@@ -53,6 +53,13 @@ func make_label(text: String, font_size: int = 18, color: Color = Color("#203042
 	return label
 
 
+func make_body_label(text: String, font_size: int = 18, color: Color = Color("#203042")) -> Label:
+	var label := make_label(text, font_size, color)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.clip_text = true
+	return label
+
+
 func make_button(text: String, callback: Callable, minimum_width: float = 0.0) -> Button:
 	var button := Button.new()
 	button.text = text
@@ -70,17 +77,18 @@ func make_panel(dark: bool = false) -> PanelContainer:
 
 func make_header(title: String, subtitle: String = "") -> PanelContainer:
 	var panel := make_panel(true)
-	panel.custom_minimum_size = Vector2(0.0, 76.0)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 18)
-	panel.add_child(row)
-	var title_label := make_label(title, 30, Color("#fff1c7"))
+	panel.custom_minimum_size = Vector2(0.0, 68.0)
+	panel.clip_contents = true
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 4)
+	panel.add_child(box)
+	var title_label := make_label(title, 28, Color("#fff1c7"))
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(title_label)
+	box.add_child(title_label)
 	if not subtitle.is_empty():
-		var subtitle_label := make_label(subtitle, 17, Color("#d8e8f5"))
-		subtitle_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		row.add_child(subtitle_label)
+		var subtitle_label := make_label(subtitle, 16, Color("#d8e8f5"))
+		subtitle_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		box.add_child(subtitle_label)
 	return panel
 
 

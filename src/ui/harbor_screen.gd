@@ -41,29 +41,36 @@ func _build_screen() -> void:
 	harbor_panel.size_flags_stretch_ratio = 1.35
 	body.add_child(harbor_panel)
 	var harbor_box := VBoxContainer.new()
+	harbor_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	harbor_box.alignment = BoxContainer.ALIGNMENT_CENTER
 	harbor_box.add_theme_constant_override("separation", 18)
 	harbor_panel.add_child(harbor_box)
 
 	var scene_title := make_label("潮風が吹く、小さな漁港", 34, Color("#ffe3a2"))
 	scene_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	scene_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	harbor_box.add_child(scene_title)
 	var scene_text := make_label(
 		"沖では魚影が濃くなっている。\n釣った魚は市場で売るか、調理場で食べて成長できる。\n準備ができたら海へ出よう。", 21, Color("#dceef7")
 	)
 	scene_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	scene_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	harbor_box.add_child(scene_text)
 
 	var loop_panel := make_panel()
 	loop_panel.custom_minimum_size = Vector2(620, 110)
+	loop_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	harbor_box.add_child(loop_panel)
 	var loop_label := make_label("基本ループ：　釣る　→　売る／料理する　→　装備・レベル強化　→　ぬしに挑む", 19, Color("#25374b"))
 	loop_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	loop_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	loop_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	loop_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	loop_panel.add_child(loop_label)
 
 	_buff_label = make_label("", 18, Color("#ffdfa0"))
 	_buff_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_buff_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	harbor_box.add_child(_buff_label)
 
 	var menu_panel := make_panel()
@@ -88,6 +95,7 @@ func _build_screen() -> void:
 	layout.add_child(footer)
 	_status_label = make_label("", 18, Color("#eaf6ff"))
 	_status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_status_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	footer.add_child(_status_label)
 	_refresh_labels()
 
