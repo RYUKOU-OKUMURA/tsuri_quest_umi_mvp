@@ -1,11 +1,14 @@
 extends "res://src/ui/screen_base.gd"
 
+const GaugeBarScript = preload("res://src/ui/components/gauge_bar.gd")
+const LevelUpPanelScript = preload("res://src/ui/components/level_up_panel.gd")
+
 var _fish_list: ItemList
 var _recipe_list: ItemList
 var _detail_label: Label
 var _cook_button: Button
 var _result_label: Label
-var _exp_bar: ProgressBar
+var _exp_bar: GaugeBar
 var _exp_label: Label
 var _level_label: Label
 var _selected_fish_id: String = ""
@@ -32,10 +35,11 @@ func _build_screen() -> void:
 	_level_label = make_label("", 24, Color("#ffe5a6"))
 	_level_label.custom_minimum_size = Vector2(210, 0)
 	level_row.add_child(_level_label)
-	_exp_bar = ProgressBar.new()
+	# 食経験値バー：汎用 GaugeBar（追従／残像／点滅付き）で ProgressBar を置換
+	_exp_bar = GaugeBarScript.new()
 	_exp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_exp_bar.custom_minimum_size = Vector2(0, 32)
-	_exp_bar.show_percentage = false
+	_exp_bar.show_value = false
+	_exp_bar.set_colors(Palette.GAUGE_AMBER, Palette.GAUGE_AMBER_HI)
 	level_row.add_child(_exp_bar)
 	_exp_label = make_label("", 18, Color("#eaf6ff"))
 	_exp_label.custom_minimum_size = Vector2(170, 0)
@@ -118,11 +122,11 @@ func _refresh_exp() -> void:
 	_level_label.text = "プレイヤー Lv.%d" % PlayerProgress.level
 	if PlayerProgress.level >= GameData.MAX_LEVEL:
 		_exp_bar.max_value = 1.0
-		_exp_bar.value = 1.0
+		_exp_bar.set_value(1.0)
 		_exp_label.text = "MAX LEVEL"
 	else:
 		_exp_bar.max_value = maxf(1.0, float(PlayerProgress.exp_to_next_level()))
-		_exp_bar.value = PlayerProgress.exp
+		_exp_bar.set_value(float(PlayerProgress.exp))
 		_exp_label.text = "%d / %d EXP" % [PlayerProgress.exp, PlayerProgress.exp_to_next_level()]
 
 
@@ -218,6 +222,9 @@ func _refresh_detail() -> void:
 func _cook_selected() -> void:
 	if _selected_fish_id.is_empty() or _selected_recipe_id.is_empty():
 		return
+	# レベルアップ演出用に、調理前のレベル／能力を控える
+	var level_before := PlayerProgress.level
+	var stats_before := PlayerProgress.get_base_stats()
 	var result := PlayerProgress.cook_and_eat(_selected_fish_id, _selected_recipe_id)
 	if not bool(result.get("ok", false)):
 		_result_label.text = String(result.get("message", "調理できませんでした。"))
@@ -240,3 +247,16 @@ func _cook_selected() -> void:
 		]
 	)
 	_refresh_all()
+	if not leveled_to.is_empty():
+		_show_level_up(
+			level_before, PlayerProgress.level, stats_before, PlayerProgress.get_base_stats()
+		)
+
+
+func _show_level_up(
+	level_from: int, level_to: int, old_stats: Dictionary, new_stats: Dictionary
+) -> void:
+	# LevelUpPanel をオーバーレイ表示（自身の queue_free で消える）
+	var panel := LevelUpPanelScript.new()
+	add_child(panel)
+	panel.show_level_up(level_from, level_to, old_stats, new_stats)

@@ -73,16 +73,25 @@ func _build_screen() -> void:
 	var book_box := VBoxContainer.new()
 	book_box.add_theme_constant_override("separation", 8)
 	book_panel.add_child(book_box)
-	var book_title := make_label("魚図鑑", 27)
+	var book_title := make_label("魚図鑑", 25)
 	book_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	book_box.add_child(book_title)
 	var book_scroll := ScrollContainer.new()
 	book_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	book_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	book_box.add_child(book_scroll)
-	var book_label := make_label(_build_fishbook_text(), 18)
-	book_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	book_scroll.add_child(book_label)
+	var book_grid := GridContainer.new()
+	book_grid.columns = 2
+	book_grid.add_theme_constant_override("hseparation", 8)
+	book_grid.add_theme_constant_override("vseparation", 8)
+	book_scroll.add_child(book_grid)
+	for fish_id in GameData.get_all_fish_ids():
+		var count := int(PlayerProgress.caught_counts.get(fish_id, 0))
+		var best := float(PlayerProgress.best_sizes.get(fish_id, 0.0))
+		if count > 0:
+			book_grid.add_child(_make_fish_card(GameData.get_fish(fish_id), count, best, false))
+		else:
+			book_grid.add_child(_make_fish_card(GameData.get_fish(fish_id), 0, 0.0, true))
 
 	var collection_panel := make_panel()
 	collection_panel.custom_minimum_size = Vector2(350, 0)
@@ -115,33 +124,58 @@ func _build_screen() -> void:
 	footer_row.add_child(make_button("港へ戻る", func() -> void: navigate("harbor"), 190))
 
 
-func _build_fishbook_text() -> String:
-	var lines: Array[String] = []
-	var discovered := 0
-	for fish_id in GameData.get_all_fish_ids():
-		var fish := GameData.get_fish(fish_id)
-		var count := int(PlayerProgress.caught_counts.get(fish_id, 0))
-		if count <= 0:
-			lines.append("？？？　未発見\n")
-			continue
-		discovered += 1
-		(
-			lines
-			. append(
-				(
-					"%s　[%s]\n  釣果：%d匹　最大：%.1f cm\n  %s\n"
-					% [
-						String(fish["name"]),
-						String(fish["rarity"]),
-						count,
-						float(PlayerProgress.best_sizes.get(fish_id, 0.0)),
-						String(fish["habitat"]),
-					]
-				)
-			)
-		)
-	lines.push_front("発見数：%d / %d\n\n" % [discovered, GameData.get_all_fish_ids().size()])
-	return "".join(PackedStringArray(lines))
+func _make_fish_card(fish: Dictionary, count: int, best: float, unknown: bool) -> PanelContainer:
+	var card := make_panel()
+	card.custom_minimum_size = Vector2(0.0, 92.0)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	card.add_child(row)
+	var icon := TextureRect.new()
+	if unknown:
+		icon.modulate = Color(0.0, 0.0, 0.0, 0.55)
+	icon.texture = UITextures.get_fish_icon(
+		Color.from_string(String(fish.get("color", "#8aa7b5")), Color("#8aa7b5"))
+	)
+	icon.custom_minimum_size = Vector2(64.0, 36.0)
+	icon.expand_mode = TextureRect.EXPAND_KEEP_SIZE
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(icon)
+	var info := VBoxContainer.new()
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	info.add_theme_constant_override("separation", 2)
+	row.add_child(info)
+	if unknown:
+		info.add_child(make_label("？？？？？", 20, Palette.TEXT_BODY, 2))
+		info.add_child(make_label("未発見の魚", 14, Color("#7d93a4")))
+	else:
+		var name_row := HBoxContainer.new()
+		name_row.add_theme_constant_override("separation", 8)
+		info.add_child(name_row)
+		name_row.add_child(make_label(String(fish["name"]), 20, Palette.TEXT_DARK, 2))
+		var rarity := String(fish.get("rarity", ""))
+		var rarity_label := make_label("[%s]" % rarity, 14, _rarity_color(rarity), 2)
+		rarity_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		name_row.add_child(rarity_label)
+		var boss := bool(fish.get("boss", false))
+		var stat_text := "釣果：%d匹　最大：%.0fcm%s" % [count, best, ("　★ぬし" if boss else "")]
+		info.add_child(make_label(stat_text, 14, Palette.TEXT_BODY))
+		info.add_child(make_label(String(fish.get("habitat", "")), 13, Color("#6f8696")))
+	return card
+
+
+func _rarity_color(rarity: String) -> Color:
+	match rarity:
+		"コモン":
+			return Palette.TEXT_BODY
+		"アンコモン":
+			return Palette.GAUGE_CYAN
+		"ぬし":
+			return Palette.GAUGE_RED
+		"レア":
+			return Palette.GAUGE_AMBER
+		_:
+			return Palette.GOLD
 
 
 func _build_collection_text() -> String:

@@ -37,6 +37,10 @@ func _on_view_state_changed(state: int) -> void:
 		Juicer.add_trauma(0.55)
 		Juicer.hit_stop(0.05)
 		_fish_flash = 1.0
+	elif state == FishingSimulator.State.ESCAPED:
+		# バラシ：弱めの揺れ＋短い停止で「逃した！」衝撃を演出
+		Juicer.add_trauma(0.35)
+		Juicer.hit_stop(0.04)
 
 
 func _draw() -> void:
