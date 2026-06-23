@@ -9,7 +9,7 @@ var _selected_rod_id: String = "starter"
 
 
 func _build_screen() -> void:
-	add_background(Color("#2a2730"))
+	add_gradient_background(Color("#3a2a1c"), Color("#1a1208"))
 	var root := make_root_margin(18)
 	var layout := VBoxContainer.new()
 	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL

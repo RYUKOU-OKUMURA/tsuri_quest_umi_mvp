@@ -10,10 +10,17 @@ const ShopScreen = preload("res://src/ui/shop_screen.gd")
 const StatusScreen = preload("res://src/ui/status_screen.gd")
 
 var _current_screen
+var _fade: ColorRect
 
 
 func _ready() -> void:
 	theme = ThemeFactory.build_theme()
+	# 画面遷移フェード（最前面）
+	_fade = ColorRect.new()
+	_fade.color = Color(0.0, 0.0, 0.0, 1.0)
+	_fade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_fade)
 	_show_screen("title")
 
 
@@ -24,6 +31,15 @@ func _notification(what: int) -> void:
 
 
 func _show_screen(screen_id: String, payload: Dictionary = {}) -> void:
+	# フェードアウト → 差し替え → フェードイン
+	var tw := create_tween()
+	tw.tween_property(_fade, "color", Color(0.0, 0.0, 0.0, 1.0), 0.12)
+	tw.tween_callback(_swap.bind(screen_id, payload))
+	tw.tween_interval(0.03)
+	tw.tween_property(_fade, "color", Color(0.0, 0.0, 0.0, 0.0), 0.15)
+
+
+func _swap(screen_id: String, payload: Dictionary) -> void:
 	var screen_script: Script
 	match screen_id:
 		"title":

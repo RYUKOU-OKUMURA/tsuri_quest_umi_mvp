@@ -5,7 +5,7 @@ var _buff_label: Label
 
 
 func _build_screen() -> void:
-	add_background(Color("#0b2840"))
+	add_sea_background()
 	var root := make_root_margin(18)
 	var layout := VBoxContainer.new()
 	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL

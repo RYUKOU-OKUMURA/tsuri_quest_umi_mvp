@@ -4,6 +4,11 @@ extends Control
 var simulator: FishingSimulator
 var fish_data: Dictionary = {}
 var _time: float = 0.0
+var _last_state: int = -1
+var _fish_flash: float = 0.0
+var _badge_style: StyleBoxFlat
+var _meter_track: StyleBoxFlat
+var _meter_fill: StyleBoxFlat
 
 
 func bind_simulator(value: FishingSimulator) -> void:
@@ -19,10 +24,23 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
+	_fish_flash = maxf(_fish_flash - delta * 3.0, 0.0)
+	if simulator != null and simulator.state != _last_state:
+		_on_view_state_changed(simulator.state)
+		_last_state = simulator.state
 	queue_redraw()
 
 
+func _on_view_state_changed(state: int) -> void:
+	# アワセ(FIGHT開始)と釣り上げで画面を揺らす
+	if state == FishingSimulator.State.FIGHT or state == FishingSimulator.State.CAUGHT:
+		Juicer.add_trauma(0.55)
+		Juicer.hit_stop(0.05)
+		_fish_flash = 1.0
+
+
 func _draw() -> void:
+	draw_set_transform(Juicer.get_offset())
 	_draw_water_background()
 	_draw_depth_scale()
 	_draw_seabed()
@@ -38,9 +56,9 @@ func _draw() -> void:
 
 
 func _draw_water_background() -> void:
-	var top_color := Color("#1a8fd0")
-	var mid_color := Color("#0e5f9c")
-	var bottom_color := Color("#062847")
+	var top_color := Palette.SEA_SHALLOW
+	var mid_color := Palette.SEA_MID
+	var bottom_color := Palette.SEA_DEEP
 	var strips := 20
 	for index in range(strips):
 		var ratio := float(index) / float(strips - 1)
@@ -49,8 +67,8 @@ func _draw_water_background() -> void:
 		var strip_height := size.y / float(strips)
 		draw_rect(Rect2(0.0, index * strip_height, size.x, strip_height + 1.0), strip_color)
 
-	var ray_color := Color(0.78, 0.95, 1.0, 0.11)
-	for index in range(5):
+	var ray_color := Color(0.82, 0.97, 1.0, 0.15)
+	for index in range(7):
 		var x := size.x * (0.10 + float(index) * 0.18)
 		var sway := sin(_time * 0.35 + float(index)) * 22.0
 		var points := PackedVector2Array(
@@ -135,7 +153,7 @@ func _draw_seabed() -> void:
 			Vector2(0.0, size.y),
 		]
 	)
-	draw_colored_polygon(sand_points, Color("#9ab68c"))
+	draw_colored_polygon(sand_points, Palette.SAND)
 
 	for index in range(13):
 		var px := fmod(float(index * 107 + 31), maxf(1.0, size.x))
@@ -363,6 +381,10 @@ func _draw_target_fish() -> void:
 		false
 	)
 
+	# ヒットフラッシュ（アワセ時など）
+	if _fish_flash > 0.0:
+		_draw_ellipse(center, rx, ry, Color(1.0, 1.0, 1.0, _fish_flash * 0.6))
+
 
 func _draw_fight_overlay() -> void:
 	if simulator.state != FishingSimulator.State.FIGHT:
@@ -373,14 +395,15 @@ func _draw_fight_overlay() -> void:
 	# 魚名バッジ：角丸＋影＋金縁
 	var badge_width := minf(240.0, size.x * 0.30)
 	var badge_rect := Rect2(size.x - badge_width - 14.0, 12.0, badge_width, 58.0)
-	var badge_style := StyleBoxFlat.new()
-	badge_style.bg_color = Color(0.04, 0.12, 0.22, 0.84)
-	badge_style.border_color = Color("#d1aa63")
-	badge_style.set_border_width_all(2)
-	badge_style.set_corner_radius_all(10)
-	badge_style.shadow_color = Color(0.0, 0.0, 0.0, 0.35)
-	badge_style.shadow_size = 8
-	draw_style_box(badge_style, badge_rect)
+	if _badge_style == null:
+		_badge_style = StyleBoxFlat.new()
+		_badge_style.bg_color = Color(0.04, 0.12, 0.22, 0.84)
+		_badge_style.border_color = Palette.GOLD
+		_badge_style.set_border_width_all(2)
+		_badge_style.set_corner_radius_all(10)
+		_badge_style.shadow_color = Palette.SHADOW
+		_badge_style.shadow_size = 8
+	draw_style_box(_badge_style, badge_rect)
 
 	var fish_name := String(fish_data.get("name", "魚"))
 	var name_pos := badge_rect.position + Vector2(12.0, 23.0)
@@ -396,16 +419,17 @@ func _draw_fight_overlay() -> void:
 		simulator.distance / maxf(simulator.initial_distance, 0.01), 0.0, 1.0
 	)
 	var meter_rect := Rect2(68.0, size.y - 26.0, size.x - 84.0, 10.0)
-	var track_style := StyleBoxFlat.new()
-	track_style.bg_color = Color(0.02, 0.08, 0.14, 0.6)
-	track_style.set_corner_radius_all(5)
-	draw_style_box(track_style, meter_rect)
+	if _meter_track == null:
+		_meter_track = StyleBoxFlat.new()
+		_meter_track.bg_color = Color(0.02, 0.08, 0.14, 0.6)
+		_meter_track.set_corner_radius_all(5)
+		_meter_fill = StyleBoxFlat.new()
+		_meter_fill.bg_color = Color(0.45, 0.88, 1.0, 0.9)
+		_meter_fill.set_corner_radius_all(5)
+	draw_style_box(_meter_track, meter_rect)
 	if distance_ratio > 0.0:
-		var fill_style := StyleBoxFlat.new()
-		fill_style.bg_color = Color(0.45, 0.88, 1.0, 0.9)
-		fill_style.set_corner_radius_all(5)
 		var fill_rect := Rect2(meter_rect.position, Vector2(meter_rect.size.x * distance_ratio, meter_rect.size.y))
-		draw_style_box(fill_style, fill_rect)
+		draw_style_box(_meter_fill, fill_rect)
 		draw_rect(
 			Rect2(fill_rect.position.x + 3.0, fill_rect.position.y + 1.5, fill_rect.size.x - 6.0, 1.5),
 			Color(1.0, 1.0, 1.0, 0.6),

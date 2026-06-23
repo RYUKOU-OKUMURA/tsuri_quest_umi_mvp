@@ -13,7 +13,7 @@ var _selected_recipe_id: String = ""
 
 
 func _build_screen() -> void:
-	add_background(Color("#172235"))
+	add_gradient_background(Color("#2a2418"), Color("#14110b"))
 	var root := make_root_margin(16)
 	var layout := VBoxContainer.new()
 	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL

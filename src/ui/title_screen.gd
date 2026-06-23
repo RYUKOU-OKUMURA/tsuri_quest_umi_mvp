@@ -4,7 +4,8 @@ var _confirm_reset: ConfirmationDialog
 
 
 func _build_screen() -> void:
-	add_background(Color("#07172b"))
+	add_sea_background()
+	add_child(add_sparkles(26))
 	var root := make_root_margin(34)
 	var layout := VBoxContainer.new()
 	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL

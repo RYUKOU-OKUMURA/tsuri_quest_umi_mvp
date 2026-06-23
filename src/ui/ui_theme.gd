@@ -1,8 +1,13 @@
 extends RefCounted
+## JRPG ウィンドウスキン テーマ。
+#  - パネル/ボタンは UITextures が procedural 生成した 9スライス装飾枠（StyleBoxTexture）。
+#  - フォントは res://assets/fonts/ の FontFile を NEAREST(アンチエイリアスOFF) で読み込み、
+#    なければ macOS システムゴシックにフォールバック。
+#  - 色は Palette（src/ui/palette.gd）へ一元化。
+const PIXEL_FONT_PATH := "res://assets/fonts/MPLUS1p-Regular.ttf"
+# レトロピクセル風にするためアンチエイリアスOFF。漢字の可読性を優先したい場合は GRAY に変更。
+const PIXEL_FONT_ANTIALIASING := TextServer.FONT_ANTIALIASING_NONE
 
-
-# macOS ビルトインの丸ゴシックを即適用。リリース時はライセンス確定済みの
-# .ttf を res://assets/fonts/ に置き、build_font() を FontFile 化に差し替えること。
 const _SYSTEM_FONT_NAMES: Array[String] = [
 	"Hiragino Maru Gothic ProN",
 	"Hiragino Sans",
@@ -18,99 +23,146 @@ static func build_theme() -> Theme:
 	theme.default_font = build_font()
 	theme.default_font_size = 18
 
-	# 塗り＋枠に加え、柔らかいドロップシャドウでパネル/ボタンを浮かせる。
-	var panel := _style(Color("#f3e8cd"), Color("#6e5635"), 3, 12, true, 12)
-	var panel_dark := _style(Color("#12283f"), Color("#9a7745"), 3, 12, true, 14)
-	var panel_blue := _style(Color("#173b61"), Color("#d1aa63"), 3, 10, true, 10)
-	var button_normal := _style(Color("#8a5428"), Color("#e1bd72"), 2, 10, true, 7)
-	var button_hover := _style(Color("#a66831"), Color("#ffe39b"), 3, 10, true, 9)
-	var button_pressed := _style(Color("#60381f"), Color("#d29a4f"), 2, 10, false, 3)
-	var button_disabled := _style(Color("#6c6860"), Color("#9c9586"), 2, 10, false, 0)
-	var input_style := _style(Color("#fff8e8"), Color("#80643c"), 2, 8, true, 5)
-	var progress_bg := _style(Color("#18202a"), Color("#8b7452"), 2, 6, false, 0)
-	var progress_fill := _style(Color("#3cbf78"), Color("#d9ef8c"), 1, 6, false, 0)
+	# 9スライス ウィンドウスキン
+	var panel := _tex(UITextures.get_skin("parchment"))
+	var dark := _tex(UITextures.get_skin("dark"))
+	var blue := _tex(UITextures.get_skin("blue"))
+	var dialog := _tex(UITextures.get_skin("dialog"))
+
+	var btn_n := _tex(UITextures.get_skin("button_normal"), 8, 4)
+	var btn_h := _tex(UITextures.get_skin("button_hover"), 8, 4)
+	var btn_p := _tex(UITextures.get_skin("button_pressed"), 8, 4)
+	var btn_d := _tex(UITextures.get_skin("button_normal"), 8, 4)
+	var btn_gold := _tex(UITextures.get_skin("button_gold"), 8, 4)
 
 	theme.set_stylebox("panel", "PanelContainer", panel)
 	theme.set_stylebox("panel", "Panel", panel)
-	theme.set_stylebox("panel", "PopupPanel", panel)
-	theme.set_stylebox("normal", "Button", button_normal)
-	theme.set_stylebox("hover", "Button", button_hover)
-	theme.set_stylebox("pressed", "Button", button_pressed)
-	theme.set_stylebox("disabled", "Button", button_disabled)
-	theme.set_stylebox("focus", "Button", button_hover)
-	theme.set_stylebox("normal", "LineEdit", input_style)
-	theme.set_stylebox("normal", "TextEdit", input_style)
-	theme.set_stylebox("normal", "OptionButton", button_normal)
-	theme.set_stylebox("hover", "OptionButton", button_hover)
-	theme.set_stylebox("pressed", "OptionButton", button_pressed)
-	theme.set_stylebox("disabled", "OptionButton", button_disabled)
-	theme.set_stylebox("background", "ProgressBar", progress_bg)
-	theme.set_stylebox("fill", "ProgressBar", progress_fill)
-	theme.set_stylebox("panel", "AcceptDialog", panel_dark)
-	theme.set_stylebox("panel", "ConfirmationDialog", panel_dark)
+	theme.set_stylebox("panel", "PopupPanel", dialog)
+	theme.set_stylebox("normal", "Button", btn_n)
+	theme.set_stylebox("hover", "Button", btn_h)
+	theme.set_stylebox("pressed", "Button", btn_p)
+	theme.set_stylebox("disabled", "Button", btn_d)
+	theme.set_stylebox("focus", "Button", btn_h)
+	theme.set_stylebox("normal", "OptionButton", btn_n)
+	theme.set_stylebox("hover", "OptionButton", btn_h)
+	theme.set_stylebox("pressed", "OptionButton", btn_p)
+	theme.set_stylebox("disabled", "OptionButton", btn_d)
+	theme.set_stylebox("focus", "OptionButton", btn_h)
 
-	theme.set_color("font_color", "Label", Color("#203042"))
-	theme.set_color("font_outline_color", "Label", Color("#0a1622"))
-	theme.set_constant("outline_size", "Label", 0)  # 暗背景のラベルで個別に上書きして使う
-	theme.set_color("font_color", "Button", Color("#fff7df"))
+	# 型バリエーション（DarkPanel/BluePanel は既存コードが参照）。JRPG* を追加。
+	theme.set_type_variation("DarkPanel", "PanelContainer")
+	theme.set_stylebox("panel", "DarkPanel", dark)
+	theme.set_type_variation("BluePanel", "PanelContainer")
+	theme.set_stylebox("panel", "BluePanel", blue)
+	theme.set_type_variation("JRPGPanel", "PanelContainer")
+	theme.set_stylebox("panel", "JRPGPanel", panel)
+	theme.set_type_variation("JRPGHeader", "PanelContainer")
+	theme.set_stylebox("panel", "JRPGHeader", dark)
+	theme.set_type_variation("JRPGDialog", "PanelContainer")
+	theme.set_stylebox("panel", "JRPGDialog", dialog)
+	theme.set_type_variation("GoldButton", "Button")
+	theme.set_stylebox("normal", "GoldButton", btn_gold)
+	theme.set_stylebox("hover", "GoldButton", btn_gold)
+	theme.set_stylebox("pressed", "GoldButton", btn_p)
+	theme.set_stylebox("focus", "GoldButton", btn_gold)
+	theme.set_stylebox("disabled", "GoldButton", btn_d)
+
+	# ItemList（市場/釣具店/調理で使用）。デフォルト灰をウィンドウスキンに統一。
+	theme.set_stylebox("panel", "ItemList", panel)
+	var selected := UITextures.flat_style(Palette.BLUE_PANEL, Palette.GOLD, 1, 4)
+	theme.set_stylebox("selected", "ItemList", selected)
+	theme.set_stylebox("selected_focus", "ItemList", selected)
+	theme.set_stylebox("cursor", "ItemList", selected)
+	theme.set_stylebox("hover", "ItemList", UITextures.flat_style(Palette.PARCHMENT_DEEP, Palette.WOOD_DARK, 1, 4))
+	theme.set_stylebox("focus", "ItemList", UITextures.flat_style(Color(0, 0, 0, 0), Color(0, 0, 0, 0), 0, 0))
+	theme.set_color("font_color", "ItemList", Palette.TEXT_DARK)
+	theme.set_color("font_selected_color", "ItemList", Palette.TEXT_BONE)
+	theme.set_color("font_hovered_color", "ItemList", Palette.TEXT_DARK)
+	theme.set_color("guide_color", "ItemList", Color(0, 0, 0, 0))
+	theme.set_constant("vseparation", "ItemList", 6)
+	theme.set_constant("hseparation", "ItemList", 10)
+
+	# 入力欄
+	var input := UITextures.flat_style(Color("#fff8e8"), Palette.WOOD_DARK, 2, 6)
+	theme.set_stylebox("normal", "LineEdit", input)
+	theme.set_stylebox("focus", "LineEdit", input)
+	theme.set_stylebox("normal", "TextEdit", input)
+
+	# ProgressBar（調理EXP等。最終的には GaugeBar に差し替え）
+	theme.set_stylebox("background", "ProgressBar", UITextures.flat_style(Palette.DARK_PANEL_DEEP, Palette.WOOD_DARK, 2, 6, false, 0))
+	theme.set_stylebox("fill", "ProgressBar", UITextures.flat_style(Palette.GAUGE_GREEN, Palette.GAUGE_GREEN_HI, 1, 6, false, 0))
+
+	# ダイアログ
+	theme.set_stylebox("panel", "AcceptDialog", dialog)
+	theme.set_stylebox("panel", "ConfirmationDialog", dialog)
+	theme.set_stylebox("panel", "AcceptDialog", dialog)
+
+	# 色・アウトライン・サイズ
+	theme.set_color("font_color", "Label", Palette.TEXT_DARK)
+	theme.set_color("font_outline_color", "Label", Palette.TEXT_OUTLINE_DARK)
+	theme.set_constant("outline_size", "Label", 0)
+	theme.set_color("font_color", "Button", Palette.TEXT_BONE)
 	theme.set_color("font_hover_color", "Button", Color.WHITE)
-	theme.set_color("font_pressed_color", "Button", Color("#fff0c2"))
+	theme.set_color("font_pressed_color", "Button", Palette.GOLD_BRIGHT)
 	theme.set_color("font_disabled_color", "Button", Color("#d0cbc1"))
-	theme.set_color("font_outline_color", "Button", Color("#3a2410"))
+	theme.set_color("font_outline_color", "Button", Palette.TEXT_OUTLINE_LIGHT)
 	theme.set_constant("outline_size", "Button", 3)
-	theme.set_color("font_color", "OptionButton", Color("#fff7df"))
-	theme.set_color("font_outline_color", "OptionButton", Color("#3a2410"))
+	theme.set_color("font_color", "OptionButton", Palette.TEXT_BONE)
+	theme.set_color("font_hover_color", "OptionButton", Color.WHITE)
+	theme.set_color("font_outline_color", "OptionButton", Palette.TEXT_OUTLINE_LIGHT)
 	theme.set_constant("outline_size", "OptionButton", 3)
+	theme.set_color("font_color", "ItemList", Palette.TEXT_DARK)
+	theme.set_color("font_outline_color", "ItemList", Palette.TEXT_OUTLINE_DARK)
+	theme.set_constant("outline_size", "ItemList", 0)
 	theme.set_color("font_color", "ProgressBar", Color.WHITE)
-	theme.set_color("font_outline_color", "ProgressBar", Color("#102030"))
+	theme.set_color("font_outline_color", "ProgressBar", Palette.TEXT_OUTLINE_DARK)
 	theme.set_constant("outline_size", "ProgressBar", 3)
 
 	theme.set_font_size("font_size", "Label", 18)
 	theme.set_font_size("font_size", "Button", 18)
 	theme.set_font_size("font_size", "OptionButton", 18)
+	theme.set_font_size("font_size", "ItemList", 18)
 	theme.set_font_size("font_size", "ProgressBar", 16)
-
-	theme.set_type_variation("DarkPanel", "PanelContainer")
-	theme.set_stylebox("panel", "DarkPanel", panel_dark)
-	theme.set_type_variation("BluePanel", "PanelContainer")
-	theme.set_stylebox("panel", "BluePanel", panel_blue)
 	return theme
 
 
 static func build_font() -> Font:
+	if ResourceLoader.exists(PIXEL_FONT_PATH):
+		var loaded := load(PIXEL_FONT_PATH)
+		var f := loaded as FontFile
+		if f != null:
+			f.antialiasing = PIXEL_FONT_ANTIALIASING
+			f.hinting = TextServer.HINTING_NONE
+			f.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
+			f.generate_mipmaps = true
+			return f
+	return _system_font()
+
+
+static func _system_font() -> SystemFont:
 	var font := SystemFont.new()
 	font.font_names = PackedStringArray(_SYSTEM_FONT_NAMES)
 	font.generate_mipmaps = true
 	return font
 
 
-# background: 塗り / border: 枠色 / width: 枠太さ / radius: 角丸
-# shadow: 影の有無 / shadow_size: 影の広がり
-static func _style(
-	background: Color,
-	border: Color,
-	width: int,
-	radius: int,
-	shadow: bool = false,
-	shadow_size: int = 0
-) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = background
-	style.border_color = border
-	style.border_width_left = width
-	style.border_width_top = width
-	style.border_width_right = width
-	style.border_width_bottom = width
-	style.corner_radius_top_left = radius
-	style.corner_radius_top_right = radius
-	style.corner_radius_bottom_left = radius
-	style.corner_radius_bottom_right = radius
-	style.content_margin_left = 14.0
-	style.content_margin_top = 10.0
-	style.content_margin_right = 14.0
-	style.content_margin_bottom = 10.0
-	if shadow and shadow_size > 0:
-		style.shadow_color = Color(0.0, 0.0, 0.0, 0.32)
-		style.shadow_size = shadow_size
-		style.shadow_offset = Vector2(0.0, maxf(float(shadow_size) * 0.45, 3.0))
-	return style
+# 9スライス StyleBoxTexture。margin=枠幅, shadow_expand=焼き込み影の描画拡張。
+static func _tex(tex: Texture2D, margin: int = 10, shadow_expand: int = 4) -> StyleBoxTexture:
+	var sb := StyleBoxTexture.new()
+	sb.texture = tex
+	sb.texture_margin_left = margin
+	sb.texture_margin_top = margin
+	sb.texture_margin_right = margin
+	sb.texture_margin_bottom = margin
+	sb.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE_FIT
+	sb.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE_FIT
+	sb.expand_margin_left = shadow_expand
+	sb.expand_margin_top = shadow_expand
+	sb.expand_margin_right = shadow_expand
+	sb.expand_margin_bottom = shadow_expand
+	sb.content_margin_left = 14.0
+	sb.content_margin_top = 10.0
+	sb.content_margin_right = 14.0
+	sb.content_margin_bottom = 10.0
+	# texture_filtering は設定しない（プロジェクト既定 NEAREST でチャンキーピクセル枠になる）
+	return sb

@@ -10,7 +10,7 @@ var _selected_fish_id: String = ""
 
 
 func _build_screen() -> void:
-	add_background(Color("#163348"))
+	add_sea_background()
 	var root := make_root_margin(18)
 	var layout := VBoxContainer.new()
 	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
