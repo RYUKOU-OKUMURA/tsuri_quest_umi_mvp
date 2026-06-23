@@ -1,6 +1,7 @@
 extends ScreenBase
 
 const FishingSimulatorScript = preload("res://src/core/fishing_simulator.gd")
+const GaugeBarScript = preload("res://src/ui/components/gauge_bar.gd")
 
 var _simulator: FishingSimulator
 var _trip_stats: Dictionary = {}
@@ -15,9 +16,9 @@ var _message_label: Label
 var _state_label: Label
 var _action_label: Label
 var _fish_info_label: Label
-var _tension_bar: ProgressBar
-var _fish_stamina_bar: ProgressBar
-var _player_energy_bar: ProgressBar
+var _tension_bar: GaugeBarScript
+var _fish_stamina_bar: GaugeBarScript
+var _player_energy_bar: GaugeBarScript
 var _distance_label: Label
 var _depth_label: Label
 var _safe_zone_label: Label
@@ -28,14 +29,9 @@ var _result_title: Label
 var _result_details: Label
 var _retry_button: Button
 
-var _tension_fill_safe: StyleBoxFlat
-var _tension_fill_warn: StyleBoxFlat
-var _tension_fill_danger: StyleBoxFlat
-
 
 func _build_screen() -> void:
-	_init_tension_bar_styles()
-	add_background(Color("#061627"))
+	add_gradient_background(Color("#0c243a"), Color("#04101e"))
 	_trip_stats = PlayerProgress.begin_fishing_trip()
 	_simulator = FishingSimulatorScript.new()
 	_simulator.state_changed.connect(_on_state_changed)
@@ -91,7 +87,7 @@ func _build_screen() -> void:
 	message_panel.custom_minimum_size = Vector2(0, 52)
 	message_panel.clip_contents = true
 	left_column.add_child(message_panel)
-	_message_label = make_body_label("", 18, Color("#fff0b5"))
+	_message_label = make_body_label("", 18, Color("#fff0b5"), 2, Color("#0a1622"))
 	_message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	message_panel.add_child(_message_label)
@@ -159,13 +155,13 @@ func _build_screen() -> void:
 	gauge_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	gauge_row.add_theme_constant_override("separation", 10)
 	hud_box.add_child(gauge_row)
-	var tension_column := _make_gauge_column("テンション")
+	var tension_column := _make_gauge_column("テンション", Color("#3cbf78"), Color("#9ff0c0"))
 	_tension_bar = tension_column["bar"]
 	gauge_row.add_child(tension_column["root"])
-	var fish_column := _make_gauge_column("魚の体力")
+	var fish_column := _make_gauge_column("魚の体力", Color("#1fa8a0"), Color("#7fe6dc"))
 	_fish_stamina_bar = fish_column["bar"]
 	gauge_row.add_child(fish_column["root"])
-	var energy_column := _make_gauge_column("プレイヤー体力")
+	var energy_column := _make_gauge_column("プレイヤー体力", Color("#2f7fd0"), Color("#88bdf2"))
 	_player_energy_bar = energy_column["bar"]
 	gauge_row.add_child(energy_column["root"])
 
@@ -196,38 +192,20 @@ func _build_screen() -> void:
 	_update_ui()
 
 
-func _init_tension_bar_styles() -> void:
-	_tension_fill_safe = StyleBoxFlat.new()
-	_tension_fill_safe.bg_color = Color("#3cbf78")
-	_tension_fill_safe.border_color = Color("#d9ef8c")
-	_tension_fill_safe.set_border_width_all(1)
-	_tension_fill_safe.set_corner_radius_all(5)
-	_tension_fill_warn = StyleBoxFlat.new()
-	_tension_fill_warn.bg_color = Color("#d9a032")
-	_tension_fill_warn.border_color = Color("#ffe39b")
-	_tension_fill_warn.set_border_width_all(1)
-	_tension_fill_warn.set_corner_radius_all(5)
-	_tension_fill_danger = StyleBoxFlat.new()
-	_tension_fill_danger.bg_color = Color("#d94f4f")
-	_tension_fill_danger.border_color = Color("#ffb0b0")
-	_tension_fill_danger.set_border_width_all(1)
-	_tension_fill_danger.set_corner_radius_all(5)
-
-
-func _make_gauge_column(title: String) -> Dictionary:
+func _make_gauge_column(
+	title: String, fill_from: Color = Color("#3cbf78"), fill_to: Color = Color("#9ff0c0")
+) -> Dictionary:
 	var root := VBoxContainer.new()
 	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.size_flags_stretch_ratio = 1.0
-	var label := make_label(title, 16, Color("#eaf5ff"))
+	var label := make_label(title, 16, Color("#eaf5ff"), 2, Color("#08131f"))
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.add_child(label)
-	var bar := ProgressBar.new()
+	var bar := GaugeBarScript.new()
 	bar.min_value = 0.0
 	bar.max_value = 100.0
-	bar.value = 100.0
-	bar.show_percentage = false
-	bar.custom_minimum_size = Vector2(0, 26)
+	bar.set_colors(fill_from, fill_to)
 	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.add_child(bar)
 	return {"root": root, "bar": bar}
@@ -399,10 +377,10 @@ func _update_ui() -> void:
 		]
 	)
 	var tension_ratio := _simulator.tension / maxf(_simulator.line_break_limit(), 0.01)
-	_tension_bar.value = clampf(tension_ratio * 100.0, 0.0, 100.0)
+	_tension_bar.set_ratio(clampf(tension_ratio, 0.0, 1.0))
 	_update_tension_bar_color(tension_ratio)
-	_fish_stamina_bar.value = _simulator.fish_stamina_ratio() * 100.0
-	_player_energy_bar.value = _simulator.player_energy_ratio() * 100.0
+	_fish_stamina_bar.set_ratio(_simulator.fish_stamina_ratio())
+	_player_energy_bar.set_ratio(_simulator.player_energy_ratio())
 
 	var fighting: bool = _simulator.state == FishingSimulator.State.FIGHT
 	_reel_button.disabled = not fighting
@@ -421,13 +399,11 @@ func _update_ui() -> void:
 
 
 func _update_tension_bar_color(tension_ratio: float) -> void:
-	var style: StyleBoxFlat
 	if tension_ratio < _simulator.safe_min() or tension_ratio > _simulator.safe_max():
-		style = _tension_fill_danger
+		_tension_bar.set_colors(Color("#e0533b"), Color("#ff9a82"))
 	elif (
 		tension_ratio < _simulator.safe_min() + 0.06 or tension_ratio > _simulator.safe_max() - 0.06
 	):
-		style = _tension_fill_warn
+		_tension_bar.set_colors(Color("#e0a02e"), Color("#ffd277"))
 	else:
-		style = _tension_fill_safe
-	_tension_bar.add_theme_stylebox_override("fill", style)
+		_tension_bar.set_colors(Color("#3cbf78"), Color("#9ff0c0"))
