@@ -154,6 +154,31 @@ def _draw_icon_well(d: ImageDraw.ImageDraw, center: tuple[int, int], radius: int
     d.ellipse((cx - radius + 6, cy - radius + 6, cx + radius - 6, cy + radius - 6), outline=_rgba("#e0bd62", 150), width=2)
 
 
+def _draw_corner_brackets(
+    d: ImageDraw.ImageDraw,
+    box: tuple[int, int, int, int],
+    *,
+    length: int = 34,
+    inset: int = 10,
+    color: str = "#e0bd62",
+    alpha: int = 145,
+    width: int = 2,
+) -> None:
+    x0, y0, x1, y1 = box
+    points = (
+        ((x0 + inset, y0 + inset), (x0 + inset + length, y0 + inset)),
+        ((x0 + inset, y0 + inset), (x0 + inset, y0 + inset + length)),
+        ((x1 - inset, y0 + inset), (x1 - inset - length, y0 + inset)),
+        ((x1 - inset, y0 + inset), (x1 - inset, y0 + inset + length)),
+        ((x0 + inset, y1 - inset), (x0 + inset + length, y1 - inset)),
+        ((x0 + inset, y1 - inset), (x0 + inset, y1 - inset - length)),
+        ((x1 - inset, y1 - inset), (x1 - inset - length, y1 - inset)),
+        ((x1 - inset, y1 - inset), (x1 - inset, y1 - inset - length)),
+    )
+    for start, end in points:
+        d.line((*start, *end), fill=_rgba(color, alpha), width=width)
+
+
 def create_top_status_frame() -> None:
     w, h = 1774, 248
     image = Image.new("RGBA", (w, h), (0, 0, 0, 0))
@@ -205,11 +230,19 @@ def create_sidebar_frame() -> None:
     d.line((header[0] + 24, header[3] - 10, header[2] - 24, header[3] - 10), fill=_rgba("#f4d27c", 70), width=1)
 
     _draw_clean_card(image, fish, "#f1e4c7", radius=10, border="#8c6733", inner="#d2aa58", seed=81, texture_strength=7)
+    for y in (fish[1] + 86, fish[1] + 342, fish[1] + 418):
+        d.line((fish[0] + 38, y, fish[2] - 38, y), fill=_rgba("#b89b64", 58), width=1)
+    _draw_corner_brackets(d, fish, length=30, inset=18, color="#a77d3b", alpha=95, width=1)
 
     _draw_navy_card(image, action, radius=12, seed=82)
     _draw_clean_card(image, action_body, "#f2e5cb", radius=8, border="#8c6733", inner="#d8b45d", seed=83, texture_strength=5)
     _draw_navy_card(image, tackle, radius=12, seed=84)
     _draw_clean_card(image, tackle_body, "#f2e5cb", radius=8, border="#8c6733", inner="#d8b45d", seed=85, texture_strength=5)
+
+    for panel, body in ((action, action_body), (tackle, tackle_body)):
+        d.line((panel[0] + 26, panel[1] + 45, panel[2] - 26, panel[1] + 45), fill=_rgba("#e0bd62", 126), width=2)
+        d.line((panel[0] + 28, panel[1] + 50, panel[2] - 28, panel[1] + 50), fill=_rgba("#07121b", 105), width=1)
+        _draw_corner_brackets(d, body, length=24, inset=9, color="#a77d3b", alpha=115, width=1)
 
     # Sparse corner accents only. Heavy rivets made the frame read as generated/debug UI.
     for cx, cy in (

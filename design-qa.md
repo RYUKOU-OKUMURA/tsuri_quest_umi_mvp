@@ -15,17 +15,18 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Patches Made Since Previous QA
 
-- Rebuilt the upper HUD depth module in `assets/showcase/underwater/fight_hud_frame.png` as a narrower central blue plate with darker side sockets, stronger angled gold separators, and title/value backing plaques.
-- Matched `FightHud` depth text centering to the narrower plate and the right-side up/down arrows.
+- Added subtle ruled lines and corner brackets to the right fish card in `assets/showcase/underwater/sidebar_frame.png`.
+- Added clearer title separators and inner corner brackets to the right action/tackle cards.
+- Matched `FightSidebar` action/tackle body placement to the generated parchment card slots, reducing cramped lower-card text.
 - Regenerated `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png`.
 
 ## Findings
 
 - [P2] Right panel is structurally better but still below reference card quality.
   Location: `assets/showcase/underwater/sidebar_frame.png`, `src/ui/components/fight_sidebar.gd`, `src/ui/fishing_screen.gd`.
-  Evidence: the action and tackle bodies are larger and the tackle text now fits inside its parchment card. The panel still has less precise corner ornamentation, weaker internal hierarchy, and a more procedural frame rhythm than the reference.
-  Impact: the right panel is more readable, but it still does not fully sell the premium JRPG card quality.
-  Fix: replace the remaining procedural border style with more hand-authored/card-painted ornamentation and tune right-panel type sizes after the final font decision.
+  Evidence: the fish card now has quieter reference-like ruled lines, and the action/tackle cards have clearer title separators plus body brackets. The lower-card text sits better inside the parchment bodies. The panel still has a more procedural border rhythm and less bespoke typography than the reference.
+  Impact: the right panel is more readable and more deliberately framed, but it still does not fully sell the premium JRPG card quality.
+  Fix: keep the new internal structure, then tune title/body optical sizes and replace any remaining generated-looking linework only if it still reads too mechanical in the next full-screen pass.
 
 - [P2] HUD top row is closer, but the board styling still needs final authored polish.
   Location: `assets/showcase/underwater/fight_hud_frame.png`, `src/ui/components/fight_hud.gd`.
@@ -53,13 +54,13 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Open Questions
 
-- None blocking. The next highest-value pass is right-panel ornamentation and typography, while keeping the updated HUD depth plate as the current baseline.
+- None blocking. The next highest-value pass is typography/spacing across the right panel and HUD, while keeping the updated sidebar and HUD frames as the current baseline.
 
 ## Implementation Checklist
 
-1. Tune right-panel border ornamentation, internal dividers, and title/body type sizes.
-2. Continue HUD upper-board polish only after the right-panel frame pass, focusing on color balance and gauge-label spacing.
-3. Continue font-size tuning after the next frame pass, especially small right-panel body text and HUD value/title rhythm.
+1. Tune title/body optical sizes across the right panel and HUD, especially small body text and key labels.
+2. Continue HUD upper-board polish, focusing on color balance and gauge-label spacing.
+3. Revisit hit splash brightness and bottom overlap now that the HUD frame geometry is more stable.
 4. Re-run `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png` after each pass.
 
 ## Follow-up Polish

@@ -125,7 +125,7 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 	_draw_text(font, "魚の行動", rect.position + Vector2(16.0, 27.0), 18, Palette.TEXT_BONE, 3)
 	var body := Rect2(rect.position + Vector2(10.0, 33.0), rect.size - Vector2(20.0, 42.0))
 	if _sidebar_frame != null:
-		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.34), rect.size - Vector2(28.0, rect.size.y * 0.40))
+		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.29), rect.size - Vector2(28.0, rect.size.y * 0.37))
 	_draw_panel(body, Color("#f3e8cd"), Palette.WOOD_DARK, Palette.GOLD)
 	var action := "待機"
 	var message := "ラインを見ながら、テンションを保とう。"
@@ -143,7 +143,7 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	_draw_text(font, "タックル", rect.position + Vector2(14.0, 26.0), 18, Palette.TEXT_BONE, 3)
 	var body := Rect2(rect.position + Vector2(10.0, 32.0), rect.size - Vector2(20.0, 38.0))
 	if _sidebar_frame != null:
-		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.35), rect.size - Vector2(28.0, rect.size.y * 0.41))
+		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.30), rect.size - Vector2(28.0, rect.size.y * 0.37))
 	_draw_panel(body, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	var rod_name := String(trip_stats.get("rod_name", "港の入門竿"))
 	var text_width := body.size.x - (74.0 if _icons != null else 12.0)
