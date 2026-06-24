@@ -2,6 +2,7 @@ extends ScreenBase
 
 const FishingSimulatorScript = preload("res://src/core/fishing_simulator.gd")
 const GaugeBarScript = preload("res://src/ui/components/gauge_bar.gd")
+const SurfaceCastViewScript = preload("res://src/ui/components/surface_cast_view.gd")
 
 var _simulator: FishingSimulator
 var _trip_stats: Dictionary = {}
@@ -23,6 +24,7 @@ var _distance_label: Label
 var _depth_label: Label
 var _safe_zone_label: Label
 var _view: UnderwaterView
+var _surface_view: SurfaceCastView
 
 var _result_overlay: ColorRect
 var _result_title: Label
@@ -82,6 +84,11 @@ func _build_screen() -> void:
 	_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	water_panel.add_child(_view)
+	# 水上キャストビューを手前に重ねる（READY〜BITE 表示、FIGHT 以降は淡出）
+	_surface_view = SurfaceCastViewScript.new()
+	_surface_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_surface_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	water_panel.add_child(_surface_view)
 
 	var message_panel := make_panel(true)
 	message_panel.custom_minimum_size = Vector2(0, 52)
@@ -256,6 +263,7 @@ func _process(delta: float) -> void:
 		return
 	_simulator.tick(delta)
 	_update_ui()
+	_update_view_visibility(delta)
 
 
 func _input(event: InputEvent) -> void:
@@ -290,6 +298,10 @@ func _prepare_new_attempt() -> void:
 		_current_fish = GameData.roll_normal_fish(PlayerProgress.level)
 	_simulator.prepare(_current_fish, _trip_stats)
 	_view.bind_simulator(_simulator)
+	_surface_view.bind_simulator(_simulator)
+	# 新規挑戦時は水上ビューから（水中は淡出状態で待機）
+	_view.modulate.a = 0.0
+	_surface_view.modulate.a = 1.0
 	_refresh_fish_info()
 
 
@@ -407,3 +419,16 @@ func _update_tension_bar_color(tension_ratio: float) -> void:
 		_tension_bar.set_colors(Color("#e0a02e"), Color("#ffd277"))
 	else:
 		_tension_bar.set_colors(Color("#3cbf78"), Color("#9ff0c0"))
+
+
+# 水上キャストビュー／水中ビューのクロスフェード。
+# FIGHT 以降（CAUGHT/ESCAPED 含む）は水中、それ以外は水上を表示する。
+func _update_view_visibility(delta: float) -> void:
+	var underwater := (
+		_simulator.state == FishingSimulator.State.FIGHT
+		or _simulator.state == FishingSimulator.State.CAUGHT
+		or _simulator.state == FishingSimulator.State.ESCAPED
+	)
+	var k := 1.0 - exp(-10.0 * delta)
+	_surface_view.modulate.a = lerpf(_surface_view.modulate.a, 0.0 if underwater else 1.0, k)
+	_view.modulate.a = lerpf(_view.modulate.a, 1.0 if underwater else 0.0, k)
