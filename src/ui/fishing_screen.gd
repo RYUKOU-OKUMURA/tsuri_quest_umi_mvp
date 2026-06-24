@@ -41,23 +41,23 @@ func _build_screen() -> void:
 	_simulator.message_changed.connect(_on_message_changed)
 	_simulator.fight_finished.connect(_on_fight_finished)
 
-	var root := make_root_margin(8)
+	var root := make_root_margin(6)
 	var layout := VBoxContainer.new()
 	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	layout.add_theme_constant_override("separation", 4)
+	layout.add_theme_constant_override("separation", 2)
 	root.add_child(layout)
 
 	var body := HBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.add_theme_constant_override("separation", 6)
+	body.add_theme_constant_override("separation", 5)
 	layout.add_child(body)
 
 	var left_column := VBoxContainer.new()
 	left_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left_column.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left_column.size_flags_stretch_ratio = 1.52
-	left_column.add_theme_constant_override("separation", 4)
+	left_column.add_theme_constant_override("separation", 2)
 	body.add_child(left_column)
 
 	_fight_status_bar = FightStatusBarScript.new()
@@ -122,7 +122,7 @@ func _build_screen() -> void:
 	var info_box := VBoxContainer.new()
 	info_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	info_box.add_theme_constant_override("separation", 8)
+	info_box.add_theme_constant_override("separation", 6)
 	info_panel.add_child(info_box)
 	_info_title_label = make_label("狙う魚", 24, Color("#22354a"))
 	_info_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
