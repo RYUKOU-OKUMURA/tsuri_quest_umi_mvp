@@ -121,8 +121,10 @@ func _draw_tension(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0b1828"), Color("#122f4f"), Palette.GOLD_DEEP)
 	var title_y := 25.0 if _hud_frame == null else 26.0
 	var bar_y := 42.0 if _hud_frame == null else 43.0
-	_draw_hud_icon(ICON_TENSION, Rect2(rect.position + Vector2(9.0, title_y - 21.0), Vector2(34.0, 34.0)), Color("#ff5b63"))
-	_draw_text(font, "テンション", rect.position + Vector2(48.0, title_y), 19, Palette.TEXT_BONE, 3)
+	var icon_size := 34.0 if _hud_frame == null else 28.0
+	var title_size := 19 if _hud_frame == null else 18
+	_draw_hud_icon(ICON_TENSION, Rect2(rect.position + Vector2(12.0, title_y - icon_size + 12.0), Vector2(icon_size, icon_size)), Color("#ff5b63"))
+	_draw_text(font, "テンション", rect.position + Vector2(48.0 if _hud_frame == null else 44.0, title_y), title_size, Palette.TEXT_BONE, 3)
 	var ratio := 0.0
 	var safe_min := 0.30
 	var safe_max := 0.74
@@ -132,17 +134,18 @@ func _draw_tension(font: Font, rect: Rect2) -> void:
 		safe_max = simulator.safe_max()
 	var bar := Rect2(rect.position + Vector2(24.0, bar_y), Vector2(rect.size.x - 58.0, 26.0 if _hud_frame == null else 24.0))
 	_draw_segment_gauge(bar, ratio, safe_min, safe_max, true)
-	_draw_text(font, "ゆるい", rect.position + Vector2(24.0, rect.size.y - 8.0), 16, Color("#72f47d"), 2)
+	var label_size := 16 if _hud_frame == null else 15
+	_draw_text(font, "ゆるい", rect.position + Vector2(24.0, rect.size.y - 8.0), label_size, Color("#72f47d"), 2)
 	var tight := "きつい"
-	var tight_w := font.get_string_size(tight, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
-	_draw_text(font, tight, rect.position + Vector2(rect.size.x - tight_w - 24.0, rect.size.y - 8.0), 16, Color("#ff823e"), 2)
+	var tight_w := font.get_string_size(tight, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
+	_draw_text(font, tight, rect.position + Vector2(rect.size.x - tight_w - 24.0, rect.size.y - 8.0), label_size, Color("#ff823e"), 2)
 
 
 func _draw_depth(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0b355f"), Color("#08213c"), Palette.GOLD)
 	var title_y := 22.0 if _hud_frame == null else 24.0
 	var title := "タナ（深さ）"
-	var title_size := 17 if _hud_frame == null else 16
+	var title_size := 17 if _hud_frame == null else 15
 	var title_w := font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x
 	var text_center_w := rect.size.x - (24.0 if _hud_frame != null else 0.0)
 	_draw_text(font, title, rect.position + Vector2((text_center_w - title_w) * 0.5, title_y), title_size, Palette.TEXT_BONE, 3)
@@ -150,7 +153,7 @@ func _draw_depth(font: Font, rect: Rect2) -> void:
 	if simulator != null:
 		depth = simulator.depth
 	var value := "%.1fm" % depth
-	var value_size := 34
+	var value_size := 34 if _hud_frame == null else 32
 	var value_w := font.get_string_size(value, HORIZONTAL_ALIGNMENT_LEFT, -1, value_size).x
 	_draw_text(font, value, rect.position + Vector2((text_center_w - value_w) * 0.5, 59.0 if _hud_frame == null else 64.0), value_size, Color("#eaf6ff"), 4)
 	var cx := rect.position.x + rect.size.x - 22.0
@@ -162,17 +165,20 @@ func _draw_stamina(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0b1828"), Color("#122f4f"), Palette.GOLD_DEEP)
 	var title_y := 25.0 if _hud_frame == null else 26.0
 	var bar_y := 42.0 if _hud_frame == null else 43.0
-	_draw_hud_icon(ICON_STAMINA, Rect2(rect.position + Vector2(9.0, title_y - 21.0), Vector2(34.0, 34.0)), Color("#6cc8ff"))
-	_draw_text(font, "魚の体力", rect.position + Vector2(48.0, title_y), 19, Palette.TEXT_BONE, 3)
+	var icon_size := 34.0 if _hud_frame == null else 28.0
+	var title_size := 19 if _hud_frame == null else 18
+	_draw_hud_icon(ICON_STAMINA, Rect2(rect.position + Vector2(12.0, title_y - icon_size + 12.0), Vector2(icon_size, icon_size)), Color("#6cc8ff"))
+	_draw_text(font, "魚の体力", rect.position + Vector2(48.0 if _hud_frame == null else 44.0, title_y), title_size, Palette.TEXT_BONE, 3)
 	var ratio := 1.0
 	if simulator != null:
 		ratio = simulator.fish_stamina_ratio()
 	var bar := Rect2(rect.position + Vector2(24.0, bar_y), Vector2(rect.size.x - 48.0, 26.0 if _hud_frame == null else 24.0))
 	_draw_segment_gauge(bar, ratio, 0.0, 1.0, false)
-	_draw_text(font, "弱い", rect.position + Vector2(24.0, rect.size.y - 8.0), 16, Color("#fff1c7"), 2)
+	var label_size := 16 if _hud_frame == null else 15
+	_draw_text(font, "弱い", rect.position + Vector2(24.0, rect.size.y - 8.0), label_size, Color("#fff1c7"), 2)
 	var strong := "強い"
-	var strong_w := font.get_string_size(strong, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
-	_draw_text(font, strong, rect.position + Vector2(rect.size.x - strong_w - 24.0, rect.size.y - 8.0), 16, Color("#fff1c7"), 2)
+	var strong_w := font.get_string_size(strong, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
+	_draw_text(font, strong, rect.position + Vector2(rect.size.x - strong_w - 24.0, rect.size.y - 8.0), label_size, Color("#fff1c7"), 2)
 
 
 func _draw_bottom_controls(font: Font, rect: Rect2) -> void:

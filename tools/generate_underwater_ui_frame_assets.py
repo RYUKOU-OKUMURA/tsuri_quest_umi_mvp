@@ -280,7 +280,17 @@ def create_fight_hud_frame() -> None:
     depth = (tension[2] + gap, top[1], tension[2] + gap + depth_w, top[3])
     stamina = (depth[2] + gap, top[1], depth[2] + gap + right_w, top[3])
 
-    _draw_navy_card(image, top, radius=12, seed=40, shadow=True)
+    _draw_clean_card(
+        image,
+        top,
+        "#0b263e",
+        radius=12,
+        border="#8f6f37",
+        inner="#c59a4c",
+        seed=40,
+        texture_strength=6,
+        shadow=True,
+    )
 
     # Keep the upper board as one piece, but let the central depth plate interrupt
     # the trim so it feels fitted into the console instead of drawn on top.
@@ -303,8 +313,8 @@ def create_fight_hud_frame() -> None:
         (depth[2] - 8, depth[3] - 14),
         (depth[2] - 80, depth[3] - 14),
     ]
-    d.polygon(left_socket, fill=_rgba("#071829", 180))
-    d.polygon(right_socket, fill=_rgba("#071829", 180))
+    d.polygon(left_socket, fill=_rgba("#061421", 205))
+    d.polygon(right_socket, fill=_rgba("#061421", 205))
 
     plate_shadow = [
         (depth[0] + 30, depth[1] + 18),
@@ -319,8 +329,8 @@ def create_fight_hud_frame() -> None:
         (depth[2] - 70, depth[3] - 16),
         (depth[0] + 70, depth[3] - 16),
     ]
-    d.polygon(plate, fill=_rgba("#174e7b", 235))
-    for inset, alpha, width_px in ((0, 170, 3), (10, 82, 2)):
+    d.polygon(plate, fill=_rgba("#123b61", 238))
+    for inset, alpha, width_px in ((0, 145, 3), (10, 62, 2)):
         d.line(
             (depth[0] + 24 + inset, depth[1] + 12, depth[0] + 70 + inset, depth[3] - 16),
             fill=_rgba("#e0bd62", alpha),
@@ -331,13 +341,13 @@ def create_fight_hud_frame() -> None:
             fill=_rgba("#e0bd62", alpha),
             width=width_px,
         )
-    d.line((depth[0] + 52, depth[1] + 26, depth[2] - 52, depth[1] + 26), fill=_rgba("#fff1a8", 95), width=2)
+    d.line((depth[0] + 52, depth[1] + 26, depth[2] - 52, depth[1] + 26), fill=_rgba("#fff1a8", 70), width=2)
     d.line((depth[0] + 76, depth[3] - 26, depth[2] - 76, depth[3] - 26), fill=(255, 255, 255, 32), width=1)
 
     title_tab = (depth[0] + 72, depth[1] + 46, depth[2] - 72, depth[1] + 94)
-    d.rounded_rectangle(title_tab, radius=8, fill=_rgba("#0c2a47", 92), outline=_rgba("#6fd6ff", 38), width=1)
+    d.rounded_rectangle(title_tab, radius=8, fill=_rgba("#081f35", 110), outline=_rgba("#6fd6ff", 28), width=1)
     value_plaque = (depth[0] + 84, depth[1] + 126, depth[2] - 84, depth[3] - 30)
-    d.rounded_rectangle(value_plaque, radius=8, fill=_rgba("#0b2b4b", 150), outline=_rgba("#cfa45a", 86), width=2)
+    d.rounded_rectangle(value_plaque, radius=8, fill=_rgba("#071d32", 170), outline=_rgba("#cfa45a", 78), width=2)
     for cx, cy in (
         (depth[0] + 54, depth[1] + 34),
         (depth[2] - 54, depth[1] + 34),
@@ -399,7 +409,7 @@ def create_fight_hud_frame() -> None:
 
     # Shared separators: enough structure without returning to the previous grid-like skin.
     for x, slant in ((depth[0] - gap // 2, 18), (depth[2] + gap // 2, -18)):
-        d.line((x + slant, top[1] + 22, x - slant, top[3] - 22), fill=_rgba("#b88b3f", 116), width=3)
+        d.line((x + slant, top[1] + 22, x - slant, top[3] - 22), fill=_rgba("#b88b3f", 94), width=3)
         d.line((x + slant + (6 if slant > 0 else -6), top[1] + 22, x - slant + (6 if slant > 0 else -6), top[3] - 22), fill=_rgba("#07121b", 100), width=2)
     for x in (hint[0] - gap // 2, menu[0] - gap // 2):
         d.line((x, bottom[1] + 16, x, bottom[3] - 16), fill=_rgba("#b88b3f", 90), width=2)

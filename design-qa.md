@@ -15,9 +15,9 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Patches Made Since Previous QA
 
-- Removed the empty icon well from the top status depth/location card in `assets/showcase/underwater/top_status_frame.png`.
-- Centered the location/depth text in `FightStatusBar` to match the reference's iconless blue card.
-- Kept the top status parchment-card icons slightly smaller so they sit more quietly inside their cards.
+- Darkened the upper HUD board in `assets/showcase/underwater/fight_hud_frame.png` so the gauge row reads closer to the reference's black/navy operation console.
+- Reduced the depth-plate highlight intensity and value/title backing brightness.
+- Reduced the live HUD icon/title/value sizes in `FightHud` so the top row feels less oversized and more compact.
 - Regenerated `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png`.
 
 ## Findings
@@ -28,11 +28,11 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
   Impact: the right panel is more readable and more deliberately framed, but it still does not fully sell the premium JRPG card quality.
   Fix: keep the new internal structure, then tune title/body optical sizes and replace any remaining generated-looking linework only if it still reads too mechanical in the next full-screen pass.
 
-- [P2] HUD top row is closer, but the board styling still needs final authored polish.
+- [P2] HUD top row is closer, but still below the reference's authored console quality.
   Location: `assets/showcase/underwater/fight_hud_frame.png`, `src/ui/components/fight_hud.gd`.
-  Evidence: the central depth module now reads as a fitted blue plate instead of a simple vertical split, and the top-row separators better echo the reference's angled segmentation. The reference still has more restrained blue/black value-panel balance, more precise gauge spacing, and a tighter custom type rhythm.
-  Impact: the HUD is now structurally closer to the target operation board, but it still does not fully reach the reference's hand-authored console quality.
-  Fix: keep the new depth-plate structure, then tune upper-board color balance, title/value type sizes, and gauge-label spacing after the right-panel frame pass.
+  Evidence: the upper board is now darker, the central depth module is less bright, and the title/icon scale is more compact. The reference still has cleaner gauge-label alignment, simpler iconography, and more deliberate black-panel spacing around the bars.
+  Impact: the HUD is closer to a single premium operation board, but it still needs final spacing and icon simplification before it can pass.
+  Fix: keep the darker frame baseline, then tune gauge-label padding and replace or simplify the ornate HUD/top-status icons if they still pull attention away from the board.
 
 - [P3] Main fish is now close, with minor runtime-placement polish remaining.
   Location: `assets/showcase/underwater/kurodai_showcase_sheet.png`, `src/ui/components/underwater_view.gd`.
@@ -54,12 +54,12 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Open Questions
 
-- None blocking. The next highest-value pass is final HUD color/label spacing and optional top-status icon simplification, while keeping the updated sidebar, HUD, hit badge, and location card as the current baseline.
+- None blocking. The next highest-value pass is icon simplification and final gauge-label spacing, while keeping the darker HUD board as the current baseline.
 
 ## Implementation Checklist
 
-1. Continue HUD upper-board polish, focusing on color balance and gauge-label spacing.
-2. Simplify or replace top-status icons if they still read noisy against the reference.
+1. Simplify or replace HUD/top-status icons that still read ornate against the reference.
+2. Tune final gauge-label padding on the HUD upper board.
 3. Tune final title/value optical sizes only after the icon decision.
 4. Re-run `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png` after each pass.
 
