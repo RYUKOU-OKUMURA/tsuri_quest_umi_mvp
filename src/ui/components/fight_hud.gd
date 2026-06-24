@@ -121,10 +121,10 @@ func _draw_tension(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0b1828"), Color("#122f4f"), Palette.GOLD_DEEP)
 	var title_y := 25.0 if _hud_frame == null else 26.0
 	var bar_y := 42.0 if _hud_frame == null else 43.0
-	var icon_size := 34.0 if _hud_frame == null else 28.0
+	var icon_size := 34.0 if _hud_frame == null else 24.0
 	var title_size := 19 if _hud_frame == null else 18
-	_draw_hud_icon(ICON_TENSION, Rect2(rect.position + Vector2(12.0, title_y - icon_size + 12.0), Vector2(icon_size, icon_size)), Color("#ff5b63"))
-	_draw_text(font, "テンション", rect.position + Vector2(48.0 if _hud_frame == null else 44.0, title_y), title_size, Palette.TEXT_BONE, 3)
+	_draw_hud_icon(ICON_TENSION, Rect2(rect.position + Vector2(12.0, title_y - icon_size + 8.0), Vector2(icon_size, icon_size)), Color("#ff5b63"))
+	_draw_text(font, "テンション", rect.position + Vector2(48.0 if _hud_frame == null else 40.0, title_y), title_size, Palette.TEXT_BONE, 3)
 	var ratio := 0.0
 	var safe_min := 0.30
 	var safe_max := 0.74
@@ -165,10 +165,10 @@ func _draw_stamina(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0b1828"), Color("#122f4f"), Palette.GOLD_DEEP)
 	var title_y := 25.0 if _hud_frame == null else 26.0
 	var bar_y := 42.0 if _hud_frame == null else 43.0
-	var icon_size := 34.0 if _hud_frame == null else 28.0
+	var icon_size := 34.0 if _hud_frame == null else 24.0
 	var title_size := 19 if _hud_frame == null else 18
-	_draw_hud_icon(ICON_STAMINA, Rect2(rect.position + Vector2(12.0, title_y - icon_size + 12.0), Vector2(icon_size, icon_size)), Color("#6cc8ff"))
-	_draw_text(font, "魚の体力", rect.position + Vector2(48.0 if _hud_frame == null else 44.0, title_y), title_size, Palette.TEXT_BONE, 3)
+	_draw_hud_icon(ICON_STAMINA, Rect2(rect.position + Vector2(12.0, title_y - icon_size + 8.0), Vector2(icon_size, icon_size)), Color("#6cc8ff"))
+	_draw_text(font, "魚の体力", rect.position + Vector2(48.0 if _hud_frame == null else 40.0, title_y), title_size, Palette.TEXT_BONE, 3)
 	var ratio := 1.0
 	if simulator != null:
 		ratio = simulator.fish_stamina_ratio()

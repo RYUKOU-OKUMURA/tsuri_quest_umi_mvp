@@ -15,9 +15,8 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Patches Made Since Previous QA
 
-- Darkened the upper HUD board in `assets/showcase/underwater/fight_hud_frame.png` so the gauge row reads closer to the reference's black/navy operation console.
-- Reduced the depth-plate highlight intensity and value/title backing brightness.
-- Reduced the live HUD icon/title/value sizes in `FightHud` so the top row feels less oversized and more compact.
+- Reduced HUD upper-row icon sizes again in `FightHud` so the symbols sit closer to the reference's small status glyphs.
+- Reduced top-status parchment-card icon size and opacity in `FightStatusBar`.
 - Regenerated `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png`.
 
 ## Findings
@@ -30,9 +29,9 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 - [P2] HUD top row is closer, but still below the reference's authored console quality.
   Location: `assets/showcase/underwater/fight_hud_frame.png`, `src/ui/components/fight_hud.gd`.
-  Evidence: the upper board is now darker, the central depth module is less bright, and the title/icon scale is more compact. The reference still has cleaner gauge-label alignment, simpler iconography, and more deliberate black-panel spacing around the bars.
+  Evidence: the upper board is now darker, the central depth module is less bright, and the title/icon scale is more compact. The latest icon-size pass reduces the ornate icon pull further. The reference still has cleaner gauge-label alignment, simpler iconography, and more deliberate black-panel spacing around the bars.
   Impact: the HUD is closer to a single premium operation board, but it still needs final spacing and icon simplification before it can pass.
-  Fix: keep the darker frame baseline, then tune gauge-label padding and replace or simplify the ornate HUD/top-status icons if they still pull attention away from the board.
+  Fix: keep the darker frame baseline, then tune gauge-label padding. Replace the icon sheet only if the remaining ornamentation still reads noisy after spacing is locked.
 
 - [P3] Main fish is now close, with minor runtime-placement polish remaining.
   Location: `assets/showcase/underwater/kurodai_showcase_sheet.png`, `src/ui/components/underwater_view.gd`.
@@ -48,19 +47,19 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 - [P2] Typography is improved but still not at the reference's custom UI quality.
   Location: all fight UI overlay text.
-  Evidence: the fight UI now uses `MPLUS1p-Bold.ttf` for the main overlay text, the top-status numbers are stronger, and the location/depth card now matches the reference's iconless centered layout. The parchment-card icons are still more ornate than the simpler reference glyphs, and the reference still has more tailored optical weights plus tighter small-text rendering.
+  Evidence: the fight UI now uses `MPLUS1p-Bold.ttf` for the main overlay text, the top-status numbers are stronger, and the location/depth card now matches the reference's iconless centered layout. The parchment-card icons are smaller and quieter, but still more ornate than the simpler reference glyphs. The reference still has more tailored optical weights plus tighter small-text rendering.
   Impact: the screen now reads more like a game UI, but typography still does not fully sell the premium mockup quality.
   Fix: keep the bold/regular split, then tune per-component font sizes and replace/simplify the top-status icon sheet if those icons still read too noisy in the final full-screen pass.
 
 ## Open Questions
 
-- None blocking. The next highest-value pass is icon simplification and final gauge-label spacing, while keeping the darker HUD board as the current baseline.
+- None blocking. The next highest-value pass is final gauge-label spacing and optical type tuning, while keeping the darker HUD board and reduced icon scale as the current baseline.
 
 ## Implementation Checklist
 
-1. Simplify or replace HUD/top-status icons that still read ornate against the reference.
-2. Tune final gauge-label padding on the HUD upper board.
-3. Tune final title/value optical sizes only after the icon decision.
+1. Tune final gauge-label padding on the HUD upper board.
+2. Tune final title/value optical sizes on HUD and right panel.
+3. Replace HUD/top-status icons only if they still read ornate after spacing is locked.
 4. Re-run `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png` after each pass.
 
 ## Follow-up Polish
