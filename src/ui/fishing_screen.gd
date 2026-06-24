@@ -41,23 +41,23 @@ func _build_screen() -> void:
 	_simulator.message_changed.connect(_on_message_changed)
 	_simulator.fight_finished.connect(_on_fight_finished)
 
-	var root := make_root_margin(14)
+	var root := make_root_margin(8)
 	var layout := VBoxContainer.new()
 	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	layout.add_theme_constant_override("separation", 6)
+	layout.add_theme_constant_override("separation", 4)
 	root.add_child(layout)
 
 	var body := HBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.add_theme_constant_override("separation", 8)
+	body.add_theme_constant_override("separation", 6)
 	layout.add_child(body)
 
 	var left_column := VBoxContainer.new()
 	left_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left_column.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left_column.size_flags_stretch_ratio = 1.52
-	left_column.add_theme_constant_override("separation", 5)
+	left_column.add_theme_constant_override("separation", 4)
 	body.add_child(left_column)
 
 	_fight_status_bar = FightStatusBarScript.new()
