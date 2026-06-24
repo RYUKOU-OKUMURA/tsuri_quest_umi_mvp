@@ -235,12 +235,15 @@ def fish_frame(frame_index: int) -> Canvas:
         c.line(x, cy - 24, x + 4, cy - 36, (205, 210, 205, 220), 1)
 
     c.ellipse(20, cy - 28, 124, cy + 26, darker)
-    for i in range(16):
-        t = i / 15
-        y0 = cy - 25 + i * 3
-        color = mix((142, 154, 162), (54, 67, 82), t) + (255,)
-        c.rect(24, y0, 119, y0 + 2, color)
-    c.ellipse(24, cy - 25, 120, cy + 23, (0, 0, 0, 0))
+    body_rx = 50.0
+    body_ry = 24.0
+    for y in range(cy - 25, cy + 24):
+        norm = (y - cy) / body_ry
+        half = int(body_rx * math.sqrt(max(0.0, 1.0 - norm * norm)))
+        t = (y - (cy - 25)) / 48.0
+        color = mix((154, 166, 174), (48, 61, 76), t) + (255,)
+        c.rect(cx - half, y, cx + half, y, color)
+    c.ellipse(24, cy - 25, 120, cy + 23, (10, 18, 28, 85))
     c.ellipse(40, cy + 3, 106, cy + 23, belly)
 
     for row in range(4):

@@ -3,6 +3,7 @@ extends ScreenBase
 const FishingSimulatorScript = preload("res://src/core/fishing_simulator.gd")
 const GaugeBarScript = preload("res://src/ui/components/gauge_bar.gd")
 const SurfaceCastViewScript = preload("res://src/ui/components/surface_cast_view.gd")
+const FightSidebarScript = preload("res://src/ui/components/fight_sidebar.gd")
 
 var _simulator: FishingSimulator
 var _trip_stats: Dictionary = {}
@@ -10,9 +11,11 @@ var _current_fish: Dictionary = {}
 var _result_recorded: bool = false
 
 var _target_option: OptionButton
+var _info_title_label: Label
 var _main_action_button: Button
 var _reel_button: Button
 var _give_button: Button
+var _harbor_button: Button
 var _message_label: Label
 var _state_label: Label
 var _action_label: Label
@@ -25,6 +28,8 @@ var _depth_label: Label
 var _safe_zone_label: Label
 var _view: UnderwaterView
 var _surface_view: SurfaceCastView
+var _fight_sidebar: FightSidebar
+var _depth_hud_label: Label
 
 var _result_overlay: ColorRect
 var _result_title: Label
@@ -53,15 +58,7 @@ func _build_screen() -> void:
 		meal_text = (
 			"%s：%s" % [String(meal_buff.get("name", "料理")), String(meal_buff.get("text", ""))]
 		)
-	layout.add_child(
-		make_header(
-			"南の島・沖　水中ファイト",
-			(
-				"Lv.%d　%s\n%s"
-				% [PlayerProgress.level, String(_trip_stats.get("rod_name", "入門竿")), meal_text]
-			)
-		)
-	)
+	layout.add_child(_make_fight_status_bar(meal_text))
 
 	var body := HBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -110,9 +107,9 @@ func _build_screen() -> void:
 	info_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	info_box.add_theme_constant_override("separation", 8)
 	info_panel.add_child(info_box)
-	var info_title := make_label("狙う魚", 24, Color("#22354a"))
-	info_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	info_box.add_child(info_title)
+	_info_title_label = make_label("狙う魚", 24, Color("#22354a"))
+	_info_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	info_box.add_child(_info_title_label)
 
 	_target_option = OptionButton.new()
 	_target_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -124,31 +121,10 @@ func _build_screen() -> void:
 	_target_option.item_selected.connect(_on_target_mode_changed)
 	info_box.add_child(_target_option)
 
-	var fish_scroll := ScrollContainer.new()
-	fish_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	fish_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	fish_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	fish_scroll.resized.connect(_sync_fish_info_scroll_size)
-	info_box.add_child(fish_scroll)
-	_fish_info_label = make_body_label("", 16, Color("#22354a"))
-	_fish_info_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	fish_scroll.add_child(_fish_info_label)
-
-	var separator := HSeparator.new()
-	info_box.add_child(separator)
-	_state_label = make_body_label("状態：準備", 17, Color("#22354a"))
-	info_box.add_child(_state_label)
-	_action_label = make_body_label("行動：--", 16, Color("#31485d"))
-	info_box.add_child(_action_label)
-	_distance_label = make_body_label("距離：-- m", 16, Color("#31485d"))
-	info_box.add_child(_distance_label)
-	_depth_label = make_body_label("水深：-- m", 16, Color("#31485d"))
-	info_box.add_child(_depth_label)
-	_safe_zone_label = make_body_label("安全域：--", 15, Color("#31485d"))
-	info_box.add_child(_safe_zone_label)
-	var back_button := make_button("港へ戻る", func() -> void: navigate("harbor"), 0)
-	back_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	info_box.add_child(back_button)
+	_fight_sidebar = FightSidebarScript.new()
+	_fight_sidebar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_fight_sidebar.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	info_box.add_child(_fight_sidebar)
 
 	var hud := make_panel(true)
 	hud.custom_minimum_size = Vector2(0, 132)
@@ -166,6 +142,19 @@ func _build_screen() -> void:
 	var tension_column := _make_gauge_column("テンション", Color("#3cbf78"), Color("#9ff0c0"))
 	_tension_bar = tension_column["bar"]
 	gauge_row.add_child(tension_column["root"])
+	var depth_panel := make_panel(true)
+	depth_panel.custom_minimum_size = Vector2(172, 58)
+	gauge_row.add_child(depth_panel)
+	var depth_box := VBoxContainer.new()
+	depth_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	depth_box.add_theme_constant_override("separation", 0)
+	depth_panel.add_child(depth_box)
+	var depth_title := make_label("タナ（深さ）", 15, Palette.TEXT_BONE, 2, Palette.TEXT_OUTLINE_DARK)
+	depth_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	depth_box.add_child(depth_title)
+	_depth_hud_label = make_label("-- m", 30, Color("#eaf6ff"), 3, Palette.TEXT_OUTLINE_DARK)
+	_depth_hud_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	depth_box.add_child(_depth_hud_label)
 	var fish_column := _make_gauge_column("魚の体力", Color("#1fa8a0"), Color("#7fe6dc"))
 	_fish_stamina_bar = fish_column["bar"]
 	gauge_row.add_child(fish_column["root"])
@@ -194,6 +183,9 @@ func _build_screen() -> void:
 	_give_button.button_up.connect(func() -> void: _simulator.set_giving_line(false))
 	_give_button.mouse_exited.connect(func() -> void: _simulator.set_giving_line(false))
 	control_row.add_child(_give_button)
+	_harbor_button = make_button("港へ戻る", func() -> void: navigate("harbor"), 0)
+	_harbor_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	control_row.add_child(_harbor_button)
 
 	_create_result_overlay()
 	_prepare_new_attempt()
@@ -217,6 +209,30 @@ func _make_gauge_column(
 	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.add_child(bar)
 	return {"root": root, "bar": bar}
+
+
+func _make_fight_status_bar(meal_text: String) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.custom_minimum_size = Vector2(0.0, 70.0)
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", 10)
+	row.add_child(_make_status_card("南の島・沖", "水中ファイト", 260.0))
+	row.add_child(_make_status_card("プレイヤー", "Lv.%d  %s" % [PlayerProgress.level, String(_trip_stats.get("rod_name", "入門竿"))], 300.0))
+	row.add_child(_make_status_card("食事効果", meal_text, 0.0))
+	return row
+
+
+func _make_status_card(title: String, body: String, min_width: float) -> PanelContainer:
+	var card := make_panel(true)
+	card.custom_minimum_size = Vector2(min_width, 70.0)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 0)
+	card.add_child(box)
+	var title_label := make_label("%s　%s" % [title, body], 18, Palette.TEXT_BONE, 3, Palette.TEXT_OUTLINE_DARK)
+	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.add_child(title_label)
+	return card
 
 
 func _create_result_overlay() -> void:
@@ -300,6 +316,7 @@ func _prepare_new_attempt() -> void:
 	_simulator.prepare(_current_fish, _trip_stats)
 	_view.bind_simulator(_simulator)
 	_surface_view.bind_simulator(_simulator)
+	_fight_sidebar.bind(_simulator, _current_fish, _trip_stats)
 	# 新規挑戦時は水上ビューから（水中は淡出状態で待機）
 	_view.modulate.a = 0.0
 	_surface_view.modulate.a = 1.0
@@ -307,30 +324,12 @@ func _prepare_new_attempt() -> void:
 
 
 func _refresh_fish_info() -> void:
-	_fish_info_label.text = (
-		"[ %s ]\n%s\n\n生息域：%s\n\n特徴：%s\n\n推定：%.0f〜%.0f cm\n売値：%d G"
-		% [
-			String(_current_fish.get("rarity", "")),
-			String(_current_fish.get("name", "不明な魚")),
-			String(_current_fish.get("habitat", "不明")),
-			String(_current_fish.get("behavior", "")),
-			float(_current_fish.get("size_min", 0.0)),
-			float(_current_fish.get("size_max", 0.0)),
-			int(_current_fish.get("sell_price", 0)),
-		]
-	)
-	call_deferred("_sync_fish_info_scroll_size")
+	if _fight_sidebar != null:
+		_fight_sidebar.set_fish(_current_fish, _trip_stats)
 
 
 func _sync_fish_info_scroll_size() -> void:
-	if _fish_info_label == null:
-		return
-	var scroll := _fish_info_label.get_parent() as ScrollContainer
-	if scroll == null:
-		return
-	var width := maxf(scroll.size.x - 4.0, 0.0)
-	var height := maxf(scroll.size.y - 4.0, _fish_info_label.get_minimum_size().y)
-	_fish_info_label.custom_minimum_size = Vector2(width, height)
+	pass
 
 
 func _on_main_action_pressed() -> void:
@@ -378,18 +377,8 @@ func _update_ui() -> void:
 	if _simulator == null:
 		return
 	_message_label.text = _simulator.action_message
-	_state_label.text = "状態：%s" % _simulator.state_label()
-	_action_label.text = "行動：%s" % _simulator.action_name
-	_distance_label.text = "距離：%.1f m" % _simulator.distance
-	_depth_label.text = "水深：%.1f m" % _simulator.depth
-	_safe_zone_label.text = (
-		"安全域 %d〜%d%%\n切断 %d%%"
-		% [
-			int(round(_simulator.safe_min() * 100.0)),
-			int(round(_simulator.safe_max() * 100.0)),
-			int(round(_simulator.line_break_limit() * 100.0)),
-		]
-	)
+	if _depth_hud_label != null:
+		_depth_hud_label.text = "%.1fm" % _simulator.depth
 	var tension_ratio := _simulator.tension / maxf(_simulator.line_break_limit(), 0.01)
 	_tension_bar.set_ratio(clampf(tension_ratio, 0.0, 1.0))
 	_update_tension_bar_color(tension_ratio)
@@ -400,6 +389,9 @@ func _update_ui() -> void:
 	_reel_button.disabled = not fighting
 	_give_button.disabled = not fighting
 	_target_option.disabled = _simulator.state != FishingSimulator.State.READY
+	_target_option.visible = _simulator.state == FishingSimulator.State.READY
+	if _info_title_label != null:
+		_info_title_label.visible = _simulator.state == FishingSimulator.State.READY
 	match _simulator.state:
 		FishingSimulator.State.READY:
 			_main_action_button.text = "仕掛けを投げる［Enter］"
