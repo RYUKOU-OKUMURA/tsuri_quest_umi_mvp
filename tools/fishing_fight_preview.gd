@@ -58,8 +58,24 @@ func _ready() -> void:
 	s._view.modulate.a = 1.0
 	s._surface_view.modulate.a = 0.0
 
-	await get_tree().create_timer(0.12).timeout
+	# Keep the comparison capture locked to the intended hit moment.
+	s.set_process(false)
+	s._view.set_process(false)
+	s._fight_sidebar.set_process(false)
+	s._fight_hud.set_process(false)
+	s._fight_status_bar.set_process(false)
+	s._simulator.action_name = "突進"
+	s._simulator.action_message = "一気に深く潜ろうとしている！ラインを緩めず耐えよう！"
+	s._simulator.visual_position = Vector2(0.42, 0.46)
+	s._simulator.visual_direction = 1.0
+	s._simulator.depth = 18.6
+	s._simulator.tension = 0.66
 	s._view._fish_flash = 0.88
+	s._view.queue_redraw()
+	s._fight_sidebar.queue_redraw()
+	s._fight_hud.queue_redraw()
+	s._fight_status_bar.queue_redraw()
+	await get_tree().process_frame
 	await get_tree().process_frame
 
 	var img := vp.get_texture().get_image()

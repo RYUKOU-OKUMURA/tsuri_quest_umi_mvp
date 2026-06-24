@@ -445,7 +445,7 @@ func _draw_showcase_target_fish(center: Vector2, scale_value: float, direction: 
 	var frame_h := float(_showcase_fish_sheet.get_height())
 	var boss_ratio := 1.42 if bool(fish_data.get("boss", false)) else 1.0
 	var stamina_scale := clampf(scale_value / boss_ratio, 0.90, 1.06)
-	var target_width_ratio := 0.38 if bool(fish_data.get("boss", false)) else 0.35
+	var target_width_ratio := 0.48 if bool(fish_data.get("boss", false)) else 0.44
 	var draw_width := size.x * target_width_ratio * stamina_scale
 	var draw_size := Vector2(draw_width, draw_width * frame_h / frame_w)
 	var frame_index := _showcase_fish_frame_index()
@@ -492,10 +492,11 @@ func _draw_hit_burst() -> void:
 		draw_texture_rect(_showcase_hit_burst, draw_rect, false, Color(1.0, 1.0, 1.0, alpha))
 	var font := get_theme_default_font()
 	var text := "ヒット！"
-	var font_size := int(clampf(size.y * 0.10, 36.0, 58.0))
+	var font_size := int(clampf(size.y * 0.16, 48.0, 76.0))
 	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
 	var pos := burst_center + Vector2(-text_width * 0.5, font_size * 0.20)
-	draw_string_outline(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 6, Color("#4d2408"))
+	draw_string_outline(font, pos + Vector2(3.0, 4.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 8, Color(0.0, 0.0, 0.0, 0.58))
+	draw_string_outline(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 8, Color("#4d2408"))
 	draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color("#ffe36e"))
 
 

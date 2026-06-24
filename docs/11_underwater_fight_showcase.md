@@ -18,6 +18,8 @@
 
 `top_status_frame.png` と `fight_hud_frame.png` は、生成素材の金飾りが強すぎたため `tools/generate_underwater_ui_frame_assets.py` で参照画像寄りの紙カード/濃紺ゲージ台として作り直している。これは最終美術素材ではなく、文字・ゲージ・アイコンが破綻しない完成寄りの枠素材スロットである。
 
+`kurodai_showcase_sheet.png` と `hit_burst.png` は、`kurodai_chroma_source.png` を元に `tools/process_underwater_fish_assets.py` で生成する。処理内容は、クロマキー除去、マゼンタ縁のデスピル、4フレームの正規化、ヒットバッジ生成である。生成元は内製差し替え用の中間素材で、画面表示は最終PNGのみを参照する。
+
 次フェーズでは、コード生成の簡易素材を磨くのではなく、以下を満たす完成素材を作ってから組み込む。
 
 - クロダイは魚らしいシルエット、鱗、ヒレ、目、背と腹の陰影が読める。
@@ -53,8 +55,9 @@
 | ファイル | 役割 | 現在の作り方 | 本番差し替え時の条件 |
 |---|---|---|---|
 | `assets/showcase/underwater/underwater_battle_bg.png` | 水中背景 | `tools/generate_underwater_showcase_assets.py` で生成 | 16:9、暗部と主役魚のコントラストを確保 |
-| `assets/showcase/underwater/kurodai_showcase_sheet.png` | クロダイ | 4 フレーム PNG スプライトシート | 透明背景、横 4 フレーム、全フレーム同サイズ |
-| `assets/showcase/underwater/hit_burst.png` | ヒット演出 | 透明 PNG | 中央配置して読めるサイズ、透明背景 |
+| `assets/showcase/underwater/kurodai_chroma_source.png` | クロダイ中間素材 | ImageGen で生成 | フラットなマゼンタ背景、横4フレーム |
+| `assets/showcase/underwater/kurodai_showcase_sheet.png` | クロダイ | `tools/process_underwater_fish_assets.py` で生成 | 透明背景、横 4 フレーム、全フレーム同サイズ |
+| `assets/showcase/underwater/hit_burst.png` | ヒット演出 | `tools/process_underwater_fish_assets.py` で生成 | 中央配置して読めるサイズ、透明背景 |
 | `assets/showcase/underwater/sidebar_frame.png` | 右パネルフレーム | 生成 UI 素材 | テキストなし、魚なし、縦長フレームとして全面表示 |
 | `assets/showcase/underwater/top_status_frame.png` | 上部ステータスバー | `tools/generate_underwater_ui_frame_assets.py` で生成 | テキストなし、横長フレームとして全面表示 |
 | `assets/showcase/underwater/fight_hud_frame.png` | 下部操作盤フレーム | `tools/generate_underwater_ui_frame_assets.py` で生成 | テキストなし、左カラム幅の二段HUDとして全面表示 |
@@ -84,8 +87,8 @@
 
 ## 次に本番化する素材
 
-1. `kurodai_showcase_sheet.png` と `hit_burst.png` を作り直す。魚は参照の落ち着いた横向きシルエットへ寄せ、ヒット演出は爆発感よりもバッジ状の読みやすさを優先する。
+1. `sidebar_frame.png` の内側カード余白を作り直す。魚カードを最優先にし、行動/タックルの下段カードはミニチュアUIに見えない情報量へ抑える。
 2. `fight_hud_frame.png` の次パスで、上段ゲージをより一体化し、下段カードとの縦間隔を詰める。
-3. `sidebar_frame.png` の内側カード余白を作り直す。魚カードを最優先にし、行動/タックルの下段カードはミニチュアUIに見えない情報量へ抑える。
-4. 日本語ピクセル/ゲームUIフォントを確定し、上部ステータス、HUD、右パネルの文字階層を作り直す。
+3. 日本語ピクセル/ゲームUIフォントを確定し、上部ステータス、HUD、右パネルの文字階層を作り直す。
+4. クロダイとヒット演出の最終アートパスを行う。魚はもう少し横長にし、ヒットバッジは参照の外形へさらに寄せる。
 5. 泡、光粒、魚影を個別スプライトまたは CPUParticles2D に分離する。
