@@ -1,6 +1,7 @@
 class_name UnderwaterView
 extends Control
 
+const FightFontsScript = preload("res://src/ui/fight_fonts.gd")
 const SHOWCASE_BG_PATH := "res://assets/showcase/underwater/underwater_battle_bg.png"
 const SHOWCASE_FISH_SHEET_PATH := "res://assets/showcase/underwater/kurodai_showcase_sheet.png"
 const SHOWCASE_HIT_BURST_PATH := "res://assets/showcase/underwater/hit_burst.png"
@@ -151,7 +152,7 @@ func _draw_depth_scale() -> void:
 	var divider_color := Color(0.55, 0.82, 0.95, 0.18)
 	draw_line(Vector2(panel_width, 0.0), Vector2(panel_width, size.y), divider_color, 1.0)
 
-	var font := get_theme_default_font()
+	var font := FightFontsScript.regular(get_theme_default_font())
 	var font_size := 12
 	var max_depth := 25.0
 	if not fish_data.is_empty():
@@ -490,7 +491,7 @@ func _draw_hit_burst() -> void:
 		var draw_size := tex_size * scale
 		var draw_rect := Rect2(burst_center - draw_size * 0.5, draw_size)
 		draw_texture_rect(_showcase_hit_burst, draw_rect, false, Color(1.0, 1.0, 1.0, alpha))
-	var font := get_theme_default_font()
+	var font := FightFontsScript.bold(get_theme_default_font())
 	var text := "ヒット！"
 	var font_size := int(clampf(size.y * 0.16, 48.0, 76.0))
 	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x

@@ -3,6 +3,7 @@ extends Control
 ## 水中ファイト看板画面の右サイドバー。
 # 魚カード、行動カード、タックルカードをまとめて描画し、参照画像の情報密度に寄せる。
 
+const FightFontsScript = preload("res://src/ui/fight_fonts.gd")
 const FISH_SHEET_PATH := "res://assets/showcase/underwater/kurodai_showcase_sheet.png"
 const SIDEBAR_FRAME_PATH := "res://assets/showcase/underwater/sidebar_frame.png"
 const ICON_SHEET_PATH := "res://assets/showcase/underwater/fight_icon_sheet.png"
@@ -48,7 +49,7 @@ func _process(_delta: float) -> void:
 
 
 func _draw() -> void:
-	var font := get_theme_default_font()
+	var font := FightFontsScript.bold(get_theme_default_font())
 	var w := size.x
 	var h := size.y
 	if w <= 0.0 or h <= 0.0:

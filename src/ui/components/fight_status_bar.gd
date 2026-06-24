@@ -3,6 +3,7 @@ extends Control
 ## 水中ファイト画面上部の専用ステータスバー。
 # 生成フレーム素材を敷き、時計・天候・所持金・現在地点/水深の文字だけを重ねる。
 
+const FightFontsScript = preload("res://src/ui/fight_fonts.gd")
 const FRAME_PATH := "res://assets/showcase/underwater/top_status_frame.png"
 const ICON_SHEET_PATH := "res://assets/showcase/underwater/fight_icon_sheet.png"
 const ICON_TIME := 0
@@ -45,7 +46,7 @@ func _draw() -> void:
 	else:
 		_draw_fallback_frame(rect)
 
-	var font := get_theme_default_font()
+	var font := FightFontsScript.bold(get_theme_default_font())
 	var slots := _slot_rects(rect)
 	_draw_status_icon(slots[0], ICON_TIME)
 	_draw_status_icon(slots[1], ICON_WEATHER)
@@ -77,10 +78,10 @@ func _draw_status_slot(font: Font, rect: Rect2, title: String, body: String, dar
 	if dark:
 		text_x += rect.size.y * 0.16
 	var max_width := rect.end.x - text_x - 18.0
-	var title_size := 14
-	var body_size := 22 if not dark else 19
+	var title_size := 15 if dark else 14
+	var body_size := 24 if not dark else 21
 	if rect.size.x < 230.0:
-		body_size = 20
+		body_size = 22
 	var title_color := Color("#6d4d25") if not dark else Palette.GOLD_BRIGHT
 	var body_color := Color("#21170f") if not dark else Color("#eaf6ff")
 	var outline := 0 if not dark else 3
@@ -89,12 +90,12 @@ func _draw_status_slot(font: Font, rect: Rect2, title: String, body: String, dar
 	if not dark and title == "AM":
 		var am_y := rect.position.y + rect.size.y * 0.66
 		_draw_text_clipped(font, title, Vector2(text_x, am_y), 14, title_color, max_width, outline)
-		_draw_text_clipped(font, body, Vector2(text_x + 34.0, am_y + 2.0), 24, body_color, max_width - 34.0, outline)
+		_draw_text_clipped(font, body, Vector2(text_x + 34.0, am_y + 3.0), 28, body_color, max_width - 34.0, outline)
 		return
 	if not dark and title == "快晴":
 		var inline_y := rect.position.y + rect.size.y * 0.66
-		_draw_text_clipped(font, title, Vector2(text_x, inline_y), 18, body_color, max_width, outline)
-		_draw_text_clipped(font, body, Vector2(text_x + 78.0, inline_y), 18, Palette.TEXT_DARK, max_width - 78.0, outline)
+		_draw_text_clipped(font, title, Vector2(text_x, inline_y), 19, body_color, max_width, outline)
+		_draw_text_clipped(font, body, Vector2(text_x + 80.0, inline_y), 19, Palette.TEXT_DARK, max_width - 80.0, outline)
 		return
 	_draw_text_clipped(font, title, Vector2(text_x, title_y), title_size, title_color, max_width, outline)
 	_draw_text_clipped(font, body, Vector2(text_x, body_y), body_size, body_color, max_width, outline)

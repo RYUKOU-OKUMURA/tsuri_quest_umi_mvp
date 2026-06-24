@@ -20,6 +20,8 @@
 
 `kurodai_showcase_sheet.png` と `hit_burst.png` は、`kurodai_chroma_source.png` を元に `tools/process_underwater_fish_assets.py` で生成する。処理内容は、クロマキー除去、マゼンタ縁のデスピル、4フレームの正規化、ヒットバッジ生成である。生成元は内製差し替え用の中間素材で、画面表示は最終PNGのみを参照する。
 
+水中ファイトの主要文字は `src/ui/fight_fonts.gd` から `MPLUS1p-Bold.ttf` を使う。通常テーマ全体は既存の `MPLUS1p-Regular.ttf` を維持し、看板画面の上部ステータス、HUD、右パネル、ヒット文字だけ太い表示に寄せる。
+
 次フェーズでは、コード生成の簡易素材を磨くのではなく、以下を満たす完成素材を作ってから組み込む。
 
 - クロダイは魚らしいシルエット、鱗、ヒレ、目、背と腹の陰影が読める。
@@ -62,6 +64,8 @@
 | `assets/showcase/underwater/top_status_frame.png` | 上部ステータスバー | `tools/generate_underwater_ui_frame_assets.py` で生成 | テキストなし、横長フレームとして全面表示 |
 | `assets/showcase/underwater/fight_hud_frame.png` | 下部操作盤フレーム | `tools/generate_underwater_ui_frame_assets.py` で生成 | テキストなし、左カラム幅の二段HUDとして全面表示 |
 | `assets/showcase/underwater/fight_icon_sheet.png` | 共通機能アイコン | 生成 UI 素材 | 透明 PNG、3x3 グリッド、各セル同サイズ |
+| `assets/fonts/MPLUS1p-Bold.ttf` | 水中ファイト主要UIフォント | Google Fonts の M PLUS 1p Bold | OFL同梱、見出し/数値/ヒット文字用 |
+| `assets/fonts/OFL-MPLUS1p.txt` | M PLUS 1p ライセンス | Google Fonts 由来 | フォント更新時も保持 |
 
 ## 実装方針
 
@@ -71,10 +75,11 @@
 - `FightStatusBar` は `top_status_frame.png` を敷き、時計・天候・所持金・水深のテキストだけを Godot 側で重ねる。
 - `FightHud` は画面全幅ではなく左カラム内に置き、`fight_hud_frame.png` の上にゲージ色、現在位置、深度、操作文字を重ねる。
 - `FightStatusBar`、`FightHud`、`FightSidebar` は `fight_icon_sheet.png` の3x3セルを使い、コード描画アイコンを本番素材へ置き換える。
+- `FightStatusBar`、`FightHud`、`FightSidebar`、`UnderwaterView` のヒット文字は `src/ui/fight_fonts.gd` から水中ファイト専用の太字フォントを読み込む。
 - 右パネルは汎用 `make_panel()` の中に入れず、`FightSidebar` の専用フレームを直接表示する。二重枠にするとサイドバー素材が縮み、参照画像のカード品質から離れるため。
 - `UnderwaterView` は主役魚とヒット演出のスケールを参照画像寄りに抑え、深度目盛りは背景に馴染む低コントラスト表示にする。
 - `tools/fishing_fight_preview.gd` は参照比較用に `クロダイ / レア / 44.2cm` 相当の固定状態を作り、画面品質の比較条件を揃える。ゲーム本編の魚データは別途維持する。
-- 画面の完成度チェックは、Godot で `tools/fishing_fight_preview.gd` のキャプチャを取り、`tools/build_fight_comparison_html.py` でリファレンスと横並び比較する。
+- 画面の完成度チェックは、Godot で `tools/fishing_fight_preview.gd` のキャプチャを取り、`tools/build_fight_comparison_html.py` と `tools/build_fight_comparison_images.py` でリファレンスと横並び比較する。
 
 ## 品質ゲート
 
@@ -88,8 +93,8 @@
 
 ## 次に本番化する素材
 
-1. 日本語ピクセル/ゲームUIフォントを確定し、上部ステータス、HUD、右パネルの文字階層を作り直す。現在の `MPLUS1p-Regular.ttf` だけでは見出しと数値の太さが足りない。
-2. `sidebar_frame.png` をもう一段クリーンにする。現状は二重枠破綻は解消したが、黒/金の外枠が重く、行動/タックルの下段カードはまだ狭い。
-3. `fight_hud_frame.png` の線ノイズを減らし、下段カードを一体化した操作盤として作り直す。
-4. クロダイとヒット演出の最終アートパスを行う。魚はもう少し横長にし、ヒットバッジは参照の外形へさらに寄せる。
+1. `sidebar_frame.png` をもう一段クリーンにする。現状は二重枠破綻は解消したが、黒/金の外枠が重く、行動/タックルの下段カードはまだ狭い。
+2. `fight_hud_frame.png` の線ノイズを減らし、下段カードを一体化した操作盤として作り直す。
+3. クロダイとヒット演出の最終アートパスを行う。魚はもう少し横長にし、ヒットバッジは参照の外形へさらに寄せる。
+4. 文字サイズの最終調整を行う。`MPLUS1p-Bold.ttf` で太さは改善したが、右パネル本文やキー表示は枠再調整後に再チューニングする。
 5. 泡、光粒、魚影を個別スプライトまたは CPUParticles2D に分離する。

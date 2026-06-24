@@ -15,24 +15,23 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Patches Made Since Previous QA
 
-- Added reproducible `sidebar_frame.png` generation to `tools/generate_underwater_ui_frame_assets.py`.
-- Re-authored `sidebar_frame.png` as a dedicated right-panel frame with a larger fish card and tighter action/tackle cards.
-- Re-authored `fight_hud_frame.png` so the top gauge row reads more like one connected operation board instead of separated cards.
-- Retuned `FightSidebar` layout: fish name/tag sizing, larger portrait slot, centered estimate value, two-line fish detail copy, larger action icon, reduced tackle copy.
-- Removed the generic outer `make_panel()` wrapper around the right sidebar in `FishingScreen`, so the dedicated sidebar art is no longer shrunk inside a second parchment panel.
-- Removed baked fish-card divider lines from `sidebar_frame.png` after they conflicted with the live Godot text/dividers.
+- Added `assets/fonts/MPLUS1p-Bold.ttf` and `assets/fonts/OFL-MPLUS1p.txt`.
+- Added `src/ui/fight_fonts.gd` so the showcase fight UI can use Regular/Bold fonts without changing the rest of the game's theme.
+- Applied the bold face to `FightStatusBar`, `FightHud`, `FightSidebar`, and the live `ヒット！` text.
+- Increased top-status numeric hierarchy for the clock, money, weather, and depth/location slot.
+- Added `tools/build_fight_comparison_images.py` so full, HUD/sidebar, and fish/hit comparison PNGs are reproducible instead of ad hoc one-off scripts.
 
 ## Findings
 
 - [P2] Right panel is structurally better but still below reference card quality.
   Location: `assets/showcase/underwater/sidebar_frame.png`, `src/ui/components/fight_sidebar.gd`, `src/ui/fishing_screen.gd`.
-  Evidence: the implementation no longer has the extra cream outer wrapper and no longer has a divider line crossing the estimate text. The panel reads more like a dedicated JRPG sidebar. It still has heavier black/gold trim, smaller lower-card content, and less refined card rhythm than the reference.
+  Evidence: the implementation no longer has the extra cream outer wrapper and no longer has a divider line crossing the estimate text. With `MPLUS1p-Bold.ttf`, titles and values now read stronger. The panel still has heavier black/gold trim, smaller lower-card content, and less refined card rhythm than the reference.
   Impact: this is a real step toward the target, but the right panel still feels more like a generated UI frame than finished game art.
-  Fix: final sidebar pass should use a cleaner hand-authored/card-painted frame, enlarge the lower card body areas, and tune the title/body font styles after the font pass.
+  Fix: final sidebar pass should use a cleaner hand-authored/card-painted frame and enlarge the lower card body areas.
 
 - [P2] HUD top row is more connected, but the board styling is still not as authored as the reference.
   Location: `assets/showcase/underwater/fight_hud_frame.png`, `src/ui/components/fight_hud.gd`.
-  Evidence: the top gauge row now reads as one navy operation board with a central angular depth plate. The reference has stronger angular segmentation and tighter vertical rhythm; the implementation still has generated-looking linework and a plainer lower control row.
+  Evidence: the top gauge row now reads as one navy operation board with a central angular depth plate, and the bold labels/values are closer to the reference. The reference still has stronger angular segmentation and tighter vertical rhythm; the implementation still has generated-looking linework and a plainer lower control row.
   Impact: the HUD is no longer fragmented, but it still lacks the reference's compact, deliberate console feel.
   Fix: reduce generated line noise, bring the depth module closer to the reference shape, and tune the lower control row as one integrated strip instead of three equal cards.
 
@@ -48,23 +47,23 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
   Impact: the moment is legible, but the effect is still not visually unified with the target mockup.
   Fix: tighten the burst silhouette, reduce height, and retune vertical placement after the final HUD pass.
 
-- [P2] Typography remains the largest cross-cutting quality gap.
+- [P2] Typography is improved but still not at the reference's custom UI quality.
   Location: all fight UI overlay text.
-  Evidence: the project uses `MPLUS1p-Regular.ttf` through the theme, but the reference has heavier game UI text, stronger numeric hierarchy, and better optical weights. Current small labels in the right panel and HUD still feel thin and cramped.
-  Impact: even with better frames, text keeps the screen in prototype territory.
-  Fix: import a heavier Japanese UI/display font or add a bold face, then define fixed styles for top status values, HUD labels, side-card titles, body copy, and key chips.
+  Evidence: the fight UI now uses `MPLUS1p-Bold.ttf` for the main overlay text and the top-status numbers are stronger. The reference still has more tailored optical weights, tighter small-text rendering, and a more bespoke game-font feel.
+  Impact: the screen now reads more like a game UI, but typography still does not fully sell the premium mockup quality.
+  Fix: keep the bold/regular split, then tune per-component font sizes and consider a more display-like Japanese face for title/value text only.
 
 ## Open Questions
 
-- None blocking. The next highest-value pass is typography plus a cleaner final sidebar/HUD frame pass.
+- None blocking. The next highest-value pass is a cleaner final sidebar/HUD frame pass, followed by final fish/hit art.
 
 ## Implementation Checklist
 
-1. Add a heavier Japanese UI font and retune all fight-screen text sizes/weights.
-2. Rework the sidebar frame one more time with less heavy black trim and larger lower-card body regions.
-3. Reduce HUD frame line noise and make the lower control row read as one integrated operation strip.
-4. Do the final kurodai art pass against `/tmp/tsuri_fish_hit_focus.png`.
-5. Tighten `hit_burst.png` placement/silhouette after HUD placement stabilizes.
+1. Rework the sidebar frame one more time with less heavy black trim and larger lower-card body regions.
+2. Reduce HUD frame line noise and make the lower control row read as one integrated operation strip.
+3. Do the final kurodai art pass against `/tmp/tsuri_fish_hit_focus.png`.
+4. Tighten `hit_burst.png` placement/silhouette after HUD placement stabilizes.
+5. Continue font-size tuning after the next frame pass, especially small right-panel body text.
 6. Re-run `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png` after each pass.
 
 ## Follow-up Polish

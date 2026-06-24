@@ -8,6 +8,7 @@ signal reel_changed(active: bool)
 signal give_line_changed(active: bool)
 signal harbor_pressed
 
+const FightFontsScript = preload("res://src/ui/fight_fonts.gd")
 const HUD_FRAME_PATH := "res://assets/showcase/underwater/fight_hud_frame.png"
 const ICON_SHEET_PATH := "res://assets/showcase/underwater/fight_icon_sheet.png"
 const ICON_TENSION := 4
@@ -84,7 +85,7 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _draw() -> void:
-	var font := get_theme_default_font()
+	var font := FightFontsScript.bold(get_theme_default_font())
 	var rect := Rect2(Vector2.ZERO, size)
 	if rect.size.x <= 0.0 or rect.size.y <= 0.0:
 		return
