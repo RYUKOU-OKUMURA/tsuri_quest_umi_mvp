@@ -1,6 +1,11 @@
 class_name UnderwaterView
 extends Control
 
+const SHOWCASE_BG_PATH := "res://assets/showcase/underwater/underwater_battle_bg.png"
+const SHOWCASE_FISH_SHEET_PATH := "res://assets/showcase/underwater/kurodai_showcase_sheet.png"
+const SHOWCASE_HIT_BURST_PATH := "res://assets/showcase/underwater/hit_burst.png"
+const SHOWCASE_FISH_FRAME_COUNT := 4
+
 var simulator: FishingSimulator
 var fish_data: Dictionary = {}
 var _time: float = 0.0
@@ -9,6 +14,9 @@ var _fish_flash: float = 0.0
 var _badge_style: StyleBoxFlat
 var _meter_track: StyleBoxFlat
 var _meter_fill: StyleBoxFlat
+var _showcase_bg: Texture2D
+var _showcase_fish_sheet: Texture2D
+var _showcase_hit_burst: Texture2D
 
 
 func bind_simulator(value: FishingSimulator) -> void:
@@ -20,6 +28,7 @@ func bind_simulator(value: FishingSimulator) -> void:
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	clip_contents = true
+	_load_showcase_assets()
 
 
 func _process(delta: float) -> void:
@@ -45,18 +54,56 @@ func _on_view_state_changed(state: int) -> void:
 
 func _draw() -> void:
 	draw_set_transform(Juicer.get_offset())
-	_draw_water_background()
+	if _showcase_bg != null:
+		_draw_showcase_background()
+	else:
+		_draw_water_background()
 	_draw_depth_scale()
-	_draw_seabed()
-	_draw_background_fish()
+	if _showcase_bg == null:
+		_draw_seabed()
+		_draw_background_fish()
 	_draw_bubbles()
 	if simulator == null or fish_data.is_empty():
 		_draw_frame()
 		return
 	_draw_line_and_bait()
 	_draw_target_fish()
+	_draw_hit_burst()
 	_draw_fight_overlay()
 	_draw_frame()
+
+
+func _load_showcase_assets() -> void:
+	_showcase_bg = _load_texture_if_exists(SHOWCASE_BG_PATH)
+	_showcase_fish_sheet = _load_texture_if_exists(SHOWCASE_FISH_SHEET_PATH)
+	_showcase_hit_burst = _load_texture_if_exists(SHOWCASE_HIT_BURST_PATH)
+
+
+func _load_texture_if_exists(path: String) -> Texture2D:
+	if ResourceLoader.exists(path) or FileAccess.file_exists(path):
+		return load(path) as Texture2D
+	return null
+
+
+func _draw_showcase_background() -> void:
+	_draw_cover_texture(_showcase_bg, Rect2(Vector2.ZERO, size), Color.WHITE)
+	# 背景PNGに重ねる軽い水中の揺らぎ。主素材を邪魔しない密度に抑える。
+	for index in range(6):
+		var y := size.y * (0.12 + float(index) * 0.085)
+		var x := fmod(_time * (8.0 + index) + float(index) * 121.0, size.x + 90.0) - 45.0
+		draw_line(Vector2(x, y), Vector2(x + 34.0, y + sin(_time + index) * 2.0), Color(0.74, 0.94, 1.0, 0.13), 2.0)
+
+
+func _draw_cover_texture(texture: Texture2D, target_rect: Rect2, modulate: Color) -> void:
+	if texture == null:
+		return
+	var tex_size := texture.get_size()
+	if tex_size.x <= 0.0 or tex_size.y <= 0.0:
+		return
+	var scale := maxf(target_rect.size.x / tex_size.x, target_rect.size.y / tex_size.y)
+	var draw_size := tex_size * scale
+	var draw_pos := target_rect.position + (target_rect.size - draw_size) * 0.5
+	draw_texture_rect(texture, Rect2(draw_pos, draw_size), false, modulate)
 
 
 func _draw_water_background() -> void:
@@ -264,6 +311,9 @@ func _draw_target_fish() -> void:
 	var stamina_scale := lerpf(0.92, 1.04, simulator.fish_stamina_ratio())
 	var scale_value := boss_scale * stamina_scale
 	var direction := simulator.visual_direction
+	if _showcase_fish_sheet != null:
+		_draw_showcase_target_fish(center, scale_value, direction)
+		return
 	var body_color := Color.from_string(String(fish_data.get("color", "#8aa7b5")), Color("#8aa7b5"))
 	var light_color := body_color.lightened(0.28)
 	var dark_color := body_color.darkened(0.34)
@@ -388,6 +438,62 @@ func _draw_target_fish() -> void:
 	# ヒットフラッシュ（アワセ時など）
 	if _fish_flash > 0.0:
 		_draw_ellipse(center, rx, ry, Color(1.0, 1.0, 1.0, _fish_flash * 0.6))
+
+
+func _draw_showcase_target_fish(center: Vector2, scale_value: float, direction: float) -> void:
+	var frame_w := float(_showcase_fish_sheet.get_width()) / float(SHOWCASE_FISH_FRAME_COUNT)
+	var frame_h := float(_showcase_fish_sheet.get_height())
+	var screen_scale := clampf(size.y / 430.0, 0.72, 1.16)
+	var draw_size := Vector2(frame_w, frame_h) * scale_value * screen_scale
+	var frame_index := _showcase_fish_frame_index()
+	var src := Rect2(frame_w * float(frame_index), 0.0, frame_w, frame_h)
+	var dst := Rect2(-draw_size * 0.5, draw_size)
+
+	_draw_ellipse(center + Vector2(0.0, draw_size.y * 0.30), draw_size.x * 0.34, draw_size.y * 0.11, Color(0.0, 0.0, 0.0, 0.18), 28)
+	if simulator.state == FishingSimulator.State.FIGHT:
+		draw_circle(center, draw_size.x * 0.34, Color(0.44, 0.89, 1.0, 0.10))
+
+	draw_set_transform(Juicer.get_offset() + center, 0.0, Vector2(direction, 1.0))
+	draw_texture_rect_region(_showcase_fish_sheet, dst, src, Color.WHITE)
+	if _fish_flash > 0.0:
+		draw_texture_rect_region(_showcase_fish_sheet, dst, src, Color(1.0, 1.0, 1.0, _fish_flash * 0.52))
+	draw_set_transform(Juicer.get_offset())
+
+
+func _showcase_fish_frame_index() -> int:
+	if simulator.state == FishingSimulator.State.CAUGHT or simulator.state == FishingSimulator.State.ESCAPED:
+		return 3
+	if _fish_flash > 0.45:
+		return 2
+	match simulator.action_name:
+		"突進", "潜水":
+			return 2
+		"休む":
+			return 3
+		"反転", "方向転換":
+			return 1
+		_:
+			return int(floor(_time * 5.0)) % 2
+
+
+func _draw_hit_burst() -> void:
+	if _fish_flash <= 0.02 or simulator == null:
+		return
+	var alpha := clampf(_fish_flash, 0.0, 1.0)
+	var burst_center := Vector2(size.x * 0.50, size.y * 0.64)
+	if _showcase_hit_burst != null:
+		var tex_size := _showcase_hit_burst.get_size()
+		var scale := clampf(size.x / 900.0, 0.72, 1.12)
+		var draw_size := tex_size * scale
+		var draw_rect := Rect2(burst_center - draw_size * 0.5, draw_size)
+		draw_texture_rect(_showcase_hit_burst, draw_rect, false, Color(1.0, 1.0, 1.0, alpha))
+	var font := get_theme_default_font()
+	var text := "ヒット！"
+	var font_size := int(clampf(size.y * 0.11, 38.0, 64.0))
+	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
+	var pos := burst_center + Vector2(-text_width * 0.5, font_size * 0.34)
+	draw_string_outline(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 5, Color("#4d2408"))
+	draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color("#ffe36e"))
 
 
 func _draw_fight_overlay() -> void:

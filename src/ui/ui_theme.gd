@@ -154,8 +154,8 @@ static func _tex(tex: Texture2D, margin: int = 10, shadow_expand: int = 4) -> St
 	sb.texture_margin_top = margin
 	sb.texture_margin_right = margin
 	sb.texture_margin_bottom = margin
-	sb.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE_FIT
-	sb.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE_FIT
+	sb.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+	sb.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
 	sb.expand_margin_left = shadow_expand
 	sb.expand_margin_top = shadow_expand
 	sb.expand_margin_right = shadow_expand

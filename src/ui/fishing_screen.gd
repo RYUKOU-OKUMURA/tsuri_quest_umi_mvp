@@ -131,6 +131,7 @@ func _build_screen() -> void:
 	fish_scroll.resized.connect(_sync_fish_info_scroll_size)
 	info_box.add_child(fish_scroll)
 	_fish_info_label = make_body_label("", 16, Color("#22354a"))
+	_fish_info_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	fish_scroll.add_child(_fish_info_label)
 
 	var separator := HSeparator.new()
@@ -328,7 +329,8 @@ func _sync_fish_info_scroll_size() -> void:
 	if scroll == null:
 		return
 	var width := maxf(scroll.size.x - 4.0, 0.0)
-	_fish_info_label.custom_minimum_size = Vector2(width, _fish_info_label.get_minimum_size().y)
+	var height := maxf(scroll.size.y - 4.0, _fish_info_label.get_minimum_size().y)
+	_fish_info_label.custom_minimum_size = Vector2(width, height)
 
 
 func _on_main_action_pressed() -> void:
