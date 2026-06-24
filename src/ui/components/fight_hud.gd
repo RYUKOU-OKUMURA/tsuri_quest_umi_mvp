@@ -192,8 +192,9 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 	var hint := Rect2(Vector2(bait.end.x + gap, rect.position.y), Vector2(hint_w, rect.size.y))
 	var menu := Rect2(Vector2(hint.end.x + gap, rect.position.y), Vector2(menu_w, rect.size.y))
 	_main_rect = bait
-	_reel_rect = Rect2(hint.position + Vector2(8.0, 30.0), Vector2(hint.size.x * 0.30, hint.size.y - 34.0))
-	_give_rect = Rect2(hint.position + Vector2(hint.size.x * 0.35, 30.0), Vector2(hint.size.x * 0.30, hint.size.y - 34.0))
+	var key_slots := _hint_key_slots(hint)
+	_reel_rect = key_slots[0]
+	_give_rect = key_slots[1]
 	_harbor_rect = Rect2(menu.position, menu.size)
 
 	_draw_panel(bait, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
@@ -213,9 +214,14 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 
 	_draw_panel(hint, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	_draw_text(font, "操作のヒント", hint.position + Vector2(18.0, 25.0), 18, Color("#6a4c2b"), 0)
-	_draw_key_hint(font, _reel_rect, "A", "巻く")
-	_draw_key_hint(font, _give_rect, "B", "緩める")
-	_draw_key_hint(font, Rect2(hint.position + Vector2(hint.size.x - 128.0, 30.0), Vector2(120.0, 30.0)), "L/R", "調整")
+	if _hud_frame != null:
+		_draw_key_hint_compact(font, key_slots[0], "A", "巻く")
+		_draw_key_hint_compact(font, key_slots[1], "B", "緩める")
+		_draw_key_hint_compact(font, key_slots[2], "L/R", "調整")
+	else:
+		_draw_key_hint(font, _reel_rect, "A", "巻く")
+		_draw_key_hint(font, _give_rect, "B", "緩める")
+		_draw_key_hint(font, key_slots[2], "L/R", "調整")
 
 	_draw_panel(menu, Color("#0b355f"), Color("#08213c"), Palette.GOLD)
 	_draw_key_row(font, menu.position + Vector2(22.0, menu.size.y * 0.42), "+", "ポーズ")
@@ -328,6 +334,18 @@ func _draw_key_hint(font: Font, rect: Rect2, key: String, label: String) -> void
 	_draw_key_row(font, rect.position + Vector2(14.0, 20.0), key, label)
 
 
+func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String) -> void:
+	var key_w := 28.0 if key.length() <= 1 else 42.0
+	var key_rect := Rect2(rect.position + Vector2(8.0, 2.0), Vector2(key_w, 22.0))
+	draw_rect(key_rect, Color("#253247"), true)
+	draw_rect(key_rect, Color("#d5b56b"), false, 1.0)
+	var key_size := 14
+	var key_text_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
+	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 16.0), key_size, Color.WHITE, 1)
+	var label_size := 15
+	_draw_text(font, label, key_rect.position + Vector2(key_rect.size.x + 7.0, 16.0), label_size, Color("#2b2117"), 0)
+
+
 func _draw_key_row(font: Font, pos: Vector2, key: String, label: String) -> void:
 	var key_rect := Rect2(pos + Vector2(0.0, -14.0), Vector2(28.0 if key.length() <= 1 else 46.0, 24.0))
 	draw_rect(key_rect, Color("#26344a"), true)
@@ -336,3 +354,22 @@ func _draw_key_row(font: Font, pos: Vector2, key: String, label: String) -> void
 	var key_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
 	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_w) * 0.5, 17.0), key_size, Color.WHITE, 1)
 	_draw_text(font, label, pos + Vector2(key_rect.size.x + 8.0, 3.0), 16, Color("#2b2117") if key != "+" and key != "-" else Palette.TEXT_BONE, 0 if key != "+" and key != "-" else 2)
+
+
+func _hint_key_slots(hint: Rect2) -> Array[Rect2]:
+	if _hud_frame == null:
+		return [
+			Rect2(hint.position + Vector2(8.0, 30.0), Vector2(hint.size.x * 0.30, hint.size.y - 34.0)),
+			Rect2(hint.position + Vector2(hint.size.x * 0.35, 30.0), Vector2(hint.size.x * 0.30, hint.size.y - 34.0)),
+			Rect2(hint.position + Vector2(hint.size.x - 128.0, 30.0), Vector2(120.0, 30.0)),
+		]
+	var slot_gap := 12.0
+	var slot_w := (hint.size.x - 44.0 - slot_gap * 2.0) / 3.0
+	var slot_y := hint.position.y + 38.0
+	var slot_h := maxf(32.0, hint.size.y - 64.0)
+	var x0 := hint.position.x + 22.0
+	return [
+		Rect2(Vector2(x0, slot_y), Vector2(slot_w, slot_h)),
+		Rect2(Vector2(x0 + slot_w + slot_gap, slot_y), Vector2(slot_w, slot_h)),
+		Rect2(Vector2(x0 + (slot_w + slot_gap) * 2.0, slot_y), Vector2(slot_w, slot_h)),
+	]

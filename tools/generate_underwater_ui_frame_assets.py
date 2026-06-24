@@ -469,9 +469,20 @@ def create_fight_hud_frame() -> None:
         shadow=False,
     )
     _draw_paper_inset(d, (hint_panel[0] + 14, hint_panel[1] + 12, hint_panel[2] - 14, hint_panel[1] + 44), alpha=28)
+    slot_gap = 24
+    slot_x0 = hint[0] + 44
+    slot_y0 = hint[1] + 76
+    slot_w = int((hint[2] - hint[0] - 88 - slot_gap * 2) / 3)
+    slot_h = 64
     for i in range(3):
-        x = hint_panel[0] + 34 + i * 210
-        d.rounded_rectangle((x, hint_panel[1] + 54, x + 172, hint_panel[3] - 18), radius=8, fill=(255, 251, 233, 20), outline=_rgba("#b89b64", 34), width=1)
+        x = slot_x0 + i * (slot_w + slot_gap)
+        d.rounded_rectangle(
+            (x, slot_y0, x + slot_w, slot_y0 + slot_h),
+            radius=8,
+            fill=(247, 239, 216, 255),
+            outline=_rgba("#b89b64", 72),
+            width=1,
+        )
     _draw_clean_card(
         image,
         menu_panel,
