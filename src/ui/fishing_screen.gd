@@ -61,7 +61,7 @@ func _build_screen() -> void:
 	var left_column := VBoxContainer.new()
 	left_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left_column.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	left_column.size_flags_stretch_ratio = 1.65
+	left_column.size_flags_stretch_ratio = 1.52
 	left_column.add_theme_constant_override("separation", 5)
 	body.add_child(left_column)
 
@@ -110,7 +110,7 @@ func _build_screen() -> void:
 	left_column.add_child(_fight_hud)
 
 	var info_panel := MarginContainer.new()
-	info_panel.custom_minimum_size = Vector2(306, 0)
+	info_panel.custom_minimum_size = Vector2(326, 0)
 	info_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	info_panel.size_flags_stretch_ratio = 0.0
 	info_panel.clip_contents = true

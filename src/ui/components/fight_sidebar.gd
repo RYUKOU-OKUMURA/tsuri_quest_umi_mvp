@@ -5,6 +5,7 @@ extends Control
 
 const FightFontsScript = preload("res://src/ui/fight_fonts.gd")
 const FISH_SHEET_PATH := "res://assets/showcase/underwater/kurodai_showcase_sheet.png"
+const FISH_CARD_PORTRAIT_PATH := "res://assets/showcase/underwater/kurodai_card_portrait.png"
 const SIDEBAR_FRAME_PATH := "res://assets/showcase/underwater/sidebar_frame.png"
 const ICON_SHEET_PATH := "res://assets/showcase/underwater/fight_icon_sheet.png"
 const FISH_FRAME_COUNT := 4
@@ -16,6 +17,7 @@ var fish_data: Dictionary = {}
 var trip_stats: Dictionary = {}
 
 var _fish_sheet: Texture2D
+var _fish_card_portrait: Texture2D
 var _sidebar_frame: Texture2D
 var _icons: Texture2D
 
@@ -37,6 +39,8 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if ResourceLoader.exists(FISH_SHEET_PATH):
 		_fish_sheet = load(FISH_SHEET_PATH) as Texture2D
+	if ResourceLoader.exists(FISH_CARD_PORTRAIT_PATH):
+		_fish_card_portrait = load(FISH_CARD_PORTRAIT_PATH) as Texture2D
 	if ResourceLoader.exists(SIDEBAR_FRAME_PATH):
 		_sidebar_frame = load(SIDEBAR_FRAME_PATH) as Texture2D
 	if ResourceLoader.exists(ICON_SHEET_PATH):
@@ -98,21 +102,21 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	_draw_rarity_tag(font, Rect2(inner.position + Vector2(inner.size.x - 52.0, 8.0), Vector2(48.0, 22.0)), rarity)
 
 	var fish_rect := Rect2(
-		inner.position + Vector2(8.0, 42.0),
+		inner.position + Vector2(6.0, 46.0),
 		Vector2(
-			inner.size.x - 16.0,
-			maxf(82.0, rect.size.y * (0.46 if _sidebar_frame != null else 0.37))
+			inner.size.x - 12.0,
+			maxf(82.0, rect.size.y * (0.52 if _sidebar_frame != null else 0.37))
 		)
 	)
 	_draw_fish_portrait(fish_rect)
-	var divider_y := fish_rect.end.y + (9.0 if _sidebar_frame != null else 6.0)
+	var divider_y := fish_rect.end.y + (6.0 if _sidebar_frame != null else 6.0)
 	draw_line(Vector2(inner.position.x + 8.0, divider_y), Vector2(inner.end.x - 8.0, divider_y), Color("#c9b486"), 1.0)
 	var estimate := (float(fish_data.get("size_min", 0.0)) + float(fish_data.get("size_max", 0.0))) * 0.5
 	var estimate_size := 22 if _sidebar_frame != null else 23
 	_draw_centered_text(font, "推定 %.1f cm" % estimate, Rect2(inner.position.x, divider_y + 8.0, inner.size.x, 30.0), estimate_size, Color("#2b2117"), 0)
 	var desc_y := divider_y + 44.0
 	draw_line(Vector2(inner.position.x + 8.0, desc_y - 10.0), Vector2(inner.end.x - 8.0, desc_y - 10.0), Color("#d6c299"), 1.0)
-	var detail_gap := 17.0 if _sidebar_frame != null else 21.0
+	var detail_gap := 16.0 if _sidebar_frame != null else 21.0
 	_draw_detail_line(font, "岩場周りで警戒心が強い。", Vector2(inner.position.x + 16.0, desc_y), inner.size.x - 28.0)
 	_draw_detail_line(font, "好むエサ：オキアミ・カニ", Vector2(inner.position.x + 16.0, desc_y + detail_gap), inner.size.x - 28.0)
 	if _sidebar_frame == null:
@@ -134,8 +138,11 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 		message = simulator.action_message
 	var icon_size := 50.0 if _sidebar_frame != null else 58.0
 	_draw_action_icon(body.position + Vector2(34.0, body.size.y * 0.54), icon_size)
-	_draw_text(font, "%s！" % action, body.position + Vector2(72.0, 28.0), 21 if _sidebar_frame != null else 20, Color("#2b2117"), 0)
-	_draw_wrapped(font, message, body.position + Vector2(72.0, 36.0), body.size.x - 82.0, 12 if _sidebar_frame != null else 11, Palette.TEXT_DARK, 2)
+	_draw_text(font, "%s！" % action, body.position + Vector2(72.0, 28.0), 22 if _sidebar_frame != null else 20, Color("#2b2117"), 0)
+	if _sidebar_frame != null:
+		_draw_action_message(font, message, body.position + Vector2(72.0, 36.0), body.size.x - 92.0)
+	else:
+		_draw_wrapped(font, message, body.position + Vector2(72.0, 36.0), body.size.x - 82.0, 11, Palette.TEXT_DARK, 2)
 
 
 func _draw_tackle_card(font: Font, rect: Rect2) -> void:
@@ -212,6 +219,17 @@ func _draw_wrapped(font: Font, text: String, pos: Vector2, max_width: float, fon
 		_draw_text(font, lines[i], pos + Vector2(0.0, float(i) * (font_size + 5.0) + float(font_size)), font_size, color, 0)
 
 
+func _draw_action_message(font: Font, text: String, pos: Vector2, max_width: float) -> void:
+	var first_stop := text.find("！")
+	if first_stop > 0 and first_stop < text.length() - 1:
+		var first := text.left(first_stop + 1)
+		var second := text.substr(first_stop + 1)
+		_draw_wrapped(font, first, pos, max_width, 12, Palette.TEXT_DARK, 1)
+		_draw_wrapped(font, second, pos + Vector2(0.0, 16.0), max_width, 12, Palette.TEXT_DARK, 1)
+		return
+	_draw_wrapped(font, text, pos, max_width, 12, Palette.TEXT_DARK, 2)
+
+
 func _draw_bullet(font: Font, text: String, pos: Vector2, max_width: float) -> void:
 	draw_circle(pos + Vector2(2.0, -3.0), 4.0, Color("#49c75a"))
 	_draw_wrapped(font, text, pos + Vector2(14.0, -15.0), max_width - 14.0, 13, Palette.TEXT_DARK, 1)
@@ -230,17 +248,25 @@ func _draw_rarity_tag(font: Font, rect: Rect2, rarity: String) -> void:
 
 
 func _draw_fish_portrait(rect: Rect2) -> void:
+	if _fish_card_portrait != null:
+		var tex_size := _fish_card_portrait.get_size()
+		var scale := minf(rect.size.x / tex_size.x, rect.size.y / tex_size.y)
+		var draw_size := tex_size * scale
+		var draw_rect := Rect2(rect.position + (rect.size - draw_size) * 0.5, draw_size)
+		draw_texture_rect(_fish_card_portrait, draw_rect, false, Color.WHITE)
+		return
 	if _fish_sheet == null:
 		var color := Color.from_string(String(fish_data.get("color", "#394956")), Color("#394956"))
 		draw_texture_rect(UITextures.get_fish_icon(color), rect, false)
 		return
 	var frame_w := float(_fish_sheet.get_width()) / float(FISH_FRAME_COUNT)
 	var frame_h := float(_fish_sheet.get_height())
-	var tex_size := Vector2(frame_w, frame_h)
+	var src := Rect2(36.0, 45.0, frame_w - 73.0, frame_h - 50.0)
+	var tex_size := src.size
 	var scale := minf(rect.size.x / tex_size.x, rect.size.y / tex_size.y)
 	var draw_size := tex_size * scale
 	var draw_rect := Rect2(rect.position + (rect.size - draw_size) * 0.5, draw_size)
-	draw_texture_rect_region(_fish_sheet, draw_rect, Rect2(0.0, 0.0, frame_w, frame_h), Color.WHITE)
+	draw_texture_rect_region(_fish_sheet, draw_rect, src, Color.WHITE)
 
 
 func _draw_action_icon(center: Vector2, size_value: float = 58.0) -> void:

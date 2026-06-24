@@ -227,7 +227,7 @@ func _draw_segment_gauge(rect: Rect2, ratio: float, safe_min: float, safe_max: f
 		draw_rect(rect.grow(3.0), Color(0.0, 0.0, 0.0, 0.35), true)
 		draw_rect(rect, Color("#07101b"), true)
 		draw_rect(rect, Color("#0f2a43"), false, 2.0)
-	var segments := 18
+	var segments := 14 if _hud_frame != null else 18
 	var gap := 2.0
 	var seg_w := (rect.size.x - gap * float(segments - 1)) / float(segments)
 	for i in range(segments):
@@ -236,15 +236,15 @@ func _draw_segment_gauge(rect: Rect2, ratio: float, safe_min: float, safe_max: f
 		var color := Color("#152231")
 		if filled:
 			if warm:
-				color = Color("#2de35a").lerp(Color("#ffe45f"), clampf(start / 0.55, 0.0, 1.0))
-				color = color.lerp(Color("#f05b22"), clampf((start - 0.55) / 0.45, 0.0, 1.0))
+				color = Color("#25d755").lerp(Color("#f1d94f"), clampf(start / 0.55, 0.0, 1.0))
+				color = color.lerp(Color("#d95524"), clampf((start - 0.55) / 0.45, 0.0, 1.0))
 			else:
-				color = Color("#27e648").lerp(Color("#11d8c9"), start)
+				color = Color("#21d34a").lerp(Color("#16c6b5"), start)
 		elif _hud_frame != null:
 			continue
 		var seg := Rect2(rect.position + Vector2(float(i) * (seg_w + gap), 3.0), Vector2(seg_w, rect.size.y - 6.0))
 		draw_rect(seg, color, true)
-		draw_rect(seg, Color(1.0, 1.0, 1.0, 0.18 if _hud_frame != null else 0.13), false, 1.0)
+		draw_rect(seg, Color(1.0, 1.0, 1.0, 0.09 if _hud_frame != null else 0.13), false, 1.0)
 	if warm:
 		for marker in [safe_min, safe_max]:
 			var tick_x := rect.position.x + rect.size.x * clampf(marker, 0.0, 1.0)

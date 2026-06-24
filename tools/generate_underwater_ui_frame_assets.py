@@ -111,6 +111,13 @@ def _draw_clean_card(
     d.rounded_rectangle((x0, y0, x1, y1), radius=radius, outline=_rgba("#4a3218"), width=3)
     d.rounded_rectangle((x0 + 5, y0 + 5, x1 - 5, y1 - 5), radius=max(2, radius - 5), outline=_rgba(border, 185), width=2)
     d.rounded_rectangle((x0 + 10, y0 + 10, x1 - 10, y1 - 10), radius=max(2, radius - 8), outline=_rgba(inner, 105), width=1)
+    for inset, alpha in ((14, 18), (20, 10)):
+        d.rounded_rectangle(
+            (x0 + inset, y0 + inset, x1 - inset, y1 - inset),
+            radius=max(2, radius - 8),
+            outline=_rgba("#6f4e28", alpha),
+            width=1,
+        )
     d.line((x0 + 16, y0 + 14, x1 - 16, y0 + 14), fill=(255, 246, 215, 88), width=1)
     d.line((x0 + 16, y1 - 13, x1 - 16, y1 - 13), fill=(98, 67, 36, 42), width=1)
 
@@ -229,6 +236,12 @@ def create_sidebar_frame() -> None:
     d.line((header[0] + 24, header[3] - 10, header[2] - 24, header[3] - 10), fill=_rgba("#f4d27c", 70), width=1)
 
     _draw_clean_card(image, fish, "#f1e4c7", radius=10, border="#8c6733", inner="#d2aa58", seed=81, texture_strength=7)
+    name_band = (fish[0] + 34, fish[1] + 24, fish[2] - 34, fish[1] + 84)
+    d.rounded_rectangle(name_band, radius=5, fill=(255, 249, 226, 30), outline=_rgba("#b89b64", 45), width=1)
+    portrait_mat = (fish[0] + 42, fish[1] + 96, fish[2] - 42, fish[1] + 348)
+    d.rounded_rectangle(portrait_mat, radius=8, fill=(255, 251, 233, 24), outline=_rgba("#b89b64", 46), width=1)
+    for y in range(portrait_mat[1] + 42, portrait_mat[3], 56):
+        d.line((portrait_mat[0] + 22, y, portrait_mat[2] - 22, y), fill=_rgba("#c8ad76", 16), width=1)
     for y in (fish[1] + 86, fish[1] + 342, fish[1] + 418):
         d.line((fish[0] + 38, y, fish[2] - 38, y), fill=_rgba("#b89b64", 58), width=1)
     _draw_corner_brackets(d, fish, length=30, inset=18, color="#a77d3b", alpha=95, width=1)
@@ -241,6 +254,15 @@ def create_sidebar_frame() -> None:
     for panel, body in ((action, action_body), (tackle, tackle_body)):
         d.line((panel[0] + 26, panel[1] + 45, panel[2] - 26, panel[1] + 45), fill=_rgba("#e0bd62", 126), width=2)
         d.line((panel[0] + 28, panel[1] + 50, panel[2] - 28, panel[1] + 50), fill=_rgba("#07121b", 105), width=1)
+        d.rounded_rectangle(
+            (body[0] + 14, body[1] + 14, body[0] + 92, body[3] - 14),
+            radius=9,
+            fill=(255, 251, 233, 22),
+            outline=_rgba("#b89b64", 50),
+            width=1,
+        )
+        for y in (body[1] + 35, body[1] + 64, body[1] + 93):
+            d.line((body[0] + 112, y, body[2] - 24, y), fill=_rgba("#b89b64", 14), width=1)
         _draw_corner_brackets(d, body, length=24, inset=9, color="#a77d3b", alpha=115, width=1)
 
     # Sparse corner accents only. Heavy rivets made the frame read as generated/debug UI.
@@ -260,8 +282,8 @@ def _draw_bar_well(image: Image.Image, box: tuple[int, int, int, int]) -> None:
     x0, y0, x1, y1 = box
     d = ImageDraw.Draw(image)
     d.rounded_rectangle((x0, y0, x1, y1), radius=8, fill=_rgba("#07121b", 235), outline=_rgba("#22384c", 190), width=2)
-    for x in range(x0 + 28, x1, 54):
-        d.line((x, y0 + 5, x, y1 - 5), fill=(255, 255, 255, 13), width=1)
+    for x in range(x0 + 44, x1, 92):
+        d.line((x, y0 + 7, x, y1 - 7), fill=(255, 255, 255, 7), width=1)
     d.line((x0 + 7, y0 + 5, x1 - 7, y0 + 5), fill=(255, 255, 255, 26), width=1)
 
 

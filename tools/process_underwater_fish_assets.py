@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "assets" / "showcase" / "underwater"
 FISH_SOURCE = OUT_DIR / "kurodai_chroma_source.png"
 FISH_SHEET = OUT_DIR / "kurodai_showcase_sheet.png"
+FISH_CARD_PORTRAIT = OUT_DIR / "kurodai_card_portrait.png"
 HIT_BURST = OUT_DIR / "hit_burst.png"
 
 
@@ -108,6 +109,31 @@ def create_kurodai_sheet() -> None:
     _final_despill(sheet).save(FISH_SHEET)
 
 
+def create_kurodai_card_portrait() -> None:
+    sheet = Image.open(FISH_SHEET).convert("RGBA")
+    frame_w = sheet.width // 4
+    frame = sheet.crop((0, 0, frame_w, sheet.height))
+    crop = frame.crop(_content_bbox(frame))
+    canvas = Image.new("RGBA", (720, 330), _rgba("#f4ead4"))
+    d = ImageDraw.Draw(canvas)
+    d.rounded_rectangle((10, 10, canvas.width - 10, canvas.height - 10), radius=12, fill=_rgba("#f4ead4"), outline=_rgba("#c6aa73", 82), width=2)
+    for y in range(54, canvas.height - 34, 58):
+        d.line((42, y, canvas.width - 42, y), fill=_rgba("#c3a873", 30), width=1)
+    shadow = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
+    sd = ImageDraw.Draw(shadow)
+    sd.ellipse((180, 238, canvas.width - 150, 294), fill=(72, 52, 31, 24))
+    canvas.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(7)))
+
+    max_w = int(canvas.width * 0.82)
+    max_h = int(canvas.height * 0.78)
+    scale = min(max_w / crop.width, max_h / crop.height)
+    resized = crop.resize((round(crop.width * scale), round(crop.height * scale)), Image.Resampling.LANCZOS)
+    x = (canvas.width - resized.width) // 2
+    y = (canvas.height - resized.height) // 2 - 6
+    canvas.alpha_composite(resized, (x, y))
+    canvas.save(FISH_CARD_PORTRAIT)
+
+
 def _rgba(hex_value: str, alpha: int = 255) -> tuple[int, int, int, int]:
     value = hex_value.lstrip("#")
     return (int(value[0:2], 16), int(value[2:4], 16), int(value[4:6], 16), alpha)
@@ -200,8 +226,9 @@ def create_hit_burst() -> None:
 
 def main() -> None:
     create_kurodai_sheet()
+    create_kurodai_card_portrait()
     create_hit_burst()
-    print(f"processed {FISH_SHEET} and {HIT_BURST}")
+    print(f"processed {FISH_SHEET}, {FISH_CARD_PORTRAIT}, and {HIT_BURST}")
 
 
 if __name__ == "__main__":

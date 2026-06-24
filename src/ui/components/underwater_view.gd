@@ -478,7 +478,7 @@ func _showcase_fish_draw_size(scale_value := -1.0) -> Vector2:
 	elif effective_scale < 0.0:
 		effective_scale = boss_ratio
 	var stamina_scale := clampf(effective_scale / boss_ratio, 0.90, 1.06)
-	var target_width_ratio := 0.52 if bool(fish_data.get("boss", false)) else 0.50
+	var target_width_ratio := 0.54 if bool(fish_data.get("boss", false)) else 0.55
 	var draw_width := size.x * target_width_ratio * stamina_scale
 	return Vector2(draw_width, draw_width * frame_h / frame_w)
 
