@@ -111,6 +111,61 @@ def _remove_runtime_subjects(crop: Image.Image) -> Image.Image:
     return Image.composite(fill, rgb, mask)
 
 
+def _add_reference_side_detail(image: Image.Image, reference_crop: Image.Image) -> Image.Image:
+    base = image.convert("RGBA")
+    reference = reference_crop.convert("RGBA")
+    w, h = base.size
+
+    # Reuse the reference's own left rock/plant pixels as a mirrored side
+    # detail source. This keeps the replacement area in the same art language
+    # instead of relying only on procedural strokes.
+    rock_patch = reference.crop((0, int(h * 0.28), int(w * 0.28), h))
+    rock_patch = rock_patch.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
+    rock_patch = rock_patch.resize((int(w * 0.34), int(h * 0.58)), Image.Resampling.LANCZOS)
+    rock_patch = ImageEnhance.Brightness(rock_patch).enhance(0.82)
+    rock_patch = ImageEnhance.Color(rock_patch).enhance(0.92)
+
+    patch_mask = Image.new("L", rock_patch.size, 0)
+    mask_pixels = patch_mask.load()
+    pw, ph = rock_patch.size
+    for y in range(ph):
+        v = y / max(1, ph - 1)
+        for x in range(pw):
+            u = x / max(1, pw - 1)
+            side_fade = min(1.0, u / 0.62, (1.0 - u) / 0.48)
+            top_fade = min(1.0, max(0.0, (v - 0.12) / 0.34))
+            bottom_fade = min(1.0, (1.0 - v) / 0.08)
+            alpha = int(54 * max(0.0, side_fade) * top_fade * bottom_fade)
+            mask_pixels[x, y] = alpha
+    patch_mask = patch_mask.filter(ImageFilter.GaussianBlur(30.0))
+
+    base.alpha_composite(
+        Image.composite(rock_patch, Image.new("RGBA", rock_patch.size, (0, 0, 0, 0)), patch_mask),
+        (int(w * 0.72), int(h * 0.40)),
+    )
+
+    seabed_patch = reference.crop((0, int(h * 0.66), int(w * 0.76), h))
+    seabed_patch = seabed_patch.resize((int(w * 0.62), int(h * 0.30)), Image.Resampling.LANCZOS)
+    seabed_patch = ImageEnhance.Brightness(seabed_patch).enhance(0.88)
+    seabed_patch = ImageEnhance.Color(seabed_patch).enhance(0.90)
+    seabed_mask = Image.new("L", seabed_patch.size, 0)
+    sm = seabed_mask.load()
+    sw, sh = seabed_patch.size
+    for y in range(sh):
+        v = y / max(1, sh - 1)
+        for x in range(sw):
+            u = x / max(1, sw - 1)
+            edge = min(1.0, u / 0.12, (1.0 - u) / 0.12)
+            sm[x, y] = int(34 * edge * min(1.0, v / 0.28) * min(1.0, (1.0 - v) / 0.10))
+    seabed_mask = seabed_mask.filter(ImageFilter.GaussianBlur(14.0))
+    base.alpha_composite(
+        Image.composite(seabed_patch, Image.new("RGBA", seabed_patch.size, (0, 0, 0, 0)), seabed_mask),
+        (int(w * 0.30), int(h * 0.68)),
+    )
+
+    return base.convert("RGB")
+
+
 def _expand_to_canvas(image: Image.Image) -> Image.Image:
     # Reference water window is wider than the runtime texture. Fit by height
     # and crop horizontally; this keeps the authored seabed and light scale.
@@ -234,6 +289,7 @@ def build() -> None:
     crop = reference.crop((0, 88, 760, 426))
 
     clean_crop = _remove_runtime_subjects(crop)
+    clean_crop = _add_reference_side_detail(clean_crop, crop)
     background = _expand_to_canvas(clean_crop)
     background = _harmonize(background)
     background = _add_masked_area_detail(background)
