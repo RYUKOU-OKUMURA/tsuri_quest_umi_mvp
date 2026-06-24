@@ -69,10 +69,10 @@ func _slot_rects(rect: Rect2) -> Array[Rect2]:
 	var y := rect.position.y + rect.size.y * 0.08
 	var h := rect.size.y * 0.84
 	return [
-		Rect2(rect.position.x + w * 0.000, y, w * 0.226, h),
-		Rect2(rect.position.x + w * 0.231, y, w * 0.288, h),
-		Rect2(rect.position.x + w * 0.524, y, w * 0.248, h),
-		Rect2(rect.position.x + w * 0.777, y, w * 0.223, h),
+		Rect2(rect.position.x + w * 0.000, y, w * 0.229, h),
+		Rect2(rect.position.x + w * 0.229, y, w * 0.297, h),
+		Rect2(rect.position.x + w * 0.526, y, w * 0.254, h),
+		Rect2(rect.position.x + w * 0.780, y, w * 0.220, h),
 	]
 
 
@@ -107,7 +107,7 @@ func _draw_status_slot(font: Font, rect: Rect2, title: String, body: String, dar
 			Rect2(Vector2(wind_x, rect.position.y + (rect.size.y - wind_icon_size) * 0.5 + 1.0), Vector2(wind_icon_size, wind_icon_size)),
 			Color(1.0, 1.0, 1.0, 0.92)
 		)
-		_draw_text_clipped(font, body, Vector2(wind_x + 34.0, inline_y), 20, Palette.TEXT_DARK, max_width - (wind_x - text_x) - 34.0, outline)
+		_draw_text_clipped(font, body, Vector2(wind_x + 34.0, inline_y), 21, Color("#173f32"), max_width - (wind_x - text_x) - 34.0, outline)
 		return
 	if not dark and title == "所持金":
 		var amount_y := rect.position.y + rect.size.y * 0.68

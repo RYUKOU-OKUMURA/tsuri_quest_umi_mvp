@@ -275,10 +275,10 @@ def create_top_status_frame() -> None:
     d = ImageDraw.Draw(image)
     y0, y1 = 22, 222
     slots = [
-        (8, y0, int(w * 0.226) - 6, y1, "#f4ead5"),
-        (int(w * 0.231) + 5, y0, int(w * 0.519) - 6, y1, "#f3e8d0"),
-        (int(w * 0.524) + 5, y0, int(w * 0.772) - 6, y1, "#f5ead4"),
-        (int(w * 0.777) + 6, y0, w - 8, y1, "#123554"),
+        (8, y0, int(w * 0.229) - 4, y1, "#f4ead5"),
+        (int(w * 0.229) + 4, y0, int(w * 0.526) - 4, y1, "#f3e8d0"),
+        (int(w * 0.526) + 4, y0, int(w * 0.780) - 4, y1, "#f5ead4"),
+        (int(w * 0.780) + 4, y0, w - 8, y1, "#123554"),
     ]
     for i, (x0, sy0, x1, sy1, fill) in enumerate(slots):
         if i == 3:
