@@ -156,10 +156,91 @@ def create_color_grade() -> None:
     image.save(OUT_DIR / "underwater_color_grade.png")
 
 
+def _draw_seaweed(draw: ImageDraw.ImageDraw, base_x: float, base_y: float, height: float, color: tuple[int, int, int, int], lean: float) -> None:
+    points: list[tuple[float, float]] = []
+    for step in range(7):
+        t = step / 6.0
+        x = base_x + math.sin(t * math.pi * 1.35) * 7.0 + lean * t
+        y = base_y - height * t
+        points.append((x, y))
+    draw.line(points, fill=color, width=3)
+    for step in (2, 3, 4, 5):
+        t = step / 6.0
+        x, y = points[step]
+        side = -1 if step % 2 == 0 else 1
+        draw.line((x, y, x + side * 12, y - height * 0.10), fill=color, width=2)
+
+
+def create_seabed_detail() -> None:
+    w, h = 1672, 941
+    image = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image, "RGBA")
+    rng = random.Random(240625)
+
+    # Extra rock silhouettes at the left/right margins. The base art already
+    # has rocks; these add the denser edge framing visible in the reference.
+    rock_sets = (
+        ([-90, -30, 42, 128, 214], 815, 1.08),
+        ([1420, 1500, 1588, 1660, 1740], 812, 0.96),
+        ([260, 390, 540, 1230], 884, 0.55),
+    )
+    for xs, base_y, scale in rock_sets:
+        for index, x in enumerate(xs):
+            rx = int((78 + rng.random() * 64) * scale)
+            ry = int((42 + rng.random() * 45) * scale)
+            y = int(base_y + rng.uniform(-28, 18))
+            dark = (4, 37, 52, 74)
+            mid = (42, 94, 94, 54)
+            hi = (110, 156, 136, 30)
+            draw.ellipse((x - rx, y - ry, x + rx, y + ry), fill=dark)
+            draw.ellipse((x - rx * 0.78, y - ry * 0.84, x + rx * 0.18, y + ry * 0.05), fill=mid)
+            draw.arc((x - rx * 0.66, y - ry * 0.72, x + rx * 0.46, y + ry * 0.38), 196, 330, fill=hi, width=2)
+            draw.line((x - rx * 0.62, y + ry * 0.35, x + rx * 0.64, y + ry * 0.22), fill=(0, 18, 31, 46), width=3)
+
+    # Seaweed and coral clusters near the lower edges, kept clear of the main fish.
+    for cluster_x, count, spread in ((160, 18, 170), (430, 12, 180), (1260, 12, 160), (1500, 20, 150)):
+        for _ in range(count):
+            x = cluster_x + rng.uniform(-spread * 0.5, spread * 0.5)
+            base_y = rng.uniform(h * 0.78, h * 0.94)
+            height = rng.uniform(34, 112)
+            hue_pick = rng.random()
+            if hue_pick < 0.64:
+                color = (38, rng.randint(105, 168), rng.randint(96, 132), rng.randint(64, 116))
+            elif hue_pick < 0.86:
+                color = (118, rng.randint(96, 150), 58, rng.randint(46, 88))
+            else:
+                color = (185, 78, 103, rng.randint(44, 82))
+            _draw_seaweed(draw, x, base_y, height, color, rng.uniform(-18, 18))
+
+    # Fine seabed caustics and sand contour lines, mostly below the hit badge.
+    caustics = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    cd = ImageDraw.Draw(caustics, "RGBA")
+    for i in range(54):
+        x = rng.uniform(w * 0.08, w * 0.92)
+        y = rng.uniform(h * 0.68, h * 0.92)
+        length = rng.uniform(38, 128)
+        amp = rng.uniform(4, 14)
+        points: list[tuple[float, float]] = []
+        for step in range(6):
+            t = step / 5.0
+            points.append((x + length * t, y + math.sin(t * math.tau + i) * amp))
+        cd.line(points, fill=(221, 248, 237, rng.randint(18, 46)), width=2)
+    image.alpha_composite(caustics.filter(ImageFilter.GaussianBlur(0.45)))
+
+    # Subtle bottom haze to bind the new details into the existing raster background.
+    haze = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    hd = ImageDraw.Draw(haze, "RGBA")
+    hd.rectangle((0, int(h * 0.84), w, h), fill=(13, 50, 50, 18))
+    image.alpha_composite(haze.filter(ImageFilter.GaussianBlur(16)))
+
+    image.save(OUT_DIR / "underwater_seabed_detail.png")
+
+
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     create_foreground_ambience()
     create_color_grade()
+    create_seabed_detail()
     print(f"generated {OUT_DIR / 'underwater_foreground_ambience.png'}")
 
 

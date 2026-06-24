@@ -35,31 +35,33 @@
    水面光、光芒、海底、岩、海藻、遠景魚、泡を含む 16:9 背景。
 2. `underwater_color_grade.png`
    背景の上に重ねる透明PNG。外周の暗部、海底の締まり、水面光の帯を足し、背景PNGの均一な明るさを抑える。
-3. `underwater_foreground_ambience.png`
+3. `underwater_seabed_detail.png`
+   背景下部と左右に重ねる透明PNG。岩場シルエット、海藻、サンゴ、水底の光線を足し、生成背景の滑らかさを補う。
+4. `underwater_foreground_ambience.png`
    背景の上に重ねる透明PNG。泡柱、光の筋、遠景魚影、粒子を含み、主役魚を邪魔しない密度補助として扱う。
-4. 動的深度表示
+5. 動的深度表示
    現在深度と目盛り。背景上に半透明で重ねる。
-5. 釣り糸・エサ
+6. 釣り糸・エサ
    既存ロジックの位置に合わせて動的描画する。
-6. `kurodai_showcase_sheet.png`
+7. `kurodai_showcase_sheet.png`
    主役魚。4 フレーム構成で、遊泳・緊張・突進・疲労を切り替える。
-7. `kurodai_card_portrait.png`
+8. `kurodai_card_portrait.png`
    右魚カード専用の静止ポートレート。紙背景へ魚を焼き込み、カード上で暗い矩形が出ないようにする。
-8. `hit_burst.png`
+9. `hit_burst.png`
    アワセ直後の「ヒット！」演出。短時間だけ魚の手前に表示する。
-9. HUD / 情報 UI
+10. HUD / 情報 UI
    上部ステータスバー、下部ゲージ、右パネル、ボタンは既存 Control UI を維持しつつ、順次画像枠へ差し替える。
-10. `sidebar_frame.png`
+11. `sidebar_frame.png`
    右側の魚情報・行動・タックルカード用の縦長フレーム素材。文字、魚、行動表示は Godot 側で重ねる。
-11. `top_status_frame.png`
+12. `top_status_frame.png`
    時計、天候、所持金、地点/水深の上部ステータスバー用フレーム素材。左ファイトカラム内にだけ敷き、文字と数値は Godot 側で重ねる。
-12. `top_status_icon_sheet.png`
+13. `top_status_icon_sheet.png`
    上部ステータスバー専用の時計、太陽、風、コイン小型アイコン。共通アイコンを縮小すると潰れて読めないため、上部カードでは専用素材を使う。
-13. `fight_hud_frame.png`
+14. `fight_hud_frame.png`
    下部操作盤の一体型フレーム素材。ゲージ色、現在位置、操作文字、エサ情報は Godot 側で重ねる。
-14. `fight_icon_sheet.png`
+15. `fight_icon_sheet.png`
    時計、天候、風、コイン、テンション、魚体力、エサ、行動、タックルの共通アイコンシート。3x3 グリッドで各 UI が同じ素材を参照する。
-15. `fight_action_card_icon.png` / `fight_tackle_card_icon.png`
+16. `fight_action_card_icon.png` / `fight_tackle_card_icon.png`
    右パネル下段カード専用の小型アイコン。共通アイコンシートをそのまま縮小すると装飾が強く、カード本文を圧迫するため、紙カード上に整えた別素材として使う。
 
 ## 最小素材セット
@@ -68,6 +70,7 @@
 |---|---|---|---|
 | `assets/showcase/underwater/underwater_battle_bg.png` | 水中背景 | `tools/generate_underwater_showcase_assets.py` で生成 | 16:9、暗部と主役魚のコントラストを確保 |
 | `assets/showcase/underwater/underwater_color_grade.png` | 背景の奥行き/光調整 | `tools/generate_underwater_foreground_assets.py` で生成 | 透明PNG、外周暗部・海底の締まり・水面光を含み、魚/ヒット演出を覆わない |
+| `assets/showcase/underwater/underwater_seabed_detail.png` | 海底/左右の密度補助 | `tools/generate_underwater_foreground_assets.py` で生成 | 透明PNG、岩場・海藻・サンゴ・水底光を含み、主役魚を邪魔しない |
 | `assets/showcase/underwater/underwater_foreground_ambience.png` | 前景密度補助 | `tools/generate_underwater_foreground_assets.py` で生成 | 透明PNG、泡柱・遠景魚・光粒を含み主役魚を邪魔しない |
 | `assets/showcase/underwater/kurodai_chroma_source.png` | クロダイ中間素材 | リファレンス魚の切り出しを ImageGen で背景抽出 | フラットなマゼンタ背景、単体魚または横4フレーム |
 | `assets/showcase/underwater/kurodai_showcase_sheet.png` | クロダイ | `tools/process_underwater_fish_assets.py` で生成 | 透明背景、横 4 フレーム、全フレーム同サイズ |
@@ -97,7 +100,7 @@
 - `FightHud` の下段は、`fight_hud_frame.png` 側にエサ/操作/メニューの紙タイトル帯、本文スロット、濃紺メニュー行を焼き込み、Godot側でエサ数とA/B/LRのキーキャップと短いラベルだけを重ねる。PNG側の装飾枠と実コードの座標がずれると、文字が暗い盤面に沈んでデバッグUIに見えるため、フレーム生成とGodot描画の座標を必ず合わせる。
 - 右パネルは汎用 `make_panel()` の中に入れず、`FightSidebar` の専用フレームを直接表示する。二重枠にするとサイドバー素材が縮み、参照画像のカード品質から離れるため。
 - `UnderwaterView` は主役魚とヒット演出のスケールを参照画像寄りに抑え、深度目盛りは背景に馴染む低コントラスト表示にする。
-- `UnderwaterView` は `underwater_battle_bg.png` の上に `underwater_color_grade.png`、`underwater_foreground_ambience.png` の順で重ね、追加の光粒だけを動的に描く。これは背景PNGの不足を完全に代替するものではなく、主役魚を邪魔しない奥行き/密度補助として扱う。PNG がない場合だけ、コード描画の遠景魚群・泡柱へフォールバックする。
+- `UnderwaterView` は `underwater_battle_bg.png` の上に `underwater_color_grade.png`、`underwater_seabed_detail.png`、`underwater_foreground_ambience.png` の順で重ね、追加の光粒だけを動的に描く。これは背景PNGの不足を完全に代替するものではなく、主役魚を邪魔しない奥行き/密度補助として扱う。PNG がない場合だけ、コード描画の遠景魚群・泡柱へフォールバックする。
 - `tools/fishing_fight_preview.gd` は参照比較用に `クロダイ / レア / 44.2cm` 相当の固定状態を作り、画面品質の比較条件を揃える。ゲーム本編の魚データは別途維持する。
 - 画面の完成度チェックは、Godot で `tools/fishing_fight_preview.gd` のキャプチャを取り、`tools/build_fight_comparison_html.py` と `tools/build_fight_comparison_images.py` でリファレンスと横並び比較する。
 
@@ -117,4 +120,4 @@
 2. `fight_hud_frame.png` の上段は深度プレート強化、暗色化、HUDアイコン縮小/低透過化、右ラベル余白調整、メーター格子弱化、未充填セグメント表示とハイライト/影追加まで完了。下段はエサ/操作/メニューの紙タイトル帯、本文スロット、濃紺メニュー行、操作ヒントの3スロット化、A/B/LRキー配置の整列まで完了。次は最終比較でまだ機械的に見える場合だけ全体比率と小文字の詰めを行う。
 3. 上部ステータスの地点カードは参照に合わせてアイコンなし中央寄せに修正済み。`top_status_frame.png` は紙カード内枠、角金具、濃紺地点カードの内装追加まで完了。上部アイコン群は `top_status_icon_sheet.png` に分離し、時計/太陽/風/コインが潰れない状態まで改善済み。`FightStatusBar` は左ファイトカラム内へ移動し、右パネルヘッダーが上端から始まる構造に修正済み。カード比率は天候/所持金を広げ、地点カードを締める方向へ調整済み。次に詰めるなら文字ベースラインと数値の光学サイズを調整する。
 4. ヒット演出は白い放射線と下端の重なりを調整済み。最終 HUD/フォント調整後に比較だけ再確認する。
-5. 泡、光粒、魚影は `underwater_foreground_ambience.png` と `UnderwaterView` の補助光粒として追加済み。背景の均一な明るさは `underwater_color_grade.png` で少し締めている。次に背景を詰める場合は、`underwater_battle_bg.png` 自体の岩場・海藻・海底ディテールを強める。
+5. 泡、光粒、魚影は `underwater_foreground_ambience.png` と `UnderwaterView` の補助光粒として追加済み。背景の均一な明るさは `underwater_color_grade.png` で少し締め、海底/左右の密度は `underwater_seabed_detail.png` で補っている。次に背景を詰める場合は、`underwater_battle_bg.png` 自体の岩場・海藻・海底ディテールを強める。

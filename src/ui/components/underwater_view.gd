@@ -4,6 +4,7 @@ extends Control
 const FightFontsScript = preload("res://src/ui/fight_fonts.gd")
 const SHOWCASE_BG_PATH := "res://assets/showcase/underwater/underwater_battle_bg.png"
 const SHOWCASE_COLOR_GRADE_PATH := "res://assets/showcase/underwater/underwater_color_grade.png"
+const SHOWCASE_SEABED_DETAIL_PATH := "res://assets/showcase/underwater/underwater_seabed_detail.png"
 const SHOWCASE_FG_AMBIENCE_PATH := "res://assets/showcase/underwater/underwater_foreground_ambience.png"
 const SHOWCASE_FISH_SHEET_PATH := "res://assets/showcase/underwater/kurodai_showcase_sheet.png"
 const SHOWCASE_HIT_BURST_PATH := "res://assets/showcase/underwater/hit_burst.png"
@@ -19,6 +20,7 @@ var _meter_track: StyleBoxFlat
 var _meter_fill: StyleBoxFlat
 var _showcase_bg: Texture2D
 var _showcase_color_grade: Texture2D
+var _showcase_seabed_detail: Texture2D
 var _showcase_fg_ambience: Texture2D
 var _showcase_fish_sheet: Texture2D
 var _showcase_hit_burst: Texture2D
@@ -82,6 +84,7 @@ func _draw() -> void:
 func _load_showcase_assets() -> void:
 	_showcase_bg = _load_texture_if_exists(SHOWCASE_BG_PATH)
 	_showcase_color_grade = _load_texture_if_exists(SHOWCASE_COLOR_GRADE_PATH)
+	_showcase_seabed_detail = _load_texture_if_exists(SHOWCASE_SEABED_DETAIL_PATH)
 	_showcase_fg_ambience = _load_texture_if_exists(SHOWCASE_FG_AMBIENCE_PATH)
 	_showcase_fish_sheet = _load_texture_if_exists(SHOWCASE_FISH_SHEET_PATH)
 	_showcase_hit_burst = _load_texture_if_exists(SHOWCASE_HIT_BURST_PATH)
@@ -97,6 +100,8 @@ func _draw_showcase_background() -> void:
 	_draw_cover_texture(_showcase_bg, Rect2(Vector2.ZERO, size), Color.WHITE)
 	if _showcase_color_grade != null:
 		_draw_cover_texture(_showcase_color_grade, Rect2(Vector2.ZERO, size), Color.WHITE)
+	if _showcase_seabed_detail != null:
+		_draw_cover_texture(_showcase_seabed_detail, Rect2(Vector2.ZERO, size), Color.WHITE)
 	# 背景PNGに重ねる軽い水中の揺らぎ。主素材を邪魔しない密度に抑える。
 	for index in range(6):
 		var y := size.y * (0.12 + float(index) * 0.085)
