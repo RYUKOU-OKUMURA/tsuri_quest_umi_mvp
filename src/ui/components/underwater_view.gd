@@ -35,6 +35,7 @@ func bind_simulator(value: FishingSimulator) -> void:
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	clip_contents = true
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_load_showcase_assets()
 
 
