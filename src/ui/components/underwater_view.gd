@@ -443,8 +443,11 @@ func _draw_target_fish() -> void:
 func _draw_showcase_target_fish(center: Vector2, scale_value: float, direction: float) -> void:
 	var frame_w := float(_showcase_fish_sheet.get_width()) / float(SHOWCASE_FISH_FRAME_COUNT)
 	var frame_h := float(_showcase_fish_sheet.get_height())
-	var screen_scale := clampf(size.y / 430.0, 0.72, 1.16)
-	var draw_size := Vector2(frame_w, frame_h) * scale_value * screen_scale
+	var boss_ratio := 1.42 if bool(fish_data.get("boss", false)) else 1.0
+	var stamina_scale := clampf(scale_value / boss_ratio, 0.90, 1.06)
+	var target_width_ratio := 0.52 if bool(fish_data.get("boss", false)) else 0.38
+	var draw_width := size.x * target_width_ratio * stamina_scale
+	var draw_size := Vector2(draw_width, draw_width * frame_h / frame_w)
 	var frame_index := _showcase_fish_frame_index()
 	var src := Rect2(frame_w * float(frame_index), 0.0, frame_w, frame_h)
 	var dst := Rect2(-draw_size * 0.5, draw_size)
@@ -480,10 +483,10 @@ func _draw_hit_burst() -> void:
 	if _fish_flash <= 0.02 or simulator == null:
 		return
 	var alpha := clampf(_fish_flash, 0.0, 1.0)
-	var burst_center := Vector2(size.x * 0.50, size.y * 0.64)
+	var burst_center := Vector2(size.x * 0.50, size.y * 0.76)
 	if _showcase_hit_burst != null:
 		var tex_size := _showcase_hit_burst.get_size()
-		var scale := clampf(size.x / 900.0, 0.72, 1.12)
+		var scale := clampf(size.x / 1050.0, 0.62, 0.95)
 		var draw_size := tex_size * scale
 		var draw_rect := Rect2(burst_center - draw_size * 0.5, draw_size)
 		draw_texture_rect(_showcase_hit_burst, draw_rect, false, Color(1.0, 1.0, 1.0, alpha))
@@ -491,8 +494,8 @@ func _draw_hit_burst() -> void:
 	var text := "ヒット！"
 	var font_size := int(clampf(size.y * 0.11, 38.0, 64.0))
 	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
-	var pos := burst_center + Vector2(-text_width * 0.5, font_size * 0.34)
-	draw_string_outline(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 5, Color("#4d2408"))
+	var pos := burst_center + Vector2(-text_width * 0.5, font_size * 0.20)
+	draw_string_outline(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 6, Color("#4d2408"))
 	draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color("#ffe36e"))
 
 

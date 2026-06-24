@@ -75,7 +75,10 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	_draw_text(font, _display_fish_name(fish_name), inner.position + Vector2(86.0, 26.0), 22, Palette.TEXT_DARK, 0)
 	_draw_rarity_tag(font, Rect2(inner.position + Vector2(inner.size.x - 70.0, 5.0), Vector2(62.0, 24.0)), rarity)
 
-	var fish_rect := Rect2(inner.position + Vector2(18.0, 34.0), Vector2(inner.size.x - 36.0, maxf(58.0, rect.size.y * 0.32)))
+	var fish_rect := Rect2(
+		inner.position + Vector2(14.0, 34.0),
+		Vector2(inner.size.x - 28.0, maxf(112.0, rect.size.y * 0.45))
+	)
 	_draw_fish_portrait(fish_rect)
 	var divider_y := fish_rect.end.y + 6.0
 	draw_line(inner.position + Vector2(8.0, divider_y), inner.position + Vector2(inner.size.x - 8.0, divider_y), Color("#c9b486"), 1.0)

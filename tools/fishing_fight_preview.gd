@@ -39,10 +39,12 @@ func _ready() -> void:
 	s._simulator.visual_direction = 1.0
 	s._simulator.depth = 18.6
 	s._simulator.tension = 0.66
+	s._view._fish_flash = 0.96
 	s._view.modulate.a = 1.0
 	s._surface_view.modulate.a = 0.0
 
-	await get_tree().create_timer(0.45).timeout
+	await get_tree().create_timer(0.12).timeout
+	s._view._fish_flash = 0.88
 	await get_tree().process_frame
 
 	var img := vp.get_texture().get_image()
