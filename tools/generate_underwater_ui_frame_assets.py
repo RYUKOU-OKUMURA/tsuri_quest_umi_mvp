@@ -241,7 +241,7 @@ def create_fight_hud_frame() -> None:
     top = (int(w * 0.014), int(h * 0.065), int(w * 0.986), int(h * 0.520))
     bottom = (int(w * 0.014), int(h * 0.552), int(w * 0.986), int(h * 0.940))
     gap = 20
-    depth_w = int(w * 0.225)
+    depth_w = int(w * 0.210)
     left_w = int((top[2] - top[0] - depth_w - gap * 2) * 0.5)
     right_w = top[2] - top[0] - depth_w - gap * 2 - left_w
     tension = (top[0], top[1], top[0] + left_w, top[3])
@@ -249,22 +249,70 @@ def create_fight_hud_frame() -> None:
     stamina = (depth[2] + gap, top[1], depth[2] + gap + right_w, top[3])
 
     _draw_navy_card(image, top, radius=12, seed=40, shadow=True)
-    d.line((top[0] + 30, top[1] + 54, top[2] - 30, top[1] + 54), fill=_rgba("#e0bd62", 55), width=2)
-    d.line((top[0] + 30, top[3] - 24, top[2] - 30, top[3] - 24), fill=(255, 255, 255, 24), width=1)
-    # Make the depth module read as the central blue plate from the reference.
-    d.polygon(
-        [
-            (depth[0] + 12, depth[1] + 16),
-            (depth[2] - 12, depth[1] + 16),
-            (depth[2] - 60, depth[3] - 14),
-            (depth[0] + 60, depth[3] - 14),
-        ],
-        fill=_rgba("#184c78", 225),
-    )
-    d.line((depth[0] + 10, depth[1] + 16, depth[0] + 60, depth[3] - 14), fill=_rgba("#d8b45d", 120), width=3)
-    d.line((depth[2] - 10, depth[1] + 16, depth[2] - 60, depth[3] - 14), fill=_rgba("#d8b45d", 120), width=3)
-    d.line((depth[0] + 36, depth[1] + 22, depth[2] - 36, depth[1] + 22), fill=_rgba("#e0bd62", 100), width=2)
-    d.line((depth[0] + 48, depth[3] - 22, depth[2] - 48, depth[3] - 22), fill=(255, 255, 255, 26), width=1)
+
+    # Keep the upper board as one piece, but let the central depth plate interrupt
+    # the trim so it feels fitted into the console instead of drawn on top.
+    for y, color, width_px in (
+        (top[1] + 54, _rgba("#e0bd62", 60), 2),
+        (top[3] - 24, (255, 255, 255, 24), 1),
+    ):
+        d.line((top[0] + 30, y, depth[0] - 34, y), fill=color, width=width_px)
+        d.line((depth[2] + 34, y, top[2] - 30, y), fill=color, width=width_px)
+
+    left_socket = [
+        (depth[0] - 42, depth[1] + 20),
+        (depth[0] + 30, depth[1] + 20),
+        (depth[0] + 80, depth[3] - 14),
+        (depth[0] + 8, depth[3] - 14),
+    ]
+    right_socket = [
+        (depth[2] - 30, depth[1] + 20),
+        (depth[2] + 42, depth[1] + 20),
+        (depth[2] - 8, depth[3] - 14),
+        (depth[2] - 80, depth[3] - 14),
+    ]
+    d.polygon(left_socket, fill=_rgba("#071829", 180))
+    d.polygon(right_socket, fill=_rgba("#071829", 180))
+
+    plate_shadow = [
+        (depth[0] + 30, depth[1] + 18),
+        (depth[2] - 30, depth[1] + 18),
+        (depth[2] - 70, depth[3] - 8),
+        (depth[0] + 70, depth[3] - 8),
+    ]
+    d.polygon(plate_shadow, fill=(0, 0, 0, 72))
+    plate = [
+        (depth[0] + 24, depth[1] + 12),
+        (depth[2] - 24, depth[1] + 12),
+        (depth[2] - 70, depth[3] - 16),
+        (depth[0] + 70, depth[3] - 16),
+    ]
+    d.polygon(plate, fill=_rgba("#174e7b", 235))
+    for inset, alpha, width_px in ((0, 170, 3), (10, 82, 2)):
+        d.line(
+            (depth[0] + 24 + inset, depth[1] + 12, depth[0] + 70 + inset, depth[3] - 16),
+            fill=_rgba("#e0bd62", alpha),
+            width=width_px,
+        )
+        d.line(
+            (depth[2] - 24 - inset, depth[1] + 12, depth[2] - 70 - inset, depth[3] - 16),
+            fill=_rgba("#e0bd62", alpha),
+            width=width_px,
+        )
+    d.line((depth[0] + 52, depth[1] + 26, depth[2] - 52, depth[1] + 26), fill=_rgba("#fff1a8", 95), width=2)
+    d.line((depth[0] + 76, depth[3] - 26, depth[2] - 76, depth[3] - 26), fill=(255, 255, 255, 32), width=1)
+
+    title_tab = (depth[0] + 72, depth[1] + 46, depth[2] - 72, depth[1] + 94)
+    d.rounded_rectangle(title_tab, radius=8, fill=_rgba("#0c2a47", 92), outline=_rgba("#6fd6ff", 38), width=1)
+    value_plaque = (depth[0] + 84, depth[1] + 126, depth[2] - 84, depth[3] - 30)
+    d.rounded_rectangle(value_plaque, radius=8, fill=_rgba("#0b2b4b", 150), outline=_rgba("#cfa45a", 86), width=2)
+    for cx, cy in (
+        (depth[0] + 54, depth[1] + 34),
+        (depth[2] - 54, depth[1] + 34),
+        (depth[0] + 84, depth[3] - 32),
+        (depth[2] - 84, depth[3] - 32),
+    ):
+        d.ellipse((cx - 4, cy - 4, cx + 4, cy + 4), fill=_rgba("#d8b45d", 150), outline=_rgba("#07121b", 160))
 
     _draw_bar_well(image, (tension[0] + 44, tension[1] + 88, tension[2] - 56, tension[1] + 142))
     _draw_bar_well(image, (stamina[0] + 44, stamina[1] + 88, stamina[2] - 48, stamina[1] + 142))
@@ -318,8 +366,9 @@ def create_fight_hud_frame() -> None:
     _draw_icon_well(d, (bait[0] + 80, (bait[1] + bait[3]) // 2), 30, pale=True)
 
     # Shared separators: enough structure without returning to the previous grid-like skin.
-    for x in (depth[0] - gap // 2, depth[2] + gap // 2):
-        d.line((x, top[1] + 22, x, top[3] - 22), fill=_rgba("#b88b3f", 82), width=2)
+    for x, slant in ((depth[0] - gap // 2, 18), (depth[2] + gap // 2, -18)):
+        d.line((x + slant, top[1] + 22, x - slant, top[3] - 22), fill=_rgba("#b88b3f", 116), width=3)
+        d.line((x + slant + (6 if slant > 0 else -6), top[1] + 22, x - slant + (6 if slant > 0 else -6), top[3] - 22), fill=_rgba("#07121b", 100), width=2)
     for x in (hint[0] - gap // 2, menu[0] - gap // 2):
         d.line((x, bottom[1] + 16, x, bottom[3] - 16), fill=_rgba("#b88b3f", 90), width=2)
 

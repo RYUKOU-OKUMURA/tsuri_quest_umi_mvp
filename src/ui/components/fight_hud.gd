@@ -104,7 +104,7 @@ func _draw() -> void:
 
 	var depth_w := clampf(size.x * 0.14, 150.0, 190.0)
 	if _hud_frame != null:
-		depth_w = clampf(size.x * 0.225, 170.0, 220.0)
+		depth_w = clampf(size.x * 0.210, 165.0, 205.0)
 	var left_w := (top.size.x - depth_w - gap * 2.0) * (0.44 if _hud_frame == null else 0.50)
 	var right_w := top.size.x - depth_w - left_w - gap * 2.0
 	var tension_rect := Rect2(top.position, Vector2(left_w, top.size.y))
@@ -141,14 +141,18 @@ func _draw_tension(font: Font, rect: Rect2) -> void:
 func _draw_depth(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0b355f"), Color("#08213c"), Palette.GOLD)
 	var title_y := 22.0 if _hud_frame == null else 24.0
-	_draw_text(font, "タナ（深さ）", rect.position + Vector2(22.0, title_y), 17, Palette.TEXT_BONE, 3)
+	var title := "タナ（深さ）"
+	var title_size := 17 if _hud_frame == null else 16
+	var title_w := font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x
+	var text_center_w := rect.size.x - (24.0 if _hud_frame != null else 0.0)
+	_draw_text(font, title, rect.position + Vector2((text_center_w - title_w) * 0.5, title_y), title_size, Palette.TEXT_BONE, 3)
 	var depth := 0.0
 	if simulator != null:
 		depth = simulator.depth
 	var value := "%.1fm" % depth
 	var value_size := 34
 	var value_w := font.get_string_size(value, HORIZONTAL_ALIGNMENT_LEFT, -1, value_size).x
-	_draw_text(font, value, rect.position + Vector2((rect.size.x - value_w) * 0.5, 59.0 if _hud_frame == null else 64.0), value_size, Color("#eaf6ff"), 4)
+	_draw_text(font, value, rect.position + Vector2((text_center_w - value_w) * 0.5, 59.0 if _hud_frame == null else 64.0), value_size, Color("#eaf6ff"), 4)
 	var cx := rect.position.x + rect.size.x - 22.0
 	_draw_triangle(Vector2(cx, rect.position.y + 34.0), 14.0, Color("#29baf7"), true)
 	_draw_triangle(Vector2(cx, rect.position.y + 70.0), 14.0, Color("#ff6b3e"), false)
