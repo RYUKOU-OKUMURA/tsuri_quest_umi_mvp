@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import math
+import random
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
@@ -11,6 +13,40 @@ REFERENCE = ROOT / "reference" / "02_underwater_fight_mockup.png"
 OUTPUT = ROOT / "assets" / "showcase" / "underwater" / "underwater_battle_bg.png"
 
 CANVAS_SIZE = (1672, 941)
+
+
+def _draw_polyline(
+    draw: ImageDraw.ImageDraw,
+    points: list[tuple[float, float]],
+    fill: tuple[int, int, int, int],
+    width: int,
+) -> None:
+    if len(points) >= 2:
+        draw.line(points, fill=fill, width=width, joint="curve")
+
+
+def _draw_seaweed(
+    draw: ImageDraw.ImageDraw,
+    x: float,
+    y: float,
+    height: float,
+    color: tuple[int, int, int, int],
+    lean: float,
+    width: int,
+) -> None:
+    points: list[tuple[float, float]] = []
+    for step in range(8):
+        t = step / 7.0
+        points.append((x + math.sin(t * math.pi * 1.55) * 8.0 + lean * t, y - height * t))
+    _draw_polyline(draw, points, color, width)
+    for step in (2, 3, 4, 5, 6):
+        px, py = points[step]
+        side = -1 if step % 2 == 0 else 1
+        draw.line(
+            (px, py, px + side * height * 0.13, py - height * 0.09),
+            fill=(color[0], color[1], color[2], max(20, color[3] - 16)),
+            width=max(1, width - 1),
+        )
 
 
 def _make_mask(size: tuple[int, int]) -> Image.Image:
@@ -106,6 +142,89 @@ def _harmonize(image: Image.Image) -> Image.Image:
     return image.convert("RGB")
 
 
+def _add_masked_area_detail(image: Image.Image) -> Image.Image:
+    image = image.convert("RGBA")
+    w, h = image.size
+    rng = random.Random(240628)
+
+    layer = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(layer, "RGBA")
+
+    # Keep the runtime fish zone quiet, then restore reference-like seabed and
+    # side density below it so the masked center does not read as an empty wall.
+    for i in range(64):
+        x = rng.uniform(w * 0.24, w * 0.92)
+        y = rng.uniform(h * 0.67, h * 0.90)
+        length = rng.uniform(48, 170)
+        amp = rng.uniform(3, 9)
+        points: list[tuple[float, float]] = []
+        for step in range(7):
+            t = step / 6.0
+            points.append((x + length * t, y + math.sin(t * math.tau + i * 0.5) * amp))
+        _draw_polyline(draw, points, (203, 246, 230, rng.randint(20, 44)), rng.choice((1, 1, 2)))
+
+    rock_groups = (
+        (w * 0.76, h * 0.79, w * 0.18, 7),
+        (w * 0.90, h * 0.70, w * 0.16, 9),
+        (w * 0.54, h * 0.90, w * 0.12, 5),
+    )
+    for cx, cy, spread, count in rock_groups:
+        for index in range(count):
+            x = cx + rng.uniform(-spread * 0.5, spread * 0.5)
+            y = cy + rng.uniform(-h * 0.05, h * 0.06)
+            rx = rng.uniform(32, 92) * (1.0 - index * 0.025)
+            ry = rng.uniform(16, 46)
+            draw.ellipse((x - rx, y - ry, x + rx, y + ry), fill=(2, 38, 55, rng.randint(46, 86)))
+            draw.ellipse((x - rx * 0.70, y - ry * 0.82, x + rx * 0.25, y + ry * 0.05), fill=(71, 126, 116, rng.randint(28, 54)))
+            draw.arc((x - rx * 0.65, y - ry * 0.85, x + rx * 0.55, y + ry * 0.35), 198, 340, fill=(162, 220, 178, rng.randint(24, 44)), width=2)
+
+    clusters = (
+        (w * 0.34, h * 0.91, w * 0.16, 18),
+        (w * 0.78, h * 0.88, w * 0.18, 20),
+        (w * 0.91, h * 0.84, w * 0.12, 24),
+    )
+    for cx, base_y, spread, count in clusters:
+        for _ in range(count):
+            x = cx + rng.uniform(-spread * 0.5, spread * 0.5)
+            height = rng.uniform(52, 160)
+            pick = rng.random()
+            if pick < 0.66:
+                color = (42, rng.randint(118, 176), rng.randint(88, 132), rng.randint(64, 118))
+            elif pick < 0.86:
+                color = (108, rng.randint(116, 154), 58, rng.randint(52, 92))
+            else:
+                color = (178, rng.randint(70, 104), rng.randint(96, 132), rng.randint(44, 80))
+            _draw_seaweed(draw, x, base_y + rng.uniform(-20, 18), height, color, rng.uniform(-22, 20), rng.choice((2, 2, 3)))
+
+    for row, (y, count, scale, alpha) in enumerate(
+        ((h * 0.25, 10, 0.70, 48), (h * 0.35, 9, 0.56, 40), (h * 0.45, 7, 0.46, 34))
+    ):
+        for i in range(count):
+            x = w * 0.54 + i * rng.uniform(44, 66) + rng.uniform(-10, 16)
+            yy = y + math.sin(i * 1.6 + row) * 16.0 + rng.uniform(-5, 5)
+            bw = 15.0 * scale * rng.uniform(0.8, 1.2)
+            bh = bw * 0.32
+            color = (2, 30, 52, alpha)
+            draw.ellipse((x - bw, yy - bh, x + bw, yy + bh), fill=color)
+            draw.polygon(((x - bw * 0.85, yy), (x - bw * 1.38, yy - bh * 0.85), (x - bw * 1.38, yy + bh * 0.85)), fill=color)
+
+    for _ in range(46):
+        x = rng.uniform(w * 0.20, w * 0.88)
+        y = rng.uniform(h * 0.78, h * 0.93)
+        rx = rng.uniform(4, 14)
+        ry = rng.uniform(2, 6)
+        draw.ellipse((x - rx, y - ry, x + rx, y + ry), fill=(3, 41, 55, rng.randint(24, 46)))
+
+    image.alpha_composite(layer.filter(ImageFilter.GaussianBlur(0.45)))
+
+    depth = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    dd = ImageDraw.Draw(depth, "RGBA")
+    dd.rectangle((0, int(h * 0.82), w, h), fill=(0, 33, 43, 18))
+    dd.rectangle((int(w * 0.84), int(h * 0.34), w, h), fill=(0, 31, 49, 14))
+    image.alpha_composite(depth.filter(ImageFilter.GaussianBlur(22)))
+    return image.convert("RGB")
+
+
 def build() -> None:
     if not REFERENCE.exists():
         raise FileNotFoundError(f"Missing reference: {REFERENCE}")
@@ -117,6 +236,7 @@ def build() -> None:
     clean_crop = _remove_runtime_subjects(crop)
     background = _expand_to_canvas(clean_crop)
     background = _harmonize(background)
+    background = _add_masked_area_detail(background)
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     background.save(OUTPUT, optimize=True)
