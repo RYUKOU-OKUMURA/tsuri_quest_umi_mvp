@@ -93,7 +93,7 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 		inner.position + Vector2(14.0, 34.0),
 		Vector2(
 			inner.size.x - 28.0,
-			maxf(72.0, rect.size.y * (0.31 if _sidebar_frame != null else 0.37))
+			maxf(72.0, rect.size.y * (0.38 if _sidebar_frame != null else 0.37))
 		)
 	)
 	_draw_fish_portrait(fish_rect)
@@ -106,8 +106,9 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	draw_line(Vector2(inner.position.x + 8.0, desc_y - 10.0), Vector2(inner.end.x - 8.0, desc_y - 10.0), Color("#d6c299"), 1.0)
 	var detail_gap := 17.0 if _sidebar_frame != null else 21.0
 	_draw_detail_line(font, "岩場周りで警戒心が強い。", Vector2(inner.position.x + 16.0, desc_y), inner.size.x - 28.0)
-	if _sidebar_frame == null:
-		_draw_detail_line(font, "好むエサ：オキアミ・カニ", Vector2(inner.position.x + 16.0, desc_y + detail_gap), inner.size.x - 28.0)
+	_draw_detail_line(font, "好むエサ：オキアミ・カニ", Vector2(inner.position.x + 16.0, desc_y + detail_gap), inner.size.x - 28.0)
+	if _sidebar_frame != null:
+		_draw_detail_line(font, "生息域：沿岸の岩場・堤防周り", Vector2(inner.position.x + 16.0, desc_y + detail_gap * 2.0), inner.size.x - 28.0)
 
 
 

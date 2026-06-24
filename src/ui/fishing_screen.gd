@@ -4,6 +4,7 @@ const FishingSimulatorScript = preload("res://src/core/fishing_simulator.gd")
 const SurfaceCastViewScript = preload("res://src/ui/components/surface_cast_view.gd")
 const FightSidebarScript = preload("res://src/ui/components/fight_sidebar.gd")
 const FightHudScript = preload("res://src/ui/components/fight_hud.gd")
+const FightStatusBarScript = preload("res://src/ui/components/fight_status_bar.gd")
 
 var _simulator: FishingSimulator
 var _trip_stats: Dictionary = {}
@@ -24,7 +25,7 @@ var _view: UnderwaterView
 var _surface_view: SurfaceCastView
 var _fight_sidebar: FightSidebar
 var _fight_hud: FightHud
-var _top_depth_label: Label
+var _fight_status_bar: FightStatusBar
 
 var _result_overlay: ColorRect
 var _result_title: Label
@@ -47,13 +48,10 @@ func _build_screen() -> void:
 	layout.add_theme_constant_override("separation", 6)
 	root.add_child(layout)
 
-	var meal_text := "食事効果なし"
-	if not Dictionary(_trip_stats.get("meal_buff", {})).is_empty():
-		var meal_buff: Dictionary = _trip_stats["meal_buff"]
-		meal_text = (
-			"%s：%s" % [String(meal_buff.get("name", "料理")), String(meal_buff.get("text", ""))]
-		)
-	layout.add_child(_make_fight_status_bar(meal_text))
+	_fight_status_bar = FightStatusBarScript.new()
+	_fight_status_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_fight_status_bar.bind(_simulator)
+	layout.add_child(_fight_status_bar)
 
 	var body := HBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -64,7 +62,7 @@ func _build_screen() -> void:
 	left_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left_column.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left_column.size_flags_stretch_ratio = 1.65
-	left_column.add_theme_constant_override("separation", 6)
+	left_column.add_theme_constant_override("separation", 5)
 	body.add_child(left_column)
 
 	var water_panel := make_panel(true)
@@ -102,6 +100,15 @@ func _build_screen() -> void:
 	_message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_message_panel.add_child(_message_label)
 
+	_fight_hud = FightHudScript.new()
+	_fight_hud.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_fight_hud.custom_minimum_size = Vector2(0.0, 178.0)
+	_fight_hud.main_action_pressed.connect(_on_main_action_pressed)
+	_fight_hud.reel_changed.connect(func(active: bool) -> void: _simulator.set_reeling(active))
+	_fight_hud.give_line_changed.connect(func(active: bool) -> void: _simulator.set_giving_line(active))
+	_fight_hud.harbor_pressed.connect(func() -> void: navigate("harbor"))
+	left_column.add_child(_fight_hud)
+
 	var info_panel := make_panel()
 	info_panel.custom_minimum_size = Vector2(300, 0)
 	info_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -132,68 +139,9 @@ func _build_screen() -> void:
 	_fight_sidebar.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	info_box.add_child(_fight_sidebar)
 
-	_fight_hud = FightHudScript.new()
-	_fight_hud.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_fight_hud.custom_minimum_size = Vector2(0.0, 178.0)
-	_fight_hud.main_action_pressed.connect(_on_main_action_pressed)
-	_fight_hud.reel_changed.connect(func(active: bool) -> void: _simulator.set_reeling(active))
-	_fight_hud.give_line_changed.connect(func(active: bool) -> void: _simulator.set_giving_line(active))
-	_fight_hud.harbor_pressed.connect(func() -> void: navigate("harbor"))
-	layout.add_child(_fight_hud)
-
 	_create_result_overlay()
 	_prepare_new_attempt()
 	_update_ui()
-
-
-func _make_fight_status_bar(_meal_text: String) -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.custom_minimum_size = Vector2(0.0, 60.0)
-	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_theme_constant_override("separation", 8)
-	row.add_child(_make_status_card("AM", "08:47", 170.0, false))
-	row.add_child(_make_status_card("快晴", "風 弱", 220.0, false))
-	row.add_child(_make_status_card("所持金", "%d G" % PlayerProgress.money, 220.0, false))
-	row.add_child(_make_location_depth_card())
-	return row
-
-
-func _make_status_card(title: String, body: String, min_width: float, dark: bool) -> PanelContainer:
-	var card := make_panel(dark)
-	card.custom_minimum_size = Vector2(min_width, 60.0)
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 0)
-	card.add_child(box)
-	var title_color := Palette.TEXT_BONE if dark else Color("#6a4c2b")
-	var body_color := Color("#fff1c7") if dark else Color("#2b2117")
-	var title_label := make_label(title, 15, title_color, 2 if dark else 0, Palette.TEXT_OUTLINE_DARK)
-	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(title_label)
-	var body_label := make_label(body, 24, body_color, 3 if dark else 0, Palette.TEXT_OUTLINE_DARK)
-	body_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	body_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(body_label)
-	return card
-
-
-func _make_location_depth_card() -> PanelContainer:
-	var card := make_panel(true)
-	card.custom_minimum_size = Vector2(240.0, 60.0)
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 0)
-	card.add_child(box)
-	var location := make_label("南の島・沖", 17, Palette.TEXT_BONE, 3, Palette.TEXT_OUTLINE_DARK)
-	location.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	location.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(location)
-	_top_depth_label = make_label("水深 -- m", 22, Color("#eaf6ff"), 3, Palette.TEXT_OUTLINE_DARK)
-	_top_depth_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_top_depth_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(_top_depth_label)
-	return card
 
 
 func _create_result_overlay() -> void:
@@ -339,8 +287,6 @@ func _update_ui() -> void:
 	if _simulator == null:
 		return
 	_set_message_text(_simulator.action_message)
-	if _top_depth_label != null:
-		_top_depth_label.text = "水深 %.1fm" % _simulator.depth
 
 	_target_option.disabled = _simulator.state != FishingSimulator.State.READY
 	_target_option.visible = _simulator.state == FishingSimulator.State.READY

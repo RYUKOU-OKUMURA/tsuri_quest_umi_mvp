@@ -1,0 +1,125 @@
+class_name FightStatusBar
+extends Control
+## 水中ファイト画面上部の専用ステータスバー。
+# 生成フレーム素材を敷き、時計・天候・所持金・現在地点/水深の文字だけを重ねる。
+
+const FRAME_PATH := "res://assets/showcase/underwater/top_status_frame.png"
+
+var simulator: FishingSimulator
+
+var _frame: Texture2D
+
+
+func bind(value: FishingSimulator) -> void:
+	simulator = value
+	queue_redraw()
+
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	custom_minimum_size = Vector2(0.0, 76.0)
+	if ResourceLoader.exists(FRAME_PATH):
+		_frame = load(FRAME_PATH) as Texture2D
+
+
+func _process(_delta: float) -> void:
+	if simulator != null:
+		queue_redraw()
+
+
+func _draw() -> void:
+	var rect := Rect2(Vector2.ZERO, size)
+	if rect.size.x <= 0.0 or rect.size.y <= 0.0:
+		return
+
+	if _frame != null:
+		draw_texture_rect(_frame, rect, false, Color.WHITE)
+	else:
+		_draw_fallback_frame(rect)
+
+	var font := get_theme_default_font()
+	var slots := _slot_rects(rect)
+	_draw_status_slot(font, slots[0], "AM", "08:47", false)
+	_draw_status_slot(font, slots[1], "快晴", "風 弱", false)
+	_draw_status_slot(font, slots[2], "所持金", "%d G" % PlayerProgress.money, false)
+	var depth := 0.0
+	if simulator != null:
+		depth = simulator.depth
+	_draw_status_slot(font, slots[3], "南の島・沖", "水深 %.1fm" % depth, true)
+
+
+func _slot_rects(rect: Rect2) -> Array[Rect2]:
+	var w := rect.size.x
+	var y := rect.position.y + rect.size.y * 0.08
+	var h := rect.size.y * 0.84
+	return [
+		Rect2(rect.position.x + w * 0.000, y, w * 0.245, h),
+		Rect2(rect.position.x + w * 0.247, y, w * 0.247, h),
+		Rect2(rect.position.x + w * 0.496, y, w * 0.205, h),
+		Rect2(rect.position.x + w * 0.704, y, w * 0.296, h),
+	]
+
+
+func _draw_status_slot(font: Font, rect: Rect2, title: String, body: String, dark: bool) -> void:
+	var icon_space := clampf(rect.size.y * 1.72, 106.0, 132.0)
+	var text_x := rect.position.x + icon_space
+	if dark:
+		text_x += rect.size.y * 0.16
+	var max_width := rect.end.x - text_x - 18.0
+	var title_size := 13
+	var body_size := 21 if not dark else 19
+	if rect.size.x < 230.0:
+		body_size = 19
+	var title_color := Color("#6d4d25") if not dark else Palette.GOLD_BRIGHT
+	var body_color := Color("#21170f") if not dark else Color("#eaf6ff")
+	var outline := 0 if not dark else 3
+	var title_y := rect.position.y + rect.size.y * 0.40
+	var body_y := rect.position.y + rect.size.y * 0.72
+	_draw_text_clipped(font, title, Vector2(text_x, title_y), title_size, title_color, max_width, outline)
+	_draw_text_clipped(font, body, Vector2(text_x, body_y), body_size, body_color, max_width, outline)
+
+
+func _draw_text_clipped(
+	font: Font,
+	text: String,
+	baseline: Vector2,
+	font_size: int,
+	color: Color,
+	max_width: float,
+	outline: int
+) -> void:
+	var display := _fit_text(font, text, font_size, max_width)
+	if outline > 0:
+		draw_string_outline(
+			font,
+			baseline,
+			display,
+			HORIZONTAL_ALIGNMENT_LEFT,
+			max_width,
+			font_size,
+			outline,
+			Color(0.0, 0.0, 0.0, 0.7)
+		)
+	draw_string(font, baseline, display, HORIZONTAL_ALIGNMENT_LEFT, max_width, font_size, color)
+
+
+func _fit_text(font: Font, text: String, font_size: int, max_width: float) -> String:
+	if font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x <= max_width:
+		return text
+	var ellipsis := "..."
+	var result := text
+	while result.length() > 0:
+		result = result.left(result.length() - 1)
+		var candidate := result + ellipsis
+		if font.get_string_size(candidate, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x <= max_width:
+			return candidate
+	return ellipsis
+
+
+func _draw_fallback_frame(rect: Rect2) -> void:
+	draw_rect(rect, Color("#071523"), true)
+	draw_rect(rect.grow(-2.0), Palette.GOLD_DEEP, false, 2.0)
+	for slot in _slot_rects(rect):
+		var fill := Palette.PARCHMENT if slot.position.x < rect.position.x + rect.size.x * 0.70 else Color("#102c4b")
+		draw_rect(slot.grow(-3.0), fill, true)
+		draw_rect(slot.grow(-3.0), Palette.GOLD, false, 2.0)
