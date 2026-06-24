@@ -38,7 +38,7 @@
 3. `underwater_seabed_detail.png`
    背景下部と左右に重ねる透明PNG。岩場シルエット、海藻、サンゴ、水底の光線を足し、生成背景の滑らかさを補う。
 4. `underwater_foreground_ambience.png`
-   背景の上に重ねる透明PNG。泡柱、中央の小さな泡列、光の筋、遠景魚影、粒子を含み、主役魚を邪魔しない密度補助として扱う。
+   背景の上に重ねる透明PNG。泡柱、中央の小さな泡列、低アルファの中央水底光、光の筋、遠景魚影、粒子を含み、主役魚を邪魔しない密度補助として扱う。
 5. 動的深度表示
    現在深度と目盛り。背景上に半透明で重ねる。
 6. 釣り糸・エサ
@@ -73,7 +73,7 @@
 | `tools/source_assets/underwater_battle_bg_source.png` | 代替水中背景の元画像 | 旧本番寄り背景PNGの保存元 | Godotインポート対象外、参照抽出を使わない場合の後処理ソース |
 | `assets/showcase/underwater/underwater_color_grade.png` | 背景の奥行き/光調整 | `tools/generate_underwater_foreground_assets.py` で生成 | 透明PNG、外周暗部・海底の締まり・水面光を含み、魚/ヒット演出を覆わない |
 | `assets/showcase/underwater/underwater_seabed_detail.png` | 海底/左右の密度補助 | `tools/generate_underwater_foreground_assets.py` で生成 | 透明PNG、岩場・海藻・サンゴ・水底光を含み、主役魚を邪魔しない |
-| `assets/showcase/underwater/underwater_foreground_ambience.png` | 前景密度補助 | `tools/generate_underwater_foreground_assets.py` で生成 | 透明PNG、泡柱・中央の小さな泡列・遠景魚・光粒を含み主役魚を邪魔しない |
+| `assets/showcase/underwater/underwater_foreground_ambience.png` | 前景密度補助 | `tools/generate_underwater_foreground_assets.py` で生成 | 透明PNG、泡柱・中央の小さな泡列・中央水底光・遠景魚・光粒を含み主役魚を邪魔しない |
 | `assets/showcase/underwater/kurodai_chroma_source.png` | クロダイ中間素材 | リファレンス魚の切り出しを ImageGen で背景抽出 | フラットなマゼンタ背景、単体魚または横4フレーム |
 | `assets/showcase/underwater/kurodai_showcase_sheet.png` | クロダイ | `tools/process_underwater_fish_assets.py` で生成 | 透明背景、横 4 フレーム、全フレーム同サイズ |
 | `assets/showcase/underwater/kurodai_card_portrait.png` | 右カード用クロダイ | `tools/process_underwater_fish_assets.py` で生成 | 紙背景に魚を合成、620x330 前後のカード窓比率、暗い矩形を出さず、魚が紙窓の主役として大きく読める |
@@ -125,4 +125,4 @@
 2. `fight_hud_frame.png` の上段は深度プレート強化、暗色化、HUDアイコン縮小/低透過化、右ラベル余白調整、18分割メーター化、未充填セグメント表示とハイライト/影追加まで完了。下段はエサ/操作/メニューの紙タイトル帯、本文スロット、濃紺メニュー行、操作ヒントの3スロット化、A/B/LRキー配置の整列、キーキャップ/ラベルの拡大と低めの再配置、キーキャップの暗い外枠/金内枠/上ハイライト追加まで完了。次は最終比較でまだ機械的に見える場合だけ全体比率と小文字の詰めを行う。
 3. 上部ステータスの地点カードは参照に合わせてアイコンなし中央寄せに修正済み。`top_status_frame.png` は紙カード内枠、角金具、濃紺地点カードの内装追加まで完了。上部アイコン群は `top_status_icon_sheet.png` に分離し、時計/太陽/風/コインが潰れない状態まで改善済み。`FightStatusBar` は左ファイトカラム内へ移動し、右パネルヘッダーが上端から始まる構造に修正済み。カード比率は天候/所持金を広げ、地点カードを締める方向へ調整済み。文字ベースラインと数値の光学サイズも調整し、所持金は小ラベルを外して金額を大きく読ませる状態まで改善済み。画面外側の root margin と主要 container separation も詰め、黒い外側ガターを減らして参照の画面密度に近づけている。最新パスでは `top_status_frame.png` と `FightStatusBar._slot_rects()` のスロット境界を少し詰め、天候カードの `風 弱` を暗緑色かつ少し大きめにして参照の色味へ寄せた。次に詰めるなら、背景または右パネルの本番素材差分が埋まったあとに最終比較で微調整する。
 4. ヒット演出は白い放射線、泡粒、下端の重なりを調整済み。青白い線が背景ノイズに見えないよう、`hit_burst.png` 側の ray/glint 密度は控えめにしている。最終 HUD/フォント調整後に比較だけ再確認する。
-5. 泡、光粒、魚影は `underwater_foreground_ambience.png` と `UnderwaterView` の補助光粒として追加済み。背景の均一な明るさは `underwater_color_grade.png` で少し締め、海底/左右の密度は `underwater_seabed_detail.png` で補っている。`underwater_battle_bg.png` 本体は `tools/build_reference_underwater_background.py` でリファレンス水中窓全体から抽出し、主役魚/ヒット/糸/ルアー部分をマスク補完して再生成済み。左右岩場、海藻、泡、遠景魚、海底光は参照画像の実ピクセルを残すため、旧生成背景や右端だけのパッチより密度が高い。中央補完面には参照由来の左右海底/水中テクスチャ、低コントラスト泡、薄い水底光、参照水面光を伸ばした光パッチ、下部だけに抑えた水底/岩場断片、上からの光芒を戻し、丸い塗り跡と空白感を弱めている。補完パッチは波状の縦フェードと不定形マスクでアルファを絞り、横長の塗り面に見える問題を抑えている。`underwater_foreground_ambience.png` には中央の小さな泡列も足し、主役魚やヒット文字を邪魔せずに中央水域の空白感を少し減らしている。参照抽出背景に合わせ、`UnderwaterView` 側では色調整/海底補助/前景 ambience の opacity を下げて灰色の膜を避け、主役魚背後の大きなシアン円形オーラも外した。`UnderwaterView` は LINEAR フィルタで showcase テクスチャを描画し、背景の縮小時の硬さを抑える。次に背景を詰める場合は、中央マスク領域を最終ラスタとして描き込み、参照中央の水底/水中密度へ近づける。
+5. 泡、光粒、魚影は `underwater_foreground_ambience.png` と `UnderwaterView` の補助光粒として追加済み。背景の均一な明るさは `underwater_color_grade.png` で少し締め、海底/左右の密度は `underwater_seabed_detail.png` で補っている。`underwater_battle_bg.png` 本体は `tools/build_reference_underwater_background.py` でリファレンス水中窓全体から抽出し、主役魚/ヒット/糸/ルアー部分をマスク補完して再生成済み。左右岩場、海藻、泡、遠景魚、海底光は参照画像の実ピクセルを残すため、旧生成背景や右端だけのパッチより密度が高い。中央補完面には参照由来の左右海底/水中テクスチャ、低コントラスト泡、薄い水底光、参照水面光を伸ばした光パッチ、下部だけに抑えた水底/岩場断片、上からの光芒を戻し、丸い塗り跡と空白感を弱めている。補完パッチは波状の縦フェードと不定形マスクでアルファを絞り、横長の塗り面に見える問題を抑えている。`underwater_foreground_ambience.png` には中央の小さな泡列と低アルファの水底光も足し、主役魚やヒット文字を邪魔せずに中央水域の空白感を少し減らしている。参照抽出背景に合わせ、`UnderwaterView` 側では色調整/海底補助/前景 ambience の opacity を下げて灰色の膜を避け、主役魚背後の大きなシアン円形オーラも外した。`UnderwaterView` は LINEAR フィルタで showcase テクスチャを描画し、背景の縮小時の硬さを抑える。次に背景を詰める場合は、中央マスク領域を最終ラスタとして描き込み、参照中央の水底/水中密度へ近づける。

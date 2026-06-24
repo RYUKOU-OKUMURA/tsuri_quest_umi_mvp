@@ -85,6 +85,45 @@ def create_foreground_ambience() -> None:
             alpha = int(38 + t * 54 + rng.random() * 18)
             _draw_bubble(draw, x, y, r, alpha)
 
+    # Very soft central caustics break up the masked clean-water band while
+    # staying behind the runtime fish and hit text.
+    center_caustics = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    ccd = ImageDraw.Draw(center_caustics, "RGBA")
+    for i in range(38):
+        x = rng.uniform(w * 0.30, w * 0.74)
+        y = rng.uniform(h * 0.48, h * 0.70)
+        length = rng.uniform(42, 128)
+        amp = rng.uniform(2.5, 8.0)
+        alpha = rng.randint(14, 32)
+        points: list[tuple[float, float]] = []
+        for step in range(6):
+            t = step / 5.0
+            points.append(
+                (
+                    x + length * t,
+                    y + math.sin(t * math.tau * 0.72 + i * 0.37) * amp + t * rng.uniform(-8, 8),
+                )
+            )
+        ccd.line(points, fill=(211, 248, 239, alpha), width=1)
+    for i in range(18):
+        x = rng.uniform(w * 0.32, w * 0.70)
+        y = rng.uniform(h * 0.54, h * 0.73)
+        ccd.arc(
+            (x, y, x + rng.uniform(48, 124), y + rng.uniform(12, 34)),
+            196,
+            344,
+            fill=(228, 252, 242, rng.randint(10, 24)),
+            width=1,
+        )
+    image.alpha_composite(center_caustics.filter(ImageFilter.GaussianBlur(0.65)))
+
+    for _ in range(34):
+        x = rng.uniform(w * 0.34, w * 0.70)
+        y = rng.uniform(h * 0.42, h * 0.70)
+        r = rng.uniform(0.9, 2.5)
+        alpha = rng.randint(24, 56)
+        _draw_bubble(draw, x, y, r, alpha)
+
     # A few foreground specks around the central water column. Keep them sparse so the fish stays dominant.
     for _ in range(86):
         x = rng.uniform(w * 0.18, w * 0.82)
