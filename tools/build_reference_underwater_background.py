@@ -407,6 +407,45 @@ def _add_center_midwater_depth(
     )
 
 
+def _add_center_band_breakup(
+    base: Image.Image,
+    source: Image.Image,
+    subject_mask: Image.Image,
+) -> None:
+    w, h = source.size
+    left_haze = source.crop((int(w * 0.02), int(h * 0.40), int(w * 0.22), int(h * 0.68)))
+    right_haze = source.crop((int(w * 0.82), int(h * 0.38), int(w * 0.98), int(h * 0.66)))
+    haze_source = Image.new(
+        "RGB",
+        (left_haze.width + right_haze.width, max(left_haze.height, right_haze.height)),
+    )
+    haze_source.paste(left_haze, (0, 0))
+    haze_source.paste(right_haze, (left_haze.width, 0))
+
+    patch_size = (int(w * 0.68), int(h * 0.24))
+    patch = haze_source.resize(patch_size, Image.Resampling.LANCZOS)
+    patch = ImageEnhance.Brightness(patch).enhance(0.62)
+    patch = ImageEnhance.Color(patch).enhance(0.84)
+    patch = ImageEnhance.Contrast(patch).enhance(0.88)
+    patch = patch.filter(ImageFilter.GaussianBlur(2.4)).convert("RGBA")
+
+    x = int(w * 0.16)
+    y = int(h * 0.43)
+    alpha = ImageChops.multiply(
+        subject_mask.crop((x, y, x + patch_size[0], y + patch_size[1])),
+        _vertical_mask(patch_size, 76, 0.00, 0.98),
+    )
+    alpha = ImageChops.multiply(alpha, _soft_blob_mask(patch_size, 214, seed_offset=32))
+    base.alpha_composite(
+        Image.composite(
+            patch,
+            Image.new("RGBA", patch_size, (0, 0, 0, 0)),
+            alpha,
+        ),
+        (x, y),
+    )
+
+
 def _add_center_water_texture(
     clean: Image.Image,
     source: Image.Image,
@@ -457,6 +496,7 @@ def _add_center_water_texture(
     )
 
     _add_center_midwater_depth(base, source, subject_mask)
+    _add_center_band_breakup(base, source, subject_mask)
     _add_center_seabed_shelf(base, source, subject_mask)
     _add_center_sand_channel(base, source, subject_mask)
     _add_center_floor_glints(base, source, subject_mask)
