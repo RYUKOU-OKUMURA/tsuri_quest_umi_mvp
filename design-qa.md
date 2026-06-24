@@ -15,9 +15,9 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Patches Made Since Previous QA
 
-- Reduced the white ray/fleck intensity in `assets/showcase/underwater/hit_burst.png`.
-- Moved the hit badge slightly lower in `UnderwaterView` so the lower edge overlaps the operation board more like the reference.
-- Increased the right action-card body copy size and added a minimal Japanese line-break guard so punctuation does not start the next line.
+- Added a location icon to the top status depth/location card instead of leaving the frame's icon well empty.
+- Reduced top status icon size slightly so the symbols sit more quietly inside the parchment cards.
+- Shifted the location/depth text left to better match the reference card balance.
 - Regenerated `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png`.
 
 ## Findings
@@ -48,19 +48,19 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 - [P2] Typography is improved but still not at the reference's custom UI quality.
   Location: all fight UI overlay text.
-  Evidence: the fight UI now uses `MPLUS1p-Bold.ttf` for the main overlay text and the top-status numbers are stronger. The reference still has more tailored optical weights, tighter small-text rendering, and a more bespoke game-font feel.
+  Evidence: the fight UI now uses `MPLUS1p-Bold.ttf` for the main overlay text, the top-status numbers are stronger, and the location/depth card no longer has an empty icon well. The top-status icons are still more ornate than the simpler reference glyphs, and the reference still has more tailored optical weights plus tighter small-text rendering.
   Impact: the screen now reads more like a game UI, but typography still does not fully sell the premium mockup quality.
-  Fix: keep the bold/regular split, then tune per-component font sizes and consider a more display-like Japanese face for title/value text only.
+  Fix: keep the bold/regular split, then tune per-component font sizes and replace/simplify the top-status icon sheet if those icons still read too noisy in the final full-screen pass.
 
 ## Open Questions
 
-- None blocking. The next highest-value pass is top-status/HUD typography and icon simplification, while keeping the updated sidebar, HUD, and hit badge as the current baseline.
+- None blocking. The next highest-value pass is final HUD color/label spacing and top-status icon simplification, while keeping the updated sidebar, HUD, hit badge, and location card as the current baseline.
 
 ## Implementation Checklist
 
-1. Tune top-status and HUD title/value optical sizes, especially the location/depth card and depth module.
+1. Continue HUD upper-board polish, focusing on color balance and gauge-label spacing.
 2. Simplify or replace top-status icons if they still read noisy against the reference.
-3. Continue HUD upper-board polish, focusing on color balance and gauge-label spacing.
+3. Tune final title/value optical sizes only after the icon decision.
 4. Re-run `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png` after each pass.
 
 ## Follow-up Polish
