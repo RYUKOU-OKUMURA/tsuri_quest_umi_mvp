@@ -15,9 +15,9 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Patches Made Since Previous QA
 
-- Added a location icon to the top status depth/location card instead of leaving the frame's icon well empty.
-- Reduced top status icon size slightly so the symbols sit more quietly inside the parchment cards.
-- Shifted the location/depth text left to better match the reference card balance.
+- Removed the empty icon well from the top status depth/location card in `assets/showcase/underwater/top_status_frame.png`.
+- Centered the location/depth text in `FightStatusBar` to match the reference's iconless blue card.
+- Kept the top status parchment-card icons slightly smaller so they sit more quietly inside their cards.
 - Regenerated `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png`.
 
 ## Findings
@@ -48,13 +48,13 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 - [P2] Typography is improved but still not at the reference's custom UI quality.
   Location: all fight UI overlay text.
-  Evidence: the fight UI now uses `MPLUS1p-Bold.ttf` for the main overlay text, the top-status numbers are stronger, and the location/depth card no longer has an empty icon well. The top-status icons are still more ornate than the simpler reference glyphs, and the reference still has more tailored optical weights plus tighter small-text rendering.
+  Evidence: the fight UI now uses `MPLUS1p-Bold.ttf` for the main overlay text, the top-status numbers are stronger, and the location/depth card now matches the reference's iconless centered layout. The parchment-card icons are still more ornate than the simpler reference glyphs, and the reference still has more tailored optical weights plus tighter small-text rendering.
   Impact: the screen now reads more like a game UI, but typography still does not fully sell the premium mockup quality.
   Fix: keep the bold/regular split, then tune per-component font sizes and replace/simplify the top-status icon sheet if those icons still read too noisy in the final full-screen pass.
 
 ## Open Questions
 
-- None blocking. The next highest-value pass is final HUD color/label spacing and top-status icon simplification, while keeping the updated sidebar, HUD, hit badge, and location card as the current baseline.
+- None blocking. The next highest-value pass is final HUD color/label spacing and optional top-status icon simplification, while keeping the updated sidebar, HUD, hit badge, and location card as the current baseline.
 
 ## Implementation Checklist
 

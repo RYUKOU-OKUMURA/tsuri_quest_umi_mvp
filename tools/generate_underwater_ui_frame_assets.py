@@ -193,7 +193,6 @@ def create_top_status_frame() -> None:
     for i, (x0, sy0, x1, sy1, fill) in enumerate(slots):
         if i == 3:
             _draw_navy_card(image, (x0, sy0, x1, sy1), radius=12, seed=30 + i)
-            _draw_icon_well(d, (x0 + 56, (sy0 + sy1) // 2), 34, pale=False)
         else:
             _draw_card(image, (x0, sy0, x1, sy1), fill, radius=12, seed=10 + i, texture_strength=7)
             _draw_icon_well(d, (x0 + 56, (sy0 + sy1) // 2), 32, pale=True)

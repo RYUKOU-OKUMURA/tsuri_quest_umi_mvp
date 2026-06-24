@@ -10,7 +10,6 @@ const ICON_TIME := 0
 const ICON_WEATHER := 1
 const ICON_WIND := 2
 const ICON_COIN := 3
-const ICON_LOCATION := 2
 
 var simulator: FishingSimulator
 
@@ -52,7 +51,6 @@ func _draw() -> void:
 	_draw_status_icon(slots[0], ICON_TIME)
 	_draw_status_icon(slots[1], ICON_WEATHER)
 	_draw_status_icon(slots[2], ICON_COIN)
-	_draw_status_icon(slots[3], ICON_LOCATION, true)
 	_draw_status_slot(font, slots[0], "AM", "08:47", false)
 	_draw_status_slot(font, slots[1], "快晴", "風 弱", false)
 	_draw_status_slot(font, slots[2], "所持金", "%s G" % _format_money(PlayerProgress.money), false)
@@ -75,12 +73,11 @@ func _slot_rects(rect: Rect2) -> Array[Rect2]:
 
 
 func _draw_status_slot(font: Font, rect: Rect2, title: String, body: String, dark: bool) -> void:
+	if dark:
+		_draw_centered_dark_slot(font, rect, title, body)
+		return
 	var icon_space := clampf(rect.size.y * 1.60, 98.0, 118.0)
-	if dark:
-		icon_space = clampf(rect.size.y * 1.32, 82.0, 96.0)
 	var text_x := rect.position.x + icon_space
-	if dark:
-		text_x += rect.size.y * 0.04
 	var max_width := rect.end.x - text_x - 18.0
 	var title_size := 15 if dark else 14
 	var body_size := 24 if not dark else 21
@@ -105,15 +102,40 @@ func _draw_status_slot(font: Font, rect: Rect2, title: String, body: String, dar
 	_draw_text_clipped(font, body, Vector2(text_x, body_y), body_size, body_color, max_width, outline)
 
 
-func _draw_status_icon(rect: Rect2, icon_index: int, dark: bool = false) -> void:
+func _draw_centered_dark_slot(font: Font, rect: Rect2, title: String, body: String) -> void:
+	var title_size := 15
+	var body_size := 21
+	var title_width := font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x
+	var body_width := font.get_string_size(body, HORIZONTAL_ALIGNMENT_LEFT, -1, body_size).x
+	_draw_text_clipped(
+		font,
+		title,
+		Vector2(rect.position.x + (rect.size.x - title_width) * 0.5, rect.position.y + rect.size.y * 0.40),
+		title_size,
+		Palette.GOLD_BRIGHT,
+		rect.size.x,
+		3
+	)
+	_draw_text_clipped(
+		font,
+		body,
+		Vector2(rect.position.x + (rect.size.x - body_width) * 0.5, rect.position.y + rect.size.y * 0.72),
+		body_size,
+		Color("#eaf6ff"),
+		rect.size.x,
+		3
+	)
+
+
+func _draw_status_icon(rect: Rect2, icon_index: int) -> void:
 	if _icons == null:
 		return
-	var icon_size := clampf(rect.size.y * (0.48 if dark else 0.52), 30.0, 38.0)
+	var icon_size := clampf(rect.size.y * 0.52, 30.0, 38.0)
 	var icon_rect := Rect2(
-		rect.position + Vector2(36.0 if dark else 29.0, (rect.size.y - icon_size) * 0.5 + 1.0),
+		rect.position + Vector2(29.0, (rect.size.y - icon_size) * 0.5 + 1.0),
 		Vector2(icon_size, icon_size)
 	)
-	_draw_sheet_icon(icon_index, icon_rect, Color(0.85, 0.96, 1.0, 0.88) if dark else Color.WHITE)
+	_draw_sheet_icon(icon_index, icon_rect)
 	if icon_index == ICON_WEATHER:
 		_draw_sheet_icon(
 			ICON_WIND,
