@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
 from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFilter
@@ -73,14 +74,33 @@ def _vertical_mask(size: tuple[int, int], alpha: int, top: float, bottom: float)
     pixels = mask.load()
     for y in range(h):
         v = y / max(1, h - 1)
-        fade_in = min(1.0, max(0.0, (v - top) / 0.18))
-        fade_out = min(1.0, max(0.0, (bottom - v) / 0.10))
-        row_alpha = int(alpha * fade_in * fade_out)
         for x in range(w):
             u = x / max(1, w - 1)
+            edge_wave = (
+                math.sin(u * math.tau * 1.7) * 0.018
+                + math.sin((u * 3.6 + 0.25) * math.tau) * 0.010
+            )
+            top_edge = top + edge_wave
+            bottom_edge = bottom + math.sin((u * 2.2 + 0.55) * math.tau) * 0.014
+            fade_in = min(1.0, max(0.0, (v - top_edge) / 0.18))
+            fade_out = min(1.0, max(0.0, (bottom_edge - v) / 0.10))
             side_fade = min(1.0, u / 0.16, (1.0 - u) / 0.16)
-            pixels[x, y] = int(row_alpha * side_fade)
+            pixels[x, y] = int(alpha * fade_in * fade_out * side_fade)
     return mask.filter(ImageFilter.GaussianBlur(10.0))
+
+
+def _soft_blob_mask(size: tuple[int, int], alpha: int, *, seed_offset: int = 0) -> Image.Image:
+    w, h = size
+    mask = Image.new("L", size, 0)
+    draw = ImageDraw.Draw(mask)
+    for index in range(4):
+        x0 = int(w * (0.02 + index * 0.18))
+        x1 = int(w * (0.48 + index * 0.17))
+        y0 = int(h * (0.16 + (index % 2) * 0.08))
+        y1 = int(h * (0.92 - (index % 3) * 0.05))
+        local_alpha = max(0, alpha - index * 8 + seed_offset)
+        draw.ellipse((x0, y0, x1, y1), fill=local_alpha)
+    return mask.filter(ImageFilter.GaussianBlur(max(8, int(min(w, h) * 0.07))))
 
 
 def _add_center_water_texture(
@@ -118,6 +138,10 @@ def _add_center_water_texture(
             Image.Resampling.LANCZOS,
         ),
         _vertical_mask(seabed_patch.size, 102, 0.18, 0.98),
+    )
+    seabed_alpha = ImageChops.multiply(
+        seabed_alpha,
+        _soft_blob_mask(seabed_patch.size, 225, seed_offset=4),
     )
     base.alpha_composite(
         Image.composite(
@@ -170,6 +194,36 @@ def _add_center_water_texture(
             (x, y),
         )
 
+    reef_fragments = (
+        (source.crop((int(w * 0.04), int(h * 0.58), int(w * 0.24), int(h * 0.88))), 0.36, 0.70, 0.28, 0.22, 28),
+        (source.crop((int(w * 0.68), int(h * 0.48), int(w * 0.94), int(h * 0.78))), 0.49, 0.61, 0.34, 0.24, 30),
+        (source.crop((int(w * 0.78), int(h * 0.54), int(w * 0.98), int(h * 0.86))), 0.57, 0.68, 0.30, 0.23, 24),
+        (source.crop((int(w * 0.66), int(h * 0.70), int(w * 0.88), int(h * 0.94))), 0.49, 0.82, 0.27, 0.14, 26),
+    )
+    for index, (fragment, u, v, patch_w_ratio, patch_h_ratio, alpha) in enumerate(reef_fragments):
+        patch_size = (int(w * patch_w_ratio), int(h * patch_h_ratio))
+        patch = fragment.resize(patch_size, Image.Resampling.LANCZOS)
+        patch = ImageEnhance.Brightness(patch).enhance(0.60)
+        patch = ImageEnhance.Color(patch).enhance(0.72)
+        patch = ImageEnhance.Contrast(patch).enhance(0.78)
+        patch = patch.filter(ImageFilter.GaussianBlur(1.8)).convert("RGBA")
+        patch_alpha = ImageChops.multiply(
+            _soft_blob_mask(patch_size, alpha, seed_offset=index * 2),
+            _vertical_mask(patch_size, 210, 0.00, 1.0),
+        )
+        x = int(w * u - patch_size[0] * 0.5)
+        y = int(h * v - patch_size[1] * 0.5)
+        subject_crop = subject_mask.crop((x, y, x + patch_size[0], y + patch_size[1]))
+        patch_alpha = ImageChops.multiply(patch_alpha, subject_crop)
+        base.alpha_composite(
+            Image.composite(
+                patch,
+                Image.new("RGBA", patch_size, (0, 0, 0, 0)),
+                patch_alpha,
+            ),
+            (x, y),
+        )
+
     left_water = source.crop((int(w * 0.02), int(h * 0.18), int(w * 0.24), int(h * 0.56)))
     right_water = left_water.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
     mid_source = Image.new(
@@ -189,7 +243,11 @@ def _add_center_water_texture(
             mid_patch.size,
             Image.Resampling.LANCZOS,
         ),
-        _vertical_mask(mid_patch.size, 94, 0.00, 0.98),
+        _vertical_mask(mid_patch.size, 86, 0.00, 0.86),
+    )
+    mid_alpha = ImageChops.multiply(
+        mid_alpha,
+        _soft_blob_mask(mid_patch.size, 218, seed_offset=0),
     )
     base.alpha_composite(
         Image.composite(
@@ -227,9 +285,11 @@ def _add_center_water_texture(
     draw = ImageDraw.Draw(caustics, "RGBA")
     for index, (x0, x1, x2, x3, alpha) in enumerate(
         (
-            (0.24, 0.30, 0.40, 0.34, 24),
-            (0.38, 0.45, 0.56, 0.48, 19),
-            (0.55, 0.61, 0.68, 0.62, 17),
+            (0.20, 0.25, 0.35, 0.30, 21),
+            (0.29, 0.34, 0.46, 0.40, 26),
+            (0.39, 0.45, 0.58, 0.50, 23),
+            (0.52, 0.58, 0.68, 0.62, 19),
+            (0.64, 0.69, 0.75, 0.70, 15),
         )
     ):
         ray = (
@@ -259,11 +319,11 @@ def _add_center_water_texture(
                 (x + 150.0 * t, y + ((step % 2) * 2.0 - 1.0) * (2.5 + index % 2)),
             )
         draw.line(points, fill=(209, 249, 232, 32), width=1)
-    for index in range(36):
-        u = 0.24 + (index % 9) * 0.055 + ((index // 9) % 2) * 0.018
-        v = 0.26 + (index // 9) * 0.088
+    for index in range(54):
+        u = 0.23 + (index % 9) * 0.057 + ((index // 9) % 2) * 0.018
+        v = 0.24 + (index // 9) * 0.070
         radius = 1.3 + (index % 3) * 0.6
-        alpha = 34 if index % 4 else 50
+        alpha = 30 if index % 4 else 46
         draw.ellipse(
             (
                 w * u - radius,
@@ -277,7 +337,7 @@ def _add_center_water_texture(
 
     caustic_mask = ImageChops.multiply(
         subject_mask,
-        _vertical_mask(source.size, 112, 0.42, 0.94),
+        _vertical_mask(source.size, 96, 0.02, 0.94),
     )
     base.alpha_composite(
         Image.composite(
