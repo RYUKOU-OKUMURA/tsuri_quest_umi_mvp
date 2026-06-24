@@ -30,6 +30,7 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 - Moved `FightStatusBar` from the full-width root row into the left fight column so the right sidebar header starts at the same top height as the status cards, matching the reference's top-level composition more closely.
 - Rebuilt `top_status_frame.png` and `FightStatusBar` slot ratios so the weather/money cards are wider and the location card is tighter instead of one oversized rightmost blue card.
 - Regenerated `kurodai_card_portrait.png` with the fish occupying more of the paper portrait window, reducing empty parchment around the sidebar fish card.
+- Added `underwater_color_grade.png`, a transparent background color-grade/depth overlay. `UnderwaterView` now draws it over `underwater_battle_bg.png` before ambience/fish so the clean generated background gets darker edges, stronger seabed depth, and subtler surface light structure.
 - Regenerated `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png`.
 
 ## Findings
@@ -59,10 +60,10 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
   Fix: keep this asset as the current kurodai baseline, then tune lure placement only after the hit badge and HUD frame settle.
 
 - [P2] Background depth is improved, but still not a final art pass.
-  Location: `assets/showcase/underwater/underwater_battle_bg.png`, `assets/showcase/underwater/underwater_foreground_ambience.png`, `src/ui/components/underwater_view.gd`.
-  Evidence: the rendered scene now composites a transparent foreground ambience asset over the existing background PNG. The asset adds authored bubble columns, caustic strokes, far-fish silhouettes, and sparse particles in the same visual zones the reference uses for density. It stays behind the line/fish/hit treatment and does not cover the kurodai. The base background still has a cleaner, more generated look than the reference's richer hand-authored seabed and far-rock detail.
-  Impact: the screen feels less empty in full view, especially around the left/right edges and upper water column, and the density pass is now a replaceable image asset instead of only code-drawn effects. A true reference-quality background still requires a stronger final raster art pass.
-  Fix: keep `underwater_foreground_ambience.png` as the foreground density slot. Next, improve the actual `underwater_battle_bg.png` art if the background still reads too smooth.
+  Location: `assets/showcase/underwater/underwater_battle_bg.png`, `assets/showcase/underwater/underwater_color_grade.png`, `assets/showcase/underwater/underwater_foreground_ambience.png`, `src/ui/components/underwater_view.gd`.
+  Evidence: the rendered scene now composites a transparent color-grade/depth overlay and foreground ambience asset over the existing background PNG. `underwater_color_grade.png` adds darker edges, seabed depth, and subtle surface-light structure before the bubble/fish-silhouette ambience layer. The ambience asset adds authored bubble columns, caustic strokes, far-fish silhouettes, and sparse particles in the same visual zones the reference uses for density. These layers stay behind the line/fish/hit treatment and do not cover the kurodai. The base background still has a cleaner, more generated look than the reference's richer hand-authored seabed and far-rock detail.
+  Impact: the screen is less uniformly bright and the fish/HUD sit in the scene more naturally. A true reference-quality background still requires a stronger final raster art pass.
+  Fix: keep `underwater_color_grade.png` as the depth/lighting grade slot and `underwater_foreground_ambience.png` as the foreground density slot. Next, improve the actual `underwater_battle_bg.png` art if the background still reads too smooth.
 
 - [P3] Hit treatment is close, with only final context polish remaining.
   Location: `assets/showcase/underwater/hit_burst.png`, `src/ui/components/underwater_view.gd`.

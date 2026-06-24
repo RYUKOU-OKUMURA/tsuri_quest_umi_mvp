@@ -102,9 +102,64 @@ def create_foreground_ambience() -> None:
     image.save(OUT_DIR / "underwater_foreground_ambience.png")
 
 
+def create_color_grade() -> None:
+    w, h = 1672, 941
+    image = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image, "RGBA")
+
+    # Broad edge and depth vignette. This reins in the clean generated
+    # background without baking over the fish or hit burst.
+    for y in range(h):
+        v = y / max(1, h - 1)
+        for x in range(w):
+            u = x / max(1, w - 1)
+            edge = max(abs(u - 0.5) * 2.0, abs(v - 0.48) * 1.20)
+            lower = max(0.0, (v - 0.58) / 0.42)
+            alpha = int(max(0.0, edge - 0.42) * 58 + lower * 34)
+            if alpha <= 0:
+                continue
+            # Navy/teal, not pure black, so it feels like depth rather than a dirty overlay.
+            image.putpixel((x, y), (2, 24, 45, min(82, alpha)))
+
+    # Slightly dim the immediate HUD-adjacent seabed so the operation board reads cleaner.
+    seabed_shadow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(seabed_shadow, "RGBA")
+    sd.rectangle((0, int(h * 0.76), w, h), fill=(0, 18, 34, 42))
+    image.alpha_composite(seabed_shadow.filter(ImageFilter.GaussianBlur(34)))
+
+    # Reference-like surface glow and a few authored light shafts. These are subtle;
+    # the base background still owns the illustration detail.
+    light = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    ld = ImageDraw.Draw(light, "RGBA")
+    ld.ellipse((int(w * 0.18), -int(h * 0.18), int(w * 0.78), int(h * 0.28)), fill=(198, 248, 255, 30))
+    for i, x in enumerate((260, 430, 620, 850, 1080)):
+        width = 80 + i * 14
+        ld.polygon(
+            [
+                (x - width, 0),
+                (x + width, 0),
+                (x + width * 1.6, int(h * 0.55)),
+                (x - width * 0.55, int(h * 0.56)),
+            ],
+            fill=(178, 238, 255, 16 if i % 2 == 0 else 11),
+        )
+    image.alpha_composite(light.filter(ImageFilter.GaussianBlur(14)))
+
+    # Darken the very top corners where the reference frame feels more enclosed.
+    corner = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    cd = ImageDraw.Draw(corner, "RGBA")
+    cd.rectangle((0, 0, w, int(h * 0.10)), fill=(0, 13, 27, 28))
+    cd.rectangle((0, 0, int(w * 0.10), h), fill=(0, 13, 27, 18))
+    cd.rectangle((int(w * 0.90), 0, w, h), fill=(0, 13, 27, 18))
+    image.alpha_composite(corner.filter(ImageFilter.GaussianBlur(20)))
+
+    image.save(OUT_DIR / "underwater_color_grade.png")
+
+
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     create_foreground_ambience()
+    create_color_grade()
     print(f"generated {OUT_DIR / 'underwater_foreground_ambience.png'}")
 
 
