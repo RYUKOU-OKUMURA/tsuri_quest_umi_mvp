@@ -72,15 +72,15 @@ func _slot_rects(rect: Rect2) -> Array[Rect2]:
 
 
 func _draw_status_slot(font: Font, rect: Rect2, title: String, body: String, dark: bool) -> void:
-	var icon_space := clampf(rect.size.y * 1.65, 102.0, 128.0)
+	var icon_space := clampf(rect.size.y * 1.60, 98.0, 118.0)
 	var text_x := rect.position.x + icon_space
 	if dark:
 		text_x += rect.size.y * 0.16
 	var max_width := rect.end.x - text_x - 18.0
-	var title_size := 13
-	var body_size := 21 if not dark else 19
+	var title_size := 14
+	var body_size := 22 if not dark else 19
 	if rect.size.x < 230.0:
-		body_size = 19
+		body_size = 20
 	var title_color := Color("#6d4d25") if not dark else Palette.GOLD_BRIGHT
 	var body_color := Color("#21170f") if not dark else Color("#eaf6ff")
 	var outline := 0 if not dark else 3
@@ -93,16 +93,16 @@ func _draw_status_slot(font: Font, rect: Rect2, title: String, body: String, dar
 func _draw_status_icon(rect: Rect2, icon_index: int) -> void:
 	if _icons == null:
 		return
-	var icon_size := clampf(rect.size.y * 0.78, 46.0, 58.0)
+	var icon_size := clampf(rect.size.y * 0.56, 34.0, 42.0)
 	var icon_rect := Rect2(
-		rect.position + Vector2(22.0, (rect.size.y - icon_size) * 0.5),
+		rect.position + Vector2(27.0, (rect.size.y - icon_size) * 0.5 + 1.0),
 		Vector2(icon_size, icon_size)
 	)
 	_draw_sheet_icon(icon_index, icon_rect)
 	if icon_index == ICON_WEATHER:
 		_draw_sheet_icon(
 			ICON_WIND,
-			Rect2(icon_rect.position + Vector2(icon_size * 0.54, icon_size * 0.56), Vector2(icon_size * 0.48, icon_size * 0.48))
+			Rect2(icon_rect.position + Vector2(icon_size * 0.58, icon_size * 0.60), Vector2(icon_size * 0.34, icon_size * 0.34))
 		)
 
 

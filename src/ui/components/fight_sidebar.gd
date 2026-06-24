@@ -123,16 +123,17 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 	_draw_text(font, "魚の行動", rect.position + Vector2(14.0, 26.0), 18, Palette.TEXT_BONE, 3)
 	var body := Rect2(rect.position + Vector2(10.0, 33.0), rect.size - Vector2(20.0, 42.0))
 	if _sidebar_frame != null:
-		body = Rect2(rect.position + Vector2(12.0, rect.size.y * 0.38), rect.size - Vector2(24.0, rect.size.y * 0.48))
+		body = Rect2(rect.position + Vector2(12.0, rect.size.y * 0.33), rect.size - Vector2(24.0, rect.size.y * 0.42))
 	_draw_panel(body, Color("#f3e8cd"), Palette.WOOD_DARK, Palette.GOLD)
 	var action := "待機"
 	var message := "ラインを見ながら、テンションを保とう。"
 	if simulator != null:
 		action = simulator.action_name
 		message = simulator.action_message
-	_draw_action_icon(body.position + Vector2(32.0, body.size.y * 0.48))
-	_draw_text(font, "%s！" % action, body.position + Vector2(74.0, 31.0), 20, Color("#2b2117"), 0)
-	_draw_wrapped(font, message, body.position + Vector2(74.0, 48.0), body.size.x - 82.0, 13, Palette.TEXT_DARK, 1)
+	var icon_size := 46.0 if _sidebar_frame != null else 58.0
+	_draw_action_icon(body.position + Vector2(31.0, body.size.y * 0.50), icon_size)
+	_draw_text(font, "%s！" % action, body.position + Vector2(64.0, 27.0), 19, Color("#2b2117"), 0)
+	_draw_wrapped(font, message, body.position + Vector2(64.0, 36.0), body.size.x - 72.0, 12, Palette.TEXT_DARK, 2)
 
 
 func _draw_tackle_card(font: Font, rect: Rect2) -> void:
@@ -140,19 +141,20 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	_draw_text(font, "タックル", rect.position + Vector2(14.0, 26.0), 18, Palette.TEXT_BONE, 3)
 	var body := Rect2(rect.position + Vector2(10.0, 32.0), rect.size - Vector2(20.0, 38.0))
 	if _sidebar_frame != null:
-		body = Rect2(rect.position + Vector2(12.0, rect.size.y * 0.33), rect.size - Vector2(24.0, rect.size.y * 0.43))
+		body = Rect2(rect.position + Vector2(12.0, rect.size.y * 0.30), rect.size - Vector2(24.0, rect.size.y * 0.38))
 	_draw_panel(body, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	var rod_name := String(trip_stats.get("rod_name", "港の入門竿"))
-	var text_width := body.size.x - (70.0 if _icons != null else 12.0)
+	var text_width := body.size.x - (64.0 if _icons != null else 12.0)
 	var lines: Array[String] = [
 		"ロッド：%s" % rod_name,
+		"リール：小型スピニング",
 		"ライン：ナイロン 3号",
-		"ハリス：フロロ 2号",
+		"針：チヌ 3号 / ハリス 2号",
 	]
 	for i in range(lines.size()):
-		_draw_wrapped(font, lines[i], body.position + Vector2(12.0, 8.0 + float(i) * 17.0), text_width, 13, Palette.TEXT_DARK, 1)
+		_draw_wrapped(font, lines[i], body.position + Vector2(12.0, 7.0 + float(i) * 14.0), text_width, 11, Palette.TEXT_DARK, 1)
 	if _icons != null:
-		_draw_tackle_icon(Rect2(body.end - Vector2(60.0, 60.0), Vector2(56.0, 56.0)))
+		_draw_tackle_icon(Rect2(body.end - Vector2(58.0, 56.0), Vector2(50.0, 50.0)))
 	else:
 		_draw_simple_rod(body.position + Vector2(body.size.x - 62.0, body.size.y - 24.0))
 
@@ -227,9 +229,8 @@ func _draw_fish_portrait(rect: Rect2) -> void:
 	draw_texture_rect_region(_fish_sheet, draw_rect, Rect2(0.0, 0.0, frame_w, frame_h), Color.WHITE)
 
 
-func _draw_action_icon(center: Vector2) -> void:
+func _draw_action_icon(center: Vector2, size_value: float = 58.0) -> void:
 	if _icons != null:
-		var size_value := 58.0
 		_draw_sheet_icon(ICON_ACTION, Rect2(center - Vector2(size_value, size_value) * 0.5, Vector2(size_value, size_value)))
 		return
 	draw_arc(center, 26.0, -2.7, -0.5, 16, Color("#22354a"), 2.0)

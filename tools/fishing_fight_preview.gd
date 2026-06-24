@@ -28,6 +28,20 @@ func _ready() -> void:
 	# ファイト画面を直接確認するため、通常の待ち時間を飛ばして状態を作る。
 	s._target_option.select(1)
 	s._prepare_new_attempt()
+	var showcase_fish := GameData.get_fish("boss_kurodai").duplicate(true)
+	showcase_fish["name"] = "クロダイ"
+	showcase_fish["rarity"] = "レア"
+	showcase_fish["boss"] = false
+	showcase_fish["size_min"] = 40.2
+	showcase_fish["size_max"] = 48.2
+	showcase_fish["start_distance"] = 38.0
+	showcase_fish["start_depth"] = 18.0
+	s._current_fish = showcase_fish
+	s._simulator.prepare(showcase_fish, s._trip_stats)
+	s._view.bind_simulator(s._simulator)
+	s._surface_view.bind_simulator(s._simulator)
+	s._fight_sidebar.bind(s._simulator, showcase_fish, s._trip_stats)
+	s._fight_hud.bind(s._simulator, showcase_fish, s._trip_stats)
 	s._simulator.cast()
 	for _i in range(80):
 		s._simulator.tick(0.08)

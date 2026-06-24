@@ -281,7 +281,7 @@ func _draw_line_and_bait() -> void:
 		var fish_center := Vector2(
 			simulator.visual_position.x * size.x, simulator.visual_position.y * size.y
 		)
-		var fish_scale := 1.35 if bool(fish_data.get("boss", false)) else 1.0
+		var fish_scale := 1.10 if bool(fish_data.get("boss", false)) else 1.0
 		bait_position = fish_center + Vector2(56.0 * fish_scale * simulator.visual_direction, 4.0)
 	elif simulator.state == FishingSimulator.State.READY:
 		bait_position = Vector2(size.x * 0.67, size.y * 0.22)
@@ -445,7 +445,7 @@ func _draw_showcase_target_fish(center: Vector2, scale_value: float, direction: 
 	var frame_h := float(_showcase_fish_sheet.get_height())
 	var boss_ratio := 1.42 if bool(fish_data.get("boss", false)) else 1.0
 	var stamina_scale := clampf(scale_value / boss_ratio, 0.90, 1.06)
-	var target_width_ratio := 0.46 if bool(fish_data.get("boss", false)) else 0.33
+	var target_width_ratio := 0.38 if bool(fish_data.get("boss", false)) else 0.35
 	var draw_width := size.x * target_width_ratio * stamina_scale
 	var draw_size := Vector2(draw_width, draw_width * frame_h / frame_w)
 	var frame_index := _showcase_fish_frame_index()
@@ -486,13 +486,13 @@ func _draw_hit_burst() -> void:
 	var burst_center := Vector2(size.x * 0.50, size.y * 0.78)
 	if _showcase_hit_burst != null:
 		var tex_size := _showcase_hit_burst.get_size()
-		var scale := clampf(size.x / 1350.0, 0.48, 0.72)
+		var scale := clampf(size.x / 1420.0, 0.44, 0.62)
 		var draw_size := tex_size * scale
 		var draw_rect := Rect2(burst_center - draw_size * 0.5, draw_size)
 		draw_texture_rect(_showcase_hit_burst, draw_rect, false, Color(1.0, 1.0, 1.0, alpha))
 	var font := get_theme_default_font()
 	var text := "ヒット！"
-	var font_size := int(clampf(size.y * 0.11, 38.0, 64.0))
+	var font_size := int(clampf(size.y * 0.10, 36.0, 58.0))
 	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
 	var pos := burst_center + Vector2(-text_width * 0.5, font_size * 0.20)
 	draw_string_outline(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 6, Color("#4d2408"))
@@ -505,39 +505,17 @@ func _draw_fight_overlay() -> void:
 
 	var font := get_theme_default_font()
 
-	# 魚名バッジ：角丸＋影＋金縁
-	var badge_width := minf(240.0, size.x * 0.30)
-	var badge_rect := Rect2(size.x - badge_width - 14.0, 12.0, badge_width, 58.0)
-	if _badge_style == null:
-		_badge_style = StyleBoxFlat.new()
-		_badge_style.bg_color = Color(0.04, 0.12, 0.22, 0.84)
-		_badge_style.border_color = Palette.GOLD
-		_badge_style.set_border_width_all(2)
-		_badge_style.set_corner_radius_all(10)
-		_badge_style.shadow_color = Palette.SHADOW
-		_badge_style.shadow_size = 8
-	draw_style_box(_badge_style, badge_rect)
-
-	var fish_name := String(fish_data.get("name", "魚"))
-	var name_pos := badge_rect.position + Vector2(12.0, 23.0)
-	var name_w := int(badge_rect.size.x - 24.0)
-	draw_string_outline(font, name_pos, fish_name, HORIZONTAL_ALIGNMENT_LEFT, name_w, 16, 3, Color(0.0, 0.0, 0.0, 0.6))
-	draw_string(font, name_pos, fish_name, HORIZONTAL_ALIGNMENT_LEFT, name_w, 16, Color("#ffe7a8"))
-	var action_pos := badge_rect.position + Vector2(12.0, 43.0)
-	draw_string_outline(font, action_pos, "行動：%s" % simulator.action_name, HORIZONTAL_ALIGNMENT_LEFT, name_w, 13, 2, Color(0.0, 0.0, 0.0, 0.55))
-	draw_string(font, action_pos, "行動：%s" % simulator.action_name, HORIZONTAL_ALIGNMENT_LEFT, name_w, 13, Color("#d8ecff"))
-
-	# 距離メーター：丸端のトラック＋塗り＋グロー
+	# 水中画面は魚と背景を主役にし、詳細情報は右パネルとHUDに寄せる。
 	var distance_ratio := clampf(
 		simulator.distance / maxf(simulator.initial_distance, 0.01), 0.0, 1.0
 	)
 	var meter_rect := Rect2(68.0, size.y - 26.0, size.x - 84.0, 10.0)
 	if _meter_track == null:
 		_meter_track = StyleBoxFlat.new()
-		_meter_track.bg_color = Color(0.02, 0.08, 0.14, 0.6)
+		_meter_track.bg_color = Color(0.02, 0.08, 0.14, 0.26)
 		_meter_track.set_corner_radius_all(5)
 		_meter_fill = StyleBoxFlat.new()
-		_meter_fill.bg_color = Color(0.45, 0.88, 1.0, 0.9)
+		_meter_fill.bg_color = Color(0.52, 0.94, 1.0, 0.58)
 		_meter_fill.set_corner_radius_all(5)
 	draw_style_box(_meter_track, meter_rect)
 	if distance_ratio > 0.0:
@@ -545,12 +523,12 @@ func _draw_fight_overlay() -> void:
 		draw_style_box(_meter_fill, fill_rect)
 		draw_rect(
 			Rect2(fill_rect.position.x + 3.0, fill_rect.position.y + 1.5, fill_rect.size.x - 6.0, 1.5),
-			Color(1.0, 1.0, 1.0, 0.6),
+			Color(1.0, 1.0, 1.0, 0.38),
 			false
 		)
 	var label_pos := Vector2(68.0, size.y - 30.0)
-	draw_string_outline(font, label_pos, "距離 %.1fm" % simulator.distance, HORIZONTAL_ALIGNMENT_LEFT, int(size.x - 84.0), 13, 2, Color(0.0, 0.0, 0.0, 0.6))
-	draw_string(font, label_pos, "距離 %.1fm" % simulator.distance, HORIZONTAL_ALIGNMENT_LEFT, int(size.x - 84.0), 13, Color(0.86, 0.96, 1.0, 0.95))
+	draw_string_outline(font, label_pos, "距離 %.1fm" % simulator.distance, HORIZONTAL_ALIGNMENT_LEFT, int(size.x - 84.0), 12, 2, Color(0.0, 0.0, 0.0, 0.46))
+	draw_string(font, label_pos, "距離 %.1fm" % simulator.distance, HORIZONTAL_ALIGNMENT_LEFT, int(size.x - 84.0), 12, Color(0.86, 0.96, 1.0, 0.72))
 
 
 func _draw_frame() -> void:

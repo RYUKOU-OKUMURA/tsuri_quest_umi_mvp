@@ -120,8 +120,8 @@ func _draw_tension(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0b1828"), Color("#122f4f"), Palette.GOLD_DEEP)
 	var title_y := 25.0 if _hud_frame == null else 23.0
 	var bar_y := 42.0 if _hud_frame == null else 34.0
-	_draw_hud_icon(ICON_TENSION, Rect2(rect.position + Vector2(3.0, title_y - 24.0), Vector2(42.0, 42.0)), Color("#ff5b63"))
-	_draw_text(font, "テンション", rect.position + Vector2(46.0, title_y), 20, Palette.TEXT_BONE, 3)
+	_draw_hud_icon(ICON_TENSION, Rect2(rect.position + Vector2(9.0, title_y - 21.0), Vector2(34.0, 34.0)), Color("#ff5b63"))
+	_draw_text(font, "テンション", rect.position + Vector2(48.0, title_y), 19, Palette.TEXT_BONE, 3)
 	var ratio := 0.0
 	var safe_min := 0.30
 	var safe_max := 0.74
@@ -157,8 +157,8 @@ func _draw_stamina(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0b1828"), Color("#122f4f"), Palette.GOLD_DEEP)
 	var title_y := 25.0 if _hud_frame == null else 23.0
 	var bar_y := 42.0 if _hud_frame == null else 34.0
-	_draw_hud_icon(ICON_STAMINA, Rect2(rect.position + Vector2(3.0, title_y - 24.0), Vector2(42.0, 42.0)), Color("#6cc8ff"))
-	_draw_text(font, "魚の体力", rect.position + Vector2(46.0, title_y), 20, Palette.TEXT_BONE, 3)
+	_draw_hud_icon(ICON_STAMINA, Rect2(rect.position + Vector2(9.0, title_y - 21.0), Vector2(34.0, 34.0)), Color("#6cc8ff"))
+	_draw_text(font, "魚の体力", rect.position + Vector2(48.0, title_y), 19, Palette.TEXT_BONE, 3)
 	var ratio := 1.0
 	if simulator != null:
 		ratio = simulator.fish_stamina_ratio()
@@ -184,18 +184,19 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 	_harbor_rect = Rect2(menu.position, menu.size)
 
 	_draw_panel(bait, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
-	var bait_text_x := 16.0 if _hud_frame == null else 116.0
-	_draw_text(font, "使用中のエサ", bait.position + Vector2(bait_text_x, 24.0), 17, Color("#6a4c2b"), 0)
+	var bait_text_x := 16.0 if _hud_frame == null else 112.0
+	var bait_label_size := 17 if _hud_frame == null else 14
+	_draw_text(font, "使用中のエサ", bait.position + Vector2(bait_text_x, 22.0), bait_label_size, Color("#6a4c2b"), 0)
 	if _icons != null:
-		var bait_icon_size := 46.0 if _hud_frame != null else 46.0
+		var bait_icon_size := 38.0 if _hud_frame != null else 46.0
 		_draw_sheet_icon(
 			ICON_BAIT,
-			Rect2(bait.position + Vector2(58.0, bait.size.y * 0.5 - bait_icon_size * 0.5), Vector2(bait_icon_size, bait_icon_size))
+			Rect2(bait.position + Vector2(61.0, bait.size.y * 0.5 - bait_icon_size * 0.5), Vector2(bait_icon_size, bait_icon_size))
 		)
 	else:
 		_draw_bait_icon(bait.position + Vector2(82.0 if _hud_frame == null else 95.0, bait.size.y * 0.62))
-	_draw_text(font, "オキアミ", bait.position + Vector2(128.0 if _hud_frame == null else 156.0, bait.size.y * 0.58), 22, Color("#2b2117"), 0)
-	_draw_text(font, "× 17", bait.position + Vector2(132.0 if _hud_frame == null else 160.0, bait.size.y * 0.86), 22, Color("#2b2117"), 0)
+	_draw_text(font, "オキアミ", bait.position + Vector2(128.0 if _hud_frame == null else 120.0, bait.size.y * 0.66), 20, Color("#2b2117"), 0)
+	_draw_text(font, "× 17", bait.position + Vector2(132.0 if _hud_frame == null else 124.0, bait.size.y * 0.92), 19, Color("#2b2117"), 0)
 
 	_draw_panel(hint, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	_draw_text(font, "操作のヒント", hint.position + Vector2(16.0, 25.0), 18, Color("#6a4c2b"), 0)
