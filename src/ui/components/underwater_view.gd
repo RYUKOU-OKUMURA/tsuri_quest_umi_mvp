@@ -57,6 +57,7 @@ func _draw() -> void:
 	draw_set_transform(Juicer.get_offset())
 	if _showcase_bg != null:
 		_draw_showcase_background()
+		_draw_showcase_ambience()
 	else:
 		_draw_water_background()
 	_draw_depth_scale()
@@ -93,6 +94,52 @@ func _draw_showcase_background() -> void:
 		var y := size.y * (0.12 + float(index) * 0.085)
 		var x := fmod(_time * (8.0 + index) + float(index) * 121.0, size.x + 90.0) - 45.0
 		draw_line(Vector2(x, y), Vector2(x + 34.0, y + sin(_time + index) * 2.0), Color(0.74, 0.94, 1.0, 0.13), 2.0)
+
+
+func _draw_showcase_ambience() -> void:
+	_draw_showcase_fish_schools()
+	_draw_showcase_bubble_columns()
+	_draw_showcase_light_specks()
+
+
+func _draw_showcase_fish_schools() -> void:
+	for index in range(18):
+		var row := index % 3
+		var col := index / 3
+		var drift := fmod(_time * (5.0 + float(row) * 1.6) + float(col) * 42.0, size.x + 120.0)
+		var x := size.x * 0.18 + drift - 80.0
+		var y := size.y * (0.22 + float(row) * 0.075) + sin(_time * 0.7 + float(index)) * 3.0
+		if x < 54.0 or x > size.x - 28.0:
+			continue
+		var scale_value := 0.42 + float((index + row) % 4) * 0.08
+		var alpha := 0.16 + float(row) * 0.035
+		_draw_small_fish(Vector2(x, y), scale_value, Color(0.01, 0.12, 0.22, alpha))
+
+
+func _draw_showcase_bubble_columns() -> void:
+	var column_ratios: Array[float] = [0.08, 0.18, 0.84, 0.93]
+	for column in range(4):
+		var base_x: float = size.x * column_ratios[column]
+		for index in range(11):
+			var speed := 10.0 + float((index + column) % 5) * 3.5
+			var y := size.y - fmod(_time * speed + float(index * 43 + column * 61), size.y + 42.0)
+			var x: float = base_x + sin(_time * 0.45 + float(index) * 0.8 + float(column)) * (9.0 + float(column % 2) * 5.0)
+			var radius := 1.6 + float((index + column) % 4) * 0.75
+			var alpha := 0.22 + float(index % 3) * 0.045
+			draw_arc(Vector2(x, y), radius, 0.0, TAU, 12, Color(0.78, 0.96, 1.0, alpha), 1.0)
+			if radius > 2.4:
+				draw_circle(Vector2(x - radius * 0.30, y - radius * 0.30), 0.65, Color(1.0, 1.0, 1.0, alpha * 0.75))
+
+
+func _draw_showcase_light_specks() -> void:
+	for index in range(42):
+		var x := 52.0 + fmod(float(index * 97 + 23), maxf(1.0, size.x - 80.0))
+		var y := size.y * 0.10 + fmod(float(index * 53 + 11) + _time * (4.0 + float(index % 5)), size.y * 0.66)
+		var pulse := 0.5 + 0.5 * sin(_time * 1.7 + float(index) * 0.9)
+		var alpha := 0.08 + pulse * 0.11
+		draw_circle(Vector2(x, y), 0.75 + float(index % 3) * 0.25, Color(0.84, 0.98, 1.0, alpha))
+		if index % 9 == 0:
+			draw_line(Vector2(x - 2.0, y), Vector2(x + 2.0, y), Color(0.90, 1.0, 1.0, alpha * 0.8), 1.0)
 
 
 func _draw_cover_texture(texture: Texture2D, target_rect: Rect2, modulate: Color) -> void:
