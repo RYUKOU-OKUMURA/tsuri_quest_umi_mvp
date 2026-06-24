@@ -46,9 +46,9 @@ func _draw() -> void:
 
 	var gap := 7.0
 	var header := Rect2(0.0, 0.0, w, 30.0)
-	var action_h := clampf(h * 0.24, 84.0, 98.0)
-	var tackle_h := clampf(h * 0.18, 64.0, 78.0)
-	var fish_h := maxf(158.0, h - header.size.y - action_h - tackle_h - gap * 3.0)
+	var action_h := clampf(h * 0.22, 86.0, 102.0)
+	var tackle_h := clampf(h * 0.24, 92.0, 112.0)
+	var fish_h := maxf(170.0, h - header.size.y - action_h - tackle_h - gap * 3.0)
 	var fish_card := Rect2(0.0, header.end.y + gap, w, fish_h)
 	var action_card := Rect2(0.0, fish_card.end.y + gap, w, action_h)
 	var tackle_card := Rect2(0.0, action_card.end.y + gap, w, tackle_h)
@@ -77,15 +77,17 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 
 	var fish_rect := Rect2(
 		inner.position + Vector2(14.0, 34.0),
-		Vector2(inner.size.x - 28.0, maxf(112.0, rect.size.y * 0.45))
+		Vector2(inner.size.x - 28.0, maxf(92.0, rect.size.y * 0.37))
 	)
 	_draw_fish_portrait(fish_rect)
 	var divider_y := fish_rect.end.y + 6.0
 	draw_line(inner.position + Vector2(8.0, divider_y), inner.position + Vector2(inner.size.x - 8.0, divider_y), Color("#c9b486"), 1.0)
 	var estimate := (float(fish_data.get("size_min", 0.0)) + float(fish_data.get("size_max", 0.0))) * 0.5
-	_draw_text(font, "推定 %.1f cm" % estimate, inner.position + Vector2(42.0, divider_y + 30.0), 23, Color("#2b2117"), 0)
-	var lower_divider_y := minf(rect.end.y - 30.0, divider_y + 40.0)
-	draw_line(inner.position + Vector2(8.0, lower_divider_y), inner.position + Vector2(inner.size.x - 8.0, lower_divider_y), Color("#d6c299"), 1.0)
+	_draw_text(font, "推定 %.1f cm" % estimate, inner.position + Vector2(42.0, divider_y + 27.0), 23, Color("#2b2117"), 0)
+	var desc_y := divider_y + 48.0
+	draw_line(inner.position + Vector2(8.0, desc_y - 10.0), inner.position + Vector2(inner.size.x - 8.0, desc_y - 10.0), Color("#d6c299"), 1.0)
+	_draw_detail_line(font, "岩場や海藻の周りに潜む警戒心の強い魚。", inner.position + Vector2(16.0, desc_y), inner.size.x - 28.0)
+	_draw_detail_line(font, "好むエサ：オキアミ・カニ", inner.position + Vector2(16.0, desc_y + 21.0), inner.size.x - 28.0)
 
 
 
@@ -107,15 +109,16 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0d3a62"), Palette.GOLD, Palette.GOLD_BRIGHT)
 	_draw_text(font, "タックル", rect.position + Vector2(14.0, 26.0), 18, Palette.TEXT_BONE, 3)
-	var body := Rect2(rect.position + Vector2(10.0, 34.0), rect.size - Vector2(20.0, 42.0))
+	var body := Rect2(rect.position + Vector2(10.0, 32.0), rect.size - Vector2(20.0, 38.0))
 	_draw_panel(body, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	var rod_name := String(trip_stats.get("rod_name", "港の入門竿"))
 	var lines: Array[String] = [
 		"ロッド：%s" % rod_name,
 		"ライン：ナイロン 3号",
+		"ハリス：フロロ 2号",
 	]
 	for i in range(lines.size()):
-		_draw_text(font, lines[i], body.position + Vector2(12.0, 27.0 + float(i) * 19.0), 14, Palette.TEXT_DARK, 0)
+		_draw_text(font, lines[i], body.position + Vector2(12.0, 22.0 + float(i) * 17.0), 13, Palette.TEXT_DARK, 0)
 	_draw_simple_rod(body.position + Vector2(body.size.x - 62.0, body.size.y - 24.0))
 
 
@@ -159,6 +162,11 @@ func _draw_wrapped(font: Font, text: String, pos: Vector2, max_width: float, fon
 func _draw_bullet(font: Font, text: String, pos: Vector2, max_width: float) -> void:
 	draw_circle(pos + Vector2(2.0, -3.0), 4.0, Color("#49c75a"))
 	_draw_wrapped(font, text, pos + Vector2(14.0, -15.0), max_width - 14.0, 13, Palette.TEXT_DARK, 1)
+
+
+func _draw_detail_line(font: Font, text: String, pos: Vector2, max_width: float) -> void:
+	draw_circle(pos + Vector2(3.0, 10.0), 4.0, Color("#49c75a"))
+	_draw_wrapped(font, text, pos + Vector2(14.0, 0.0), max_width - 14.0, 13, Palette.TEXT_DARK, 1)
 
 
 func _draw_rarity_tag(font: Font, rect: Rect2, rarity: String) -> void:

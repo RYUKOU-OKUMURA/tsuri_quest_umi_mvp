@@ -1,9 +1,9 @@
 extends ScreenBase
 
 const FishingSimulatorScript = preload("res://src/core/fishing_simulator.gd")
-const GaugeBarScript = preload("res://src/ui/components/gauge_bar.gd")
 const SurfaceCastViewScript = preload("res://src/ui/components/surface_cast_view.gd")
 const FightSidebarScript = preload("res://src/ui/components/fight_sidebar.gd")
+const FightHudScript = preload("res://src/ui/components/fight_hud.gd")
 
 var _simulator: FishingSimulator
 var _trip_stats: Dictionary = {}
@@ -12,26 +12,19 @@ var _result_recorded: bool = false
 
 var _target_option: OptionButton
 var _info_title_label: Label
-var _main_action_button: Button
-var _reel_button: Button
-var _give_button: Button
-var _harbor_button: Button
 var _message_panel: PanelContainer
 var _message_label: Label
 var _state_label: Label
 var _action_label: Label
 var _fish_info_label: Label
-var _tension_bar: GaugeBarScript
-var _fish_stamina_bar: GaugeBarScript
-var _player_energy_bar: GaugeBarScript
 var _distance_label: Label
 var _depth_label: Label
 var _safe_zone_label: Label
 var _view: UnderwaterView
 var _surface_view: SurfaceCastView
 var _fight_sidebar: FightSidebar
+var _fight_hud: FightHud
 var _top_depth_label: Label
-var _depth_hud_label: Label
 
 var _result_overlay: ColorRect
 var _result_title: Label
@@ -139,89 +132,18 @@ func _build_screen() -> void:
 	_fight_sidebar.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	info_box.add_child(_fight_sidebar)
 
-	var hud := make_panel(true)
-	hud.custom_minimum_size = Vector2(0, 132)
-	hud.clip_contents = true
-	layout.add_child(hud)
-	var hud_box := VBoxContainer.new()
-	hud_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hud_box.add_theme_constant_override("separation", 6)
-	hud.add_child(hud_box)
-
-	var gauge_row := HBoxContainer.new()
-	gauge_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	gauge_row.add_theme_constant_override("separation", 10)
-	hud_box.add_child(gauge_row)
-	var tension_column := _make_gauge_column("テンション", Color("#3cbf78"), Color("#9ff0c0"))
-	_tension_bar = tension_column["bar"]
-	gauge_row.add_child(tension_column["root"])
-	var depth_panel := make_panel(true)
-	depth_panel.custom_minimum_size = Vector2(172, 58)
-	gauge_row.add_child(depth_panel)
-	var depth_box := VBoxContainer.new()
-	depth_box.alignment = BoxContainer.ALIGNMENT_CENTER
-	depth_box.add_theme_constant_override("separation", 0)
-	depth_panel.add_child(depth_box)
-	var depth_title := make_label("タナ（深さ）", 15, Palette.TEXT_BONE, 2, Palette.TEXT_OUTLINE_DARK)
-	depth_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	depth_box.add_child(depth_title)
-	_depth_hud_label = make_label("-- m", 30, Color("#eaf6ff"), 3, Palette.TEXT_OUTLINE_DARK)
-	_depth_hud_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	depth_box.add_child(_depth_hud_label)
-	var fish_column := _make_gauge_column("魚の体力", Color("#1fa8a0"), Color("#7fe6dc"))
-	_fish_stamina_bar = fish_column["bar"]
-	gauge_row.add_child(fish_column["root"])
-	var energy_column := _make_gauge_column("プレイヤー体力", Color("#2f7fd0"), Color("#88bdf2"))
-	_player_energy_bar = energy_column["bar"]
-	gauge_row.add_child(energy_column["root"])
-
-	var control_row := HBoxContainer.new()
-	control_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	control_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	control_row.add_theme_constant_override("separation", 8)
-	hud_box.add_child(control_row)
-	_main_action_button = make_button("仕掛けを投げる", _on_main_action_pressed, 0)
-	_main_action_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_main_action_button.size_flags_stretch_ratio = 1.1
-	control_row.add_child(_main_action_button)
-	_reel_button = make_button("巻く［Space］", func() -> void: pass, 0)
-	_reel_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_reel_button.button_down.connect(func() -> void: _simulator.set_reeling(true))
-	_reel_button.button_up.connect(func() -> void: _simulator.set_reeling(false))
-	_reel_button.mouse_exited.connect(func() -> void: _simulator.set_reeling(false))
-	control_row.add_child(_reel_button)
-	_give_button = make_button("糸を出す［Shift］", func() -> void: pass, 0)
-	_give_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_give_button.button_down.connect(func() -> void: _simulator.set_giving_line(true))
-	_give_button.button_up.connect(func() -> void: _simulator.set_giving_line(false))
-	_give_button.mouse_exited.connect(func() -> void: _simulator.set_giving_line(false))
-	control_row.add_child(_give_button)
-	_harbor_button = make_button("港へ戻る", func() -> void: navigate("harbor"), 0)
-	_harbor_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	control_row.add_child(_harbor_button)
+	_fight_hud = FightHudScript.new()
+	_fight_hud.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_fight_hud.custom_minimum_size = Vector2(0.0, 178.0)
+	_fight_hud.main_action_pressed.connect(_on_main_action_pressed)
+	_fight_hud.reel_changed.connect(func(active: bool) -> void: _simulator.set_reeling(active))
+	_fight_hud.give_line_changed.connect(func(active: bool) -> void: _simulator.set_giving_line(active))
+	_fight_hud.harbor_pressed.connect(func() -> void: navigate("harbor"))
+	layout.add_child(_fight_hud)
 
 	_create_result_overlay()
 	_prepare_new_attempt()
 	_update_ui()
-
-
-func _make_gauge_column(
-	title: String, fill_from: Color = Color("#3cbf78"), fill_to: Color = Color("#9ff0c0")
-) -> Dictionary:
-	var root := VBoxContainer.new()
-	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	root.size_flags_stretch_ratio = 1.0
-	var label := make_label(title, 16, Color("#eaf5ff"), 2, Color("#08131f"))
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	root.add_child(label)
-	var bar := GaugeBarScript.new()
-	bar.min_value = 0.0
-	bar.max_value = 100.0
-	bar.set_colors(fill_from, fill_to)
-	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	root.add_child(bar)
-	return {"root": root, "bar": bar}
 
 
 func _make_fight_status_bar(_meal_text: String) -> HBoxContainer:
@@ -356,6 +278,7 @@ func _prepare_new_attempt() -> void:
 	_view.bind_simulator(_simulator)
 	_surface_view.bind_simulator(_simulator)
 	_fight_sidebar.bind(_simulator, _current_fish, _trip_stats)
+	_fight_hud.bind(_simulator, _current_fish, _trip_stats)
 	# 新規挑戦時は水上ビューから（水中は淡出状態で待機）
 	_view.modulate.a = 0.0
 	_surface_view.modulate.a = 1.0
@@ -416,44 +339,13 @@ func _update_ui() -> void:
 	if _simulator == null:
 		return
 	_set_message_text(_simulator.action_message)
-	if _depth_hud_label != null:
-		_depth_hud_label.text = "%.1fm" % _simulator.depth
 	if _top_depth_label != null:
 		_top_depth_label.text = "水深 %.1fm" % _simulator.depth
-	var tension_ratio := _simulator.tension / maxf(_simulator.line_break_limit(), 0.01)
-	_tension_bar.set_ratio(clampf(tension_ratio, 0.0, 1.0))
-	_update_tension_bar_color(tension_ratio)
-	_fish_stamina_bar.set_ratio(_simulator.fish_stamina_ratio())
-	_player_energy_bar.set_ratio(_simulator.player_energy_ratio())
 
-	var fighting: bool = _simulator.state == FishingSimulator.State.FIGHT
-	_reel_button.disabled = not fighting
-	_give_button.disabled = not fighting
 	_target_option.disabled = _simulator.state != FishingSimulator.State.READY
 	_target_option.visible = _simulator.state == FishingSimulator.State.READY
 	if _info_title_label != null:
 		_info_title_label.visible = _simulator.state == FishingSimulator.State.READY
-	match _simulator.state:
-		FishingSimulator.State.READY:
-			_main_action_button.text = "仕掛けを投げる［Enter］"
-			_main_action_button.disabled = false
-		FishingSimulator.State.BITE:
-			_main_action_button.text = "今だ！ アワセる［E］"
-			_main_action_button.disabled = false
-		_:
-			_main_action_button.text = "ファイト中" if fighting else "魚を待っています"
-			_main_action_button.disabled = true
-
-
-func _update_tension_bar_color(tension_ratio: float) -> void:
-	if tension_ratio < _simulator.safe_min() or tension_ratio > _simulator.safe_max():
-		_tension_bar.set_colors(Color("#e0533b"), Color("#ff9a82"))
-	elif (
-		tension_ratio < _simulator.safe_min() + 0.06 or tension_ratio > _simulator.safe_max() - 0.06
-	):
-		_tension_bar.set_colors(Color("#e0a02e"), Color("#ffd277"))
-	else:
-		_tension_bar.set_colors(Color("#3cbf78"), Color("#9ff0c0"))
 
 
 func _set_message_text(message: String) -> void:
