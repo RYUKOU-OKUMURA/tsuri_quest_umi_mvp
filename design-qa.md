@@ -15,10 +15,9 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Patches Made Since Previous QA
 
-- Rebuilt `assets/showcase/underwater/hit_burst.png` as a blue water-splash asset instead of an orange-centered sticker.
-- Removed the warm ellipse from the generated hit asset so the live yellow/orange `ヒット！` text carries the warm color.
-- Moved `_draw_hit_burst()` slightly downward so the badge sits nearer the water/HUD boundary like the reference.
-- Expanded `/tmp/tsuri_fish_hit_focus.png` current-screen crop in `tools/build_fight_comparison_images.py` so the QA evidence includes the full lowered hit badge.
+- Reworked `fight_hud_frame.png` lower row generation so bait, hint, and menu sections sit on one shared navy base instead of three independently shadowed cards.
+- Kept parchment sub-panels for bait and operation hints, but removed their separate drop shadows so the bottom HUD reads more like a single operation strip.
+- Regenerated `assets/showcase/underwater/fight_hud_frame.png` and refreshed `/tmp/tsuri_frame_focus_compare.png`.
 
 ## Findings
 
@@ -30,9 +29,9 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 - [P2] HUD top row is more connected, but the board styling is still not as authored as the reference.
   Location: `assets/showcase/underwater/fight_hud_frame.png`, `src/ui/components/fight_hud.gd`.
-  Evidence: the top gauge row now reads as one navy operation board with a central angular depth plate, and the latest pass reduces the most obvious line noise. The reference still has stronger angular segmentation and tighter vertical rhythm; the implementation's lower control row still reads as separate simple cards.
-  Impact: the HUD is no longer fragmented, but it still lacks the reference's compact, deliberate console feel.
-  Fix: bring the depth module closer to the reference shape and tune the lower control row as one integrated strip instead of three equal cards.
+  Evidence: the bottom controls now share a navy base, so the previous three-floating-card read is reduced. The reference still has stronger angular segmentation in the upper gauge board, more deliberate depth-module geometry, and tighter vertical rhythm.
+  Impact: the HUD is moving toward a single operation board, but it still lacks the reference's compact, authored console feel.
+  Fix: bring the depth module closer to the reference shape, reduce lower-row height slightly if needed, and tune text positions after the final frame geometry is locked.
 
 - [P3] Main fish is now close, with minor runtime-placement polish remaining.
   Location: `assets/showcase/underwater/kurodai_showcase_sheet.png`, `src/ui/components/underwater_view.gd`.
@@ -58,8 +57,8 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Implementation Checklist
 
-1. Make the HUD lower control row read as one integrated operation strip.
-2. Enlarge the sidebar lower card body regions if the current sidebar width remains.
+1. Enlarge the sidebar lower card body regions if the current sidebar width remains.
+2. Bring the HUD depth module and top-row angular separators closer to the reference.
 3. Continue font-size tuning after the next frame pass, especially small right-panel body text.
 4. Re-run `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png` after each pass.
 

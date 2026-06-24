@@ -276,16 +276,52 @@ def create_fight_hud_frame() -> None:
     hint = (bait[2] + gap, bottom[1], bait[2] + gap + hint_w, bottom[3])
     menu = (hint[2] + gap, bottom[1], bottom[2], bottom[3])
 
-    _draw_clean_card(image, bait, "#f3e6cc", radius=10, seed=51, texture_strength=5, shadow=True)
-    _draw_clean_card(image, hint, "#f2e4c8", radius=10, seed=52, texture_strength=5, shadow=True)
-    _draw_navy_card(image, menu, radius=12, seed=53, shadow=True)
+    _draw_navy_card(image, bottom, radius=12, seed=50, shadow=True)
+    inner_y0 = bottom[1] + 10
+    inner_y1 = bottom[3] - 10
+    bait_panel = (bait[0] + 10, inner_y0, bait[2] - 4, inner_y1)
+    hint_panel = (hint[0] + 4, inner_y0, hint[2] - 4, inner_y1)
+    menu_panel = (menu[0] + 4, inner_y0, menu[2] - 10, inner_y1)
+    _draw_clean_card(
+        image,
+        bait_panel,
+        "#f3e6cc",
+        radius=8,
+        border="#8c6733",
+        inner="#d8b45d",
+        seed=51,
+        texture_strength=5,
+        shadow=False,
+    )
+    _draw_clean_card(
+        image,
+        hint_panel,
+        "#f2e4c8",
+        radius=8,
+        border="#8c6733",
+        inner="#d8b45d",
+        seed=52,
+        texture_strength=5,
+        shadow=False,
+    )
+    _draw_clean_card(
+        image,
+        menu_panel,
+        "#0e3a5b",
+        radius=8,
+        border="#9f7a3d",
+        inner="#dfbf73",
+        seed=53,
+        texture_strength=5,
+        shadow=False,
+    )
     _draw_icon_well(d, (bait[0] + 80, (bait[1] + bait[3]) // 2), 30, pale=True)
 
-    # Thin separators: enough structure without returning to the previous grid-like skin.
+    # Shared separators: enough structure without returning to the previous grid-like skin.
     for x in (depth[0] - gap // 2, depth[2] + gap // 2):
         d.line((x, top[1] + 22, x, top[3] - 22), fill=_rgba("#b88b3f", 82), width=2)
     for x in (hint[0] - gap // 2, menu[0] - gap // 2):
-        d.line((x, bottom[1] + 18, x, bottom[3] - 18), fill=_rgba("#b88b3f", 75), width=2)
+        d.line((x, bottom[1] + 16, x, bottom[3] - 16), fill=_rgba("#b88b3f", 90), width=2)
 
     image.save(OUT_DIR / "fight_hud_frame.png")
 
