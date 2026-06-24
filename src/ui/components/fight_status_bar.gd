@@ -69,10 +69,10 @@ func _slot_rects(rect: Rect2) -> Array[Rect2]:
 	var y := rect.position.y + rect.size.y * 0.08
 	var h := rect.size.y * 0.84
 	return [
-		Rect2(rect.position.x + w * 0.000, y, w * 0.229, h),
-		Rect2(rect.position.x + w * 0.229, y, w * 0.297, h),
-		Rect2(rect.position.x + w * 0.526, y, w * 0.254, h),
-		Rect2(rect.position.x + w * 0.780, y, w * 0.220, h),
+		Rect2(rect.position.x + w * 0.000, y, w * 0.245, h),
+		Rect2(rect.position.x + w * 0.245, y, w * 0.310, h),
+		Rect2(rect.position.x + w * 0.555, y, w * 0.270, h),
+		Rect2(rect.position.x + w * 0.825, y, w * 0.175, h),
 	]
 
 
@@ -147,7 +147,7 @@ func _draw_status_icon(rect: Rect2, icon_index: int) -> void:
 		return
 	var icon_size := clampf(rect.size.y * 0.60, 38.0, 44.0)
 	var icon_rect := Rect2(
-		rect.position + Vector2(16.0, (rect.size.y - icon_size) * 0.5 + 1.0),
+		rect.position + Vector2(10.0, (rect.size.y - icon_size) * 0.5 + 1.0),
 		Vector2(icon_size, icon_size)
 	)
 	_draw_top_sheet_icon(icon_index, icon_rect, Color(1.0, 1.0, 1.0, 0.96))

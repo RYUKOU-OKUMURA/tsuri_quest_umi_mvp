@@ -273,11 +273,14 @@ def create_top_status_frame() -> None:
     image = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(image)
     y0, y1 = 22, 222
+    split1 = int(w * 0.245)
+    split2 = int(w * 0.555)
+    split3 = int(w * 0.825)
     slots = [
-        (8, y0, int(w * 0.229) - 4, y1, "#f4ead5"),
-        (int(w * 0.229) + 4, y0, int(w * 0.526) - 4, y1, "#f3e8d0"),
-        (int(w * 0.526) + 4, y0, int(w * 0.780) - 4, y1, "#f5ead4"),
-        (int(w * 0.780) + 4, y0, w - 8, y1, "#123554"),
+        (8, y0, split1 - 4, y1, "#f4ead5"),
+        (split1 + 4, y0, split2 - 4, y1, "#f3e8d0"),
+        (split2 + 4, y0, split3 - 4, y1, "#f5ead4"),
+        (split3 + 4, y0, w - 8, y1, "#123554"),
     ]
     for i, (x0, sy0, x1, sy1, fill) in enumerate(slots):
         if i == 3:
@@ -295,7 +298,6 @@ def create_top_status_frame() -> None:
             body = (x0 + 18, sy0 + 18, x1 - 18, sy1 - 18)
             d.rounded_rectangle(body, radius=7, outline=_rgba("#8c6733", 62), width=1)
             d.line((body[0] + 14, body[1] + 14, body[2] - 14, body[1] + 14), fill=_rgba("#ffffff", 74), width=1)
-            _draw_icon_well(d, (x0 + 56, (sy0 + sy1) // 2), 28, pale=True)
             _draw_corner_brackets(d, (x0 + 8, sy0 + 8, x1 - 8, sy1 - 8), length=26, inset=10, color="#8c6733", alpha=82, width=1)
             if i in (1, 2):
                 d.line((x0 + 132, sy0 + 36, x0 + 132, sy1 - 36), fill=_rgba("#b8934d", 96), width=2)
