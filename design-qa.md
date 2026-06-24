@@ -25,6 +25,7 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 - Added `underwater_foreground_ambience.png`, a transparent foreground ambience asset with bubble columns, caustic strokes, and distant fish silhouettes. `UnderwaterView` now uses it over `underwater_battle_bg.png` and keeps only light specks as a runtime shimmer.
 - Rebuilt `top_status_frame.png` with stronger paper-card inner frames, corner brackets, a more authored navy location card, and quieter top-status icon rendering.
 - Refined HUD segment gauges with visible inactive segments, subtle upper highlights, bottom shadows, and a stronger tension marker shadow so the meters feel more embedded in the authored console.
+- Rebuilt the lower HUD frame with stronger paper title bands, recessed bait/hint/menu wells, and darker menu row slots. Realigned the runtime bait text and A/B/LR key caps to the baked paper slots.
 - Regenerated `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png`.
 
 ## Findings
@@ -37,9 +38,9 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 - [P2] HUD top row is closer, but still below the reference's authored console quality.
   Location: `assets/showcase/underwater/fight_hud_frame.png`, `src/ui/components/fight_hud.gd`.
-  Evidence: the upper board is now darker, the central depth module is less bright, the title/icon scale is more compact, and the row icons are visually quieter after opacity modulation. The bar-well grid density is lower, the runtime meter uses fewer segments, inactive segments remain faintly visible, and filled segments now have small highlight/shadow treatment instead of flat rectangles. The lower bait/hint cards now have opaque paper insets, and the operation-hint key row uses three aligned paper slots with compact A/B/LR key blocks instead of labels sinking into the dark board. The reference still has more deliberate black-panel spacing and a more bespoke meter construction.
-  Impact: the HUD is closer to a single premium operation board, and the meter no longer reads as strongly like debug blocks. It still does not fully reach the reference's authored console quality.
-  Fix: keep the darker frame, new label padding, quieter icon opacity, reduced segment grid, visible inactive segments, navy menu card, and aligned operation-hint slots. Next, revisit the lower HUD frame texture only if the final full-screen comparison still reads too mechanical.
+  Evidence: the upper board is now darker, the central depth module is less bright, the title/icon scale is more compact, and the row icons are visually quieter after opacity modulation. The bar-well grid density is lower, the runtime meter uses fewer segments, inactive segments remain faintly visible, and filled segments now have small highlight/shadow treatment instead of flat rectangles. The lower bait/hint/menu area now has stronger baked paper title bands, recessed paper slots, darker menu rows, and runtime A/B/LR key caps aligned to those slots instead of floating inside a generic grid. The reference still has more deliberate black-panel spacing, larger authored operation-card proportions, and a more bespoke meter construction.
+  Impact: the HUD reads more like an authored operation board and less like a debug grid. It still does not fully reach the reference's premium console quality.
+  Fix: keep the darker frame, label padding, quieter icon opacity, reduced segment grid, visible inactive segments, navy menu card, recessed lower paper slots, and aligned operation-hint caps. The next HUD pass should focus on final proportions/typography only after background and top-icon gaps are checked in full view.
 
 - [P2] Top status bar has stronger material quality, but still trails the reference's compact icon grammar.
   Location: `assets/showcase/underwater/top_status_frame.png`, `src/ui/components/fight_status_bar.gd`.
@@ -73,7 +74,7 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Open Questions
 
-- None blocking. The next highest-value pass is still final background art or HUD meter/frame material quality; the foreground ambience and top-status frame improvements help but do not replace final art direction.
+- None blocking. The next highest-value pass is now final background art or top-status icon simplification; the HUD lower-frame pass reduced the grid/debug read but does not replace final art direction.
 
 ## Implementation Checklist
 
@@ -85,6 +86,7 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 ## Follow-up Polish
 
 - Replace top status and right-panel small icons with simpler reference-like icons if they still feel noisy after the lower-card pass.
+- Recheck lower HUD text sizes after any layout/proportion change; the current paper slots and key-cap positions are intentionally paired.
 - Recheck the hit splash after the final HUD/font pass, but do not keep iterating it unless the comparison regresses.
 - Add small sparkle/bubble particles only after the main frame and typography mismatches are solved.
 - Add subtle tail/body variants to the kurodai sheet later if animation quality becomes noticeable; keep the current static extracted art for visual fidelity.

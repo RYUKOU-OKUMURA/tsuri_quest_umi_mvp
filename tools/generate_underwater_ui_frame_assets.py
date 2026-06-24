@@ -67,6 +67,22 @@ def _draw_paper_inset(d: ImageDraw.ImageDraw, box: tuple[int, int, int, int], *,
     d.line((x0 + 12, y1 - 12, x1 - 12, y1 - 12), fill=_rgba("#7c592d", 46), width=1)
 
 
+def _draw_inner_shadow(d: ImageDraw.ImageDraw, box: tuple[int, int, int, int], *, radius: int = 7, alpha: int = 38) -> None:
+    x0, y0, x1, y1 = box
+    d.rounded_rectangle((x0, y0, x1, y1), radius=radius, outline=(0, 0, 0, alpha), width=2)
+    d.line((x0 + 10, y0 + 2, x1 - 10, y0 + 2), fill=(255, 255, 255, max(16, alpha)), width=1)
+    d.line((x0 + 10, y1 - 2, x1 - 10, y1 - 2), fill=(70, 45, 22, alpha), width=1)
+
+
+def _draw_paper_slot(d: ImageDraw.ImageDraw, box: tuple[int, int, int, int], *, title: bool = False) -> None:
+    x0, y0, x1, y1 = box
+    fill = "#fff2d2" if title else "#f7edd6"
+    d.rounded_rectangle((x0, y0, x1, y1), radius=7, fill=_rgba(fill), outline=_rgba("#8c6733", 120), width=1)
+    d.rounded_rectangle((x0 + 3, y0 + 3, x1 - 3, y1 - 3), radius=5, outline=_rgba("#d8b45d", 80), width=1)
+    d.line((x0 + 10, y0 + 8, x1 - 10, y0 + 8), fill=(255, 255, 255, 90), width=1)
+    d.line((x0 + 10, y1 - 8, x1 - 10, y1 - 8), fill=(106, 73, 35, 38), width=1)
+
+
 def _draw_card(
     image: Image.Image,
     box: tuple[int, int, int, int],
@@ -465,6 +481,9 @@ def create_fight_hud_frame() -> None:
     bait_panel = (bait[0] + 10, inner_y0, bait[2] - 4, inner_y1)
     hint_panel = (hint[0] + 4, inner_y0, hint[2] - 4, inner_y1)
     menu_panel = (menu[0] + 4, inner_y0, menu[2] - 10, inner_y1)
+    for panel in (bait_panel, hint_panel, menu_panel):
+        px0, py0, px1, py1 = panel
+        d.rounded_rectangle((px0 + 3, py0 + 5, px1 + 3, py1 + 5), radius=9, fill=(0, 0, 0, 48))
     _draw_clean_card(
         image,
         bait_panel,
@@ -476,8 +495,9 @@ def create_fight_hud_frame() -> None:
         texture_strength=5,
         shadow=False,
     )
-    _draw_paper_inset(d, (bait_panel[0] + 12, bait_panel[1] + 12, bait_panel[2] - 12, bait_panel[1] + 44), alpha=30)
-    _draw_paper_inset(d, (bait_panel[0] + 70, bait_panel[1] + 50, bait_panel[2] - 18, bait_panel[3] - 16), alpha=24)
+    _draw_paper_slot(d, (bait_panel[0] + 14, bait_panel[1] + 12, bait_panel[2] - 14, bait_panel[1] + 44), title=True)
+    _draw_paper_slot(d, (bait_panel[0] + 76, bait_panel[1] + 55, bait_panel[2] - 18, bait_panel[3] - 16))
+    _draw_inner_shadow(d, (bait_panel[0] + 76, bait_panel[1] + 55, bait_panel[2] - 18, bait_panel[3] - 16), alpha=28)
     _draw_clean_card(
         image,
         hint_panel,
@@ -489,21 +509,16 @@ def create_fight_hud_frame() -> None:
         texture_strength=5,
         shadow=False,
     )
-    _draw_paper_inset(d, (hint_panel[0] + 14, hint_panel[1] + 12, hint_panel[2] - 14, hint_panel[1] + 44), alpha=28)
+    _draw_paper_slot(d, (hint_panel[0] + 14, hint_panel[1] + 12, hint_panel[2] - 14, hint_panel[1] + 44), title=True)
     slot_gap = 24
     slot_x0 = hint[0] + 44
-    slot_y0 = hint[1] + 76
+    slot_y0 = hint[1] + 74
     slot_w = int((hint[2] - hint[0] - 88 - slot_gap * 2) / 3)
-    slot_h = 64
+    slot_h = 58
     for i in range(3):
         x = slot_x0 + i * (slot_w + slot_gap)
-        d.rounded_rectangle(
-            (x, slot_y0, x + slot_w, slot_y0 + slot_h),
-            radius=8,
-            fill=(247, 239, 216, 255),
-            outline=_rgba("#b89b64", 72),
-            width=1,
-        )
+        _draw_paper_slot(d, (x, slot_y0, x + slot_w, slot_y0 + slot_h))
+        _draw_inner_shadow(d, (x, slot_y0, x + slot_w, slot_y0 + slot_h), alpha=24)
     _draw_clean_card(
         image,
         menu_panel,
@@ -515,6 +530,17 @@ def create_fight_hud_frame() -> None:
         texture_strength=5,
         shadow=False,
     )
+    menu_row_pad = 24
+    menu_row_h = 50
+    for row_y in (menu_panel[1] + 34, menu_panel[1] + 96):
+        d.rounded_rectangle(
+            (menu_panel[0] + menu_row_pad, row_y, menu_panel[2] - menu_row_pad, row_y + menu_row_h),
+            radius=6,
+            fill=_rgba("#08243a", 185),
+            outline=_rgba("#d8b45d", 90),
+            width=1,
+        )
+        d.line((menu_panel[0] + menu_row_pad + 12, row_y + 8, menu_panel[2] - menu_row_pad - 12, row_y + 8), fill=(255, 255, 255, 26), width=1)
     _draw_icon_well(d, (bait[0] + 80, (bait[1] + bait[3]) // 2), 30, pale=True)
 
     # Shared separators: enough structure without returning to the previous grid-like skin.

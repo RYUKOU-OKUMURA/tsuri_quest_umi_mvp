@@ -205,12 +205,12 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 		var bait_icon_size := 42.0 if _hud_frame != null else 46.0
 		_draw_sheet_icon(
 			ICON_BAIT,
-			Rect2(bait.position + Vector2(58.0, bait.size.y * 0.5 - bait_icon_size * 0.5 + 5.0), Vector2(bait_icon_size, bait_icon_size))
+			Rect2(bait.position + Vector2(58.0, bait.size.y * 0.5 - bait_icon_size * 0.5 + (2.0 if _hud_frame != null else 5.0)), Vector2(bait_icon_size, bait_icon_size))
 		)
 	else:
 		_draw_bait_icon(bait.position + Vector2(82.0 if _hud_frame == null else 95.0, bait.size.y * 0.62))
-	_draw_text(font, "オキアミ", bait.position + Vector2(118.0, bait.size.y * 0.66), 20, Color("#2b2117"), 0)
-	_draw_text(font, "× 17", bait.position + Vector2(124.0, bait.size.y * 0.92), 19, Color("#2b2117"), 0)
+	_draw_text(font, "オキアミ", bait.position + Vector2(118.0, bait.size.y * (0.62 if _hud_frame != null else 0.66)), 20, Color("#2b2117"), 0)
+	_draw_text(font, "× 17", bait.position + Vector2(124.0, bait.size.y * (0.86 if _hud_frame != null else 0.92)), 19, Color("#2b2117"), 0)
 
 	_draw_panel(hint, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	_draw_text(font, "操作のヒント", hint.position + Vector2(18.0, 25.0), 18, Color("#6a4c2b"), 0)
@@ -346,7 +346,7 @@ func _draw_key_hint(font: Font, rect: Rect2, key: String, label: String) -> void
 
 func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String) -> void:
 	var key_w := 28.0 if key.length() <= 1 else 42.0
-	var key_rect := Rect2(rect.position + Vector2(8.0, 2.0), Vector2(key_w, 22.0))
+	var key_rect := Rect2(rect.position + Vector2(8.0, 3.0), Vector2(key_w, 22.0))
 	draw_rect(key_rect, Color("#253247"), true)
 	draw_rect(key_rect, Color("#d5b56b"), false, 1.0)
 	var key_size := 14
@@ -375,8 +375,8 @@ func _hint_key_slots(hint: Rect2) -> Array[Rect2]:
 		]
 	var slot_gap := 12.0
 	var slot_w := (hint.size.x - 44.0 - slot_gap * 2.0) / 3.0
-	var slot_y := hint.position.y + 38.0
-	var slot_h := maxf(32.0, hint.size.y - 64.0)
+	var slot_y := hint.position.y + 30.0
+	var slot_h := 28.0
 	var x0 := hint.position.x + 22.0
 	return [
 		Rect2(Vector2(x0, slot_y), Vector2(slot_w, slot_h)),
