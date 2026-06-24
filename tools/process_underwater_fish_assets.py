@@ -114,22 +114,25 @@ def create_kurodai_card_portrait() -> None:
     frame_w = sheet.width // 4
     frame = sheet.crop((0, 0, frame_w, sheet.height))
     crop = frame.crop(_content_bbox(frame))
-    canvas = Image.new("RGBA", (720, 330), _rgba("#f4ead4"))
+    # Match the in-game sidebar portrait window. A 720x330 source became too
+    # wide for the runtime card slot and made the fish feel like a shrunken
+    # document thumbnail rather than the card's subject.
+    canvas = Image.new("RGBA", (620, 330), _rgba("#f4ead4"))
     d = ImageDraw.Draw(canvas)
     d.rounded_rectangle((10, 10, canvas.width - 10, canvas.height - 10), radius=12, fill=_rgba("#f4ead4"), outline=_rgba("#c6aa73", 82), width=2)
     for y in range(54, canvas.height - 34, 58):
         d.line((42, y, canvas.width - 42, y), fill=_rgba("#c3a873", 30), width=1)
     shadow = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow)
-    sd.ellipse((135, 236, canvas.width - 105, 298), fill=(72, 52, 31, 26))
+    sd.ellipse((92, 236, canvas.width - 70, 300), fill=(72, 52, 31, 28))
     canvas.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(7)))
 
-    max_w = int(canvas.width * 0.94)
-    max_h = int(canvas.height * 0.88)
+    max_w = int(canvas.width * 0.985)
+    max_h = int(canvas.height * 0.92)
     scale = min(max_w / crop.width, max_h / crop.height)
     resized = crop.resize((round(crop.width * scale), round(crop.height * scale)), Image.Resampling.LANCZOS)
     x = (canvas.width - resized.width) // 2
-    y = (canvas.height - resized.height) // 2 - 2
+    y = (canvas.height - resized.height) // 2 - 4
     canvas.alpha_composite(resized, (x, y))
     canvas.save(FISH_CARD_PORTRAIT)
 
