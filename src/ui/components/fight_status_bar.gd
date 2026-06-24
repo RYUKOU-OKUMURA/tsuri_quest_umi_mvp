@@ -52,7 +52,7 @@ func _draw() -> void:
 	_draw_status_icon(slots[2], ICON_COIN)
 	_draw_status_slot(font, slots[0], "AM", "08:47", false)
 	_draw_status_slot(font, slots[1], "快晴", "風 弱", false)
-	_draw_status_slot(font, slots[2], "所持金", "%d G" % PlayerProgress.money, false)
+	_draw_status_slot(font, slots[2], "所持金", "%s G" % _format_money(PlayerProgress.money), false)
 	var depth := 0.0
 	if simulator != null:
 		depth = simulator.depth
@@ -86,6 +86,16 @@ func _draw_status_slot(font: Font, rect: Rect2, title: String, body: String, dar
 	var outline := 0 if not dark else 3
 	var title_y := rect.position.y + rect.size.y * 0.40
 	var body_y := rect.position.y + rect.size.y * 0.72
+	if not dark and title == "AM":
+		var am_y := rect.position.y + rect.size.y * 0.66
+		_draw_text_clipped(font, title, Vector2(text_x, am_y), 14, title_color, max_width, outline)
+		_draw_text_clipped(font, body, Vector2(text_x + 34.0, am_y + 2.0), 24, body_color, max_width - 34.0, outline)
+		return
+	if not dark and title == "快晴":
+		var inline_y := rect.position.y + rect.size.y * 0.66
+		_draw_text_clipped(font, title, Vector2(text_x, inline_y), 18, body_color, max_width, outline)
+		_draw_text_clipped(font, body, Vector2(text_x + 78.0, inline_y), 18, Palette.TEXT_DARK, max_width - 78.0, outline)
+		return
 	_draw_text_clipped(font, title, Vector2(text_x, title_y), title_size, title_color, max_width, outline)
 	_draw_text_clipped(font, body, Vector2(text_x, body_y), body_size, body_color, max_width, outline)
 
@@ -152,6 +162,18 @@ func _fit_text(font: Font, text: String, font_size: int, max_width: float) -> St
 		if font.get_string_size(candidate, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x <= max_width:
 			return candidate
 	return ellipsis
+
+
+func _format_money(value: int) -> String:
+	var raw := str(value)
+	var result := ""
+	var count := 0
+	for index in range(raw.length() - 1, -1, -1):
+		if count > 0 and count % 3 == 0:
+			result = "," + result
+		result = raw[index] + result
+		count += 1
+	return result
 
 
 func _draw_fallback_frame(rect: Rect2) -> void:

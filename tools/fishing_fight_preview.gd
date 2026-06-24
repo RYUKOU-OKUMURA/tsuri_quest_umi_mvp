@@ -9,6 +9,7 @@ const VW := Vector2i(1280, 720)
 
 func _ready() -> void:
 	PlayerProgress.level = max(PlayerProgress.level, GameData.BOSS_UNLOCK_LEVEL)
+	PlayerProgress.money = 12450
 
 	var vp := SubViewport.new()
 	vp.size = VW
