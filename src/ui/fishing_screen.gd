@@ -16,6 +16,7 @@ var _main_action_button: Button
 var _reel_button: Button
 var _give_button: Button
 var _harbor_button: Button
+var _message_panel: PanelContainer
 var _message_label: Label
 var _state_label: Label
 var _action_label: Label
@@ -29,6 +30,7 @@ var _safe_zone_label: Label
 var _view: UnderwaterView
 var _surface_view: SurfaceCastView
 var _fight_sidebar: FightSidebar
+var _top_depth_label: Label
 var _depth_hud_label: Label
 
 var _result_overlay: ColorRect
@@ -45,11 +47,11 @@ func _build_screen() -> void:
 	_simulator.message_changed.connect(_on_message_changed)
 	_simulator.fight_finished.connect(_on_fight_finished)
 
-	var root := make_root_margin(16)
+	var root := make_root_margin(14)
 	var layout := VBoxContainer.new()
 	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	layout.add_theme_constant_override("separation", 8)
+	layout.add_theme_constant_override("separation", 6)
 	root.add_child(layout)
 
 	var meal_text := "食事効果なし"
@@ -87,14 +89,25 @@ func _build_screen() -> void:
 	_surface_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	water_panel.add_child(_surface_view)
 
-	var message_panel := make_panel(true)
-	message_panel.custom_minimum_size = Vector2(0, 52)
-	message_panel.clip_contents = true
-	left_column.add_child(message_panel)
+	var message_layer := Control.new()
+	message_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	water_panel.add_child(message_layer)
+	_message_panel = make_panel(true)
+	_message_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_message_panel.visible = false
+	_message_panel.anchor_left = 0.18
+	_message_panel.anchor_top = 1.0
+	_message_panel.anchor_right = 0.82
+	_message_panel.anchor_bottom = 1.0
+	_message_panel.offset_left = 0.0
+	_message_panel.offset_top = -54.0
+	_message_panel.offset_right = 0.0
+	_message_panel.offset_bottom = -12.0
+	message_layer.add_child(_message_panel)
 	_message_label = make_body_label("", 18, Color("#fff0b5"), 2, Color("#0a1622"))
 	_message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	message_panel.add_child(_message_label)
+	_message_panel.add_child(_message_label)
 
 	var info_panel := make_panel()
 	info_panel.custom_minimum_size = Vector2(300, 0)
@@ -211,27 +224,53 @@ func _make_gauge_column(
 	return {"root": root, "bar": bar}
 
 
-func _make_fight_status_bar(meal_text: String) -> HBoxContainer:
+func _make_fight_status_bar(_meal_text: String) -> HBoxContainer:
 	var row := HBoxContainer.new()
-	row.custom_minimum_size = Vector2(0.0, 70.0)
+	row.custom_minimum_size = Vector2(0.0, 60.0)
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_theme_constant_override("separation", 10)
-	row.add_child(_make_status_card("南の島・沖", "水中ファイト", 260.0))
-	row.add_child(_make_status_card("プレイヤー", "Lv.%d  %s" % [PlayerProgress.level, String(_trip_stats.get("rod_name", "入門竿"))], 300.0))
-	row.add_child(_make_status_card("食事効果", meal_text, 0.0))
+	row.add_theme_constant_override("separation", 8)
+	row.add_child(_make_status_card("AM", "08:47", 170.0, false))
+	row.add_child(_make_status_card("快晴", "風 弱", 220.0, false))
+	row.add_child(_make_status_card("所持金", "%d G" % PlayerProgress.money, 220.0, false))
+	row.add_child(_make_location_depth_card())
 	return row
 
 
-func _make_status_card(title: String, body: String, min_width: float) -> PanelContainer:
-	var card := make_panel(true)
-	card.custom_minimum_size = Vector2(min_width, 70.0)
+func _make_status_card(title: String, body: String, min_width: float, dark: bool) -> PanelContainer:
+	var card := make_panel(dark)
+	card.custom_minimum_size = Vector2(min_width, 60.0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 0)
 	card.add_child(box)
-	var title_label := make_label("%s　%s" % [title, body], 18, Palette.TEXT_BONE, 3, Palette.TEXT_OUTLINE_DARK)
+	var title_color := Palette.TEXT_BONE if dark else Color("#6a4c2b")
+	var body_color := Color("#fff1c7") if dark else Color("#2b2117")
+	var title_label := make_label(title, 15, title_color, 2 if dark else 0, Palette.TEXT_OUTLINE_DARK)
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title_label)
+	var body_label := make_label(body, 24, body_color, 3 if dark else 0, Palette.TEXT_OUTLINE_DARK)
+	body_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(body_label)
+	return card
+
+
+func _make_location_depth_card() -> PanelContainer:
+	var card := make_panel(true)
+	card.custom_minimum_size = Vector2(240.0, 60.0)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 0)
+	card.add_child(box)
+	var location := make_label("南の島・沖", 17, Palette.TEXT_BONE, 3, Palette.TEXT_OUTLINE_DARK)
+	location.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	location.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(location)
+	_top_depth_label = make_label("水深 -- m", 22, Color("#eaf6ff"), 3, Palette.TEXT_OUTLINE_DARK)
+	_top_depth_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_top_depth_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(_top_depth_label)
 	return card
 
 
@@ -345,7 +384,7 @@ func _on_state_changed(_new_state: int) -> void:
 
 
 func _on_message_changed(message: String) -> void:
-	_message_label.text = message
+	_set_message_text(message)
 
 
 func _on_fight_finished(caught: bool, reason: String) -> void:
@@ -376,9 +415,11 @@ func _retry() -> void:
 func _update_ui() -> void:
 	if _simulator == null:
 		return
-	_message_label.text = _simulator.action_message
+	_set_message_text(_simulator.action_message)
 	if _depth_hud_label != null:
 		_depth_hud_label.text = "%.1fm" % _simulator.depth
+	if _top_depth_label != null:
+		_top_depth_label.text = "水深 %.1fm" % _simulator.depth
 	var tension_ratio := _simulator.tension / maxf(_simulator.line_break_limit(), 0.01)
 	_tension_bar.set_ratio(clampf(tension_ratio, 0.0, 1.0))
 	_update_tension_bar_color(tension_ratio)
@@ -413,6 +454,17 @@ func _update_tension_bar_color(tension_ratio: float) -> void:
 		_tension_bar.set_colors(Color("#e0a02e"), Color("#ffd277"))
 	else:
 		_tension_bar.set_colors(Color("#3cbf78"), Color("#9ff0c0"))
+
+
+func _set_message_text(message: String) -> void:
+	if _message_label == null:
+		return
+	_message_label.text = message
+	if _message_panel != null:
+		var show_message := not message.strip_edges().is_empty()
+		if _simulator != null and _simulator.state == FishingSimulator.State.FIGHT:
+			show_message = false
+		_message_panel.visible = show_message
 
 
 # 水上キャストビュー／水中ビューのクロスフェード。
