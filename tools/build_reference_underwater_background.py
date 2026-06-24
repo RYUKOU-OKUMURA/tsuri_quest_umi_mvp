@@ -112,12 +112,12 @@ def _add_center_water_texture(
 
     seabed_alpha = ImageChops.multiply(
         subject_mask.crop(
-            (int(w * 0.16), int(h * 0.62), int(w * 0.88), int(h * 0.92)),
+            (int(w * 0.16), int(h * 0.66), int(w * 0.88), int(h * 0.96)),
         ).resize(
             seabed_patch.size,
             Image.Resampling.LANCZOS,
         ),
-        _vertical_mask(seabed_patch.size, 118, 0.10, 0.98),
+        _vertical_mask(seabed_patch.size, 102, 0.18, 0.98),
     )
     base.alpha_composite(
         Image.composite(
@@ -125,7 +125,7 @@ def _add_center_water_texture(
             Image.new("RGBA", seabed_patch.size, (0, 0, 0, 0)),
             seabed_alpha,
         ),
-        (int(w * 0.16), int(h * 0.62)),
+        (int(w * 0.16), int(h * 0.66)),
     )
 
     floor_fragments = (
@@ -200,8 +200,45 @@ def _add_center_water_texture(
         (int(w * 0.20), int(h * 0.20)),
     )
 
+    surface_light = source.crop((int(w * 0.08), 0, int(w * 0.94), int(h * 0.22)))
+    light_patch_size = (int(w * 0.72), int(h * 0.46))
+    light_patch = surface_light.resize(light_patch_size, Image.Resampling.LANCZOS)
+    light_patch = ImageEnhance.Brightness(light_patch).enhance(0.98)
+    light_patch = ImageEnhance.Color(light_patch).enhance(0.92)
+    light_patch = ImageEnhance.Contrast(light_patch).enhance(1.08)
+    light_patch = light_patch.filter(ImageFilter.GaussianBlur(0.55)).convert("RGBA")
+
+    light_x = int(w * 0.17)
+    light_y = int(h * 0.08)
+    light_alpha = ImageChops.multiply(
+        subject_mask.crop((light_x, light_y, light_x + light_patch_size[0], light_y + light_patch_size[1])),
+        _vertical_mask(light_patch_size, 44, 0.00, 0.92),
+    )
+    base.alpha_composite(
+        Image.composite(
+            light_patch,
+            Image.new("RGBA", light_patch_size, (0, 0, 0, 0)),
+            light_alpha,
+        ),
+        (light_x, light_y),
+    )
+
     caustics = Image.new("RGBA", source.size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(caustics, "RGBA")
+    for index, (x0, x1, x2, x3, alpha) in enumerate(
+        (
+            (0.24, 0.30, 0.40, 0.34, 24),
+            (0.38, 0.45, 0.56, 0.48, 19),
+            (0.55, 0.61, 0.68, 0.62, 17),
+        )
+    ):
+        ray = (
+            (w * x0, h * 0.06),
+            (w * x1, h * 0.06),
+            (w * x2, h * (0.62 + index * 0.025)),
+            (w * x3, h * (0.62 + index * 0.025)),
+        )
+        draw.polygon(ray, fill=(150, 223, 238, alpha))
     for index in range(28):
         y = h * (0.60 + (index % 7) * 0.045)
         x = w * (0.22 + (index // 7) * 0.13)
