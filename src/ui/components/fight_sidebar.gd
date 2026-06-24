@@ -219,7 +219,7 @@ func _draw_bullet(font: Font, text: String, pos: Vector2, max_width: float) -> v
 
 func _draw_detail_line(font: Font, text: String, pos: Vector2, max_width: float) -> void:
 	draw_circle(pos + Vector2(3.0, 10.0), 4.0, Color("#49c75a"))
-	_draw_wrapped(font, text, pos + Vector2(14.0, 0.0), max_width - 14.0, 13, Palette.TEXT_DARK, 1)
+	_draw_wrapped(font, text, pos + Vector2(14.0, -1.0), max_width - 14.0, 14, Palette.TEXT_DARK, 1)
 
 
 func _draw_rarity_tag(font: Font, rect: Rect2, rarity: String) -> void:

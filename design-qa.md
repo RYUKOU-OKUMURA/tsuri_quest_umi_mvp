@@ -15,16 +15,14 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Patches Made Since Previous QA
 
-- Increased the HUD upper-board right-label inset so `きつい` and `強い` no longer crowd the frame edge.
-- Shortened the stamina gauge well slightly to match the new right-label padding.
-- Increased key right-panel hierarchy text by one optical step: fish name, estimate, action title, and lower-card headings.
+- Increased the right fish-card body copy by one optical step so the bullet details read closer to the reference's information-card weight.
 - Regenerated `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png`.
 
 ## Findings
 
 - [P2] Right panel is structurally better but still below reference card quality.
   Location: `assets/showcase/underwater/sidebar_frame.png`, `src/ui/components/fight_sidebar.gd`, `src/ui/fishing_screen.gd`.
-  Evidence: the fish card now has quieter reference-like ruled lines, and the action/tackle cards have clearer title separators plus body brackets. The latest optical-size pass strengthens the fish name, estimated size, action title, and lower-card headings. The panel still has a more procedural border rhythm and less bespoke typography than the reference.
+  Evidence: the fish card now has quieter reference-like ruled lines, and the action/tackle cards have clearer title separators plus body brackets. Recent optical-size passes strengthened the fish name, estimated size, action title, lower-card headings, and fish-card bullet copy. The panel still has a more procedural border rhythm and less bespoke typography than the reference.
   Impact: the right panel is more readable and more deliberately framed, but it still does not fully sell the premium JRPG card quality.
   Fix: keep the new internal structure, then tune body text only if the next full-screen pass still reads too light. Replace any remaining generated-looking linework only if it still reads too mechanical after the final font pass.
 
@@ -54,11 +52,11 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Open Questions
 
-- None blocking. The next highest-value pass is one final full-screen pass for remaining icon noise, body text weight, and any regressions from the latest spacing changes.
+- None blocking. The next highest-value pass is one final full-screen pass for remaining icon noise, text density, and any regressions from the latest spacing changes.
 
 ## Implementation Checklist
 
-1. Recheck full-screen composition for remaining icon noise and body text weight.
+1. Recheck full-screen composition for remaining icon noise and text density.
 2. Replace HUD/top-status icons only if they still read ornate after the latest size reductions.
 3. Keep the current HUD/right-panel spacing unless the next comparison shows a clear regression.
 4. Re-run `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png` after each pass.
