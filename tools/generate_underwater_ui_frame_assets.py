@@ -184,11 +184,11 @@ def create_sidebar_frame() -> None:
     _draw_outer_frame(image, (7, 7, w - 8, h - 8), radius=18)
 
     header = (24, 22, w - 24, 112)
-    fish = (28, 126, w - 28, 616)
-    action = (24, 634, w - 24, 808)
-    tackle = (24, 826, w - 24, h - 24)
-    action_body = (42, 682, w - 42, 792)
-    tackle_body = (42, 878, w - 42, h - 42)
+    fish = (28, 126, w - 28, 600)
+    action = (24, 618, w - 24, 812)
+    tackle = (24, 830, w - 24, h - 24)
+    action_body = (42, 670, w - 42, 794)
+    tackle_body = (42, 880, w - 42, h - 42)
 
     _draw_clean_card(
         image,

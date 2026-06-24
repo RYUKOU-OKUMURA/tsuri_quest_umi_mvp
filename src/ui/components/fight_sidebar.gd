@@ -62,9 +62,9 @@ func _draw() -> void:
 	if _sidebar_frame != null:
 		draw_texture_rect(_sidebar_frame, Rect2(Vector2.ZERO, size), false, Color.WHITE)
 		header = Rect2(w * 0.055, h * 0.030, w * 0.89, h * 0.075)
-		fish_card = Rect2(w * 0.060, h * 0.125, w * 0.88, h * 0.460)
-		action_card = Rect2(w * 0.055, h * 0.610, w * 0.89, h * 0.175)
-		tackle_card = Rect2(w * 0.055, h * 0.800, w * 0.89, h * 0.175)
+		fish_card = Rect2(w * 0.060, h * 0.125, w * 0.88, h * 0.440)
+		action_card = Rect2(w * 0.055, h * 0.600, w * 0.89, h * 0.190)
+		tackle_card = Rect2(w * 0.055, h * 0.810, w * 0.89, h * 0.165)
 	else:
 		var gap := 7.0
 		var action_h := clampf(h * 0.22, 86.0, 102.0)
@@ -125,7 +125,7 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 	_draw_text(font, "魚の行動", rect.position + Vector2(16.0, 27.0), 18, Palette.TEXT_BONE, 3)
 	var body := Rect2(rect.position + Vector2(10.0, 33.0), rect.size - Vector2(20.0, 42.0))
 	if _sidebar_frame != null:
-		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.30), rect.size - Vector2(28.0, rect.size.y * 0.34))
+		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.34), rect.size - Vector2(28.0, rect.size.y * 0.40))
 	_draw_panel(body, Color("#f3e8cd"), Palette.WOOD_DARK, Palette.GOLD)
 	var action := "待機"
 	var message := "ラインを見ながら、テンションを保とう。"
@@ -143,17 +143,19 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	_draw_text(font, "タックル", rect.position + Vector2(14.0, 26.0), 18, Palette.TEXT_BONE, 3)
 	var body := Rect2(rect.position + Vector2(10.0, 32.0), rect.size - Vector2(20.0, 38.0))
 	if _sidebar_frame != null:
-		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.31), rect.size - Vector2(28.0, rect.size.y * 0.35))
+		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.35), rect.size - Vector2(28.0, rect.size.y * 0.41))
 	_draw_panel(body, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	var rod_name := String(trip_stats.get("rod_name", "港の入門竿"))
 	var text_width := body.size.x - (74.0 if _icons != null else 12.0)
 	var lines: Array[String] = [
 		"ロッド：%s" % _short_rod_name(rod_name),
 		"リール：小型スピニング",
-		"ライン：ナイロン3号 / 針：チヌ3号",
+		"ライン：ナイロン3号 / 針：チヌ",
 	]
+	var tackle_font_size := 11 if _sidebar_frame != null else 12
+	var tackle_line_gap := 14.0 if _sidebar_frame != null else 16.0
 	for i in range(lines.size()):
-		_draw_wrapped(font, lines[i], body.position + Vector2(12.0, 9.0 + float(i) * 16.0), text_width, 12, Palette.TEXT_DARK, 1)
+		_draw_wrapped(font, lines[i], body.position + Vector2(12.0, 6.0 + float(i) * tackle_line_gap), text_width, tackle_font_size, Palette.TEXT_DARK, 1)
 	if _icons != null:
 		_draw_tackle_icon(Rect2(body.end - Vector2(64.0, 64.0), Vector2(56.0, 56.0)))
 	else:
