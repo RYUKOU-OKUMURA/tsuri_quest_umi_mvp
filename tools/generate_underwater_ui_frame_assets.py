@@ -83,6 +83,53 @@ def _draw_paper_slot(d: ImageDraw.ImageDraw, box: tuple[int, int, int, int], *, 
     d.line((x0 + 10, y1 - 8, x1 - 10, y1 - 8), fill=(106, 73, 35, 38), width=1)
 
 
+def _draw_sidebar_icon_recess(image: Image.Image, box: tuple[int, int, int, int], *, seed: int) -> None:
+    x0, y0, x1, y1 = box
+    w = x1 - x0
+    h = y1 - y0
+    shadow = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    sd = ImageDraw.Draw(shadow)
+    sd.rounded_rectangle((x0 + 2, y0 + 3, x1 + 2, y1 + 3), radius=8, fill=(68, 43, 18, 34))
+    image.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(3)))
+
+    mask = _rounded_mask((w, h), 8)
+    texture = _texture((w, h), "#f3e0b2", seed, strength=5)
+    _paste_masked(image, texture, mask, (x0, y0))
+
+    d = ImageDraw.Draw(image)
+    d.rounded_rectangle((x0, y0, x1, y1), radius=8, outline=_rgba("#8b6733", 112), width=1)
+    d.rounded_rectangle((x0 + 5, y0 + 5, x1 - 5, y1 - 5), radius=6, outline=_rgba("#e4c371", 82), width=1)
+    d.ellipse((x0 + 14, y1 - 28, x1 - 14, y1 - 11), fill=(214, 193, 151, 96))
+    d.line((x0 + 12, y0 + 10, x1 - 12, y0 + 10), fill=(255, 255, 255, 72), width=1)
+
+
+def _draw_sidebar_text_well(image: Image.Image, box: tuple[int, int, int, int], *, seed: int) -> None:
+    x0, y0, x1, y1 = box
+    w = x1 - x0
+    h = y1 - y0
+    shadow = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    sd = ImageDraw.Draw(shadow)
+    sd.rounded_rectangle((x0 + 2, y0 + 3, x1 + 2, y1 + 3), radius=8, fill=(74, 47, 20, 30))
+    image.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(3)))
+
+    mask = _rounded_mask((w, h), 8)
+    texture = _texture((w, h), "#fff0ce", seed, strength=6)
+    td = ImageDraw.Draw(texture)
+    for i in range(7):
+        alpha = 12 - i
+        td.line((5 + i, 10, 5 + i, h - 10), fill=(127, 87, 38, max(0, alpha)), width=1)
+        td.line((w - 6 - i, 10, w - 6 - i, h - 10), fill=(255, 255, 255, max(0, alpha)), width=1)
+    _paste_masked(image, texture, mask, (x0, y0))
+
+    d = ImageDraw.Draw(image)
+    d.rounded_rectangle((x0, y0, x1, y1), radius=8, outline=_rgba("#a98242", 82), width=1)
+    d.rounded_rectangle((x0 + 4, y0 + 4, x1 - 4, y1 - 4), radius=6, outline=_rgba("#edd49a", 54), width=1)
+    d.line((x0 + 14, y0 + 11, x1 - 14, y0 + 11), fill=(255, 255, 255, 72), width=1)
+    d.line((x0 + 16, y1 - 12, x1 - 16, y1 - 12), fill=_rgba("#80552a", 24), width=1)
+    d.line((x0 + 18, y0 + 37, x1 - 56, y0 + 37), fill=_rgba("#b89b64", 24), width=1)
+    _draw_corner_brackets(d, (x0 + 1, y0 + 1, x1 - 1, y1 - 1), length=16, inset=7, color="#a77d3b", alpha=46, width=1)
+
+
 def _draw_card(
     image: Image.Image,
     box: tuple[int, int, int, int],
@@ -337,7 +384,7 @@ def create_sidebar_frame() -> None:
     _draw_navy_card(image, tackle, radius=12, seed=84)
     _draw_clean_card(image, tackle_body, "#f2e5cb", radius=8, border="#8c6733", inner="#d8b45d", seed=85, texture_strength=5)
 
-    for panel, body, icon_side in ((action, action_body, "left"), (tackle, tackle_body, "right")):
+    for panel_index, (panel, body, icon_side) in enumerate(((action, action_body, "left"), (tackle, tackle_body, "right"))):
         d.line((panel[0] + 26, panel[1] + 39, panel[2] - 26, panel[1] + 39), fill=_rgba("#e0bd62", 104), width=2)
         d.line((panel[0] + 28, panel[1] + 44, panel[2] - 28, panel[1] + 44), fill=_rgba("#07121b", 72), width=1)
         if icon_side == "left":
@@ -346,10 +393,8 @@ def create_sidebar_frame() -> None:
         else:
             icon_well = (body[2] - 82, body[1] + 24, body[2] - 16, body[3] - 24)
             text_well = (body[0] + 16, body[1] + 14, body[2] - 96, body[3] - 14)
-        _draw_paper_inset(d, icon_well, alpha=24)
-        d.rounded_rectangle(text_well, radius=6, fill=(255, 246, 224, 255), outline=_rgba("#b89b64", 84), width=1)
-        d.line((text_well[0] + 14, text_well[1] + 38, text_well[2] - 14, text_well[1] + 38), fill=_rgba("#b89b64", 42), width=1)
-        d.line((text_well[0] + 14, text_well[3] - 12, text_well[2] - 14, text_well[3] - 12), fill=_rgba("#ffffff", 64), width=1)
+        _draw_sidebar_icon_recess(image, icon_well, seed=130 + panel_index)
+        _draw_sidebar_text_well(image, text_well, seed=140 + panel_index)
         _draw_corner_brackets(d, body, length=22, inset=9, color="#a77d3b", alpha=88, width=1)
 
     # Sparse corner accents only. Heavy rivets made the frame read as generated/debug UI.
