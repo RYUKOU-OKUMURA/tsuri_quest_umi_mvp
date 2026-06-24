@@ -130,17 +130,17 @@ func _draw_centered_dark_slot(font: Font, rect: Rect2, title: String, body: Stri
 func _draw_status_icon(rect: Rect2, icon_index: int) -> void:
 	if _icons == null:
 		return
-	var icon_size := clampf(rect.size.y * 0.45, 28.0, 34.0)
+	var icon_size := clampf(rect.size.y * 0.40, 24.0, 30.0)
 	var icon_rect := Rect2(
-		rect.position + Vector2(31.0, (rect.size.y - icon_size) * 0.5 + 1.0),
+		rect.position + Vector2(32.0, (rect.size.y - icon_size) * 0.5 + 1.0),
 		Vector2(icon_size, icon_size)
 	)
-	_draw_sheet_icon(icon_index, icon_rect, Color(1.0, 1.0, 1.0, 0.84))
+	_draw_sheet_icon(icon_index, icon_rect, Color(1.0, 1.0, 1.0, 0.70))
 	if icon_index == ICON_WEATHER:
 		_draw_sheet_icon(
 			ICON_WIND,
 			Rect2(icon_rect.position + Vector2(icon_size * 0.58, icon_size * 0.60), Vector2(icon_size * 0.34, icon_size * 0.34)),
-			Color.WHITE
+			Color(1.0, 1.0, 1.0, 0.82)
 		)
 
 

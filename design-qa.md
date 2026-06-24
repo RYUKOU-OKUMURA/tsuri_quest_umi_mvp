@@ -23,6 +23,7 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 - Reworked the right fish-card title row into an opaque paper plaque and regenerated `sidebar_frame.png`, so `No.028 / クロダイ / レア` no longer sits on a dark, stale-looking strip.
 - Rebuilt the right-panel action/tackle card interiors with separate icon wells and text plaques, reducing the mechanical guide-rule feel in the lower cards.
 - Added `underwater_foreground_ambience.png`, a transparent foreground ambience asset with bubble columns, caustic strokes, and distant fish silhouettes. `UnderwaterView` now uses it over `underwater_battle_bg.png` and keeps only light specks as a runtime shimmer.
+- Rebuilt `top_status_frame.png` with stronger paper-card inner frames, corner brackets, a more authored navy location card, and quieter top-status icon rendering.
 - Regenerated `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png`.
 
 ## Findings
@@ -38,6 +39,12 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
   Evidence: the upper board is now darker, the central depth module is less bright, the title/icon scale is more compact, and the row icons are visually quieter after opacity modulation. The bar-well grid density is lower, the runtime meter uses fewer segments, and the lower bait/hint cards now have opaque paper insets. The operation-hint key row now uses three aligned paper slots with compact A/B/LR key blocks instead of labels sinking into the dark board. The reference still has more deliberate black-panel spacing and a more bespoke meter construction.
   Impact: the HUD is closer to a single premium operation board, and the most obvious broken-grid read in the lower hint row is reduced. It still does not fully reach the reference's authored console quality.
   Fix: keep the darker frame, new label padding, quieter icon opacity, reduced segment grid, navy menu card, and aligned operation-hint slots. Next, revisit the meter art and lower HUD frame texture only if the final full-screen comparison still reads too mechanical.
+
+- [P2] Top status bar has stronger material quality, but still trails the reference's compact icon grammar.
+  Location: `assets/showcase/underwater/top_status_frame.png`, `src/ui/components/fight_status_bar.gd`.
+  Evidence: the top status frame now has stronger paper-card inner borders, corner brackets, subtler icon wells, and a more authored navy location card. Runtime icons are smaller and lower opacity, so the ornate icon sheet no longer dominates the card text. The reference still has simpler, more legible icon silhouettes and slightly tighter card spacing.
+  Impact: the top row reads less like flat cards and more like part of the JRPG information frame, but its icon language is still not fully reference-quality.
+  Fix: keep the stronger frame material and quieter icon opacity. Replace/simplify the top-status icon sheet only if those icons still feel noisy after the final frame/background pass.
 
 - [P3] Main fish is now close, with minor runtime-placement polish remaining.
   Location: `assets/showcase/underwater/kurodai_showcase_sheet.png`, `src/ui/components/underwater_view.gd`.
@@ -65,7 +72,7 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Open Questions
 
-- None blocking. The next highest-value pass is still final background art or final UI frame material quality; the foreground ambience asset helps density but does not replace authored background art.
+- None blocking. The next highest-value pass is still final background art or HUD meter/frame material quality; the foreground ambience and top-status frame improvements help but do not replace final art direction.
 
 ## Implementation Checklist
 

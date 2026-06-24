@@ -220,11 +220,24 @@ def create_top_status_frame() -> None:
     for i, (x0, sy0, x1, sy1, fill) in enumerate(slots):
         if i == 3:
             _draw_navy_card(image, (x0, sy0, x1, sy1), radius=12, seed=30 + i)
+            d.rounded_rectangle(
+                (x0 + 18, sy0 + 22, x1 - 18, sy1 - 22),
+                radius=8,
+                outline=_rgba("#6dc8ee", 34),
+                width=1,
+            )
+            d.line((x0 + 36, sy0 + 62, x1 - 36, sy0 + 62), fill=_rgba("#e0bd62", 82), width=1)
+            _draw_corner_brackets(d, (x0 + 10, sy0 + 10, x1 - 10, sy1 - 10), length=32, inset=10, color="#e0bd62", alpha=105, width=2)
         else:
             _draw_card(image, (x0, sy0, x1, sy1), fill, radius=12, seed=10 + i, texture_strength=7)
-            _draw_icon_well(d, (x0 + 56, (sy0 + sy1) // 2), 32, pale=True)
+            body = (x0 + 18, sy0 + 18, x1 - 18, sy1 - 18)
+            d.rounded_rectangle(body, radius=7, outline=_rgba("#8c6733", 62), width=1)
+            d.line((body[0] + 14, body[1] + 14, body[2] - 14, body[1] + 14), fill=_rgba("#ffffff", 74), width=1)
+            _draw_icon_well(d, (x0 + 56, (sy0 + sy1) // 2), 28, pale=True)
+            _draw_corner_brackets(d, (x0 + 8, sy0 + 8, x1 - 8, sy1 - 8), length=26, inset=10, color="#8c6733", alpha=82, width=1)
             if i in (1, 2):
-                d.line((x0 + 132, sy0 + 34, x0 + 132, sy1 - 34), fill=_rgba("#b8934d", 110), width=2)
+                d.line((x0 + 132, sy0 + 36, x0 + 132, sy1 - 36), fill=_rgba("#b8934d", 96), width=2)
+                d.line((x0 + 138, sy0 + 42, x0 + 138, sy1 - 42), fill=_rgba("#ffffff", 70), width=1)
     image.save(OUT_DIR / "top_status_frame.png")
 
 
