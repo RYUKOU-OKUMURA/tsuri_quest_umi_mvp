@@ -15,12 +15,11 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Patches Made Since Previous QA
 
-- Added a lighter `_draw_clean_card()` path to `tools/generate_underwater_ui_frame_assets.py`.
-- Reduced the heavy black/gold outer trim on `sidebar_frame.png`.
-- Removed most decorative rivets from the sidebar frame so it no longer reads as a generated/debug skin.
-- Rebuilt sidebar paper/navy cards with thinner inner strokes and lower paper grain.
-- Reduced `fight_hud_frame.png` line noise: thinner gauge wells, lighter separators, lighter depth-plate borders, and cleaner lower-card frames.
-- Regenerated `sidebar_frame.png`, `fight_hud_frame.png`, and `top_status_frame.png` with the lighter card rules.
+- Replaced the previous generated kurodai source with a reference-fish background-extraction pass saved to `assets/showcase/underwater/kurodai_chroma_source.png`.
+- Updated `tools/process_underwater_fish_assets.py` so a single high-quality fish cutout can be normalized into the required four-frame runtime sheet without slicing it into quarters.
+- Regenerated `assets/showcase/underwater/kurodai_showcase_sheet.png` from the extracted reference-style source.
+- Increased the showcase fish display scale in `src/ui/components/underwater_view.gd` to restore the reference's main-subject presence.
+- Moved the bait/line endpoint from the fish body to the fish's nose-forward area so the line no longer visually pierces the kurodai.
 
 ## Findings
 
@@ -36,11 +35,11 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
   Impact: the HUD is no longer fragmented, but it still lacks the reference's compact, deliberate console feel.
   Fix: bring the depth module closer to the reference shape and tune the lower control row as one integrated strip instead of three equal cards.
 
-- [P2] Main fish remains a style mismatch.
+- [P3] Main fish is now close, with minor runtime-placement polish remaining.
   Location: `assets/showcase/underwater/kurodai_showcase_sheet.png`, `src/ui/components/underwater_view.gd`.
-  Evidence: the current fish is readable and detailed, but the reference fish is longer, flatter, calmer, and more naturally shaded. The implementation fish is taller and more dramatic.
-  Impact: the screen has a strong subject, but it still does not match the reference's premium pixel-art/painted fish quality.
-  Fix: make a final fish asset pass: elongate the body, reduce fin drama, flatten the belly, and tune contrast against `/tmp/tsuri_fish_hit_focus.png`.
+  Evidence: the fish source now preserves the reference-like black seabream outline, scale texture, dorsal spines, eye, and gray banding. The implementation fish is also closer in scale and no longer reads as a generic generated cutout. The remaining mismatch is mainly placement polish: the bait sits slightly higher/right than the reference and the runtime fish still lives on a brighter, denser generated background.
+  Impact: the fish is no longer a blocking quality mismatch; it now sells the screen's main subject.
+  Fix: keep this asset as the current kurodai baseline, then tune lure placement only after the hit badge and HUD frame settle.
 
 - [P2] Hit treatment is clear but still a different art style.
   Location: `assets/showcase/underwater/hit_burst.png`, `src/ui/components/underwater_view.gd`.
@@ -56,18 +55,18 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Open Questions
 
-- None blocking. The next highest-value pass is final fish/hit art, with another HUD/sidebar pass after the fish silhouette settles.
+- None blocking. The next highest-value pass is final hit-badge art plus another HUD/sidebar pass now that the fish silhouette is usable.
 
 ## Implementation Checklist
 
-1. Do the final kurodai art pass against `/tmp/tsuri_fish_hit_focus.png`.
-2. Tighten `hit_burst.png` placement/silhouette after HUD placement stabilizes.
-3. Make the HUD lower control row read as one integrated operation strip.
-4. Enlarge the sidebar lower card body regions if the final fish/HUD pass keeps the current sidebar width.
-5. Continue font-size tuning after the next frame pass, especially small right-panel body text.
-6. Re-run `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png` after each pass.
+1. Tighten `hit_burst.png` placement/silhouette after HUD placement stabilizes.
+2. Make the HUD lower control row read as one integrated operation strip.
+3. Enlarge the sidebar lower card body regions if the current sidebar width remains.
+4. Continue font-size tuning after the next frame pass, especially small right-panel body text.
+5. Re-run `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png` after each pass.
 
 ## Follow-up Polish
 
 - Replace top status icons with simpler reference-like icons if they still feel noisy after the font pass.
 - Add small sparkle/bubble particles only after the main frame and typography mismatches are solved.
+- Add subtle tail/body variants to the kurodai sheet later if animation quality becomes noticeable; keep the current static extracted art for visual fidelity.

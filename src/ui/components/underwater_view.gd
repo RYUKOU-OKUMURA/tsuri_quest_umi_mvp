@@ -283,7 +283,13 @@ func _draw_line_and_bait() -> void:
 			simulator.visual_position.x * size.x, simulator.visual_position.y * size.y
 		)
 		var fish_scale := 1.10 if bool(fish_data.get("boss", false)) else 1.0
-		bait_position = fish_center + Vector2(56.0 * fish_scale * simulator.visual_direction, 4.0)
+		var forward_offset := 56.0 * fish_scale
+		var vertical_offset := 4.0
+		if _showcase_fish_sheet != null:
+			var fish_draw_size := _showcase_fish_draw_size()
+			forward_offset = fish_draw_size.x * 0.55
+			vertical_offset = -fish_draw_size.y * 0.04
+		bait_position = fish_center + Vector2(forward_offset * simulator.visual_direction, vertical_offset)
 	elif simulator.state == FishingSimulator.State.READY:
 		bait_position = Vector2(size.x * 0.67, size.y * 0.22)
 
@@ -444,11 +450,7 @@ func _draw_target_fish() -> void:
 func _draw_showcase_target_fish(center: Vector2, scale_value: float, direction: float) -> void:
 	var frame_w := float(_showcase_fish_sheet.get_width()) / float(SHOWCASE_FISH_FRAME_COUNT)
 	var frame_h := float(_showcase_fish_sheet.get_height())
-	var boss_ratio := 1.42 if bool(fish_data.get("boss", false)) else 1.0
-	var stamina_scale := clampf(scale_value / boss_ratio, 0.90, 1.06)
-	var target_width_ratio := 0.48 if bool(fish_data.get("boss", false)) else 0.44
-	var draw_width := size.x * target_width_ratio * stamina_scale
-	var draw_size := Vector2(draw_width, draw_width * frame_h / frame_w)
+	var draw_size := _showcase_fish_draw_size(scale_value)
 	var frame_index := _showcase_fish_frame_index()
 	var src := Rect2(frame_w * float(frame_index), 0.0, frame_w, frame_h)
 	var dst := Rect2(-draw_size * 0.5, draw_size)
@@ -462,6 +464,23 @@ func _draw_showcase_target_fish(center: Vector2, scale_value: float, direction: 
 	if _fish_flash > 0.0:
 		draw_texture_rect_region(_showcase_fish_sheet, dst, src, Color(1.0, 1.0, 1.0, _fish_flash * 0.52))
 	draw_set_transform(Juicer.get_offset())
+
+
+func _showcase_fish_draw_size(scale_value := -1.0) -> Vector2:
+	if _showcase_fish_sheet == null:
+		return Vector2.ZERO
+	var frame_w := float(_showcase_fish_sheet.get_width()) / float(SHOWCASE_FISH_FRAME_COUNT)
+	var frame_h := float(_showcase_fish_sheet.get_height())
+	var boss_ratio := 1.42 if bool(fish_data.get("boss", false)) else 1.0
+	var effective_scale := scale_value
+	if effective_scale < 0.0 and simulator != null:
+		effective_scale = boss_ratio * lerpf(0.92, 1.04, simulator.fish_stamina_ratio())
+	elif effective_scale < 0.0:
+		effective_scale = boss_ratio
+	var stamina_scale := clampf(effective_scale / boss_ratio, 0.90, 1.06)
+	var target_width_ratio := 0.52 if bool(fish_data.get("boss", false)) else 0.50
+	var draw_width := size.x * target_width_ratio * stamina_scale
+	return Vector2(draw_width, draw_width * frame_h / frame_w)
 
 
 func _showcase_fish_frame_index() -> int:

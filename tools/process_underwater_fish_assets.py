@@ -83,12 +83,16 @@ def _final_despill(image: Image.Image) -> Image.Image:
 
 def create_kurodai_sheet() -> None:
     source = _magenta_removed(Image.open(FISH_SOURCE))
-    source_frames = 4
+    # ImageGen passes can produce either a four-cell source sheet or a single
+    # reference-quality fish cutout. The final runtime asset always remains a
+    # four-frame sheet, but single-source art should be duplicated instead of
+    # sliced into unusable quarters.
+    source_frames = 1 if source.width / max(1, source.height) < 2.4 else 4
     source_w = source.width // source_frames
     frame_w, frame_h = 640, 320
-    sheet = Image.new("RGBA", (frame_w * source_frames, frame_h), (0, 0, 0, 0))
 
-    source_indices = [1, 1, 2, 3]
+    source_indices = [0, 0, 0, 0] if source_frames == 1 else [1, 1, 2, 3]
+    sheet = Image.new("RGBA", (frame_w * len(source_indices), frame_h), (0, 0, 0, 0))
     for index, source_index in enumerate(source_indices):
         raw = source.crop((source_index * source_w, 0, (source_index + 1) * source_w, source.height))
         crop = raw.crop(_content_bbox(raw))
