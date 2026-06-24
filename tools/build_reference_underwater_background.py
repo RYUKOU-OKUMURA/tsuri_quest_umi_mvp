@@ -103,6 +103,99 @@ def _soft_blob_mask(size: tuple[int, int], alpha: int, *, seed_offset: int = 0) 
     return mask.filter(ImageFilter.GaussianBlur(max(8, int(min(w, h) * 0.07))))
 
 
+def _add_distant_fish_layer(
+    base: Image.Image,
+    source: Image.Image,
+    subject_mask: Image.Image,
+) -> None:
+    w, h = source.size
+    fish_source = source.crop((int(w * 0.73), int(h * 0.14), int(w * 0.96), int(h * 0.40)))
+    positions = (
+        (0.42, 0.30, 0.24, 0.110, 42, False),
+        (0.53, 0.25, 0.19, 0.090, 36, True),
+        (0.61, 0.36, 0.22, 0.105, 34, False),
+        (0.70, 0.30, 0.18, 0.086, 30, True),
+        (0.35, 0.40, 0.17, 0.080, 28, True),
+    )
+    for u, v, pw_ratio, ph_ratio, alpha, flip in positions:
+        patch_size = (int(w * pw_ratio), int(h * ph_ratio))
+        patch = fish_source.resize(patch_size, Image.Resampling.LANCZOS)
+        if flip:
+            patch = patch.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
+        patch = ImageEnhance.Brightness(patch).enhance(0.52)
+        patch = ImageEnhance.Color(patch).enhance(0.62)
+        patch = ImageEnhance.Contrast(patch).enhance(0.76)
+        patch = patch.filter(ImageFilter.GaussianBlur(1.4)).convert("RGBA")
+
+        x = int(w * u - patch_size[0] * 0.5)
+        y = int(h * v - patch_size[1] * 0.5)
+        local_mask = _soft_blob_mask(patch_size, alpha)
+        local_mask = ImageChops.multiply(local_mask, _vertical_mask(patch_size, 230, 0.0, 1.0))
+        subject_crop = subject_mask.crop((x, y, x + patch_size[0], y + patch_size[1]))
+        local_mask = ImageChops.multiply(local_mask, subject_crop)
+        base.alpha_composite(
+            Image.composite(
+                patch,
+                Image.new("RGBA", patch_size, (0, 0, 0, 0)),
+                local_mask,
+            ),
+            (x, y),
+        )
+
+
+def _add_midwater_bubble_texture(
+    base: Image.Image,
+    source: Image.Image,
+    subject_mask: Image.Image,
+) -> None:
+    w, h = source.size
+    bubbles = Image.new("RGBA", source.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(bubbles, "RGBA")
+    for index in range(104):
+        col = index % 16
+        row = index // 16
+        u = 0.23 + col * 0.038 + (row % 2) * 0.014
+        v = 0.20 + row * 0.065 + math.sin(index * 1.7) * 0.010
+        radius = 1.1 + (index % 4) * 0.55
+        alpha = 21 + (index % 3) * 8
+        draw.ellipse(
+            (
+                w * u - radius,
+                h * v - radius,
+                w * u + radius,
+                h * v + radius,
+            ),
+            outline=(196, 238, 246, alpha),
+            width=1,
+        )
+    for index in range(36):
+        u = 0.30 + (index % 9) * 0.052
+        v = 0.54 + (index // 9) * 0.042
+        radius = 1.5 + (index % 3) * 0.7
+        draw.ellipse(
+            (
+                w * u - radius,
+                h * v - radius,
+                w * u + radius,
+                h * v + radius,
+            ),
+            outline=(213, 246, 245, 34),
+            width=1,
+        )
+    bubble_mask = ImageChops.multiply(
+        subject_mask,
+        _vertical_mask(source.size, 108, 0.08, 0.78),
+    )
+    base.alpha_composite(
+        Image.composite(
+            bubbles,
+            Image.new("RGBA", source.size, (0, 0, 0, 0)),
+            bubble_mask.filter(ImageFilter.GaussianBlur(1.5)),
+        ),
+        (0, 0),
+    )
+
+
 def _add_center_water_texture(
     clean: Image.Image,
     source: Image.Image,
@@ -243,7 +336,7 @@ def _add_center_water_texture(
             mid_patch.size,
             Image.Resampling.LANCZOS,
         ),
-        _vertical_mask(mid_patch.size, 86, 0.00, 0.86),
+        _vertical_mask(mid_patch.size, 54, 0.00, 0.86),
     )
     mid_alpha = ImageChops.multiply(
         mid_alpha,
@@ -258,6 +351,9 @@ def _add_center_water_texture(
         (int(w * 0.20), int(h * 0.20)),
     )
 
+    _add_distant_fish_layer(base, source, subject_mask)
+    _add_midwater_bubble_texture(base, source, subject_mask)
+
     surface_light = source.crop((int(w * 0.08), 0, int(w * 0.94), int(h * 0.22)))
     light_patch_size = (int(w * 0.72), int(h * 0.46))
     light_patch = surface_light.resize(light_patch_size, Image.Resampling.LANCZOS)
@@ -270,7 +366,7 @@ def _add_center_water_texture(
     light_y = int(h * 0.08)
     light_alpha = ImageChops.multiply(
         subject_mask.crop((light_x, light_y, light_x + light_patch_size[0], light_y + light_patch_size[1])),
-        _vertical_mask(light_patch_size, 44, 0.00, 0.92),
+        _vertical_mask(light_patch_size, 58, 0.00, 0.92),
     )
     base.alpha_composite(
         Image.composite(
@@ -285,11 +381,11 @@ def _add_center_water_texture(
     draw = ImageDraw.Draw(caustics, "RGBA")
     for index, (x0, x1, x2, x3, alpha) in enumerate(
         (
-            (0.20, 0.25, 0.35, 0.30, 21),
-            (0.29, 0.34, 0.46, 0.40, 26),
-            (0.39, 0.45, 0.58, 0.50, 23),
-            (0.52, 0.58, 0.68, 0.62, 19),
-            (0.64, 0.69, 0.75, 0.70, 15),
+            (0.20, 0.25, 0.35, 0.30, 26),
+            (0.29, 0.34, 0.46, 0.40, 32),
+            (0.39, 0.45, 0.58, 0.50, 29),
+            (0.52, 0.58, 0.68, 0.62, 24),
+            (0.64, 0.69, 0.75, 0.70, 19),
         )
     ):
         ray = (
@@ -337,7 +433,7 @@ def _add_center_water_texture(
 
     caustic_mask = ImageChops.multiply(
         subject_mask,
-        _vertical_mask(source.size, 96, 0.02, 0.94),
+        _vertical_mask(source.size, 112, 0.02, 0.94),
     )
     base.alpha_composite(
         Image.composite(
