@@ -41,6 +41,8 @@
    右側の魚情報・行動・タックルカード用の縦長フレーム素材。文字、魚、行動表示は Godot 側で重ねる。
 8. `top_status_frame.png`
    時計、天候、所持金、地点/水深の上部ステータスバー用フレーム素材。文字と数値は Godot 側で重ねる。
+9. `fight_hud_frame.png`
+   下部操作盤の一体型フレーム素材。ゲージ色、現在位置、操作文字、エサ情報は Godot 側で重ねる。
 
 ## 最小素材セット
 
@@ -51,6 +53,7 @@
 | `assets/showcase/underwater/hit_burst.png` | ヒット演出 | 透明 PNG | 中央配置して読めるサイズ、透明背景 |
 | `assets/showcase/underwater/sidebar_frame.png` | 右パネルフレーム | 生成 UI 素材 | テキストなし、魚なし、縦長フレームとして全面表示 |
 | `assets/showcase/underwater/top_status_frame.png` | 上部ステータスバー | 生成 UI 素材 | テキストなし、横長フレームとして全面表示 |
+| `assets/showcase/underwater/fight_hud_frame.png` | 下部操作盤フレーム | 生成 UI 素材 | テキストなし、左カラム幅の二段HUDとして全面表示 |
 
 ## 実装方針
 
@@ -58,7 +61,8 @@
 - PNG がない場合は既存の procedural 描画にフォールバックする。
 - 魚スプライトの位置、向き、状態は `FishingSimulator.visual_position`、`visual_direction`、`action_name`、`fish_stamina_ratio()` から決める。
 - `FightStatusBar` は `top_status_frame.png` を敷き、時計・天候・所持金・水深のテキストだけを Godot 側で重ねる。
-- `FightHud` は画面全幅ではなく左カラム内に置き、右サイドバーが下まで伸びる構図にする。
+- `FightHud` は画面全幅ではなく左カラム内に置き、`fight_hud_frame.png` の上にゲージ色、現在位置、深度、操作文字を重ねる。
+- `UnderwaterView` は主役魚とヒット演出のスケールを参照画像寄りに抑え、深度目盛りは背景に馴染む低コントラスト表示にする。
 - 画面の完成度チェックは、Godot で `tools/fishing_fight_preview.gd` のキャプチャを取り、`tools/build_fight_comparison_html.py` でリファレンスと横並び比較する。
 
 ## 品質ゲート
@@ -73,8 +77,8 @@
 
 ## 次に本番化する素材
 
-1. 下部 HUD のキーアイコン、文字位置、パネル装飾、矢印型セパレータを最終調整する。
-2. 右パネルの重ね文字、魚肖像、行動/タックルアイコンを最終調整する。
-3. 魚のスケール、ヒット演出位置、深度UIの見え方を最終調整する。
+1. 右パネルの重ね文字、魚肖像、行動/タックルアイコンを最終調整する。
+2. 上部ステータス、下部 HUD、右パネルの機能アイコンを本番素材として統一する。
+3. 魚のシルエット/ポーズ、ヒット文字、演出位置を最終調整する。
 4. 泡、光粒、魚影を個別スプライトまたは CPUParticles2D に分離する。
 5. 日本語ピクセルフォントを確定する。

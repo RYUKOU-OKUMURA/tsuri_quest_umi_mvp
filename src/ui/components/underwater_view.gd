@@ -145,14 +145,14 @@ func _draw_water_background() -> void:
 
 
 func _draw_depth_scale() -> void:
-	var panel_width := 54.0
-	var panel_color := Color(0.02, 0.08, 0.16, 0.42)
+	var panel_width := 44.0
+	var panel_color := Color(0.02, 0.08, 0.16, 0.24)
 	draw_rect(Rect2(0.0, 0.0, panel_width, size.y), panel_color)
-	var divider_color := Color(0.55, 0.82, 0.95, 0.35)
+	var divider_color := Color(0.55, 0.82, 0.95, 0.18)
 	draw_line(Vector2(panel_width, 0.0), Vector2(panel_width, size.y), divider_color, 1.0)
 
 	var font := get_theme_default_font()
-	var font_size := 13
+	var font_size := 12
 	var max_depth := 25.0
 	if not fish_data.is_empty():
 		max_depth = maxf(float(fish_data.get("start_depth", 8.0)) + 12.0, 18.0)
@@ -161,32 +161,32 @@ func _draw_depth_scale() -> void:
 			continue
 		var y := lerpf(28.0, size.y * 0.82, float(depth_mark) / max_depth)
 		draw_line(
-			Vector2(8.0, y), Vector2(panel_width - 6.0, y), Color(0.65, 0.86, 0.98, 0.35), 1.0
+			Vector2(8.0, y), Vector2(panel_width - 7.0, y), Color(0.65, 0.86, 0.98, 0.18), 1.0
 		)
 		draw_string(
 			font,
-			Vector2(10.0, y - 3.0),
+			Vector2(8.0, y - 3.0),
 			"%dm" % depth_mark,
 			HORIZONTAL_ALIGNMENT_LEFT,
-			int(panel_width - 12.0),
+			int(panel_width - 10.0),
 			font_size,
-			Color(0.82, 0.94, 1.0, 0.82)
+			Color(0.82, 0.94, 1.0, 0.58)
 		)
 
 	if simulator != null and simulator.state == FishingSimulator.State.FIGHT:
 		var current_y := lerpf(28.0, size.y * 0.82, clampf(simulator.depth / max_depth, 0.0, 1.0))
-		var marker := Vector2(panel_width - 10.0, current_y)
-		draw_circle(marker, 9.0, Color(1.0, 0.80, 0.40, 0.22))
-		draw_circle(marker, 5.0, Color("#ffd37a"))
-		draw_circle(marker, 2.4, Color("#fff3cf"))
+		var marker := Vector2(panel_width - 8.0, current_y)
+		draw_circle(marker, 7.0, Color(1.0, 0.80, 0.40, 0.18))
+		draw_circle(marker, 3.8, Color("#ffd37a"))
+		draw_circle(marker, 1.8, Color("#fff3cf"))
 		draw_string(
 			font,
-			Vector2(10.0, current_y + 4.0),
+			Vector2(8.0, current_y + 4.0),
 			"現 %.0fm" % simulator.depth,
 			HORIZONTAL_ALIGNMENT_LEFT,
-			int(panel_width - 12.0),
+			int(panel_width - 10.0),
 			font_size,
-			Color("#ffe7a8")
+			Color("#ffe7a8", 0.78)
 		)
 
 
@@ -445,7 +445,7 @@ func _draw_showcase_target_fish(center: Vector2, scale_value: float, direction: 
 	var frame_h := float(_showcase_fish_sheet.get_height())
 	var boss_ratio := 1.42 if bool(fish_data.get("boss", false)) else 1.0
 	var stamina_scale := clampf(scale_value / boss_ratio, 0.90, 1.06)
-	var target_width_ratio := 0.52 if bool(fish_data.get("boss", false)) else 0.38
+	var target_width_ratio := 0.46 if bool(fish_data.get("boss", false)) else 0.33
 	var draw_width := size.x * target_width_ratio * stamina_scale
 	var draw_size := Vector2(draw_width, draw_width * frame_h / frame_w)
 	var frame_index := _showcase_fish_frame_index()
@@ -483,10 +483,10 @@ func _draw_hit_burst() -> void:
 	if _fish_flash <= 0.02 or simulator == null:
 		return
 	var alpha := clampf(_fish_flash, 0.0, 1.0)
-	var burst_center := Vector2(size.x * 0.50, size.y * 0.76)
+	var burst_center := Vector2(size.x * 0.50, size.y * 0.78)
 	if _showcase_hit_burst != null:
 		var tex_size := _showcase_hit_burst.get_size()
-		var scale := clampf(size.x / 1050.0, 0.62, 0.95)
+		var scale := clampf(size.x / 1350.0, 0.48, 0.72)
 		var draw_size := tex_size * scale
 		var draw_rect := Rect2(burst_center - draw_size * 0.5, draw_size)
 		draw_texture_rect(_showcase_hit_burst, draw_rect, false, Color(1.0, 1.0, 1.0, alpha))

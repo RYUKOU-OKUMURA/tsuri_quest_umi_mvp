@@ -8,9 +8,13 @@ signal reel_changed(active: bool)
 signal give_line_changed(active: bool)
 signal harbor_pressed
 
+const HUD_FRAME_PATH := "res://assets/showcase/underwater/fight_hud_frame.png"
+
 var simulator: FishingSimulator
 var fish_data: Dictionary = {}
 var trip_stats: Dictionary = {}
+
+var _hud_frame: Texture2D
 
 var _main_rect := Rect2()
 var _reel_rect := Rect2()
@@ -30,6 +34,8 @@ func bind(value: FishingSimulator, fish: Dictionary, stats: Dictionary) -> void:
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	custom_minimum_size = Vector2(0.0, 178.0)
+	if ResourceLoader.exists(HUD_FRAME_PATH):
+		_hud_frame = load(HUD_FRAME_PATH) as Texture2D
 
 
 func _process(_delta: float) -> void:
@@ -76,20 +82,26 @@ func _draw() -> void:
 	if rect.size.x <= 0.0 or rect.size.y <= 0.0:
 		return
 
-	_draw_panel(rect, Color("#08223b"), Palette.GOLD_DEEP, Palette.GOLD)
+	if _hud_frame != null:
+		draw_texture_rect(_hud_frame, rect, false, Color.WHITE)
+	else:
+		_draw_panel(rect, Color("#08223b"), Palette.GOLD_DEEP, Palette.GOLD)
 
 	var gap := 10.0
-	var top_h := minf(92.0, size.y * 0.54)
-	var bottom_h := size.y - top_h - gap * 2.0
-	var top := Rect2(gap, gap, size.x - gap * 2.0, top_h)
-	var bottom := Rect2(gap, top.end.y + gap, size.x - gap * 2.0, bottom_h)
+	var top := Rect2(gap, gap, size.x - gap * 2.0, minf(92.0, size.y * 0.54))
+	var bottom := Rect2(gap, top.end.y + gap, size.x - gap * 2.0, size.y - top.size.y - gap * 2.0)
+	if _hud_frame != null:
+		top = Rect2(size.x * 0.018, size.y * 0.09, size.x * 0.964, size.y * 0.405)
+		bottom = Rect2(size.x * 0.015, size.y * 0.565, size.x * 0.970, size.y * 0.365)
 
 	var depth_w := clampf(size.x * 0.14, 150.0, 190.0)
-	var left_w := (top.size.x - depth_w - gap * 2.0) * 0.44
+	if _hud_frame != null:
+		depth_w = clampf(size.x * 0.225, 170.0, 220.0)
+	var left_w := (top.size.x - depth_w - gap * 2.0) * (0.44 if _hud_frame == null else 0.50)
 	var right_w := top.size.x - depth_w - left_w - gap * 2.0
-	var tension_rect := Rect2(top.position, Vector2(left_w, top_h))
-	var depth_rect := Rect2(Vector2(tension_rect.end.x + gap, top.position.y), Vector2(depth_w, top_h))
-	var stamina_rect := Rect2(Vector2(depth_rect.end.x + gap, top.position.y), Vector2(right_w, top_h))
+	var tension_rect := Rect2(top.position, Vector2(left_w, top.size.y))
+	var depth_rect := Rect2(Vector2(tension_rect.end.x + gap, top.position.y), Vector2(depth_w, top.size.y))
+	var stamina_rect := Rect2(Vector2(depth_rect.end.x + gap, top.position.y), Vector2(right_w, top.size.y))
 
 	_draw_tension(font, tension_rect)
 	_draw_depth(font, depth_rect)
@@ -99,8 +111,10 @@ func _draw() -> void:
 
 func _draw_tension(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0b1828"), Color("#122f4f"), Palette.GOLD_DEEP)
-	_draw_icon_badge(rect.position + Vector2(24.0, 20.0), Color("#ff5b63"))
-	_draw_text(font, "テンション", rect.position + Vector2(46.0, 25.0), 20, Palette.TEXT_BONE, 3)
+	var title_y := 25.0 if _hud_frame == null else 23.0
+	var bar_y := 42.0 if _hud_frame == null else 34.0
+	_draw_icon_badge(rect.position + Vector2(24.0, title_y - 5.0), Color("#ff5b63"))
+	_draw_text(font, "テンション", rect.position + Vector2(46.0, title_y), 20, Palette.TEXT_BONE, 3)
 	var ratio := 0.0
 	var safe_min := 0.30
 	var safe_max := 0.74
@@ -108,7 +122,7 @@ func _draw_tension(font: Font, rect: Rect2) -> void:
 		ratio = clampf(simulator.tension / maxf(simulator.line_break_limit(), 0.01), 0.0, 1.0)
 		safe_min = simulator.safe_min()
 		safe_max = simulator.safe_max()
-	var bar := Rect2(rect.position + Vector2(24.0, 42.0), Vector2(rect.size.x - 58.0, 26.0))
+	var bar := Rect2(rect.position + Vector2(24.0, bar_y), Vector2(rect.size.x - 58.0, 26.0 if _hud_frame == null else 22.0))
 	_draw_segment_gauge(bar, ratio, safe_min, safe_max, true)
 	_draw_text(font, "ゆるい", rect.position + Vector2(24.0, rect.size.y - 8.0), 16, Color("#72f47d"), 2)
 	var tight := "きつい"
@@ -118,14 +132,15 @@ func _draw_tension(font: Font, rect: Rect2) -> void:
 
 func _draw_depth(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0b355f"), Color("#08213c"), Palette.GOLD)
-	_draw_text(font, "タナ（深さ）", rect.position + Vector2(22.0, 22.0), 17, Palette.TEXT_BONE, 3)
+	var title_y := 22.0 if _hud_frame == null else 21.0
+	_draw_text(font, "タナ（深さ）", rect.position + Vector2(22.0, title_y), 17, Palette.TEXT_BONE, 3)
 	var depth := 0.0
 	if simulator != null:
 		depth = simulator.depth
 	var value := "%.1fm" % depth
 	var value_size := 34
 	var value_w := font.get_string_size(value, HORIZONTAL_ALIGNMENT_LEFT, -1, value_size).x
-	_draw_text(font, value, rect.position + Vector2((rect.size.x - value_w) * 0.5, 59.0), value_size, Color("#eaf6ff"), 4)
+	_draw_text(font, value, rect.position + Vector2((rect.size.x - value_w) * 0.5, 59.0 if _hud_frame == null else 56.0), value_size, Color("#eaf6ff"), 4)
 	var cx := rect.position.x + rect.size.x - 22.0
 	_draw_triangle(Vector2(cx, rect.position.y + 28.0), 14.0, Color("#29baf7"), true)
 	_draw_triangle(Vector2(cx, rect.position.y + 62.0), 14.0, Color("#ff6b3e"), false)
@@ -133,12 +148,14 @@ func _draw_depth(font: Font, rect: Rect2) -> void:
 
 func _draw_stamina(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0b1828"), Color("#122f4f"), Palette.GOLD_DEEP)
-	_draw_icon_badge(rect.position + Vector2(24.0, 20.0), Color("#6cc8ff"))
-	_draw_text(font, "魚の体力", rect.position + Vector2(46.0, 25.0), 20, Palette.TEXT_BONE, 3)
+	var title_y := 25.0 if _hud_frame == null else 23.0
+	var bar_y := 42.0 if _hud_frame == null else 34.0
+	_draw_icon_badge(rect.position + Vector2(24.0, title_y - 5.0), Color("#6cc8ff"))
+	_draw_text(font, "魚の体力", rect.position + Vector2(46.0, title_y), 20, Palette.TEXT_BONE, 3)
 	var ratio := 1.0
 	if simulator != null:
 		ratio = simulator.fish_stamina_ratio()
-	var bar := Rect2(rect.position + Vector2(24.0, 42.0), Vector2(rect.size.x - 48.0, 26.0))
+	var bar := Rect2(rect.position + Vector2(24.0, bar_y), Vector2(rect.size.x - 48.0, 26.0 if _hud_frame == null else 22.0))
 	_draw_segment_gauge(bar, ratio, 0.0, 1.0, false)
 	_draw_text(font, "弱い", rect.position + Vector2(24.0, rect.size.y - 8.0), 16, Color("#fff1c7"), 2)
 	var strong := "強い"
@@ -148,28 +165,29 @@ func _draw_stamina(font: Font, rect: Rect2) -> void:
 
 func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 	var gap := 10.0
-	var bait_w := rect.size.x * 0.28
-	var menu_w := rect.size.x * 0.20
+	var bait_w := rect.size.x * (0.28 if _hud_frame == null else 0.285)
+	var menu_w := rect.size.x * (0.20 if _hud_frame == null else 0.260)
 	var hint_w := rect.size.x - bait_w - menu_w - gap * 2.0
 	var bait := Rect2(rect.position, Vector2(bait_w, rect.size.y))
 	var hint := Rect2(Vector2(bait.end.x + gap, rect.position.y), Vector2(hint_w, rect.size.y))
 	var menu := Rect2(Vector2(hint.end.x + gap, rect.position.y), Vector2(menu_w, rect.size.y))
 	_main_rect = bait
-	_reel_rect = Rect2(hint.position + Vector2(8.0, 30.0), Vector2(hint.size.x * 0.35, hint.size.y - 34.0))
-	_give_rect = Rect2(hint.position + Vector2(hint.size.x * 0.42, 30.0), Vector2(hint.size.x * 0.35, hint.size.y - 34.0))
+	_reel_rect = Rect2(hint.position + Vector2(8.0, 30.0), Vector2(hint.size.x * 0.30, hint.size.y - 34.0))
+	_give_rect = Rect2(hint.position + Vector2(hint.size.x * 0.35, 30.0), Vector2(hint.size.x * 0.30, hint.size.y - 34.0))
 	_harbor_rect = Rect2(menu.position, menu.size)
 
 	_draw_panel(bait, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
-	_draw_text(font, "使用中のエサ", bait.position + Vector2(16.0, 24.0), 17, Color("#6a4c2b"), 0)
-	_draw_bait_icon(bait.position + Vector2(82.0, bait.size.y * 0.62))
-	_draw_text(font, "オキアミ", bait.position + Vector2(128.0, bait.size.y * 0.58), 22, Color("#2b2117"), 0)
-	_draw_text(font, "× 17", bait.position + Vector2(132.0, bait.size.y * 0.86), 22, Color("#2b2117"), 0)
+	var bait_text_x := 16.0 if _hud_frame == null else 86.0
+	_draw_text(font, "使用中のエサ", bait.position + Vector2(bait_text_x, 24.0), 17, Color("#6a4c2b"), 0)
+	_draw_bait_icon(bait.position + Vector2(82.0 if _hud_frame == null else 95.0, bait.size.y * 0.62))
+	_draw_text(font, "オキアミ", bait.position + Vector2(128.0 if _hud_frame == null else 146.0, bait.size.y * 0.58), 22, Color("#2b2117"), 0)
+	_draw_text(font, "× 17", bait.position + Vector2(132.0 if _hud_frame == null else 150.0, bait.size.y * 0.86), 22, Color("#2b2117"), 0)
 
 	_draw_panel(hint, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	_draw_text(font, "操作のヒント", hint.position + Vector2(16.0, 25.0), 18, Color("#6a4c2b"), 0)
 	_draw_key_hint(font, _reel_rect, "A", "巻く")
 	_draw_key_hint(font, _give_rect, "B", "緩める")
-	_draw_key_hint(font, Rect2(hint.position + Vector2(hint.size.x - 116.0, 32.0), Vector2(104.0, 28.0)), "L/R", "調整")
+	_draw_key_hint(font, Rect2(hint.position + Vector2(hint.size.x - 128.0, 30.0), Vector2(120.0, 30.0)), "L/R", "調整")
 
 	_draw_panel(menu, Color("#0b355f"), Color("#08213c"), Palette.GOLD)
 	_draw_key_row(font, menu.position + Vector2(22.0, menu.size.y * 0.42), "+", "ポーズ")
@@ -177,9 +195,10 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 
 
 func _draw_segment_gauge(rect: Rect2, ratio: float, safe_min: float, safe_max: float, warm: bool) -> void:
-	draw_rect(rect.grow(3.0), Color(0.0, 0.0, 0.0, 0.35), true)
-	draw_rect(rect, Color("#07101b"), true)
-	draw_rect(rect, Color("#0f2a43"), false, 2.0)
+	if _hud_frame == null:
+		draw_rect(rect.grow(3.0), Color(0.0, 0.0, 0.0, 0.35), true)
+		draw_rect(rect, Color("#07101b"), true)
+		draw_rect(rect, Color("#0f2a43"), false, 2.0)
 	var segments := 18
 	var gap := 2.0
 	var seg_w := (rect.size.x - gap * float(segments - 1)) / float(segments)
@@ -193,18 +212,24 @@ func _draw_segment_gauge(rect: Rect2, ratio: float, safe_min: float, safe_max: f
 				color = color.lerp(Color("#f05b22"), clampf((start - 0.55) / 0.45, 0.0, 1.0))
 			else:
 				color = Color("#27e648").lerp(Color("#11d8c9"), start)
+		elif _hud_frame != null:
+			continue
 		var seg := Rect2(rect.position + Vector2(float(i) * (seg_w + gap), 3.0), Vector2(seg_w, rect.size.y - 6.0))
 		draw_rect(seg, color, true)
-		draw_rect(seg, Color(1.0, 1.0, 1.0, 0.13), false, 1.0)
+		draw_rect(seg, Color(1.0, 1.0, 1.0, 0.18 if _hud_frame != null else 0.13), false, 1.0)
 	if warm:
-		for marker in [safe_min, safe_max, ratio]:
-			var x := rect.position.x + rect.size.x * clampf(marker, 0.0, 1.0)
-			var marker_color := Color("#fff8df") if marker == ratio else Color(1.0, 1.0, 1.0, 0.72)
-			draw_line(Vector2(x, rect.position.y - 4.0), Vector2(x, rect.end.y + 5.0), marker_color, 2.0)
-			_draw_triangle(Vector2(x, rect.position.y - 9.0), 7.0, marker_color, false)
+		for marker in [safe_min, safe_max]:
+			var tick_x := rect.position.x + rect.size.x * clampf(marker, 0.0, 1.0)
+			draw_line(Vector2(tick_x, rect.position.y + 1.0), Vector2(tick_x, rect.end.y - 1.0), Color(1.0, 1.0, 1.0, 0.34), 1.0)
+		var x := rect.position.x + rect.size.x * clampf(ratio, 0.0, 1.0)
+		var marker_color := Color("#fff8df")
+		draw_line(Vector2(x, rect.position.y - 3.0), Vector2(x, rect.end.y + 4.0), marker_color, 2.0)
+		_draw_triangle(Vector2(x, rect.position.y - 8.0), 7.0, marker_color, false)
 
 
 func _draw_panel(rect: Rect2, fill: Color, border: Color, highlight: Color) -> void:
+	if _hud_frame != null:
+		return
 	draw_rect(rect, Color(0.0, 0.0, 0.0, 0.32), true)
 	var body := rect.grow(-3.0)
 	draw_rect(body, fill, true)
@@ -251,8 +276,9 @@ func _draw_bait_icon(center: Vector2) -> void:
 
 
 func _draw_key_hint(font: Font, rect: Rect2, key: String, label: String) -> void:
-	draw_rect(rect, Color(0.0, 0.0, 0.0, 0.07), true)
-	draw_rect(rect, Color("#c8b27f"), false, 1.0)
+	if _hud_frame == null:
+		draw_rect(rect, Color(0.0, 0.0, 0.0, 0.07), true)
+		draw_rect(rect, Color("#c8b27f"), false, 1.0)
 	_draw_key_row(font, rect.position + Vector2(14.0, 20.0), key, label)
 
 
