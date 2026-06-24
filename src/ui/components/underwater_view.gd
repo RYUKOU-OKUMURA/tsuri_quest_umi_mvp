@@ -100,9 +100,9 @@ func _load_texture_if_exists(path: String) -> Texture2D:
 func _draw_showcase_background() -> void:
 	_draw_cover_texture(_showcase_bg, Rect2(Vector2.ZERO, size), Color.WHITE)
 	if _showcase_color_grade != null:
-		_draw_cover_texture(_showcase_color_grade, Rect2(Vector2.ZERO, size), Color.WHITE)
+		_draw_cover_texture(_showcase_color_grade, Rect2(Vector2.ZERO, size), Color(1.0, 1.0, 1.0, 0.38))
 	if _showcase_seabed_detail != null:
-		_draw_cover_texture(_showcase_seabed_detail, Rect2(Vector2.ZERO, size), Color.WHITE)
+		_draw_cover_texture(_showcase_seabed_detail, Rect2(Vector2.ZERO, size), Color(1.0, 1.0, 1.0, 0.62))
 	# 背景PNGに重ねる軽い水中の揺らぎ。主素材を邪魔しない密度に抑える。
 	for index in range(6):
 		var y := size.y * (0.12 + float(index) * 0.085)
@@ -112,7 +112,7 @@ func _draw_showcase_background() -> void:
 
 func _draw_showcase_ambience() -> void:
 	if _showcase_fg_ambience != null:
-		_draw_cover_texture(_showcase_fg_ambience, Rect2(Vector2.ZERO, size), Color(1.0, 1.0, 1.0, 0.86))
+		_draw_cover_texture(_showcase_fg_ambience, Rect2(Vector2.ZERO, size), Color(1.0, 1.0, 1.0, 0.72))
 	else:
 		_draw_showcase_fish_schools()
 		_draw_showcase_bubble_columns()
