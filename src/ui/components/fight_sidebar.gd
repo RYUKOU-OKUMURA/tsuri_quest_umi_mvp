@@ -5,7 +5,10 @@ extends Control
 
 const FISH_SHEET_PATH := "res://assets/showcase/underwater/kurodai_showcase_sheet.png"
 const SIDEBAR_FRAME_PATH := "res://assets/showcase/underwater/sidebar_frame.png"
+const ICON_SHEET_PATH := "res://assets/showcase/underwater/fight_icon_sheet.png"
 const FISH_FRAME_COUNT := 4
+const ICON_ACTION := 7
+const ICON_TACKLE := 8
 
 var simulator: FishingSimulator
 var fish_data: Dictionary = {}
@@ -13,6 +16,7 @@ var trip_stats: Dictionary = {}
 
 var _fish_sheet: Texture2D
 var _sidebar_frame: Texture2D
+var _icons: Texture2D
 
 
 func bind(value: FishingSimulator, fish: Dictionary, stats: Dictionary) -> void:
@@ -34,6 +38,8 @@ func _ready() -> void:
 		_fish_sheet = load(FISH_SHEET_PATH) as Texture2D
 	if ResourceLoader.exists(SIDEBAR_FRAME_PATH):
 		_sidebar_frame = load(SIDEBAR_FRAME_PATH) as Texture2D
+	if ResourceLoader.exists(ICON_SHEET_PATH):
+		_icons = load(ICON_SHEET_PATH) as Texture2D
 
 
 func _process(_delta: float) -> void:
@@ -137,14 +143,18 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 		body = Rect2(rect.position + Vector2(12.0, rect.size.y * 0.33), rect.size - Vector2(24.0, rect.size.y * 0.43))
 	_draw_panel(body, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	var rod_name := String(trip_stats.get("rod_name", "港の入門竿"))
+	var text_width := body.size.x - (70.0 if _icons != null else 12.0)
 	var lines: Array[String] = [
 		"ロッド：%s" % rod_name,
 		"ライン：ナイロン 3号",
 		"ハリス：フロロ 2号",
 	]
 	for i in range(lines.size()):
-		_draw_text(font, lines[i], body.position + Vector2(12.0, 22.0 + float(i) * 17.0), 13, Palette.TEXT_DARK, 0)
-	_draw_simple_rod(body.position + Vector2(body.size.x - 62.0, body.size.y - 24.0))
+		_draw_wrapped(font, lines[i], body.position + Vector2(12.0, 8.0 + float(i) * 17.0), text_width, 13, Palette.TEXT_DARK, 1)
+	if _icons != null:
+		_draw_tackle_icon(Rect2(body.end - Vector2(60.0, 60.0), Vector2(56.0, 56.0)))
+	else:
+		_draw_simple_rod(body.position + Vector2(body.size.x - 62.0, body.size.y - 24.0))
 
 
 func _draw_panel(rect: Rect2, fill: Color, border: Color, highlight: Color) -> void:
@@ -218,6 +228,10 @@ func _draw_fish_portrait(rect: Rect2) -> void:
 
 
 func _draw_action_icon(center: Vector2) -> void:
+	if _icons != null:
+		var size_value := 58.0
+		_draw_sheet_icon(ICON_ACTION, Rect2(center - Vector2(size_value, size_value) * 0.5, Vector2(size_value, size_value)))
+		return
 	draw_arc(center, 26.0, -2.7, -0.5, 16, Color("#22354a"), 2.0)
 	draw_polygon(
 		PackedVector2Array([
@@ -248,7 +262,24 @@ func _draw_simple_rod(base: Vector2) -> void:
 	draw_circle(base + Vector2(-18.0, 8.0), 5.0, Palette.GOLD)
 
 
+func _draw_tackle_icon(rect: Rect2) -> void:
+	if _icons == null:
+		return
+	_draw_sheet_icon(ICON_TACKLE, rect)
+
+
 func _display_fish_name(name: String) -> String:
 	if name.find("クロダイ") >= 0:
 		return "クロダイ"
 	return name
+
+
+func _draw_sheet_icon(icon_index: int, target: Rect2) -> void:
+	if _icons == null:
+		return
+	var cell_w := float(_icons.get_width()) / 3.0
+	var cell_h := float(_icons.get_height()) / 3.0
+	var col := icon_index % 3
+	var row := icon_index / 3
+	var src := Rect2(float(col) * cell_w, float(row) * cell_h, cell_w, cell_h)
+	draw_texture_rect_region(_icons, target, src, Color.WHITE)

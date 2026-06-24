@@ -4,10 +4,16 @@ extends Control
 # 生成フレーム素材を敷き、時計・天候・所持金・現在地点/水深の文字だけを重ねる。
 
 const FRAME_PATH := "res://assets/showcase/underwater/top_status_frame.png"
+const ICON_SHEET_PATH := "res://assets/showcase/underwater/fight_icon_sheet.png"
+const ICON_TIME := 0
+const ICON_WEATHER := 1
+const ICON_WIND := 2
+const ICON_COIN := 3
 
 var simulator: FishingSimulator
 
 var _frame: Texture2D
+var _icons: Texture2D
 
 
 func bind(value: FishingSimulator) -> void:
@@ -20,6 +26,8 @@ func _ready() -> void:
 	custom_minimum_size = Vector2(0.0, 76.0)
 	if ResourceLoader.exists(FRAME_PATH):
 		_frame = load(FRAME_PATH) as Texture2D
+	if ResourceLoader.exists(ICON_SHEET_PATH):
+		_icons = load(ICON_SHEET_PATH) as Texture2D
 
 
 func _process(_delta: float) -> void:
@@ -39,6 +47,9 @@ func _draw() -> void:
 
 	var font := get_theme_default_font()
 	var slots := _slot_rects(rect)
+	_draw_status_icon(slots[0], ICON_TIME)
+	_draw_status_icon(slots[1], ICON_WEATHER)
+	_draw_status_icon(slots[2], ICON_COIN)
 	_draw_status_slot(font, slots[0], "AM", "08:47", false)
 	_draw_status_slot(font, slots[1], "快晴", "風 弱", false)
 	_draw_status_slot(font, slots[2], "所持金", "%d G" % PlayerProgress.money, false)
@@ -61,7 +72,7 @@ func _slot_rects(rect: Rect2) -> Array[Rect2]:
 
 
 func _draw_status_slot(font: Font, rect: Rect2, title: String, body: String, dark: bool) -> void:
-	var icon_space := clampf(rect.size.y * 1.72, 106.0, 132.0)
+	var icon_space := clampf(rect.size.y * 1.65, 102.0, 128.0)
 	var text_x := rect.position.x + icon_space
 	if dark:
 		text_x += rect.size.y * 0.16
@@ -77,6 +88,33 @@ func _draw_status_slot(font: Font, rect: Rect2, title: String, body: String, dar
 	var body_y := rect.position.y + rect.size.y * 0.72
 	_draw_text_clipped(font, title, Vector2(text_x, title_y), title_size, title_color, max_width, outline)
 	_draw_text_clipped(font, body, Vector2(text_x, body_y), body_size, body_color, max_width, outline)
+
+
+func _draw_status_icon(rect: Rect2, icon_index: int) -> void:
+	if _icons == null:
+		return
+	var icon_size := clampf(rect.size.y * 0.78, 46.0, 58.0)
+	var icon_rect := Rect2(
+		rect.position + Vector2(22.0, (rect.size.y - icon_size) * 0.5),
+		Vector2(icon_size, icon_size)
+	)
+	_draw_sheet_icon(icon_index, icon_rect)
+	if icon_index == ICON_WEATHER:
+		_draw_sheet_icon(
+			ICON_WIND,
+			Rect2(icon_rect.position + Vector2(icon_size * 0.54, icon_size * 0.56), Vector2(icon_size * 0.48, icon_size * 0.48))
+		)
+
+
+func _draw_sheet_icon(icon_index: int, target: Rect2) -> void:
+	if _icons == null:
+		return
+	var cell_w := float(_icons.get_width()) / 3.0
+	var cell_h := float(_icons.get_height()) / 3.0
+	var col := icon_index % 3
+	var row := icon_index / 3
+	var src := Rect2(float(col) * cell_w, float(row) * cell_h, cell_w, cell_h)
+	draw_texture_rect_region(_icons, target, src, Color.WHITE)
 
 
 func _draw_text_clipped(

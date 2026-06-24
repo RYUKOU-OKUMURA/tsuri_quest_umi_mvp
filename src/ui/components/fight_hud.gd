@@ -9,12 +9,17 @@ signal give_line_changed(active: bool)
 signal harbor_pressed
 
 const HUD_FRAME_PATH := "res://assets/showcase/underwater/fight_hud_frame.png"
+const ICON_SHEET_PATH := "res://assets/showcase/underwater/fight_icon_sheet.png"
+const ICON_TENSION := 4
+const ICON_STAMINA := 5
+const ICON_BAIT := 6
 
 var simulator: FishingSimulator
 var fish_data: Dictionary = {}
 var trip_stats: Dictionary = {}
 
 var _hud_frame: Texture2D
+var _icons: Texture2D
 
 var _main_rect := Rect2()
 var _reel_rect := Rect2()
@@ -36,6 +41,8 @@ func _ready() -> void:
 	custom_minimum_size = Vector2(0.0, 178.0)
 	if ResourceLoader.exists(HUD_FRAME_PATH):
 		_hud_frame = load(HUD_FRAME_PATH) as Texture2D
+	if ResourceLoader.exists(ICON_SHEET_PATH):
+		_icons = load(ICON_SHEET_PATH) as Texture2D
 
 
 func _process(_delta: float) -> void:
@@ -113,7 +120,7 @@ func _draw_tension(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0b1828"), Color("#122f4f"), Palette.GOLD_DEEP)
 	var title_y := 25.0 if _hud_frame == null else 23.0
 	var bar_y := 42.0 if _hud_frame == null else 34.0
-	_draw_icon_badge(rect.position + Vector2(24.0, title_y - 5.0), Color("#ff5b63"))
+	_draw_hud_icon(ICON_TENSION, Rect2(rect.position + Vector2(3.0, title_y - 24.0), Vector2(42.0, 42.0)), Color("#ff5b63"))
 	_draw_text(font, "テンション", rect.position + Vector2(46.0, title_y), 20, Palette.TEXT_BONE, 3)
 	var ratio := 0.0
 	var safe_min := 0.30
@@ -150,7 +157,7 @@ func _draw_stamina(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0b1828"), Color("#122f4f"), Palette.GOLD_DEEP)
 	var title_y := 25.0 if _hud_frame == null else 23.0
 	var bar_y := 42.0 if _hud_frame == null else 34.0
-	_draw_icon_badge(rect.position + Vector2(24.0, title_y - 5.0), Color("#6cc8ff"))
+	_draw_hud_icon(ICON_STAMINA, Rect2(rect.position + Vector2(3.0, title_y - 24.0), Vector2(42.0, 42.0)), Color("#6cc8ff"))
 	_draw_text(font, "魚の体力", rect.position + Vector2(46.0, title_y), 20, Palette.TEXT_BONE, 3)
 	var ratio := 1.0
 	if simulator != null:
@@ -177,11 +184,18 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 	_harbor_rect = Rect2(menu.position, menu.size)
 
 	_draw_panel(bait, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
-	var bait_text_x := 16.0 if _hud_frame == null else 86.0
+	var bait_text_x := 16.0 if _hud_frame == null else 116.0
 	_draw_text(font, "使用中のエサ", bait.position + Vector2(bait_text_x, 24.0), 17, Color("#6a4c2b"), 0)
-	_draw_bait_icon(bait.position + Vector2(82.0 if _hud_frame == null else 95.0, bait.size.y * 0.62))
-	_draw_text(font, "オキアミ", bait.position + Vector2(128.0 if _hud_frame == null else 146.0, bait.size.y * 0.58), 22, Color("#2b2117"), 0)
-	_draw_text(font, "× 17", bait.position + Vector2(132.0 if _hud_frame == null else 150.0, bait.size.y * 0.86), 22, Color("#2b2117"), 0)
+	if _icons != null:
+		var bait_icon_size := 46.0 if _hud_frame != null else 46.0
+		_draw_sheet_icon(
+			ICON_BAIT,
+			Rect2(bait.position + Vector2(58.0, bait.size.y * 0.5 - bait_icon_size * 0.5), Vector2(bait_icon_size, bait_icon_size))
+		)
+	else:
+		_draw_bait_icon(bait.position + Vector2(82.0 if _hud_frame == null else 95.0, bait.size.y * 0.62))
+	_draw_text(font, "オキアミ", bait.position + Vector2(128.0 if _hud_frame == null else 156.0, bait.size.y * 0.58), 22, Color("#2b2117"), 0)
+	_draw_text(font, "× 17", bait.position + Vector2(132.0 if _hud_frame == null else 160.0, bait.size.y * 0.86), 22, Color("#2b2117"), 0)
 
 	_draw_panel(hint, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	_draw_text(font, "操作のヒント", hint.position + Vector2(16.0, 25.0), 18, Color("#6a4c2b"), 0)
@@ -254,6 +268,24 @@ func _draw_icon_badge(center: Vector2, color: Color) -> void:
 	draw_circle(center, 11.0, Color(0.0, 0.0, 0.0, 0.42))
 	draw_circle(center, 8.0, color)
 	draw_circle(center + Vector2(-2.0, -2.0), 2.5, Color(1.0, 1.0, 1.0, 0.55))
+
+
+func _draw_hud_icon(icon_index: int, rect: Rect2, fallback_color: Color) -> void:
+	if _icons == null:
+		_draw_icon_badge(rect.position + rect.size * 0.5, fallback_color)
+		return
+	_draw_sheet_icon(icon_index, rect)
+
+
+func _draw_sheet_icon(icon_index: int, target: Rect2) -> void:
+	if _icons == null:
+		return
+	var cell_w := float(_icons.get_width()) / 3.0
+	var cell_h := float(_icons.get_height()) / 3.0
+	var col := icon_index % 3
+	var row := icon_index / 3
+	var src := Rect2(float(col) * cell_w, float(row) * cell_h, cell_w, cell_h)
+	draw_texture_rect_region(_icons, target, src, Color.WHITE)
 
 
 func _draw_triangle(center: Vector2, radius: float, color: Color, up: bool) -> void:
