@@ -71,6 +71,7 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 - Added a stronger reference-derived center background pass in `tools/build_reference_underwater_background.py`: a midwater school texture plus a raised seabed-shelf patch reuse the reference's own fish-school/water/seabed pixels inside the subject mask, reducing the flat blue band behind the runtime kurodai without covering the line, lure, or `ヒット！` text.
 - Rebalanced the lower-HUD bait/hint/menu widths so the operation hint card gets more room, regenerated `fight_hud_frame.png` with matching baked slots, and added tiny secondary operation notes under `巻く / 緩める / 調整` to move the HUD closer to the reference's printed control-card information density.
 - Added a reference-derived center-floor glint pass in `tools/build_reference_underwater_background.py`, reusing left/right seabed pixels as a low-alpha lower-center patch so the area under the fish and behind the hit text has more seabed reflection without covering the runtime fish or `ヒット！` text.
+- Increased the runtime `hit_burst.png` draw scale and moved the fight distance overlay behind the hit treatment with lower opacity, so the blue splash reads more like a real badge behind `ヒット！` instead of being cut by the meter line.
 - Regenerated `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png`.
 
 ## Findings
@@ -105,11 +106,11 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
   Impact: this is a visible move toward the target image because the water panel carries more of the reference's real edge density, bubble rhythm, seabed art language, and central depth under the main fish. The lower-center glint pass is intentionally subtle and does not solve the full paintover gap by itself.
   Fix: keep the full-window extraction, stronger center texture pass, waved/blobbed masks, central light shafts, raised seabed-shelf patch, center-floor glint patch, low-alpha reef fragments, and sparse central background fish/bubbles as the deterministic background build path, and keep UnderwaterView linear filtering/lower overlay opacity. Next background work should either author a higher-quality center replacement patch or use a final raster paintover for the masked fish/hit area; do not treat the current center fill as finished art.
 
-- [P3] Hit treatment is close, with only final context polish remaining.
+- [P3] Hit treatment is closer, with only final context polish remaining.
   Location: `assets/showcase/underwater/hit_burst.png`, `src/ui/components/underwater_view.gd`.
-  Evidence: the badge now reads as a darker blue splash with fewer white rays/flecks behind the yellow/orange live text, and its lower edge sits closer to the top of the operation board. A rejected midwater-detail experiment made the center read like pasted residue, so that direction was not kept; the latest `/tmp/tsuri_fish_hit_focus.png` keeps the stable background and only quiets the hit badge's internal line noise. It still differs slightly from the reference starburst silhouette and text optical weight.
-  Impact: the hit moment is less noisy and competes less with the fish/background. It is no longer a major art-style mismatch, but it is still not a perfect match to the reference badge.
-  Fix: keep the quieter ray/glint density. Revisit only after the final background center paintover and HUD/font pass, because the badge's ideal strength depends on the final water density underneath it.
+  Evidence: the badge now reads as a darker blue splash with fewer white rays/flecks behind the yellow/orange live text, and its lower edge sits closer to the top of the operation board. The latest runtime pass draws the fight distance meter before the hit treatment, lowers the distance meter opacity, and increases the `hit_burst.png` display scale. In `/tmp/tsuri_fish_hit_focus.png`, the splash is more visible behind `ヒット！` and is no longer cut as strongly by the horizontal distance bar. It still differs slightly from the reference starburst silhouette and text optical weight.
+  Impact: the hit moment has more of the reference's central badge presence while keeping the fish and HUD readable. It is no longer a major art-style mismatch, but it is still not a perfect match to the reference badge.
+  Fix: keep the larger runtime splash scale, quieter ray/glint density, and distance overlay behind the hit treatment. Revisit only after the final background center paintover and HUD/font pass, because the badge's ideal strength depends on the final water density underneath it.
 
 - [P2] Typography is improved but still not at the reference's custom UI quality.
   Location: all fight UI overlay text.

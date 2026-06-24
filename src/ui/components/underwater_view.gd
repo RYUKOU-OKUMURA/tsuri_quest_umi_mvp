@@ -77,8 +77,8 @@ func _draw() -> void:
 		return
 	_draw_line_and_bait()
 	_draw_target_fish()
-	_draw_hit_burst()
 	_draw_fight_overlay()
+	_draw_hit_burst()
 	_draw_frame()
 
 
@@ -568,7 +568,7 @@ func _draw_hit_burst() -> void:
 	var burst_center := Vector2(size.x * 0.50, size.y * 0.835)
 	if _showcase_hit_burst != null:
 		var tex_size := _showcase_hit_burst.get_size()
-		var scale := clampf(size.x / 1500.0, 0.42, 0.58)
+		var scale := clampf(size.x / 1370.0, 0.50, 0.66)
 		var draw_size := tex_size * scale
 		var draw_rect := Rect2(burst_center - draw_size * 0.5, draw_size)
 		draw_texture_rect(_showcase_hit_burst, draw_rect, false, Color(1.0, 1.0, 1.0, alpha))
@@ -595,10 +595,10 @@ func _draw_fight_overlay() -> void:
 	var meter_rect := Rect2(68.0, size.y - 26.0, size.x - 84.0, 10.0)
 	if _meter_track == null:
 		_meter_track = StyleBoxFlat.new()
-		_meter_track.bg_color = Color(0.02, 0.08, 0.14, 0.26)
+		_meter_track.bg_color = Color(0.02, 0.08, 0.14, 0.16)
 		_meter_track.set_corner_radius_all(5)
 		_meter_fill = StyleBoxFlat.new()
-		_meter_fill.bg_color = Color(0.52, 0.94, 1.0, 0.58)
+		_meter_fill.bg_color = Color(0.52, 0.94, 1.0, 0.34)
 		_meter_fill.set_corner_radius_all(5)
 	draw_style_box(_meter_track, meter_rect)
 	if distance_ratio > 0.0:
@@ -606,12 +606,12 @@ func _draw_fight_overlay() -> void:
 		draw_style_box(_meter_fill, fill_rect)
 		draw_rect(
 			Rect2(fill_rect.position.x + 3.0, fill_rect.position.y + 1.5, fill_rect.size.x - 6.0, 1.5),
-			Color(1.0, 1.0, 1.0, 0.38),
+			Color(1.0, 1.0, 1.0, 0.22),
 			false
 		)
 	var label_pos := Vector2(68.0, size.y - 30.0)
-	draw_string_outline(font, label_pos, "距離 %.1fm" % simulator.distance, HORIZONTAL_ALIGNMENT_LEFT, int(size.x - 84.0), 12, 2, Color(0.0, 0.0, 0.0, 0.46))
-	draw_string(font, label_pos, "距離 %.1fm" % simulator.distance, HORIZONTAL_ALIGNMENT_LEFT, int(size.x - 84.0), 12, Color(0.86, 0.96, 1.0, 0.72))
+	draw_string_outline(font, label_pos, "距離 %.1fm" % simulator.distance, HORIZONTAL_ALIGNMENT_LEFT, int(size.x - 84.0), 12, 2, Color(0.0, 0.0, 0.0, 0.32))
+	draw_string(font, label_pos, "距離 %.1fm" % simulator.distance, HORIZONTAL_ALIGNMENT_LEFT, int(size.x - 84.0), 12, Color(0.86, 0.96, 1.0, 0.48))
 
 
 func _draw_frame() -> void:
