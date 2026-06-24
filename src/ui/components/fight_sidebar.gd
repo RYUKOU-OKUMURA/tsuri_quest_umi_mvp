@@ -94,7 +94,7 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	var rarity := String(fish_data.get("rarity", "レア"))
 	var no_text := "No.028"
 	_draw_text(font, no_text, inner.position + Vector2(0.0, 26.0), 14, Color("#6b6153"), 0)
-	_draw_text(font, _display_fish_name(fish_name), inner.position + Vector2(74.0, 28.0), 20, Palette.TEXT_DARK, 0)
+	_draw_text(font, _display_fish_name(fish_name), inner.position + Vector2(74.0, 28.0), 21 if _sidebar_frame != null else 20, Palette.TEXT_DARK, 0)
 	_draw_rarity_tag(font, Rect2(inner.position + Vector2(inner.size.x - 52.0, 8.0), Vector2(48.0, 22.0)), rarity)
 
 	var fish_rect := Rect2(
@@ -108,7 +108,7 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	var divider_y := fish_rect.end.y + (9.0 if _sidebar_frame != null else 6.0)
 	draw_line(Vector2(inner.position.x + 8.0, divider_y), Vector2(inner.end.x - 8.0, divider_y), Color("#c9b486"), 1.0)
 	var estimate := (float(fish_data.get("size_min", 0.0)) + float(fish_data.get("size_max", 0.0))) * 0.5
-	var estimate_size := 21 if _sidebar_frame != null else 23
+	var estimate_size := 22 if _sidebar_frame != null else 23
 	_draw_centered_text(font, "推定 %.1f cm" % estimate, Rect2(inner.position.x, divider_y + 8.0, inner.size.x, 30.0), estimate_size, Color("#2b2117"), 0)
 	var desc_y := divider_y + 44.0
 	draw_line(Vector2(inner.position.x + 8.0, desc_y - 10.0), Vector2(inner.end.x - 8.0, desc_y - 10.0), Color("#d6c299"), 1.0)
@@ -122,7 +122,7 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 
 func _draw_action_card(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0d3a62"), Palette.GOLD, Palette.GOLD_BRIGHT)
-	_draw_text(font, "魚の行動", rect.position + Vector2(16.0, 27.0), 18, Palette.TEXT_BONE, 3)
+	_draw_text(font, "魚の行動", rect.position + Vector2(16.0, 27.0), 19 if _sidebar_frame != null else 18, Palette.TEXT_BONE, 3)
 	var body := Rect2(rect.position + Vector2(10.0, 33.0), rect.size - Vector2(20.0, 42.0))
 	if _sidebar_frame != null:
 		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.29), rect.size - Vector2(28.0, rect.size.y * 0.37))
@@ -134,13 +134,13 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 		message = simulator.action_message
 	var icon_size := 50.0 if _sidebar_frame != null else 58.0
 	_draw_action_icon(body.position + Vector2(34.0, body.size.y * 0.54), icon_size)
-	_draw_text(font, "%s！" % action, body.position + Vector2(72.0, 28.0), 20, Color("#2b2117"), 0)
+	_draw_text(font, "%s！" % action, body.position + Vector2(72.0, 28.0), 21 if _sidebar_frame != null else 20, Color("#2b2117"), 0)
 	_draw_wrapped(font, message, body.position + Vector2(72.0, 36.0), body.size.x - 82.0, 12 if _sidebar_frame != null else 11, Palette.TEXT_DARK, 2)
 
 
 func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0d3a62"), Palette.GOLD, Palette.GOLD_BRIGHT)
-	_draw_text(font, "タックル", rect.position + Vector2(14.0, 26.0), 18, Palette.TEXT_BONE, 3)
+	_draw_text(font, "タックル", rect.position + Vector2(14.0, 26.0), 19 if _sidebar_frame != null else 18, Palette.TEXT_BONE, 3)
 	var body := Rect2(rect.position + Vector2(10.0, 32.0), rect.size - Vector2(20.0, 38.0))
 	if _sidebar_frame != null:
 		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.30), rect.size - Vector2(28.0, rect.size.y * 0.37))

@@ -135,10 +135,11 @@ func _draw_tension(font: Font, rect: Rect2) -> void:
 	var bar := Rect2(rect.position + Vector2(24.0, bar_y), Vector2(rect.size.x - 58.0, 26.0 if _hud_frame == null else 24.0))
 	_draw_segment_gauge(bar, ratio, safe_min, safe_max, true)
 	var label_size := 16 if _hud_frame == null else 15
+	var right_label_margin := 24.0 if _hud_frame == null else 34.0
 	_draw_text(font, "ゆるい", rect.position + Vector2(24.0, rect.size.y - 8.0), label_size, Color("#72f47d"), 2)
 	var tight := "きつい"
 	var tight_w := font.get_string_size(tight, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
-	_draw_text(font, tight, rect.position + Vector2(rect.size.x - tight_w - 24.0, rect.size.y - 8.0), label_size, Color("#ff823e"), 2)
+	_draw_text(font, tight, rect.position + Vector2(rect.size.x - tight_w - right_label_margin, rect.size.y - 8.0), label_size, Color("#ff823e"), 2)
 
 
 func _draw_depth(font: Font, rect: Rect2) -> void:
@@ -172,13 +173,14 @@ func _draw_stamina(font: Font, rect: Rect2) -> void:
 	var ratio := 1.0
 	if simulator != null:
 		ratio = simulator.fish_stamina_ratio()
-	var bar := Rect2(rect.position + Vector2(24.0, bar_y), Vector2(rect.size.x - 48.0, 26.0 if _hud_frame == null else 24.0))
+	var bar := Rect2(rect.position + Vector2(24.0, bar_y), Vector2(rect.size.x - (48.0 if _hud_frame == null else 58.0), 26.0 if _hud_frame == null else 24.0))
 	_draw_segment_gauge(bar, ratio, 0.0, 1.0, false)
 	var label_size := 16 if _hud_frame == null else 15
+	var right_label_margin := 24.0 if _hud_frame == null else 34.0
 	_draw_text(font, "弱い", rect.position + Vector2(24.0, rect.size.y - 8.0), label_size, Color("#fff1c7"), 2)
 	var strong := "強い"
 	var strong_w := font.get_string_size(strong, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
-	_draw_text(font, strong, rect.position + Vector2(rect.size.x - strong_w - 24.0, rect.size.y - 8.0), label_size, Color("#fff1c7"), 2)
+	_draw_text(font, strong, rect.position + Vector2(rect.size.x - strong_w - right_label_margin, rect.size.y - 8.0), label_size, Color("#fff1c7"), 2)
 
 
 func _draw_bottom_controls(font: Font, rect: Rect2) -> void:

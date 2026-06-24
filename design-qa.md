@@ -15,23 +15,24 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Patches Made Since Previous QA
 
-- Reduced HUD upper-row icon sizes again in `FightHud` so the symbols sit closer to the reference's small status glyphs.
-- Reduced top-status parchment-card icon size and opacity in `FightStatusBar`.
+- Increased the HUD upper-board right-label inset so `きつい` and `強い` no longer crowd the frame edge.
+- Shortened the stamina gauge well slightly to match the new right-label padding.
+- Increased key right-panel hierarchy text by one optical step: fish name, estimate, action title, and lower-card headings.
 - Regenerated `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png`.
 
 ## Findings
 
 - [P2] Right panel is structurally better but still below reference card quality.
   Location: `assets/showcase/underwater/sidebar_frame.png`, `src/ui/components/fight_sidebar.gd`, `src/ui/fishing_screen.gd`.
-  Evidence: the fish card now has quieter reference-like ruled lines, and the action/tackle cards have clearer title separators plus body brackets. The lower-card text sits better inside the parchment bodies. The panel still has a more procedural border rhythm and less bespoke typography than the reference.
+  Evidence: the fish card now has quieter reference-like ruled lines, and the action/tackle cards have clearer title separators plus body brackets. The latest optical-size pass strengthens the fish name, estimated size, action title, and lower-card headings. The panel still has a more procedural border rhythm and less bespoke typography than the reference.
   Impact: the right panel is more readable and more deliberately framed, but it still does not fully sell the premium JRPG card quality.
-  Fix: keep the new internal structure, then tune title/body optical sizes and replace any remaining generated-looking linework only if it still reads too mechanical in the next full-screen pass.
+  Fix: keep the new internal structure, then tune body text only if the next full-screen pass still reads too light. Replace any remaining generated-looking linework only if it still reads too mechanical after the final font pass.
 
 - [P2] HUD top row is closer, but still below the reference's authored console quality.
   Location: `assets/showcase/underwater/fight_hud_frame.png`, `src/ui/components/fight_hud.gd`.
-  Evidence: the upper board is now darker, the central depth module is less bright, and the title/icon scale is more compact. The latest icon-size pass reduces the ornate icon pull further. The reference still has cleaner gauge-label alignment, simpler iconography, and more deliberate black-panel spacing around the bars.
+  Evidence: the upper board is now darker, the central depth module is less bright, and the title/icon scale is more compact. The latest label-padding pass gives the right-side labels more breathing room. The reference still has simpler iconography and more deliberate black-panel spacing around the bars.
   Impact: the HUD is closer to a single premium operation board, but it still needs final spacing and icon simplification before it can pass.
-  Fix: keep the darker frame baseline, then tune gauge-label padding. Replace the icon sheet only if the remaining ornamentation still reads noisy after spacing is locked.
+  Fix: keep the darker frame and new label padding. Replace the icon sheet only if the remaining ornamentation still reads noisy after one final full-screen pass.
 
 - [P3] Main fish is now close, with minor runtime-placement polish remaining.
   Location: `assets/showcase/underwater/kurodai_showcase_sheet.png`, `src/ui/components/underwater_view.gd`.
@@ -53,13 +54,13 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Open Questions
 
-- None blocking. The next highest-value pass is final gauge-label spacing and optical type tuning, while keeping the darker HUD board and reduced icon scale as the current baseline.
+- None blocking. The next highest-value pass is one final full-screen pass for remaining icon noise, body text weight, and any regressions from the latest spacing changes.
 
 ## Implementation Checklist
 
-1. Tune final gauge-label padding on the HUD upper board.
-2. Tune final title/value optical sizes on HUD and right panel.
-3. Replace HUD/top-status icons only if they still read ornate after spacing is locked.
+1. Recheck full-screen composition for remaining icon noise and body text weight.
+2. Replace HUD/top-status icons only if they still read ornate after the latest size reductions.
+3. Keep the current HUD/right-panel spacing unless the next comparison shows a clear regression.
 4. Re-run `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png` after each pass.
 
 ## Follow-up Polish
