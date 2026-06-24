@@ -233,8 +233,8 @@ func _draw_segment_gauge(rect: Rect2, ratio: float, safe_min: float, safe_max: f
 		draw_rect(rect.grow(3.0), Color(0.0, 0.0, 0.0, 0.35), true)
 		draw_rect(rect, Color("#07101b"), true)
 		draw_rect(rect, Color("#0f2a43"), false, 2.0)
-	var segments := 14 if _hud_frame != null else 18
-	var gap := 2.0
+	var segments := 18
+	var gap := 1.5 if _hud_frame != null else 2.0
 	var seg_w := (rect.size.x - gap * float(segments - 1)) / float(segments)
 	if _hud_frame != null:
 		draw_rect(rect.grow(2.0), Color(0.0, 0.0, 0.0, 0.22), true)
