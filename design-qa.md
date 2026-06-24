@@ -33,6 +33,7 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 - Added `underwater_color_grade.png`, a transparent background color-grade/depth overlay. `UnderwaterView` now draws it over `underwater_battle_bg.png` before ambience/fish so the clean generated background gets darker edges, stronger seabed depth, and subtler surface light structure.
 - Added `underwater_seabed_detail.png`, a transparent seabed/edge-density layer with extra rock silhouettes, seaweed/coral clusters, and low caustic contour lines. `UnderwaterView` draws it after the color grade and before bubble/fish ambience.
 - Rebuilt `kurodai_card_portrait.png` with a 620x330 card-window ratio instead of the previous 720x330 source ratio, so the runtime sidebar slot no longer scales the portrait down like a wide document thumbnail.
+- Tuned `FightStatusBar` typography and icon layout: larger top icons, stronger AM/time/weather text, a single strong money value instead of a tiny stacked money label, and a larger centered location-depth value.
 - Regenerated `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png`.
 
 ## Findings
@@ -51,9 +52,9 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 - [P2] Top status bar has stronger material quality, but still trails the reference's compact icon grammar.
   Location: `assets/showcase/underwater/top_status_frame.png`, `assets/showcase/underwater/top_status_icon_sheet.png`, `src/ui/components/fight_status_bar.gd`.
-  Evidence: the top status frame now has stronger paper-card inner borders, corner brackets, subtler icon wells, and a more authored navy location card. The old common icon sheet made the first three top cards read as small noisy ornaments; the new top-specific icon sheet gives the clock, sun, wind, and coin clearer silhouettes closer to the reference, and the wind glyph is now placed inline before `風 弱`. The status bar now lives only over the left fight column, and the weather/money/location slot ratios are closer to the reference instead of stretching the blue location card across the full screen. The reference still has stronger number typography and slightly cleaner icon/text alignment.
+  Evidence: the top status frame now has stronger paper-card inner borders, corner brackets, subtler icon wells, and a more authored navy location card. The old common icon sheet made the first three top cards read as small noisy ornaments; the new top-specific icon sheet gives the clock, sun, wind, and coin clearer silhouettes closer to the reference, and the wind glyph is now placed inline before `風 弱`. The status bar now lives only over the left fight column, and the weather/money/location slot ratios are closer to the reference instead of stretching the blue location card across the full screen. The latest typography pass increases the top icons, time, weather, money value, and location-depth value; the money card now reads as a strong coin-plus-amount card instead of a small label/value stack. The reference still has slightly more tailored glyph metrics and tighter icon/text alignment.
   Impact: the top row now reads more like the reference's authored status strip and no longer pushes the right panel down. It still does not fully match the compact, high-contrast reference top bar.
-  Fix: keep `top_status_icon_sheet.png`, left-column placement, and the new card ratios. Next top-row work should focus on typography/baselines only after the background and right-card art gaps are checked.
+  Fix: keep `top_status_icon_sheet.png`, left-column placement, the new card ratios, and the stronger money/time typography. Next top-row work should only happen if a later background/right-panel pass makes these baselines feel off again.
 
 - [P3] Main fish is now close, with minor runtime-placement polish remaining.
   Location: `assets/showcase/underwater/kurodai_showcase_sheet.png`, `src/ui/components/underwater_view.gd`.
@@ -81,7 +82,7 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Open Questions
 
-- None blocking. The next highest-value pass is now final background art or top-status icon simplification; the HUD lower-frame pass reduced the grid/debug read but does not replace final art direction.
+- None blocking. The next highest-value pass is now final background art or right-panel small-text/card optical quality; the top status row is improved enough that further top-row work should wait unless the final comparison exposes a regression.
 
 ## Implementation Checklist
 
@@ -92,7 +93,7 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Follow-up Polish
 
-- Replace top status and right-panel small icons with simpler reference-like icons if they still feel noisy after the lower-card pass.
+- Replace right-panel small icons with simpler reference-like icons if they still feel noisy after the next lower-card pass.
 - Recheck lower HUD text sizes after any layout/proportion change; the current paper slots and key-cap positions are intentionally paired.
 - Recheck the hit splash after the final HUD/font pass, but do not keep iterating it unless the comparison regresses.
 - Add small sparkle/bubble particles only after the main frame and typography mismatches are solved.
