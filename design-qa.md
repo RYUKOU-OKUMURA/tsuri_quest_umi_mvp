@@ -26,6 +26,7 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 - Rebuilt `top_status_frame.png` with stronger paper-card inner frames, corner brackets, a more authored navy location card, and quieter top-status icon rendering.
 - Refined HUD segment gauges with visible inactive segments, subtle upper highlights, bottom shadows, and a stronger tension marker shadow so the meters feel more embedded in the authored console.
 - Rebuilt the lower HUD frame with stronger paper title bands, recessed bait/hint/menu wells, and darker menu row slots. Realigned the runtime bait text and A/B/LR key caps to the baked paper slots.
+- Added `top_status_icon_sheet.png` as a top-bar-specific icon sheet extracted and cleaned from the reference. `FightStatusBar` now uses those larger clock/weather/wind/coin icons and draws the wind icon as its own inline glyph instead of a tiny overlay on the sun.
 - Regenerated `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png`.
 
 ## Findings
@@ -43,10 +44,10 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
   Fix: keep the darker frame, label padding, quieter icon opacity, reduced segment grid, visible inactive segments, navy menu card, recessed lower paper slots, and aligned operation-hint caps. The next HUD pass should focus on final proportions/typography only after background and top-icon gaps are checked in full view.
 
 - [P2] Top status bar has stronger material quality, but still trails the reference's compact icon grammar.
-  Location: `assets/showcase/underwater/top_status_frame.png`, `src/ui/components/fight_status_bar.gd`.
-  Evidence: the top status frame now has stronger paper-card inner borders, corner brackets, subtler icon wells, and a more authored navy location card. Runtime icons are smaller and lower opacity, so the ornate icon sheet no longer dominates the card text. The reference still has simpler, more legible icon silhouettes and slightly tighter card spacing.
-  Impact: the top row reads less like flat cards and more like part of the JRPG information frame, but its icon language is still not fully reference-quality.
-  Fix: keep the stronger frame material and quieter icon opacity. Replace/simplify the top-status icon sheet only if those icons still feel noisy after the final frame/background pass.
+  Location: `assets/showcase/underwater/top_status_frame.png`, `assets/showcase/underwater/top_status_icon_sheet.png`, `src/ui/components/fight_status_bar.gd`.
+  Evidence: the top status frame now has stronger paper-card inner borders, corner brackets, subtler icon wells, and a more authored navy location card. The old common icon sheet made the first three top cards read as small noisy ornaments; the new top-specific icon sheet gives the clock, sun, wind, and coin clearer silhouettes closer to the reference, and the wind glyph is now placed inline before `風 弱`. The reference still has tighter card proportions, stronger number typography, and slightly cleaner icon/text alignment.
+  Impact: the top row now reads more like authored status UI instead of a paper card with decorative stamps. It still does not fully match the compact, high-contrast reference top bar.
+  Fix: keep `top_status_icon_sheet.png` as the top-bar icon source. Next top-row work should tune card proportions and text baselines rather than returning to the shared ornate icon sheet.
 
 - [P3] Main fish is now close, with minor runtime-placement polish remaining.
   Location: `assets/showcase/underwater/kurodai_showcase_sheet.png`, `src/ui/components/underwater_view.gd`.

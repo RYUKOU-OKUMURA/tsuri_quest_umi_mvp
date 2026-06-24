@@ -5,6 +5,7 @@ extends Control
 
 const FightFontsScript = preload("res://src/ui/fight_fonts.gd")
 const FRAME_PATH := "res://assets/showcase/underwater/top_status_frame.png"
+const TOP_ICON_SHEET_PATH := "res://assets/showcase/underwater/top_status_icon_sheet.png"
 const ICON_SHEET_PATH := "res://assets/showcase/underwater/fight_icon_sheet.png"
 const ICON_TIME := 0
 const ICON_WEATHER := 1
@@ -14,6 +15,7 @@ const ICON_COIN := 3
 var simulator: FishingSimulator
 
 var _frame: Texture2D
+var _top_icons: Texture2D
 var _icons: Texture2D
 
 
@@ -27,6 +29,8 @@ func _ready() -> void:
 	custom_minimum_size = Vector2(0.0, 76.0)
 	if ResourceLoader.exists(FRAME_PATH):
 		_frame = load(FRAME_PATH) as Texture2D
+	if ResourceLoader.exists(TOP_ICON_SHEET_PATH):
+		_top_icons = load(TOP_ICON_SHEET_PATH) as Texture2D
 	if ResourceLoader.exists(ICON_SHEET_PATH):
 		_icons = load(ICON_SHEET_PATH) as Texture2D
 
@@ -96,7 +100,13 @@ func _draw_status_slot(font: Font, rect: Rect2, title: String, body: String, dar
 	if not dark and title == "快晴":
 		var inline_y := rect.position.y + rect.size.y * 0.66
 		_draw_text_clipped(font, title, Vector2(text_x, inline_y), 19, body_color, max_width, outline)
-		_draw_text_clipped(font, body, Vector2(text_x + 80.0, inline_y), 19, Palette.TEXT_DARK, max_width - 80.0, outline)
+		var wind_icon_size := 26.0
+		_draw_top_sheet_icon(
+			ICON_WIND,
+			Rect2(Vector2(text_x + 90.0, rect.position.y + (rect.size.y - wind_icon_size) * 0.5 + 1.0), Vector2(wind_icon_size, wind_icon_size)),
+			Color(1.0, 1.0, 1.0, 0.92)
+		)
+		_draw_text_clipped(font, body, Vector2(text_x + 126.0, inline_y), 19, Palette.TEXT_DARK, max_width - 126.0, outline)
 		return
 	_draw_text_clipped(font, title, Vector2(text_x, title_y), title_size, title_color, max_width, outline)
 	_draw_text_clipped(font, body, Vector2(text_x, body_y), body_size, body_color, max_width, outline)
@@ -128,20 +138,23 @@ func _draw_centered_dark_slot(font: Font, rect: Rect2, title: String, body: Stri
 
 
 func _draw_status_icon(rect: Rect2, icon_index: int) -> void:
-	if _icons == null:
+	if _top_icons == null and _icons == null:
 		return
-	var icon_size := clampf(rect.size.y * 0.40, 24.0, 30.0)
+	var icon_size := clampf(rect.size.y * 0.52, 32.0, 38.0)
 	var icon_rect := Rect2(
-		rect.position + Vector2(32.0, (rect.size.y - icon_size) * 0.5 + 1.0),
+		rect.position + Vector2(28.0, (rect.size.y - icon_size) * 0.5 + 1.0),
 		Vector2(icon_size, icon_size)
 	)
-	_draw_sheet_icon(icon_index, icon_rect, Color(1.0, 1.0, 1.0, 0.70))
-	if icon_index == ICON_WEATHER:
-		_draw_sheet_icon(
-			ICON_WIND,
-			Rect2(icon_rect.position + Vector2(icon_size * 0.58, icon_size * 0.60), Vector2(icon_size * 0.34, icon_size * 0.34)),
-			Color(1.0, 1.0, 1.0, 0.82)
-		)
+	_draw_top_sheet_icon(icon_index, icon_rect, Color(1.0, 1.0, 1.0, 0.96))
+
+
+func _draw_top_sheet_icon(icon_index: int, target: Rect2, modulate: Color = Color.WHITE) -> void:
+	if _top_icons != null:
+		var cell_w := float(_top_icons.get_width()) / 4.0
+		var src := Rect2(float(icon_index) * cell_w, 0.0, cell_w, float(_top_icons.get_height()))
+		draw_texture_rect_region(_top_icons, target, src, modulate)
+		return
+	_draw_sheet_icon(icon_index, target, modulate)
 
 
 func _draw_sheet_icon(icon_index: int, target: Rect2, modulate: Color = Color.WHITE) -> void:
