@@ -155,9 +155,9 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 	var icon_size := 38.0 if _sidebar_frame != null else 58.0
 	var text_x := 74.0 if _sidebar_frame != null else 78.0
 	_draw_action_icon(body.position + Vector2(42.0, body.size.y * 0.54), icon_size)
-	_draw_text(font, "%s！" % action, body.position + Vector2(text_x, 38.0), 24 if _sidebar_frame != null else 20, Color("#2b2117"), 0)
+	_draw_text(font, "%s！" % action, body.position + Vector2(text_x, 35.0), 24 if _sidebar_frame != null else 20, Color("#2b2117"), 0)
 	if _sidebar_frame != null:
-		_draw_action_message(font, message, body.position + Vector2(text_x, 53.0), body.size.x - text_x - 14.0)
+		_draw_action_message(font, message, body.position + Vector2(text_x, 45.0), body.size.x - text_x - 14.0)
 	else:
 		_draw_wrapped(font, message, body.position + Vector2(72.0, 36.0), body.size.x - 82.0, 11, Palette.TEXT_DARK, 2)
 
@@ -267,7 +267,7 @@ func _draw_wrapped(
 func _draw_action_message(font: Font, text: String, pos: Vector2, max_width: float) -> void:
 	var first_stop := text.find("！")
 	var font_size := 13
-	var gap := 15.5 if _sidebar_frame != null else 16.0
+	var gap := 13.5 if _sidebar_frame != null else 16.0
 	if first_stop > 0 and first_stop < text.length() - 1:
 		var first := text.left(first_stop + 1)
 		var second := text.substr(first_stop + 1)
