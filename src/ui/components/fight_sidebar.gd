@@ -266,8 +266,8 @@ func _draw_wrapped(
 
 func _draw_action_message(font: Font, text: String, pos: Vector2, max_width: float) -> void:
 	var first_stop := text.find("！")
-	var font_size := 12 if _sidebar_frame != null else 13
-	var gap := 14.5 if _sidebar_frame != null else 16.0
+	var font_size := 13
+	var gap := 15.5 if _sidebar_frame != null else 16.0
 	if first_stop > 0 and first_stop < text.length() - 1:
 		var first := text.left(first_stop + 1)
 		var second := text.substr(first_stop + 1)
