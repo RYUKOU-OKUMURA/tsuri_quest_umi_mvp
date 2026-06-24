@@ -307,7 +307,7 @@ def _add_center_floor_glints(
 
     patch_size = (int(w * 0.56), int(h * 0.24))
     patch = floor_source.resize(patch_size, Image.Resampling.LANCZOS)
-    patch = ImageEnhance.Brightness(patch).enhance(0.88)
+    patch = ImageEnhance.Brightness(patch).enhance(0.94)
     patch = ImageEnhance.Color(patch).enhance(0.82)
     patch = ImageEnhance.Contrast(patch).enhance(1.16)
     patch = patch.filter(ImageFilter.GaussianBlur(0.55)).convert("RGBA")
@@ -316,7 +316,7 @@ def _add_center_floor_glints(
     y = int(h * 0.62)
     alpha = ImageChops.multiply(
         subject_mask.crop((x, y, x + patch_size[0], y + patch_size[1])),
-        _vertical_mask(patch_size, 108, 0.00, 0.96),
+        _vertical_mask(patch_size, 122, 0.00, 0.96),
     )
     alpha = ImageChops.multiply(alpha, _soft_blob_mask(patch_size, 226, seed_offset=18))
     base.alpha_composite(
@@ -346,7 +346,7 @@ def _add_center_floor_micro_detail(
 
     patch_size = (int(w * 0.62), int(h * 0.22))
     patch = detail_source.resize(patch_size, Image.Resampling.LANCZOS)
-    patch = ImageEnhance.Brightness(patch).enhance(0.94)
+    patch = ImageEnhance.Brightness(patch).enhance(0.98)
     patch = ImageEnhance.Color(patch).enhance(0.82)
     patch = ImageEnhance.Contrast(patch).enhance(1.24)
     patch = patch.filter(ImageFilter.UnsharpMask(radius=1.1, percent=62, threshold=4)).convert("RGBA")
@@ -355,7 +355,7 @@ def _add_center_floor_micro_detail(
     y = int(h * 0.61)
     alpha = ImageChops.multiply(
         subject_mask.crop((x, y, x + patch_size[0], y + patch_size[1])),
-        _vertical_mask(patch_size, 76, 0.08, 0.98),
+        _vertical_mask(patch_size, 84, 0.08, 0.98),
     )
     alpha = ImageChops.multiply(alpha, _soft_blob_mask(patch_size, 220, seed_offset=26))
     base.alpha_composite(
@@ -385,7 +385,7 @@ def _add_center_sand_channel(
 
     patch_size = (int(w * 0.70), int(h * 0.26))
     patch = sand_source.resize(patch_size, Image.Resampling.LANCZOS)
-    patch = ImageEnhance.Brightness(patch).enhance(1.03)
+    patch = ImageEnhance.Brightness(patch).enhance(1.08)
     patch = ImageEnhance.Color(patch).enhance(0.86)
     patch = ImageEnhance.Contrast(patch).enhance(1.18)
     patch = patch.filter(ImageFilter.GaussianBlur(0.42)).convert("RGBA")
@@ -394,7 +394,7 @@ def _add_center_sand_channel(
     y = int(h * 0.66)
     alpha = ImageChops.multiply(
         subject_mask.crop((x, y, x + patch_size[0], y + patch_size[1])),
-        _vertical_mask(patch_size, 138, 0.04, 1.0),
+        _vertical_mask(patch_size, 150, 0.04, 1.0),
     )
     alpha = ImageChops.multiply(alpha, _soft_blob_mask(patch_size, 236, seed_offset=20))
     base.alpha_composite(
@@ -424,16 +424,16 @@ def _add_center_midwater_depth(
 
     patch_size = (int(w * 0.66), int(h * 0.28))
     patch = water_source.resize(patch_size, Image.Resampling.LANCZOS)
-    patch = ImageEnhance.Brightness(patch).enhance(0.77)
+    patch = ImageEnhance.Brightness(patch).enhance(0.84)
     patch = ImageEnhance.Color(patch).enhance(0.82)
-    patch = ImageEnhance.Contrast(patch).enhance(0.86)
+    patch = ImageEnhance.Contrast(patch).enhance(0.82)
     patch = patch.filter(ImageFilter.GaussianBlur(1.9)).convert("RGBA")
 
     x = int(w * 0.17)
     y = int(h * 0.39)
     alpha = ImageChops.multiply(
         subject_mask.crop((x, y, x + patch_size[0], y + patch_size[1])),
-        _vertical_mask(patch_size, 66, 0.00, 0.96),
+        _vertical_mask(patch_size, 52, 0.00, 0.96),
     )
     alpha = ImageChops.multiply(alpha, _soft_blob_mask(patch_size, 226, seed_offset=28))
     base.alpha_composite(
@@ -463,16 +463,16 @@ def _add_center_band_breakup(
 
     patch_size = (int(w * 0.68), int(h * 0.24))
     patch = haze_source.resize(patch_size, Image.Resampling.LANCZOS)
-    patch = ImageEnhance.Brightness(patch).enhance(0.70)
+    patch = ImageEnhance.Brightness(patch).enhance(0.78)
     patch = ImageEnhance.Color(patch).enhance(0.84)
-    patch = ImageEnhance.Contrast(patch).enhance(0.88)
+    patch = ImageEnhance.Contrast(patch).enhance(0.82)
     patch = patch.filter(ImageFilter.GaussianBlur(2.4)).convert("RGBA")
 
     x = int(w * 0.16)
     y = int(h * 0.43)
     alpha = ImageChops.multiply(
         subject_mask.crop((x, y, x + patch_size[0], y + patch_size[1])),
-        _vertical_mask(patch_size, 58, 0.00, 0.98),
+        _vertical_mask(patch_size, 44, 0.00, 0.98),
     )
     alpha = ImageChops.multiply(alpha, _soft_blob_mask(patch_size, 214, seed_offset=32))
     base.alpha_composite(
@@ -502,7 +502,7 @@ def _add_center_midwater_light_glaze(
 
     patch_size = (int(w * 0.64), int(h * 0.36))
     patch = light_source.resize(patch_size, Image.Resampling.LANCZOS)
-    patch = ImageEnhance.Brightness(patch).enhance(1.16)
+    patch = ImageEnhance.Brightness(patch).enhance(1.23)
     patch = ImageEnhance.Color(patch).enhance(0.96)
     patch = ImageEnhance.Contrast(patch).enhance(0.82)
     patch = patch.filter(ImageFilter.GaussianBlur(1.8)).convert("RGBA")
@@ -511,7 +511,7 @@ def _add_center_midwater_light_glaze(
     y = int(h * 0.20)
     alpha = ImageChops.multiply(
         subject_mask.crop((x, y, x + patch_size[0], y + patch_size[1])),
-        _vertical_mask(patch_size, 76, 0.00, 0.96),
+        _vertical_mask(patch_size, 92, 0.00, 0.96),
     )
     alpha = ImageChops.multiply(alpha, _soft_blob_mask(patch_size, 220, seed_offset=34))
     base.alpha_composite(
