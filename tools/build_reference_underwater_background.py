@@ -42,7 +42,7 @@ def _make_full_window_subject_mask(size: tuple[int, int]) -> Image.Image:
         fill=255,
     )
     draw.ellipse((w * 0.61, h * 0.33, w * 0.78, h * 0.58), fill=255)
-    return mask.filter(ImageFilter.GaussianBlur(9.0))
+    return mask.filter(ImageFilter.GaussianBlur(16.0))
 
 
 def _make_water_fill(size: tuple[int, int]) -> Image.Image:
@@ -106,9 +106,9 @@ def _add_center_water_texture(
         (int(w * 0.72), int(h * 0.30)),
         Image.Resampling.LANCZOS,
     )
-    seabed_patch = ImageEnhance.Brightness(seabed_patch).enhance(0.72)
-    seabed_patch = ImageEnhance.Color(seabed_patch).enhance(0.78)
-    seabed_patch = ImageEnhance.Contrast(seabed_patch).enhance(0.90)
+    seabed_patch = ImageEnhance.Brightness(seabed_patch).enhance(0.78)
+    seabed_patch = ImageEnhance.Color(seabed_patch).enhance(0.82)
+    seabed_patch = ImageEnhance.Contrast(seabed_patch).enhance(0.96)
 
     seabed_alpha = ImageChops.multiply(
         subject_mask.crop(
@@ -117,7 +117,7 @@ def _add_center_water_texture(
             seabed_patch.size,
             Image.Resampling.LANCZOS,
         ),
-        _vertical_mask(seabed_patch.size, 92, 0.12, 0.98),
+        _vertical_mask(seabed_patch.size, 118, 0.10, 0.98),
     )
     base.alpha_composite(
         Image.composite(
@@ -126,6 +126,36 @@ def _add_center_water_texture(
             seabed_alpha,
         ),
         (int(w * 0.16), int(h * 0.62)),
+    )
+
+    left_water = source.crop((int(w * 0.02), int(h * 0.18), int(w * 0.24), int(h * 0.56)))
+    right_water = left_water.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
+    mid_source = Image.new(
+        "RGB",
+        (left_water.width + right_water.width, max(left_water.height, right_water.height)),
+    )
+    mid_source.paste(left_water, (0, 0))
+    mid_source.paste(right_water, (left_water.width, 0))
+    mid_patch = mid_source.resize((int(w * 0.60), int(h * 0.36)), Image.Resampling.LANCZOS)
+    mid_patch = ImageEnhance.Brightness(mid_patch).enhance(0.92)
+    mid_patch = ImageEnhance.Color(mid_patch).enhance(0.88)
+    mid_patch = ImageEnhance.Contrast(mid_patch).enhance(0.94)
+    mid_patch = mid_patch.filter(ImageFilter.GaussianBlur(0.28))
+
+    mid_alpha = ImageChops.multiply(
+        subject_mask.crop((int(w * 0.20), int(h * 0.20), int(w * 0.80), int(h * 0.56))).resize(
+            mid_patch.size,
+            Image.Resampling.LANCZOS,
+        ),
+        _vertical_mask(mid_patch.size, 94, 0.00, 0.98),
+    )
+    base.alpha_composite(
+        Image.composite(
+            mid_patch.convert("RGBA"),
+            Image.new("RGBA", mid_patch.size, (0, 0, 0, 0)),
+            mid_alpha,
+        ),
+        (int(w * 0.20), int(h * 0.20)),
     )
 
     caustics = Image.new("RGBA", source.size, (0, 0, 0, 0))
@@ -139,11 +169,36 @@ def _add_center_water_texture(
             points.append(
                 (x + 112.0 * t, y + ((step % 2) * 2.0 - 1.0) * (3.0 + index % 3)),
             )
-        draw.line(points, fill=(185, 236, 220, 28), width=1)
+        draw.line(points, fill=(185, 236, 220, 40), width=1)
+    for index in range(18):
+        y = h * (0.66 + (index % 6) * 0.038)
+        x = w * (0.31 + (index // 6) * 0.13)
+        points = []
+        for step in range(6):
+            t = step / 5.0
+            points.append(
+                (x + 150.0 * t, y + ((step % 2) * 2.0 - 1.0) * (2.5 + index % 2)),
+            )
+        draw.line(points, fill=(209, 249, 232, 32), width=1)
+    for index in range(36):
+        u = 0.24 + (index % 9) * 0.055 + ((index // 9) % 2) * 0.018
+        v = 0.26 + (index // 9) * 0.088
+        radius = 1.3 + (index % 3) * 0.6
+        alpha = 34 if index % 4 else 50
+        draw.ellipse(
+            (
+                w * u - radius,
+                h * v - radius,
+                w * u + radius,
+                h * v + radius,
+            ),
+            outline=(194, 238, 245, alpha),
+            width=1,
+        )
 
     caustic_mask = ImageChops.multiply(
         subject_mask,
-        _vertical_mask(source.size, 74, 0.46, 0.92),
+        _vertical_mask(source.size, 112, 0.42, 0.94),
     )
     base.alpha_composite(
         Image.composite(
@@ -166,7 +221,7 @@ def _remove_full_window_subjects(crop: Image.Image) -> Image.Image:
     w, h = crop.size
     veil = Image.new("RGBA", crop.size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(veil, "RGBA")
-    draw.ellipse((int(w * 0.18), int(h * 0.08), int(w * 0.78), int(h * 0.75)), fill=(22, 148, 191, 24))
+    draw.ellipse((int(w * 0.18), int(h * 0.08), int(w * 0.78), int(h * 0.75)), fill=(22, 148, 191, 12))
     clean_rgba = clean.convert("RGBA")
     clean_rgba.alpha_composite(veil.filter(ImageFilter.GaussianBlur(30.0)))
     return clean_rgba.convert("RGB")
