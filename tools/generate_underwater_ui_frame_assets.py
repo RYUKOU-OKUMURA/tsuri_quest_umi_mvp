@@ -377,8 +377,6 @@ def create_sidebar_frame() -> None:
         d.line((portrait_mat[0] + 22, y, portrait_mat[2] - 22, y), fill=_rgba("#c8ad76", 16), width=1)
     for y in (fish[1] + 86,):
         d.line((fish[0] + 38, y, fish[2] - 38, y), fill=_rgba("#b89b64", 58), width=1)
-    info_mat = (fish[0] + 44, fish[1] + 404, fish[2] - 44, fish[3] - 28)
-    d.rounded_rectangle(info_mat, radius=6, fill=_rgba("#fff7df", 88), outline=_rgba("#b89b64", 34), width=1)
     _draw_corner_brackets(d, fish, length=30, inset=18, color="#a77d3b", alpha=95, width=1)
 
     _draw_navy_card(image, action, radius=12, seed=82)
