@@ -16,7 +16,7 @@
 
 `tools/generate_underwater_showcase_assets.py` で生成した初期 PNG は、素材ベース表示の技術検証用であり、完成方向の土台ではない。現在の `underwater_battle_bg.png`、`kurodai_showcase_sheet.png`、`hit_burst.png` は AI 生成素材を取り込んだ本番寄りパスに更新済みだが、画面全体の品質判定は引き続き `reference/02_underwater_fight_mockup.png` との横並び比較で行う。
 
-`sidebar_frame.png`、`top_status_frame.png`、`fight_hud_frame.png` は、生成素材の金飾りが強すぎたため `tools/generate_underwater_ui_frame_assets.py` で参照画像寄りの紙カード/濃紺ゲージ台として作り直している。これは最終美術素材ではなく、文字・ゲージ・アイコンが破綻しない完成寄りの枠素材スロットである。`FishingScreen` では右サイドバー外側の汎用パネルを外し、専用 `sidebar_frame.png` が直接画面に出るようにしている。
+`sidebar_frame.png`、`top_status_frame.png`、`fight_hud_frame.png` は、生成素材の金飾りが強すぎたため `tools/generate_underwater_ui_frame_assets.py` で参照画像寄りの紙カード/濃紺ゲージ台として作り直している。これは最終美術素材ではなく、文字・ゲージ・アイコンが破綻しない完成寄りの枠素材スロットである。`FishingScreen` では右サイドバー外側の汎用パネルを外し、専用 `sidebar_frame.png` が直接画面に出るようにしている。現行の生成ルールでは `_draw_clean_card()` を使い、黒い太枠・鋲・強い金線を減らして、参照画像の紙カード寄りに軽量化している。
 
 `kurodai_showcase_sheet.png` と `hit_burst.png` は、`kurodai_chroma_source.png` を元に `tools/process_underwater_fish_assets.py` で生成する。処理内容は、クロマキー除去、マゼンタ縁のデスピル、4フレームの正規化、ヒットバッジ生成である。生成元は内製差し替え用の中間素材で、画面表示は最終PNGのみを参照する。
 
@@ -93,8 +93,8 @@
 
 ## 次に本番化する素材
 
-1. `sidebar_frame.png` をもう一段クリーンにする。現状は二重枠破綻は解消したが、黒/金の外枠が重く、行動/タックルの下段カードはまだ狭い。
-2. `fight_hud_frame.png` の線ノイズを減らし、下段カードを一体化した操作盤として作り直す。
-3. クロダイとヒット演出の最終アートパスを行う。魚はもう少し横長にし、ヒットバッジは参照の外形へさらに寄せる。
+1. クロダイとヒット演出の最終アートパスを行う。魚はもう少し横長にし、ヒットバッジは参照の外形へさらに寄せる。
+2. `fight_hud_frame.png` の下段カードを一体化した操作盤として作り直す。線ノイズは減ったが、まだ3枚カード感が残る。
+3. `sidebar_frame.png` の行動/タックル下段カードを広げる。黒/金の重さは軽減したが、下段本文はまだ狭い。
 4. 文字サイズの最終調整を行う。`MPLUS1p-Bold.ttf` で太さは改善したが、右パネル本文やキー表示は枠再調整後に再チューニングする。
 5. 泡、光粒、魚影を個別スプライトまたは CPUParticles2D に分離する。
