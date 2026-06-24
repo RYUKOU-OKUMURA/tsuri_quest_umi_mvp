@@ -18,19 +18,20 @@ Side-by-side page: `/tmp/tsuri_fight_compare.html`
 - Improved: the top status area now uses compact cards for time, weather/wind, money, and location/depth.
 - Improved: the bottom HUD is now a dedicated fight dashboard with segmented tension/stamina gauges, a central depth card, bait card, operation hints, and a menu card.
 - Improved: the right panel has denser fish/action/tackle cards, with extra fish notes and tackle details.
-- Still blocked: the right panel frame quality, top card ornamentation, and final HUD art polish are not yet at the reference's JRPG window/card quality.
+- Improved: the right panel now uses a dedicated generated sidebar frame asset with parchment cards, navy action/tackle bands, gold trim, and ornamental corners.
+- Still blocked: top card ornamentation, final HUD art polish, and final composition pass are not yet at the reference's JRPG window/card quality.
 
 ## Blocking Differences
 
 1. Main composition: the fish and background are closer, but the hit effect and fish placement still need a final art-direction pass against the reference.
 2. Top status: the card structure is closer, but iconography and small ornamental frames are still weaker than the reference.
-3. Right panel: the current panel is denser and uses the better fish portrait, but the frame, header, and card ornamentation are still less polished than the reference.
+3. Right panel: the generated frame is much closer, but the overlaid text/fish layout still needs final spacing and icon polish.
 4. Bottom HUD: the structure is now much closer, but the final panel art, icon quality, and typography still need polish.
 5. Typography/icons: the reference has icon-led labels and denser hierarchy; the current screen still relies on plain text labels and generic buttons.
 
 ## Next Required Iteration
 
-1. Replace the right info-card frame/header/action/tackle panels with dedicated high-quality window assets.
-2. Add icon-led top status details and stronger ornamental corners.
-3. Polish the bottom HUD panel art, key icons, and text alignment against the reference.
+1. Add icon-led top status details and stronger ornamental corners.
+2. Polish the bottom HUD panel art, key icons, and text alignment against the reference.
+3. Finalize right-panel overlay spacing, icons, and action/tackle content against the generated frame.
 4. Re-run `tools/fishing_fight_preview.gd`, rebuild `/tmp/tsuri_fight_compare.html`, and compare against the same five criteria: density, spacing, color, fish presence, and UI frame quality.
