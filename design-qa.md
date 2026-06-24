@@ -24,6 +24,7 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 - Rebuilt the right-panel action/tackle card interiors with separate icon wells and text plaques, reducing the mechanical guide-rule feel in the lower cards.
 - Added `underwater_foreground_ambience.png`, a transparent foreground ambience asset with bubble columns, caustic strokes, and distant fish silhouettes. `UnderwaterView` now uses it over `underwater_battle_bg.png` and keeps only light specks as a runtime shimmer.
 - Rebuilt `top_status_frame.png` with stronger paper-card inner frames, corner brackets, a more authored navy location card, and quieter top-status icon rendering.
+- Refined HUD segment gauges with visible inactive segments, subtle upper highlights, bottom shadows, and a stronger tension marker shadow so the meters feel more embedded in the authored console.
 - Regenerated `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png`.
 
 ## Findings
@@ -36,9 +37,9 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 - [P2] HUD top row is closer, but still below the reference's authored console quality.
   Location: `assets/showcase/underwater/fight_hud_frame.png`, `src/ui/components/fight_hud.gd`.
-  Evidence: the upper board is now darker, the central depth module is less bright, the title/icon scale is more compact, and the row icons are visually quieter after opacity modulation. The bar-well grid density is lower, the runtime meter uses fewer segments, and the lower bait/hint cards now have opaque paper insets. The operation-hint key row now uses three aligned paper slots with compact A/B/LR key blocks instead of labels sinking into the dark board. The reference still has more deliberate black-panel spacing and a more bespoke meter construction.
-  Impact: the HUD is closer to a single premium operation board, and the most obvious broken-grid read in the lower hint row is reduced. It still does not fully reach the reference's authored console quality.
-  Fix: keep the darker frame, new label padding, quieter icon opacity, reduced segment grid, navy menu card, and aligned operation-hint slots. Next, revisit the meter art and lower HUD frame texture only if the final full-screen comparison still reads too mechanical.
+  Evidence: the upper board is now darker, the central depth module is less bright, the title/icon scale is more compact, and the row icons are visually quieter after opacity modulation. The bar-well grid density is lower, the runtime meter uses fewer segments, inactive segments remain faintly visible, and filled segments now have small highlight/shadow treatment instead of flat rectangles. The lower bait/hint cards now have opaque paper insets, and the operation-hint key row uses three aligned paper slots with compact A/B/LR key blocks instead of labels sinking into the dark board. The reference still has more deliberate black-panel spacing and a more bespoke meter construction.
+  Impact: the HUD is closer to a single premium operation board, and the meter no longer reads as strongly like debug blocks. It still does not fully reach the reference's authored console quality.
+  Fix: keep the darker frame, new label padding, quieter icon opacity, reduced segment grid, visible inactive segments, navy menu card, and aligned operation-hint slots. Next, revisit the lower HUD frame texture only if the final full-screen comparison still reads too mechanical.
 
 - [P2] Top status bar has stronger material quality, but still trails the reference's compact icon grammar.
   Location: `assets/showcase/underwater/top_status_frame.png`, `src/ui/components/fight_status_bar.gd`.

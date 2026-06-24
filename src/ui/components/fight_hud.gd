@@ -236,27 +236,37 @@ func _draw_segment_gauge(rect: Rect2, ratio: float, safe_min: float, safe_max: f
 	var segments := 14 if _hud_frame != null else 18
 	var gap := 2.0
 	var seg_w := (rect.size.x - gap * float(segments - 1)) / float(segments)
+	if _hud_frame != null:
+		draw_rect(rect.grow(2.0), Color(0.0, 0.0, 0.0, 0.22), true)
+		draw_rect(rect, Color(0.0, 0.0, 0.0, 0.18), true)
 	for i in range(segments):
 		var start := float(i) / float(segments)
 		var filled := start < ratio
-		var color := Color("#152231")
+		var color := Color("#172534")
 		if filled:
 			if warm:
 				color = Color("#25d755").lerp(Color("#f1d94f"), clampf(start / 0.55, 0.0, 1.0))
 				color = color.lerp(Color("#d95524"), clampf((start - 0.55) / 0.45, 0.0, 1.0))
 			else:
 				color = Color("#21d34a").lerp(Color("#16c6b5"), start)
-		elif _hud_frame != null:
-			continue
 		var seg := Rect2(rect.position + Vector2(float(i) * (seg_w + gap), 3.0), Vector2(seg_w, rect.size.y - 6.0))
-		draw_rect(seg, color, true)
-		draw_rect(seg, Color(1.0, 1.0, 1.0, 0.09 if _hud_frame != null else 0.13), false, 1.0)
+		if _hud_frame != null:
+			var alpha := 1.0 if filled else 0.32
+			var seg_color := Color(color.r, color.g, color.b, alpha)
+			draw_rect(seg, seg_color, true)
+			draw_rect(Rect2(seg.position, Vector2(seg.size.x, maxf(1.0, seg.size.y * 0.24))), Color(1.0, 1.0, 1.0, 0.16 if filled else 0.05), true)
+			draw_rect(Rect2(Vector2(seg.position.x, seg.end.y - 2.0), Vector2(seg.size.x, 2.0)), Color(0.0, 0.0, 0.0, 0.20), true)
+			draw_rect(seg, Color(1.0, 1.0, 1.0, 0.10 if filled else 0.045), false, 1.0)
+		else:
+			draw_rect(seg, color, true)
+			draw_rect(seg, Color(1.0, 1.0, 1.0, 0.13), false, 1.0)
 	if warm:
 		for marker in [safe_min, safe_max]:
 			var tick_x := rect.position.x + rect.size.x * clampf(marker, 0.0, 1.0)
-			draw_line(Vector2(tick_x, rect.position.y + 1.0), Vector2(tick_x, rect.end.y - 1.0), Color(1.0, 1.0, 1.0, 0.34), 1.0)
+			draw_line(Vector2(tick_x, rect.position.y + 1.0), Vector2(tick_x, rect.end.y - 1.0), Color(1.0, 1.0, 1.0, 0.30), 1.0)
 		var x := rect.position.x + rect.size.x * clampf(ratio, 0.0, 1.0)
 		var marker_color := Color("#fff8df")
+		draw_line(Vector2(x + 2.0, rect.position.y - 2.0), Vector2(x + 2.0, rect.end.y + 4.0), Color(0.0, 0.0, 0.0, 0.34), 2.0)
 		draw_line(Vector2(x, rect.position.y - 3.0), Vector2(x, rect.end.y + 4.0), marker_color, 2.0)
 		_draw_triangle(Vector2(x, rect.position.y - 8.0), 7.0, marker_color, false)
 
