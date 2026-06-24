@@ -14,7 +14,7 @@
 
 ## 現在素材の扱い
 
-`tools/generate_underwater_showcase_assets.py` で生成した初期 PNG は、素材ベース表示の技術検証用であり、完成方向の土台ではない。現在の `underwater_battle_bg.png` は AI 生成素材を取り込んだ本番寄りパスで、`tools/source_assets/underwater_battle_bg_source.png` を元に `tools/enhance_underwater_battle_bg.py` で本体背景へ奥行き、端の植物密度、砂地の細線、軽いペイントグレーズを焼き込む。`kurodai_showcase_sheet.png` はリファレンス魚の切り出しを背景抽出して作った高品質パスである。右カードでは泳ぎ用シートを直接描かず、紙背景に焼き込んだ `kurodai_card_portrait.png` を使う。`hit_burst.png` は `tools/process_underwater_fish_assets.py` で青い水しぶき素材として再生成し、暖色は Godot 側の「ヒット！」文字だけに寄せている。画面全体の品質判定は引き続き `reference/02_underwater_fight_mockup.png` との横並び比較で行う。
+`tools/generate_underwater_showcase_assets.py` で生成した初期 PNG は、素材ベース表示の技術検証用であり、完成方向の土台ではない。現在の `underwater_battle_bg.png` は AI 生成素材を取り込んだ本番寄りパスで、`tools/source_assets/underwater_battle_bg_source.png` を元に `tools/enhance_underwater_battle_bg.py` で本体背景へ奥行き、端の植物密度、砂地の細線、軽いペイントグレーズを焼き込む。後処理では半解像度の bilateral smoothing を混ぜ、岩や海藻の情報を残しながらピクセルアート寄りの硬い面を少し抑える。`kurodai_showcase_sheet.png` はリファレンス魚の切り出しを背景抽出して作った高品質パスである。右カードでは泳ぎ用シートを直接描かず、紙背景に焼き込んだ `kurodai_card_portrait.png` を使う。`hit_burst.png` は `tools/process_underwater_fish_assets.py` で青い水しぶき素材として再生成し、暖色は Godot 側の「ヒット！」文字だけに寄せている。画面全体の品質判定は引き続き `reference/02_underwater_fight_mockup.png` との横並び比較で行う。
 
 `sidebar_frame.png`、`top_status_frame.png`、`fight_hud_frame.png` は、生成素材の金飾りが強すぎたため `tools/generate_underwater_ui_frame_assets.py` で参照画像寄りの紙カード/濃紺ゲージ台として作り直している。これは最終美術素材ではなく、文字・ゲージ・アイコンが破綻しない完成寄りの枠素材スロットである。`FishingScreen` では右サイドバー外側の汎用パネルを外し、専用 `sidebar_frame.png` が直接画面に出るようにしている。現行の生成ルールでは `_draw_clean_card()` を使い、黒い太枠・鋲・強い金線を減らして、参照画像の紙カード寄りに軽量化している。
 
@@ -103,7 +103,7 @@
 - 右パネルは汎用 `make_panel()` の中に入れず、`FightSidebar` の専用フレームを直接表示する。二重枠にするとサイドバー素材が縮み、参照画像のカード品質から離れるため。
 - `UnderwaterView` は主役魚とヒット演出のスケールを参照画像寄りに抑え、深度目盛りは背景に馴染む低コントラスト表示にする。
 - `UnderwaterView` は `underwater_battle_bg.png` の上に `underwater_color_grade.png`、`underwater_seabed_detail.png`、`underwater_foreground_ambience.png` の順で重ね、追加の光粒だけを動的に描く。これは背景PNGの不足を完全に代替するものではなく、主役魚を邪魔しない奥行き/密度補助として扱う。PNG がない場合だけ、コード描画の遠景魚群・泡柱へフォールバックする。
-- `underwater_battle_bg.png` を直接詰める場合は、既存PNGを重ねがけで上書きせず、`tools/source_assets/underwater_battle_bg_source.png` から `tools/enhance_underwater_battle_bg.py` を実行して決定的に再生成する。遠景の魚影・岩影は黒い斑点に見えやすいため、中心部では弱く、密度は左右端と海底寄りに置く。
+- `underwater_battle_bg.png` を直接詰める場合は、既存PNGを重ねがけで上書きせず、`tools/source_assets/underwater_battle_bg_source.png` から `tools/enhance_underwater_battle_bg.py` を実行して決定的に再生成する。遠景の魚影・岩影は黒い斑点に見えやすいため、中心部では弱く、密度は左右端と海底寄りに置く。画風を寄せる処理は半解像度の bilateral smoothing を使い、処理時間を抑えながら硬いピクセル面だけを弱める。
 - `tools/fishing_fight_preview.gd` は参照比較用に `クロダイ / レア / 44.2cm` 相当の固定状態を作り、画面品質の比較条件を揃える。ゲーム本編の魚データは別途維持する。
 - 画面の完成度チェックは、Godot で `tools/fishing_fight_preview.gd` のキャプチャを取り、`tools/build_fight_comparison_html.py` と `tools/build_fight_comparison_images.py` でリファレンスと横並び比較する。
 
@@ -123,4 +123,4 @@
 2. `fight_hud_frame.png` の上段は深度プレート強化、暗色化、HUDアイコン縮小/低透過化、右ラベル余白調整、メーター格子弱化、未充填セグメント表示とハイライト/影追加まで完了。下段はエサ/操作/メニューの紙タイトル帯、本文スロット、濃紺メニュー行、操作ヒントの3スロット化、A/B/LRキー配置の整列まで完了。次は最終比較でまだ機械的に見える場合だけ全体比率と小文字の詰めを行う。
 3. 上部ステータスの地点カードは参照に合わせてアイコンなし中央寄せに修正済み。`top_status_frame.png` は紙カード内枠、角金具、濃紺地点カードの内装追加まで完了。上部アイコン群は `top_status_icon_sheet.png` に分離し、時計/太陽/風/コインが潰れない状態まで改善済み。`FightStatusBar` は左ファイトカラム内へ移動し、右パネルヘッダーが上端から始まる構造に修正済み。カード比率は天候/所持金を広げ、地点カードを締める方向へ調整済み。文字ベースラインと数値の光学サイズも調整し、所持金は小ラベルを外して金額を大きく読ませる状態まで改善済み。次に詰めるなら、背景または右パネルの本番素材差分が埋まったあとに最終比較で微調整する。
 4. ヒット演出は白い放射線と下端の重なりを調整済み。最終 HUD/フォント調整後に比較だけ再確認する。
-5. 泡、光粒、魚影は `underwater_foreground_ambience.png` と `UnderwaterView` の補助光粒として追加済み。背景の均一な明るさは `underwater_color_grade.png` で少し締め、海底/左右の密度は `underwater_seabed_detail.png` で補っている。`underwater_battle_bg.png` 本体は `tools/enhance_underwater_battle_bg.py` で、軽いペイントグレーズ、端の暗部、遠景の薄い奥行き、砂地の細線、端の植物/小石を焼き込み済み。`UnderwaterView` は LINEAR フィルタで showcase テクスチャを描画し、背景の縮小時の硬さを抑える。次に背景を詰める場合は、さらに強い本番背景差し替えか、よりリファレンス寄りの画風へ寄せるベース背景パスを行う。
+5. 泡、光粒、魚影は `underwater_foreground_ambience.png` と `UnderwaterView` の補助光粒として追加済み。背景の均一な明るさは `underwater_color_grade.png` で少し締め、海底/左右の密度は `underwater_seabed_detail.png` で補っている。`underwater_battle_bg.png` 本体は `tools/enhance_underwater_battle_bg.py` で、半解像度 bilateral smoothing、軽いペイントグレーズ、端の暗部、遠景の薄い奥行き、砂地の細線、端の植物/小石を焼き込み済み。`UnderwaterView` は LINEAR フィルタで showcase テクスチャを描画し、背景の縮小時の硬さを抑える。次に背景を詰める場合は、さらに強い本番背景差し替えか、よりリファレンス寄りの画風へ寄せるベース背景パスを行う。

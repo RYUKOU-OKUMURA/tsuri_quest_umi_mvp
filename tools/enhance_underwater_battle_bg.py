@@ -52,6 +52,30 @@ def _draw_seaweed(
         )
 
 
+def _apply_painterly_smoothing(image: Image.Image) -> Image.Image:
+    try:
+        import numpy as np
+        from skimage.restoration import denoise_bilateral
+    except Exception:
+        softened = image.filter(ImageFilter.GaussianBlur(0.72))
+        return Image.blend(image, softened, 0.24)
+
+    source = image.convert("RGB")
+    work_size = (max(1, source.width // 2), max(1, source.height // 2))
+    work = source.resize(work_size, Image.Resampling.BILINEAR)
+    arr = np.asarray(work).astype("float32") / 255.0
+    smoothed = denoise_bilateral(
+        arr,
+        sigma_color=0.045,
+        sigma_spatial=3.2,
+        channel_axis=-1,
+    )
+    smooth_image = Image.fromarray(np.clip(smoothed * 255.0, 0, 255).astype("uint8"), "RGB")
+    smooth_image = smooth_image.resize(source.size, Image.Resampling.BILINEAR)
+    blended = Image.blend(source, smooth_image, 0.34)
+    return blended.filter(ImageFilter.UnsharpMask(radius=1.2, percent=42, threshold=4))
+
+
 def _add_depth_and_paint_glaze(image: Image.Image) -> Image.Image:
     image = image.convert("RGBA")
     # The source art is high detail but pixel-art crisp. A very low-opacity
@@ -171,6 +195,7 @@ def enhance() -> None:
     if not SOURCE.exists():
         raise FileNotFoundError(f"Missing source background: {SOURCE}")
     image = Image.open(SOURCE)
+    image = _apply_painterly_smoothing(image)
     image = _add_depth_and_paint_glaze(image)
     _add_far_depth(image)
     _add_seabed_and_edge_detail(image)
