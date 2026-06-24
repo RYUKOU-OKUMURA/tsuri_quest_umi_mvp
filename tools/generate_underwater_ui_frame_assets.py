@@ -556,9 +556,9 @@ def create_fight_hud_frame() -> None:
     _draw_paper_slot(d, (hint_panel[0] + 14, hint_panel[1] + 12, hint_panel[2] - 14, hint_panel[1] + 44), title=True)
     slot_gap = 20
     slot_x0 = hint[0] + 38
-    slot_y0 = hint[1] + 72
+    slot_y0 = hint[1] + 68
     slot_w = int((hint[2] - hint[0] - 80 - slot_gap * 2) / 3)
-    slot_h = 62
+    slot_h = 96
     for i in range(3):
         x = slot_x0 + i * (slot_w + slot_gap)
         _draw_paper_slot(d, (x, slot_y0, x + slot_w, slot_y0 + slot_h))
