@@ -513,8 +513,8 @@ def create_fight_hud_frame() -> None:
     _draw_bar_well(image, (tension[0] + 44, tension[1] + 88, tension[2] - 56, tension[1] + 142))
     _draw_bar_well(image, (stamina[0] + 44, stamina[1] + 88, stamina[2] - 48, stamina[1] + 142))
 
-    bait_w = int((bottom[2] - bottom[0]) * 0.275)
-    menu_w = int((bottom[2] - bottom[0]) * 0.218)
+    bait_w = int((bottom[2] - bottom[0]) * 0.265)
+    menu_w = int((bottom[2] - bottom[0]) * 0.190)
     hint_w = bottom[2] - bottom[0] - bait_w - menu_w - gap * 2
     bait = (bottom[0], bottom[1], bottom[0] + bait_w, bottom[3])
     hint = (bait[2] + gap, bottom[1], bait[2] + gap + hint_w, bottom[3])
@@ -557,9 +557,9 @@ def create_fight_hud_frame() -> None:
     _draw_paper_slot(d, (hint_panel[0] + 14, hint_panel[1] + 12, hint_panel[2] - 14, hint_panel[1] + 44), title=True)
     slot_gap = 20
     slot_x0 = hint[0] + 38
-    slot_y0 = hint[1] + 74
-    slot_w = int((hint[2] - hint[0] - 76 - slot_gap * 2) / 3)
-    slot_h = 58
+    slot_y0 = hint[1] + 72
+    slot_w = int((hint[2] - hint[0] - 80 - slot_gap * 2) / 3)
+    slot_h = 62
     for i in range(3):
         x = slot_x0 + i * (slot_w + slot_gap)
         _draw_paper_slot(d, (x, slot_y0, x + slot_w, slot_y0 + slot_h))
