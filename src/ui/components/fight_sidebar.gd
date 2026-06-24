@@ -120,18 +120,18 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 		inner.position + Vector2(6.0, 52.0 if compact_card else 46.0),
 		Vector2(
 			inner.size.x - 12.0,
-			maxf(82.0, rect.size.y * (0.50 if compact_card else 0.37))
+			maxf(82.0, rect.size.y * (0.46 if compact_card else 0.37))
 		)
 	)
 	_draw_fish_portrait(fish_rect)
 	var divider_y := fish_rect.end.y + (6.0 if _sidebar_frame != null else 6.0)
 	draw_line(Vector2(inner.position.x + 8.0, divider_y), Vector2(inner.end.x - 8.0, divider_y), Color("#c9b486"), 1.0)
 	var estimate := (float(fish_data.get("size_min", 0.0)) + float(fish_data.get("size_max", 0.0))) * 0.5
-	var estimate_size := 22 if _sidebar_frame != null else 23
+	var estimate_size := 21 if _sidebar_frame != null else 23
 	_draw_centered_text(font, "推定 %.1f cm" % estimate, Rect2(inner.position.x, divider_y + 8.0, inner.size.x, 30.0), estimate_size, Color("#2b2117"), 0)
-	var desc_y := divider_y + (38.0 if compact_card else 44.0)
+	var desc_y := divider_y + (49.0 if compact_card else 44.0)
 	draw_line(Vector2(inner.position.x + 8.0, desc_y - 10.0), Vector2(inner.end.x - 8.0, desc_y - 10.0), Color("#d6c299"), 1.0)
-	var detail_gap := 14.0 if compact_card else 21.0
+	var detail_gap := 15.0 if compact_card else 21.0
 	_draw_detail_line(font, "岩場周りで警戒心が強い。", Vector2(inner.position.x + 16.0, desc_y), inner.size.x - 28.0)
 	_draw_detail_line(font, "好むエサ：オキアミ・カニ", Vector2(inner.position.x + 16.0, desc_y + detail_gap), inner.size.x - 28.0)
 	if _sidebar_frame == null:
@@ -284,7 +284,11 @@ func _draw_bullet(font: Font, text: String, pos: Vector2, max_width: float) -> v
 
 func _draw_detail_line(font: Font, text: String, pos: Vector2, max_width: float) -> void:
 	draw_circle(pos + Vector2(3.0, 10.0), 4.0, Color("#49c75a"))
-	var font_size := 13 if _sidebar_frame != null or max_width < 260.0 else 14
+	var font_size := 14
+	if _sidebar_frame != null:
+		font_size = 12
+	elif max_width < 260.0:
+		font_size = 13
 	_draw_wrapped(font, text, pos + Vector2(14.0, -1.0), max_width - 14.0, font_size, Palette.TEXT_DARK, 1)
 
 
