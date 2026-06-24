@@ -145,18 +145,19 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 	var body := Rect2(rect.position + Vector2(10.0, 33.0), rect.size - Vector2(20.0, 42.0))
 	if _sidebar_frame != null:
 		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.24), rect.size - Vector2(28.0, rect.size.y * 0.30))
-	_draw_panel(body, Color("#f3e8cd"), Palette.WOOD_DARK, Palette.GOLD)
+	else:
+		_draw_panel(body, Color("#f3e8cd"), Palette.WOOD_DARK, Palette.GOLD)
 	var action := "待機"
 	var message := "ラインを見ながら、テンションを保とう。"
 	if simulator != null:
 		action = simulator.action_name
 		message = simulator.action_message
-	var icon_size := 34.0 if _sidebar_frame != null else 58.0
-	var text_x := 62.0 if _sidebar_frame != null else 78.0
-	_draw_action_icon(body.position + Vector2(34.0, body.size.y * 0.55), icon_size)
-	_draw_text(font, "%s！" % action, body.position + Vector2(text_x, 35.0), 23 if _sidebar_frame != null else 20, Color("#2b2117"), 0)
+	var icon_size := 38.0 if _sidebar_frame != null else 58.0
+	var text_x := 74.0 if _sidebar_frame != null else 78.0
+	_draw_action_icon(body.position + Vector2(42.0, body.size.y * 0.54), icon_size)
+	_draw_text(font, "%s！" % action, body.position + Vector2(text_x, 38.0), 24 if _sidebar_frame != null else 20, Color("#2b2117"), 0)
 	if _sidebar_frame != null:
-		_draw_action_message(font, message, body.position + Vector2(text_x, 52.0), body.size.x - text_x - 12.0)
+		_draw_action_message(font, message, body.position + Vector2(text_x, 53.0), body.size.x - text_x - 14.0)
 	else:
 		_draw_wrapped(font, message, body.position + Vector2(72.0, 36.0), body.size.x - 82.0, 11, Palette.TEXT_DARK, 2)
 
@@ -167,19 +168,26 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	var body := Rect2(rect.position + Vector2(10.0, 32.0), rect.size - Vector2(20.0, 38.0))
 	if _sidebar_frame != null:
 		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.245), rect.size - Vector2(28.0, rect.size.y * 0.31))
-	_draw_panel(body, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
+	else:
+		_draw_panel(body, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	var rod_name := _short_rod_name(String(trip_stats.get("rod_name", "港の入門竿")))
-	var text_width := body.size.x - (66.0 if _tackle_card_icon != null or _icons != null else 12.0)
+	var has_tackle_icon := _tackle_card_icon != null or _icons != null
+	var icon_reserved_width := 12.0
+	if has_tackle_icon:
+		icon_reserved_width = 76.0 if _sidebar_frame != null else 66.0
+	var text_offset := Vector2(18.0, 20.0) if _sidebar_frame != null else Vector2(12.0, 14.0)
+	var text_width := body.size.x - icon_reserved_width - text_offset.x
 	var lines: Array[String] = [
 		"ロッド：%s" % rod_name,
-		"小型リール・糸3号・チヌ針",
+		"リール・糸3号・チヌ針",
 	]
-	var tackle_font_size := 15 if _sidebar_frame != null else 12
-	var tackle_line_gap := 20.0 if _sidebar_frame != null else 16.0
+	var tackle_font_size := 14 if _sidebar_frame != null else 12
+	var tackle_line_gap := 19.0 if _sidebar_frame != null else 16.0
 	for i in range(lines.size()):
-		_draw_wrapped(font, lines[i], body.position + Vector2(12.0, 14.0 + float(i) * tackle_line_gap), text_width, tackle_font_size, Palette.TEXT_DARK, 1, tackle_font_size + 3.0)
+		_draw_wrapped(font, lines[i], body.position + text_offset + Vector2(0.0, float(i) * tackle_line_gap), text_width, tackle_font_size, Palette.TEXT_DARK, 1, tackle_font_size + 3.0)
 	if _tackle_card_icon != null or _icons != null:
-		_draw_tackle_icon(Rect2(body.end - Vector2(50.0, 50.0), Vector2(40.0, 40.0)))
+		var icon_rect := Rect2(body.end - Vector2(58.0, 58.0), Vector2(42.0, 42.0)) if _sidebar_frame != null else Rect2(body.end - Vector2(50.0, 50.0), Vector2(40.0, 40.0))
+		_draw_tackle_icon(icon_rect)
 	else:
 		_draw_simple_rod(body.position + Vector2(body.size.x - 62.0, body.size.y - 24.0))
 
@@ -258,8 +266,8 @@ func _draw_wrapped(
 
 func _draw_action_message(font: Font, text: String, pos: Vector2, max_width: float) -> void:
 	var first_stop := text.find("！")
-	var font_size := 14 if _sidebar_frame != null else 13
-	var gap := 17.2 if _sidebar_frame != null else 16.0
+	var font_size := 12 if _sidebar_frame != null else 13
+	var gap := 14.5 if _sidebar_frame != null else 16.0
 	if first_stop > 0 and first_stop < text.length() - 1:
 		var first := text.left(first_stop + 1)
 		var second := text.substr(first_stop + 1)
