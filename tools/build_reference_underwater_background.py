@@ -293,6 +293,42 @@ def _add_center_seabed_shelf(
     )
 
 
+def _add_center_floor_glints(
+    base: Image.Image,
+    source: Image.Image,
+    subject_mask: Image.Image,
+) -> None:
+    w, h = source.size
+    left_floor = source.crop((int(w * 0.06), int(h * 0.66), int(w * 0.36), int(h * 0.94)))
+    right_floor = source.crop((int(w * 0.66), int(h * 0.64), int(w * 0.96), int(h * 0.92)))
+    floor_source = Image.new("RGB", (left_floor.width + right_floor.width, max(left_floor.height, right_floor.height)))
+    floor_source.paste(left_floor, (0, floor_source.height - left_floor.height))
+    floor_source.paste(right_floor, (left_floor.width, floor_source.height - right_floor.height))
+
+    patch_size = (int(w * 0.56), int(h * 0.24))
+    patch = floor_source.resize(patch_size, Image.Resampling.LANCZOS)
+    patch = ImageEnhance.Brightness(patch).enhance(0.88)
+    patch = ImageEnhance.Color(patch).enhance(0.82)
+    patch = ImageEnhance.Contrast(patch).enhance(1.16)
+    patch = patch.filter(ImageFilter.GaussianBlur(0.55)).convert("RGBA")
+
+    x = int(w * 0.24)
+    y = int(h * 0.62)
+    alpha = ImageChops.multiply(
+        subject_mask.crop((x, y, x + patch_size[0], y + patch_size[1])),
+        _vertical_mask(patch_size, 108, 0.00, 0.96),
+    )
+    alpha = ImageChops.multiply(alpha, _soft_blob_mask(patch_size, 226, seed_offset=18))
+    base.alpha_composite(
+        Image.composite(
+            patch,
+            Image.new("RGBA", patch_size, (0, 0, 0, 0)),
+            alpha,
+        ),
+        (x, y),
+    )
+
+
 def _add_center_water_texture(
     clean: Image.Image,
     source: Image.Image,
@@ -343,6 +379,7 @@ def _add_center_water_texture(
     )
 
     _add_center_seabed_shelf(base, source, subject_mask)
+    _add_center_floor_glints(base, source, subject_mask)
 
     floor_fragments = (
         (source.crop((int(w * 0.08), int(h * 0.74), int(w * 0.28), int(h * 0.92))), 0.33, 0.79, 0.24, 0.11, 30),
