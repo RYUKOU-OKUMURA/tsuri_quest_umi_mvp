@@ -293,9 +293,10 @@ def create_sidebar_frame() -> None:
 
     _draw_clean_card(image, fish, "#f1e4c7", radius=10, border="#8c6733", inner="#d2aa58", seed=81, texture_strength=7)
     name_band = (fish[0] + 34, fish[1] + 24, fish[2] - 34, fish[1] + 84)
-    d.rounded_rectangle(name_band, radius=5, fill=(255, 249, 226, 30), outline=_rgba("#b89b64", 45), width=1)
+    d.rounded_rectangle(name_band, radius=5, fill=(255, 243, 215, 255), outline=_rgba("#b89b64", 92), width=1)
+    d.line((name_band[0] + 16, name_band[1] + 15, name_band[2] - 16, name_band[1] + 15), fill=_rgba("#ffffff", 82), width=1)
     portrait_mat = (fish[0] + 42, fish[1] + 96, fish[2] - 42, fish[1] + 348)
-    d.rounded_rectangle(portrait_mat, radius=8, fill=(255, 251, 233, 24), outline=_rgba("#b89b64", 46), width=1)
+    d.rounded_rectangle(portrait_mat, radius=8, fill=(255, 251, 233, 255), outline=_rgba("#b89b64", 74), width=1)
     for y in range(portrait_mat[1] + 42, portrait_mat[3], 56):
         d.line((portrait_mat[0] + 22, y, portrait_mat[2] - 22, y), fill=_rgba("#c8ad76", 16), width=1)
     for y in (fish[1] + 86, fish[1] + 342, fish[1] + 418):
