@@ -1,6 +1,7 @@
 extends RefCounted
 ## JRPG ウィンドウスキン テーマ。
-#  - パネル/ボタンは UITextures が procedural 生成した 9スライス装飾枠（StyleBoxTexture）。
+#  - 通常UIは細い縁の StyleBoxFlat を使い、生成9スライス由来の格子状破綻を避ける。
+#  - 本番ウィンドウ素材が用意できたら、ここを StyleBoxTexture に差し替える。
 #  - フォントは res://assets/fonts/ の FontFile を NEAREST(アンチエイリアスOFF) で読み込み、
 #    なければ macOS システムゴシックにフォールバック。
 #  - 色は Palette（src/ui/palette.gd）へ一元化。
@@ -23,17 +24,16 @@ static func build_theme() -> Theme:
 	theme.default_font = build_font()
 	theme.default_font_size = 18
 
-	# 9スライス ウィンドウスキン
-	var panel := _tex(UITextures.get_skin("parchment"))
-	var dark := _tex(UITextures.get_skin("dark"))
-	var blue := _tex(UITextures.get_skin("blue"))
-	var dialog := _tex(UITextures.get_skin("dialog"))
+	var panel := _panel_style(Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD, false)
+	var dark := _panel_style(Palette.DARK_PANEL, Color("#06101c"), Color("#cfa763"), true)
+	var blue := _panel_style(Palette.BLUE_PANEL, Color("#07172a"), Color("#cfa763"), true)
+	var dialog := _panel_style(Color("#102138"), Palette.GOLD_DEEP, Palette.GOLD_BRIGHT, true)
 
-	var btn_n := _tex(UITextures.get_skin("button_normal"), 8, 4)
-	var btn_h := _tex(UITextures.get_skin("button_hover"), 8, 4)
-	var btn_p := _tex(UITextures.get_skin("button_pressed"), 8, 4)
-	var btn_d := _tex(UITextures.get_skin("button_normal"), 8, 4)
-	var btn_gold := _tex(UITextures.get_skin("button_gold"), 8, 4)
+	var btn_n := _button_style(Palette.WOOD, Palette.WOOD_DARK, Palette.GOLD)
+	var btn_h := _button_style(Palette.WOOD_HOVER, Palette.WOOD_DARK, Palette.GOLD_BRIGHT)
+	var btn_p := _button_style(Palette.WOOD_PRESSED, Color("#2d1b10"), Palette.GOLD_DEEP)
+	var btn_d := _button_style(Color("#5f5142"), Color("#3b3027"), Color("#8f7b5e"))
+	var btn_gold := _button_style(Color("#b88732"), Color("#5a3518"), Palette.GOLD_BRIGHT)
 
 	theme.set_stylebox("panel", "PanelContainer", panel)
 	theme.set_stylebox("panel", "Panel", panel)
@@ -165,4 +165,40 @@ static func _tex(tex: Texture2D, margin: int = 10, shadow_expand: int = 4) -> St
 	sb.content_margin_right = 14.0
 	sb.content_margin_bottom = 10.0
 	# texture_filtering は設定しない（プロジェクト既定 NEAREST でチャンキーピクセル枠になる）
+	return sb
+
+
+static func _panel_style(fill: Color, outer: Color, inner: Color, dark_text: bool) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = fill
+	sb.border_color = outer.lerp(inner, 0.22)
+	sb.set_border_width_all(3)
+	sb.set_corner_radius_all(2)
+	sb.content_margin_left = 14.0
+	sb.content_margin_top = 10.0
+	sb.content_margin_right = 14.0
+	sb.content_margin_bottom = 10.0
+	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.28)
+	sb.shadow_size = 5
+	sb.shadow_offset = Vector2(0.0, 3.0)
+	sb.anti_aliasing = false
+	if dark_text:
+		sb.bg_color = fill.lightened(0.02)
+	return sb
+
+
+static func _button_style(fill: Color, outer: Color, inner: Color) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = fill
+	sb.border_color = outer.lerp(inner, 0.45)
+	sb.set_border_width_all(2)
+	sb.set_corner_radius_all(3)
+	sb.content_margin_left = 14.0
+	sb.content_margin_top = 8.0
+	sb.content_margin_right = 14.0
+	sb.content_margin_bottom = 8.0
+	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.24)
+	sb.shadow_size = 3
+	sb.shadow_offset = Vector2(0.0, 2.0)
+	sb.anti_aliasing = false
 	return sb
