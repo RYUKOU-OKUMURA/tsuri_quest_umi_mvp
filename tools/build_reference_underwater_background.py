@@ -196,6 +196,103 @@ def _add_midwater_bubble_texture(
     )
 
 
+def _add_reference_school_texture(
+    base: Image.Image,
+    source: Image.Image,
+    subject_mask: Image.Image,
+) -> None:
+    w, h = source.size
+
+    left_school = source.crop((int(w * 0.02), int(h * 0.14), int(w * 0.32), int(h * 0.42)))
+    right_school = source.crop((int(w * 0.70), int(h * 0.12), int(w * 0.98), int(h * 0.40)))
+    school_source = Image.new("RGB", (left_school.width + right_school.width, max(left_school.height, right_school.height)))
+    school_source.paste(left_school, (0, 0))
+    school_source.paste(right_school, (left_school.width, 0))
+
+    patch_size = (int(w * 0.64), int(h * 0.38))
+    patch = school_source.resize(patch_size, Image.Resampling.LANCZOS)
+    patch = ImageEnhance.Brightness(patch).enhance(0.70)
+    patch = ImageEnhance.Color(patch).enhance(0.70)
+    patch = ImageEnhance.Contrast(patch).enhance(0.82)
+    patch = patch.filter(ImageFilter.GaussianBlur(1.15)).convert("RGBA")
+
+    x = int(w * 0.18)
+    y = int(h * 0.16)
+    alpha = ImageChops.multiply(
+        subject_mask.crop((x, y, x + patch_size[0], y + patch_size[1])),
+        _vertical_mask(patch_size, 72, 0.00, 0.90),
+    )
+    alpha = ImageChops.multiply(alpha, _soft_blob_mask(patch_size, 228, seed_offset=6))
+    base.alpha_composite(
+        Image.composite(
+            patch,
+            Image.new("RGBA", patch_size, (0, 0, 0, 0)),
+            alpha,
+        ),
+        (x, y),
+    )
+
+    ridge_source = source.crop((int(w * 0.04), int(h * 0.58), int(w * 0.96), int(h * 0.80)))
+    ridge_size = (int(w * 0.70), int(h * 0.18))
+    ridge = ridge_source.resize(ridge_size, Image.Resampling.LANCZOS)
+    ridge = ImageEnhance.Brightness(ridge).enhance(0.62)
+    ridge = ImageEnhance.Color(ridge).enhance(0.66)
+    ridge = ImageEnhance.Contrast(ridge).enhance(0.74)
+    ridge = ridge.filter(ImageFilter.GaussianBlur(2.2)).convert("RGBA")
+
+    ridge_x = int(w * 0.17)
+    ridge_y = int(h * 0.55)
+    ridge_alpha = ImageChops.multiply(
+        subject_mask.crop((ridge_x, ridge_y, ridge_x + ridge_size[0], ridge_y + ridge_size[1])),
+        _vertical_mask(ridge_size, 42, 0.06, 0.98),
+    )
+    ridge_alpha = ImageChops.multiply(ridge_alpha, _soft_blob_mask(ridge_size, 236, seed_offset=10))
+    base.alpha_composite(
+        Image.composite(
+            ridge,
+            Image.new("RGBA", ridge_size, (0, 0, 0, 0)),
+            ridge_alpha,
+        ),
+        (ridge_x, ridge_y),
+    )
+
+
+def _add_center_seabed_shelf(
+    base: Image.Image,
+    source: Image.Image,
+    subject_mask: Image.Image,
+) -> None:
+    w, h = source.size
+    left_shelf = source.crop((int(w * 0.04), int(h * 0.58), int(w * 0.36), int(h * 0.84)))
+    right_shelf = source.crop((int(w * 0.64), int(h * 0.58), int(w * 0.96), int(h * 0.84)))
+    shelf_source = Image.new("RGB", (left_shelf.width + right_shelf.width, max(left_shelf.height, right_shelf.height)))
+    shelf_source.paste(left_shelf, (0, 0))
+    shelf_source.paste(right_shelf, (left_shelf.width, 0))
+
+    shelf_size = (int(w * 0.68), int(h * 0.30))
+    shelf = shelf_source.resize(shelf_size, Image.Resampling.LANCZOS)
+    shelf = ImageEnhance.Brightness(shelf).enhance(0.74)
+    shelf = ImageEnhance.Color(shelf).enhance(0.78)
+    shelf = ImageEnhance.Contrast(shelf).enhance(0.94)
+    shelf = shelf.filter(ImageFilter.GaussianBlur(1.0)).convert("RGBA")
+
+    x = int(w * 0.17)
+    y = int(h * 0.48)
+    shelf_alpha = ImageChops.multiply(
+        subject_mask.crop((x, y, x + shelf_size[0], y + shelf_size[1])),
+        _vertical_mask(shelf_size, 118, 0.02, 1.0),
+    )
+    shelf_alpha = ImageChops.multiply(shelf_alpha, _soft_blob_mask(shelf_size, 230, seed_offset=12))
+    base.alpha_composite(
+        Image.composite(
+            shelf,
+            Image.new("RGBA", shelf_size, (0, 0, 0, 0)),
+            shelf_alpha,
+        ),
+        (x, y),
+    )
+
+
 def _add_center_water_texture(
     clean: Image.Image,
     source: Image.Image,
@@ -244,6 +341,8 @@ def _add_center_water_texture(
         ),
         (int(w * 0.16), int(h * 0.66)),
     )
+
+    _add_center_seabed_shelf(base, source, subject_mask)
 
     floor_fragments = (
         (source.crop((int(w * 0.08), int(h * 0.74), int(w * 0.28), int(h * 0.92))), 0.33, 0.79, 0.24, 0.11, 30),
@@ -351,6 +450,7 @@ def _add_center_water_texture(
         (int(w * 0.20), int(h * 0.20)),
     )
 
+    _add_reference_school_texture(base, source, subject_mask)
     _add_distant_fish_layer(base, source, subject_mask)
     _add_midwater_bubble_texture(base, source, subject_mask)
 
