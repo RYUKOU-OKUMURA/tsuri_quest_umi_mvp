@@ -345,15 +345,17 @@ func _draw_key_hint(font: Font, rect: Rect2, key: String, label: String) -> void
 
 
 func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String) -> void:
-	var key_w := 32.0 if key.length() <= 1 else 48.0
-	var key_rect := Rect2(rect.position + Vector2(8.0, 2.0), Vector2(key_w, 25.0))
+	var key_w := 36.0 if key.length() <= 1 else 54.0
+	var key_rect := Rect2(rect.position + Vector2(7.0, 1.0), Vector2(key_w, 27.0))
 	draw_rect(key_rect, Color("#253247"), true)
-	draw_rect(key_rect, Color("#d5b56b"), false, 1.0)
-	var key_size := 15
+	draw_rect(key_rect, Color("#0d1524"), false, 2.0)
+	draw_rect(key_rect.grow(-2.0), Color("#d5b56b"), false, 1.0)
+	draw_line(key_rect.position + Vector2(4.0, 4.0), key_rect.position + Vector2(key_rect.size.x - 4.0, 4.0), Color(1.0, 1.0, 1.0, 0.20), 1.0)
+	var key_size := 16
 	var key_text_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
-	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 18.0), key_size, Color.WHITE, 1)
-	var label_size := 16
-	_draw_text(font, label, key_rect.position + Vector2(key_rect.size.x + 7.0, 18.0), label_size, Color("#2b2117"), 0)
+	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 19.5), key_size, Color.WHITE, 1)
+	var label_size := 17
+	_draw_text(font, label, key_rect.position + Vector2(key_rect.size.x + 6.0, 19.0), label_size, Color("#2b2117"), 0)
 
 
 func _draw_key_row(font: Font, pos: Vector2, key: String, label: String) -> void:
