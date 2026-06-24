@@ -27,14 +27,16 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 - Refined HUD segment gauges with visible inactive segments, subtle upper highlights, bottom shadows, and a stronger tension marker shadow so the meters feel more embedded in the authored console.
 - Rebuilt the lower HUD frame with stronger paper title bands, recessed bait/hint/menu wells, and darker menu row slots. Realigned the runtime bait text and A/B/LR key caps to the baked paper slots.
 - Added `top_status_icon_sheet.png` as a top-bar-specific icon sheet extracted and cleaned from the reference. `FightStatusBar` now uses those larger clock/weather/wind/coin icons and draws the wind icon as its own inline glyph instead of a tiny overlay on the sun.
+- Moved `FightStatusBar` from the full-width root row into the left fight column so the right sidebar header starts at the same top height as the status cards, matching the reference's top-level composition more closely.
+- Rebuilt `top_status_frame.png` and `FightStatusBar` slot ratios so the weather/money cards are wider and the location card is tighter instead of one oversized rightmost blue card.
 - Regenerated `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png`.
 
 ## Findings
 
 - [P2] Right panel is structurally better but still below reference card quality.
   Location: `assets/showcase/underwater/sidebar_frame.png`, `src/ui/components/fight_sidebar.gd`, `src/ui/fishing_screen.gd`.
-  Evidence: the panel is now wider, the fish card uses a dedicated paper-backed kurodai portrait instead of the runtime swimming sheet, and the previous dark portrait rectangle regression is gone. The fish-card title row now sits on an opaque paper plaque, so `No.028 / クロダイ / レア` reads clearly like the reference instead of sinking into a dark band. The action/tackle cards now use dedicated paper-backed card icons, separate icon wells, and calmer text plaques, so the small lower cards read less like compressed cutouts from the ornate shared icon sheet. The lower-card copy has been shortened and spaced more deliberately, but the cards still feel more mechanically framed than the reference, especially around small-text optical quality and the remaining tight vertical crop.
-  Impact: the right panel is more readable and more deliberately framed, but it still does not fully sell the premium JRPG card quality.
+  Evidence: the panel is now wider, starts at the top of the screen beside the status cards, uses a dedicated paper-backed kurodai portrait instead of the runtime swimming sheet, and the previous dark portrait rectangle regression is gone. The fish-card title row now sits on an opaque paper plaque, so `No.028 / クロダイ / レア` reads clearly like the reference instead of sinking into a dark band. Moving the status bar into the left column also gives the right panel more vertical room, so the lower action/tackle cards are less cramped. The lower-card copy has been shortened and spaced more deliberately, but the cards still feel more mechanically framed than the reference, especially around small-text optical quality.
+  Impact: the right panel now matches the reference's top-level composition much better and is more readable. It still does not fully sell the premium JRPG card quality.
   Fix: keep the dedicated fish-card portrait, wider panel, paper title plaque, card-specific lower icons, separated lower-card wells, and shorter lower-card copy. Next, move to the next largest visible gap unless the right panel regresses: background density/final UI frame art.
 
 - [P2] HUD top row is closer, but still below the reference's authored console quality.
@@ -45,9 +47,9 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 - [P2] Top status bar has stronger material quality, but still trails the reference's compact icon grammar.
   Location: `assets/showcase/underwater/top_status_frame.png`, `assets/showcase/underwater/top_status_icon_sheet.png`, `src/ui/components/fight_status_bar.gd`.
-  Evidence: the top status frame now has stronger paper-card inner borders, corner brackets, subtler icon wells, and a more authored navy location card. The old common icon sheet made the first three top cards read as small noisy ornaments; the new top-specific icon sheet gives the clock, sun, wind, and coin clearer silhouettes closer to the reference, and the wind glyph is now placed inline before `風 弱`. The reference still has tighter card proportions, stronger number typography, and slightly cleaner icon/text alignment.
-  Impact: the top row now reads more like authored status UI instead of a paper card with decorative stamps. It still does not fully match the compact, high-contrast reference top bar.
-  Fix: keep `top_status_icon_sheet.png` as the top-bar icon source. Next top-row work should tune card proportions and text baselines rather than returning to the shared ornate icon sheet.
+  Evidence: the top status frame now has stronger paper-card inner borders, corner brackets, subtler icon wells, and a more authored navy location card. The old common icon sheet made the first three top cards read as small noisy ornaments; the new top-specific icon sheet gives the clock, sun, wind, and coin clearer silhouettes closer to the reference, and the wind glyph is now placed inline before `風 弱`. The status bar now lives only over the left fight column, and the weather/money/location slot ratios are closer to the reference instead of stretching the blue location card across the full screen. The reference still has stronger number typography and slightly cleaner icon/text alignment.
+  Impact: the top row now reads more like the reference's authored status strip and no longer pushes the right panel down. It still does not fully match the compact, high-contrast reference top bar.
+  Fix: keep `top_status_icon_sheet.png`, left-column placement, and the new card ratios. Next top-row work should focus on typography/baselines only after the background and right-card art gaps are checked.
 
 - [P3] Main fish is now close, with minor runtime-placement polish remaining.
   Location: `assets/showcase/underwater/kurodai_showcase_sheet.png`, `src/ui/components/underwater_view.gd`.

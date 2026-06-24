@@ -69,10 +69,10 @@ func _slot_rects(rect: Rect2) -> Array[Rect2]:
 	var y := rect.position.y + rect.size.y * 0.08
 	var h := rect.size.y * 0.84
 	return [
-		Rect2(rect.position.x + w * 0.000, y, w * 0.245, h),
-		Rect2(rect.position.x + w * 0.247, y, w * 0.247, h),
-		Rect2(rect.position.x + w * 0.496, y, w * 0.205, h),
-		Rect2(rect.position.x + w * 0.704, y, w * 0.296, h),
+		Rect2(rect.position.x + w * 0.000, y, w * 0.222, h),
+		Rect2(rect.position.x + w * 0.235, y, w * 0.282, h),
+		Rect2(rect.position.x + w * 0.530, y, w * 0.242, h),
+		Rect2(rect.position.x + w * 0.785, y, w * 0.215, h),
 	]
 
 
@@ -80,7 +80,7 @@ func _draw_status_slot(font: Font, rect: Rect2, title: String, body: String, dar
 	if dark:
 		_draw_centered_dark_slot(font, rect, title, body)
 		return
-	var icon_space := clampf(rect.size.y * 1.60, 98.0, 118.0)
+	var icon_space := clampf(rect.size.y * 1.12, 68.0, 78.0)
 	var text_x := rect.position.x + icon_space
 	var max_width := rect.end.x - text_x - 18.0
 	var title_size := 15 if dark else 14
@@ -95,7 +95,7 @@ func _draw_status_slot(font: Font, rect: Rect2, title: String, body: String, dar
 	if not dark and title == "AM":
 		var am_y := rect.position.y + rect.size.y * 0.66
 		_draw_text_clipped(font, title, Vector2(text_x, am_y), 14, title_color, max_width, outline)
-		_draw_text_clipped(font, body, Vector2(text_x + 34.0, am_y + 3.0), 28, body_color, max_width - 34.0, outline)
+		_draw_text_clipped(font, body, Vector2(text_x + 29.0, am_y + 3.0), 26, body_color, max_width, outline)
 		return
 	if not dark and title == "快晴":
 		var inline_y := rect.position.y + rect.size.y * 0.66
@@ -103,10 +103,10 @@ func _draw_status_slot(font: Font, rect: Rect2, title: String, body: String, dar
 		var wind_icon_size := 26.0
 		_draw_top_sheet_icon(
 			ICON_WIND,
-			Rect2(Vector2(text_x + 90.0, rect.position.y + (rect.size.y - wind_icon_size) * 0.5 + 1.0), Vector2(wind_icon_size, wind_icon_size)),
+			Rect2(Vector2(text_x + 78.0, rect.position.y + (rect.size.y - wind_icon_size) * 0.5 + 1.0), Vector2(wind_icon_size, wind_icon_size)),
 			Color(1.0, 1.0, 1.0, 0.92)
 		)
-		_draw_text_clipped(font, body, Vector2(text_x + 126.0, inline_y), 19, Palette.TEXT_DARK, max_width - 126.0, outline)
+		_draw_text_clipped(font, body, Vector2(text_x + 110.0, inline_y), 19, Palette.TEXT_DARK, max_width - 110.0, outline)
 		return
 	_draw_text_clipped(font, title, Vector2(text_x, title_y), title_size, title_color, max_width, outline)
 	_draw_text_clipped(font, body, Vector2(text_x, body_y), body_size, body_color, max_width, outline)
@@ -142,7 +142,7 @@ func _draw_status_icon(rect: Rect2, icon_index: int) -> void:
 		return
 	var icon_size := clampf(rect.size.y * 0.52, 32.0, 38.0)
 	var icon_rect := Rect2(
-		rect.position + Vector2(28.0, (rect.size.y - icon_size) * 0.5 + 1.0),
+		rect.position + Vector2(20.0, (rect.size.y - icon_size) * 0.5 + 1.0),
 		Vector2(icon_size, icon_size)
 	)
 	_draw_top_sheet_icon(icon_index, icon_rect, Color(1.0, 1.0, 1.0, 0.96))

@@ -48,11 +48,6 @@ func _build_screen() -> void:
 	layout.add_theme_constant_override("separation", 6)
 	root.add_child(layout)
 
-	_fight_status_bar = FightStatusBarScript.new()
-	_fight_status_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_fight_status_bar.bind(_simulator)
-	layout.add_child(_fight_status_bar)
-
 	var body := HBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_theme_constant_override("separation", 8)
@@ -64,6 +59,11 @@ func _build_screen() -> void:
 	left_column.size_flags_stretch_ratio = 1.52
 	left_column.add_theme_constant_override("separation", 5)
 	body.add_child(left_column)
+
+	_fight_status_bar = FightStatusBarScript.new()
+	_fight_status_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_fight_status_bar.bind(_simulator)
+	left_column.add_child(_fight_status_bar)
 
 	var water_panel := make_panel(true)
 	water_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
