@@ -41,6 +41,7 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 - Added `tools/build_reference_underwater_background.py`, which builds `underwater_battle_bg.png` from the reference mockup's water window instead of continuing to polish the generated background as the primary source. The current pass uses the full authored water window rather than only the upper-left crop, masks the main fish, hit burst, line, and lure zones, fills those runtime-subject areas with a clean blue water field, expands the crop to the existing 1672x941 texture slot, and harmonizes the result for use under the runtime fish/HUD.
 - Reduced `underwater_color_grade.png`, `underwater_seabed_detail.png`, and `underwater_foreground_ambience.png` draw opacity in `UnderwaterView` so the old generated-background helper layers no longer create a gray film over the reference-derived base.
 - Replaced the earlier procedural lower/right detail and right-reef patch approach with the full-window extraction path. This preserves the reference's actual left rock pile, right reef, seabed caustics, bubble rhythm, and distant fish, while broad masks prevent the original fish/hit/line/lure from doubling behind the runtime art.
+- Added a reference-derived center texture pass inside `tools/build_reference_underwater_background.py`. The pass reuses side seabed/water pixels and subtle caustic strokes inside the masked fish/hit zone, reducing the smooth circular clean-water patch without reintroducing the original reference fish, hit text, lure, or line.
 - Regenerated `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png`.
 
 ## Findings
@@ -71,9 +72,9 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 - [P2] Background is much closer to the reference, but the masked center still needs final art cleanup.
   Location: `assets/showcase/underwater/underwater_battle_bg.png`, `tools/build_reference_underwater_background.py`, `assets/showcase/underwater/underwater_color_grade.png`, `assets/showcase/underwater/underwater_seabed_detail.png`, `assets/showcase/underwater/underwater_foreground_ambience.png`, `src/ui/components/underwater_view.gd`.
-  Evidence: the primary background is no longer the generated canyon scene. `tools/build_reference_underwater_background.py` now extracts the full authored water window from the reference mockup, preserving the real left rock pile, right reef, seabed caustics, bubbles, distant fish, surface light, and darker blue side depth. The main fish, hit burst, line, and lure zones are broadly masked so the runtime kurodai, hit treatment, and line can sit on top without obvious duplicates. In `/tmp/tsuri_fight_compare.png`, the implementation now has much stronger left/right reef density and a closer underwater-window read than the previous flat blue center/right background. The remaining mismatch is the large clean-water mask around the runtime fish/hit, which reads smoother and rounder than the reference's hand-authored central water and seabed detail.
-  Impact: this is a larger quality move toward the target image than the previous small patch passes. The water panel now carries the reference's real edge density, bubble rhythm, and seabed art language, and the main fish sits in a richer environment. It is still not a finished background because the center replacement is clean but not hand-authored enough.
-  Fix: keep the full-window extraction as the primary deterministic background build path and keep UnderwaterView linear filtering/lower overlay opacity. Next background work should reduce the visible smooth mask shape by authoring subtler central water/seabed texture under the runtime fish and hit burst; do not return to right-edge-only patches as the main fix.
+  Evidence: the primary background is no longer the generated canyon scene. `tools/build_reference_underwater_background.py` now extracts the full authored water window from the reference mockup, preserving the real left rock pile, right reef, seabed caustics, bubbles, distant fish, surface light, and darker blue side depth. The main fish, hit burst, line, and lure zones are broadly masked so the runtime kurodai, hit treatment, and line can sit on top without obvious duplicates. The latest pass adds reference-derived side seabed/water texture and faint caustic strokes back into that masked center. In `/tmp/tsuri_fight_compare.png` and `/tmp/tsuri_fish_hit_focus.png`, this reduces the smooth circular clean-water patch and does not visibly reintroduce the original reference hit text, fish, lure, or duplicate line. The remaining mismatch is that the center is still quieter and less hand-authored than the reference's dense middle seabed/water painting.
+  Impact: this is a larger quality move toward the target image than the previous small patch passes. The water panel now carries the reference's real edge density, bubble rhythm, and seabed art language, and the main fish sits in a richer environment. It is still not a finished background because the center replacement is improved but not fully painted to reference density.
+  Fix: keep the full-window extraction and center texture pass as the primary deterministic background build path, and keep UnderwaterView linear filtering/lower overlay opacity. Next background work should either author a higher-quality center replacement patch or use a final raster paintover for the masked fish/hit area; do not treat the current center fill as finished art.
 
 - [P3] Hit treatment is close, with only final context polish remaining.
   Location: `assets/showcase/underwater/hit_burst.png`, `src/ui/components/underwater_view.gd`.
@@ -89,12 +90,12 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Open Questions
 
-- None blocking. The next highest-value pass remains final background art cleanup. The full-window reference extraction is the right base, but the clean central mask still needs a more authored water/seabed replacement to reach the reference's hand-painted density.
+- None blocking. The next highest-value pass remains final background art cleanup. The full-window reference extraction plus center texture pass is the right base, but the central masked zone still needs a more authored water/seabed replacement to reach the reference's hand-painted density.
 
 ## Implementation Checklist
 
 1. Keep comparing `/tmp/tsuri_frame_focus_compare.png` against the reference after any HUD/sidebar frame change.
-2. Improve `underwater_battle_bg.png` itself from `tools/source_assets/underwater_battle_bg_source.png`; `underwater_foreground_ambience.png` now covers the foreground bubble/caustic density slot.
+2. Improve `underwater_battle_bg.png` itself from `tools/build_reference_underwater_background.py`; `underwater_foreground_ambience.png` now covers the foreground bubble/caustic density slot.
 3. Keep the dedicated fish-card portrait; do not return to drawing the swimming sprite sheet directly in the sidebar.
 4. Re-run `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png` after each pass.
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
+from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFilter
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -67,9 +67,99 @@ def _make_water_fill(size: tuple[int, int]) -> Image.Image:
     return fill.filter(ImageFilter.GaussianBlur(1.2))
 
 
+def _vertical_mask(size: tuple[int, int], alpha: int, top: float, bottom: float) -> Image.Image:
+    w, h = size
+    mask = Image.new("L", size, 0)
+    pixels = mask.load()
+    for y in range(h):
+        v = y / max(1, h - 1)
+        fade_in = min(1.0, max(0.0, (v - top) / 0.18))
+        fade_out = min(1.0, max(0.0, (bottom - v) / 0.10))
+        row_alpha = int(alpha * fade_in * fade_out)
+        for x in range(w):
+            u = x / max(1, w - 1)
+            side_fade = min(1.0, u / 0.16, (1.0 - u) / 0.16)
+            pixels[x, y] = int(row_alpha * side_fade)
+    return mask.filter(ImageFilter.GaussianBlur(10.0))
+
+
+def _add_center_water_texture(
+    clean: Image.Image,
+    source: Image.Image,
+    subject_mask: Image.Image,
+) -> Image.Image:
+    base = clean.convert("RGBA")
+    w, h = source.size
+
+    # Reuse the reference's own seabed and water pixels to break up the clean
+    # fill inside the removed fish/hit area. This stays in the target art
+    # language while keeping the runtime fish zone visually quiet.
+    left_floor = source.crop((int(w * 0.02), int(h * 0.69), int(w * 0.34), h))
+    right_floor = source.crop((int(w * 0.76), int(h * 0.66), int(w * 0.98), h))
+    floor_source = Image.new(
+        "RGB",
+        (left_floor.width + right_floor.width, max(left_floor.height, right_floor.height)),
+    )
+    floor_source.paste(left_floor, (0, floor_source.height - left_floor.height))
+    floor_source.paste(right_floor, (left_floor.width, floor_source.height - right_floor.height))
+    seabed_patch = floor_source.resize(
+        (int(w * 0.72), int(h * 0.30)),
+        Image.Resampling.LANCZOS,
+    )
+    seabed_patch = ImageEnhance.Brightness(seabed_patch).enhance(0.72)
+    seabed_patch = ImageEnhance.Color(seabed_patch).enhance(0.78)
+    seabed_patch = ImageEnhance.Contrast(seabed_patch).enhance(0.90)
+
+    seabed_alpha = ImageChops.multiply(
+        subject_mask.crop(
+            (int(w * 0.16), int(h * 0.62), int(w * 0.88), int(h * 0.92)),
+        ).resize(
+            seabed_patch.size,
+            Image.Resampling.LANCZOS,
+        ),
+        _vertical_mask(seabed_patch.size, 92, 0.12, 0.98),
+    )
+    base.alpha_composite(
+        Image.composite(
+            seabed_patch.convert("RGBA"),
+            Image.new("RGBA", seabed_patch.size, (0, 0, 0, 0)),
+            seabed_alpha,
+        ),
+        (int(w * 0.16), int(h * 0.62)),
+    )
+
+    caustics = Image.new("RGBA", source.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(caustics, "RGBA")
+    for index in range(28):
+        y = h * (0.60 + (index % 7) * 0.045)
+        x = w * (0.22 + (index // 7) * 0.13)
+        points: list[tuple[float, float]] = []
+        for step in range(5):
+            t = step / 4.0
+            points.append(
+                (x + 112.0 * t, y + ((step % 2) * 2.0 - 1.0) * (3.0 + index % 3)),
+            )
+        draw.line(points, fill=(185, 236, 220, 28), width=1)
+
+    caustic_mask = ImageChops.multiply(
+        subject_mask,
+        _vertical_mask(source.size, 74, 0.46, 0.92),
+    )
+    base.alpha_composite(
+        Image.composite(
+            caustics,
+            Image.new("RGBA", source.size, (0, 0, 0, 0)),
+            caustic_mask,
+        ),
+        (0, 0),
+    )
+    return base.convert("RGB")
+
+
 def _remove_full_window_subjects(crop: Image.Image) -> Image.Image:
     mask = _make_full_window_subject_mask(crop.size)
     clean = Image.composite(_make_water_fill(crop.size), crop.convert("RGB"), mask)
+    clean = _add_center_water_texture(clean, crop.convert("RGB"), mask)
 
     # A soft blue veil hides the boundary between authored reef pixels and the
     # clean center water while leaving the edges detailed.
