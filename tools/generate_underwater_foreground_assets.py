@@ -69,6 +69,22 @@ def create_foreground_ambience() -> None:
             alpha = int(60 + t * 92 + rng.random() * 24)
             _draw_bubble(draw, x, y, r, alpha)
 
+    # Sparse midwater bubbles add reference-like density in the central water
+    # without painting over the main kurodai sprite.
+    midwater_columns = [
+        (560, 0.40, 34, 16),
+        (790, 0.34, 30, 14),
+        (1040, 0.38, 34, 15),
+    ]
+    for base_x, height_ratio, spread, count in midwater_columns:
+        for i in range(count):
+            t = i / max(1, count - 1)
+            y = h * (0.68 - t * height_ratio) + rng.uniform(-9, 9)
+            x = base_x + math.sin(t * 6.2 + base_x * 0.021) * spread * 0.42 + rng.uniform(-spread, spread)
+            r = rng.uniform(1.3, 4.3) * (0.86 + t * 0.18)
+            alpha = int(38 + t * 54 + rng.random() * 18)
+            _draw_bubble(draw, x, y, r, alpha)
+
     # A few foreground specks around the central water column. Keep them sparse so the fish stays dominant.
     for _ in range(86):
         x = rng.uniform(w * 0.18, w * 0.82)
