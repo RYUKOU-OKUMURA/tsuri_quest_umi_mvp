@@ -123,7 +123,7 @@ func _draw_tension(font: Font, rect: Rect2) -> void:
 	var bar_y := 42.0 if _hud_frame == null else 43.0
 	var icon_size := 34.0 if _hud_frame == null else 24.0
 	var title_size := 19 if _hud_frame == null else 18
-	_draw_hud_icon(ICON_TENSION, Rect2(rect.position + Vector2(12.0, title_y - icon_size + 8.0), Vector2(icon_size, icon_size)), Color("#ff5b63"))
+	_draw_hud_icon(ICON_TENSION, Rect2(rect.position + Vector2(12.0, title_y - icon_size + 8.0), Vector2(icon_size, icon_size)), Color("#ff5b63"), Color(1.0, 1.0, 1.0, 0.86))
 	_draw_text(font, "テンション", rect.position + Vector2(48.0 if _hud_frame == null else 40.0, title_y), title_size, Palette.TEXT_BONE, 3)
 	var ratio := 0.0
 	var safe_min := 0.30
@@ -168,7 +168,7 @@ func _draw_stamina(font: Font, rect: Rect2) -> void:
 	var bar_y := 42.0 if _hud_frame == null else 43.0
 	var icon_size := 34.0 if _hud_frame == null else 24.0
 	var title_size := 19 if _hud_frame == null else 18
-	_draw_hud_icon(ICON_STAMINA, Rect2(rect.position + Vector2(12.0, title_y - icon_size + 8.0), Vector2(icon_size, icon_size)), Color("#6cc8ff"))
+	_draw_hud_icon(ICON_STAMINA, Rect2(rect.position + Vector2(12.0, title_y - icon_size + 8.0), Vector2(icon_size, icon_size)), Color("#6cc8ff"), Color(1.0, 1.0, 1.0, 0.86))
 	_draw_text(font, "魚の体力", rect.position + Vector2(48.0 if _hud_frame == null else 40.0, title_y), title_size, Palette.TEXT_BONE, 3)
 	var ratio := 1.0
 	if simulator != null:
@@ -284,14 +284,14 @@ func _draw_icon_badge(center: Vector2, color: Color) -> void:
 	draw_circle(center + Vector2(-2.0, -2.0), 2.5, Color(1.0, 1.0, 1.0, 0.55))
 
 
-func _draw_hud_icon(icon_index: int, rect: Rect2, fallback_color: Color) -> void:
+func _draw_hud_icon(icon_index: int, rect: Rect2, fallback_color: Color, modulate: Color = Color.WHITE) -> void:
 	if _icons == null:
 		_draw_icon_badge(rect.position + rect.size * 0.5, fallback_color)
 		return
-	_draw_sheet_icon(icon_index, rect)
+	_draw_sheet_icon(icon_index, rect, modulate)
 
 
-func _draw_sheet_icon(icon_index: int, target: Rect2) -> void:
+func _draw_sheet_icon(icon_index: int, target: Rect2, modulate: Color = Color.WHITE) -> void:
 	if _icons == null:
 		return
 	var cell_w := float(_icons.get_width()) / 3.0
@@ -299,7 +299,7 @@ func _draw_sheet_icon(icon_index: int, target: Rect2) -> void:
 	var col := icon_index % 3
 	var row := icon_index / 3
 	var src := Rect2(float(col) * cell_w, float(row) * cell_h, cell_w, cell_h)
-	draw_texture_rect_region(_icons, target, src, Color.WHITE)
+	draw_texture_rect_region(_icons, target, src, modulate)
 
 
 func _draw_triangle(center: Vector2, radius: float, color: Color, up: bool) -> void:

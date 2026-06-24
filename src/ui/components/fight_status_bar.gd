@@ -135,7 +135,7 @@ func _draw_status_icon(rect: Rect2, icon_index: int) -> void:
 		rect.position + Vector2(31.0, (rect.size.y - icon_size) * 0.5 + 1.0),
 		Vector2(icon_size, icon_size)
 	)
-	_draw_sheet_icon(icon_index, icon_rect, Color(1.0, 1.0, 1.0, 0.92))
+	_draw_sheet_icon(icon_index, icon_rect, Color(1.0, 1.0, 1.0, 0.84))
 	if icon_index == ICON_WEATHER:
 		_draw_sheet_icon(
 			ICON_WIND,
