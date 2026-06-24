@@ -128,6 +128,48 @@ def _add_center_water_texture(
         (int(w * 0.16), int(h * 0.62)),
     )
 
+    floor_fragments = (
+        (source.crop((int(w * 0.08), int(h * 0.74), int(w * 0.28), int(h * 0.92))), 0.33, 0.79, 0.24, 0.11, 30),
+        (source.crop((int(w * 0.78), int(h * 0.72), int(w * 0.96), int(h * 0.92))), 0.49, 0.82, 0.21, 0.10, 24),
+        (source.crop((int(w * 0.20), int(h * 0.78), int(w * 0.38), int(h * 0.94))), 0.61, 0.83, 0.19, 0.09, 20),
+    )
+    for fragment, u, v, patch_w_ratio, patch_h_ratio, alpha in floor_fragments:
+        patch_size = (int(w * patch_w_ratio), int(h * patch_h_ratio))
+        patch = fragment.resize(patch_size, Image.Resampling.LANCZOS)
+        patch = ImageEnhance.Brightness(patch).enhance(0.72)
+        patch = ImageEnhance.Color(patch).enhance(0.76)
+        patch = ImageEnhance.Contrast(patch).enhance(0.88)
+        patch = patch.filter(ImageFilter.GaussianBlur(0.8)).convert("RGBA")
+
+        local_mask = Image.new("L", patch_size, 0)
+        local_draw = ImageDraw.Draw(local_mask)
+        local_draw.ellipse(
+            (
+                int(patch_size[0] * 0.04),
+                int(patch_size[1] * 0.18),
+                int(patch_size[0] * 0.96),
+                int(patch_size[1] * 0.98),
+            ),
+            fill=alpha,
+        )
+        local_mask = ImageChops.multiply(
+            local_mask,
+            _vertical_mask(patch_size, 255, 0.28, 1.0),
+        )
+        local_mask = local_mask.filter(ImageFilter.GaussianBlur(18.0))
+        x = int(w * u - patch_size[0] * 0.5)
+        y = int(h * v - patch_size[1] * 0.5)
+        subject_crop = subject_mask.crop((x, y, x + patch_size[0], y + patch_size[1]))
+        fragment_alpha = ImageChops.multiply(local_mask, subject_crop)
+        base.alpha_composite(
+            Image.composite(
+                patch,
+                Image.new("RGBA", patch_size, (0, 0, 0, 0)),
+                fragment_alpha,
+            ),
+            (x, y),
+        )
+
     left_water = source.crop((int(w * 0.02), int(h * 0.18), int(w * 0.24), int(h * 0.56)))
     right_water = left_water.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
     mid_source = Image.new(

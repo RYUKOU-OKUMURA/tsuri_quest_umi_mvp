@@ -519,9 +519,7 @@ func _draw_showcase_target_fish(center: Vector2, scale_value: float, direction: 
 	var src := Rect2(frame_w * float(frame_index), 0.0, frame_w, frame_h)
 	var dst := Rect2(-draw_size * 0.5, draw_size)
 
-	_draw_ellipse(center + Vector2(0.0, draw_size.y * 0.30), draw_size.x * 0.34, draw_size.y * 0.11, Color(0.0, 0.0, 0.0, 0.18), 28)
-	if simulator.state == FishingSimulator.State.FIGHT:
-		draw_circle(center, draw_size.x * 0.34, Color(0.44, 0.89, 1.0, 0.10))
+	_draw_ellipse(center + Vector2(0.0, draw_size.y * 0.32), draw_size.x * 0.24, draw_size.y * 0.055, Color(0.0, 0.0, 0.0, 0.08), 28)
 
 	draw_set_transform(Juicer.get_offset() + center, 0.0, Vector2(direction, 1.0))
 	draw_texture_rect_region(_showcase_fish_sheet, dst, src, Color.WHITE)
