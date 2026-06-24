@@ -503,7 +503,7 @@ func _draw_hit_burst() -> void:
 	if _fish_flash <= 0.02 or simulator == null:
 		return
 	var alpha := clampf(_fish_flash, 0.0, 1.0)
-	var burst_center := Vector2(size.x * 0.50, size.y * 0.82)
+	var burst_center := Vector2(size.x * 0.50, size.y * 0.835)
 	if _showcase_hit_burst != null:
 		var tex_size := _showcase_hit_burst.get_size()
 		var scale := clampf(size.x / 1500.0, 0.42, 0.58)

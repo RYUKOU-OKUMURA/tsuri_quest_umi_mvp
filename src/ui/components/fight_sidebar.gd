@@ -135,7 +135,7 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 	var icon_size := 50.0 if _sidebar_frame != null else 58.0
 	_draw_action_icon(body.position + Vector2(34.0, body.size.y * 0.54), icon_size)
 	_draw_text(font, "%s！" % action, body.position + Vector2(72.0, 28.0), 20, Color("#2b2117"), 0)
-	_draw_wrapped(font, message, body.position + Vector2(72.0, 37.0), body.size.x - 82.0, 11, Palette.TEXT_DARK, 2)
+	_draw_wrapped(font, message, body.position + Vector2(72.0, 36.0), body.size.x - 82.0, 12 if _sidebar_frame != null else 11, Palette.TEXT_DARK, 2)
 
 
 func _draw_tackle_card(font: Font, rect: Rect2) -> void:
@@ -192,11 +192,17 @@ func _draw_centered_text(font: Font, text: String, rect: Rect2, font_size: int, 
 func _draw_wrapped(font: Font, text: String, pos: Vector2, max_width: float, font_size: int, color: Color, max_lines: int) -> void:
 	var line := ""
 	var lines: Array[String] = []
+	var closing_marks := "、。！？…）」』"
 	for i in range(text.length()):
-		var next := line + text[i]
+		var char := text[i]
+		var next := line + char
 		if font.get_string_size(next, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x > max_width and not line.is_empty():
-			lines.append(line)
-			line = text[i]
+			if closing_marks.contains(char):
+				lines.append(next)
+				line = ""
+			else:
+				lines.append(line)
+				line = char
 		else:
 			line = next
 	if not line.is_empty():

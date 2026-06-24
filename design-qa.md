@@ -15,9 +15,9 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Patches Made Since Previous QA
 
-- Added subtle ruled lines and corner brackets to the right fish card in `assets/showcase/underwater/sidebar_frame.png`.
-- Added clearer title separators and inner corner brackets to the right action/tackle cards.
-- Matched `FightSidebar` action/tackle body placement to the generated parchment card slots, reducing cramped lower-card text.
+- Reduced the white ray/fleck intensity in `assets/showcase/underwater/hit_burst.png`.
+- Moved the hit badge slightly lower in `UnderwaterView` so the lower edge overlaps the operation board more like the reference.
+- Increased the right action-card body copy size and added a minimal Japanese line-break guard so punctuation does not start the next line.
 - Regenerated `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png`.
 
 ## Findings
@@ -40,11 +40,11 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
   Impact: the fish is no longer a blocking quality mismatch; it now sells the screen's main subject.
   Fix: keep this asset as the current kurodai baseline, then tune lure placement only after the hit badge and HUD frame settle.
 
-- [P3] Hit treatment is closer, with minor placement/brightness polish remaining.
+- [P3] Hit treatment is close, with only final context polish remaining.
   Location: `assets/showcase/underwater/hit_burst.png`, `src/ui/components/underwater_view.gd`.
-  Evidence: the badge now reads as a dark blue splash with cyan edges behind the yellow/orange live text, which is much closer to the reference than the previous orange-centered oval. It still has more radial white streaks and a slightly different lower-edge overlap than the source mockup.
-  Impact: the hit moment is no longer a major art-style mismatch, but it still needs a final polish pass after the HUD frame is locked.
-  Fix: after the HUD pass, tune the splash brightness and exact vertical overlap so it sits naturally on the top edge of the lower operation board.
+  Evidence: the badge now reads as a darker blue splash with reduced white rays/flecks behind the yellow/orange live text, and its lower edge sits closer to the top of the operation board. It still differs slightly from the reference starburst silhouette and text optical weight.
+  Impact: the hit moment is no longer a major art-style mismatch; the remaining work is small visual context tuning.
+  Fix: keep the current darker badge, then revisit only if the final HUD/font pass makes the overlap or brightness feel off again.
 
 - [P2] Typography is improved but still not at the reference's custom UI quality.
   Location: all fight UI overlay text.
@@ -54,18 +54,18 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Open Questions
 
-- None blocking. The next highest-value pass is typography/spacing across the right panel and HUD, while keeping the updated sidebar and HUD frames as the current baseline.
+- None blocking. The next highest-value pass is top-status/HUD typography and icon simplification, while keeping the updated sidebar, HUD, and hit badge as the current baseline.
 
 ## Implementation Checklist
 
-1. Tune title/body optical sizes across the right panel and HUD, especially small body text and key labels.
-2. Continue HUD upper-board polish, focusing on color balance and gauge-label spacing.
-3. Revisit hit splash brightness and bottom overlap now that the HUD frame geometry is more stable.
+1. Tune top-status and HUD title/value optical sizes, especially the location/depth card and depth module.
+2. Simplify or replace top-status icons if they still read noisy against the reference.
+3. Continue HUD upper-board polish, focusing on color balance and gauge-label spacing.
 4. Re-run `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png` after each pass.
 
 ## Follow-up Polish
 
 - Replace top status icons with simpler reference-like icons if they still feel noisy after the font pass.
-- Tune the hit splash brightness and bottom overlap after the HUD shape is finalized.
+- Recheck the hit splash after the final HUD/font pass, but do not keep iterating it unless the comparison regresses.
 - Add small sparkle/bubble particles only after the main frame and typography mismatches are solved.
 - Add subtle tail/body variants to the kurodai sheet later if animation quality becomes noticeable; keep the current static extracted art for visual fidelity.
