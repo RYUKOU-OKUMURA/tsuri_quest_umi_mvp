@@ -98,8 +98,8 @@ func _draw() -> void:
 	var top := Rect2(gap, gap, size.x - gap * 2.0, minf(92.0, size.y * 0.54))
 	var bottom := Rect2(gap, top.end.y + gap, size.x - gap * 2.0, size.y - top.size.y - gap * 2.0)
 	if _hud_frame != null:
-		top = Rect2(size.x * 0.018, size.y * 0.09, size.x * 0.964, size.y * 0.405)
-		bottom = Rect2(size.x * 0.015, size.y * 0.565, size.x * 0.970, size.y * 0.365)
+		top = Rect2(size.x * 0.014, size.y * 0.065, size.x * 0.972, size.y * 0.455)
+		bottom = Rect2(size.x * 0.014, size.y * 0.552, size.x * 0.972, size.y * 0.388)
 
 	var depth_w := clampf(size.x * 0.14, 150.0, 190.0)
 	if _hud_frame != null:
@@ -118,8 +118,8 @@ func _draw() -> void:
 
 func _draw_tension(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0b1828"), Color("#122f4f"), Palette.GOLD_DEEP)
-	var title_y := 25.0 if _hud_frame == null else 23.0
-	var bar_y := 42.0 if _hud_frame == null else 34.0
+	var title_y := 25.0 if _hud_frame == null else 26.0
+	var bar_y := 42.0 if _hud_frame == null else 43.0
 	_draw_hud_icon(ICON_TENSION, Rect2(rect.position + Vector2(9.0, title_y - 21.0), Vector2(34.0, 34.0)), Color("#ff5b63"))
 	_draw_text(font, "テンション", rect.position + Vector2(48.0, title_y), 19, Palette.TEXT_BONE, 3)
 	var ratio := 0.0
@@ -129,7 +129,7 @@ func _draw_tension(font: Font, rect: Rect2) -> void:
 		ratio = clampf(simulator.tension / maxf(simulator.line_break_limit(), 0.01), 0.0, 1.0)
 		safe_min = simulator.safe_min()
 		safe_max = simulator.safe_max()
-	var bar := Rect2(rect.position + Vector2(24.0, bar_y), Vector2(rect.size.x - 58.0, 26.0 if _hud_frame == null else 22.0))
+	var bar := Rect2(rect.position + Vector2(24.0, bar_y), Vector2(rect.size.x - 58.0, 26.0 if _hud_frame == null else 24.0))
 	_draw_segment_gauge(bar, ratio, safe_min, safe_max, true)
 	_draw_text(font, "ゆるい", rect.position + Vector2(24.0, rect.size.y - 8.0), 16, Color("#72f47d"), 2)
 	var tight := "きつい"
@@ -139,7 +139,7 @@ func _draw_tension(font: Font, rect: Rect2) -> void:
 
 func _draw_depth(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0b355f"), Color("#08213c"), Palette.GOLD)
-	var title_y := 22.0 if _hud_frame == null else 21.0
+	var title_y := 22.0 if _hud_frame == null else 24.0
 	_draw_text(font, "タナ（深さ）", rect.position + Vector2(22.0, title_y), 17, Palette.TEXT_BONE, 3)
 	var depth := 0.0
 	if simulator != null:
@@ -147,22 +147,22 @@ func _draw_depth(font: Font, rect: Rect2) -> void:
 	var value := "%.1fm" % depth
 	var value_size := 34
 	var value_w := font.get_string_size(value, HORIZONTAL_ALIGNMENT_LEFT, -1, value_size).x
-	_draw_text(font, value, rect.position + Vector2((rect.size.x - value_w) * 0.5, 59.0 if _hud_frame == null else 56.0), value_size, Color("#eaf6ff"), 4)
+	_draw_text(font, value, rect.position + Vector2((rect.size.x - value_w) * 0.5, 59.0 if _hud_frame == null else 64.0), value_size, Color("#eaf6ff"), 4)
 	var cx := rect.position.x + rect.size.x - 22.0
-	_draw_triangle(Vector2(cx, rect.position.y + 28.0), 14.0, Color("#29baf7"), true)
-	_draw_triangle(Vector2(cx, rect.position.y + 62.0), 14.0, Color("#ff6b3e"), false)
+	_draw_triangle(Vector2(cx, rect.position.y + 34.0), 14.0, Color("#29baf7"), true)
+	_draw_triangle(Vector2(cx, rect.position.y + 70.0), 14.0, Color("#ff6b3e"), false)
 
 
 func _draw_stamina(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0b1828"), Color("#122f4f"), Palette.GOLD_DEEP)
-	var title_y := 25.0 if _hud_frame == null else 23.0
-	var bar_y := 42.0 if _hud_frame == null else 34.0
+	var title_y := 25.0 if _hud_frame == null else 26.0
+	var bar_y := 42.0 if _hud_frame == null else 43.0
 	_draw_hud_icon(ICON_STAMINA, Rect2(rect.position + Vector2(9.0, title_y - 21.0), Vector2(34.0, 34.0)), Color("#6cc8ff"))
 	_draw_text(font, "魚の体力", rect.position + Vector2(48.0, title_y), 19, Palette.TEXT_BONE, 3)
 	var ratio := 1.0
 	if simulator != null:
 		ratio = simulator.fish_stamina_ratio()
-	var bar := Rect2(rect.position + Vector2(24.0, bar_y), Vector2(rect.size.x - 48.0, 26.0 if _hud_frame == null else 22.0))
+	var bar := Rect2(rect.position + Vector2(24.0, bar_y), Vector2(rect.size.x - 48.0, 26.0 if _hud_frame == null else 24.0))
 	_draw_segment_gauge(bar, ratio, 0.0, 1.0, false)
 	_draw_text(font, "弱い", rect.position + Vector2(24.0, rect.size.y - 8.0), 16, Color("#fff1c7"), 2)
 	var strong := "強い"
@@ -184,22 +184,22 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 	_harbor_rect = Rect2(menu.position, menu.size)
 
 	_draw_panel(bait, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
-	var bait_text_x := 16.0 if _hud_frame == null else 112.0
-	var bait_label_size := 17 if _hud_frame == null else 14
+	var bait_text_x := 16.0
+	var bait_label_size := 17 if _hud_frame == null else 15
 	_draw_text(font, "使用中のエサ", bait.position + Vector2(bait_text_x, 22.0), bait_label_size, Color("#6a4c2b"), 0)
 	if _icons != null:
-		var bait_icon_size := 38.0 if _hud_frame != null else 46.0
+		var bait_icon_size := 42.0 if _hud_frame != null else 46.0
 		_draw_sheet_icon(
 			ICON_BAIT,
-			Rect2(bait.position + Vector2(61.0, bait.size.y * 0.5 - bait_icon_size * 0.5), Vector2(bait_icon_size, bait_icon_size))
+			Rect2(bait.position + Vector2(58.0, bait.size.y * 0.5 - bait_icon_size * 0.5 + 5.0), Vector2(bait_icon_size, bait_icon_size))
 		)
 	else:
 		_draw_bait_icon(bait.position + Vector2(82.0 if _hud_frame == null else 95.0, bait.size.y * 0.62))
-	_draw_text(font, "オキアミ", bait.position + Vector2(128.0 if _hud_frame == null else 120.0, bait.size.y * 0.66), 20, Color("#2b2117"), 0)
-	_draw_text(font, "× 17", bait.position + Vector2(132.0 if _hud_frame == null else 124.0, bait.size.y * 0.92), 19, Color("#2b2117"), 0)
+	_draw_text(font, "オキアミ", bait.position + Vector2(118.0, bait.size.y * 0.66), 20, Color("#2b2117"), 0)
+	_draw_text(font, "× 17", bait.position + Vector2(124.0, bait.size.y * 0.92), 19, Color("#2b2117"), 0)
 
 	_draw_panel(hint, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
-	_draw_text(font, "操作のヒント", hint.position + Vector2(16.0, 25.0), 18, Color("#6a4c2b"), 0)
+	_draw_text(font, "操作のヒント", hint.position + Vector2(18.0, 25.0), 18, Color("#6a4c2b"), 0)
 	_draw_key_hint(font, _reel_rect, "A", "巻く")
 	_draw_key_hint(font, _give_rect, "B", "緩める")
 	_draw_key_hint(font, Rect2(hint.position + Vector2(hint.size.x - 128.0, 30.0), Vector2(120.0, 30.0)), "L/R", "調整")

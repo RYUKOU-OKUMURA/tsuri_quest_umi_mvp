@@ -60,10 +60,10 @@ func _draw() -> void:
 	var tackle_card := Rect2()
 	if _sidebar_frame != null:
 		draw_texture_rect(_sidebar_frame, Rect2(Vector2.ZERO, size), false, Color.WHITE)
-		header = Rect2(w * 0.06, h * 0.025, w * 0.88, h * 0.075)
-		fish_card = Rect2(w * 0.055, h * 0.135, w * 0.89, h * 0.435)
-		action_card = Rect2(w * 0.055, h * 0.620, w * 0.89, h * 0.160)
-		tackle_card = Rect2(w * 0.055, h * 0.815, w * 0.89, h * 0.155)
+		header = Rect2(w * 0.055, h * 0.030, w * 0.89, h * 0.075)
+		fish_card = Rect2(w * 0.060, h * 0.125, w * 0.88, h * 0.460)
+		action_card = Rect2(w * 0.055, h * 0.610, w * 0.89, h * 0.175)
+		tackle_card = Rect2(w * 0.055, h * 0.800, w * 0.89, h * 0.175)
 	else:
 		var gap := 7.0
 		var action_h := clampf(h * 0.22, 86.0, 102.0)
@@ -81,59 +81,60 @@ func _draw() -> void:
 
 func _draw_header(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Palette.DARK_PANEL, Palette.GOLD, Palette.GOLD_BRIGHT)
-	_draw_text(font, "釣り中の魚", rect.position + Vector2(14.0, 23.0), 18, Palette.TEXT_BONE, 3)
-	_draw_text(font, "1/1匹", rect.position + Vector2(rect.size.x - 62.0, 23.0), 16, Palette.GOLD_BRIGHT, 2)
+	var title_size := 18 if _sidebar_frame == null else 19
+	_draw_text(font, "釣り中の魚", rect.position + Vector2(14.0, rect.size.y * 0.68), title_size, Palette.TEXT_BONE, 3)
+	_draw_text(font, "1/1匹", rect.position + Vector2(rect.size.x - 66.0, rect.size.y * 0.68), 16, Palette.GOLD_BRIGHT, 2)
 
 
 func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
-	var inner := rect.grow(-10.0)
+	var inner := rect.grow(-10.0 if _sidebar_frame == null else -12.0)
 	var fish_name := String(fish_data.get("name", "クロダイ"))
 	var rarity := String(fish_data.get("rarity", "レア"))
 	var no_text := "No.028"
-	_draw_text(font, no_text, inner.position + Vector2(0.0, 24.0), 15, Color("#6b6153"), 0)
-	_draw_text(font, _display_fish_name(fish_name), inner.position + Vector2(86.0, 26.0), 22, Palette.TEXT_DARK, 0)
-	_draw_rarity_tag(font, Rect2(inner.position + Vector2(inner.size.x - 70.0, 5.0), Vector2(62.0, 24.0)), rarity)
+	_draw_text(font, no_text, inner.position + Vector2(0.0, 26.0), 14, Color("#6b6153"), 0)
+	_draw_text(font, _display_fish_name(fish_name), inner.position + Vector2(74.0, 28.0), 20, Palette.TEXT_DARK, 0)
+	_draw_rarity_tag(font, Rect2(inner.position + Vector2(inner.size.x - 52.0, 8.0), Vector2(48.0, 22.0)), rarity)
 
 	var fish_rect := Rect2(
-		inner.position + Vector2(14.0, 34.0),
+		inner.position + Vector2(8.0, 42.0),
 		Vector2(
-			inner.size.x - 28.0,
-			maxf(72.0, rect.size.y * (0.38 if _sidebar_frame != null else 0.37))
+			inner.size.x - 16.0,
+			maxf(82.0, rect.size.y * (0.46 if _sidebar_frame != null else 0.37))
 		)
 	)
 	_draw_fish_portrait(fish_rect)
-	var divider_y := fish_rect.end.y + 6.0
+	var divider_y := fish_rect.end.y + (9.0 if _sidebar_frame != null else 6.0)
 	draw_line(Vector2(inner.position.x + 8.0, divider_y), Vector2(inner.end.x - 8.0, divider_y), Color("#c9b486"), 1.0)
 	var estimate := (float(fish_data.get("size_min", 0.0)) + float(fish_data.get("size_max", 0.0))) * 0.5
 	var estimate_size := 21 if _sidebar_frame != null else 23
-	_draw_text(font, "推定 %.1f cm" % estimate, Vector2(inner.position.x + 42.0, divider_y + 22.0), estimate_size, Color("#2b2117"), 0)
-	var desc_y := divider_y + 36.0
+	_draw_centered_text(font, "推定 %.1f cm" % estimate, Rect2(inner.position.x, divider_y + 8.0, inner.size.x, 30.0), estimate_size, Color("#2b2117"), 0)
+	var desc_y := divider_y + 44.0
 	draw_line(Vector2(inner.position.x + 8.0, desc_y - 10.0), Vector2(inner.end.x - 8.0, desc_y - 10.0), Color("#d6c299"), 1.0)
 	var detail_gap := 17.0 if _sidebar_frame != null else 21.0
 	_draw_detail_line(font, "岩場周りで警戒心が強い。", Vector2(inner.position.x + 16.0, desc_y), inner.size.x - 28.0)
 	_draw_detail_line(font, "好むエサ：オキアミ・カニ", Vector2(inner.position.x + 16.0, desc_y + detail_gap), inner.size.x - 28.0)
-	if _sidebar_frame != null:
+	if _sidebar_frame == null:
 		_draw_detail_line(font, "生息域：沿岸の岩場・堤防周り", Vector2(inner.position.x + 16.0, desc_y + detail_gap * 2.0), inner.size.x - 28.0)
 
 
 
 func _draw_action_card(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0d3a62"), Palette.GOLD, Palette.GOLD_BRIGHT)
-	_draw_text(font, "魚の行動", rect.position + Vector2(14.0, 26.0), 18, Palette.TEXT_BONE, 3)
+	_draw_text(font, "魚の行動", rect.position + Vector2(16.0, 27.0), 18, Palette.TEXT_BONE, 3)
 	var body := Rect2(rect.position + Vector2(10.0, 33.0), rect.size - Vector2(20.0, 42.0))
 	if _sidebar_frame != null:
-		body = Rect2(rect.position + Vector2(12.0, rect.size.y * 0.33), rect.size - Vector2(24.0, rect.size.y * 0.42))
+		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.30), rect.size - Vector2(28.0, rect.size.y * 0.34))
 	_draw_panel(body, Color("#f3e8cd"), Palette.WOOD_DARK, Palette.GOLD)
 	var action := "待機"
 	var message := "ラインを見ながら、テンションを保とう。"
 	if simulator != null:
 		action = simulator.action_name
 		message = simulator.action_message
-	var icon_size := 46.0 if _sidebar_frame != null else 58.0
-	_draw_action_icon(body.position + Vector2(31.0, body.size.y * 0.50), icon_size)
-	_draw_text(font, "%s！" % action, body.position + Vector2(64.0, 27.0), 19, Color("#2b2117"), 0)
-	_draw_wrapped(font, message, body.position + Vector2(64.0, 36.0), body.size.x - 72.0, 12, Palette.TEXT_DARK, 2)
+	var icon_size := 50.0 if _sidebar_frame != null else 58.0
+	_draw_action_icon(body.position + Vector2(34.0, body.size.y * 0.54), icon_size)
+	_draw_text(font, "%s！" % action, body.position + Vector2(72.0, 28.0), 20, Color("#2b2117"), 0)
+	_draw_wrapped(font, message, body.position + Vector2(72.0, 37.0), body.size.x - 82.0, 11, Palette.TEXT_DARK, 2)
 
 
 func _draw_tackle_card(font: Font, rect: Rect2) -> void:
@@ -141,20 +142,19 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	_draw_text(font, "タックル", rect.position + Vector2(14.0, 26.0), 18, Palette.TEXT_BONE, 3)
 	var body := Rect2(rect.position + Vector2(10.0, 32.0), rect.size - Vector2(20.0, 38.0))
 	if _sidebar_frame != null:
-		body = Rect2(rect.position + Vector2(12.0, rect.size.y * 0.30), rect.size - Vector2(24.0, rect.size.y * 0.38))
+		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.31), rect.size - Vector2(28.0, rect.size.y * 0.35))
 	_draw_panel(body, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	var rod_name := String(trip_stats.get("rod_name", "港の入門竿"))
-	var text_width := body.size.x - (64.0 if _icons != null else 12.0)
+	var text_width := body.size.x - (74.0 if _icons != null else 12.0)
 	var lines: Array[String] = [
-		"ロッド：%s" % rod_name,
+		"ロッド：%s" % _short_rod_name(rod_name),
 		"リール：小型スピニング",
-		"ライン：ナイロン 3号",
-		"針：チヌ 3号 / ハリス 2号",
+		"ライン：ナイロン3号 / 針：チヌ3号",
 	]
 	for i in range(lines.size()):
-		_draw_wrapped(font, lines[i], body.position + Vector2(12.0, 7.0 + float(i) * 14.0), text_width, 11, Palette.TEXT_DARK, 1)
+		_draw_wrapped(font, lines[i], body.position + Vector2(12.0, 9.0 + float(i) * 16.0), text_width, 12, Palette.TEXT_DARK, 1)
 	if _icons != null:
-		_draw_tackle_icon(Rect2(body.end - Vector2(58.0, 56.0), Vector2(50.0, 50.0)))
+		_draw_tackle_icon(Rect2(body.end - Vector2(64.0, 64.0), Vector2(56.0, 56.0)))
 	else:
 		_draw_simple_rod(body.position + Vector2(body.size.x - 62.0, body.size.y - 24.0))
 
@@ -179,6 +179,11 @@ func _draw_text(font: Font, text: String, baseline: Vector2, font_size: int, col
 	if outline > 0:
 		draw_string_outline(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, outline, Color(0.0, 0.0, 0.0, 0.65))
 	draw_string(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
+
+
+func _draw_centered_text(font: Font, text: String, rect: Rect2, font_size: int, color: Color, outline: int) -> void:
+	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+	_draw_text(font, text, rect.position + Vector2((rect.size.x - text_width) * 0.5, font_size), font_size, color, outline)
 
 
 func _draw_wrapped(font: Font, text: String, pos: Vector2, max_width: float, font_size: int, color: Color, max_lines: int) -> void:
@@ -272,6 +277,12 @@ func _draw_tackle_icon(rect: Rect2) -> void:
 func _display_fish_name(name: String) -> String:
 	if name.find("クロダイ") >= 0:
 		return "クロダイ"
+	return name
+
+
+func _short_rod_name(name: String) -> String:
+	if name.length() > 7:
+		return name.left(7)
 	return name
 
 

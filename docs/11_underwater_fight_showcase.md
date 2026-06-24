@@ -16,7 +16,7 @@
 
 `tools/generate_underwater_showcase_assets.py` で生成した初期 PNG は、素材ベース表示の技術検証用であり、完成方向の土台ではない。現在の `underwater_battle_bg.png`、`kurodai_showcase_sheet.png`、`hit_burst.png` は AI 生成素材を取り込んだ本番寄りパスに更新済みだが、画面全体の品質判定は引き続き `reference/02_underwater_fight_mockup.png` との横並び比較で行う。
 
-`top_status_frame.png` と `fight_hud_frame.png` は、生成素材の金飾りが強すぎたため `tools/generate_underwater_ui_frame_assets.py` で参照画像寄りの紙カード/濃紺ゲージ台として作り直している。これは最終美術素材ではなく、文字・ゲージ・アイコンが破綻しない完成寄りの枠素材スロットである。
+`sidebar_frame.png`、`top_status_frame.png`、`fight_hud_frame.png` は、生成素材の金飾りが強すぎたため `tools/generate_underwater_ui_frame_assets.py` で参照画像寄りの紙カード/濃紺ゲージ台として作り直している。これは最終美術素材ではなく、文字・ゲージ・アイコンが破綻しない完成寄りの枠素材スロットである。`FishingScreen` では右サイドバー外側の汎用パネルを外し、専用 `sidebar_frame.png` が直接画面に出るようにしている。
 
 `kurodai_showcase_sheet.png` と `hit_burst.png` は、`kurodai_chroma_source.png` を元に `tools/process_underwater_fish_assets.py` で生成する。処理内容は、クロマキー除去、マゼンタ縁のデスピル、4フレームの正規化、ヒットバッジ生成である。生成元は内製差し替え用の中間素材で、画面表示は最終PNGのみを参照する。
 
@@ -58,7 +58,7 @@
 | `assets/showcase/underwater/kurodai_chroma_source.png` | クロダイ中間素材 | ImageGen で生成 | フラットなマゼンタ背景、横4フレーム |
 | `assets/showcase/underwater/kurodai_showcase_sheet.png` | クロダイ | `tools/process_underwater_fish_assets.py` で生成 | 透明背景、横 4 フレーム、全フレーム同サイズ |
 | `assets/showcase/underwater/hit_burst.png` | ヒット演出 | `tools/process_underwater_fish_assets.py` で生成 | 中央配置して読めるサイズ、透明背景 |
-| `assets/showcase/underwater/sidebar_frame.png` | 右パネルフレーム | 生成 UI 素材 | テキストなし、魚なし、縦長フレームとして全面表示 |
+| `assets/showcase/underwater/sidebar_frame.png` | 右パネルフレーム | `tools/generate_underwater_ui_frame_assets.py` で生成 | テキストなし、魚なし、縦長フレームとして全面表示 |
 | `assets/showcase/underwater/top_status_frame.png` | 上部ステータスバー | `tools/generate_underwater_ui_frame_assets.py` で生成 | テキストなし、横長フレームとして全面表示 |
 | `assets/showcase/underwater/fight_hud_frame.png` | 下部操作盤フレーム | `tools/generate_underwater_ui_frame_assets.py` で生成 | テキストなし、左カラム幅の二段HUDとして全面表示 |
 | `assets/showcase/underwater/fight_icon_sheet.png` | 共通機能アイコン | 生成 UI 素材 | 透明 PNG、3x3 グリッド、各セル同サイズ |
@@ -71,6 +71,7 @@
 - `FightStatusBar` は `top_status_frame.png` を敷き、時計・天候・所持金・水深のテキストだけを Godot 側で重ねる。
 - `FightHud` は画面全幅ではなく左カラム内に置き、`fight_hud_frame.png` の上にゲージ色、現在位置、深度、操作文字を重ねる。
 - `FightStatusBar`、`FightHud`、`FightSidebar` は `fight_icon_sheet.png` の3x3セルを使い、コード描画アイコンを本番素材へ置き換える。
+- 右パネルは汎用 `make_panel()` の中に入れず、`FightSidebar` の専用フレームを直接表示する。二重枠にするとサイドバー素材が縮み、参照画像のカード品質から離れるため。
 - `UnderwaterView` は主役魚とヒット演出のスケールを参照画像寄りに抑え、深度目盛りは背景に馴染む低コントラスト表示にする。
 - `tools/fishing_fight_preview.gd` は参照比較用に `クロダイ / レア / 44.2cm` 相当の固定状態を作り、画面品質の比較条件を揃える。ゲーム本編の魚データは別途維持する。
 - 画面の完成度チェックは、Godot で `tools/fishing_fight_preview.gd` のキャプチャを取り、`tools/build_fight_comparison_html.py` でリファレンスと横並び比較する。
@@ -87,8 +88,8 @@
 
 ## 次に本番化する素材
 
-1. `sidebar_frame.png` の内側カード余白を作り直す。魚カードを最優先にし、行動/タックルの下段カードはミニチュアUIに見えない情報量へ抑える。
-2. `fight_hud_frame.png` の次パスで、上段ゲージをより一体化し、下段カードとの縦間隔を詰める。
-3. 日本語ピクセル/ゲームUIフォントを確定し、上部ステータス、HUD、右パネルの文字階層を作り直す。
+1. 日本語ピクセル/ゲームUIフォントを確定し、上部ステータス、HUD、右パネルの文字階層を作り直す。現在の `MPLUS1p-Regular.ttf` だけでは見出しと数値の太さが足りない。
+2. `sidebar_frame.png` をもう一段クリーンにする。現状は二重枠破綻は解消したが、黒/金の外枠が重く、行動/タックルの下段カードはまだ狭い。
+3. `fight_hud_frame.png` の線ノイズを減らし、下段カードを一体化した操作盤として作り直す。
 4. クロダイとヒット演出の最終アートパスを行う。魚はもう少し横長にし、ヒットバッジは参照の外形へさらに寄せる。
 5. 泡、光粒、魚影を個別スプライトまたは CPUParticles2D に分離する。

@@ -109,11 +109,15 @@ func _build_screen() -> void:
 	_fight_hud.harbor_pressed.connect(func() -> void: navigate("harbor"))
 	left_column.add_child(_fight_hud)
 
-	var info_panel := make_panel()
-	info_panel.custom_minimum_size = Vector2(300, 0)
+	var info_panel := MarginContainer.new()
+	info_panel.custom_minimum_size = Vector2(306, 0)
 	info_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	info_panel.size_flags_stretch_ratio = 0.0
 	info_panel.clip_contents = true
+	info_panel.add_theme_constant_override("margin_left", 0)
+	info_panel.add_theme_constant_override("margin_top", 0)
+	info_panel.add_theme_constant_override("margin_right", 0)
+	info_panel.add_theme_constant_override("margin_bottom", 0)
 	body.add_child(info_panel)
 	var info_box := VBoxContainer.new()
 	info_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
