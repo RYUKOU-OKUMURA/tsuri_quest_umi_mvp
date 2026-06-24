@@ -42,6 +42,7 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 - Reduced `underwater_color_grade.png`, `underwater_seabed_detail.png`, and `underwater_foreground_ambience.png` draw opacity in `UnderwaterView` so the old generated-background helper layers no longer create a gray film over the reference-derived base.
 - Replaced the earlier procedural lower/right detail and right-reef patch approach with the full-window extraction path. This preserves the reference's actual left rock pile, right reef, seabed caustics, bubble rhythm, and distant fish, while broad masks prevent the original fish/hit/line/lure from doubling behind the runtime art.
 - Added a reference-derived center texture pass inside `tools/build_reference_underwater_background.py`. The pass reuses side seabed/water pixels and subtle caustic strokes inside the masked fish/hit zone, reducing the smooth circular clean-water patch without reintroducing the original reference fish, hit text, lure, or line.
+- Reduced `hit_burst.png` ray/glint density in `tools/process_underwater_fish_assets.py`, so the hit badge throws fewer bright blue-white lines across the center water and competes less with the live `ヒット！` text.
 - Regenerated `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png`.
 
 ## Findings
@@ -78,9 +79,9 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 - [P3] Hit treatment is close, with only final context polish remaining.
   Location: `assets/showcase/underwater/hit_burst.png`, `src/ui/components/underwater_view.gd`.
-  Evidence: the badge now reads as a darker blue splash with reduced white rays/flecks behind the yellow/orange live text, and its lower edge sits closer to the top of the operation board. It still differs slightly from the reference starburst silhouette and text optical weight.
-  Impact: the hit moment is no longer a major art-style mismatch; the remaining work is small visual context tuning.
-  Fix: keep the current darker badge, then revisit only if the final HUD/font pass makes the overlap or brightness feel off again.
+  Evidence: the badge now reads as a darker blue splash with fewer white rays/flecks behind the yellow/orange live text, and its lower edge sits closer to the top of the operation board. A rejected midwater-detail experiment made the center read like pasted residue, so that direction was not kept; the latest `/tmp/tsuri_fish_hit_focus.png` keeps the stable background and only quiets the hit badge's internal line noise. It still differs slightly from the reference starburst silhouette and text optical weight.
+  Impact: the hit moment is less noisy and competes less with the fish/background. It is no longer a major art-style mismatch, but it is still not a perfect match to the reference badge.
+  Fix: keep the quieter ray/glint density. Revisit only after the final background center paintover and HUD/font pass, because the badge's ideal strength depends on the final water density underneath it.
 
 - [P2] Typography is improved but still not at the reference's custom UI quality.
   Location: all fight UI overlay text.

@@ -14,7 +14,7 @@
 
 ## 現在素材の扱い
 
-`tools/generate_underwater_showcase_assets.py` で生成した初期 PNG は、素材ベース表示の技術検証用であり、完成方向の土台ではない。現在の `underwater_battle_bg.png` は `tools/build_reference_underwater_background.py` で、`reference/02_underwater_fight_mockup.png` の水中窓全体から抽出したリファレンス由来の背景パスである。魚、ヒット演出、糸、ルアーが入る領域は広めにマスクして水色面で埋め、左右の岩場、海藻、泡、遠景魚、水面光、海底光は参照画像の実ピクセルを残す。中央の補完面には、参照画像の左右海底/水中ピクセルと薄い水底光を再合成し、丸い塗りつぶし跡を弱める。ただしこれは完成背景ではなく、本番では中央マスク領域の水中/水底をさらに描き込む。旧生成背景ソース `tools/source_assets/underwater_battle_bg_source.png` と `tools/enhance_underwater_battle_bg.py` は、リファレンス抽出が使えない場合の代替パスとして残す。`kurodai_showcase_sheet.png` はリファレンス魚の切り出しを背景抽出して作った高品質パスである。右カードでは泳ぎ用シートを直接描かず、紙背景に焼き込んだ `kurodai_card_portrait.png` を使う。`hit_burst.png` は `tools/process_underwater_fish_assets.py` で青い水しぶき素材として再生成し、暖色は Godot 側の「ヒット！」文字だけに寄せている。画面全体の品質判定は引き続き `reference/02_underwater_fight_mockup.png` との横並び比較で行う。
+`tools/generate_underwater_showcase_assets.py` で生成した初期 PNG は、素材ベース表示の技術検証用であり、完成方向の土台ではない。現在の `underwater_battle_bg.png` は `tools/build_reference_underwater_background.py` で、`reference/02_underwater_fight_mockup.png` の水中窓全体から抽出したリファレンス由来の背景パスである。魚、ヒット演出、糸、ルアーが入る領域は広めにマスクして水色面で埋め、左右の岩場、海藻、泡、遠景魚、水面光、海底光は参照画像の実ピクセルを残す。中央の補完面には、参照画像の左右海底/水中ピクセルと薄い水底光を再合成し、丸い塗りつぶし跡を弱める。ただしこれは完成背景ではなく、本番では中央マスク領域の水中/水底をさらに描き込む。旧生成背景ソース `tools/source_assets/underwater_battle_bg_source.png` と `tools/enhance_underwater_battle_bg.py` は、リファレンス抽出が使えない場合の代替パスとして残す。`kurodai_showcase_sheet.png` はリファレンス魚の切り出しを背景抽出して作った高品質パスである。右カードでは泳ぎ用シートを直接描かず、紙背景に焼き込んだ `kurodai_card_portrait.png` を使う。`hit_burst.png` は `tools/process_underwater_fish_assets.py` で青い水しぶき素材として再生成し、暖色は Godot 側の「ヒット！」文字だけに寄せている。ヒットバッジは主役魚と文字を邪魔しないよう、白い放射線や泡粒を入れすぎない。画面全体の品質判定は引き続き `reference/02_underwater_fight_mockup.png` との横並び比較で行う。
 
 `sidebar_frame.png`、`top_status_frame.png`、`fight_hud_frame.png` は、生成素材の金飾りが強すぎたため `tools/generate_underwater_ui_frame_assets.py` で参照画像寄りの紙カード/濃紺ゲージ台として作り直している。これは最終美術素材ではなく、文字・ゲージ・アイコンが破綻しない完成寄りの枠素材スロットである。`FishingScreen` では右サイドバー外側の汎用パネルを外し、専用 `sidebar_frame.png` が直接画面に出るようにしている。現行の生成ルールでは `_draw_clean_card()` を使い、黒い太枠・鋲・強い金線を減らして、参照画像の紙カード寄りに軽量化している。
 
@@ -77,7 +77,7 @@
 | `assets/showcase/underwater/kurodai_chroma_source.png` | クロダイ中間素材 | リファレンス魚の切り出しを ImageGen で背景抽出 | フラットなマゼンタ背景、単体魚または横4フレーム |
 | `assets/showcase/underwater/kurodai_showcase_sheet.png` | クロダイ | `tools/process_underwater_fish_assets.py` で生成 | 透明背景、横 4 フレーム、全フレーム同サイズ |
 | `assets/showcase/underwater/kurodai_card_portrait.png` | 右カード用クロダイ | `tools/process_underwater_fish_assets.py` で生成 | 紙背景に魚を合成、620x330 前後のカード窓比率、暗い矩形を出さず、魚が紙窓の主役として大きく読める |
-| `assets/showcase/underwater/hit_burst.png` | ヒット演出 | `tools/process_underwater_fish_assets.py` で生成 | 濃紺の水しぶき、透明背景、文字は含めない |
+| `assets/showcase/underwater/hit_burst.png` | ヒット演出 | `tools/process_underwater_fish_assets.py` で生成 | 濃紺の水しぶき、透明背景、文字は含めない、白い放射線と泡粒は控えめにする |
 | `assets/showcase/underwater/sidebar_frame.png` | 右パネルフレーム | `tools/generate_underwater_ui_frame_assets.py` で生成 | テキストなし、魚なし、縦長フレームとして全面表示 |
 | `assets/showcase/underwater/top_status_frame.png` | 上部ステータスバー | `tools/generate_underwater_ui_frame_assets.py` で生成 | テキストなし、横長フレームとして全面表示 |
 | `assets/showcase/underwater/top_status_icon_sheet.png` | 上部ステータス専用アイコン | `tools/extract_top_status_icons.py` で参照画像から抽出・透明化 | 4セル横並び、時計/太陽/風/コイン、上部カードで潰れず読める |
@@ -123,5 +123,5 @@
 1. `sidebar_frame.png` は右パネル幅拡張、魚カード用 `kurodai_card_portrait.png` 分離、魚カード見出しの紙プラーク化、紙面の内部構造追加、行動文の意味改行、行動/タックル下段カード専用アイコン追加、下段カード本文の短縮、余白調整、アイコン枠/本文プラーク分離まで完了。`kurodai_card_portrait.png` は魚の占有率を上げ、カード内の空白感を減らした。行動/タックル下段カードは、本文を大きくし、アイコン占有を抑え、タックル本文を2行に圧縮し、紙スロット上端に干渉しないベースラインへ調整済み。次は全体比較で右パネルが再び浮く場合だけ小さく調整する。
 2. `fight_hud_frame.png` の上段は深度プレート強化、暗色化、HUDアイコン縮小/低透過化、右ラベル余白調整、メーター格子弱化、未充填セグメント表示とハイライト/影追加まで完了。下段はエサ/操作/メニューの紙タイトル帯、本文スロット、濃紺メニュー行、操作ヒントの3スロット化、A/B/LRキー配置の整列まで完了。次は最終比較でまだ機械的に見える場合だけ全体比率と小文字の詰めを行う。
 3. 上部ステータスの地点カードは参照に合わせてアイコンなし中央寄せに修正済み。`top_status_frame.png` は紙カード内枠、角金具、濃紺地点カードの内装追加まで完了。上部アイコン群は `top_status_icon_sheet.png` に分離し、時計/太陽/風/コインが潰れない状態まで改善済み。`FightStatusBar` は左ファイトカラム内へ移動し、右パネルヘッダーが上端から始まる構造に修正済み。カード比率は天候/所持金を広げ、地点カードを締める方向へ調整済み。文字ベースラインと数値の光学サイズも調整し、所持金は小ラベルを外して金額を大きく読ませる状態まで改善済み。次に詰めるなら、背景または右パネルの本番素材差分が埋まったあとに最終比較で微調整する。
-4. ヒット演出は白い放射線と下端の重なりを調整済み。最終 HUD/フォント調整後に比較だけ再確認する。
+4. ヒット演出は白い放射線、泡粒、下端の重なりを調整済み。青白い線が背景ノイズに見えないよう、`hit_burst.png` 側の ray/glint 密度は控えめにしている。最終 HUD/フォント調整後に比較だけ再確認する。
 5. 泡、光粒、魚影は `underwater_foreground_ambience.png` と `UnderwaterView` の補助光粒として追加済み。背景の均一な明るさは `underwater_color_grade.png` で少し締め、海底/左右の密度は `underwater_seabed_detail.png` で補っている。`underwater_battle_bg.png` 本体は `tools/build_reference_underwater_background.py` でリファレンス水中窓全体から抽出し、主役魚/ヒット/糸/ルアー部分をマスク補完して再生成済み。左右岩場、海藻、泡、遠景魚、海底光は参照画像の実ピクセルを残すため、旧生成背景や右端だけのパッチより密度が高い。中央補完面には参照由来の左右海底/水中テクスチャと薄い水底光を戻し、丸い塗り跡を弱めている。参照抽出背景に合わせ、`UnderwaterView` 側では色調整/海底補助/前景 ambience の opacity を下げて灰色の膜を避けている。`UnderwaterView` は LINEAR フィルタで showcase テクスチャを描画し、背景の縮小時の硬さを抑える。次に背景を詰める場合は、中央マスク領域を最終ラスタとして描き込み、参照中央の水底/水中密度へ近づける。

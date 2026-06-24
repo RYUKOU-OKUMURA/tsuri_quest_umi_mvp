@@ -191,35 +191,35 @@ def create_hit_burst() -> None:
     # Layered blue splash body. Keep the warm color for the live Godot text, not
     # the asset, so the badge reads like water instead of an orange sticker.
     d.polygon(outer, fill=_rgba("#061a3a", 248))
-    d.line(outer + [outer[0]], fill=_rgba("#1b5b90", 220), width=8 * scale, joint="curve")
-    d.line(outer + [outer[0]], fill=_rgba("#8ce7ff", 188), width=3 * scale, joint="curve")
+    d.line(outer + [outer[0]], fill=_rgba("#1b5b90", 204), width=7 * scale, joint="curve")
+    d.line(outer + [outer[0]], fill=_rgba("#8ce7ff", 120), width=2 * scale, joint="curve")
     d.polygon(inner, fill=_rgba("#083765", 240))
-    d.line(inner + [inner[0]], fill=_rgba("#4fbdea", 164), width=3 * scale, joint="curve")
+    d.line(inner + [inner[0]], fill=_rgba("#4fbdea", 112), width=2 * scale, joint="curve")
     d.polygon(core, fill=_rgba("#0b4f84", 222))
 
-    for i in range(20):
-        angle = -math.pi + i * math.tau / 20
+    for i in range(12):
+        angle = -math.pi + i * math.tau / 12
         x0 = cx + math.cos(angle) * (45 + (i % 4) * 5) * scale
         y0 = cy + math.sin(angle) * (10 + (i % 3) * 2) * scale
-        x1 = cx + math.cos(angle) * (142 + (i % 5) * 13) * scale
-        y1 = cy + math.sin(angle) * (28 + (i % 4) * 5) * scale
-        d.line((x0, y0, x1, y1), fill=(205, 246, 255, 78), width=max(1, 2 * scale))
+        x1 = cx + math.cos(angle) * (118 + (i % 5) * 11) * scale
+        y1 = cy + math.sin(angle) * (24 + (i % 4) * 4) * scale
+        d.line((x0, y0, x1, y1), fill=(205, 246, 255, 40), width=max(1, 1 * scale))
 
     # Tiny foam flecks and glints.
-    for i in range(28):
-        angle = i * math.tau / 28
-        radius = (128 + (i % 6) * 15) * scale
+    for i in range(18):
+        angle = i * math.tau / 18
+        radius = (118 + (i % 6) * 13) * scale
         x = cx + math.cos(angle) * radius
         y = cy + math.sin(angle) * radius * 0.31
-        r = (2 + i % 3) * scale
-        d.ellipse((x - r, y - r, x + r, y + r), fill=(236, 255, 255, 122))
-    for i in range(5):
-        x = cx + (-86 + i * 43) * scale
+        r = (1.5 + i % 2) * scale
+        d.ellipse((x - r, y - r, x + r, y + r), fill=(236, 255, 255, 82))
+    for i in range(3):
+        x = cx + (-52 + i * 52) * scale
         y = cy + (-38 + (i % 3) * 18) * scale
         d.line(
             (x - 12 * scale, y + 5 * scale, x + 14 * scale, y - 6 * scale),
-            fill=(255, 255, 255, 84),
-            width=2 * scale,
+            fill=(255, 255, 255, 46),
+            width=1 * scale,
         )
 
     image = image.resize((w, h), Image.Resampling.LANCZOS)
