@@ -8,6 +8,8 @@ const FISH_SHEET_PATH := "res://assets/showcase/underwater/kurodai_showcase_shee
 const FISH_CARD_PORTRAIT_PATH := "res://assets/showcase/underwater/kurodai_card_portrait.png"
 const SIDEBAR_FRAME_PATH := "res://assets/showcase/underwater/sidebar_frame.png"
 const ICON_SHEET_PATH := "res://assets/showcase/underwater/fight_icon_sheet.png"
+const ACTION_CARD_ICON_PATH := "res://assets/showcase/underwater/fight_action_card_icon.png"
+const TACKLE_CARD_ICON_PATH := "res://assets/showcase/underwater/fight_tackle_card_icon.png"
 const FISH_FRAME_COUNT := 4
 const ICON_ACTION := 7
 const ICON_TACKLE := 8
@@ -20,6 +22,8 @@ var _fish_sheet: Texture2D
 var _fish_card_portrait: Texture2D
 var _sidebar_frame: Texture2D
 var _icons: Texture2D
+var _action_card_icon: Texture2D
+var _tackle_card_icon: Texture2D
 
 
 func bind(value: FishingSimulator, fish: Dictionary, stats: Dictionary) -> void:
@@ -45,6 +49,10 @@ func _ready() -> void:
 		_sidebar_frame = load(SIDEBAR_FRAME_PATH) as Texture2D
 	if ResourceLoader.exists(ICON_SHEET_PATH):
 		_icons = load(ICON_SHEET_PATH) as Texture2D
+	if ResourceLoader.exists(ACTION_CARD_ICON_PATH):
+		_action_card_icon = load(ACTION_CARD_ICON_PATH) as Texture2D
+	if ResourceLoader.exists(TACKLE_CARD_ICON_PATH):
+		_tackle_card_icon = load(TACKLE_CARD_ICON_PATH) as Texture2D
 
 
 func _process(_delta: float) -> void:
@@ -136,11 +144,11 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 	if simulator != null:
 		action = simulator.action_name
 		message = simulator.action_message
-	var icon_size := 50.0 if _sidebar_frame != null else 58.0
-	_draw_action_icon(body.position + Vector2(34.0, body.size.y * 0.54), icon_size)
-	_draw_text(font, "%s！" % action, body.position + Vector2(72.0, 28.0), 22 if _sidebar_frame != null else 20, Color("#2b2117"), 0)
+	var icon_size := 48.0 if _sidebar_frame != null else 58.0
+	_draw_action_icon(body.position + Vector2(36.0, body.size.y * 0.54), icon_size)
+	_draw_text(font, "%s！" % action, body.position + Vector2(78.0, 28.0), 22 if _sidebar_frame != null else 20, Color("#2b2117"), 0)
 	if _sidebar_frame != null:
-		_draw_action_message(font, message, body.position + Vector2(72.0, 36.0), body.size.x - 92.0)
+		_draw_action_message(font, message, body.position + Vector2(78.0, 36.0), body.size.x - 100.0)
 	else:
 		_draw_wrapped(font, message, body.position + Vector2(72.0, 36.0), body.size.x - 82.0, 11, Palette.TEXT_DARK, 2)
 
@@ -153,7 +161,7 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.30), rect.size - Vector2(28.0, rect.size.y * 0.37))
 	_draw_panel(body, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	var rod_name := String(trip_stats.get("rod_name", "港の入門竿"))
-	var text_width := body.size.x - (74.0 if _icons != null else 12.0)
+	var text_width := body.size.x - (88.0 if _tackle_card_icon != null or _icons != null else 12.0)
 	var lines: Array[String] = [
 		"ロッド：%s" % _short_rod_name(rod_name),
 		"リール：小型スピニング",
@@ -163,8 +171,8 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	var tackle_line_gap := 14.0 if _sidebar_frame != null else 16.0
 	for i in range(lines.size()):
 		_draw_wrapped(font, lines[i], body.position + Vector2(12.0, 6.0 + float(i) * tackle_line_gap), text_width, tackle_font_size, Palette.TEXT_DARK, 1)
-	if _icons != null:
-		_draw_tackle_icon(Rect2(body.end - Vector2(64.0, 64.0), Vector2(56.0, 56.0)))
+	if _tackle_card_icon != null or _icons != null:
+		_draw_tackle_icon(Rect2(body.end - Vector2(62.0, 62.0), Vector2(52.0, 52.0)))
 	else:
 		_draw_simple_rod(body.position + Vector2(body.size.x - 62.0, body.size.y - 24.0))
 
@@ -270,6 +278,9 @@ func _draw_fish_portrait(rect: Rect2) -> void:
 
 
 func _draw_action_icon(center: Vector2, size_value: float = 58.0) -> void:
+	if _action_card_icon != null:
+		_draw_texture_centered(_action_card_icon, center, Vector2(size_value, size_value))
+		return
 	if _icons != null:
 		_draw_sheet_icon(ICON_ACTION, Rect2(center - Vector2(size_value, size_value) * 0.5, Vector2(size_value, size_value)))
 		return
@@ -304,9 +315,20 @@ func _draw_simple_rod(base: Vector2) -> void:
 
 
 func _draw_tackle_icon(rect: Rect2) -> void:
+	if _tackle_card_icon != null:
+		_draw_texture_centered(_tackle_card_icon, rect.position + rect.size * 0.5, rect.size)
+		return
 	if _icons == null:
 		return
 	_draw_sheet_icon(ICON_TACKLE, rect)
+
+
+func _draw_texture_centered(texture: Texture2D, center: Vector2, max_size: Vector2) -> void:
+	var tex_size := texture.get_size()
+	var scale := minf(max_size.x / tex_size.x, max_size.y / tex_size.y)
+	var draw_size := tex_size * scale
+	var rect := Rect2(center - draw_size * 0.5, draw_size)
+	draw_texture_rect(texture, rect, false, Color.WHITE)
 
 
 func _display_fish_name(name: String) -> String:

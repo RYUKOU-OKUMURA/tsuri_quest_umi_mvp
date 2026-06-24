@@ -9,6 +9,7 @@ from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "assets" / "showcase" / "underwater"
+ICON_SHEET = OUT_DIR / "fight_icon_sheet.png"
 
 
 def _rgba(hex_value: str, alpha: int = 255) -> tuple[int, int, int, int]:
@@ -45,6 +46,25 @@ def _rounded_mask(size: tuple[int, int], radius: int) -> Image.Image:
     mask = Image.new("L", size, 0)
     ImageDraw.Draw(mask).rounded_rectangle((0, 0, size[0] - 1, size[1] - 1), radius=radius, fill=255)
     return mask
+
+
+def _content_bbox(image: Image.Image) -> tuple[int, int, int, int]:
+    alpha = image.getchannel("A")
+    bbox = alpha.point(lambda value: 255 if value > 18 else 0).getbbox()
+    if bbox is None:
+        return (0, 0, image.width, image.height)
+    x0, y0, x1, y1 = bbox
+    pad = max(10, int(max(x1 - x0, y1 - y0) * 0.05))
+    return (max(0, x0 - pad), max(0, y0 - pad), min(image.width, x1 + pad), min(image.height, y1 + pad))
+
+
+def _draw_paper_inset(d: ImageDraw.ImageDraw, box: tuple[int, int, int, int], *, alpha: int = 42) -> None:
+    x0, y0, x1, y1 = box
+    warm = max(0, min(18, alpha // 3))
+    fill = (255 - warm, 250 - warm, 232 - warm, 255)
+    d.rounded_rectangle((x0, y0, x1, y1), radius=7, fill=fill, outline=_rgba("#b89b64", 92), width=1)
+    d.line((x0 + 12, y0 + 13, x1 - 12, y0 + 13), fill=_rgba("#ffffff", 82), width=1)
+    d.line((x0 + 12, y1 - 12, x1 - 12, y1 - 12), fill=_rgba("#7c592d", 46), width=1)
 
 
 def _draw_card(
@@ -208,6 +228,42 @@ def create_top_status_frame() -> None:
     image.save(OUT_DIR / "top_status_frame.png")
 
 
+def _create_sidebar_card_icon(icon_index: int, filename: str, *, seed: int) -> None:
+    if not ICON_SHEET.exists():
+        return
+    sheet = Image.open(ICON_SHEET).convert("RGBA")
+    cell_w = sheet.width // 3
+    cell_h = sheet.height // 3
+    col = icon_index % 3
+    row = icon_index // 3
+    raw = sheet.crop((col * cell_w, row * cell_h, (col + 1) * cell_w, (row + 1) * cell_h))
+    crop = raw.crop(_content_bbox(raw))
+
+    canvas = _texture((168, 150), "#f3e7cd", seed, strength=5)
+    d = ImageDraw.Draw(canvas)
+    d.rounded_rectangle((3, 3, 164, 146), radius=14, outline=_rgba("#8c6733", 190), width=3)
+    d.rounded_rectangle((11, 11, 156, 138), radius=10, outline=_rgba("#d8b45d", 112), width=1)
+    d.ellipse((38, 104, 130, 128), fill=(216, 199, 160, 255))
+
+    max_w = 116
+    max_h = 102
+    scale = min(max_w / crop.width, max_h / crop.height)
+    resized = crop.resize((round(crop.width * scale), round(crop.height * scale)), Image.Resampling.LANCZOS)
+    # The source icon sheet is intentionally ornate; card icons are calmer and
+    # slightly translucent so text remains the focus.
+    alpha = resized.getchannel("A").point(lambda value: int(value * 0.86))
+    resized.putalpha(alpha)
+    x = (canvas.width - resized.width) // 2
+    y = (canvas.height - resized.height) // 2 - 4
+    canvas.alpha_composite(resized, (x, y))
+    canvas.save(OUT_DIR / filename)
+
+
+def create_sidebar_card_icons() -> None:
+    _create_sidebar_card_icon(7, "fight_action_card_icon.png", seed=90)
+    _create_sidebar_card_icon(8, "fight_tackle_card_icon.png", seed=91)
+
+
 def create_sidebar_frame() -> None:
     w, h = 678, 1024
     image = Image.new("RGBA", (w, h), (0, 0, 0, 0))
@@ -254,13 +310,7 @@ def create_sidebar_frame() -> None:
     for panel, body in ((action, action_body), (tackle, tackle_body)):
         d.line((panel[0] + 26, panel[1] + 45, panel[2] - 26, panel[1] + 45), fill=_rgba("#e0bd62", 126), width=2)
         d.line((panel[0] + 28, panel[1] + 50, panel[2] - 28, panel[1] + 50), fill=_rgba("#07121b", 105), width=1)
-        d.rounded_rectangle(
-            (body[0] + 14, body[1] + 14, body[0] + 92, body[3] - 14),
-            radius=9,
-            fill=(255, 251, 233, 22),
-            outline=_rgba("#b89b64", 50),
-            width=1,
-        )
+        _draw_paper_inset(d, (body[0] + 14, body[1] + 14, body[0] + 92, body[3] - 14), alpha=34)
         for y in (body[1] + 35, body[1] + 64, body[1] + 93):
             d.line((body[0] + 112, y, body[2] - 24, y), fill=_rgba("#b89b64", 14), width=1)
         _draw_corner_brackets(d, body, length=24, inset=9, color="#a77d3b", alpha=115, width=1)
@@ -405,6 +455,8 @@ def create_fight_hud_frame() -> None:
         texture_strength=5,
         shadow=False,
     )
+    _draw_paper_inset(d, (bait_panel[0] + 12, bait_panel[1] + 12, bait_panel[2] - 12, bait_panel[1] + 44), alpha=30)
+    _draw_paper_inset(d, (bait_panel[0] + 70, bait_panel[1] + 50, bait_panel[2] - 18, bait_panel[3] - 16), alpha=24)
     _draw_clean_card(
         image,
         hint_panel,
@@ -416,6 +468,10 @@ def create_fight_hud_frame() -> None:
         texture_strength=5,
         shadow=False,
     )
+    _draw_paper_inset(d, (hint_panel[0] + 14, hint_panel[1] + 12, hint_panel[2] - 14, hint_panel[1] + 44), alpha=28)
+    for i in range(3):
+        x = hint_panel[0] + 34 + i * 210
+        d.rounded_rectangle((x, hint_panel[1] + 54, x + 172, hint_panel[3] - 18), radius=8, fill=(255, 251, 233, 20), outline=_rgba("#b89b64", 34), width=1)
     _draw_clean_card(
         image,
         menu_panel,
@@ -441,6 +497,7 @@ def create_fight_hud_frame() -> None:
 
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
+    create_sidebar_card_icons()
     create_sidebar_frame()
     create_top_status_frame()
     create_fight_hud_frame()

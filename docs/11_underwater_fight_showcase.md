@@ -53,6 +53,8 @@
    下部操作盤の一体型フレーム素材。ゲージ色、現在位置、操作文字、エサ情報は Godot 側で重ねる。
 11. `fight_icon_sheet.png`
    時計、天候、風、コイン、テンション、魚体力、エサ、行動、タックルの共通アイコンシート。3x3 グリッドで各 UI が同じ素材を参照する。
+12. `fight_action_card_icon.png` / `fight_tackle_card_icon.png`
+   右パネル下段カード専用の小型アイコン。共通アイコンシートをそのまま縮小すると装飾が強く、カード本文を圧迫するため、紙カード上に整えた別素材として使う。
 
 ## 最小素材セット
 
@@ -67,6 +69,8 @@
 | `assets/showcase/underwater/top_status_frame.png` | 上部ステータスバー | `tools/generate_underwater_ui_frame_assets.py` で生成 | テキストなし、横長フレームとして全面表示 |
 | `assets/showcase/underwater/fight_hud_frame.png` | 下部操作盤フレーム | `tools/generate_underwater_ui_frame_assets.py` で生成 | テキストなし、左カラム幅の二段HUDとして全面表示 |
 | `assets/showcase/underwater/fight_icon_sheet.png` | 共通機能アイコン | 生成 UI 素材 | 透明 PNG、3x3 グリッド、各セル同サイズ |
+| `assets/showcase/underwater/fight_action_card_icon.png` | 右パネル行動カードアイコン | `tools/generate_underwater_ui_frame_assets.py` で生成 | 紙カード背景つき、本文を圧迫しない小型表示 |
+| `assets/showcase/underwater/fight_tackle_card_icon.png` | 右パネルタックルカードアイコン | `tools/generate_underwater_ui_frame_assets.py` で生成 | 紙カード背景つき、本文を圧迫しない小型表示 |
 | `assets/fonts/MPLUS1p-Bold.ttf` | 水中ファイト主要UIフォント | Google Fonts の M PLUS 1p Bold | OFL同梱、見出し/数値/ヒット文字用 |
 | `assets/fonts/OFL-MPLUS1p.txt` | M PLUS 1p ライセンス | Google Fonts 由来 | フォント更新時も保持 |
 
@@ -79,6 +83,7 @@
 - `FightHud` は画面全幅ではなく左カラム内に置き、`fight_hud_frame.png` の上にゲージ色、現在位置、深度、操作文字を重ねる。
 - `FightStatusBar`、`FightHud`、`FightSidebar` は `fight_icon_sheet.png` の3x3セルを使い、コード描画アイコンを本番素材へ置き換える。
 - `FightSidebar` の魚カードだけは、泳ぎ用の `kurodai_showcase_sheet.png` ではなく `kurodai_card_portrait.png` を優先する。泳ぎ用シートを拡大するとカード上で暗い矩形が出るため、カード用素材を分ける。
+- `FightSidebar` の行動/タックル小カードは `fight_action_card_icon.png` / `fight_tackle_card_icon.png` を優先する。共通アイコンシートは大きな装飾を含むため、右下段カードではカード専用にトリミングした素材を使う。
 - `FightStatusBar`、`FightHud`、`FightSidebar`、`UnderwaterView` のヒット文字は `src/ui/fight_fonts.gd` から水中ファイト専用の太字フォントを読み込む。
 - 右パネルは汎用 `make_panel()` の中に入れず、`FightSidebar` の専用フレームを直接表示する。二重枠にするとサイドバー素材が縮み、参照画像のカード品質から離れるため。
 - `UnderwaterView` は主役魚とヒット演出のスケールを参照画像寄りに抑え、深度目盛りは背景に馴染む低コントラスト表示にする。
@@ -97,8 +102,8 @@
 
 ## 次に本番化する素材
 
-1. `sidebar_frame.png` は右パネル幅拡張、魚カード用 `kurodai_card_portrait.png` 分離、紙面の内部構造追加、行動文の意味改行まで完了。次は行動/タックル下段カードのアイコン処理と本文密度を詰める。
-2. `fight_hud_frame.png` の上段は深度プレート強化、暗色化、HUDアイコン縮小/低透過化、右ラベル余白調整、メーター格子弱化まで完了。次は下段エサ/操作/メニューカードの奥行きを詰める。
+1. `sidebar_frame.png` は右パネル幅拡張、魚カード用 `kurodai_card_portrait.png` 分離、紙面の内部構造追加、行動文の意味改行、行動/タックル下段カード専用アイコン追加まで完了。次は本文密度と小カード内の余白を詰める。
+2. `fight_hud_frame.png` の上段は深度プレート強化、暗色化、HUDアイコン縮小/低透過化、右ラベル余白調整、メーター格子弱化まで完了。下段はエサ/操作カードの紙面段差追加まで完了。次は操作ヒントのキー配置を詰める。
 3. 上部ステータスの地点カードは参照に合わせてアイコンなし中央寄せに修正済み。上部アイコン群は縮小/低透過化済みで、差し替えは最終比較でまだ装飾過多に見える場合だけ行う。
 4. ヒット演出は白い放射線と下端の重なりを調整済み。最終 HUD/フォント調整後に比較だけ再確認する。
 5. 泡、光粒、魚影を個別スプライトまたは CPUParticles2D に分離する。
