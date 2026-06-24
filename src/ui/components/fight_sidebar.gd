@@ -151,12 +151,12 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 	if simulator != null:
 		action = simulator.action_name
 		message = simulator.action_message
-	var icon_size := 40.0 if _sidebar_frame != null else 58.0
-	var text_x := 70.0 if _sidebar_frame != null else 78.0
+	var icon_size := 38.0 if _sidebar_frame != null else 58.0
+	var text_x := 68.0 if _sidebar_frame != null else 78.0
 	_draw_action_icon(body.position + Vector2(34.0, body.size.y * 0.55), icon_size)
-	_draw_text(font, "%s！" % action, body.position + Vector2(text_x, 24.0), 21 if _sidebar_frame != null else 20, Color("#2b2117"), 0)
+	_draw_text(font, "%s！" % action, body.position + Vector2(text_x, 25.0), 22 if _sidebar_frame != null else 20, Color("#2b2117"), 0)
 	if _sidebar_frame != null:
-		_draw_action_message(font, message, body.position + Vector2(text_x, 31.0), body.size.x - text_x - 12.0)
+		_draw_action_message(font, message, body.position + Vector2(text_x, 33.0), body.size.x - text_x - 10.0)
 	else:
 		_draw_wrapped(font, message, body.position + Vector2(72.0, 36.0), body.size.x - 82.0, 11, Palette.TEXT_DARK, 2)
 
@@ -169,18 +169,17 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.305), rect.size - Vector2(28.0, rect.size.y * 0.37))
 	_draw_panel(body, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	var rod_name := _short_rod_name(String(trip_stats.get("rod_name", "港の入門竿")))
-	var text_width := body.size.x - (76.0 if _tackle_card_icon != null or _icons != null else 12.0)
+	var text_width := body.size.x - (72.0 if _tackle_card_icon != null or _icons != null else 12.0)
 	var lines: Array[String] = [
 		"ロッド：%s" % rod_name,
-		"リール：小型 / 糸：3号",
-		"針：チヌ",
+		"小型リール・糸3号・チヌ針",
 	]
-	var tackle_font_size := 13 if _sidebar_frame != null else 12
-	var tackle_line_gap := 15.5 if _sidebar_frame != null else 16.0
+	var tackle_font_size := 15 if _sidebar_frame != null else 12
+	var tackle_line_gap := 20.0 if _sidebar_frame != null else 16.0
 	for i in range(lines.size()):
-		_draw_wrapped(font, lines[i], body.position + Vector2(12.0, 6.0 + float(i) * tackle_line_gap), text_width, tackle_font_size, Palette.TEXT_DARK, 1, tackle_font_size + 2.5)
+		_draw_wrapped(font, lines[i], body.position + Vector2(12.0, 9.0 + float(i) * tackle_line_gap), text_width, tackle_font_size, Palette.TEXT_DARK, 1, tackle_font_size + 3.0)
 	if _tackle_card_icon != null or _icons != null:
-		_draw_tackle_icon(Rect2(body.end - Vector2(56.0, 56.0), Vector2(46.0, 46.0)))
+		_draw_tackle_icon(Rect2(body.end - Vector2(54.0, 54.0), Vector2(44.0, 44.0)))
 	else:
 		_draw_simple_rod(body.position + Vector2(body.size.x - 62.0, body.size.y - 24.0))
 
@@ -259,13 +258,15 @@ func _draw_wrapped(
 
 func _draw_action_message(font: Font, text: String, pos: Vector2, max_width: float) -> void:
 	var first_stop := text.find("！")
+	var font_size := 14 if _sidebar_frame != null else 13
+	var gap := 17.2 if _sidebar_frame != null else 16.0
 	if first_stop > 0 and first_stop < text.length() - 1:
 		var first := text.left(first_stop + 1)
 		var second := text.substr(first_stop + 1)
-		_draw_wrapped(font, first, pos, max_width, 13, Palette.TEXT_DARK, 1, 16.0)
-		_draw_wrapped(font, second, pos + Vector2(0.0, 17.0), max_width, 13, Palette.TEXT_DARK, 1, 16.0)
+		_draw_wrapped(font, first, pos, max_width, font_size, Palette.TEXT_DARK, 1, gap)
+		_draw_wrapped(font, second, pos + Vector2(0.0, gap), max_width, font_size, Palette.TEXT_DARK, 1, gap)
 		return
-	_draw_wrapped(font, text, pos, max_width, 13, Palette.TEXT_DARK, 2, 16.0)
+	_draw_wrapped(font, text, pos, max_width, font_size, Palette.TEXT_DARK, 2, gap)
 
 
 func _draw_bullet(font: Font, text: String, pos: Vector2, max_width: float) -> void:
