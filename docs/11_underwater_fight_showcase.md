@@ -14,7 +14,7 @@
 
 ## 現在素材の扱い
 
-`tools/generate_underwater_showcase_assets.py` で生成した初期 PNG は、素材ベース表示の技術検証用であり、完成方向の土台ではない。現在の `underwater_battle_bg.png` は `tools/build_reference_underwater_background.py` で、`reference/02_underwater_fight_mockup.png` の水中窓から抽出したリファレンス由来の背景パスである。魚、ヒット演出、糸、ルアーが入る領域はマスクして水色面で埋め、さらに海底光、右岩場、海藻、小石、遠景魚、参照左岩場をミラーした低透過テクスチャを焼き込んで、runtime のクロダイ/ヒット演出を邪魔しない範囲で密度を戻す。旧生成背景ソース `tools/source_assets/underwater_battle_bg_source.png` と `tools/enhance_underwater_battle_bg.py` は、リファレンス抽出が使えない場合の代替パスとして残す。`kurodai_showcase_sheet.png` はリファレンス魚の切り出しを背景抽出して作った高品質パスである。右カードでは泳ぎ用シートを直接描かず、紙背景に焼き込んだ `kurodai_card_portrait.png` を使う。`hit_burst.png` は `tools/process_underwater_fish_assets.py` で青い水しぶき素材として再生成し、暖色は Godot 側の「ヒット！」文字だけに寄せている。画面全体の品質判定は引き続き `reference/02_underwater_fight_mockup.png` との横並び比較で行う。
+`tools/generate_underwater_showcase_assets.py` で生成した初期 PNG は、素材ベース表示の技術検証用であり、完成方向の土台ではない。現在の `underwater_battle_bg.png` は `tools/build_reference_underwater_background.py` で、`reference/02_underwater_fight_mockup.png` の水中窓から抽出したリファレンス由来の背景パスである。魚、ヒット演出、糸、ルアーが入る領域はマスクして水色面で埋め、さらに海底光、右岩場、海藻、小石、遠景魚、参照左岩場をミラーした低透過テクスチャ、参照画像全体から切り出した右岩場の内容マスク合成を焼き込んで、runtime のクロダイ/ヒット演出を邪魔しない範囲で密度を戻す。旧生成背景ソース `tools/source_assets/underwater_battle_bg_source.png` と `tools/enhance_underwater_battle_bg.py` は、リファレンス抽出が使えない場合の代替パスとして残す。`kurodai_showcase_sheet.png` はリファレンス魚の切り出しを背景抽出して作った高品質パスである。右カードでは泳ぎ用シートを直接描かず、紙背景に焼き込んだ `kurodai_card_portrait.png` を使う。`hit_burst.png` は `tools/process_underwater_fish_assets.py` で青い水しぶき素材として再生成し、暖色は Godot 側の「ヒット！」文字だけに寄せている。画面全体の品質判定は引き続き `reference/02_underwater_fight_mockup.png` との横並び比較で行う。
 
 `sidebar_frame.png`、`top_status_frame.png`、`fight_hud_frame.png` は、生成素材の金飾りが強すぎたため `tools/generate_underwater_ui_frame_assets.py` で参照画像寄りの紙カード/濃紺ゲージ台として作り直している。これは最終美術素材ではなく、文字・ゲージ・アイコンが破綻しない完成寄りの枠素材スロットである。`FishingScreen` では右サイドバー外側の汎用パネルを外し、専用 `sidebar_frame.png` が直接画面に出るようにしている。現行の生成ルールでは `_draw_clean_card()` を使い、黒い太枠・鋲・強い金線を減らして、参照画像の紙カード寄りに軽量化している。
 
@@ -69,7 +69,7 @@
 | ファイル | 役割 | 現在の作り方 | 本番差し替え時の条件 |
 |---|---|---|---|
 | `assets/showcase/underwater/underwater_battle_bg.png` | 水中背景 | `tools/build_reference_underwater_background.py` で参照画像の水中窓から抽出 | 16:9、リファレンスの岩場/泡/水面光を保持し、魚/ヒット/糸/ルアーの残像を背景に残さない |
-| `tools/build_reference_underwater_background.py` | 水中背景ビルダー | 参照画像クロップ、主役/演出マスク、色面補完、参照左岩場のミラー合成、キャンバス拡張、中央/右側の密度焼き込み | 中間PNGを残さず、最終背景だけを決定的に再生成する |
+| `tools/build_reference_underwater_background.py` | 水中背景ビルダー | 参照画像クロップ、主役/演出マスク、色面補完、参照左岩場のミラー合成、参照画像全体からの右岩場内容マスク合成、キャンバス拡張、中央/右側の密度焼き込み | 中間PNGを残さず、最終背景だけを決定的に再生成する |
 | `tools/source_assets/underwater_battle_bg_source.png` | 代替水中背景の元画像 | 旧本番寄り背景PNGの保存元 | Godotインポート対象外、参照抽出を使わない場合の後処理ソース |
 | `assets/showcase/underwater/underwater_color_grade.png` | 背景の奥行き/光調整 | `tools/generate_underwater_foreground_assets.py` で生成 | 透明PNG、外周暗部・海底の締まり・水面光を含み、魚/ヒット演出を覆わない |
 | `assets/showcase/underwater/underwater_seabed_detail.png` | 海底/左右の密度補助 | `tools/generate_underwater_foreground_assets.py` で生成 | 透明PNG、岩場・海藻・サンゴ・水底光を含み、主役魚を邪魔しない |
@@ -104,7 +104,7 @@
 - 右パネルは汎用 `make_panel()` の中に入れず、`FightSidebar` の専用フレームを直接表示する。二重枠にするとサイドバー素材が縮み、参照画像のカード品質から離れるため。
 - `UnderwaterView` は主役魚とヒット演出のスケールを参照画像寄りに抑え、深度目盛りは背景に馴染む低コントラスト表示にする。
 - `UnderwaterView` は `underwater_battle_bg.png` の上に `underwater_color_grade.png`、`underwater_seabed_detail.png`、`underwater_foreground_ambience.png` の順で重ね、追加の光粒だけを動的に描く。参照抽出背景では旧生成背景向けの補助レイヤーが強すぎると灰色の膜に見えるため、色調整、海底補助、前景 ambience は低めの opacity で重ねる。PNG がない場合だけ、コード描画の遠景魚群・泡柱へフォールバックする。
-- `underwater_battle_bg.png` を直接詰める場合は、まず `tools/build_reference_underwater_background.py` を実行して参照画像由来の背景を決定的に再生成する。中央のマスク領域は主役魚とヒット演出で隠れるため、魚の存在感を邪魔しない水色面を基本にしつつ、下端と右側には海底光、岩場、海藻、小石、遠景魚を焼き込んで空白感を抑える。右下の密度は参照クロップの左岩場/海底ピクセルをミラーして低透過・強フェザーで合成し、矩形の貼り付け境界が見えないようにする。参照抽出を使わない代替検証時のみ、`tools/source_assets/underwater_battle_bg_source.png` から `tools/enhance_underwater_battle_bg.py` を実行する。
+- `underwater_battle_bg.png` を直接詰める場合は、まず `tools/build_reference_underwater_background.py` を実行して参照画像由来の背景を決定的に再生成する。中央のマスク領域は主役魚とヒット演出で隠れるため、魚の存在感を邪魔しない水色面を基本にしつつ、下端と右側には海底光、岩場、海藻、小石、遠景魚を焼き込んで空白感を抑える。右下の密度は参照クロップの左岩場/海底ピクセルをミラーして低透過・強フェザーで合成し、さらに参照画像全体の右岩場から暗い岩・海藻・泡だけを内容マスクで抽出して薄く重ねる。矩形の貼り付け境界が見えるほど濃くしない。参照抽出を使わない代替検証時のみ、`tools/source_assets/underwater_battle_bg_source.png` から `tools/enhance_underwater_battle_bg.py` を実行する。
 - `tools/fishing_fight_preview.gd` は参照比較用に `クロダイ / レア / 44.2cm` 相当の固定状態を作り、画面品質の比較条件を揃える。ゲーム本編の魚データは別途維持する。
 - 画面の完成度チェックは、Godot で `tools/fishing_fight_preview.gd` のキャプチャを取り、`tools/build_fight_comparison_html.py` と `tools/build_fight_comparison_images.py` でリファレンスと横並び比較する。
 
@@ -124,4 +124,4 @@
 2. `fight_hud_frame.png` の上段は深度プレート強化、暗色化、HUDアイコン縮小/低透過化、右ラベル余白調整、メーター格子弱化、未充填セグメント表示とハイライト/影追加まで完了。下段はエサ/操作/メニューの紙タイトル帯、本文スロット、濃紺メニュー行、操作ヒントの3スロット化、A/B/LRキー配置の整列まで完了。次は最終比較でまだ機械的に見える場合だけ全体比率と小文字の詰めを行う。
 3. 上部ステータスの地点カードは参照に合わせてアイコンなし中央寄せに修正済み。`top_status_frame.png` は紙カード内枠、角金具、濃紺地点カードの内装追加まで完了。上部アイコン群は `top_status_icon_sheet.png` に分離し、時計/太陽/風/コインが潰れない状態まで改善済み。`FightStatusBar` は左ファイトカラム内へ移動し、右パネルヘッダーが上端から始まる構造に修正済み。カード比率は天候/所持金を広げ、地点カードを締める方向へ調整済み。文字ベースラインと数値の光学サイズも調整し、所持金は小ラベルを外して金額を大きく読ませる状態まで改善済み。次に詰めるなら、背景または右パネルの本番素材差分が埋まったあとに最終比較で微調整する。
 4. ヒット演出は白い放射線と下端の重なりを調整済み。最終 HUD/フォント調整後に比較だけ再確認する。
-5. 泡、光粒、魚影は `underwater_foreground_ambience.png` と `UnderwaterView` の補助光粒として追加済み。背景の均一な明るさは `underwater_color_grade.png` で少し締め、海底/左右の密度は `underwater_seabed_detail.png` で補っている。`underwater_battle_bg.png` 本体は `tools/build_reference_underwater_background.py` でリファレンス水中窓から抽出し、主役魚/ヒット/糸/ルアー部分をマスク補完して再生成済み。現在はさらに、マスクで平坦になった下端と右側へ海底光、岩場、背の高い海藻、小石、遠景魚、参照左岩場をミラーした低透過テクスチャを焼き込み、空白感を減らしている。参照抽出背景に合わせ、`UnderwaterView` 側では色調整/海底補助/前景 ambience の opacity を下げて灰色の膜を避けている。`UnderwaterView` は LINEAR フィルタで showcase テクスチャを描画し、背景の縮小時の硬さを抑える。次に背景を詰める場合は、中央/右側をより手描き密度の高い本番ラスタ素材へ置き換える。
+5. 泡、光粒、魚影は `underwater_foreground_ambience.png` と `UnderwaterView` の補助光粒として追加済み。背景の均一な明るさは `underwater_color_grade.png` で少し締め、海底/左右の密度は `underwater_seabed_detail.png` で補っている。`underwater_battle_bg.png` 本体は `tools/build_reference_underwater_background.py` でリファレンス水中窓から抽出し、主役魚/ヒット/糸/ルアー部分をマスク補完して再生成済み。現在はさらに、マスクで平坦になった下端と右側へ海底光、岩場、背の高い海藻、小石、遠景魚、参照左岩場をミラーした低透過テクスチャ、参照画像全体から切り出した右岩場の内容マスク合成を焼き込み、空白感を減らしている。参照抽出背景に合わせ、`UnderwaterView` 側では色調整/海底補助/前景 ambience の opacity を下げて灰色の膜を避けている。`UnderwaterView` は LINEAR フィルタで showcase テクスチャを描画し、背景の縮小時の硬さを抑える。次に背景を詰める場合は、中央/右側をより手描き密度の高い本番ラスタ素材へ置き換える。

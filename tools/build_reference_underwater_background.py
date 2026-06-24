@@ -5,7 +5,7 @@ import math
 import random
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
+from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFilter
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -166,6 +166,66 @@ def _add_reference_side_detail(image: Image.Image, reference_crop: Image.Image) 
     return base.convert("RGB")
 
 
+def _soft_mask(size: tuple[int, int], alpha: int, blur: float) -> Image.Image:
+    mask = Image.new("L", size, 0)
+    pixels = mask.load()
+    w, h = size
+    for y in range(h):
+        v = y / max(1, h - 1)
+        for x in range(w):
+            u = x / max(1, w - 1)
+            side = min(1.0, u / 0.42, (1.0 - u) / 0.08)
+            vertical = min(1.0, v / 0.24, (1.0 - v) / 0.10)
+            # Keep the reef strongest in the lower-right, where the reference
+            # has crisp rock piles and tall seaweed, and fade the open water.
+            reef_weight = 0.20 + 0.80 * max(0.0, (u - 0.24) / 0.76) * max(0.0, (v - 0.16) / 0.84)
+            pixels[x, y] = int(alpha * side * vertical * reef_weight)
+    return mask.filter(ImageFilter.GaussianBlur(blur))
+
+
+def _detail_mask_from_reference_patch(patch: Image.Image, alpha: int) -> Image.Image:
+    rgb = patch.convert("RGB")
+    mask = Image.new("L", rgb.size, 0)
+    source = rgb.load()
+    output = mask.load()
+    w, h = rgb.size
+    for y in range(h):
+        for x in range(w):
+            r, g, b = source[x, y]
+            average = (r + g + b) / 3.0
+            saturation = (max(r, g, b) - min(r, g, b)) / 150.0
+            darkness = max(0.0, (128.0 - average) / 128.0)
+            seaweed_green = max(0.0, (g - r - 10.0) / 90.0)
+            detail = min(1.0, max(darkness * 1.08, seaweed_green * 1.0, saturation * 0.38))
+            if b > g + 12 and b > r + 45 and average > 70.0 and darkness < 0.45:
+                detail *= 0.15
+            output[x, y] = int(alpha * detail)
+    return mask.filter(ImageFilter.GaussianBlur(0.6))
+
+
+def _add_reference_right_reef(image: Image.Image, reference: Image.Image) -> Image.Image:
+    base = image.convert("RGBA")
+    w, h = base.size
+
+    # Pull the authored right-side rock/seaweed mass from the full reference
+    # water window. The earlier left-window extraction cannot recover this
+    # region after masking the runtime fish and hit text.
+    reef_patch = reference.crop((930, 286, 1240, 660)).convert("RGBA")
+    reef_patch = reef_patch.resize((int(w * 0.31), int(h * 0.54)), Image.Resampling.LANCZOS)
+    reef_patch = ImageEnhance.Brightness(reef_patch).enhance(0.88)
+    reef_patch = ImageEnhance.Color(reef_patch).enhance(0.94)
+    reef_patch = ImageEnhance.Contrast(reef_patch).enhance(1.00)
+    content_mask = _detail_mask_from_reference_patch(reef_patch, 180)
+    placement_mask = _soft_mask(reef_patch.size, 230, 54.0)
+    reef_mask = ImageChops.multiply(content_mask, placement_mask)
+    base.alpha_composite(
+        Image.composite(reef_patch, Image.new("RGBA", reef_patch.size, (0, 0, 0, 0)), reef_mask),
+        (int(w * 0.68), int(h * 0.39)),
+    )
+
+    return base.convert("RGB")
+
+
 def _expand_to_canvas(image: Image.Image) -> Image.Image:
     # Reference water window is wider than the runtime texture. Fit by height
     # and crop horizontally; this keeps the authored seabed and light scale.
@@ -293,6 +353,7 @@ def build() -> None:
     background = _expand_to_canvas(clean_crop)
     background = _harmonize(background)
     background = _add_masked_area_detail(background)
+    background = _add_reference_right_reef(background, reference)
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     background.save(OUTPUT, optimize=True)
