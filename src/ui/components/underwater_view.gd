@@ -503,10 +503,10 @@ func _draw_hit_burst() -> void:
 	if _fish_flash <= 0.02 or simulator == null:
 		return
 	var alpha := clampf(_fish_flash, 0.0, 1.0)
-	var burst_center := Vector2(size.x * 0.50, size.y * 0.78)
+	var burst_center := Vector2(size.x * 0.50, size.y * 0.82)
 	if _showcase_hit_burst != null:
 		var tex_size := _showcase_hit_burst.get_size()
-		var scale := clampf(size.x / 1420.0, 0.44, 0.62)
+		var scale := clampf(size.x / 1500.0, 0.42, 0.58)
 		var draw_size := tex_size * scale
 		var draw_rect := Rect2(burst_center - draw_size * 0.5, draw_size)
 		draw_texture_rect(_showcase_hit_burst, draw_rect, false, Color(1.0, 1.0, 1.0, alpha))

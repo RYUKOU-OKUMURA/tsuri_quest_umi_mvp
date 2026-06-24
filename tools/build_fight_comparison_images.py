@@ -60,7 +60,7 @@ def build_frame_focus(reference: Image.Image, capture: Image.Image) -> None:
 
 def build_fish_focus(reference: Image.Image, capture: Image.Image) -> None:
     ref_fish = reference.crop((0, 85, 1260, 612))
-    cur_fish = capture.crop((0, 84, 980, 430))
+    cur_fish = capture.crop((0, 84, 980, 455))
     ref = _fit_width(ref_fish, 720)
     cur = _fit_width(cur_fish, 720)
     out = Image.new("RGB", (1460, max(ref.height, cur.height) + 80), BG)

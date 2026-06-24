@@ -113,13 +113,20 @@ def _rgba(hex_value: str, alpha: int = 255) -> tuple[int, int, int, int]:
     return (int(value[0:2], 16), int(value[2:4], 16), int(value[4:6], 16), alpha)
 
 
-def _star_points(cx: float, cy: float, outer: float, inner: float, count: int) -> list[tuple[float, float]]:
+def _star_points(
+    cx: float,
+    cy: float,
+    outer: float,
+    inner: float,
+    count: int,
+    flatten: float = 0.56,
+    phase: float = -math.pi / 2,
+) -> list[tuple[float, float]]:
     points: list[tuple[float, float]] = []
     for i in range(count * 2):
         radius = outer if i % 2 == 0 else inner
-        angle = -math.pi / 2 + i * math.pi / count
-        # Flatten the badge to match the reference's comic splash.
-        points.append((cx + math.cos(angle) * radius, cy + math.sin(angle) * radius * 0.56))
+        angle = phase + i * math.pi / count
+        points.append((cx + math.cos(angle) * radius, cy + math.sin(angle) * radius * flatten))
     return points
 
 
@@ -138,43 +145,53 @@ def _font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
 
 def create_hit_burst() -> None:
     scale = 3
-    w, h = 560, 220
+    w, h = 540, 205
     image = Image.new("RGBA", (w * scale, h * scale), (0, 0, 0, 0))
     d = ImageDraw.Draw(image)
-    cx, cy = w * scale * 0.50, h * scale * 0.52
+    cx, cy = w * scale * 0.50, h * scale * 0.55
+    outer = _star_points(cx, cy, 220 * scale, 112 * scale, 16, 0.50)
+    inner = _star_points(cx, cy, 178 * scale, 84 * scale, 16, 0.46, -math.pi / 2 + math.pi / 32)
+    core = _star_points(cx, cy, 132 * scale, 68 * scale, 12, 0.42)
 
     # Soft shadow.
     shadow = Image.new("RGBA", image.size, (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow)
-    sd.polygon(_star_points(cx + 8 * scale, cy + 10 * scale, 210 * scale, 126 * scale, 15), fill=(0, 0, 0, 120))
-    image.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(4 * scale)))
+    sd.polygon([(x + 8 * scale, y + 10 * scale) for x, y in outer], fill=(0, 0, 0, 128))
+    image.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(4.5 * scale)))
 
-    # Badge outline and body.
-    d.polygon(_star_points(cx, cy, 210 * scale, 126 * scale, 15), fill=_rgba("#082549", 245))
-    d.line(_star_points(cx, cy, 210 * scale, 126 * scale, 15) + [_star_points(cx, cy, 210 * scale, 126 * scale, 15)[0]], fill=_rgba("#5cb7ec", 235), width=4 * scale, joint="curve")
-    d.polygon(_star_points(cx, cy, 174 * scale, 104 * scale, 15), fill=_rgba("#0f497a", 232))
+    # Layered blue splash body. Keep the warm color for the live Godot text, not
+    # the asset, so the badge reads like water instead of an orange sticker.
+    d.polygon(outer, fill=_rgba("#061a3a", 248))
+    d.line(outer + [outer[0]], fill=_rgba("#1b5b90", 245), width=8 * scale, joint="curve")
+    d.line(outer + [outer[0]], fill=_rgba("#8ce7ff", 240), width=3 * scale, joint="curve")
+    d.polygon(inner, fill=_rgba("#083765", 240))
+    d.line(inner + [inner[0]], fill=_rgba("#4fbdea", 210), width=3 * scale, joint="curve")
+    d.polygon(core, fill=_rgba("#0b4f84", 222))
 
-    # White-blue water edges, restrained compared with the previous explosion asset.
-    for i in range(22):
-        angle = -math.pi + i * math.tau / 22
-        x0 = cx + math.cos(angle) * 52 * scale
-        y0 = cy + math.sin(angle) * 14 * scale
-        x1 = cx + math.cos(angle) * (138 + (i % 3) * 10) * scale
-        y1 = cy + math.sin(angle) * (30 + (i % 4) * 4) * scale
-        d.line((x0, y0, x1, y1), fill=(205, 245, 255, 120), width=max(1, 2 * scale))
+    for i in range(28):
+        angle = -math.pi + i * math.tau / 28
+        x0 = cx + math.cos(angle) * (45 + (i % 4) * 5) * scale
+        y0 = cy + math.sin(angle) * (10 + (i % 3) * 2) * scale
+        x1 = cx + math.cos(angle) * (142 + (i % 5) * 13) * scale
+        y1 = cy + math.sin(angle) * (28 + (i % 4) * 5) * scale
+        d.line((x0, y0, x1, y1), fill=(205, 246, 255, 116), width=max(1, 2 * scale))
 
-    # Warm center behind the live Godot text.
-    d.ellipse((cx - 112 * scale, cy - 48 * scale, cx + 112 * scale, cy + 48 * scale), fill=(255, 138, 24, 86))
-    d.ellipse((cx - 82 * scale, cy - 34 * scale, cx + 82 * scale, cy + 34 * scale), fill=(255, 232, 82, 58))
-
-    # Tiny foam flecks.
-    for i in range(34):
-        angle = i * math.tau / 34
-        radius = (135 + (i % 5) * 14) * scale
+    # Tiny foam flecks and glints.
+    for i in range(40):
+        angle = i * math.tau / 40
+        radius = (128 + (i % 6) * 15) * scale
         x = cx + math.cos(angle) * radius
-        y = cy + math.sin(angle) * radius * 0.32
+        y = cy + math.sin(angle) * radius * 0.31
         r = (2 + i % 3) * scale
-        d.ellipse((x - r, y - r, x + r, y + r), fill=(236, 255, 255, 170))
+        d.ellipse((x - r, y - r, x + r, y + r), fill=(236, 255, 255, 178))
+    for i in range(7):
+        x = cx + (-116 + i * 38) * scale
+        y = cy + (-38 + (i % 3) * 18) * scale
+        d.line(
+            (x - 12 * scale, y + 5 * scale, x + 14 * scale, y - 6 * scale),
+            fill=(255, 255, 255, 128),
+            width=2 * scale,
+        )
 
     image = image.resize((w, h), Image.Resampling.LANCZOS)
     # Keep exact text out of the asset; Godot draws the Japanese label.
