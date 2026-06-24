@@ -21,15 +21,16 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 - Rebuilt the lower HUD operation-hint slots to align the authored paper wells with the Godot-drawn A/B/LR key blocks, reducing the broken grid/debug-panel read.
 - Shortened and re-spaced the right-panel action/tackle lower-card text so the dedicated card icons no longer fight as much with dense body copy.
 - Reworked the right fish-card title row into an opaque paper plaque and regenerated `sidebar_frame.png`, so `No.028 / クロダイ / レア` no longer sits on a dark, stale-looking strip.
+- Rebuilt the right-panel action/tackle card interiors with separate icon wells and text plaques, reducing the mechanical guide-rule feel in the lower cards.
 - Regenerated `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png`.
 
 ## Findings
 
 - [P2] Right panel is structurally better but still below reference card quality.
   Location: `assets/showcase/underwater/sidebar_frame.png`, `src/ui/components/fight_sidebar.gd`, `src/ui/fishing_screen.gd`.
-  Evidence: the panel is now wider, the fish card uses a dedicated paper-backed kurodai portrait instead of the runtime swimming sheet, and the previous dark portrait rectangle regression is gone. The fish-card title row now sits on an opaque paper plaque, so `No.028 / クロダイ / レア` reads clearly like the reference instead of sinking into a dark band. The action/tackle cards now use dedicated paper-backed card icons, so the small lower cards read less like compressed cutouts from the ornate shared icon sheet. The lower-card copy has been shortened and spaced more deliberately, but the cards still feel more mechanically framed than the reference, especially around the remaining guide-rule rhythm and small-text optical quality.
+  Evidence: the panel is now wider, the fish card uses a dedicated paper-backed kurodai portrait instead of the runtime swimming sheet, and the previous dark portrait rectangle regression is gone. The fish-card title row now sits on an opaque paper plaque, so `No.028 / クロダイ / レア` reads clearly like the reference instead of sinking into a dark band. The action/tackle cards now use dedicated paper-backed card icons, separate icon wells, and calmer text plaques, so the small lower cards read less like compressed cutouts from the ornate shared icon sheet. The lower-card copy has been shortened and spaced more deliberately, but the cards still feel more mechanically framed than the reference, especially around small-text optical quality and the remaining tight vertical crop.
   Impact: the right panel is more readable and more deliberately framed, but it still does not fully sell the premium JRPG card quality.
-  Fix: keep the dedicated fish-card portrait, wider panel, paper title plaque, card-specific lower icons, and shorter lower-card copy. Next, replace the remaining guide-rule treatment with cleaner authored card interiors if the right panel still reads too mechanical.
+  Fix: keep the dedicated fish-card portrait, wider panel, paper title plaque, card-specific lower icons, separated lower-card wells, and shorter lower-card copy. Next, move to the next largest visible gap unless the right panel regresses: background density/final UI frame art.
 
 - [P2] HUD top row is closer, but still below the reference's authored console quality.
   Location: `assets/showcase/underwater/fight_hud_frame.png`, `src/ui/components/fight_hud.gd`.
@@ -57,12 +58,12 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Open Questions
 
-- None blocking. The next highest-value pass is replacing remaining mechanical guide-rule/card interiors or moving to the next major quality gap: background density and final UI frame art.
+- None blocking. The next highest-value pass is now the major full-screen gap: background density/final UI frame art, with right-panel lower-card text polish kept as a follow-up only if it regresses.
 
 ## Implementation Checklist
 
 1. Keep comparing `/tmp/tsuri_frame_focus_compare.png` against the reference after any HUD/sidebar frame change.
-2. Replace remaining mechanical lower-card guide rules if the right panel still reads like a compressed info box.
+2. Move the next pass to background density or final UI frame art unless the right-panel lower cards regress in comparison.
 3. Keep the dedicated fish-card portrait; do not return to drawing the swimming sprite sheet directly in the sidebar.
 4. Re-run `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png` after each pass.
 

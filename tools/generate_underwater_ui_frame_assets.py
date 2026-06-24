@@ -308,12 +308,19 @@ def create_sidebar_frame() -> None:
     _draw_navy_card(image, tackle, radius=12, seed=84)
     _draw_clean_card(image, tackle_body, "#f2e5cb", radius=8, border="#8c6733", inner="#d8b45d", seed=85, texture_strength=5)
 
-    for panel, body in ((action, action_body), (tackle, tackle_body)):
+    for panel, body, icon_side in ((action, action_body, "left"), (tackle, tackle_body, "right")):
         d.line((panel[0] + 26, panel[1] + 45, panel[2] - 26, panel[1] + 45), fill=_rgba("#e0bd62", 126), width=2)
         d.line((panel[0] + 28, panel[1] + 50, panel[2] - 28, panel[1] + 50), fill=_rgba("#07121b", 105), width=1)
-        _draw_paper_inset(d, (body[0] + 14, body[1] + 14, body[0] + 92, body[3] - 14), alpha=34)
-        for y in (body[1] + 35, body[1] + 64, body[1] + 93):
-            d.line((body[0] + 112, y, body[2] - 24, y), fill=_rgba("#b89b64", 14), width=1)
+        if icon_side == "left":
+            icon_well = (body[0] + 14, body[1] + 18, body[0] + 88, body[3] - 18)
+            text_well = (body[0] + 104, body[1] + 16, body[2] - 18, body[3] - 16)
+        else:
+            icon_well = (body[2] - 88, body[1] + 18, body[2] - 14, body[3] - 18)
+            text_well = (body[0] + 14, body[1] + 16, body[2] - 104, body[3] - 16)
+        _draw_paper_inset(d, icon_well, alpha=34)
+        d.rounded_rectangle(text_well, radius=6, fill=(255, 246, 224, 255), outline=_rgba("#b89b64", 84), width=1)
+        d.line((text_well[0] + 14, text_well[1] + 36, text_well[2] - 14, text_well[1] + 36), fill=_rgba("#b89b64", 58), width=1)
+        d.line((text_well[0] + 14, text_well[3] - 13, text_well[2] - 14, text_well[3] - 13), fill=_rgba("#ffffff", 70), width=1)
         _draw_corner_brackets(d, body, length=24, inset=9, color="#a77d3b", alpha=115, width=1)
 
     # Sparse corner accents only. Heavy rivets made the frame read as generated/debug UI.

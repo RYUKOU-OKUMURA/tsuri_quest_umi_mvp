@@ -153,9 +153,9 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 		message = simulator.action_message
 	var icon_size := 44.0 if _sidebar_frame != null else 58.0
 	_draw_action_icon(body.position + Vector2(36.0, body.size.y * 0.54), icon_size)
-	_draw_text(font, "%s！" % action, body.position + Vector2(78.0, 25.0), 20 if _sidebar_frame != null else 20, Color("#2b2117"), 0)
+	_draw_text(font, "%s！" % action, body.position + Vector2(78.0, 24.0), 20 if _sidebar_frame != null else 20, Color("#2b2117"), 0)
 	if _sidebar_frame != null:
-		_draw_action_message(font, message, body.position + Vector2(78.0, 34.0), body.size.x - 96.0)
+		_draw_action_message(font, message, body.position + Vector2(78.0, 31.0), body.size.x - 96.0)
 	else:
 		_draw_wrapped(font, message, body.position + Vector2(72.0, 36.0), body.size.x - 82.0, 11, Palette.TEXT_DARK, 2)
 
