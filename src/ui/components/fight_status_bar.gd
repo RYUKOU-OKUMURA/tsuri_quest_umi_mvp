@@ -80,9 +80,9 @@ func _draw_status_slot(font: Font, rect: Rect2, title: String, body: String, dar
 	if dark:
 		_draw_centered_dark_slot(font, rect, title, body)
 		return
-	var icon_space := clampf(rect.size.y * 1.04, 63.0, 72.0)
+	var icon_space := clampf(rect.size.y * 0.96, 60.0, 68.0)
 	var text_x := rect.position.x + icon_space
-	var max_width := rect.end.x - text_x - 14.0
+	var max_width := rect.end.x - text_x - 10.0
 	var title_size := 15 if dark else 14
 	var body_size := 24 if not dark else 21
 	if rect.size.x < 230.0:
@@ -94,20 +94,20 @@ func _draw_status_slot(font: Font, rect: Rect2, title: String, body: String, dar
 	var body_y := rect.position.y + rect.size.y * 0.72
 	if not dark and title == "AM":
 		var am_y := rect.position.y + rect.size.y * 0.64
-		_draw_text_clipped(font, title, Vector2(text_x, am_y), 15, title_color, max_width, outline)
-		_draw_text_clipped(font, body, Vector2(text_x + 27.0, am_y + 4.0), 30, body_color, max_width - 27.0, outline)
+		_draw_text_clipped(font, title, Vector2(text_x, am_y), 16, title_color, max_width, outline)
+		_draw_text_clipped(font, body, Vector2(text_x + 32.0, am_y + 4.0), 30, body_color, max_width - 32.0, outline)
 		return
 	if not dark and title == "快晴":
 		var inline_y := rect.position.y + rect.size.y * 0.66
-		_draw_text_clipped(font, title, Vector2(text_x, inline_y), 21, body_color, max_width, outline)
-		var wind_icon_size := 29.0
-		var wind_x := text_x + 73.0
+		_draw_text_clipped(font, title, Vector2(text_x, inline_y), 22, body_color, max_width, outline)
+		var wind_icon_size := 30.0
+		var wind_x := text_x + 67.0
 		_draw_top_sheet_icon(
 			ICON_WIND,
 			Rect2(Vector2(wind_x, rect.position.y + (rect.size.y - wind_icon_size) * 0.5 + 1.0), Vector2(wind_icon_size, wind_icon_size)),
 			Color(1.0, 1.0, 1.0, 0.92)
 		)
-		_draw_text_clipped(font, body, Vector2(wind_x + 34.0, inline_y), 21, Color("#173f32"), max_width - (wind_x - text_x) - 34.0, outline)
+		_draw_text_clipped(font, body, Vector2(wind_x + 32.0, inline_y), 22, Color("#173f32"), max_width - (wind_x - text_x) - 32.0, outline)
 		return
 	if not dark and title == "所持金":
 		var amount_y := rect.position.y + rect.size.y * 0.68
@@ -145,9 +145,9 @@ func _draw_centered_dark_slot(font: Font, rect: Rect2, title: String, body: Stri
 func _draw_status_icon(rect: Rect2, icon_index: int) -> void:
 	if _top_icons == null and _icons == null:
 		return
-	var icon_size := clampf(rect.size.y * 0.60, 38.0, 44.0)
+	var icon_size := clampf(rect.size.y * 0.66, 42.0, 48.0)
 	var icon_rect := Rect2(
-		rect.position + Vector2(10.0, (rect.size.y - icon_size) * 0.5 + 1.0),
+		rect.position + Vector2(9.0, (rect.size.y - icon_size) * 0.5 + 1.0),
 		Vector2(icon_size, icon_size)
 	)
 	_draw_top_sheet_icon(icon_index, icon_rect, Color(1.0, 1.0, 1.0, 0.96))
