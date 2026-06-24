@@ -3,6 +3,7 @@ extends Control
 
 const FightFontsScript = preload("res://src/ui/fight_fonts.gd")
 const SHOWCASE_BG_PATH := "res://assets/showcase/underwater/underwater_battle_bg.png"
+const SHOWCASE_FG_AMBIENCE_PATH := "res://assets/showcase/underwater/underwater_foreground_ambience.png"
 const SHOWCASE_FISH_SHEET_PATH := "res://assets/showcase/underwater/kurodai_showcase_sheet.png"
 const SHOWCASE_HIT_BURST_PATH := "res://assets/showcase/underwater/hit_burst.png"
 const SHOWCASE_FISH_FRAME_COUNT := 4
@@ -16,6 +17,7 @@ var _badge_style: StyleBoxFlat
 var _meter_track: StyleBoxFlat
 var _meter_fill: StyleBoxFlat
 var _showcase_bg: Texture2D
+var _showcase_fg_ambience: Texture2D
 var _showcase_fish_sheet: Texture2D
 var _showcase_hit_burst: Texture2D
 
@@ -77,6 +79,7 @@ func _draw() -> void:
 
 func _load_showcase_assets() -> void:
 	_showcase_bg = _load_texture_if_exists(SHOWCASE_BG_PATH)
+	_showcase_fg_ambience = _load_texture_if_exists(SHOWCASE_FG_AMBIENCE_PATH)
 	_showcase_fish_sheet = _load_texture_if_exists(SHOWCASE_FISH_SHEET_PATH)
 	_showcase_hit_burst = _load_texture_if_exists(SHOWCASE_HIT_BURST_PATH)
 
@@ -97,8 +100,11 @@ func _draw_showcase_background() -> void:
 
 
 func _draw_showcase_ambience() -> void:
-	_draw_showcase_fish_schools()
-	_draw_showcase_bubble_columns()
+	if _showcase_fg_ambience != null:
+		_draw_cover_texture(_showcase_fg_ambience, Rect2(Vector2.ZERO, size), Color(1.0, 1.0, 1.0, 0.86))
+	else:
+		_draw_showcase_fish_schools()
+		_draw_showcase_bubble_columns()
 	_draw_showcase_light_specks()
 
 
