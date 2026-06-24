@@ -68,7 +68,7 @@
 | `assets/showcase/underwater/underwater_foreground_ambience.png` | 前景密度補助 | `tools/generate_underwater_foreground_assets.py` で生成 | 透明PNG、泡柱・遠景魚・光粒を含み主役魚を邪魔しない |
 | `assets/showcase/underwater/kurodai_chroma_source.png` | クロダイ中間素材 | リファレンス魚の切り出しを ImageGen で背景抽出 | フラットなマゼンタ背景、単体魚または横4フレーム |
 | `assets/showcase/underwater/kurodai_showcase_sheet.png` | クロダイ | `tools/process_underwater_fish_assets.py` で生成 | 透明背景、横 4 フレーム、全フレーム同サイズ |
-| `assets/showcase/underwater/kurodai_card_portrait.png` | 右カード用クロダイ | `tools/process_underwater_fish_assets.py` で生成 | 紙背景に魚を合成、カード内で暗い矩形を出さない |
+| `assets/showcase/underwater/kurodai_card_portrait.png` | 右カード用クロダイ | `tools/process_underwater_fish_assets.py` で生成 | 紙背景に魚を合成、カード内で暗い矩形を出さず、魚が紙窓の主役として大きく読める |
 | `assets/showcase/underwater/hit_burst.png` | ヒット演出 | `tools/process_underwater_fish_assets.py` で生成 | 濃紺の水しぶき、透明背景、文字は含めない |
 | `assets/showcase/underwater/sidebar_frame.png` | 右パネルフレーム | `tools/generate_underwater_ui_frame_assets.py` で生成 | テキストなし、魚なし、縦長フレームとして全面表示 |
 | `assets/showcase/underwater/top_status_frame.png` | 上部ステータスバー | `tools/generate_underwater_ui_frame_assets.py` で生成 | テキストなし、横長フレームとして全面表示 |
@@ -88,7 +88,7 @@
 - `FightStatusBar` は `top_status_frame.png` を左ファイトカラム内に敷き、時計・天候・所持金・水深のテキストを Godot 側で重ねる。全幅ルート直下に置くと右パネルが下がり、参照画像の「左ステータスカードと右魚カードヘッダーが同じ上端に並ぶ」構成から外れるため、右パネルとは横並びの同階層にする。上部の時計/太陽/風/コインは `top_status_icon_sheet.png` を優先し、共通アイコンシートは専用素材がない場合のフォールバックにする。
 - `FightHud` は画面全幅ではなく左カラム内に置き、`fight_hud_frame.png` の上にゲージ色、現在位置、深度、操作文字を重ねる。ゲージは塗り済みセグメントだけでなく、薄い未充填セグメント、上ハイライト、下影、テンション位置マーカー影を描き、矩形の羅列ではなく操作盤に埋まったメーターとして見せる。
 - `FightStatusBar`、`FightHud`、`FightSidebar` は `fight_icon_sheet.png` の3x3セルを使い、コード描画アイコンを本番素材へ置き換える。
-- `FightSidebar` の魚カードだけは、泳ぎ用の `kurodai_showcase_sheet.png` ではなく `kurodai_card_portrait.png` を優先する。泳ぎ用シートを拡大するとカード上で暗い矩形が出るため、カード用素材を分ける。
+- `FightSidebar` の魚カードだけは、泳ぎ用の `kurodai_showcase_sheet.png` ではなく `kurodai_card_portrait.png` を優先する。泳ぎ用シートを拡大するとカード上で暗い矩形が出るため、カード用素材を分ける。`kurodai_card_portrait.png` は紙背景込みの横長素材だが、魚が小さくなりすぎると図鑑カード品質に届かないため、生成時は魚が紙窓の大部分を占める比率にする。
 - `FightSidebar` の行動/タックル小カードは `fight_action_card_icon.png` / `fight_tackle_card_icon.png` を優先する。共通アイコンシートは大きな装飾を含むため、右下段カードではカード専用にトリミングした素材を使う。右下段カードの本文は、長文情報をそのまま詰め込まず、アイコン横で読める短い行に圧縮する。
 - `FightStatusBar`、`FightHud`、`FightSidebar`、`UnderwaterView` のヒット文字は `src/ui/fight_fonts.gd` から水中ファイト専用の太字フォントを読み込む。
 - `FightHud` の下段は、`fight_hud_frame.png` 側にエサ/操作/メニューの紙タイトル帯、本文スロット、濃紺メニュー行を焼き込み、Godot側でエサ数とA/B/LRのキーキャップと短いラベルだけを重ねる。PNG側の装飾枠と実コードの座標がずれると、文字が暗い盤面に沈んでデバッグUIに見えるため、フレーム生成とGodot描画の座標を必ず合わせる。
@@ -110,7 +110,7 @@
 
 ## 次に本番化する素材
 
-1. `sidebar_frame.png` は右パネル幅拡張、魚カード用 `kurodai_card_portrait.png` 分離、魚カード見出しの紙プラーク化、紙面の内部構造追加、行動文の意味改行、行動/タックル下段カード専用アイコン追加、下段カード本文の短縮、余白調整、アイコン枠/本文プラーク分離まで完了。次は全体比較で右パネルが再び浮く場合だけ小さく調整する。
+1. `sidebar_frame.png` は右パネル幅拡張、魚カード用 `kurodai_card_portrait.png` 分離、魚カード見出しの紙プラーク化、紙面の内部構造追加、行動文の意味改行、行動/タックル下段カード専用アイコン追加、下段カード本文の短縮、余白調整、アイコン枠/本文プラーク分離まで完了。`kurodai_card_portrait.png` は魚の占有率を上げ、カード内の空白感を減らした。次は全体比較で右パネルが再び浮く場合だけ小さく調整する。
 2. `fight_hud_frame.png` の上段は深度プレート強化、暗色化、HUDアイコン縮小/低透過化、右ラベル余白調整、メーター格子弱化、未充填セグメント表示とハイライト/影追加まで完了。下段はエサ/操作/メニューの紙タイトル帯、本文スロット、濃紺メニュー行、操作ヒントの3スロット化、A/B/LRキー配置の整列まで完了。次は最終比較でまだ機械的に見える場合だけ全体比率と小文字の詰めを行う。
 3. 上部ステータスの地点カードは参照に合わせてアイコンなし中央寄せに修正済み。`top_status_frame.png` は紙カード内枠、角金具、濃紺地点カードの内装追加まで完了。上部アイコン群は `top_status_icon_sheet.png` に分離し、時計/太陽/風/コインが潰れない状態まで改善済み。`FightStatusBar` は左ファイトカラム内へ移動し、右パネルヘッダーが上端から始まる構造に修正済み。カード比率は天候/所持金を広げ、地点カードを締める方向へ調整済み。次に詰めるなら文字ベースラインと数値の光学サイズを調整する。
 4. ヒット演出は白い放射線と下端の重なりを調整済み。最終 HUD/フォント調整後に比較だけ再確認する。

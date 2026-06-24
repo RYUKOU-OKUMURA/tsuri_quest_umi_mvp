@@ -29,15 +29,16 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 - Added `top_status_icon_sheet.png` as a top-bar-specific icon sheet extracted and cleaned from the reference. `FightStatusBar` now uses those larger clock/weather/wind/coin icons and draws the wind icon as its own inline glyph instead of a tiny overlay on the sun.
 - Moved `FightStatusBar` from the full-width root row into the left fight column so the right sidebar header starts at the same top height as the status cards, matching the reference's top-level composition more closely.
 - Rebuilt `top_status_frame.png` and `FightStatusBar` slot ratios so the weather/money cards are wider and the location card is tighter instead of one oversized rightmost blue card.
+- Regenerated `kurodai_card_portrait.png` with the fish occupying more of the paper portrait window, reducing empty parchment around the sidebar fish card.
 - Regenerated `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png`.
 
 ## Findings
 
 - [P2] Right panel is structurally better but still below reference card quality.
   Location: `assets/showcase/underwater/sidebar_frame.png`, `src/ui/components/fight_sidebar.gd`, `src/ui/fishing_screen.gd`.
-  Evidence: the panel is now wider, starts at the top of the screen beside the status cards, uses a dedicated paper-backed kurodai portrait instead of the runtime swimming sheet, and the previous dark portrait rectangle regression is gone. The fish-card title row now sits on an opaque paper plaque, so `No.028 / クロダイ / レア` reads clearly like the reference instead of sinking into a dark band. Moving the status bar into the left column also gives the right panel more vertical room, so the lower action/tackle cards are less cramped. The lower-card copy has been shortened and spaced more deliberately, but the cards still feel more mechanically framed than the reference, especially around small-text optical quality.
-  Impact: the right panel now matches the reference's top-level composition much better and is more readable. It still does not fully sell the premium JRPG card quality.
-  Fix: keep the dedicated fish-card portrait, wider panel, paper title plaque, card-specific lower icons, separated lower-card wells, and shorter lower-card copy. Next, move to the next largest visible gap unless the right panel regresses: background density/final UI frame art.
+  Evidence: the panel is now wider, starts at the top of the screen beside the status cards, uses a dedicated paper-backed kurodai portrait instead of the runtime swimming sheet, and the previous dark portrait rectangle regression is gone. The fish-card title row now sits on an opaque paper plaque, so `No.028 / クロダイ / レア` reads clearly like the reference instead of sinking into a dark band. Moving the status bar into the left column gives the right panel more vertical room, and the regenerated `kurodai_card_portrait.png` makes the fish occupy more of the portrait window instead of floating in empty paper. The lower-card copy has been shortened and spaced more deliberately, but the cards still feel more mechanically framed than the reference, especially around small-text optical quality.
+  Impact: the right panel now matches the reference's top-level composition better, and the fish card has stronger subject presence. It still does not fully sell the premium JRPG card quality.
+  Fix: keep the larger dedicated fish-card portrait, wider panel, paper title plaque, card-specific lower icons, separated lower-card wells, and shorter lower-card copy. Next, move to the next largest visible gap unless the right panel regresses: background density/final UI frame art.
 
 - [P2] HUD top row is closer, but still below the reference's authored console quality.
   Location: `assets/showcase/underwater/fight_hud_frame.png`, `src/ui/components/fight_hud.gd`.

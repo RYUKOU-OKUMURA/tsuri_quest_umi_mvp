@@ -121,15 +121,15 @@ def create_kurodai_card_portrait() -> None:
         d.line((42, y, canvas.width - 42, y), fill=_rgba("#c3a873", 30), width=1)
     shadow = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow)
-    sd.ellipse((180, 238, canvas.width - 150, 294), fill=(72, 52, 31, 24))
+    sd.ellipse((135, 236, canvas.width - 105, 298), fill=(72, 52, 31, 26))
     canvas.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(7)))
 
-    max_w = int(canvas.width * 0.82)
-    max_h = int(canvas.height * 0.78)
+    max_w = int(canvas.width * 0.94)
+    max_h = int(canvas.height * 0.88)
     scale = min(max_w / crop.width, max_h / crop.height)
     resized = crop.resize((round(crop.width * scale), round(crop.height * scale)), Image.Resampling.LANCZOS)
     x = (canvas.width - resized.width) // 2
-    y = (canvas.height - resized.height) // 2 - 6
+    y = (canvas.height - resized.height) // 2 - 2
     canvas.alpha_composite(resized, (x, y))
     canvas.save(FISH_CARD_PORTRAIT)
 
