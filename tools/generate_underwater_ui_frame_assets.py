@@ -89,18 +89,18 @@ def _draw_sidebar_icon_recess(image: Image.Image, box: tuple[int, int, int, int]
     h = y1 - y0
     shadow = Image.new("RGBA", image.size, (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow)
-    sd.rounded_rectangle((x0 + 2, y0 + 3, x1 + 2, y1 + 3), radius=8, fill=(68, 43, 18, 34))
+    sd.rounded_rectangle((x0 + 2, y0 + 3, x1 + 2, y1 + 3), radius=10, fill=(68, 43, 18, 24))
     image.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(3)))
 
-    mask = _rounded_mask((w, h), 8)
+    mask = _rounded_mask((w, h), 10)
     texture = _texture((w, h), "#f3e0b2", seed, strength=5)
     _paste_masked(image, texture, mask, (x0, y0))
 
     d = ImageDraw.Draw(image)
-    d.rounded_rectangle((x0, y0, x1, y1), radius=8, outline=_rgba("#8b6733", 112), width=1)
-    d.rounded_rectangle((x0 + 5, y0 + 5, x1 - 5, y1 - 5), radius=6, outline=_rgba("#e4c371", 82), width=1)
-    d.ellipse((x0 + 14, y1 - 28, x1 - 14, y1 - 11), fill=(214, 193, 151, 96))
-    d.line((x0 + 12, y0 + 10, x1 - 12, y0 + 10), fill=(255, 255, 255, 72), width=1)
+    d.rounded_rectangle((x0, y0, x1, y1), radius=10, outline=_rgba("#8b6733", 64), width=1)
+    d.rounded_rectangle((x0 + 6, y0 + 6, x1 - 6, y1 - 6), radius=7, outline=_rgba("#e4c371", 48), width=1)
+    d.ellipse((x0 + 15, y1 - 27, x1 - 15, y1 - 12), fill=(214, 193, 151, 66))
+    d.line((x0 + 14, y0 + 11, x1 - 14, y0 + 11), fill=(255, 255, 255, 56), width=1)
 
 
 def _draw_sidebar_text_well(image: Image.Image, box: tuple[int, int, int, int], *, seed: int) -> None:
@@ -109,25 +109,24 @@ def _draw_sidebar_text_well(image: Image.Image, box: tuple[int, int, int, int], 
     h = y1 - y0
     shadow = Image.new("RGBA", image.size, (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow)
-    sd.rounded_rectangle((x0 + 2, y0 + 3, x1 + 2, y1 + 3), radius=8, fill=(74, 47, 20, 30))
-    image.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(3)))
+    sd.rounded_rectangle((x0 + 2, y0 + 3, x1 + 2, y1 + 3), radius=10, fill=(74, 47, 20, 16))
+    image.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(4)))
 
-    mask = _rounded_mask((w, h), 8)
+    mask = _rounded_mask((w, h), 10)
     texture = _texture((w, h), "#fff0ce", seed, strength=6)
     td = ImageDraw.Draw(texture)
-    for i in range(7):
-        alpha = 12 - i
+    for i in range(5):
+        alpha = 6 - i
         td.line((5 + i, 10, 5 + i, h - 10), fill=(127, 87, 38, max(0, alpha)), width=1)
         td.line((w - 6 - i, 10, w - 6 - i, h - 10), fill=(255, 255, 255, max(0, alpha)), width=1)
     _paste_masked(image, texture, mask, (x0, y0))
 
     d = ImageDraw.Draw(image)
-    d.rounded_rectangle((x0, y0, x1, y1), radius=8, outline=_rgba("#a98242", 82), width=1)
-    d.rounded_rectangle((x0 + 4, y0 + 4, x1 - 4, y1 - 4), radius=6, outline=_rgba("#edd49a", 54), width=1)
-    d.line((x0 + 14, y0 + 11, x1 - 14, y0 + 11), fill=(255, 255, 255, 72), width=1)
-    d.line((x0 + 16, y1 - 12, x1 - 16, y1 - 12), fill=_rgba("#80552a", 24), width=1)
-    d.line((x0 + 18, y0 + 37, x1 - 56, y0 + 37), fill=_rgba("#b89b64", 24), width=1)
-    _draw_corner_brackets(d, (x0 + 1, y0 + 1, x1 - 1, y1 - 1), length=16, inset=7, color="#a77d3b", alpha=46, width=1)
+    d.rounded_rectangle((x0, y0, x1, y1), radius=10, outline=_rgba("#a98242", 38), width=1)
+    d.line((x0 + 16, y0 + 12, x1 - 16, y0 + 12), fill=(255, 255, 255, 54), width=1)
+    d.line((x0 + 18, y1 - 12, x1 - 18, y1 - 12), fill=_rgba("#80552a", 16), width=1)
+    d.line((x0 + 18, y0 + 36, x1 - 72, y0 + 36), fill=_rgba("#b89b64", 14), width=1)
+    _draw_corner_brackets(d, (x0 + 2, y0 + 2, x1 - 2, y1 - 2), length=13, inset=7, color="#a77d3b", alpha=28, width=1)
 
 
 def _draw_card(
@@ -388,11 +387,11 @@ def create_sidebar_frame() -> None:
         d.line((panel[0] + 26, panel[1] + 39, panel[2] - 26, panel[1] + 39), fill=_rgba("#e0bd62", 104), width=2)
         d.line((panel[0] + 28, panel[1] + 44, panel[2] - 28, panel[1] + 44), fill=_rgba("#07121b", 72), width=1)
         if icon_side == "left":
-            icon_well = (body[0] + 16, body[1] + 24, body[0] + 82, body[3] - 24)
-            text_well = (body[0] + 96, body[1] + 14, body[2] - 16, body[3] - 14)
+            icon_well = (body[0] + 18, body[1] + 27, body[0] + 78, body[3] - 27)
+            text_well = (body[0] + 88, body[1] + 14, body[2] - 16, body[3] - 14)
         else:
-            icon_well = (body[2] - 82, body[1] + 24, body[2] - 16, body[3] - 24)
-            text_well = (body[0] + 16, body[1] + 14, body[2] - 96, body[3] - 14)
+            icon_well = (body[2] - 78, body[1] + 27, body[2] - 18, body[3] - 27)
+            text_well = (body[0] + 16, body[1] + 14, body[2] - 88, body[3] - 14)
         _draw_sidebar_icon_recess(image, icon_well, seed=130 + panel_index)
         _draw_sidebar_text_well(image, text_well, seed=140 + panel_index)
         _draw_corner_brackets(d, body, length=22, inset=9, color="#a77d3b", alpha=88, width=1)
