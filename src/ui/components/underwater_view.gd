@@ -351,8 +351,8 @@ func _draw_line_and_bait() -> void:
 		var vertical_offset := 4.0
 		if _showcase_fish_sheet != null:
 			var fish_draw_size := _showcase_fish_draw_size()
-			forward_offset = fish_draw_size.x * 0.55
-			vertical_offset = -fish_draw_size.y * 0.04
+			forward_offset = fish_draw_size.x * 0.38
+			vertical_offset = fish_draw_size.y * 0.01
 		bait_position = fish_center + Vector2(forward_offset * simulator.visual_direction, vertical_offset)
 	elif simulator.state == FishingSimulator.State.READY:
 		bait_position = Vector2(size.x * 0.67, size.y * 0.22)

@@ -62,6 +62,7 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 - Tightened the fight-screen root margin, body separation, left-column separation, and sidebar internal gap so the top status, water window, HUD, and right panel sit with less dark gutter between them.
 - Tightened the `top_status_frame.png` slot boundaries together with `FightStatusBar._slot_rects()` and strengthened the weather-card wind text with a darker green, slightly larger label.
 - Added low-alpha central caustic strokes and small bubbles to `underwater_foreground_ambience.png`, breaking up the flat masked-water band without drawing over the runtime fish or hit text.
+- Moved the runtime lure closer to the kurodai's nose and slightly lower by tuning the showcase fish forward/vertical offset in `UnderwaterView`, so the line, lure, fish, and hit badge read as one event instead of a detached bait point.
 - Regenerated `/tmp/tsuri_fight_compare.png`, `/tmp/tsuri_frame_focus_compare.png`, and `/tmp/tsuri_fish_hit_focus.png`.
 
 ## Findings
@@ -86,9 +87,9 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 - [P3] Main fish is now close, with minor runtime-placement polish remaining.
   Location: `assets/showcase/underwater/kurodai_showcase_sheet.png`, `src/ui/components/underwater_view.gd`.
-  Evidence: the fish source now preserves the reference-like black seabream outline, scale texture, dorsal spines, eye, and gray banding. The implementation fish is also larger again after the panel-width change and no longer reads as a generic generated cutout. The latest pass removes the oversized cyan fight aura and shrinks the dark fish shadow, so the fish no longer sits inside a visible debug-like oval that the reference does not have. The remaining mismatch is mainly placement polish: the bait sits slightly higher/right than the reference and the runtime fish still lives over a center background replacement zone that is quieter than the authored reference.
+  Evidence: the fish source now preserves the reference-like black seabream outline, scale texture, dorsal spines, eye, and gray banding. The implementation fish is also larger again after the panel-width change and no longer reads as a generic generated cutout. The latest pass removes the oversized cyan fight aura and shrinks the dark fish shadow, so the fish no longer sits inside a visible debug-like oval that the reference does not have. The current lure pass pulls the bait closer to the kurodai's nose and slightly lower, matching `/tmp/tsuri_fish_hit_focus.png` more closely to the reference's fish/line/lure cluster. The remaining mismatch is mainly context: the runtime fish still lives over a center background replacement zone that is quieter than the authored reference.
   Impact: the fish is no longer a blocking quality mismatch; it now sells the screen's main subject.
-  Fix: keep this asset as the current kurodai baseline, then tune lure placement only after the hit badge and HUD frame settle.
+  Fix: keep this asset and lure offset as the current kurodai baseline. Revisit only if the final center background paintover changes the perceived fish/lure spacing.
 
 - [P2] Background is much closer to the reference, but the masked center still needs final art cleanup.
   Location: `assets/showcase/underwater/underwater_battle_bg.png`, `tools/build_reference_underwater_background.py`, `assets/showcase/underwater/underwater_color_grade.png`, `assets/showcase/underwater/underwater_seabed_detail.png`, `assets/showcase/underwater/underwater_foreground_ambience.png`, `src/ui/components/underwater_view.gd`.
