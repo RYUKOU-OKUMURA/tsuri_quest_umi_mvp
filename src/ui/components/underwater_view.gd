@@ -100,9 +100,9 @@ func _load_texture_if_exists(path: String) -> Texture2D:
 func _draw_showcase_background() -> void:
 	_draw_cover_texture(_showcase_bg, Rect2(Vector2.ZERO, size), Color.WHITE)
 	if _showcase_color_grade != null:
-		_draw_cover_texture(_showcase_color_grade, Rect2(Vector2.ZERO, size), Color(1.0, 1.0, 1.0, 0.38))
+		_draw_cover_texture(_showcase_color_grade, Rect2(Vector2.ZERO, size), Color(1.0, 1.0, 1.0, 0.32))
 	if _showcase_seabed_detail != null:
-		_draw_cover_texture(_showcase_seabed_detail, Rect2(Vector2.ZERO, size), Color(1.0, 1.0, 1.0, 0.62))
+		_draw_cover_texture(_showcase_seabed_detail, Rect2(Vector2.ZERO, size), Color(1.0, 1.0, 1.0, 0.56))
 	# 背景PNGに重ねる軽い水中の揺らぎ。主素材を邪魔しない密度に抑える。
 	for index in range(6):
 		var y := size.y * (0.12 + float(index) * 0.085)
@@ -519,7 +519,7 @@ func _draw_showcase_target_fish(center: Vector2, scale_value: float, direction: 
 	var src := Rect2(frame_w * float(frame_index), 0.0, frame_w, frame_h)
 	var dst := Rect2(-draw_size * 0.5, draw_size)
 
-	_draw_ellipse(center + Vector2(0.0, draw_size.y * 0.32), draw_size.x * 0.24, draw_size.y * 0.055, Color(0.0, 0.0, 0.0, 0.08), 28)
+	_draw_ellipse(center + Vector2(0.0, draw_size.y * 0.32), draw_size.x * 0.20, draw_size.y * 0.045, Color(0.0, 0.0, 0.0, 0.035), 28)
 
 	draw_set_transform(Juicer.get_offset() + center, 0.0, Vector2(direction, 1.0))
 	draw_texture_rect_region(_showcase_fish_sheet, dst, src, Color.WHITE)

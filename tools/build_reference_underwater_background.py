@@ -424,16 +424,16 @@ def _add_center_midwater_depth(
 
     patch_size = (int(w * 0.66), int(h * 0.28))
     patch = water_source.resize(patch_size, Image.Resampling.LANCZOS)
-    patch = ImageEnhance.Brightness(patch).enhance(0.84)
-    patch = ImageEnhance.Color(patch).enhance(0.82)
-    patch = ImageEnhance.Contrast(patch).enhance(0.82)
+    patch = ImageEnhance.Brightness(patch).enhance(0.92)
+    patch = ImageEnhance.Color(patch).enhance(0.88)
+    patch = ImageEnhance.Contrast(patch).enhance(0.86)
     patch = patch.filter(ImageFilter.GaussianBlur(1.9)).convert("RGBA")
 
     x = int(w * 0.17)
     y = int(h * 0.39)
     alpha = ImageChops.multiply(
         subject_mask.crop((x, y, x + patch_size[0], y + patch_size[1])),
-        _vertical_mask(patch_size, 52, 0.00, 0.96),
+        _vertical_mask(patch_size, 38, 0.00, 0.96),
     )
     alpha = ImageChops.multiply(alpha, _soft_blob_mask(patch_size, 226, seed_offset=28))
     base.alpha_composite(
@@ -463,16 +463,16 @@ def _add_center_band_breakup(
 
     patch_size = (int(w * 0.68), int(h * 0.24))
     patch = haze_source.resize(patch_size, Image.Resampling.LANCZOS)
-    patch = ImageEnhance.Brightness(patch).enhance(0.78)
-    patch = ImageEnhance.Color(patch).enhance(0.84)
-    patch = ImageEnhance.Contrast(patch).enhance(0.82)
+    patch = ImageEnhance.Brightness(patch).enhance(0.86)
+    patch = ImageEnhance.Color(patch).enhance(0.88)
+    patch = ImageEnhance.Contrast(patch).enhance(0.86)
     patch = patch.filter(ImageFilter.GaussianBlur(2.4)).convert("RGBA")
 
     x = int(w * 0.16)
     y = int(h * 0.43)
     alpha = ImageChops.multiply(
         subject_mask.crop((x, y, x + patch_size[0], y + patch_size[1])),
-        _vertical_mask(patch_size, 44, 0.00, 0.98),
+        _vertical_mask(patch_size, 34, 0.00, 0.98),
     )
     alpha = ImageChops.multiply(alpha, _soft_blob_mask(patch_size, 214, seed_offset=32))
     base.alpha_composite(
