@@ -45,6 +45,7 @@ func _audit_required_assets() -> void:
 		"res://assets/showcase/cooking/fish_icon_sheet.png",
 		"res://assets/showcase/cooking/dish_icon_sheet.png",
 		"res://assets/showcase/cooking/dish_feature_aji_shioyaki.png",
+		"res://assets/showcase/cooking/recipe_grid_frame.png",
 		"res://assets/showcase/cooking/recipe_card_frame.png",
 		"res://assets/showcase/cooking/dish_detail_frame.png",
 		"res://assets/showcase/cooking/meal_result_frame.png",

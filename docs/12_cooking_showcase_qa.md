@@ -8,7 +8,7 @@
 
 | 状態 | 実装 | 現在判定 | Freeze 条件 |
 |---|---|---|---|
-| `COOK_SELECT` | `src/ui/cooking_screen.gd` | P2: 専用カードUI・料理画像・魚アイコンに加え、魚行に選択マーカーと`status_card_frame.png`、料理カードに`recipe_card_frame.png`、右詳細に`dish_detail_frame.png`の9スライス枠を適用。headless layout auditで1280x720内のはみ出し/縦クリップなしを確認済み。視覚スクショで密度確認が必要。 | 魚/料理/詳細/調理ボタンが1280x720で衝突せず、stock listに見えない。魚行と料理カードの選択/未選択/ロック状態が識別できる。 |
+| `COOK_SELECT` | `src/ui/cooking_screen.gd` | P2: 専用カードUI・料理画像・魚アイコンに加え、魚行に選択マーカーと`status_card_frame.png`、料理一覧に`recipe_grid_frame.png`、料理カードに`recipe_card_frame.png`、右詳細に`dish_detail_frame.png`の9スライス枠を適用。headless layout auditで1280x720内のはみ出し/縦クリップなしを確認済み。視覚スクショで密度確認が必要。 | 魚/料理/詳細/調理ボタンが1280x720で衝突せず、stock listに見えない。魚行と料理カードの選択/未選択/ロック状態が識別できる。 |
 | `MEAL_RESULT` | `src/ui/components/cooking_reward_panel.gd` | P2: 専用報酬オーバーレイで料理/基本EXP/初回/合計/バフを分離済み。食事/EXP/成長の進行ストリップと、料理が食経験値・次回効果へ変わる橋渡し文、`meal_scene_bg.png`の食事背景、湯気/きらめきの控えめな報酬演出、`meal_result_frame.png`の9スライス枠を追加。headless layout audit通過。視覚スクショ未確認。 | 食べた料理、基本EXP、初回ボーナス、合計獲得、バフが本文を読まなくても追える。 |
 | `EXP_GAIN` | `src/ui/components/cooking_reward_panel.gd` | P2: EXPゲージ演出と大きな+EXP表示を持つ。基本EXP/初回/合計を分離し、レベルアップ時は報酬パネル上でも`Lv.X -> Lv.Y`を予告、Lv.5到達時は`ぬし解放`へつながることを先出しして、食事結果からEXP/成長へのつながりを強化。Lv到達時は料理名つきで食経験値が成長を後押ししたことを明示し、食事背景と小演出で選択フォームから報酬場面へ切り替わる。headless smokeで非レベルアップ完結パス、layout auditで1280x720収まりを確認済み。視覚スクショ未確認。 | EXPメーターが主役で、レベルアップしない場合も完結感がある。レベルアップする場合は次の報酬演出へ進む理由が明確に読める。 |
 | `LEVEL_UP_OVERLAY` | `src/ui/components/level_up_panel.gd` | P2: 大型報酬パネル、before/after、Lv.5解放カードあり。能力アイコンをフォント依存の記号からASCIIバッジへ置換し、`level_up_frame.png`の9スライス枠を適用済み。食経験値が成長に変わった副題と、食事でLv.5到達した解放文を追加。headless layout audit通過。視覚スクショ未確認。 | レベル遷移、能力上昇、ぬし解放が最も強い報酬瞬間として読める。 |

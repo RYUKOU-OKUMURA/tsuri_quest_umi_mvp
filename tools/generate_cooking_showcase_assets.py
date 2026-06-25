@@ -285,6 +285,7 @@ def dish_feature() -> None:
 
 def frame_assets() -> None:
     specs = [
+        ("recipe_grid_frame.png", (460, 560), rgba("ead9b2"), rgba("59371c"), rgba("f4c56b")),
         ("recipe_card_frame.png", (280, 220), rgba("f4e5bf"), rgba("59371c"), rgba("f4c56b")),
         ("dish_detail_frame.png", (620, 560), rgba("f5e8c8"), rgba("59371c"), rgba("f4c56b")),
         ("meal_result_frame.png", (760, 240), rgba("102840", 238), rgba("59371c"), rgba("f4c56b")),

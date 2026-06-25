@@ -9,6 +9,7 @@ const COOKING_BG := "res://assets/showcase/cooking/cooking_room_bg.png"
 const FISH_ICON_SHEET := "res://assets/showcase/cooking/fish_icon_sheet.png"
 const DISH_ICON_SHEET := "res://assets/showcase/cooking/dish_icon_sheet.png"
 const DISH_FEATURE_AJI := "res://assets/showcase/cooking/dish_feature_aji_shioyaki.png"
+const RECIPE_GRID_FRAME := "res://assets/showcase/cooking/recipe_grid_frame.png"
 const RECIPE_CARD_FRAME := "res://assets/showcase/cooking/recipe_card_frame.png"
 const DISH_DETAIL_FRAME := "res://assets/showcase/cooking/dish_detail_frame.png"
 const FISH_ROW_FRAME := "res://assets/showcase/cooking/status_card_frame.png"
@@ -176,7 +177,13 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	_fish_box.add_theme_constant_override("separation", 6)
 	fish_layout.add_child(_fish_box)
 
-	var recipe_panel := _panel_box(Color("#ead9b2"), Color("#5e391a"), Color("#e6b561"), 6)
+	var recipe_panel := _texture_panel_box(
+		RECIPE_GRID_FRAME,
+		32,
+		_style_box(Color("#ead9b2"), Color("#5e391a"), Color("#e6b561"), 6, 5),
+		16.0,
+		10.0
+	)
 	recipe_panel.custom_minimum_size = Vector2(420, 0)
 	recipe_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(recipe_panel)
