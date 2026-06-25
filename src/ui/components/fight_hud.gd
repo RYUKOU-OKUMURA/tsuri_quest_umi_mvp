@@ -420,7 +420,7 @@ func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String,
 	var key_text_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
 	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 15.0), key_size, Color.WHITE, 1)
 	var label_size := 14 if not is_long_key else 13
-	var note_size := 11 if not is_long_key else 9
+	var note_size := 11 if not is_long_key else 10
 	var label_pos := key_rect.position + Vector2(key_rect.size.x + (7.0 if not is_long_key else 5.0), 15.0)
 	_draw_text(font, label, label_pos, label_size, Color("#2b2117"), 0)
 	var note_font := FightFontsScript.regular(get_theme_default_font())
@@ -433,7 +433,7 @@ func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String,
 	var note_w := note_font.get_string_size(note_text, HORIZONTAL_ALIGNMENT_LEFT, -1, note_size).x
 	if note_w > available_w:
 		note_size = max(8, note_size - 1)
-	_draw_text(note_font, note_text, note_pos, note_size, Color("#3f2f22"), 0)
+	_draw_text(note_font, note_text, note_pos, note_size, Color("#2b2117"), 0)
 
 
 func _draw_key_row(font: Font, pos: Vector2, key: String, label: String) -> void:
@@ -465,7 +465,7 @@ func _compact_control_note(note: String) -> String:
 		return "リールを巻く"
 	if note.begins_with("ライン"):
 		return "ラインを出す"
-	return "テンション調整"
+	return "テンション"
 
 
 func _hint_key_slots(hint: Rect2) -> Array[Rect2]:
