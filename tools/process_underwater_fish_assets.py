@@ -4,7 +4,7 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
+from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont, ImageOps
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -146,19 +146,15 @@ def create_kurodai_card_portrait(sheet: Image.Image | None = None) -> None:
         sheet = Image.open(FISH_SHEET).convert("RGBA")
     frame_w = sheet.width // 4
     frame = sheet.crop((0, 0, frame_w, sheet.height))
-    crop = frame.crop(_content_bbox(frame))
-    # Match the in-game sidebar portrait window. A 720x330 source became too
-    # wide for the runtime card slot and made the fish feel like a shrunken
-    # document thumbnail rather than the card's subject.
-    canvas = Image.new("RGBA", (620, 330), _rgba("#f4ead4"))
-    d = ImageDraw.Draw(canvas)
-    d.rounded_rectangle((10, 10, canvas.width - 10, canvas.height - 10), radius=12, fill=_rgba("#f4ead4"), outline=_rgba("#c6aa73", 82), width=2)
-    for y in range(54, canvas.height - 34, 58):
-        d.line((42, y, canvas.width - 42, y), fill=_rgba("#c3a873", 30), width=1)
+    crop = ImageOps.mirror(frame.crop(_content_bbox(frame)))
+    # Match the in-game sidebar portrait window, but keep the card paper and
+    # rules in sidebar_frame.png so the fish reads as printed on one card
+    # surface instead of sitting inside a second framed panel.
+    canvas = Image.new("RGBA", (620, 330), (0, 0, 0, 0))
     shadow = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow)
-    sd.ellipse((92, 236, canvas.width - 70, 300), fill=(72, 52, 31, 28))
-    canvas.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(7)))
+    sd.ellipse((112, 240, canvas.width - 92, 292), fill=(72, 52, 31, 24))
+    canvas.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(9)))
 
     max_w = int(canvas.width * 0.90)
     max_h = int(canvas.height * 0.84)
