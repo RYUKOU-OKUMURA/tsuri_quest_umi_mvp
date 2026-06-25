@@ -59,10 +59,8 @@ func _build_screen() -> void:
 	var unlock_layout := HBoxContainer.new()
 	unlock_layout.add_theme_constant_override("separation", 12)
 	_unlock_card.add_child(unlock_layout)
-	var unlock_icon := make_shadow_label("★", 34, Palette.GAUGE_RED_HI, 3)
-	unlock_icon.custom_minimum_size = Vector2(48.0, 0.0)
-	unlock_icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	unlock_icon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	var unlock_icon := _badge_box("BOSS", Palette.GAUGE_RED_HI, Color("#fff1c7"))
+	unlock_icon.custom_minimum_size = Vector2(70.0, 0.0)
 	unlock_layout.add_child(unlock_icon)
 	var unlock_text := VBoxContainer.new()
 	unlock_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -81,7 +79,7 @@ func _build_screen() -> void:
 func show_level_up(
 	level_from: int, level_to: int, old_stats: Dictionary, new_stats: Dictionary
 ) -> void:
-	_level_line.text = "Lv.%d   →   Lv.%d" % [level_from, level_to]
+	_level_line.text = "Lv.%d   ->   Lv.%d" % [level_from, level_to]
 	_rebuild_stats(old_stats, new_stats)
 	var boss_unlocked := (
 		level_from < GameData.BOSS_UNLOCK_LEVEL and level_to >= GameData.BOSS_UNLOCK_LEVEL
@@ -97,7 +95,7 @@ func _rebuild_stats(old_stats: Dictionary, new_stats: Dictionary) -> void:
 	_clear_container(_stats_box)
 	var rows := [
 		{
-			"icon": "♥",
+			"icon": "HP",
 			"name": "最大体力",
 			"old": int(round(float(old_stats.get("max_energy", 0)))),
 			"new": int(round(float(new_stats.get("max_energy", 0)))),
@@ -105,7 +103,7 @@ func _rebuild_stats(old_stats: Dictionary, new_stats: Dictionary) -> void:
 			"color": Palette.GAUGE_RED_HI,
 		},
 		{
-			"icon": "↻",
+			"icon": "PWR",
 			"name": "巻力",
 			"old": float(old_stats.get("reel_power", 0)),
 			"new": float(new_stats.get("reel_power", 0)),
@@ -113,7 +111,7 @@ func _rebuild_stats(old_stats: Dictionary, new_stats: Dictionary) -> void:
 			"color": Palette.GAUGE_CYAN_HI,
 		},
 		{
-			"icon": "◆",
+			"icon": "TEC",
 			"name": "技量",
 			"old": int(old_stats.get("technique", 0)),
 			"new": int(new_stats.get("technique", 0)),
@@ -121,7 +119,7 @@ func _rebuild_stats(old_stats: Dictionary, new_stats: Dictionary) -> void:
 			"color": Palette.GOLD_BRIGHT,
 		},
 		{
-			"icon": "✦",
+			"icon": "FOC",
 			"name": "集中力",
 			"old": int(old_stats.get("focus", 0)),
 			"new": int(new_stats.get("focus", 0)),
@@ -143,10 +141,8 @@ func _stat_row(row: Dictionary) -> PanelContainer:
 	line.add_theme_constant_override("separation", 12)
 	panel.add_child(line)
 
-	var icon := make_shadow_label(String(row["icon"]), 24, row["color"], 3)
+	var icon := _badge_box(String(row["icon"]), row["color"], Palette.TEXT_BONE)
 	icon.custom_minimum_size = Vector2(46.0, 0.0)
-	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	icon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	line.add_child(icon)
 
 	var name := make_label(String(row["name"]), 20, Palette.TEXT_BONE, 2)
@@ -157,7 +153,7 @@ func _stat_row(row: Dictionary) -> PanelContainer:
 	var fmt := String(row["fmt"])
 	var old_text := fmt % old_value
 	var new_text := fmt % new_value
-	var values := make_shadow_label("%s  ▶  %s" % [old_text, new_text], 24, Palette.TEXT_BONE, 3)
+	var values := make_shadow_label("%s  ->  %s" % [old_text, new_text], 24, Palette.TEXT_BONE, 3)
 	values.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	values.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	values.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -172,6 +168,20 @@ func _stat_row(row: Dictionary) -> PanelContainer:
 	gain.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	line.add_child(gain)
 	return panel
+
+
+func _badge_box(text: String, fill: Color, text_color: Color) -> PanelContainer:
+	var badge := PanelContainer.new()
+	badge.add_theme_stylebox_override(
+		"panel",
+		_style_box(fill.darkened(0.18), Color("#07121e"), Palette.GOLD_BRIGHT, 2, 4)
+	)
+	var label := make_shadow_label(text, 17, text_color, 2)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	badge.add_child(label)
+	return badge
 
 
 func _add_burst_layer() -> void:
