@@ -176,9 +176,23 @@ func _fake_meal_result() -> Dictionary:
 
 
 func _save_viewport(vp: SubViewport, path: String) -> bool:
+	if DisplayServer.get_name() == "headless":
+		_push_headless_capture_error(path)
+		return false
 	var img := vp.get_texture().get_image()
 	if img == null:
 		push_error("SubViewport get_image() returned null for %s" % path)
 		return false
 	img.save_png(path)
 	return true
+
+
+func _push_headless_capture_error(path: String) -> void:
+	push_error(
+		(
+			"Cannot capture %s with the headless/dummy display driver. "
+			+ "Run this scene with a real display driver, for example without --headless, "
+			+ "to generate cooking screenshots."
+		)
+		% path
+	)

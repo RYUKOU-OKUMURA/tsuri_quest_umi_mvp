@@ -55,6 +55,10 @@ func _build_screen() -> void:
 	_level_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_level_line)
 
+	var source_line := make_shadow_label("食経験値が成長に変わった", 20, Palette.GAUGE_GREEN_HI, 3)
+	source_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(source_line)
+
 	_stats_box = VBoxContainer.new()
 	_stats_box.add_theme_constant_override("separation", 6)
 	_stats_box.custom_minimum_size = Vector2(650.0, 0.0)
@@ -96,7 +100,7 @@ func show_level_up(
 	_unlock_card.visible = boss_unlocked
 	if boss_unlocked:
 		_unlock_title.text = "港のぬしに挑戦できるようになった！"
-		_unlock_body.text = "Lv.%d到達。港の大岩周辺で、ぬしとの本格ファイトが解放されます。" % GameData.BOSS_UNLOCK_LEVEL
+		_unlock_body.text = "食事でLv.%d到達。港の大岩周辺で、ぬしとの本格ファイトが解放されます。" % GameData.BOSS_UNLOCK_LEVEL
 	_present()
 
 
