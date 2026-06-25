@@ -22,6 +22,8 @@ def _make_full_window_subject_mask(size: tuple[int, int]) -> Image.Image:
     # The full reference water window preserves the authored left/right reefs
     # and seabed, so only remove the runtime subjects that will be redrawn by
     # Godot: the large kurodai, the hit burst, the line, and the lure.
+    # Keep the subject mask broad enough to avoid fish/hit remnants in the
+    # reusable background. Detail restoration comes from edge-only safe crops.
     draw.ellipse((w * 0.11, h * 0.16, w * 0.66, h * 0.68), fill=255)
     draw.rectangle((w * 0.22, h * 0.28, w * 0.60, h * 0.60), fill=255)
     draw.polygon(((w * 0.23, h * 0.38), (w * 0.10, h * 0.27), (w * 0.11, h * 0.62)), fill=255)
@@ -31,8 +33,8 @@ def _make_full_window_subject_mask(size: tuple[int, int]) -> Image.Image:
     draw.ellipse((w * 0.34, h * 0.62, w * 0.76, h * 1.04), fill=255)
     draw.rectangle((w * 0.34, h * 0.70, w * 0.76, h * 0.99), fill=255)
 
-    draw.line((w * 0.91, -h * 0.08, w * 0.68, h * 0.54), fill=255, width=max(58, int(w * 0.062)))
-    draw.line((w * 0.84, -h * 0.06, w * 0.67, h * 0.52), fill=255, width=max(46, int(w * 0.050)))
+    draw.line((w * 0.91, -h * 0.08, w * 0.68, h * 0.54), fill=255, width=max(42, int(w * 0.046)))
+    draw.line((w * 0.84, -h * 0.06, w * 0.67, h * 0.52), fill=255, width=max(32, int(w * 0.036)))
     draw.polygon(
         (
             (w * 0.78, 0.0),
@@ -101,6 +103,28 @@ def _soft_blob_mask(size: tuple[int, int], alpha: int, *, seed_offset: int = 0) 
         local_alpha = max(0, alpha - index * 8 + seed_offset)
         draw.ellipse((x0, y0, x1, y1), fill=local_alpha)
     return mask.filter(ImageFilter.GaussianBlur(max(8, int(min(w, h) * 0.07))))
+
+
+def _stitch_reference_patches(left: Image.Image, right: Image.Image, *, align: str = "top") -> Image.Image:
+    left = left.convert("RGB")
+    right = right.convert("RGB")
+    overlap = max(8, int(min(left.width, right.width) * 0.22))
+    width = left.width + right.width - overlap
+    height = max(left.height, right.height)
+    stitched = Image.new("RGB", (width, height))
+
+    left_y = height - left.height if align == "bottom" else 0
+    right_y = height - right.height if align == "bottom" else 0
+    stitched.paste(left, (0, left_y))
+
+    mask = Image.new("L", right.size, 255)
+    pixels = mask.load()
+    for x in range(min(overlap, right.width)):
+        alpha = int(255 * x / max(1, overlap - 1))
+        for y in range(right.height):
+            pixels[x, y] = alpha
+    stitched.paste(right, (left.width - overlap, right_y), mask)
+    return stitched
 
 
 def _add_distant_fish_layer(
@@ -203,11 +227,9 @@ def _add_reference_school_texture(
 ) -> None:
     w, h = source.size
 
-    left_school = source.crop((int(w * 0.02), int(h * 0.14), int(w * 0.32), int(h * 0.42)))
+    left_school = source.crop((int(w * 0.02), int(h * 0.14), int(w * 0.14), int(h * 0.42)))
     right_school = source.crop((int(w * 0.70), int(h * 0.12), int(w * 0.98), int(h * 0.40)))
-    school_source = Image.new("RGB", (left_school.width + right_school.width, max(left_school.height, right_school.height)))
-    school_source.paste(left_school, (0, 0))
-    school_source.paste(right_school, (left_school.width, 0))
+    school_source = _stitch_reference_patches(left_school, right_school)
 
     patch_size = (int(w * 0.64), int(h * 0.38))
     patch = school_source.resize(patch_size, Image.Resampling.LANCZOS)
@@ -232,7 +254,9 @@ def _add_reference_school_texture(
         (x, y),
     )
 
-    ridge_source = source.crop((int(w * 0.04), int(h * 0.58), int(w * 0.96), int(h * 0.80)))
+    left_ridge = source.crop((int(w * 0.04), int(h * 0.58), int(w * 0.16), int(h * 0.80)))
+    right_ridge = source.crop((int(w * 0.80), int(h * 0.58), int(w * 0.96), int(h * 0.80)))
+    ridge_source = _stitch_reference_patches(left_ridge, right_ridge)
     ridge_size = (int(w * 0.70), int(h * 0.18))
     ridge = ridge_source.resize(ridge_size, Image.Resampling.LANCZOS)
     ridge = ImageEnhance.Brightness(ridge).enhance(0.62)
@@ -263,11 +287,9 @@ def _add_center_seabed_shelf(
     subject_mask: Image.Image,
 ) -> None:
     w, h = source.size
-    left_shelf = source.crop((int(w * 0.04), int(h * 0.58), int(w * 0.36), int(h * 0.84)))
-    right_shelf = source.crop((int(w * 0.64), int(h * 0.58), int(w * 0.96), int(h * 0.84)))
-    shelf_source = Image.new("RGB", (left_shelf.width + right_shelf.width, max(left_shelf.height, right_shelf.height)))
-    shelf_source.paste(left_shelf, (0, 0))
-    shelf_source.paste(right_shelf, (left_shelf.width, 0))
+    left_shelf = source.crop((int(w * 0.04), int(h * 0.58), int(w * 0.16), int(h * 0.84)))
+    right_shelf = source.crop((int(w * 0.78), int(h * 0.58), int(w * 0.96), int(h * 0.84)))
+    shelf_source = _stitch_reference_patches(left_shelf, right_shelf)
 
     shelf_size = (int(w * 0.68), int(h * 0.30))
     shelf = shelf_source.resize(shelf_size, Image.Resampling.LANCZOS)
@@ -299,11 +321,9 @@ def _add_center_floor_glints(
     subject_mask: Image.Image,
 ) -> None:
     w, h = source.size
-    left_floor = source.crop((int(w * 0.06), int(h * 0.66), int(w * 0.36), int(h * 0.94)))
-    right_floor = source.crop((int(w * 0.66), int(h * 0.64), int(w * 0.96), int(h * 0.92)))
-    floor_source = Image.new("RGB", (left_floor.width + right_floor.width, max(left_floor.height, right_floor.height)))
-    floor_source.paste(left_floor, (0, floor_source.height - left_floor.height))
-    floor_source.paste(right_floor, (left_floor.width, floor_source.height - right_floor.height))
+    left_floor = source.crop((int(w * 0.06), int(h * 0.66), int(w * 0.18), int(h * 0.94)))
+    right_floor = source.crop((int(w * 0.78), int(h * 0.64), int(w * 0.96), int(h * 0.92)))
+    floor_source = _stitch_reference_patches(left_floor, right_floor, align="bottom")
 
     patch_size = (int(w * 0.56), int(h * 0.24))
     patch = floor_source.resize(patch_size, Image.Resampling.LANCZOS)
@@ -335,14 +355,9 @@ def _add_center_floor_micro_detail(
     subject_mask: Image.Image,
 ) -> None:
     w, h = source.size
-    left_floor = source.crop((int(w * 0.05), int(h * 0.69), int(w * 0.30), int(h * 0.94)))
+    left_floor = source.crop((int(w * 0.05), int(h * 0.69), int(w * 0.18), int(h * 0.94)))
     right_floor = source.crop((int(w * 0.76), int(h * 0.66), int(w * 0.97), int(h * 0.92)))
-    detail_source = Image.new(
-        "RGB",
-        (left_floor.width + right_floor.width, max(left_floor.height, right_floor.height)),
-    )
-    detail_source.paste(left_floor, (0, detail_source.height - left_floor.height))
-    detail_source.paste(right_floor, (left_floor.width, detail_source.height - right_floor.height))
+    detail_source = _stitch_reference_patches(left_floor, right_floor, align="bottom")
 
     patch_size = (int(w * 0.62), int(h * 0.22))
     patch = detail_source.resize(patch_size, Image.Resampling.LANCZOS)
@@ -374,14 +389,9 @@ def _add_center_floor_caustic_mesh(
     subject_mask: Image.Image,
 ) -> None:
     w, h = source.size
-    left_floor = source.crop((int(w * 0.05), int(h * 0.72), int(w * 0.32), int(h * 0.96)))
+    left_floor = source.crop((int(w * 0.05), int(h * 0.72), int(w * 0.18), int(h * 0.96)))
     right_floor = source.crop((int(w * 0.72), int(h * 0.70), int(w * 0.97), int(h * 0.94)))
-    floor_source = Image.new(
-        "RGB",
-        (left_floor.width + right_floor.width, max(left_floor.height, right_floor.height)),
-    )
-    floor_source.paste(left_floor, (0, floor_source.height - left_floor.height))
-    floor_source.paste(right_floor, (left_floor.width, floor_source.height - right_floor.height))
+    floor_source = _stitch_reference_patches(left_floor, right_floor, align="bottom")
 
     patch_size = (int(w * 0.58), int(h * 0.21))
     patch = floor_source.resize(patch_size, Image.Resampling.LANCZOS)
@@ -453,14 +463,9 @@ def _add_center_sand_channel(
     subject_mask: Image.Image,
 ) -> None:
     w, h = source.size
-    left_sand = source.crop((int(w * 0.03), int(h * 0.73), int(w * 0.28), int(h * 0.98)))
+    left_sand = source.crop((int(w * 0.03), int(h * 0.73), int(w * 0.17), int(h * 0.98)))
     right_sand = source.crop((int(w * 0.79), int(h * 0.72), int(w * 0.97), int(h * 0.98)))
-    sand_source = Image.new(
-        "RGB",
-        (left_sand.width + right_sand.width, max(left_sand.height, right_sand.height)),
-    )
-    sand_source.paste(left_sand, (0, sand_source.height - left_sand.height))
-    sand_source.paste(right_sand, (left_sand.width, sand_source.height - right_sand.height))
+    sand_source = _stitch_reference_patches(left_sand, right_sand, align="bottom")
 
     patch_size = (int(w * 0.70), int(h * 0.26))
     patch = sand_source.resize(patch_size, Image.Resampling.LANCZOS)
@@ -492,14 +497,9 @@ def _add_center_midwater_depth(
     subject_mask: Image.Image,
 ) -> None:
     w, h = source.size
-    left_water = source.crop((int(w * 0.02), int(h * 0.34), int(w * 0.20), int(h * 0.64)))
+    left_water = source.crop((int(w * 0.02), int(h * 0.34), int(w * 0.14), int(h * 0.64)))
     right_water = source.crop((int(w * 0.82), int(h * 0.34), int(w * 0.98), int(h * 0.64)))
-    water_source = Image.new(
-        "RGB",
-        (left_water.width + right_water.width, max(left_water.height, right_water.height)),
-    )
-    water_source.paste(left_water, (0, 0))
-    water_source.paste(right_water, (left_water.width, 0))
+    water_source = _stitch_reference_patches(left_water, right_water)
 
     patch_size = (int(w * 0.66), int(h * 0.28))
     patch = water_source.resize(patch_size, Image.Resampling.LANCZOS)
@@ -531,14 +531,9 @@ def _add_center_band_breakup(
     subject_mask: Image.Image,
 ) -> None:
     w, h = source.size
-    left_haze = source.crop((int(w * 0.02), int(h * 0.40), int(w * 0.22), int(h * 0.68)))
+    left_haze = source.crop((int(w * 0.02), int(h * 0.40), int(w * 0.14), int(h * 0.68)))
     right_haze = source.crop((int(w * 0.82), int(h * 0.38), int(w * 0.98), int(h * 0.66)))
-    haze_source = Image.new(
-        "RGB",
-        (left_haze.width + right_haze.width, max(left_haze.height, right_haze.height)),
-    )
-    haze_source.paste(left_haze, (0, 0))
-    haze_source.paste(right_haze, (left_haze.width, 0))
+    haze_source = _stitch_reference_patches(left_haze, right_haze)
 
     patch_size = (int(w * 0.68), int(h * 0.24))
     patch = haze_source.resize(patch_size, Image.Resampling.LANCZOS)
@@ -570,14 +565,9 @@ def _add_center_midwater_light_glaze(
     subject_mask: Image.Image,
 ) -> None:
     w, h = source.size
-    upper_left = source.crop((int(w * 0.05), int(h * 0.06), int(w * 0.34), int(h * 0.36)))
+    upper_left = source.crop((int(w * 0.05), int(h * 0.06), int(w * 0.15), int(h * 0.36)))
     upper_right = source.crop((int(w * 0.70), int(h * 0.06), int(w * 0.97), int(h * 0.34)))
-    light_source = Image.new(
-        "RGB",
-        (upper_left.width + upper_right.width, max(upper_left.height, upper_right.height)),
-    )
-    light_source.paste(upper_left, (0, 0))
-    light_source.paste(upper_right, (upper_left.width, 0))
+    light_source = _stitch_reference_patches(upper_left, upper_right)
 
     patch_size = (int(w * 0.64), int(h * 0.36))
     patch = light_source.resize(patch_size, Image.Resampling.LANCZOS)
@@ -730,14 +720,9 @@ def _add_center_water_texture(
     # Reuse the reference's own seabed and water pixels to break up the clean
     # fill inside the removed fish/hit area. This stays in the target art
     # language while keeping the runtime fish zone visually quiet.
-    left_floor = source.crop((int(w * 0.02), int(h * 0.69), int(w * 0.34), h))
+    left_floor = source.crop((int(w * 0.02), int(h * 0.69), int(w * 0.17), h))
     right_floor = source.crop((int(w * 0.76), int(h * 0.66), int(w * 0.98), h))
-    floor_source = Image.new(
-        "RGB",
-        (left_floor.width + right_floor.width, max(left_floor.height, right_floor.height)),
-    )
-    floor_source.paste(left_floor, (0, floor_source.height - left_floor.height))
-    floor_source.paste(right_floor, (left_floor.width, floor_source.height - right_floor.height))
+    floor_source = _stitch_reference_patches(left_floor, right_floor, align="bottom")
     seabed_patch = floor_source.resize(
         (int(w * 0.72), int(h * 0.30)),
         Image.Resampling.LANCZOS,
@@ -779,9 +764,9 @@ def _add_center_water_texture(
     _add_center_floor_caustic_mesh(base, source, subject_mask)
 
     floor_fragments = (
-        (source.crop((int(w * 0.08), int(h * 0.74), int(w * 0.28), int(h * 0.92))), 0.33, 0.79, 0.24, 0.11, 22),
+        (source.crop((int(w * 0.08), int(h * 0.74), int(w * 0.18), int(h * 0.92))), 0.33, 0.79, 0.24, 0.11, 22),
         (source.crop((int(w * 0.78), int(h * 0.72), int(w * 0.96), int(h * 0.92))), 0.49, 0.82, 0.21, 0.10, 18),
-        (source.crop((int(w * 0.20), int(h * 0.78), int(w * 0.38), int(h * 0.94))), 0.61, 0.83, 0.19, 0.09, 16),
+        (source.crop((int(w * 0.82), int(h * 0.78), int(w * 0.98), int(h * 0.94))), 0.61, 0.83, 0.19, 0.09, 16),
     )
     for fragment, u, v, patch_w_ratio, patch_h_ratio, alpha in floor_fragments:
         patch_size = (int(w * patch_w_ratio), int(h * patch_h_ratio))
@@ -821,10 +806,10 @@ def _add_center_water_texture(
         )
 
     reef_fragments = (
-        (source.crop((int(w * 0.04), int(h * 0.58), int(w * 0.24), int(h * 0.88))), 0.36, 0.70, 0.28, 0.22, 12),
-        (source.crop((int(w * 0.68), int(h * 0.48), int(w * 0.94), int(h * 0.78))), 0.49, 0.61, 0.34, 0.24, 14),
+        (source.crop((int(w * 0.04), int(h * 0.58), int(w * 0.16), int(h * 0.88))), 0.36, 0.70, 0.28, 0.22, 12),
+        (source.crop((int(w * 0.82), int(h * 0.48), int(w * 0.98), int(h * 0.78))), 0.49, 0.61, 0.34, 0.24, 14),
         (source.crop((int(w * 0.78), int(h * 0.54), int(w * 0.98), int(h * 0.86))), 0.57, 0.68, 0.30, 0.23, 11),
-        (source.crop((int(w * 0.66), int(h * 0.70), int(w * 0.88), int(h * 0.94))), 0.49, 0.82, 0.27, 0.14, 12),
+        (source.crop((int(w * 0.82), int(h * 0.70), int(w * 0.98), int(h * 0.94))), 0.49, 0.82, 0.27, 0.14, 12),
     )
     for index, (fragment, u, v, patch_w_ratio, patch_h_ratio, alpha) in enumerate(reef_fragments):
         patch_size = (int(w * patch_w_ratio), int(h * patch_h_ratio))
@@ -850,14 +835,9 @@ def _add_center_water_texture(
             (x, y),
         )
 
-    left_water = source.crop((int(w * 0.02), int(h * 0.18), int(w * 0.24), int(h * 0.56)))
-    right_water = left_water.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
-    mid_source = Image.new(
-        "RGB",
-        (left_water.width + right_water.width, max(left_water.height, right_water.height)),
-    )
-    mid_source.paste(left_water, (0, 0))
-    mid_source.paste(right_water, (left_water.width, 0))
+    left_water = source.crop((int(w * 0.02), int(h * 0.18), int(w * 0.14), int(h * 0.56)))
+    right_water = source.crop((int(w * 0.82), int(h * 0.18), int(w * 0.98), int(h * 0.56)))
+    mid_source = _stitch_reference_patches(left_water, right_water)
     mid_patch = mid_source.resize((int(w * 0.60), int(h * 0.36)), Image.Resampling.LANCZOS)
     mid_patch = ImageEnhance.Brightness(mid_patch).enhance(1.04)
     mid_patch = ImageEnhance.Color(mid_patch).enhance(0.92)
