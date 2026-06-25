@@ -11,8 +11,8 @@ const SHOWCASE_HIT_BURST_PATH := "res://assets/showcase/underwater/hit_burst.png
 const SHOWCASE_HIT_BADGE_FULL_PATH := "res://assets/showcase/underwater/hit_badge_full.png"
 const SHOWCASE_LURE_PATH := "res://assets/showcase/underwater/fight_lure.png"
 const SHOWCASE_FISH_FRAME_COUNT := 4
-const SHOWCASE_FISH_CENTER_OFFSET := Vector2(-0.082, -0.018)
-const HIT_BURST_CENTER_RATIO := Vector2(0.49, 0.765)
+const SHOWCASE_FISH_CENTER_OFFSET := Vector2(-0.045, -0.004)
+const HIT_BURST_CENTER_RATIO := Vector2(0.49, 0.80)
 
 var simulator: FishingSimulator
 var fish_data: Dictionary = {}
@@ -595,14 +595,14 @@ func _draw_hit_burst() -> void:
 	var burst_center := size * HIT_BURST_CENTER_RATIO
 	if _showcase_hit_badge_full != null:
 		var badge_size := _showcase_hit_badge_full.get_size()
-		var badge_scale := clampf(size.x / 1320.0, 0.47, 0.56)
+		var badge_scale := clampf(size.x / 1320.0, 0.50, 0.58)
 		var badge_draw_size := badge_size * badge_scale
 		var badge_rect := Rect2(burst_center - badge_draw_size * 0.5, badge_draw_size)
 		draw_texture_rect(_showcase_hit_badge_full, badge_rect, false, Color(1.0, 1.0, 1.0, alpha))
 		return
 	if _showcase_hit_burst != null:
 		var tex_size := _showcase_hit_burst.get_size()
-		var scale := clampf(size.x / 1320.0, 0.47, 0.56)
+		var scale := clampf(size.x / 1320.0, 0.50, 0.58)
 		var draw_size := tex_size * scale
 		var draw_rect := Rect2(burst_center - draw_size * 0.5, draw_size)
 		draw_texture_rect(_showcase_hit_burst, draw_rect, false, Color(1.0, 1.0, 1.0, alpha))

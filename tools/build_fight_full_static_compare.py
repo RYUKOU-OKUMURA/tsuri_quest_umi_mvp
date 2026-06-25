@@ -120,8 +120,8 @@ def _draw_fish(water: Image.Image) -> tuple[float, float, float, float]:
     draw_w = water.width * 0.515 * stamina_scale
     draw_h = draw_w * fish.height / fish.width
     center = (
-        (0.42 - 0.082) * water.width,
-        (0.46 - 0.018) * water.height,
+        (0.42 - 0.045) * water.width,
+        (0.46 - 0.004) * water.height,
     )
     shadow = Image.new("RGBA", water.size, (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow)
@@ -173,8 +173,8 @@ def _draw_line_lure_hit(water: Image.Image, fish_metrics: tuple[float, float, fl
     draw.line((meter_rect[0] + 2, meter_rect[1] + 1, meter_rect[0] + fill_w - 2, meter_rect[1] + 1), fill=(255, 255, 255, 19), width=1)
     _draw_text(draw, (76.0, water.height - 27.0), "距離 29.8m", 9, "#b7d6e1", bold=False, stroke=1, stroke_fill=(0, 0, 0, 51))
 
-    burst_center = (water.width * 0.49, water.height * 0.765)
-    scale = min(max(water.width / 1320.0, 0.47), 0.56)
+    burst_center = (water.width * 0.49, water.height * 0.80)
+    scale = min(max(water.width / 1320.0, 0.50), 0.58)
     full_badge_path = ASSET_DIR / "hit_badge_full.png"
     if full_badge_path.exists():
         badge = Image.open(full_badge_path).convert("RGBA")
