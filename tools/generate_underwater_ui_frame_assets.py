@@ -556,13 +556,13 @@ def create_fight_hud_frame() -> None:
         shadow=False,
     )
     _draw_paper_slot(d, (hint_panel[0] + 14, hint_panel[1] + 12, hint_panel[2] - 14, hint_panel[1] + 44), title=True)
-    hint_body = (hint_panel[0] + 24, hint_panel[1] + 58, hint_panel[2] - 24, hint_panel[3] - 16)
+    hint_body = (hint_panel[0] + 22, hint_panel[1] + 52, hint_panel[2] - 22, hint_panel[3] - 12)
     _draw_paper_slot(d, hint_body)
     _draw_inner_shadow(d, hint_body, alpha=18)
     for i in (1, 2):
         x = hint_body[0] + int((hint_body[2] - hint_body[0]) * i / 3)
-        d.line((x, hint_body[1] + 14, x, hint_body[3] - 14), fill=_rgba("#8c6733", 62), width=2)
-        d.line((x + 3, hint_body[1] + 18, x + 3, hint_body[3] - 18), fill=(255, 255, 255, 34), width=1)
+        d.line((x, hint_body[1] + 12, x, hint_body[3] - 12), fill=_rgba("#8c6733", 54), width=2)
+        d.line((x + 3, hint_body[1] + 16, x + 3, hint_body[3] - 16), fill=(255, 255, 255, 30), width=1)
     _draw_clean_card(
         image,
         menu_panel,

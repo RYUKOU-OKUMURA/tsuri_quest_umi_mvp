@@ -345,21 +345,22 @@ func _draw_key_hint(font: Font, rect: Rect2, key: String, label: String) -> void
 
 
 func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String, note: String) -> void:
-	var key_w := 38.0 if key.length() <= 1 else 54.0
-	var key_rect := Rect2(rect.position + Vector2(8.0, 7.0), Vector2(key_w, 26.0))
+	var is_long_key := key.length() > 1
+	var key_w := 42.0 if not is_long_key else 56.0
+	var key_rect := Rect2(rect.position + Vector2(7.0, 8.0), Vector2(key_w, 29.0))
 	draw_rect(key_rect, Color("#253247"), true)
 	draw_rect(key_rect, Color("#0d1524"), false, 2.0)
 	draw_rect(key_rect.grow(-2.0), Color("#d5b56b"), false, 1.0)
 	draw_line(key_rect.position + Vector2(4.0, 4.0), key_rect.position + Vector2(key_rect.size.x - 4.0, 4.0), Color(1.0, 1.0, 1.0, 0.20), 1.0)
-	var key_size := 16
+	var key_size := 17 if not is_long_key else 16
 	var key_text_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
-	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 18.0), key_size, Color.WHITE, 1)
-	var label_size := 18
-	var note_size := 9
-	var label_pos := key_rect.position + Vector2(key_rect.size.x + 8.0, 18.0)
+	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 20.0), key_size, Color.WHITE, 1)
+	var label_size := 20 if not is_long_key else 19
+	var note_size := 10 if not is_long_key else 9
+	var label_pos := key_rect.position + Vector2(key_rect.size.x + (8.0 if not is_long_key else 6.0), 20.0)
 	_draw_text(font, label, label_pos, label_size, Color("#2b2117"), 0)
 	var note_text := _compact_control_note(note)
-	_draw_text(font, note_text, label_pos + Vector2(0.0, 9.0), note_size, Color("#5a4327"), 0)
+	_draw_text(font, note_text, label_pos + Vector2(0.0, 11.0), note_size, Color("#5a4327"), 0)
 
 
 func _draw_key_row(font: Font, pos: Vector2, key: String, label: String) -> void:
@@ -388,10 +389,10 @@ func _hint_key_slots(hint: Rect2) -> Array[Rect2]:
 			Rect2(hint.position + Vector2(hint.size.x - 128.0, 30.0), Vector2(120.0, 30.0)),
 		]
 	var slot_gap := 0.0
-	var slot_w := (hint.size.x - 44.0) / 3.0
-	var slot_y := hint.position.y + 27.0
-	var slot_h := 45.0
-	var x0 := hint.position.x + 22.0
+	var slot_w := (hint.size.x - 48.0) / 3.0
+	var slot_y := hint.position.y + 24.0
+	var slot_h := 52.0
+	var x0 := hint.position.x + 24.0
 	return [
 		Rect2(Vector2(x0, slot_y), Vector2(slot_w, slot_h)),
 		Rect2(Vector2(x0 + slot_w + slot_gap, slot_y), Vector2(slot_w, slot_h)),
