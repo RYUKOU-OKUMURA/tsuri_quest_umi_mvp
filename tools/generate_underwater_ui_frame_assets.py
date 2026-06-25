@@ -358,13 +358,13 @@ def _draw_outer_frame(image: Image.Image, box: tuple[int, int, int, int], *, rad
     d = ImageDraw.Draw(image)
     shadow = Image.new("RGBA", image.size, (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow)
-    sd.rounded_rectangle((x0 + 2, y0 + 4, x1 + 2, y1 + 4), radius=radius, fill=(0, 0, 0, 24))
-    image.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(5)))
-    d.rounded_rectangle((x0, y0, x1, y1), radius=radius, fill=_rgba("#071a2d", 168), outline=_rgba("#1c1209", 118), width=1)
-    d.rounded_rectangle((x0 + 4, y0 + 4, x1 - 4, y1 - 4), radius=radius - 4, outline=_rgba("#d8b45d", 82), width=1)
-    d.rounded_rectangle((x0 + 8, y0 + 8, x1 - 8, y1 - 8), radius=radius - 8, outline=_rgba("#6e4b22", 42), width=1)
-    d.line((x0 + 22, y0 + 14, x1 - 22, y0 + 14), fill=(255, 240, 190, 18), width=1)
-    d.line((x0 + 22, y1 - 14, x1 - 22, y1 - 14), fill=(0, 0, 0, 18), width=1)
+    sd.rounded_rectangle((x0 + 2, y0 + 4, x1 + 2, y1 + 4), radius=radius, fill=(0, 0, 0, 18))
+    image.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(4)))
+    d.rounded_rectangle((x0, y0, x1, y1), radius=radius, fill=_rgba("#071a2d", 132), outline=_rgba("#1c1209", 82), width=1)
+    d.rounded_rectangle((x0 + 4, y0 + 4, x1 - 4, y1 - 4), radius=radius - 4, outline=_rgba("#d8b45d", 62), width=1)
+    d.rounded_rectangle((x0 + 8, y0 + 8, x1 - 8, y1 - 8), radius=radius - 8, outline=_rgba("#6e4b22", 28), width=1)
+    d.line((x0 + 22, y0 + 14, x1 - 22, y0 + 14), fill=(255, 240, 190, 13), width=1)
+    d.line((x0 + 22, y1 - 14, x1 - 22, y1 - 14), fill=(0, 0, 0, 12), width=1)
 
 
 def _draw_top_status_paper_card(
@@ -380,8 +380,8 @@ def _draw_top_status_paper_card(
     radius = 10
     shadow = Image.new("RGBA", image.size, (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow)
-    sd.rounded_rectangle((x0 + 3, y0 + 4, x1 + 3, y1 + 4), radius=radius, fill=(0, 0, 0, 28))
-    image.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(4)))
+    sd.rounded_rectangle((x0 + 3, y0 + 4, x1 + 3, y1 + 4), radius=radius, fill=(0, 0, 0, 20))
+    image.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(3)))
 
     mask = _rounded_mask((w, h), radius)
     texture = _reference_paper_texture((w, h), fill, seed, strength=6)
@@ -442,11 +442,11 @@ def _draw_top_status_paper_card(
     image.alpha_composite(scuffs, (x0, y0))
 
     d = ImageDraw.Draw(image)
-    d.rounded_rectangle((x0, y0, x1, y1), radius=radius, outline=_rgba("#2d1d10", 198), width=2)
-    d.rounded_rectangle((x0 + 4, y0 + 4, x1 - 4, y1 - 4), radius=radius - 3, outline=_rgba("#8d642f", 150), width=2)
-    d.rounded_rectangle((x0 + 10, y0 + 10, x1 - 10, y1 - 10), radius=radius - 6, outline=_rgba("#c99b47", 78), width=1)
-    d.line((x0 + 18, y0 + 13, x1 - 18, y0 + 13), fill=(255, 246, 215, 48), width=1)
-    d.line((x0 + 18, y1 - 12, x1 - 18, y1 - 12), fill=(88, 54, 26, 44), width=1)
+    d.rounded_rectangle((x0, y0, x1, y1), radius=radius, outline=_rgba("#2d1d10", 156), width=1)
+    d.rounded_rectangle((x0 + 4, y0 + 4, x1 - 4, y1 - 4), radius=radius - 3, outline=_rgba("#8d642f", 168), width=2)
+    d.rounded_rectangle((x0 + 10, y0 + 10, x1 - 10, y1 - 10), radius=radius - 6, outline=_rgba("#c99b47", 92), width=1)
+    d.line((x0 + 18, y0 + 13, x1 - 18, y0 + 13), fill=(255, 246, 215, 62), width=1)
+    d.line((x0 + 18, y1 - 12, x1 - 18, y1 - 12), fill=(88, 54, 26, 58), width=1)
 
 
 def _draw_icon_well(d: ImageDraw.ImageDraw, center: tuple[int, int], radius: int, pale: bool = True) -> None:
@@ -485,11 +485,11 @@ def create_top_status_frame() -> None:
     w, h = 1774, 248
     image = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(image)
-    y0, y1 = 22, 222
+    y0, y1 = 12, 236
     split1 = int(w * 0.235)
     split2 = int(w * 0.535)
     split3 = int(w * 0.785)
-    slot_gap = 12
+    slot_gap = 8
     slots = [
         (8, y0, split1 - slot_gap, y1, "#f4ead5"),
         (split1 + slot_gap, y0, split2 - slot_gap, y1, "#f3e8d0"),
@@ -498,7 +498,17 @@ def create_top_status_frame() -> None:
     ]
     for i, (x0, sy0, x1, sy1, fill) in enumerate(slots):
         if i == 3:
-            _draw_navy_card(image, (x0, sy0, x1, sy1), radius=12, seed=30 + i)
+            _draw_navy_card(
+                image,
+                (x0, sy0, x1, sy1),
+                radius=12,
+                seed=30 + i,
+                outer_alpha=220,
+                outer_width=2,
+                border_alpha=155,
+                inner_alpha=88,
+                detail_alpha_scale=0.86,
+            )
             d.rounded_rectangle(
                 (x0 + 18, sy0 + 22, x1 - 18, sy1 - 22),
                 radius=8,
@@ -512,7 +522,7 @@ def create_top_status_frame() -> None:
             body = (x0 + 20, sy0 + 20, x1 - 20, sy1 - 20)
             d.rounded_rectangle(body, radius=6, outline=_rgba("#8c6733", 24), width=1)
             d.line((body[0] + 18, body[1] + 12, body[2] - 18, body[1] + 12), fill=_rgba("#ffffff", 32), width=1)
-            _draw_corner_brackets(d, (x0 + 8, sy0 + 8, x1 - 8, sy1 - 8), length=24, inset=10, color="#8c6733", alpha=64, width=1)
+            _draw_corner_brackets(d, (x0 + 8, sy0 + 8, x1 - 8, sy1 - 8), length=28, inset=10, color="#8c6733", alpha=88, width=2)
             if i == 1:
                 separator_x = x0 + 246
                 d.line((separator_x, sy0 + 46, separator_x, sy1 - 46), fill=_rgba("#b8934d", 58), width=1)
@@ -573,8 +583,8 @@ def create_sidebar_frame() -> None:
     fish = (12, 108, w - 12, 590)
     action = (10, 602, w - 10, 802)
     tackle = (10, 817, w - 10, h - 12)
-    action_body = (30, 647, w - 30, 787)
-    tackle_body = (30, 860, w - 30, h - 32)
+    action_body = (26, 641, w - 26, 791)
+    tackle_body = (26, 854, w - 26, h - 28)
 
     _draw_clean_card(
         image,
@@ -632,12 +642,12 @@ def create_sidebar_frame() -> None:
         action,
         radius=12,
         seed=82,
-        outer_alpha=170,
-        outer_width=2,
-        border_alpha=118,
+        outer_alpha=142,
+        outer_width=1,
+        border_alpha=92,
         border_width=1,
-        inner_alpha=68,
-        detail_alpha_scale=0.62,
+        inner_alpha=54,
+        detail_alpha_scale=0.46,
     )
     _draw_clean_card(
         image,
@@ -649,24 +659,24 @@ def create_sidebar_frame() -> None:
         seed=83,
         texture_strength=5,
         shadow=False,
-        outer_alpha=145,
-        outer_width=2,
-        border_alpha=92,
+        outer_alpha=112,
+        outer_width=1,
+        border_alpha=72,
         border_width=1,
-        inner_alpha=34,
-        detail_alpha_scale=0.45,
+        inner_alpha=28,
+        detail_alpha_scale=0.36,
     )
     _draw_navy_card(
         image,
         tackle,
         radius=12,
         seed=84,
-        outer_alpha=170,
-        outer_width=2,
-        border_alpha=118,
+        outer_alpha=142,
+        outer_width=1,
+        border_alpha=92,
         border_width=1,
-        inner_alpha=68,
-        detail_alpha_scale=0.62,
+        inner_alpha=54,
+        detail_alpha_scale=0.46,
     )
     _draw_clean_card(
         image,
@@ -678,25 +688,25 @@ def create_sidebar_frame() -> None:
         seed=85,
         texture_strength=5,
         shadow=False,
-        outer_alpha=145,
-        outer_width=2,
-        border_alpha=92,
+        outer_alpha=112,
+        outer_width=1,
+        border_alpha=72,
         border_width=1,
-        inner_alpha=34,
-        detail_alpha_scale=0.45,
+        inner_alpha=28,
+        detail_alpha_scale=0.36,
     )
 
     for panel_index, (panel, body, icon_side) in enumerate(((action, action_body, "left"), (tackle, tackle_body, "right"))):
-        d.line((panel[0] + 26, panel[1] + 39, panel[2] - 26, panel[1] + 39), fill=_rgba("#e0bd62", 50), width=1)
-        d.line((panel[0] + 28, panel[1] + 44, panel[2] - 28, panel[1] + 44), fill=_rgba("#07121b", 30), width=1)
+        d.line((panel[0] + 26, panel[1] + 39, panel[2] - 26, panel[1] + 39), fill=_rgba("#e0bd62", 34), width=1)
+        d.line((panel[0] + 28, panel[1] + 44, panel[2] - 28, panel[1] + 44), fill=_rgba("#07121b", 18), width=1)
         d.rounded_rectangle(
-            (body[0] + 14, body[1] + 15, body[2] - 14, body[3] - 15),
+            (body[0] + 12, body[1] + 13, body[2] - 12, body[3] - 13),
             radius=8,
-            outline=_rgba("#a98242", 14),
+            outline=_rgba("#a98242", 8),
             width=1,
         )
-        d.line((body[0] + 36, body[3] - 20, body[2] - 36, body[3] - 20), fill=_rgba("#80552a", 5), width=1)
-        _draw_corner_brackets(d, body, length=14, inset=12, color="#a77d3b", alpha=12, width=1)
+        d.line((body[0] + 36, body[3] - 18, body[2] - 36, body[3] - 18), fill=_rgba("#80552a", 4), width=1)
+        _draw_corner_brackets(d, body, length=13, inset=11, color="#a77d3b", alpha=8, width=1)
 
     # Sparse corner accents only. Heavy rivets made the frame read as generated/debug UI.
     for cx, cy in (
@@ -750,8 +760,8 @@ def create_fight_hud_frame() -> None:
     # Keep the upper board as one piece, but let the central depth plate interrupt
     # the trim so it feels fitted into the console instead of drawn on top.
     for y, color, width_px in (
-        (top[1] + 54, _rgba("#e0bd62", 60), 2),
-        (top[3] - 24, (255, 255, 255, 24), 1),
+        (top[1] + 54, _rgba("#e0bd62", 38), 2),
+        (top[3] - 24, (255, 255, 255, 18), 1),
     ):
         d.line((top[0] + 30, y, depth[0] - 34, y), fill=color, width=width_px)
         d.line((depth[2] + 34, y, top[2] - 30, y), fill=color, width=width_px)
@@ -785,7 +795,7 @@ def create_fight_hud_frame() -> None:
         (depth[0] + 70, depth[3] - 16),
     ]
     d.polygon(plate, fill=_rgba("#123b61", 224))
-    for inset, alpha, width_px in ((0, 145, 3), (10, 62, 2)):
+    for inset, alpha, width_px in ((0, 118, 2), (10, 48, 1)):
         d.line(
             (depth[0] + 24 + inset, depth[1] + 12, depth[0] + 70 + inset, depth[3] - 16),
             fill=_rgba("#e0bd62", alpha),
@@ -796,8 +806,8 @@ def create_fight_hud_frame() -> None:
             fill=_rgba("#e0bd62", alpha),
             width=width_px,
         )
-    d.line((depth[0] + 52, depth[1] + 26, depth[2] - 52, depth[1] + 26), fill=_rgba("#fff1a8", 70), width=2)
-    d.line((depth[0] + 76, depth[3] - 26, depth[2] - 76, depth[3] - 26), fill=(255, 255, 255, 32), width=1)
+    d.line((depth[0] + 52, depth[1] + 26, depth[2] - 52, depth[1] + 26), fill=_rgba("#fff1a8", 54), width=1)
+    d.line((depth[0] + 76, depth[3] - 26, depth[2] - 76, depth[3] - 26), fill=(255, 255, 255, 24), width=1)
 
     title_tab = (depth[0] + 72, depth[1] + 46, depth[2] - 72, depth[1] + 94)
     d.rounded_rectangle(title_tab, radius=8, fill=_rgba("#081f35", 110), outline=_rgba("#6fd6ff", 28), width=1)
@@ -844,7 +854,7 @@ def create_fight_hud_frame() -> None:
     bait_title = (bait_panel[0] + 14, bait_panel[1] + 12, bait_panel[2] - 14, bait_panel[1] + 44)
     d.rounded_rectangle(bait_title, radius=7, fill=_rgba("#8b7558", 210), outline=_rgba("#fff0c7", 52), width=1)
     d.line((bait_title[0] + 8, bait_title[1] + 6, bait_title[2] - 8, bait_title[1] + 6), fill=(255, 255, 255, 34), width=1)
-    bait_body = (bait_panel[0] + 64, bait_panel[1] + 55, bait_panel[2] - 18, bait_panel[3] - 16)
+    bait_body = (bait_panel[0] + 58, bait_panel[1] + 55, bait_panel[2] - 16, bait_panel[3] - 14)
     _draw_paper_slot(d, bait_body)
     _draw_inner_shadow(d, bait_body, alpha=20)
     _draw_clean_card(
@@ -861,13 +871,13 @@ def create_fight_hud_frame() -> None:
     hint_title = (hint_panel[0] + 14, hint_panel[1] + 12, hint_panel[2] - 14, hint_panel[1] + 50)
     d.rounded_rectangle(hint_title, radius=7, fill=_rgba("#092840", 160), outline=_rgba("#d8b45d", 62), width=1)
     d.line((hint_title[0] + 12, hint_title[1] + 7, hint_title[2] - 12, hint_title[1] + 7), fill=(255, 255, 255, 28), width=1)
-    hint_body = (hint_panel[0] + 22, hint_panel[1] + 58, hint_panel[2] - 22, hint_panel[3] - 12)
+    hint_body = (hint_panel[0] + 16, hint_panel[1] + 54, hint_panel[2] - 16, hint_panel[3] - 8)
     _draw_paper_slot(d, hint_body)
-    _draw_inner_shadow(d, hint_body, alpha=18)
+    _draw_inner_shadow(d, hint_body, alpha=14)
     for i in (1, 2):
         x = hint_body[0] + int((hint_body[2] - hint_body[0]) * i / 3)
-        d.line((x, hint_body[1] + 14, x, hint_body[3] - 14), fill=_rgba("#8c6733", 12), width=1)
-        d.line((x + 3, hint_body[1] + 18, x + 3, hint_body[3] - 18), fill=(255, 255, 255, 7), width=1)
+        d.line((x, hint_body[1] + 14, x, hint_body[3] - 14), fill=_rgba("#8c6733", 5), width=1)
+        d.line((x + 3, hint_body[1] + 18, x + 3, hint_body[3] - 18), fill=(255, 255, 255, 3), width=1)
     _draw_clean_card(
         image,
         menu_panel,
@@ -893,10 +903,10 @@ def create_fight_hud_frame() -> None:
 
     # Shared separators: enough structure without returning to the previous grid-like skin.
     for x, slant in ((depth[0] - gap // 2, 18), (depth[2] + gap // 2, -18)):
-        d.line((x + slant, top[1] + 22, x - slant, top[3] - 22), fill=_rgba("#b88b3f", 94), width=3)
-        d.line((x + slant + (6 if slant > 0 else -6), top[1] + 22, x - slant + (6 if slant > 0 else -6), top[3] - 22), fill=_rgba("#07121b", 100), width=2)
+        d.line((x + slant, top[1] + 22, x - slant, top[3] - 22), fill=_rgba("#b88b3f", 76), width=2)
+        d.line((x + slant + (6 if slant > 0 else -6), top[1] + 22, x - slant + (6 if slant > 0 else -6), top[3] - 22), fill=_rgba("#07121b", 86), width=1)
     for x in (hint[0] - gap // 2, menu[0] - gap // 2):
-        d.line((x, bottom[1] + 16, x, bottom[3] - 16), fill=_rgba("#b88b3f", 90), width=2)
+        d.line((x, bottom[1] + 16, x, bottom[3] - 16), fill=_rgba("#b88b3f", 68), width=1)
 
     image.save(OUT_DIR / "fight_hud_frame.png")
 

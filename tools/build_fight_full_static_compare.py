@@ -117,7 +117,7 @@ def _draw_fish(water: Image.Image) -> tuple[float, float, float, float]:
     frame_index = 2
     fish = sheet.crop((frame_w * frame_index, 0, frame_w * (frame_index + 1), frame_h))
     stamina_scale = 1.006
-    draw_w = water.width * 0.49 * stamina_scale
+    draw_w = water.width * 0.515 * stamina_scale
     draw_h = draw_w * fish.height / fish.width
     center = (
         (0.42 - 0.082) * water.width,
@@ -127,12 +127,12 @@ def _draw_fish(water: Image.Image) -> tuple[float, float, float, float]:
     sd = ImageDraw.Draw(shadow)
     sd.ellipse(
         (
-            center[0] - draw_w * 0.20,
+            center[0] - draw_w * 0.24,
             center[1] + draw_h * 0.275,
-            center[0] + draw_w * 0.20,
+            center[0] + draw_w * 0.24,
             center[1] + draw_h * 0.365,
         ),
-        fill=(0, 0, 0, 9),
+        fill=(0, 0, 0, 13),
     )
     water.alpha_composite(shadow)
     resized = _resize(fish, (round(draw_w), round(draw_h)))

@@ -149,21 +149,24 @@ def _hint_slots(hint: tuple[float, float, float, float]) -> list[tuple[float, fl
 
 def _draw_key_hint(draw: ImageDraw.ImageDraw, slot: tuple[float, float, float, float], key: str, label: str, note: str) -> None:
     is_long = key == "L/R"
-    cap_w = 22 if not is_long else 38
-    cap_h = 19
-    cap = (slot[0] + 11, slot[1] + 10, slot[0] + 11 + cap_w, slot[1] + 10 + cap_h)
+    cap_w = 23 if not is_long else 40
+    cap_h = 20
+    cap = (slot[0] + 12, slot[1] + 8, slot[0] + 12 + cap_w, slot[1] + 8 + cap_h)
     _draw_key_cap(draw, cap, key, 10 if is_long else 12)
-    label_x = cap[0] + cap_w + (6 if is_long else 7)
+    label_x = cap[0] + cap_w + (7 if is_long else 8)
     label_size = 13
-    note_size = 8
-    label_y = cap[1] + 15
+    note_size = 9 if is_long else 10
+    label_y = cap[1] + 13
     _draw_text(draw, (label_x, label_y), label, label_size, "#2b2117")
-    note_text = "テンション" if is_long else f"（{note}）"
-    note_x = label_x + _text_width(label, label_size) + 4
-    available = slot[2] - note_x - 4
+    note_text = "テンション調整" if is_long else f"（{note}）"
+    if not is_long:
+        note_text = note
+    note_x = label_x
+    note_y = label_y + 15
+    available = slot[2] - note_x - 6
     if _text_width(note_text, note_size, bold=False) > available:
-        note_size = max(6, note_size - 1)
-    _draw_text(draw, (note_x, label_y - 1), note_text, note_size, "#493620", bold=False)
+        note_size = max(8, note_size - 1)
+    _draw_text(draw, (note_x, note_y), note_text, note_size, "#513b20", bold=False)
 
 
 def _draw_menu_row(draw: ImageDraw.ImageDraw, pos: tuple[float, float], key: str, label: str) -> None:

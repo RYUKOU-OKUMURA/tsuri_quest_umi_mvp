@@ -4,7 +4,7 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont, ImageOps
+from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -110,10 +110,21 @@ def _add_runtime_fish_edge_underlay(image: Image.Image) -> Image.Image:
     alpha = image.getchannel("A")
     expanded = alpha.filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.GaussianBlur(0.90))
     inner = alpha.filter(ImageFilter.GaussianBlur(0.35))
-    edge = ImageChops.subtract(expanded, inner).point(lambda value: int(value * 0.24))
+    edge = ImageChops.subtract(expanded, inner).point(lambda value: int(value * 0.28))
     underlay = Image.new("RGBA", image.size, (6, 24, 36, 0))
     underlay.putalpha(edge)
     return Image.alpha_composite(underlay, image)
+
+
+def _restore_fish_detail(image: Image.Image) -> Image.Image:
+    alpha = image.getchannel("A")
+    rgb = image.convert("RGB")
+    rgb = ImageEnhance.Contrast(rgb).enhance(1.08)
+    rgb = ImageEnhance.Sharpness(rgb).enhance(1.18)
+    rgb = rgb.filter(ImageFilter.UnsharpMask(radius=0.85, percent=72, threshold=2))
+    out = rgb.convert("RGBA")
+    out.putalpha(alpha)
+    return out
 
 
 def create_kurodai_sheet() -> Image.Image:
@@ -140,7 +151,7 @@ def create_kurodai_sheet() -> Image.Image:
         y = (frame_h - resized.height) // 2 + 8
         sheet.alpha_composite(resized, (x, y))
 
-    clean_sheet = _clean_transparent_fish_edge(_final_despill(sheet))
+    clean_sheet = _restore_fish_detail(_clean_transparent_fish_edge(_final_despill(sheet)))
     _add_runtime_fish_edge_underlay(clean_sheet).save(FISH_SHEET)
     return clean_sheet
 

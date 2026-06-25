@@ -146,8 +146,8 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	var detail_font := get_theme_default_font()
 	if compact_card:
 		_draw_info_paragraph(detail_font, "岩場や海藻の周りに潜む警戒心の強い魚。底をねらうエサに好反応。", Vector2(inner.position.x + 15.0, desc_y), inner.size.x - 26.0)
-		_draw_detail_line(detail_font, "好むエサ：オキアミ・カニ", Vector2(inner.position.x + 15.0, desc_y + 34.0), inner.size.x - 26.0)
-		_draw_detail_line(detail_font, "主な生息域：沿岸の岩場", Vector2(inner.position.x + 15.0, desc_y + 51.0), inner.size.x - 26.0)
+		_draw_detail_line(detail_font, "好むエサ：オキアミ・カニ", Vector2(inner.position.x + 15.0, desc_y + 35.0), inner.size.x - 26.0)
+		_draw_detail_line(detail_font, "主な生息域：沿岸の岩場", Vector2(inner.position.x + 15.0, desc_y + 52.0), inner.size.x - 26.0)
 	else:
 		_draw_detail_line(detail_font, "岩場周りで警戒心が強い。", Vector2(inner.position.x + 15.0, desc_y), inner.size.x - 26.0)
 		_draw_detail_line(detail_font, "エサ：オキアミ・カニ", Vector2(inner.position.x + 15.0, desc_y + detail_gap), inner.size.x - 26.0)
@@ -164,7 +164,7 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 	_draw_text(font, "魚の行動", rect.position + Vector2(title_x, 25.0), 18, Palette.TEXT_BONE, 2 if _sidebar_frame != null else 3)
 	var body := Rect2(rect.position + Vector2(10.0, 33.0), rect.size - Vector2(20.0, 42.0))
 	if _sidebar_frame != null:
-		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.225), rect.size - Vector2(28.0, rect.size.y * 0.300))
+		body = Rect2(rect.position + Vector2(12.5, rect.size.y * 0.195), rect.size - Vector2(25.0, rect.size.y * 0.250))
 	else:
 		_draw_panel(body, Color("#f3e8cd"), Palette.WOOD_DARK, Palette.GOLD)
 	var action := "待機"
@@ -177,10 +177,10 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 	if _sidebar_frame != null:
 		icon_size = 72.0
 		text_x = 86.0
-	_draw_action_icon(body.position + Vector2(38.0, body.size.y * 0.58), icon_size)
-	_draw_text(font, "%s！" % action, body.position + Vector2(text_x, 30.0), 21 if _sidebar_frame != null else 20, Color("#2b2117"), 0)
+	_draw_action_icon(body.position + Vector2(40.0, body.size.y * 0.57), icon_size)
+	_draw_text(font, "%s！" % action, body.position + Vector2(text_x, 31.0), 20 if _sidebar_frame != null else 20, Color("#2b2117"), 0)
 	if _sidebar_frame != null:
-		_draw_action_message(font, message, body.position + Vector2(text_x, 44.0), body.size.x - text_x - 6.0)
+		_draw_action_message(font, message, body.position + Vector2(text_x, 47.0), body.size.x - text_x - 6.0)
 	else:
 		_draw_wrapped(font, message, body.position + Vector2(72.0, 36.0), body.size.x - 82.0, 11, Palette.TEXT_DARK, 2)
 
@@ -190,7 +190,7 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	_draw_text(font, "タックル", rect.position + Vector2(14.0, 24.0), 18, Palette.TEXT_BONE, 2 if _sidebar_frame != null else 3)
 	var body := Rect2(rect.position + Vector2(10.0, 32.0), rect.size - Vector2(20.0, 38.0))
 	if _sidebar_frame != null:
-		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.220), rect.size - Vector2(28.0, rect.size.y * 0.323))
+		body = Rect2(rect.position + Vector2(12.5, rect.size.y * 0.185), rect.size - Vector2(25.0, rect.size.y * 0.255))
 	else:
 		_draw_panel(body, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	var rod_name := _short_rod_name(String(trip_stats.get("rod_name", "港の入門竿")))
@@ -198,7 +198,7 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	var icon_reserved_width := 12.0
 	if has_tackle_icon:
 		icon_reserved_width = 96.0 if _sidebar_frame != null else 66.0
-	var text_offset := Vector2(14.0, 15.0) if _sidebar_frame != null else Vector2(12.0, 14.0)
+	var text_offset := Vector2(15.0, 17.0) if _sidebar_frame != null else Vector2(12.0, 14.0)
 	var text_width := body.size.x - icon_reserved_width - text_offset.x
 	var lines: Array[String] = []
 	if _sidebar_frame != null:
@@ -213,13 +213,13 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 			"ロッド：%s" % rod_name,
 			"糸3号・チヌ針",
 		]
-	var tackle_font_size := 12 if _sidebar_frame != null else 12
-	var tackle_line_gap := 14.5 if _sidebar_frame != null else 16.0
+	var tackle_font_size := 13 if _sidebar_frame != null else 12
+	var tackle_line_gap := 15.0 if _sidebar_frame != null else 16.0
 	var tackle_font := get_theme_default_font() if _sidebar_frame != null else font
 	for i in range(lines.size()):
 		_draw_wrapped(tackle_font, lines[i], body.position + text_offset + Vector2(0.0, float(i) * tackle_line_gap), text_width, tackle_font_size, Palette.TEXT_DARK, 1, tackle_font_size + 2.0)
 	if _tackle_card_icon != null or _icons != null:
-		var icon_rect := Rect2(body.end - Vector2(94.0, 76.0), Vector2(88.0, 70.0)) if _sidebar_frame != null else Rect2(body.end - Vector2(50.0, 50.0), Vector2(40.0, 40.0))
+		var icon_rect := Rect2(body.end - Vector2(96.0, 78.0), Vector2(90.0, 72.0)) if _sidebar_frame != null else Rect2(body.end - Vector2(50.0, 50.0), Vector2(40.0, 40.0))
 		_draw_tackle_icon(icon_rect)
 	else:
 		_draw_simple_rod(body.position + Vector2(body.size.x - 62.0, body.size.y - 24.0))
@@ -331,8 +331,9 @@ func _draw_bullet(font: Font, text: String, pos: Vector2, max_width: float) -> v
 
 
 func _draw_info_paragraph(font: Font, text: String, pos: Vector2, max_width: float) -> void:
-	var font_size := 13 if _sidebar_frame != null else 14
-	_draw_wrapped(font, text, pos, max_width, font_size, Palette.TEXT_DARK, 2, float(font_size + 3))
+	var font_size := 14
+	var gap := 16.0 if _sidebar_frame != null else float(font_size + 3)
+	_draw_wrapped(font, text, pos, max_width, font_size, Palette.TEXT_DARK, 2, gap)
 
 
 func _draw_detail_line(font: Font, text: String, pos: Vector2, max_width: float) -> void:
@@ -365,11 +366,11 @@ func _draw_fish_portrait(rect: Rect2) -> void:
 		var tex_size := _fish_card_portrait.get_size()
 		var scale := minf(rect.size.x / tex_size.x, rect.size.y / tex_size.y)
 		if _sidebar_frame != null:
-			scale *= 0.90
+			scale *= 0.94
 		var draw_size := tex_size * scale
 		var draw_rect := Rect2(rect.position + (rect.size - draw_size) * 0.5, draw_size)
 		if _sidebar_frame != null:
-			draw_rect.position += Vector2(-7.0, -2.0)
+			draw_rect.position += Vector2(-5.0, -4.0)
 		draw_texture_rect(_fish_card_portrait, draw_rect, false, Color.WHITE)
 		return
 	if _fish_sheet == null:

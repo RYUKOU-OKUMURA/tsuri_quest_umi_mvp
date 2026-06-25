@@ -188,8 +188,8 @@ def _draw_fish_card(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: int
         base,
         Image.open(ASSET_DIR / "kurodai_card_portrait.png").convert("RGBA"),
         fish_rect,
-        scale_multiplier=0.90,
-        offset=(-7.0, -2.0),
+        scale_multiplier=0.94,
+        offset=(-5.0, -4.0),
     )
     divider_y = fish_rect[3] + 3
     draw.line((inner[0] + 8, divider_y, inner[2] - 8, divider_y), fill="#c9b486", width=1)
@@ -201,13 +201,13 @@ def _draw_fish_card(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: int
         (inner[0] + 15, desc_y),
         "岩場や海藻の周りに潜む警戒心の強い魚。底をねらうエサに好反応。",
         inner[2] - inner[0] - 26,
-        13,
+        14,
         "#2b2117",
         bold=False,
         max_lines=2,
         line_gap=16,
     )
-    for y, text in ((desc_y + 34, "好むエサ：オキアミ・カニ"), (desc_y + 51, "主な生息域：沿岸の岩場")):
+    for y, text in ((desc_y + 35, "好むエサ：オキアミ・カニ"), (desc_y + 52, "主な生息域：沿岸の岩場")):
         draw.ellipse((inner[0] + 15, y + 6, inner[0] + 23, y + 14), fill="#49c75a")
         _draw_wrapped(draw, (inner[0] + 30, y - 1), text, inner[2] - inner[0] - 41, 13, "#2b2117", bold=False)
 
@@ -217,27 +217,27 @@ def _draw_lower_cards(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: i
     tackle = (w * 0.0148, h * 0.7979, w * (0.0148 + 0.9705), h * (0.7979 + 0.1904))
     _draw_sheet_icon(base, 7, (action[0] + 14, action[1] + 6, action[0] + 36, action[1] + 28))
     _draw_text(draw, (action[0] + 40, action[1] + 5), "魚の行動", 18, "#f7ecd0", stroke=2)
-    action_body = (action[0] + 14, action[1] + (action[3] - action[1]) * 0.225, action[2] - 14, action[3] - (action[3] - action[1]) * 0.075)
-    _paste_alpha_crop_contain(base, Image.open(ASSET_DIR / "fight_action_card_icon.png").convert("RGBA"), (action_body[0] + 2, action_body[1] + 10, action_body[0] + 74, action_body[1] + 82))
-    _draw_text(draw, (action_body[0] + 86, action_body[1] + 9), "突っ込み！", 21, "#2b2117")
-    _draw_wrapped(draw, (action_body[0] + 86, action_body[1] + 44), "一気に深く潜る！", action_body[2] - action_body[0] - 92, 14, "#2b2117", max_lines=1, line_gap=15)
-    _draw_wrapped(draw, (action_body[0] + 86, action_body[1] + 59), "ラインを緩めず耐えよう！", action_body[2] - action_body[0] - 92, 14, "#2b2117", max_lines=1, line_gap=15)
+    action_body = (action[0] + 12.5, action[1] + (action[3] - action[1]) * 0.195, action[2] - 12.5, action[3] - (action[3] - action[1]) * 0.055)
+    _paste_alpha_crop_contain(base, Image.open(ASSET_DIR / "fight_action_card_icon.png").convert("RGBA"), (action_body[0] + 4, action_body[1] + 10, action_body[0] + 76, action_body[1] + 82))
+    _draw_text(draw, (action_body[0] + 86, action_body[1] + 11), "突っ込み！", 20, "#2b2117")
+    _draw_wrapped(draw, (action_body[0] + 86, action_body[1] + 47), "一気に深く潜る！", action_body[2] - action_body[0] - 92, 14, "#2b2117", max_lines=1, line_gap=15)
+    _draw_wrapped(draw, (action_body[0] + 86, action_body[1] + 62), "ラインを緩めず耐えよう！", action_body[2] - action_body[0] - 92, 14, "#2b2117", max_lines=1, line_gap=15)
 
     _draw_text(draw, (tackle[0] + 14, tackle[1] + 4), "タックル", 18, "#f7ecd0", stroke=2)
-    body = (tackle[0] + 14, tackle[1] + (tackle[3] - tackle[1]) * 0.220, tackle[2] - 14, tackle[3] - (tackle[3] - tackle[1]) * 0.103)
+    body = (tackle[0] + 12.5, tackle[1] + (tackle[3] - tackle[1]) * 0.185, tackle[2] - 12.5, tackle[3] - (tackle[3] - tackle[1]) * 0.070)
     for index, text in enumerate(("ロッド：港の入門竿", "ライン：ナイロン3号", "ハリス：フロロ2号", "針：チヌ針")):
         _draw_wrapped(
             draw,
-            (body[0] + 14, body[1] + 15 + index * 14.5),
+            (body[0] + 15, body[1] + 17 + index * 15.0),
             text,
             body[2] - body[0] - 110,
-            12,
+            13,
             "#2b2117",
             bold=False,
             max_lines=1,
             line_gap=15,
         )
-    _paste_contain(base, Image.open(ASSET_DIR / "fight_tackle_card_icon.png").convert("RGBA"), (body[2] - 94, body[3] - 76, body[2] - 6, body[3] - 6))
+    _paste_contain(base, Image.open(ASSET_DIR / "fight_tackle_card_icon.png").convert("RGBA"), (body[2] - 96, body[3] - 78, body[2] - 6, body[3] - 6))
 
 
 def build_current_sidebar() -> Image.Image:

@@ -394,9 +394,9 @@ func _draw_key_hint(font: Font, rect: Rect2, key: String, label: String) -> void
 
 func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String, note: String) -> void:
 	var is_long_key := key.length() > 1
-	var key_origin := rect.position + Vector2(11.0, 10.0)
-	var key_w := 22.0 if not is_long_key else 38.0
-	var key_h := 19.0
+	var key_origin := rect.position + Vector2(12.0, 8.0)
+	var key_w := 23.0 if not is_long_key else 40.0
+	var key_h := 20.0
 	var key_rect := Rect2(key_origin, Vector2(key_w, key_h))
 	if is_long_key:
 		var style := StyleBoxFlat.new()
@@ -416,24 +416,19 @@ func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String,
 		draw_line(center + Vector2(-5.0, -4.5), center + Vector2(5.0, -4.5), Color(1.0, 1.0, 1.0, 0.14), 1.0)
 	var key_size := 12 if not is_long_key else 10
 	var key_text_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
-	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 14.0), key_size, Color.WHITE, 1)
+	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 14.5), key_size, Color.WHITE, 1)
 	var label_size := 13
-	var note_size := 8
-	var label_pos := key_rect.position + Vector2(key_rect.size.x + (7.0 if not is_long_key else 6.0), 15.0)
+	var note_size := 10 if not is_long_key else 9
+	var label_pos := key_rect.position + Vector2(key_rect.size.x + (8.0 if not is_long_key else 7.0), 13.0)
 	_draw_text(font, label, label_pos, label_size, Color("#2b2117"), 0)
 	var note_font := FightFontsScript.regular(get_theme_default_font())
 	var note_text := _compact_control_note(note)
-	if is_long_key:
-		note_text = "テンション"
-	else:
-		note_text = "（%s）" % note_text
-	var label_w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
-	var note_pos := label_pos + Vector2(label_w + 4.0, -1.0)
-	var available_w := rect.end.x - note_pos.x - 4.0
+	var note_pos := label_pos + Vector2(0.0, 16.0)
+	var available_w := rect.end.x - note_pos.x - 6.0
 	var note_w := note_font.get_string_size(note_text, HORIZONTAL_ALIGNMENT_LEFT, -1, note_size).x
 	if note_w > available_w:
-		note_size = max(6, note_size - 1)
-	_draw_text(note_font, note_text, note_pos, note_size, Color("#493620"), 0)
+		note_size = max(8, note_size - 1)
+	_draw_text(note_font, note_text, note_pos, note_size, Color("#513b20"), 0)
 
 
 func _draw_key_row(font: Font, pos: Vector2, key: String, label: String) -> void:
