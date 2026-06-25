@@ -5,7 +5,7 @@ import math
 import random
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -52,6 +52,45 @@ def create_foreground_ambience() -> None:
         color = (225, 251, 255, int(14 + rng.random() * 22))
         cd.arc((x0, y, x0 + length, y + 32), 190, 350, fill=color, width=2)
     image.alpha_composite(caustics.filter(ImageFilter.GaussianBlur(radius=0.7)))
+
+    # Broad surface shafts closer to the reference's bright upper water. These
+    # are baked into the ambience layer so they stay behind the fish and hit UI.
+    shafts = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(shafts, "RGBA")
+    shaft_specs = (
+        (0.18, 0.27, 0.10, 0.28, 44),
+        (0.28, 0.39, 0.20, 0.43, 58),
+        (0.40, 0.52, 0.34, 0.58, 50),
+        (0.55, 0.66, 0.47, 0.70, 38),
+    )
+    for top_l, top_r, bottom_l, bottom_r, alpha in shaft_specs:
+        sd.polygon(
+            [
+                (w * top_l, 0),
+                (w * top_r, 0),
+                (w * bottom_r, h * 0.58),
+                (w * bottom_l, h * 0.58),
+            ],
+            fill=(183, 242, 255, alpha),
+        )
+    for i, x in enumerate((330, 470, 610, 770, 930, 1090)):
+        sd.line(
+            (
+                x - 92,
+                int(h * (0.060 + (i % 2) * 0.012)),
+                x + 122,
+                int(h * (0.052 + (i % 3) * 0.010)),
+            ),
+            fill=(236, 255, 255, 58),
+            width=2,
+        )
+    shaft_gate = Image.new("L", (w, h), 0)
+    gd = ImageDraw.Draw(shaft_gate)
+    gd.ellipse((int(w * 0.10), -int(h * 0.18), int(w * 0.86), int(h * 0.58)), fill=196)
+    gd.rectangle((int(w * 0.22), 0, int(w * 0.76), int(h * 0.25)), fill=214)
+    shaft_gate = shaft_gate.filter(ImageFilter.GaussianBlur(42.0))
+    shafts.putalpha(ImageChops.multiply(shafts.getchannel("A"), shaft_gate))
+    image.alpha_composite(shafts.filter(ImageFilter.GaussianBlur(10.0)))
 
     # Bubble columns at the same visual zones as the reference: left rocks, mid distance, right plants.
     columns = [

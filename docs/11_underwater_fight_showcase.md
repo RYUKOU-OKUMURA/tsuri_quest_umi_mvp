@@ -38,7 +38,7 @@
 3. `underwater_seabed_detail.png`
    背景下部と左右に重ねる透明PNG。岩場シルエット、海藻、サンゴ、水底の光線を足し、生成背景の滑らかさを補う。
 4. `underwater_foreground_ambience.png`
-   背景の上に重ねる透明PNG。泡柱、中央の小さな泡列、低アルファの中央水底光、光の筋、遠景魚影、粒子を含み、主役魚を邪魔しない密度補助として扱う。
+   背景の上に重ねる透明PNG。泡柱、中央の小さな泡列、低アルファの中央水底光、上部の広い光束と水面 shimmer、遠景魚影、粒子を含み、主役魚を邪魔しない密度補助として扱う。
 5. 動的深度表示
    現在深度と目盛り。背景上に半透明で重ねる。
 6. 釣り糸・エサ
@@ -74,7 +74,7 @@
 | `tools/source_assets/underwater_battle_bg_source.png` | 代替水中背景の元画像 | 旧本番寄り背景PNGの保存元 | Godotインポート対象外、参照抽出を使わない場合の後処理ソース |
 | `assets/showcase/underwater/underwater_color_grade.png` | 背景の奥行き/光調整 | `tools/generate_underwater_foreground_assets.py` で生成 | 透明PNG、外周暗部・海底の締まり・水面光を含み、魚/ヒット演出を覆わない |
 | `assets/showcase/underwater/underwater_seabed_detail.png` | 海底/左右の密度補助 | `tools/generate_underwater_foreground_assets.py` で生成 | 透明PNG、岩場・海藻・サンゴ・水底光を含み、主役魚を邪魔しない |
-| `assets/showcase/underwater/underwater_foreground_ambience.png` | 前景密度補助 | `tools/generate_underwater_foreground_assets.py` で生成 | 透明PNG、泡柱・中央の小さな泡列・中央水底光・遠景魚・光粒を含み主役魚を邪魔しない |
+| `assets/showcase/underwater/underwater_foreground_ambience.png` | 前景密度補助 | `tools/generate_underwater_foreground_assets.py` で生成 | 透明PNG、泡柱・中央の小さな泡列・中央水底光・上部光束・水面 shimmer・遠景魚・光粒を含み主役魚を邪魔しない |
 | `assets/showcase/underwater/kurodai_chroma_source.png` | クロダイ中間素材 | リファレンス魚の切り出しを ImageGen で背景抽出 | フラットなマゼンタ背景、単体魚または横4フレーム |
 | `assets/showcase/underwater/kurodai_showcase_sheet.png` | クロダイ | `tools/process_underwater_fish_assets.py` で生成 | 透明背景、横 4 フレーム、全フレーム同サイズ |
 | `assets/showcase/underwater/kurodai_card_portrait.png` | 右カード用クロダイ | `tools/process_underwater_fish_assets.py` で生成 | 紙背景に魚を合成、620x330 前後のカード窓比率、暗い矩形を出さず、魚が紙窓の主役として大きく読める |
@@ -106,7 +106,7 @@
 - 右パネルは汎用 `make_panel()` の中に入れず、`FightSidebar` の専用フレームを直接表示する。二重枠にするとサイドバー素材が縮み、参照画像のカード品質から離れるため。
 - `UnderwaterView` は主役魚とヒット演出のスケールを参照画像寄りに抑え、深度目盛りは背景に馴染む低コントラスト表示にする。ヒット時は距離バーが `ヒット！` と青い水しぶき台座を横切らないよう、距離バーを先に低透過で描き、その後に `hit_burst.png` とヒット文字を描く。魚の背後には大きな円形オーラを置かず、必要な場合も小さく薄い影だけにする。背景・魚・ヒット素材の上からコード描画の半透明円を重ねると、参照にはない合成跡として読まれるため。
 - `UnderwaterView` の釣り糸とルアーは、魚の前方へ機械的に離しすぎず、鼻先に潰れすぎてもいけない。showcase 魚素材がある場合は `SHOWCASE_FISH_CENTER_OFFSET` で魚をわずかに左上へ寄せ、魚幅を少し抑えたうえで、魚幅の約 0.44 倍をルアーの前方オフセット基準にする。参照画像では魚、糸、ルアー、ヒット演出が一つの出来事としてまとまって見えるため、ルアーが右上へ離れた配置や、魚の鼻先へ重なって輪郭を壊す配置は不合格とする。
-- `UnderwaterView` は `underwater_battle_bg.png` の上に `underwater_color_grade.png`、`underwater_seabed_detail.png`、`underwater_foreground_ambience.png` の順で重ね、追加の光粒だけを動的に描く。参照抽出背景では旧生成背景向けの補助レイヤーが強すぎると灰色の膜に見えるため、色調整と海底補助は低めの opacity で重ねる。現行値は、強めた水面光を持つ color grade 0.18、seabed detail 0.30、foreground ambience 0.72 を基準にする。PNG がない場合だけ、コード描画の遠景魚群・泡柱へフォールバックする。
+- `UnderwaterView` は `underwater_battle_bg.png` の上に `underwater_color_grade.png`、`underwater_seabed_detail.png`、`underwater_foreground_ambience.png` の順で重ね、追加の光粒だけを動的に描く。参照抽出背景では旧生成背景向けの補助レイヤーが強すぎると灰色の膜に見えるため、色調整と海底補助は低めの opacity で重ねる。現行値は、強めた水面光を持つ color grade 0.18、seabed detail 0.30、foreground ambience 0.72 を基準にする。`underwater_foreground_ambience.png` の上部光束は `_draw_showcase_ambience()` の段階で描くため、魚・糸・ヒット演出を覆わずに水面側の明度と密度を補う。PNG がない場合だけ、コード描画の遠景魚群・泡柱へフォールバックする。
 - `underwater_battle_bg.png` を直接詰める場合は、まず `tools/build_reference_underwater_background.py` を実行して参照画像由来の背景を決定的に再生成する。参照水中窓全体を使い、主役魚・ヒット演出・糸・ルアーだけを広めに消して、runtime のクロダイ/ヒット/糸を重ねる。左右の岩場、海藻、泡、遠景魚、水面光、海底光は参照画像の密度をそのまま背景へ残す。中央の水色補完面には参照画像の左右海底/水中ピクセル、低コントラストの泡、薄い水底光、参照水面光を伸ばした光パッチ、参照魚群/水中ピクセルから作る低コントラストの魚群テクスチャ、左右端水域から作る明るめで低アルファのミッドウォーターパッチ、左右端水域から作る低透過の水平帯崩し霞、上へ持ち上げた海底棚、左右端海底から作る中央サンドチャンネル、低アルファの中央床反射を足して、丸いマスク跡と水平の明るい帯を弱める。海底補完は水平帯に見えやすいため、波状の縦フェードと不定形マスクで水中側へ馴染ませる。最新パスでは、subject mask 内の中層明度リフト、左右端床クロップ由来の床テクスチャ、小泡、床光ストロークを重ねる final paintover cleanup に加え、`tools/source_assets/underwater_center_paintover_candidate.png` を柔らかい中央全体マスク、主役周辺マスク、canvas scale の中央床光リフトで合成して、暗い中心帯をより明るい中層・床光・水中密度で崩している。さらに reference-light polish で、広い中央光ゲート、上面 shimmer、床 caustic strokes/arcs を背景PNGへ低アルファで焼き込み、参照の表面光と水底の細線密度に少し寄せている。中央下部の参照クロップはヒット文字や糸の断片を残しやすいので、主役演出から離れた左右端だけを素材元にする。まだ参照中央の手描き密度には届かず、背景単体では広い補完帯が読めるため、本番ラスタパスでは中央マスク領域をさらに描き込む。参照抽出を使わない代替検証時のみ、`tools/source_assets/underwater_battle_bg_source.png` から `tools/enhance_underwater_battle_bg.py` を実行する。
 - `tools/fishing_fight_preview.gd` は参照比較用に `クロダイ / レア / 44.2cm` 相当の固定状態を作り、画面品質の比較条件を揃える。ゲーム本編の魚データは別途維持する。
 - 画面の完成度チェックは、Godot で `tools/fishing_fight_preview.gd` のキャプチャを取り、`tools/build_fight_comparison_html.py` と `tools/build_fight_comparison_images.py` でリファレンスと横並び比較する。
