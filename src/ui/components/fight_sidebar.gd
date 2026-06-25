@@ -74,10 +74,10 @@ func _draw() -> void:
 	var tackle_card := Rect2()
 	if _sidebar_frame != null:
 		draw_texture_rect(_sidebar_frame, Rect2(Vector2.ZERO, size), false, Color.WHITE)
-		header = Rect2(w * 0.0148, h * 0.0117, w * 0.9705, h * 0.0908)
-		fish_card = Rect2(w * 0.0177, h * 0.1055, w * 0.9646, h * 0.4707)
-		action_card = Rect2(w * 0.0148, h * 0.5879, w * 0.9705, h * 0.1953)
-		tackle_card = Rect2(w * 0.0148, h * 0.7979, w * 0.9705, h * 0.1904)
+		header = Rect2(w * 0.0148, h * 0.0117, w * 0.9705, h * 0.0771)
+		fish_card = Rect2(w * 0.0177, h * 0.0918, w * 0.9646, h * 0.4883)
+		action_card = Rect2(w * 0.0148, h * 0.5918, w * 0.9705, h * 0.1953)
+		tackle_card = Rect2(w * 0.0148, h * 0.8008, w * 0.9705, h * 0.1875)
 	else:
 		var gap := 7.0
 		var action_h := clampf(h * 0.22, 86.0, 102.0)
@@ -96,13 +96,14 @@ func _draw() -> void:
 func _draw_header(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Palette.DARK_PANEL, Palette.GOLD, Palette.GOLD_BRIGHT)
 	var title_size := 18
-	var title_outline := 3 if _sidebar_frame == null else 2
+	var title_outline := 3 if _sidebar_frame == null else 1
 	var count_outline := 2 if _sidebar_frame == null else 1
-	_draw_text(font, "釣り中の魚", rect.position + Vector2(14.0, rect.size.y * 0.68), title_size, Palette.TEXT_BONE, title_outline)
+	var baseline_y := rect.size.y * (0.62 if _sidebar_frame != null else 0.68)
+	_draw_text(font, "釣り中の魚", rect.position + Vector2(14.0, baseline_y), title_size, Palette.TEXT_BONE, title_outline)
 	var count_text := "1/1 匹"
 	var count_size := 16
 	var count_w := font.get_string_size(count_text, HORIZONTAL_ALIGNMENT_LEFT, -1, count_size).x
-	_draw_text(font, count_text, rect.position + Vector2(rect.size.x - count_w - 14.0, rect.size.y * 0.68), count_size, Palette.GOLD_BRIGHT, count_outline)
+	_draw_text(font, count_text, rect.position + Vector2(rect.size.x - count_w - 14.0, baseline_y), count_size, Palette.GOLD_BRIGHT, count_outline)
 
 
 func _draw_fish_card(font: Font, rect: Rect2) -> void:
@@ -190,7 +191,7 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	_draw_text(font, "タックル", rect.position + Vector2(14.0, 24.0), 18, Palette.TEXT_BONE, 2 if _sidebar_frame != null else 3)
 	var body := Rect2(rect.position + Vector2(10.0, 32.0), rect.size - Vector2(20.0, 38.0))
 	if _sidebar_frame != null:
-		body = Rect2(rect.position + Vector2(12.5, rect.size.y * 0.185), rect.size - Vector2(25.0, rect.size.y * 0.255))
+		body = Rect2(rect.position + Vector2(12.5, rect.size.y * 0.193), rect.size - Vector2(25.0, rect.size.y * 0.276))
 	else:
 		_draw_panel(body, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	var rod_name := _short_rod_name(String(trip_stats.get("rod_name", "港の入門竿")))

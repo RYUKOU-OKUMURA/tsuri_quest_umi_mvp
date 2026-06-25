@@ -579,12 +579,12 @@ def create_sidebar_frame() -> None:
     d = ImageDraw.Draw(image)
     _draw_outer_frame(image, (5, 4, w - 6, h - 5), radius=14)
 
-    header = (10, 12, w - 10, 105)
-    fish = (12, 108, w - 12, 590)
-    action = (10, 602, w - 10, 802)
-    tackle = (10, 817, w - 10, h - 12)
-    action_body = (26, 641, w - 26, 791)
-    tackle_body = (26, 854, w - 26, h - 28)
+    header = (10, 12, w - 10, 91)
+    fish = (12, 94, w - 12, 594)
+    action = (10, 606, w - 10, 806)
+    tackle = (10, 820, w - 10, h - 12)
+    action_body = (26, 645, w - 26, 795)
+    tackle_body = (26, 857, w - 26, h - 28)
 
     _draw_clean_card(
         image,
@@ -622,10 +622,10 @@ def create_sidebar_frame() -> None:
         inner_alpha=58,
         detail_alpha_scale=0.58,
     )
-    title_rule_y = fish[1] + 78
+    title_rule_y = fish[1] + 76
     d.line((fish[0] + 48, title_rule_y, fish[2] - 48, title_rule_y), fill=_rgba("#b89b64", 58), width=1)
     d.line((fish[0] + 48, title_rule_y + 2, fish[2] - 48, title_rule_y + 2), fill=_rgba("#ffffff", 30), width=1)
-    portrait_mat = (fish[0] + 42, fish[1] + 88, fish[2] - 42, fish[1] + 348)
+    portrait_mat = (fish[0] + 42, fish[1] + 86, fish[2] - 42, fish[1] + 340)
     grid = Image.new("RGBA", image.size, (0, 0, 0, 0))
     gd = ImageDraw.Draw(grid)
     for x in range(portrait_mat[0] + 38, portrait_mat[2] - 20, 46):
@@ -633,7 +633,7 @@ def create_sidebar_frame() -> None:
     for y in range(portrait_mat[1] + 38, portrait_mat[3] - 8, 48):
         gd.line((portrait_mat[0] + 18, y, portrait_mat[2] - 18, y), fill=_rgba("#c8ad76", 18), width=1)
     image.alpha_composite(grid)
-    for y in (fish[1] + 356,):
+    for y in (fish[1] + 348,):
         d.line((fish[0] + 38, y, fish[2] - 38, y), fill=_rgba("#b89b64", 58), width=1)
     _draw_corner_brackets(d, fish, length=30, inset=18, color="#a77d3b", alpha=66, width=1)
 
