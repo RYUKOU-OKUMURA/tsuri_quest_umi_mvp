@@ -526,7 +526,7 @@ func _draw_showcase_target_fish(center: Vector2, scale_value: float, direction: 
 	draw_set_transform(Juicer.get_offset() + center, 0.0, Vector2(direction, 1.0))
 	draw_texture_rect_region(_showcase_fish_sheet, dst, src, Color.WHITE)
 	if _fish_flash > 0.0:
-		draw_texture_rect_region(_showcase_fish_sheet, dst, src, Color(1.0, 1.0, 1.0, _fish_flash * 0.52))
+		draw_texture_rect_region(_showcase_fish_sheet, dst, src, Color(1.0, 1.0, 1.0, _fish_flash * 0.16))
 	draw_set_transform(Juicer.get_offset())
 
 
