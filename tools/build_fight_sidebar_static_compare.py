@@ -203,14 +203,14 @@ def _draw_fish_card(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: int
         "岩場や海藻の周りに潜む警戒心の強い魚。底をねらうエサに好反応。",
         inner[2] - inner[0] - 26,
         14,
-        "#24190f",
+        "#1b1109",
         bold=False,
         max_lines=2,
         line_gap=16,
     )
     for y, text in ((desc_y + 35, "好むエサ：オキアミ・カニ"), (desc_y + 52, "主な生息域：沿岸の岩場")):
         draw.ellipse((inner[0] + 14.5, y + 5.5, inner[0] + 23.5, y + 14.5), fill="#3fbd50")
-        _draw_wrapped(draw, (inner[0] + 30, y - 1), text, inner[2] - inner[0] - 41, 13, "#24190f", bold=False)
+        _draw_wrapped(draw, (inner[0] + 30, y - 1), text, inner[2] - inner[0] - 41, 14, "#1b1109", bold=False)
 
 
 def _draw_lower_cards(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: int) -> None:

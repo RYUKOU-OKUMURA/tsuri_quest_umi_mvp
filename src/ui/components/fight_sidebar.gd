@@ -337,17 +337,17 @@ func _draw_bullet(font: Font, text: String, pos: Vector2, max_width: float) -> v
 func _draw_info_paragraph(font: Font, text: String, pos: Vector2, max_width: float) -> void:
 	var font_size := 14
 	var gap := 16.0 if _sidebar_frame != null else float(font_size + 3)
-	_draw_wrapped(font, text, pos, max_width, font_size, Color("#24190f"), 2, gap)
+	_draw_wrapped(font, text, pos, max_width, font_size, Color("#1b1109"), 2, gap)
 
 
 func _draw_detail_line(font: Font, text: String, pos: Vector2, max_width: float) -> void:
 	draw_circle(pos + Vector2(3.0, 10.0), 4.4 if _sidebar_frame != null else 4.3, Color("#3fbd50"))
 	var font_size := 14
 	if _sidebar_frame != null:
-		font_size = 13
+		font_size = 14
 	elif max_width < 260.0:
 		font_size = 13
-	_draw_wrapped(font, text, pos + Vector2(15.0, -1.0), max_width - 15.0, font_size, Color("#24190f"), 1)
+	_draw_wrapped(font, text, pos + Vector2(15.0, -1.0), max_width - 15.0, font_size, Color("#1b1109"), 1)
 
 
 func _draw_rarity_tag(font: Font, rect: Rect2, rarity: String) -> void:
