@@ -129,7 +129,15 @@ func _build_screen() -> void:
 	root.add_child(_confirm_button)
 
 
-func show_reward(result: Dictionary, exp_before: int, exp_after: int, exp_max: int, leveled: bool) -> void:
+func show_reward(
+	result: Dictionary,
+	exp_before: int,
+	exp_after: int,
+	exp_max: int,
+	leveled: bool,
+	level_before := 0,
+	level_after := 0
+) -> void:
 	var dish_name := String(result.get("dish_name", "料理"))
 	_header_title.text = "ごちそうさま！ 成長へつながった" if leveled else "ごちそうさま！ 食経験値を獲得"
 	_dish_title.text = "%sを食べた！" % dish_name
@@ -150,8 +158,16 @@ func show_reward(result: Dictionary, exp_before: int, exp_after: int, exp_max: i
 
 	var buff := Dictionary(result.get("buff", {}))
 	_buff_label.text = String(buff.get("text", "次の釣行で効果を得る"))
-	_growth_label.text = "LEVEL UP! 能力上昇へ" if leveled else "次のレベルまで %d EXP" % maxi(0, exp_max - exp_after)
-	_confirm_button.text = "成長を見る" if leveled else "OK"
+	if leveled:
+		if level_before > 0 and level_after > level_before:
+			_growth_label.text = "LEVEL UP! Lv.%d -> Lv.%d" % [level_before, level_after]
+			_confirm_button.text = "Lv.%dの成長を見る" % level_after
+		else:
+			_growth_label.text = "LEVEL UP! 能力上昇へ"
+			_confirm_button.text = "成長を見る"
+	else:
+		_growth_label.text = "次のレベルまで %d EXP" % maxi(0, exp_max - exp_after)
+		_confirm_button.text = "OK"
 	_refresh_flow_steps(leveled)
 	_present()
 

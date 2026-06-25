@@ -691,7 +691,7 @@ func _show_reward_overlay(
 ) -> void:
 	var panel := CookingRewardPanelScript.new()
 	add_child(panel)
-	panel.show_reward(result, exp_before, exp_after, exp_max, leveled)
+	panel.show_reward(result, exp_before, exp_after, exp_max, leveled, level_before, PlayerProgress.level)
 	if leveled and not _preview_suppress_level_overlay:
 		_pending_level_up = {
 			"level_from": level_before,
