@@ -65,11 +65,11 @@ func configure(payload: Dictionary) -> void:
 
 func _build_screen() -> void:
 	_add_cooking_background()
-	var root := make_root_margin(14)
+	var root := make_root_margin(10)
 	var layout := VBoxContainer.new()
 	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	layout.add_theme_constant_override("separation", 10)
+	layout.add_theme_constant_override("separation", 8)
 	root.add_child(layout)
 
 	_build_header(layout)
@@ -104,91 +104,90 @@ func _add_cooking_background() -> void:
 
 func _build_header(layout: VBoxContainer) -> void:
 	var header := HBoxContainer.new()
-	header.custom_minimum_size = Vector2(0, 80)
-	header.add_theme_constant_override("separation", 10)
+	header.custom_minimum_size = Vector2(0, 64)
+	header.add_theme_constant_override("separation", 8)
 	layout.add_child(header)
 
 	var title_card := _panel_box(Color("#25170e"), Color("#70451f"), Color("#f0c06b"), 6)
-	title_card.custom_minimum_size = Vector2(320, 0)
+	title_card.custom_minimum_size = Vector2(278, 0)
 	header.add_child(title_card)
 	var title_row := HBoxContainer.new()
 	title_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	title_row.add_theme_constant_override("separation", 12)
+	title_row.add_theme_constant_override("separation", 10)
 	title_card.add_child(title_row)
-	var pot := make_shadow_label("♨", 30, Palette.GOLD_BRIGHT, 3)
-	title_row.add_child(pot)
-	var title := make_shadow_label("調理場", 34, Palette.GOLD_BRIGHT, 4)
+	var title := make_shadow_label("調理場", 30, Palette.GOLD_BRIGHT, 4)
+	title.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title_row.add_child(title)
 
 	var status_card := _panel_box(Color("#0d2338"), Color("#70451f"), Color("#dba75b"), 6)
 	status_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(status_card)
 	var status_row := HBoxContainer.new()
-	status_row.add_theme_constant_override("separation", 16)
+	status_row.add_theme_constant_override("separation", 12)
 	status_card.add_child(status_row)
-	_level_label = make_shadow_label("", 24, Palette.TEXT_BONE, 3)
-	_level_label.custom_minimum_size = Vector2(180, 0)
+	_level_label = make_shadow_label("", 21, Palette.TEXT_BONE, 3)
+	_level_label.custom_minimum_size = Vector2(158, 0)
 	status_row.add_child(_level_label)
 	_exp_bar = GaugeBarScript.new()
 	_exp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_exp_bar.show_value = false
-	_exp_bar.custom_minimum_size = Vector2(0, 28)
+	_exp_bar.custom_minimum_size = Vector2(0, 24)
 	_exp_bar.set_colors(Palette.GAUGE_CYAN, Palette.GAUGE_CYAN_HI)
 	status_row.add_child(_exp_bar)
-	_exp_label = make_shadow_label("", 18, Palette.TEXT_BONE, 2)
-	_exp_label.custom_minimum_size = Vector2(150, 0)
+	_exp_label = make_shadow_label("", 17, Palette.TEXT_BONE, 2)
+	_exp_label.custom_minimum_size = Vector2(126, 0)
 	_exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	status_row.add_child(_exp_label)
 
 	var money_card := _panel_box(Color("#0d2338"), Color("#70451f"), Color("#dba75b"), 6)
-	money_card.custom_minimum_size = Vector2(250, 0)
+	money_card.custom_minimum_size = Vector2(210, 0)
 	header.add_child(money_card)
-	_money_label = make_shadow_label("", 25, Palette.GOLD_BRIGHT, 3)
+	_money_label = make_shadow_label("", 22, Palette.GOLD_BRIGHT, 3)
 	_money_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_money_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	money_card.add_child(_money_label)
 
 	var back := make_button("港へ", func() -> void: navigate("harbor"), 96, false)
-	back.custom_minimum_size = Vector2(96, 58)
+	back.custom_minimum_size = Vector2(90, 52)
 	header.add_child(back)
 
 
 func _build_cook_select(layout: VBoxContainer) -> void:
 	var body := HBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.add_theme_constant_override("separation", 10)
+	body.add_theme_constant_override("separation", 8)
 	layout.add_child(body)
 
 	var fish_panel := _panel_box(Color("#10283d"), Color("#5e391a"), Color("#e4b461"), 6)
-	fish_panel.custom_minimum_size = Vector2(292, 0)
+	fish_panel.custom_minimum_size = Vector2(276, 0)
 	fish_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(fish_panel)
 	var fish_layout := VBoxContainer.new()
-	fish_layout.add_theme_constant_override("separation", 8)
+	fish_layout.add_theme_constant_override("separation", 6)
 	fish_panel.add_child(fish_layout)
-	var fish_title := make_shadow_label("所持している魚", 24, Palette.TEXT_BONE, 3)
+	var fish_title := make_shadow_label("所持している魚", 22, Palette.TEXT_BONE, 3)
 	fish_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	fish_layout.add_child(fish_title)
 	_fish_box = VBoxContainer.new()
 	_fish_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_fish_box.add_theme_constant_override("separation", 7)
+	_fish_box.add_theme_constant_override("separation", 6)
 	fish_layout.add_child(_fish_box)
 
 	var recipe_panel := _panel_box(Color("#ead9b2"), Color("#5e391a"), Color("#e6b561"), 6)
-	recipe_panel.custom_minimum_size = Vector2(452, 0)
+	recipe_panel.custom_minimum_size = Vector2(420, 0)
 	recipe_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(recipe_panel)
 	var recipe_layout := VBoxContainer.new()
-	recipe_layout.add_theme_constant_override("separation", 8)
+	recipe_layout.add_theme_constant_override("separation", 6)
 	recipe_panel.add_child(recipe_layout)
-	var recipe_title := make_label("料理を選ぶ", 26, Color("#2e2419"), 1, Color("#fff3ce"))
+	var recipe_title := make_label("料理を選ぶ", 23, Color("#2e2419"), 1, Color("#fff3ce"))
 	recipe_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	recipe_layout.add_child(recipe_title)
 	_recipe_grid = GridContainer.new()
 	_recipe_grid.columns = 2
 	_recipe_grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_recipe_grid.add_theme_constant_override("h_separation", 8)
-	_recipe_grid.add_theme_constant_override("v_separation", 8)
+	_recipe_grid.add_theme_constant_override("h_separation", 7)
+	_recipe_grid.add_theme_constant_override("v_separation", 7)
 	recipe_layout.add_child(_recipe_grid)
 
 	var detail_panel := _panel_box(Color("#f4e7c8"), Color("#5e391a"), Color("#e6b561"), 6)
@@ -196,67 +195,82 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	detail_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(detail_panel)
 	var detail_layout := VBoxContainer.new()
-	detail_layout.add_theme_constant_override("separation", 8)
+	detail_layout.add_theme_constant_override("separation", 6)
 	detail_panel.add_child(detail_layout)
-	_dish_title = make_label("料理を選んでください", 30, Color("#2a2118"), 1, Color("#fff4d4"))
+	_dish_title = make_label("料理を選んでください", 25, Color("#2a2118"), 1, Color("#fff4d4"))
 	_dish_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	detail_layout.add_child(_dish_title)
-	_dish_subtitle = make_label("", 17, Color("#59422b"))
+	_dish_subtitle = make_label("", 15, Color("#59422b"))
 	_dish_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	detail_layout.add_child(_dish_subtitle)
 	_dish_image = TextureRect.new()
-	_dish_image.custom_minimum_size = Vector2(0, 210)
+	_dish_image.custom_minimum_size = Vector2(0, 142)
 	_dish_image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_dish_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_dish_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	detail_layout.add_child(_dish_image)
-	_material_value = _add_detail_row(detail_layout, "必要な材料", "")
-	_stock_value = _add_detail_row(detail_layout, "所持数", "")
-	_exp_value = _add_detail_row(detail_layout, "獲得食経験値", "")
-	_buff_value = _add_detail_row(detail_layout, "次の釣行で得る効果", "")
-	_overwrite_note = make_label("", 15, Color("#624b31"))
+	var detail_grid := GridContainer.new()
+	detail_grid.columns = 2
+	detail_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail_grid.add_theme_constant_override("h_separation", 6)
+	detail_grid.add_theme_constant_override("v_separation", 6)
+	detail_layout.add_child(detail_grid)
+	_material_value = _add_detail_tile(detail_grid, "材料", "")
+	_stock_value = _add_detail_tile(detail_grid, "所持数", "")
+	_exp_value = _add_detail_tile(detail_grid, "食経験値", "")
+	_buff_value = _add_detail_tile(detail_grid, "食事効果", "")
+	_overwrite_note = make_label("", 13, Color("#624b31"))
 	_overwrite_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_overwrite_note.clip_text = true
+	_overwrite_note.custom_minimum_size = Vector2(0, 18)
 	detail_layout.add_child(_overwrite_note)
 	_cook_button = make_button("調理する", _cook_selected, 300, true)
-	_cook_button.custom_minimum_size = Vector2(300, 54)
+	_cook_button.custom_minimum_size = Vector2(286, 50)
 	_cook_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	detail_layout.add_child(_cook_button)
 
 
 func _build_result_summary(layout: VBoxContainer) -> void:
 	var result_panel := _panel_box(Color("#0f2338"), Color("#5e391a"), Color("#e3b15e"), 6)
-	result_panel.custom_minimum_size = Vector2(0, 112)
+	result_panel.custom_minimum_size = Vector2(0, 94)
 	layout.add_child(result_panel)
 	var result_layout := VBoxContainer.new()
-	result_layout.add_theme_constant_override("separation", 6)
+	result_layout.add_theme_constant_override("separation", 4)
 	result_panel.add_child(result_layout)
 	var title_row := HBoxContainer.new()
 	title_row.add_theme_constant_override("separation", 10)
 	result_layout.add_child(title_row)
-	_result_title = make_shadow_label("", 21, Palette.GOLD_BRIGHT, 3)
+	_result_title = make_shadow_label("", 18, Palette.GOLD_BRIGHT, 3)
 	_result_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_result_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_row.add_child(_result_title)
 	_status_button = make_button("詳細", _show_status_overlay, 100, false)
-	_status_button.custom_minimum_size = Vector2(100, 36)
+	_status_button.custom_minimum_size = Vector2(92, 34)
 	title_row.add_child(_status_button)
 	_result_body = HBoxContainer.new()
 	_result_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_result_body.add_theme_constant_override("separation", 8)
+	_result_body.add_theme_constant_override("separation", 6)
 	result_layout.add_child(_result_body)
 
 
-func _add_detail_row(parent: VBoxContainer, title: String, value: String) -> Label:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	parent.add_child(row)
-	var title_label := make_label(title, 18, Color("#6a4a2b"))
-	title_label.custom_minimum_size = Vector2(180, 0)
-	row.add_child(title_label)
-	var value_label := make_label(value, 22, Color("#2a2118"), 1, Color("#fff2cf"))
+func _add_detail_tile(parent: GridContainer, title: String, value: String) -> Label:
+	var tile := _panel_box(Color("#fff0cf"), Color("#8b5b2c"), Color("#e6b561"), 3)
+	tile.custom_minimum_size = Vector2(0, 58)
+	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	parent.add_child(tile)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 0)
+	tile.add_child(box)
+	var title_label := make_label(title, 13, Color("#6a4a2b"))
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(title_label)
+	var value_label := make_label(value, 17, Color("#2a2118"), 1, Color("#fff2cf"))
 	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	row.add_child(value_label)
+	value_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	value_label.clip_text = true
+	box.add_child(value_label)
 	return value_label
 
 
@@ -305,7 +319,7 @@ func _rebuild_fish_cards() -> void:
 func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	var fish := GameData.get_fish(fish_id)
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(0, 68)
+	card.custom_minimum_size = Vector2(0, 56)
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
 	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	card.gui_input.connect(
@@ -315,19 +329,19 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	)
 	_fish_cards[fish_id] = card
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
+	row.add_theme_constant_override("separation", 8)
 	card.add_child(row)
 	var icon := TextureRect.new()
 	icon.texture = _fish_icon(fish_id)
-	icon.custom_minimum_size = Vector2(86, 48)
+	icon.custom_minimum_size = Vector2(74, 40)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	row.add_child(icon)
-	var name := make_label(String(fish.get("name", fish_id)), 21, Color("#241b12"), 1, Color("#fff2ca"))
+	var name := make_label(String(fish.get("name", fish_id)), 18, Color("#241b12"), 1, Color("#fff2ca"))
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(name)
-	var amount := make_label("× %d" % count, 21, Color("#241b12"), 1, Color("#fff2ca"))
+	var amount := make_label("× %d" % count, 18, Color("#241b12"), 1, Color("#fff2ca"))
 	amount.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(amount)
 	return card
@@ -407,7 +421,7 @@ func _recipe_entries_for_fish(fish_id: String) -> Array[Dictionary]:
 func _make_recipe_card(recipe: Dictionary, locked: bool) -> PanelContainer:
 	var recipe_id := String(recipe.get("id", ""))
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(210, 145)
+	card.custom_minimum_size = Vector2(198, 108)
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
 	if not locked:
 		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -421,12 +435,12 @@ func _make_recipe_card(recipe: Dictionary, locked: bool) -> PanelContainer:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
 	card.add_child(box)
-	var title := make_label(String(recipe.get("name", "")), 18, Color("#251c12"), 1, Color("#fff3cf"))
+	var title := make_label(String(recipe.get("name", "")), 16, Color("#251c12"), 1, Color("#fff3cf"))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title)
 	var image := TextureRect.new()
 	image.texture = _recipe_icon(recipe_id if not locked else "locked")
-	image.custom_minimum_size = Vector2(0, 72)
+	image.custom_minimum_size = Vector2(0, 48)
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	image.modulate = Color(0.46, 0.42, 0.36, 0.82) if locked else Color.WHITE
@@ -441,7 +455,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool) -> PanelContainer:
 			exp_amount,
 			" / 初回" if not PlayerProgress.eaten_recipes.has(dish_key) else "",
 		]
-	var footer := make_label(footer_text, 15, Color("#49351f"), 1, Color("#fff4cf"))
+	var footer := make_label(footer_text, 13, Color("#49351f"), 1, Color("#fff4cf"))
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(footer)
 	return card
@@ -505,7 +519,7 @@ func _refresh_detail() -> void:
 	_stock_value.text = "%d → %d" % [count, maxi(0, count - 1)]
 	_exp_value.text = "+%d EXP%s" % [total_exp, "（初回込み）" if first_time else ""]
 	_buff_value.text = String(recipe.get("buff_text", ""))
-	_overwrite_note.text = "食事効果は次の釣行開始時に消費され、既存の効果を上書きします。"
+	_overwrite_note.text = "食事効果は次の釣行で発動し、既存効果を上書き。"
 	_cook_button.disabled = count <= 0
 
 
@@ -651,14 +665,14 @@ func _show_pending_level_up() -> void:
 func _summary_card(title: String, value: String, accent: Color) -> PanelContainer:
 	var card := _panel_box(Color("#f2e4c2"), Color("#60401f"), Color("#d7a456"), 5)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.custom_minimum_size = Vector2(0, 62)
+	card.custom_minimum_size = Vector2(0, 50)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 0)
 	card.add_child(box)
-	var title_label := make_label(title, 15, Color("#614525"))
+	var title_label := make_label(title, 13, Color("#614525"))
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title_label)
-	var value_label := make_label(value, 20, accent, 1, Color("#1d160f"))
+	var value_label := make_label(value, 16, accent, 1, Color("#1d160f"))
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	value_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
