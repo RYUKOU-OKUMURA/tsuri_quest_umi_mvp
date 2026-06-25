@@ -74,10 +74,10 @@ func _draw() -> void:
 	var tackle_card := Rect2()
 	if _sidebar_frame != null:
 		draw_texture_rect(_sidebar_frame, Rect2(Vector2.ZERO, size), false, Color.WHITE)
-		header = Rect2(w * 0.044, h * 0.026, w * 0.912, h * 0.078)
-		fish_card = Rect2(w * 0.048, h * 0.109, w * 0.904, h * 0.466)
-		action_card = Rect2(w * 0.044, h * 0.588, w * 0.912, h * 0.195)
-		tackle_card = Rect2(w * 0.044, h * 0.798, w * 0.912, h * 0.178)
+		header = Rect2(w * 0.0148, h * 0.0117, w * 0.9705, h * 0.0908)
+		fish_card = Rect2(w * 0.0177, h * 0.1055, w * 0.9646, h * 0.4707)
+		action_card = Rect2(w * 0.0148, h * 0.5879, w * 0.9705, h * 0.1953)
+		tackle_card = Rect2(w * 0.0148, h * 0.7979, w * 0.9705, h * 0.1904)
 	else:
 		var gap := 7.0
 		var action_h := clampf(h * 0.22, 86.0, 102.0)
@@ -164,7 +164,7 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 	_draw_text(font, "魚の行動", rect.position + Vector2(title_x, 25.0), 18, Palette.TEXT_BONE, 2 if _sidebar_frame != null else 3)
 	var body := Rect2(rect.position + Vector2(10.0, 33.0), rect.size - Vector2(20.0, 42.0))
 	if _sidebar_frame != null:
-		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.225), rect.size - Vector2(28.0, rect.size.y * 0.285))
+		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.225), rect.size - Vector2(28.0, rect.size.y * 0.300))
 	else:
 		_draw_panel(body, Color("#f3e8cd"), Palette.WOOD_DARK, Palette.GOLD)
 	var action := "待機"
@@ -190,7 +190,7 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	_draw_text(font, "タックル", rect.position + Vector2(14.0, 24.0), 18, Palette.TEXT_BONE, 2 if _sidebar_frame != null else 3)
 	var body := Rect2(rect.position + Vector2(10.0, 32.0), rect.size - Vector2(20.0, 38.0))
 	if _sidebar_frame != null:
-		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.225), rect.size - Vector2(28.0, rect.size.y * 0.285))
+		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.220), rect.size - Vector2(28.0, rect.size.y * 0.323))
 	else:
 		_draw_panel(body, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	var rod_name := _short_rod_name(String(trip_stats.get("rod_name", "港の入門竿")))

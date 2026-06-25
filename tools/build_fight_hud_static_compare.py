@@ -68,6 +68,14 @@ def _draw_sheet_icon(base: Image.Image, index: int, box: tuple[float, float, flo
     base.alpha_composite(icon, (round(box[0]), round(box[1])))
 
 
+def _paste_icon_contain(base: Image.Image, image: Image.Image, box: tuple[float, float, float, float]) -> None:
+    width = box[2] - box[0]
+    height = box[3] - box[1]
+    scale = min(width / image.width, height / image.height)
+    icon = _resize(image, (round(image.width * scale), round(image.height * scale)))
+    base.alpha_composite(icon, (round(box[0] + (width - icon.width) * 0.5), round(box[1] + (height - icon.height) * 0.5)))
+
+
 def _draw_segment_gauge(
     draw: ImageDraw.ImageDraw,
     rect: tuple[float, float, float, float],
@@ -78,8 +86,8 @@ def _draw_segment_gauge(
     warm: bool,
 ) -> None:
     x0, y0, x1, y1 = rect
-    draw.rectangle((x0 - 2, y0 - 2, x1 + 2, y1 + 2), fill=(0, 0, 0, 23))
-    draw.rectangle(rect, fill=(0, 0, 0, 15))
+    draw.rectangle((x0 - 2, y0 - 2, x1 + 2, y1 + 2), fill=(0, 0, 0))
+    draw.rectangle(rect, fill=(5, 11, 18))
     segments = 18
     gap = 1.5
     seg_w = ((x1 - x0) - gap * (segments - 1)) / segments
@@ -87,26 +95,30 @@ def _draw_segment_gauge(
         start = i / segments
         filled = start < ratio
         if warm:
-            fill = (34, 211, 78, 255)
+            fill = (34, 211, 78)
             if start > 0.55:
-                fill = (217, 85, 36, 255)
+                fill = (217, 85, 36)
             elif start > 0.35:
-                fill = (220, 198, 72, 255)
+                fill = (220, 198, 72)
         else:
-            fill = (28, 205, 155, 255)
+            fill = (28, 205, 155)
         if not filled:
-            fill = (23, 37, 52, 46)
+            fill = (7, 16, 24)
         sx = x0 + i * (seg_w + gap)
         draw.rectangle((sx, y0 + 2, sx + seg_w, y1 - 2), fill=fill)
-        draw.rectangle((sx, y0 + 2, sx + seg_w, y0 + 7), fill=(255, 255, 255, 36 if filled else 7))
-        draw.rectangle((sx, y1 - 4, sx + seg_w, y1 - 2), fill=(0, 0, 0, 28))
+        if filled:
+            draw.rectangle((sx, y0 + 2, sx + seg_w, y0 + 7), fill=tuple(min(255, channel + 24) for channel in fill))
+            draw.rectangle((sx, y1 - 4, sx + seg_w, y1 - 2), fill=tuple(max(0, round(channel * 0.62)) for channel in fill))
+        else:
+            draw.rectangle((sx, y1 - 4, sx + seg_w, y1 - 2), fill=(0, 0, 0))
     if warm:
         for marker in (safe_min, safe_max):
             mx = x0 + (x1 - x0) * marker
-            draw.line((mx, y0 + 1, mx, y1 - 1), fill=(255, 255, 255, 76), width=1)
+            draw.line((mx, y0 + 2, mx, y1 - 2), fill=(76, 79, 77), width=1)
         mx = x0 + (x1 - x0) * ratio
-        draw.line((mx + 2, y0 - 2, mx + 2, y1 + 4), fill=(0, 0, 0, 86), width=2)
-        draw.line((mx, y0 - 3, mx, y1 + 4), fill="#fff8df", width=2)
+        draw.line((mx + 1.5, y0 - 1, mx + 1.5, y1 + 3), fill=(0, 0, 0), width=2)
+        draw.line((mx, y0 - 2, mx, y1 + 3), fill=(228, 220, 192), width=1)
+        _draw_triangle(draw, (mx, y0 - 7), 6, (228, 220, 192), up=False)
 
 
 def _draw_triangle(draw: ImageDraw.ImageDraw, center: tuple[float, float], radius: float, fill: str, *, up: bool) -> None:
@@ -178,7 +190,12 @@ def build_current_hud() -> Image.Image:
     depth = (tension[2] + gap, top[1], tension[2] + gap + depth_w, top[3])
     stamina = (depth[2] + gap, top[1], depth[2] + gap + right_w, top[3])
 
-    _draw_sheet_icon(frame, 4, (tension[0] + 12, tension[1] + 10, tension[0] + 36, tension[1] + 34), (255, 91, 99, 220))
+    tension_icon_path = ASSET_DIR / "hud_tension_icon.png"
+    tension_icon_box = (tension[0] + 12, tension[1] + 10, tension[0] + 36, tension[1] + 34)
+    if tension_icon_path.exists():
+        _paste_icon_contain(frame, Image.open(tension_icon_path).convert("RGBA"), tension_icon_box)
+    else:
+        _draw_sheet_icon(frame, 4, tension_icon_box, (255, 91, 99, 220))
     _draw_text(draw, (tension[0] + 40, tension[1] + 26), "テンション", 18, "#f7ecd0", stroke=2)
     _draw_segment_gauge(draw, (tension[0] + 24, tension[1] + 43, tension[2] - 34, tension[1] + 67), 0.66, 0.30, 0.74, warm=True)
     _draw_text(draw, (tension[0] + 24, tension[3] - 8), "ゆるい", 14, "#72f47d", stroke=1)

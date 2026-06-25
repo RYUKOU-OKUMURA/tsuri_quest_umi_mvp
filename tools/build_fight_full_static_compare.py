@@ -67,6 +67,12 @@ def _alpha_composite(base: Image.Image, layer: Image.Image, alpha: float) -> Non
     base.alpha_composite(layer)
 
 
+def _draw_alpha_outline(base: Image.Image, box: tuple[int, int, int, int], color: tuple[int, int, int, int]) -> None:
+    overlay = Image.new("RGBA", base.size, (0, 0, 0, 0))
+    ImageDraw.Draw(overlay).rectangle(box, outline=color, width=1)
+    base.alpha_composite(overlay)
+
+
 def _draw_text(
     draw: ImageDraw.ImageDraw,
     xy: tuple[float, float],
@@ -187,14 +193,10 @@ def build_water_window() -> Image.Image:
     _alpha_composite(water, _cover(Image.open(ASSET_DIR / "underwater_seabed_detail.png").convert("RGBA"), size, (0.5, 0.24)), 0.22)
     _alpha_composite(water, _cover(Image.open(ASSET_DIR / "underwater_foreground_ambience.png").convert("RGBA"), size, (0.5, 0.24)), 0.72)
     draw = ImageDraw.Draw(water)
-    draw.rectangle((0, 0, 44, water.height), fill=(5, 20, 41, 61))
-    draw.line((44, 0, 44, water.height), fill=(140, 209, 242, 46), width=1)
     fish_metrics = _draw_fish(water)
     _draw_line_lure_hit(water, fish_metrics)
-    draw.rectangle((0, 0, water.width - 1, water.height - 1), outline=(0, 13, 31, 46), width=1)
-    for inset in range(2, 17, 3):
-        alpha = max(0, 34 - inset * 5)
-        draw.rectangle((inset, inset, water.width - 1 - inset, water.height - 1 - inset), outline=(0, 8, 20, alpha), width=1)
+    _draw_alpha_outline(water, (0, 0, water.width - 1, water.height - 1), (0, 10, 23, 23))
+    _draw_alpha_outline(water, (2, 2, water.width - 3, water.height - 3), (140, 204, 235, 11))
     return water.convert("RGB")
 
 

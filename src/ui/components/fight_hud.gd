@@ -12,6 +12,7 @@ const FightFontsScript = preload("res://src/ui/fight_fonts.gd")
 const HUD_FRAME_PATH := "res://assets/showcase/underwater/fight_hud_frame.png"
 const ICON_SHEET_PATH := "res://assets/showcase/underwater/fight_icon_sheet.png"
 const HUD_BAIT_ICON_PATH := "res://assets/showcase/underwater/hud_bait_icon.png"
+const HUD_TENSION_ICON_PATH := "res://assets/showcase/underwater/hud_tension_icon.png"
 const ICON_TENSION := 4
 const ICON_STAMINA := 5
 const ICON_BAIT := 6
@@ -23,6 +24,7 @@ var trip_stats: Dictionary = {}
 var _hud_frame: Texture2D
 var _icons: Texture2D
 var _bait_icon: Texture2D
+var _tension_icon: Texture2D
 
 var _main_rect := Rect2()
 var _reel_rect := Rect2()
@@ -48,6 +50,8 @@ func _ready() -> void:
 		_icons = load(ICON_SHEET_PATH) as Texture2D
 	if ResourceLoader.exists(HUD_BAIT_ICON_PATH):
 		_bait_icon = load(HUD_BAIT_ICON_PATH) as Texture2D
+	if ResourceLoader.exists(HUD_TENSION_ICON_PATH):
+		_tension_icon = load(HUD_TENSION_ICON_PATH) as Texture2D
 
 
 func _process(_delta: float) -> void:
@@ -127,7 +131,11 @@ func _draw_tension(font: Font, rect: Rect2) -> void:
 	var bar_y := 42.0 if _hud_frame == null else 43.0
 	var icon_size := 34.0 if _hud_frame == null else 24.0
 	var title_size := 19 if _hud_frame == null else 18
-	_draw_hud_icon(ICON_TENSION, Rect2(rect.position + Vector2(12.0, title_y - icon_size + 8.0), Vector2(icon_size, icon_size)), Color("#ff5b63"), Color(1.0, 1.0, 1.0, 0.86))
+	var tension_icon_rect := Rect2(rect.position + Vector2(12.0, title_y - icon_size + 8.0), Vector2(icon_size, icon_size))
+	if _hud_frame != null and _tension_icon != null:
+		_draw_tension_texture_icon(tension_icon_rect)
+	else:
+		_draw_hud_icon(ICON_TENSION, tension_icon_rect, Color("#ff5b63"), Color(1.0, 1.0, 1.0, 0.86))
 	_draw_text(font, "テンション", rect.position + Vector2(48.0 if _hud_frame == null else 40.0, title_y), title_size, Palette.TEXT_BONE, 2 if _hud_frame != null else 3)
 	var ratio := 0.0
 	var safe_min := 0.30
@@ -258,12 +266,12 @@ func _draw_segment_gauge(rect: Rect2, ratio: float, safe_min: float, safe_max: f
 	var gap := 1.5 if _hud_frame != null else 2.0
 	var seg_w := (rect.size.x - gap * float(segments - 1)) / float(segments)
 	if _hud_frame != null:
-		draw_rect(rect.grow(2.0), Color(0.0, 0.0, 0.0, 0.09), true)
-		draw_rect(rect, Color(0.0, 0.0, 0.0, 0.06), true)
+		draw_rect(rect.grow(2.0), Color(0.0, 0.0, 0.0, 0.15), true)
+		draw_rect(rect, Color("#050b12", 0.74), true)
 	for i in range(segments):
 		var start := float(i) / float(segments)
 		var filled := start < ratio
-		var color := Color("#172534")
+		var color := Color("#071018")
 		if filled:
 			if warm:
 				color = Color("#25d755").lerp(Color("#f1d94f"), clampf(start / 0.55, 0.0, 1.0))
@@ -272,24 +280,23 @@ func _draw_segment_gauge(rect: Rect2, ratio: float, safe_min: float, safe_max: f
 				color = Color("#21d34a").lerp(Color("#16c6b5"), start)
 		var seg := Rect2(rect.position + Vector2(float(i) * (seg_w + gap), 2.0), Vector2(seg_w, rect.size.y - 4.0))
 		if _hud_frame != null:
-			var alpha := 0.98 if filled else 0.18
+			var alpha := 0.94 if filled else 0.78
 			var seg_color := Color(color.r, color.g, color.b, alpha)
 			draw_rect(seg, seg_color, true)
-			draw_rect(Rect2(seg.position, Vector2(seg.size.x, maxf(1.0, seg.size.y * 0.24))), Color(1.0, 1.0, 1.0, 0.14 if filled else 0.026), true)
-			draw_rect(Rect2(Vector2(seg.position.x, seg.end.y - 2.0), Vector2(seg.size.x, 2.0)), Color(0.0, 0.0, 0.0, 0.11), true)
-			draw_rect(seg, Color(1.0, 1.0, 1.0, 0.08 if filled else 0.022), false, 1.0)
+			draw_rect(Rect2(seg.position, Vector2(seg.size.x, maxf(1.0, seg.size.y * 0.22))), Color(1.0, 1.0, 1.0, 0.10 if filled else 0.018), true)
+			draw_rect(Rect2(Vector2(seg.position.x, seg.end.y - 2.0), Vector2(seg.size.x, 2.0)), Color(0.0, 0.0, 0.0, 0.16 if filled else 0.22), true)
 		else:
 			draw_rect(seg, color, true)
 			draw_rect(seg, Color(1.0, 1.0, 1.0, 0.13), false, 1.0)
 	if warm:
 		for marker in [safe_min, safe_max]:
 			var tick_x := rect.position.x + rect.size.x * clampf(marker, 0.0, 1.0)
-			draw_line(Vector2(tick_x, rect.position.y + 1.0), Vector2(tick_x, rect.end.y - 1.0), Color(1.0, 1.0, 1.0, 0.30), 1.0)
+			draw_line(Vector2(tick_x, rect.position.y + 2.0), Vector2(tick_x, rect.end.y - 2.0), Color(1.0, 1.0, 1.0, 0.18), 1.0)
 		var x := rect.position.x + rect.size.x * clampf(ratio, 0.0, 1.0)
-		var marker_color := Color("#fff8df")
-		draw_line(Vector2(x + 2.0, rect.position.y - 2.0), Vector2(x + 2.0, rect.end.y + 4.0), Color(0.0, 0.0, 0.0, 0.34), 2.0)
-		draw_line(Vector2(x, rect.position.y - 3.0), Vector2(x, rect.end.y + 4.0), marker_color, 2.0)
-		_draw_triangle(Vector2(x, rect.position.y - 8.0), 7.0, marker_color, false)
+		var marker_color := Color(1.0, 0.97, 0.84, 0.86)
+		draw_line(Vector2(x + 1.5, rect.position.y - 1.0), Vector2(x + 1.5, rect.end.y + 3.0), Color(0.0, 0.0, 0.0, 0.28), 2.0)
+		draw_line(Vector2(x, rect.position.y - 2.0), Vector2(x, rect.end.y + 3.0), marker_color, 1.5)
+		_draw_triangle(Vector2(x, rect.position.y - 7.0), 6.0, marker_color, false)
 
 
 func _draw_panel(rect: Rect2, fill: Color, border: Color, highlight: Color) -> void:
@@ -347,6 +354,16 @@ func _draw_bait_texture_icon(target: Rect2) -> void:
 	var draw_size := texture_size * scale
 	var draw_rect := Rect2(target.position + (target.size - draw_size) * 0.5, draw_size)
 	draw_texture_rect(_bait_icon, draw_rect, false, Color.WHITE)
+
+
+func _draw_tension_texture_icon(target: Rect2) -> void:
+	if _tension_icon == null:
+		return
+	var texture_size := _tension_icon.get_size()
+	var scale := minf(target.size.x / texture_size.x, target.size.y / texture_size.y)
+	var draw_size := texture_size * scale
+	var draw_rect := Rect2(target.position + (target.size - draw_size) * 0.5, draw_size)
+	draw_texture_rect(_tension_icon, draw_rect, false, Color.WHITE)
 
 
 func _draw_triangle(center: Vector2, radius: float, color: Color, up: bool) -> void:

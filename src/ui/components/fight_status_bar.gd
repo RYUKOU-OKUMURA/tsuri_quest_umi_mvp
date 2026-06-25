@@ -51,17 +51,18 @@ func _draw() -> void:
 		_draw_fallback_frame(rect)
 
 	var font := FightFontsScript.bold(get_theme_default_font())
+	var regular_font := FightFontsScript.regular(get_theme_default_font())
 	var slots := _slot_rects(rect)
 	_draw_status_icon(slots[0], ICON_TIME)
 	_draw_status_icon(slots[1], ICON_WEATHER)
 	_draw_status_icon(slots[2], ICON_COIN)
-	_draw_status_slot(font, slots[0], "AM", "08:47", false)
-	_draw_status_slot(font, slots[1], "快晴", "風 弱", false)
-	_draw_status_slot(font, slots[2], "所持金", "%s G" % _format_money(PlayerProgress.money), false)
+	_draw_status_slot(font, regular_font, slots[0], "AM", "08:47", false)
+	_draw_status_slot(font, regular_font, slots[1], "快晴", "風 弱", false)
+	_draw_status_slot(font, regular_font, slots[2], "所持金", "%s G" % _format_money(PlayerProgress.money), false)
 	var depth := 0.0
 	if simulator != null:
 		depth = simulator.depth
-	_draw_status_slot(font, slots[3], "南の島・沖", "水深 %.1fm" % depth, true)
+	_draw_status_slot(font, regular_font, slots[3], "南の島・沖", "水深 %.1fm" % depth, true)
 
 
 func _slot_rects(rect: Rect2) -> Array[Rect2]:
@@ -76,9 +77,9 @@ func _slot_rects(rect: Rect2) -> Array[Rect2]:
 	]
 
 
-func _draw_status_slot(font: Font, rect: Rect2, title: String, body: String, dark: bool) -> void:
+func _draw_status_slot(font: Font, regular_font: Font, rect: Rect2, title: String, body: String, dark: bool) -> void:
 	if dark:
-		_draw_centered_dark_slot(font, rect, title, body)
+		_draw_centered_dark_slot(font, regular_font, rect, title, body)
 		return
 	var icon_space := clampf(rect.size.y * 0.96, 60.0, 68.0)
 	var text_x := rect.position.x + icon_space
@@ -94,58 +95,59 @@ func _draw_status_slot(font: Font, rect: Rect2, title: String, body: String, dar
 	var body_y := rect.position.y + rect.size.y * 0.72
 	if not dark and title == "AM":
 		var am_y := rect.position.y + rect.size.y * 0.54
-		_draw_text_clipped(font, title, Vector2(text_x - 1.0, am_y), 14, title_color, max_width, outline)
-		_draw_text_clipped(font, body, Vector2(text_x + 29.0, am_y + 2.0), 24, body_color, max_width - 29.0, outline)
+		_draw_text_clipped(regular_font, title, Vector2(text_x - 1.0, am_y), 14, title_color, max_width, outline)
+		_draw_text_clipped(font, body, Vector2(text_x + 29.0, am_y + 1.0), 23, body_color, max_width - 29.0, outline)
 		return
 	if not dark and title == "快晴":
 		var inline_y := rect.position.y + rect.size.y * 0.57
 		_draw_text_clipped(font, title, Vector2(text_x - 1.0, inline_y), 19, body_color, max_width, outline)
-		var wind_icon_size := 24.0
-		var wind_x := text_x + 68.0
+		var wind_icon_size := 23.0
+		var wind_x := text_x + 65.0
 		_draw_top_sheet_icon(
 			ICON_WIND,
 			Rect2(Vector2(wind_x, rect.position.y + (rect.size.y - wind_icon_size) * 0.5 + 1.0), Vector2(wind_icon_size, wind_icon_size)),
 			Color(1.0, 1.0, 1.0, 0.92)
 		)
-		_draw_text_clipped(font, body, Vector2(wind_x + 28.0, inline_y), 18, Color("#173f32"), max_width - (wind_x - text_x) - 28.0, outline)
+		_draw_text_clipped(font, body, Vector2(wind_x + 27.0, inline_y), 17, Color("#173f32"), max_width - (wind_x - text_x) - 27.0, outline)
 		return
 	if not dark and title == "所持金":
 		var amount_y := rect.position.y + rect.size.y * 0.57
-		_draw_text_clipped(font, body, Vector2(text_x - 1.0, amount_y), 24, body_color, max_width + 2.0, outline)
+		_draw_text_clipped(font, body, Vector2(text_x - 1.0, amount_y), 23, body_color, max_width + 2.0, outline)
 		return
 	_draw_text_clipped(font, title, Vector2(text_x, title_y), title_size, title_color, max_width, outline)
 	_draw_text_clipped(font, body, Vector2(text_x, body_y), body_size, body_color, max_width, outline)
 
 
-func _draw_centered_dark_slot(font: Font, rect: Rect2, title: String, body: String) -> void:
+func _draw_centered_dark_slot(font: Font, regular_font: Font, rect: Rect2, title: String, body: String) -> void:
 	var title_size := 12
-	var body_size := 18
+	var depth_label_size := 14
+	var depth_value_size := 17
 	var title_width := font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x
-	var body_width := font.get_string_size(body, HORIZONTAL_ALIGNMENT_LEFT, -1, body_size).x
 	_draw_text_clipped(
 		font,
 		title,
-		Vector2(rect.position.x + (rect.size.x - title_width) * 0.5, rect.position.y + rect.size.y * 0.35),
+		Vector2(rect.position.x + (rect.size.x - title_width) * 0.5, rect.position.y + rect.size.y * 0.34),
 		title_size,
 		Palette.GOLD_BRIGHT,
 		rect.size.x,
 		1
 	)
-	_draw_text_clipped(
-		font,
-		body,
-		Vector2(rect.position.x + (rect.size.x - body_width) * 0.5, rect.position.y + rect.size.y * 0.69),
-		body_size,
-		Color("#eaf6ff"),
-		rect.size.x,
-		1
-	)
+	var depth_value := body.replace("水深 ", "")
+	var label := "水深"
+	var gap := 8.0
+	var label_width := regular_font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, depth_label_size).x
+	var value_width := font.get_string_size(depth_value, HORIZONTAL_ALIGNMENT_LEFT, -1, depth_value_size).x
+	var total_width := label_width + gap + value_width
+	var baseline := rect.position.y + rect.size.y * 0.70
+	var x := rect.position.x + (rect.size.x - total_width) * 0.5
+	_draw_text_clipped(regular_font, label, Vector2(x, baseline), depth_label_size, Color("#d9ecff"), label_width + 2.0, 1)
+	_draw_text_clipped(font, depth_value, Vector2(x + label_width + gap, baseline), depth_value_size, Color("#eaf6ff"), value_width + 2.0, 1)
 
 
 func _draw_status_icon(rect: Rect2, icon_index: int) -> void:
 	if _top_icons == null and _icons == null:
 		return
-	var icon_size := clampf(rect.size.y * 0.62, 40.0, 46.0)
+	var icon_size := clampf(rect.size.y * 0.60, 38.0, 44.0)
 	var icon_rect := Rect2(
 		rect.position + Vector2(11.0, (rect.size.y - icon_size) * 0.5 + 1.0),
 		Vector2(icon_size, icon_size)

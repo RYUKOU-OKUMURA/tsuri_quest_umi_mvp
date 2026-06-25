@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 REFERENCE = ROOT / "reference" / "02_underwater_fight_mockup.png"
 ASSET_DIR = ROOT / "assets" / "showcase" / "underwater"
 FONT_BOLD = ROOT / "assets" / "fonts" / "MPLUS1p-Bold.ttf"
+FONT_REGULAR = ROOT / "assets" / "fonts" / "MPLUS1p-Regular.ttf"
 OUT = Path("/tmp/tsuri_top_status_static_compare.png")
 
 STATUS_SIZE = (937, 76)
@@ -19,8 +20,8 @@ BG = "#07111d"
 TEXT_LABEL = "#e8f3ff"
 
 
-def _font(size: int) -> ImageFont.FreeTypeFont:
-    return ImageFont.truetype(str(FONT_BOLD), size)
+def _font(size: int, *, bold: bool = True) -> ImageFont.FreeTypeFont:
+    return ImageFont.truetype(str(FONT_BOLD if bold else FONT_REGULAR), size)
 
 
 def _resize(image: Image.Image, size: tuple[int, int]) -> Image.Image:
@@ -34,10 +35,11 @@ def _draw_text(
     size: int,
     fill: str,
     *,
+    bold: bool = True,
     stroke: int = 0,
     max_width: float | None = None,
 ) -> None:
-    font = _font(size)
+    font = _font(size, bold=bold)
     if max_width is not None:
         text = _fit_text(text, size, max_width)
     ascent, _descent = font.getmetrics()
@@ -53,6 +55,10 @@ def _draw_text(
 
 def _text_width(text: str, size: int) -> float:
     return _font(size).getlength(text)
+
+
+def _regular_text_width(text: str, size: int) -> float:
+    return _font(size, bold=False).getlength(text)
 
 
 def _fit_text(text: str, size: int, max_width: float) -> str:
@@ -87,7 +93,7 @@ def _draw_top_icon(base: Image.Image, index: int, slot: tuple[float, float, floa
     cell_w = sheet.width // 4
     src = sheet.crop((index * cell_w, 0, (index + 1) * cell_w, sheet.height))
     slot_h = slot[3] - slot[1]
-    icon_size = min(max(slot_h * 0.62, 40.0), 46.0)
+    icon_size = min(max(slot_h * 0.60, 38.0), 44.0)
     icon = _resize(src, (round(icon_size), round(icon_size)))
     base.alpha_composite(icon, (round(slot[0] + 11), round(slot[1] + (slot_h - icon_size) * 0.5 + 1)))
 
@@ -110,9 +116,17 @@ def _draw_centered_dark_slot(
     w = x1 - x0
     h = y1 - y0
     title_size = 12
-    body_size = 18
+    label_size = 14
+    value_size = 17
     _draw_text(draw, (x0 + (w - _text_width(title, title_size)) * 0.5, y0 + h * 0.35), title, title_size, "#f1d58d", stroke=1)
-    _draw_text(draw, (x0 + (w - _text_width(body, body_size)) * 0.5, y0 + h * 0.69), body, body_size, "#eaf6ff", stroke=1)
+    label = "水深"
+    value = body.replace("水深 ", "")
+    gap = 8.0
+    total_w = _regular_text_width(label, label_size) + gap + _text_width(value, value_size)
+    x = x0 + (w - total_w) * 0.5
+    baseline = y0 + h * 0.70
+    _draw_text(draw, (x, baseline), label, label_size, "#d9ecff", bold=False, stroke=1)
+    _draw_text(draw, (x + _regular_text_width(label, label_size) + gap, baseline), value, value_size, "#eaf6ff", stroke=1)
 
 
 def _draw_status_slot(base: Image.Image, draw: ImageDraw.ImageDraw, slot: tuple[float, float, float, float], title: str, body: str) -> None:
@@ -123,19 +137,19 @@ def _draw_status_slot(base: Image.Image, draw: ImageDraw.ImageDraw, slot: tuple[
     max_width = x1 - text_x - 10.0
     if title == "AM":
         baseline = y0 + h * 0.54
-        _draw_text(draw, (text_x - 1, baseline), title, 14, "#6d4d25", max_width=max_width)
-        _draw_text(draw, (text_x + 29, baseline + 2), body, 24, "#21170f", max_width=max_width - 29)
+        _draw_text(draw, (text_x - 1, baseline), title, 14, "#6d4d25", bold=False, max_width=max_width)
+        _draw_text(draw, (text_x + 29, baseline + 1), body, 23, "#21170f", max_width=max_width - 29)
         return
     if title == "快晴":
         baseline = y0 + h * 0.57
         _draw_text(draw, (text_x - 1, baseline), title, 19, "#21170f", max_width=max_width)
-        wind_size = 24.0
-        wind_x = text_x + 68.0
+        wind_size = 23.0
+        wind_x = text_x + 65.0
         _draw_inline_wind_icon(base, (wind_x, y0 + (h - wind_size) * 0.5 + 1, wind_x + wind_size, y0 + (h - wind_size) * 0.5 + 1 + wind_size))
-        _draw_text(draw, (wind_x + 28, baseline), body, 18, "#173f32", max_width=max_width - (wind_x - text_x) - 28)
+        _draw_text(draw, (wind_x + 27, baseline), body, 17, "#173f32", max_width=max_width - (wind_x - text_x) - 27)
         return
     if title == "所持金":
-        _draw_text(draw, (text_x - 1, y0 + h * 0.57), body, 24, "#21170f", max_width=max_width + 2)
+        _draw_text(draw, (text_x - 1, y0 + h * 0.57), body, 23, "#21170f", max_width=max_width + 2)
 
 
 def build_current_status() -> Image.Image:

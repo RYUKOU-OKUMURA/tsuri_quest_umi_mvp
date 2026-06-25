@@ -16,6 +16,7 @@ FISH_CARD_PORTRAIT = OUT_DIR / "kurodai_card_portrait.png"
 HIT_BURST = OUT_DIR / "hit_burst.png"
 FIGHT_LURE = OUT_DIR / "fight_lure.png"
 HUD_BAIT_ICON = OUT_DIR / "hud_bait_icon.png"
+HUD_TENSION_ICON = OUT_DIR / "hud_tension_icon.png"
 
 
 def _magenta_removed(image: Image.Image) -> Image.Image:
@@ -358,13 +359,49 @@ def create_hud_bait_icon() -> None:
     canvas.save(HUD_BAIT_ICON)
 
 
+def create_hud_tension_icon() -> None:
+    crop = Image.open(REFERENCE).convert("RGBA").crop((36, 658, 78, 700))
+    mask = Image.new("L", crop.size, 0)
+    src = crop.load()
+    raw_mask = mask.load()
+    for y in range(crop.height):
+        for x in range(crop.width):
+            r, g, b, _a = src[x, y]
+            red_body = r > 170 and g > 45 and g < 130 and b < 120 and r > g + 50 and r > b + 65
+            red_shadow = r > 100 and g < 80 and b < 80 and r > g + 35 and r > b + 35
+            if red_body or red_shadow:
+                raw_mask[x, y] = 255
+
+    final_mask = mask.filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.GaussianBlur(0.25))
+    icon = crop.copy()
+    icon.putalpha(final_mask)
+    bbox = final_mask.point(lambda value: 255 if value > 16 else 0).getbbox()
+    if bbox is None:
+        raise RuntimeError("HUD tension extraction produced an empty mask")
+    pad = 3
+    box = (
+        max(0, bbox[0] - pad),
+        max(0, bbox[1] - pad),
+        min(icon.width, bbox[2] + pad),
+        min(icon.height, bbox[3] + pad),
+    )
+    icon = icon.crop(box)
+
+    canvas = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    scale = min(56 / icon.width, 52 / icon.height)
+    resized = icon.resize((round(icon.width * scale), round(icon.height * scale)), Image.Resampling.LANCZOS)
+    canvas.alpha_composite(resized, ((canvas.width - resized.width) // 2, (canvas.height - resized.height) // 2))
+    canvas.save(HUD_TENSION_ICON)
+
+
 def main() -> None:
     clean_sheet = create_kurodai_sheet()
     create_kurodai_card_portrait(clean_sheet)
     create_hit_burst()
     create_fight_lure()
     create_hud_bait_icon()
-    print(f"processed {FISH_SHEET}, {FISH_CARD_PORTRAIT}, {HIT_BURST}, {FIGHT_LURE}, and {HUD_BAIT_ICON}")
+    create_hud_tension_icon()
+    print(f"processed {FISH_SHEET}, {FISH_CARD_PORTRAIT}, {HIT_BURST}, {FIGHT_LURE}, {HUD_BAIT_ICON}, and {HUD_TENSION_ICON}")
 
 
 if __name__ == "__main__":

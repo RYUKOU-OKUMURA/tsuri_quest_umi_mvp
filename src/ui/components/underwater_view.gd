@@ -71,7 +71,7 @@ func _draw() -> void:
 		_draw_showcase_ambience()
 	else:
 		_draw_water_background()
-	_draw_depth_scale()
+		_draw_depth_scale()
 	if _showcase_bg == null:
 		_draw_seabed()
 		_draw_background_fish()
@@ -639,9 +639,6 @@ func _draw_fight_overlay() -> void:
 
 
 func _draw_frame() -> void:
-	draw_rect(Rect2(0.0, 0.0, size.x, size.y), Color(0.01, 0.05, 0.12, 0.12), false, 1.0)
-	for index in range(5):
-		var alpha := 0.13 - float(index) * 0.022
-		var inset := 2.0 + float(index) * 3.0
-		var frame_rect := Rect2(inset, inset, size.x - inset * 2.0, size.y - inset * 2.0)
-		draw_rect(frame_rect, Color(0.0, 0.03, 0.08, alpha), false, 1.0)
+	draw_rect(Rect2(0.0, 0.0, size.x, size.y), Color(0.0, 0.04, 0.09, 0.09), false, 1.0)
+	var inner_rect := Rect2(2.0, 2.0, maxf(0.0, size.x - 4.0), maxf(0.0, size.y - 4.0))
+	draw_rect(inner_rect, Color(0.55, 0.80, 0.92, 0.045), false, 1.0)
