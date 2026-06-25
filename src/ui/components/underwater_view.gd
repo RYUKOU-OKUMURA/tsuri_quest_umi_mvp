@@ -9,7 +9,7 @@ const SHOWCASE_FG_AMBIENCE_PATH := "res://assets/showcase/underwater/underwater_
 const SHOWCASE_FISH_SHEET_PATH := "res://assets/showcase/underwater/kurodai_showcase_sheet.png"
 const SHOWCASE_HIT_BURST_PATH := "res://assets/showcase/underwater/hit_burst.png"
 const SHOWCASE_FISH_FRAME_COUNT := 4
-const SHOWCASE_FISH_CENTER_OFFSET := Vector2(-0.055, -0.012)
+const SHOWCASE_FISH_CENTER_OFFSET := Vector2(-0.072, -0.014)
 
 var simulator: FishingSimulator
 var fish_data: Dictionary = {}
@@ -549,7 +549,7 @@ func _showcase_fish_draw_size(scale_value := -1.0) -> Vector2:
 	elif effective_scale < 0.0:
 		effective_scale = boss_ratio
 	var stamina_scale := clampf(effective_scale / boss_ratio, 0.90, 1.06)
-	var target_width_ratio := 0.50 if bool(fish_data.get("boss", false)) else 0.51
+	var target_width_ratio := 0.465 if bool(fish_data.get("boss", false)) else 0.49
 	var draw_width := size.x * target_width_ratio * stamina_scale
 	return Vector2(draw_width, draw_width * frame_h / frame_w)
 
@@ -577,13 +577,13 @@ func _draw_hit_burst() -> void:
 	var burst_center := Vector2(size.x * 0.49, size.y * 0.805)
 	if _showcase_hit_burst != null:
 		var tex_size := _showcase_hit_burst.get_size()
-		var scale := clampf(size.x / 1370.0, 0.44, 0.56)
+		var scale := clampf(size.x / 1450.0, 0.42, 0.50)
 		var draw_size := tex_size * scale
 		var draw_rect := Rect2(burst_center - draw_size * 0.5, draw_size)
 		draw_texture_rect(_showcase_hit_burst, draw_rect, false, Color(1.0, 1.0, 1.0, alpha))
 	var font := FightFontsScript.bold(get_theme_default_font())
 	var text := "ヒット！"
-	var font_size := int(clampf(size.y * 0.135, 44.0, 64.0))
+	var font_size := int(clampf(size.y * 0.125, 42.0, 58.0))
 	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
 	var pos := burst_center + Vector2(-text_width * 0.5, font_size * 0.20)
 	draw_string_outline(font, pos + Vector2(3.0, 4.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 8, Color(0.0, 0.0, 0.0, 0.58))
