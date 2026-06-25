@@ -24,6 +24,7 @@ func _ready() -> void:
 
 	await _audit_cook_select()
 	await _audit_exp_gain()
+	await _audit_exp_gain_level_up()
 	await _audit_meal_result()
 	await _audit_level_up()
 	await _audit_status_summary()
@@ -34,13 +35,14 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 
-	print("Cooking layout audit passed for 5 states at 1280x720.")
+	print("Cooking layout audit passed for 5 states plus level-up EXP subcase at 1280x720.")
 	get_tree().quit(0)
 
 
 func _audit_cook_select() -> void:
 	_seed_select_state()
 	var screen := await _mount_cooking_screen()
+	_audit_recipe_grid_shape("COOK_SELECT", screen)
 	await _audit_tree("COOK_SELECT", screen)
 	screen.queue_free()
 	await _tick()
@@ -56,12 +58,24 @@ func _audit_exp_gain() -> void:
 	await _tick()
 
 
-func _audit_meal_result() -> void:
+func _audit_exp_gain_level_up() -> void:
 	_seed_select_state()
 	var screen := await _mount_cooking_screen()
 	var result := _fake_level_result()
 	_seed_after_meal_state()
 	screen.preview_show_reward_result(result, 130, 150, 150, true)
+	await get_tree().create_timer(0.7).timeout
+	await _audit_tree("EXP_GAIN_LEVELUP", screen)
+	screen.queue_free()
+	await _tick()
+
+
+func _audit_meal_result() -> void:
+	_seed_select_state()
+	var screen := await _mount_cooking_screen()
+	var result := _fake_level_result()
+	_seed_after_meal_state()
+	screen.preview_show_meal_reward_result(result, true)
 	await get_tree().create_timer(0.7).timeout
 	await _audit_tree("MEAL_RESULT", screen)
 	screen.queue_free()
@@ -154,6 +168,23 @@ func _audit_label(state: String, label: Label) -> void:
 			"%s: label %s may clip vertically: text='%s' size=%s needed_h=%.1f lines=%d"
 			% [state, _node_path(label), _trim(label.text), rect.size, needed_height, line_count]
 		)
+	if label.autowrap_mode == TextServer.AUTOWRAP_OFF:
+		var font := label.get_theme_font("font")
+		if font != null:
+			var needed_width := _label_text_width(label, font, font_size) + float(outline * 2)
+			if rect.size.x + TOLERANCE < needed_width:
+				_failures.append(
+					"%s: label %s may clip horizontally: text='%s' size=%s needed_w=%.1f"
+					% [state, _node_path(label), _trim(label.text), rect.size, needed_width]
+				)
+
+
+func _label_text_width(label: Label, font: Font, font_size: int) -> float:
+	var max_width := 0.0
+	for line in label.text.split("\n"):
+		var line_width := font.get_string_size(String(line), HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+		max_width = maxf(max_width, line_width)
+	return max_width
 
 
 func _audit_button(state: String, button: Button) -> void:
@@ -189,6 +220,31 @@ func _debug_top_level(state: String, root: Control) -> void:
 				if grandchild is Control:
 					var grand_control := grandchild as Control
 					print("    %s %s min=%s" % [grand_control.get_class(), grand_control.get_global_rect(), grand_control.get_combined_minimum_size()])
+
+
+func _audit_recipe_grid_shape(state: String, root: Node) -> void:
+	var grid := _find_named(root, "RecipeGrid") as GridContainer
+	if grid == null:
+		_failures.append("%s: RecipeGrid is missing." % state)
+		return
+	if grid.columns != 3:
+		_failures.append("%s: RecipeGrid should use 3 columns, got %d." % [state, grid.columns])
+	var card_count := 0
+	for child in grid.get_children():
+		if child is Control and String((child as Control).name).begins_with("RecipeCard_"):
+			card_count += 1
+	if card_count < 5:
+		_failures.append("%s: RecipeGrid should expose at least 5 recipe cards, got %d." % [state, card_count])
+
+
+func _find_named(node: Node, node_name: String) -> Node:
+	if node.name == node_name:
+		return node
+	for child in node.get_children():
+		var found := _find_named(child, node_name)
+		if found != null:
+			return found
+	return null
 
 
 func _find_first(node: Node, class_name_text: String) -> Node:

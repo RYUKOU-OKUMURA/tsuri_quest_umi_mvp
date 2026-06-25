@@ -35,12 +35,16 @@ func _ready() -> void:
 	screen.queue_free()
 	await get_tree().process_frame
 
-	_seed_exp_gain_state()
+	_seed_select_state()
 	screen = await _mount_screen(vp)
-	screen.preview_show_reward_result(_fake_non_level_result(), 80, 100, 150, false)
+	var old_stats := PlayerProgress.get_base_stats()
+	var fake_result := _fake_meal_result()
+	_seed_after_meal_state()
+	screen.preview_show_meal_reward_result(fake_result, true)
+
 	await get_tree().process_frame
 	await get_tree().process_frame
-	if not _save_viewport(vp, OUT_EXP):
+	if not _save_viewport(vp, OUT_RESULT):
 		get_tree().quit(1)
 		return
 
@@ -49,14 +53,11 @@ func _ready() -> void:
 
 	_seed_select_state()
 	screen = await _mount_screen(vp)
-	var old_stats := PlayerProgress.get_base_stats()
-	var fake_result := _fake_meal_result()
 	_seed_after_meal_state()
 	screen.preview_show_reward_result(fake_result, 130, 150, 150, true)
-
 	await get_tree().process_frame
 	await get_tree().process_frame
-	if not _save_viewport(vp, OUT_RESULT):
+	if not _save_viewport(vp, OUT_EXP):
 		get_tree().quit(1)
 		return
 
@@ -105,25 +106,6 @@ func _seed_select_state() -> void:
 	PlayerProgress.pending_buff = {}
 
 
-func _seed_exp_gain_state() -> void:
-	PlayerProgress.level = 4
-	PlayerProgress.exp = 100
-	PlayerProgress.money = 1250
-	PlayerProgress.inventory.clear()
-	PlayerProgress.inventory["aji"] = 4
-	PlayerProgress.inventory["saba"] = 3
-	PlayerProgress.inventory["kasago"] = 2
-	PlayerProgress.inventory["mejina"] = 2
-	PlayerProgress.eaten_recipes = {"aji:salt_grill": 1}
-	PlayerProgress.pending_buff = {
-		"recipe_id": "salt_grill",
-		"name": "アジの塩焼き",
-		"stat": "max_energy",
-		"value": 0.05,
-		"text": "次の釣行で最大体力 +5%",
-	}
-
-
 func _seed_after_meal_state() -> void:
 	PlayerProgress.level = 5
 	PlayerProgress.exp = 20
@@ -134,25 +116,6 @@ func _seed_after_meal_state() -> void:
 		"stat": "max_energy",
 		"value": 0.05,
 		"text": "次の釣行で最大体力 +5%",
-	}
-
-
-func _fake_non_level_result() -> Dictionary:
-	return {
-		"ok": true,
-		"dish_name": "アジの塩焼き",
-		"base_exp": 20,
-		"first_time": false,
-		"first_bonus": 0,
-		"total_exp": 20,
-		"leveled_to": [],
-		"buff": {
-			"recipe_id": "salt_grill",
-			"name": "アジの塩焼き",
-			"stat": "max_energy",
-			"value": 0.05,
-			"text": "次の釣行で最大体力 +5%",
-		},
 	}
 
 

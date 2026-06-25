@@ -87,7 +87,12 @@ func _run_real_cooking_level_flow() -> bool:
 	):
 		return false
 	if not screen.preview_accept_reward_overlay():
-		push_error("Expected real cooking reward overlay before level-up transition.")
+		push_error("Expected real cooking meal-result overlay before EXP transition.")
+		get_tree().quit(1)
+		return false
+	await get_tree().create_timer(0.35).timeout
+	if not screen.preview_accept_reward_overlay():
+		push_error("Expected real cooking EXP overlay before level-up transition.")
 		get_tree().quit(1)
 		return false
 	await get_tree().create_timer(0.35).timeout

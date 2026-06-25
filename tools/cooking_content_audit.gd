@@ -24,6 +24,7 @@ func _ready() -> void:
 	_audit_required_assets()
 	await _audit_cook_select()
 	await _audit_exp_gain()
+	await _audit_exp_gain_level_up()
 	await _audit_meal_result()
 	await _audit_level_up()
 	await _audit_status_summary()
@@ -34,7 +35,7 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 
-	print("Cooking content audit passed for 5 states.")
+	print("Cooking content audit passed for 5 states plus level-up EXP subcase.")
 	get_tree().quit(0)
 
 
@@ -68,14 +69,48 @@ func _audit_cook_select() -> void:
 			"所持している魚",
 			"料理を選ぶ",
 			"アジの塩焼き",
+			"選択中 / 40 EXP 初回",
+			"煮付け",
+			"素材違い",
+			"？？？",
+			"未解放 Lv.5",
 			"材料",
 			"アジ ×1",
+			"4 → 3",
 			"食経験値",
 			"+40 EXP",
+			"初回ボーナス",
+			"+20 EXP",
 			"食事効果",
 			"次の釣行で最大体力 +5%",
+			"効果回数",
+			"1回",
+			"次の釣行で1回発動",
+			"既存効果を上書き",
 			"調理する",
 			"現在の準備",
+		]
+	)
+	await _expect_absent_texts(
+		"EXP_GAIN",
+		screen,
+		[
+			"PLAYER",
+			"DISH",
+			"POWER",
+			"EATING",
+		]
+	)
+	await _expect_absent_texts(
+		"STATUS_SUMMARY",
+		screen,
+		[
+			"STATUS",
+			"PLAYER",
+			"COOLER",
+			"GOLD",
+			"TIME",
+			"READY",
 		]
 	)
 	screen.queue_free()
@@ -91,16 +126,76 @@ func _audit_exp_gain() -> void:
 		"EXP_GAIN",
 		screen,
 		[
-			"ごちそうさま！ 食経験値を獲得",
+			"食経験値を獲得！",
 			"1 食事 完了",
 			"2 EXP 加算中",
 			"3 成長 進行中",
 			"アジの塩焼きの食経験値がたまり",
 			"アジの塩焼きを食べた！",
+			"次の釣行で効果！",
+			"EXP 80 / 150  ->  100 / 150",
 			"+20 EXP",
 			"記録済み",
 			"次の釣行で最大体力 +5%",
+			"1回の釣行で発動",
 			"次のレベルまで 50 EXP",
+			"プレイヤーLv.",
+			"Lv.4  100/150 EXP",
+			"効果中の料理",
+			"アジの塩焼き / あと1回",
+			"クーラーボックス",
+			"11 / 20",
+			"所持金",
+			"1250 G",
+		]
+	)
+	await _expect_absent_texts(
+		"EXP_GAIN_LEVELUP",
+		screen,
+		[
+			"PLAYER",
+			"DISH",
+			"POWER",
+			"EATING",
+		]
+	)
+	screen.queue_free()
+	await _tick()
+
+
+func _audit_exp_gain_level_up() -> void:
+	_seed_select_state()
+	var screen := await _mount_cooking_screen()
+	var result := _fake_level_result()
+	_seed_after_meal_state()
+	screen.preview_show_reward_result(result, 130, 150, 150, true)
+	await get_tree().create_timer(0.7).timeout
+	await _expect_texts(
+		"EXP_GAIN_LEVELUP",
+		screen,
+		[
+			"食経験値が成長へ！",
+			"1 食事 完了",
+			"2 EXP 加算中",
+			"3 成長 解放",
+			"アジの塩焼きの食経験値が Lv.5 到達",
+			"アジの塩焼きを食べた！",
+			"次の釣行で効果！",
+			"EXP 130 / 150  ->  150 / 150",
+			"+40 EXP",
+			"初めて食べた料理！",
+			"今回の合計 +40 EXP",
+			"Lv.4 -> Lv.5 / ぬし解放",
+			"1回の釣行で発動",
+			"プレイヤーLv.",
+			"Lv.5  20/190 EXP",
+			"効果中の料理",
+			"アジの塩焼き / あと1回",
+			"クーラーボックス",
+			"10 / 20",
+			"所持金",
+			"1250 G",
+			"解放を見る",
 		]
 	)
 	screen.queue_free()
@@ -112,19 +207,48 @@ func _audit_meal_result() -> void:
 	var screen := await _mount_cooking_screen()
 	var result := _fake_level_result()
 	_seed_after_meal_state()
-	screen.preview_show_reward_result(result, 130, 150, 150, true)
+	screen.preview_show_meal_reward_result(result, true)
 	await get_tree().create_timer(0.7).timeout
 	await _expect_texts(
 		"MEAL_RESULT",
 		screen,
 		[
-			"ごちそうさま！ 成長へつながった",
-			"3 成長 解放",
-			"アジの塩焼きの食経験値が Lv.5 到達",
-			"初めて食べた料理！",
-			"今回の合計 +40 EXP",
+			"食べた！",
+			"2 EXP 待機",
+			"3 成長 待機",
+			"食経験値は次に加算される",
+			"アジの塩焼きを食べた！",
+			"今回の料理",
+			"食経験値を獲得した！",
+			"はじめて作った料理！",
+			"合計獲得食経験値",
+			"+40 EXP",
+			"次回の釣行で効果を発揮！",
+			"次の釣行で最大体力 +5%",
+			"1回の釣行で発動",
+			"プレイヤーLv.",
+			"Lv.5  20/190 EXP",
+			"効果中の料理",
+			"アジの塩焼き / あと1回",
+			"クーラーボックス",
+			"10 / 20",
+			"所持金",
+			"1250 G",
+			"EXP加算へ",
+		]
+	)
+	await _expect_absent_texts(
+		"MEAL_RESULT",
+		screen,
+		[
+			"食経験値が成長へ！",
+			"次の釣行で効果！",
+			"EXP 130 / 150",
 			"Lv.4 -> Lv.5 / ぬし解放",
-			"解放を見る",
+			"PLAYER",
+			"DISH",
+			"POWER",
+			"EATING",
 		]
 	)
 	screen.queue_free()
@@ -144,14 +268,33 @@ func _audit_level_up() -> void:
 		"LEVEL_UP_OVERLAY",
 		panel,
 		[
+			"成長の証",
 			"LEVEL UP!",
 			"Lv.4   ->   Lv.5",
 			"食経験値が成長に変わった",
 			"最大体力",
 			"巻力",
+			"新たな釣り場が解放！",
+			"挑戦解放",
 			"港のぬしに挑戦できるようになった！",
 			"食事でLv.5到達",
+			"次の目標：港のぬし",
+			"新釣り場",
+			"港の大岩",
+			"外洋への挑戦",
 			"OK",
+		]
+	)
+	await _expect_absent_texts(
+		"LEVEL_UP_OVERLAY",
+		panel,
+		[
+			"CROWN",
+			"REWARD",
+			"NEW CHALLENGE",
+			"BOSS",
+			"MEDAL",
+			"NEW SPOT",
 		]
 	)
 	panel.queue_free()
@@ -167,15 +310,29 @@ func _audit_status_summary() -> void:
 		"STATUS_SUMMARY",
 		screen,
 		[
-			"ステータス要約",
-			"プレイヤー Lv.5",
+			"ステータス",
+			"調理の成果を確認できます",
+			"Lv.5",
+			"20 / 190",
+			"次のレベルまで 170 EXP",
+			"体力",
+			"攻撃力",
+			"防御力",
+			"素早さ",
+			"運",
 			"効果中の料理",
+			"効果中！ あと 1回",
 			"アジの塩焼き",
-			"次の釣行で最大体力 +5%",
+			"効果：体力アップ",
+			"最大体力 +5%",
 			"クーラーボックス",
+			"10 / 20",
 			"所持金",
+			"1250 G",
 			"プレイ時間",
-			"閉じる",
+			"03:25:45",
+			"うまい料理で力がみなぎってきた！",
+			"港へ戻る",
 		]
 	)
 	screen.queue_free()
@@ -200,6 +357,17 @@ func _expect_texts(state: String, root: Node, required: Array) -> void:
 		if not visible_text.contains(String(text)):
 			_failures.append(
 				"%s: missing visible text '%s'. Visible text: %s"
+				% [state, String(text), _trim(visible_text)]
+			)
+
+
+func _expect_absent_texts(state: String, root: Node, forbidden: Array) -> void:
+	await _tick()
+	var visible_text := _visible_text(root)
+	for text in forbidden:
+		if visible_text.contains(String(text)):
+			_failures.append(
+				"%s: forbidden visible text '%s'. Visible text: %s"
 				% [state, String(text), _trim(visible_text)]
 			)
 
