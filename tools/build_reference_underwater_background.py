@@ -1232,6 +1232,129 @@ def _add_canvas_center_floor_lift(image: Image.Image, crop_subject_mask: Image.I
     return result.convert("RGB")
 
 
+def _add_canvas_reference_light_polish(
+    image: Image.Image,
+    reference_crop: Image.Image,
+    crop_subject_mask: Image.Image,
+) -> Image.Image:
+    source = _expand_to_canvas(reference_crop.convert("RGB"))
+    subject_mask = _expand_to_canvas(crop_subject_mask).convert("L")
+    result = image.convert("RGBA")
+    w, h = CANVAS_SIZE
+
+    upper_left = source.crop((int(w * 0.06), int(h * 0.02), int(w * 0.18), int(h * 0.34)))
+    upper_right = source.crop((int(w * 0.70), int(h * 0.02), int(w * 0.96), int(h * 0.34)))
+    light_source = _stitch_reference_patches(upper_left, upper_right)
+    light_size = (int(w * 0.70), int(h * 0.50))
+    light_patch = light_source.resize(light_size, Image.Resampling.LANCZOS)
+    light_patch = ImageEnhance.Brightness(light_patch).enhance(1.20)
+    light_patch = ImageEnhance.Color(light_patch).enhance(0.96)
+    light_patch = ImageEnhance.Contrast(light_patch).enhance(0.88)
+    light_patch = light_patch.filter(ImageFilter.GaussianBlur(1.0)).convert("RGBA")
+
+    light_x = int(w * 0.15)
+    light_y = int(h * 0.03)
+    light_gate = Image.new("L", light_size, 0)
+    light_draw = ImageDraw.Draw(light_gate)
+    light_draw.ellipse(
+        (
+            int(light_size[0] * 0.02),
+            int(light_size[1] * -0.08),
+            int(light_size[0] * 0.98),
+            int(light_size[1] * 0.96),
+        ),
+        fill=150,
+    )
+    light_gate = light_gate.filter(ImageFilter.GaussianBlur(30.0))
+    light_alpha = ImageChops.multiply(
+        subject_mask.crop((light_x, light_y, light_x + light_size[0], light_y + light_size[1])),
+        _vertical_mask(light_size, 118, 0.00, 0.86),
+    )
+    light_alpha = ImageChops.multiply(light_alpha, light_gate)
+    light_alpha = ImageChops.multiply(light_alpha, _soft_blob_mask(light_size, 232, seed_offset=74))
+    result.alpha_composite(
+        Image.composite(
+            light_patch,
+            Image.new("RGBA", light_size, (0, 0, 0, 0)),
+            light_alpha,
+        ),
+        (light_x, light_y),
+    )
+
+    left_floor = source.crop((int(w * 0.05), int(h * 0.70), int(w * 0.18), int(h * 0.96)))
+    right_floor = source.crop((int(w * 0.78), int(h * 0.68), int(w * 0.98), int(h * 0.94)))
+    floor_source = _stitch_reference_patches(left_floor, right_floor, align="bottom")
+    floor_size = (int(w * 0.66), int(h * 0.25))
+    floor_patch = floor_source.resize(floor_size, Image.Resampling.LANCZOS)
+    floor_patch = ImageEnhance.Brightness(floor_patch).enhance(1.16)
+    floor_patch = ImageEnhance.Color(floor_patch).enhance(0.92)
+    floor_patch = ImageEnhance.Contrast(floor_patch).enhance(1.18)
+    floor_patch = floor_patch.filter(ImageFilter.UnsharpMask(radius=1.1, percent=42, threshold=3)).convert("RGBA")
+
+    floor_x = int(w * 0.20)
+    floor_y = int(h * 0.58)
+    floor_gate = Image.new("L", floor_size, 0)
+    floor_draw = ImageDraw.Draw(floor_gate)
+    floor_draw.ellipse(
+        (
+            int(floor_size[0] * 0.00),
+            int(floor_size[1] * 0.06),
+            int(floor_size[0] * 1.00),
+            int(floor_size[1] * 1.08),
+        ),
+        fill=132,
+    )
+    floor_gate = floor_gate.filter(ImageFilter.GaussianBlur(24.0))
+    floor_alpha = ImageChops.multiply(
+        subject_mask.crop((floor_x, floor_y, floor_x + floor_size[0], floor_y + floor_size[1])),
+        _vertical_mask(floor_size, 132, 0.10, 1.0),
+    )
+    floor_alpha = ImageChops.multiply(floor_alpha, floor_gate)
+    floor_alpha = ImageChops.multiply(floor_alpha, _soft_blob_mask(floor_size, 226, seed_offset=76))
+    result.alpha_composite(
+        Image.composite(
+            floor_patch,
+            Image.new("RGBA", floor_size, (0, 0, 0, 0)),
+            floor_alpha,
+        ),
+        (floor_x, floor_y),
+    )
+
+    strokes = Image.new("RGBA", CANVAS_SIZE, (0, 0, 0, 0))
+    stroke_draw = ImageDraw.Draw(strokes, "RGBA")
+    for index in range(48):
+        row = index % 8
+        col = index // 8
+        x = w * (0.24 + col * 0.088 + (row % 2) * 0.018)
+        y = h * (0.59 + row * 0.030)
+        points: list[tuple[float, float]] = []
+        for step in range(6):
+            t = step / 5.0
+            points.append(
+                (
+                    x + 128.0 * t,
+                    y + math.sin(t * math.tau + index * 0.52) * (2.0 + (index % 4) * 0.45),
+                )
+            )
+        stroke_draw.line(points, fill=(214, 250, 231, 26 if index % 4 else 38), width=1)
+
+    stroke_mask = ImageChops.multiply(
+        subject_mask,
+        _vertical_mask(CANVAS_SIZE, 84, 0.48, 0.90),
+    )
+    stroke_mask = ImageChops.multiply(stroke_mask, _soft_blob_mask(CANVAS_SIZE, 218, seed_offset=78))
+    result.alpha_composite(
+        Image.composite(
+            strokes.filter(ImageFilter.GaussianBlur(0.35)),
+            Image.new("RGBA", CANVAS_SIZE, (0, 0, 0, 0)),
+            stroke_mask,
+        ),
+        (0, 0),
+    )
+
+    return result.convert("RGB")
+
+
 def build() -> None:
     if not REFERENCE.exists():
         raise FileNotFoundError(f"Missing reference: {REFERENCE}")
@@ -1246,6 +1369,7 @@ def build() -> None:
     background = _expand_to_canvas(clean_crop)
     background = _add_generated_canvas_paintover(background, _make_full_window_subject_mask(crop.size))
     background = _add_canvas_center_floor_lift(background, _make_full_window_subject_mask(crop.size))
+    background = _add_canvas_reference_light_polish(background, crop, _make_full_window_subject_mask(crop.size))
     background = _harmonize(background)
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
