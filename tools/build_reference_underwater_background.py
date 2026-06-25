@@ -1247,9 +1247,9 @@ def _add_canvas_reference_light_polish(
     light_source = _stitch_reference_patches(upper_left, upper_right)
     light_size = (int(w * 0.70), int(h * 0.50))
     light_patch = light_source.resize(light_size, Image.Resampling.LANCZOS)
-    light_patch = ImageEnhance.Brightness(light_patch).enhance(1.20)
+    light_patch = ImageEnhance.Brightness(light_patch).enhance(1.34)
     light_patch = ImageEnhance.Color(light_patch).enhance(0.96)
-    light_patch = ImageEnhance.Contrast(light_patch).enhance(0.88)
+    light_patch = ImageEnhance.Contrast(light_patch).enhance(0.84)
     light_patch = light_patch.filter(ImageFilter.GaussianBlur(1.0)).convert("RGBA")
 
     light_x = int(w * 0.15)
@@ -1266,10 +1266,32 @@ def _add_canvas_reference_light_polish(
         fill=150,
     )
     light_gate = light_gate.filter(ImageFilter.GaussianBlur(30.0))
-    light_alpha = ImageChops.multiply(
-        subject_mask.crop((light_x, light_y, light_x + light_size[0], light_y + light_size[1])),
-        _vertical_mask(light_size, 118, 0.00, 0.86),
+    broad_light = Image.new("L", light_size, 0)
+    broad_light_draw = ImageDraw.Draw(broad_light)
+    broad_light_draw.ellipse(
+        (
+            int(light_size[0] * 0.02),
+            int(light_size[1] * -0.18),
+            int(light_size[0] * 0.96),
+            int(light_size[1] * 0.78),
+        ),
+        fill=118,
     )
+    broad_light_draw.rectangle(
+        (
+            int(light_size[0] * 0.20),
+            0,
+            int(light_size[0] * 0.84),
+            int(light_size[1] * 0.42),
+        ),
+        fill=138,
+    )
+    broad_light = broad_light.filter(ImageFilter.GaussianBlur(42.0))
+    light_alpha = ImageChops.lighter(
+        subject_mask.crop((light_x, light_y, light_x + light_size[0], light_y + light_size[1])),
+        broad_light,
+    )
+    light_alpha = ImageChops.multiply(light_alpha, _vertical_mask(light_size, 136, 0.00, 0.86))
     light_alpha = ImageChops.multiply(light_alpha, light_gate)
     light_alpha = ImageChops.multiply(light_alpha, _soft_blob_mask(light_size, 232, seed_offset=74))
     result.alpha_composite(

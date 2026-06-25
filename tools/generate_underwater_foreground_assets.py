@@ -186,7 +186,7 @@ def create_color_grade() -> None:
     # the base background still owns the illustration detail.
     light = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     ld = ImageDraw.Draw(light, "RGBA")
-    ld.ellipse((int(w * 0.18), -int(h * 0.18), int(w * 0.78), int(h * 0.28)), fill=(198, 248, 255, 30))
+    ld.ellipse((int(w * 0.13), -int(h * 0.22), int(w * 0.82), int(h * 0.36)), fill=(208, 252, 255, 108))
     for i, x in enumerate((260, 430, 620, 850, 1080)):
         width = 80 + i * 14
         ld.polygon(
@@ -196,14 +196,25 @@ def create_color_grade() -> None:
                 (x + width * 1.6, int(h * 0.55)),
                 (x - width * 0.55, int(h * 0.56)),
             ],
-            fill=(178, 238, 255, 16 if i % 2 == 0 else 11),
+            fill=(184, 242, 255, 54 if i % 2 == 0 else 40),
+        )
+    for i, x in enumerate((330, 520, 735, 950, 1160)):
+        ld.line(
+            (
+                x - 86,
+                int(h * (0.070 + (i % 2) * 0.018)),
+                x + 114,
+                int(h * (0.062 + (i % 3) * 0.012)),
+            ),
+            fill=(235, 255, 255, 62),
+            width=2,
         )
     image.alpha_composite(light.filter(ImageFilter.GaussianBlur(14)))
 
     # Darken the very top corners where the reference frame feels more enclosed.
     corner = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     cd = ImageDraw.Draw(corner, "RGBA")
-    cd.rectangle((0, 0, w, int(h * 0.10)), fill=(0, 13, 27, 28))
+    cd.rectangle((0, 0, w, int(h * 0.10)), fill=(0, 13, 27, 6))
     cd.rectangle((0, 0, int(w * 0.10), h), fill=(0, 13, 27, 18))
     cd.rectangle((int(w * 0.90), 0, w, h), fill=(0, 13, 27, 18))
     image.alpha_composite(corner.filter(ImageFilter.GaussianBlur(20)))
