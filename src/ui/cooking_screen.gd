@@ -3,6 +3,7 @@ extends "res://src/ui/screen_base.gd"
 const GaugeBarScript = preload("res://src/ui/components/gauge_bar.gd")
 const LevelUpPanelScript = preload("res://src/ui/components/level_up_panel.gd")
 const CookingRewardPanelScript = preload("res://src/ui/components/cooking_reward_panel.gd")
+const CookingStatusPanelScript = preload("res://src/ui/components/cooking_status_panel.gd")
 
 const COOKING_BG := "res://assets/showcase/cooking/cooking_room_bg.png"
 const FISH_ICON_SHEET := "res://assets/showcase/cooking/fish_icon_sheet.png"
@@ -50,6 +51,7 @@ var _overwrite_note: Label
 var _cook_button: Button
 var _result_title: Label
 var _result_body: HBoxContainer
+var _status_button: Button
 
 var _fish_cards: Dictionary = {}
 var _recipe_cards: Dictionary = {}
@@ -228,9 +230,16 @@ func _build_result_summary(layout: VBoxContainer) -> void:
 	var result_layout := VBoxContainer.new()
 	result_layout.add_theme_constant_override("separation", 6)
 	result_panel.add_child(result_layout)
+	var title_row := HBoxContainer.new()
+	title_row.add_theme_constant_override("separation", 10)
+	result_layout.add_child(title_row)
 	_result_title = make_shadow_label("", 21, Palette.GOLD_BRIGHT, 3)
+	_result_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_result_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	result_layout.add_child(_result_title)
+	title_row.add_child(_result_title)
+	_status_button = make_button("詳細", _show_status_overlay, 100, false)
+	_status_button.custom_minimum_size = Vector2(100, 36)
+	title_row.add_child(_status_button)
 	_result_body = HBoxContainer.new()
 	_result_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_result_body.add_theme_constant_override("separation", 8)
@@ -540,6 +549,13 @@ func preview_show_reward_result(result: Dictionary, exp_before: int, exp_after: 
 	_show_reward_overlay(result, exp_before, exp_after, exp_max, PlayerProgress.level - 1, {}, leveled)
 
 
+func preview_show_status_overlay() -> void:
+	_refresh_header()
+	_refresh_detail()
+	_show_status_summary()
+	_show_status_overlay()
+
+
 func _show_error_result(message: String) -> void:
 	_flow_state = FlowState.MEAL_RESULT
 	_result_title.text = "調理できませんでした"
@@ -570,6 +586,12 @@ func _show_status_summary() -> void:
 			Palette.TEXT_BONE
 		)
 	)
+
+
+func _show_status_overlay() -> void:
+	var panel := CookingStatusPanelScript.new()
+	add_child(panel)
+	panel.show_summary()
 
 
 func _show_meal_result(result: Dictionary, leveled: bool) -> void:

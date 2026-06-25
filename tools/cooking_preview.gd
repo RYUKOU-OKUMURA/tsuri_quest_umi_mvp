@@ -10,6 +10,7 @@ const OUT_SELECT := "/tmp/tsuri_cooking_select.png"
 const OUT_RESULT := "/tmp/tsuri_cooking_result.png"
 const OUT_EXP := "/tmp/tsuri_cooking_exp.png"
 const OUT_LEVELUP := "/tmp/tsuri_cooking_levelup.png"
+const OUT_STATUS := "/tmp/tsuri_cooking_status.png"
 const VW := Vector2i(1280, 720)
 
 
@@ -57,6 +58,14 @@ func _ready() -> void:
 	await get_tree().create_timer(0.7).timeout
 	await get_tree().process_frame
 	if not _save_viewport(vp, OUT_LEVELUP):
+		get_tree().quit(1)
+		return
+
+	panel.queue_free()
+	screen.preview_show_status_overlay()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if not _save_viewport(vp, OUT_STATUS):
 		get_tree().quit(1)
 		return
 
