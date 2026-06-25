@@ -114,7 +114,7 @@ def _draw_fish(water: Image.Image) -> tuple[float, float, float, float]:
     draw_w = water.width * 0.49 * stamina_scale
     draw_h = draw_w * fish.height / fish.width
     center = (
-        (0.42 - 0.067) * water.width,
+        (0.42 - 0.082) * water.width,
         (0.46 - 0.018) * water.height,
     )
     shadow = Image.new("RGBA", water.size, (0, 0, 0, 0))

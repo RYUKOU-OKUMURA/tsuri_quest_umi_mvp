@@ -10,7 +10,7 @@ const SHOWCASE_FISH_SHEET_PATH := "res://assets/showcase/underwater/kurodai_show
 const SHOWCASE_HIT_BURST_PATH := "res://assets/showcase/underwater/hit_burst.png"
 const SHOWCASE_LURE_PATH := "res://assets/showcase/underwater/fight_lure.png"
 const SHOWCASE_FISH_FRAME_COUNT := 4
-const SHOWCASE_FISH_CENTER_OFFSET := Vector2(-0.067, -0.018)
+const SHOWCASE_FISH_CENTER_OFFSET := Vector2(-0.082, -0.018)
 
 var simulator: FishingSimulator
 var fish_data: Dictionary = {}
