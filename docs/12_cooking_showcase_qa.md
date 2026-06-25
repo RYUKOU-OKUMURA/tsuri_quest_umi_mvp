@@ -10,7 +10,7 @@
 |---|---|---|---|
 | `COOK_SELECT` | `src/ui/cooking_screen.gd` | P2: 専用カードUI・料理画像・魚アイコンは入った。視覚スクショで密度と文字収まり確認が必要。 | 魚/料理/詳細/調理ボタンが1280x720で衝突せず、stock listに見えない。 |
 | `MEAL_RESULT` | `src/ui/components/cooking_reward_panel.gd` | P2: 専用報酬オーバーレイで料理/EXP/初回/バフを分離済み。視覚スクショ未確認。 | 食べた料理、EXP、初回ボーナス、バフが本文を読まなくても追える。 |
-| `EXP_GAIN` | `src/ui/components/cooking_reward_panel.gd` | P2: EXPゲージ演出を持つ。非レベルアップ時の実機確認が必要。 | EXPメーターが主役で、レベルアップしない場合も完結感がある。 |
+| `EXP_GAIN` | `src/ui/components/cooking_reward_panel.gd` | P2: EXPゲージ演出を持つ。headless smokeで非レベルアップ完結パスを確認済み。視覚スクショ未確認。 | EXPメーターが主役で、レベルアップしない場合も完結感がある。 |
 | `LEVEL_UP_OVERLAY` | `src/ui/components/level_up_panel.gd` | P2: 大型報酬パネル、before/after、Lv.5解放カードあり。視覚スクショ未確認。 | レベル遷移、能力上昇、ぬし解放が最も強い報酬瞬間として読める。 |
 | `STATUS_SUMMARY` | `src/ui/components/cooking_status_panel.gd` | P2: 詳細ボタンから要約オーバーレイを開ける。視覚スクショ未確認。 | Lv/EXP、能力、効果中料理、クーラー、所持金、プレイ時間がカードで読める。 |
 
@@ -27,7 +27,7 @@
   - 目的: headlessで各状態のControl構築を検証するためのスモークシーン。
   - コマンド: `HOME=/private/tmp/tsuri_home "/Applications/Godot.app/Contents/MacOS/Godot" --headless --path ... res://tools/cooking_flow_smoke.tscn`
   - 結果: 成功。
-  - 範囲: `COOK_SELECT`、報酬オーバーレイ、レベルアップ、ステータス要約のControl構築と短時間実行。
+  - 範囲: `COOK_SELECT`、非レベルアップEXP報酬、レベルアップ報酬、レベルアップ、ステータス要約のControl構築と短時間実行。
 
 ## 未解決
 

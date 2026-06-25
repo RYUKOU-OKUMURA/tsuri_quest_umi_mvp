@@ -16,7 +16,6 @@ const VW := Vector2i(1280, 720)
 
 func _ready() -> void:
 	theme = ThemeFactory.build_theme()
-	_seed_select_state()
 
 	var vp := SubViewport.new()
 	vp.size = VW
@@ -26,19 +25,30 @@ func _ready() -> void:
 	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child(vp)
 
-	var screen := CookingScreen.new()
-	screen.theme = ThemeFactory.build_theme()
-	screen.configure({"suppress_level_overlay": true})
-	screen.size = Vector2(VW)
-	vp.add_child(screen)
-
-	await get_tree().process_frame
-	await get_tree().process_frame
+	_seed_select_state()
+	var screen := await _mount_screen(vp)
 	if not _save_viewport(vp, OUT_SELECT):
 		get_tree().quit(1)
 		return
 	_save_viewport(vp, OUT_ALL)
 
+	screen.queue_free()
+	await get_tree().process_frame
+
+	_seed_exp_gain_state()
+	screen = await _mount_screen(vp)
+	screen.preview_show_reward_result(_fake_non_level_result(), 80, 100, 150, false)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if not _save_viewport(vp, OUT_EXP):
+		get_tree().quit(1)
+		return
+
+	screen.queue_free()
+	await get_tree().process_frame
+
+	_seed_select_state()
+	screen = await _mount_screen(vp)
 	var old_stats := PlayerProgress.get_base_stats()
 	var fake_result := _fake_meal_result()
 	_seed_after_meal_state()
@@ -49,7 +59,6 @@ func _ready() -> void:
 	if not _save_viewport(vp, OUT_RESULT):
 		get_tree().quit(1)
 		return
-	_save_viewport(vp, OUT_EXP)
 
 	var panel := LevelUpPanelScript.new()
 	screen.add_child(panel)
@@ -72,6 +81,17 @@ func _ready() -> void:
 	get_tree().quit()
 
 
+func _mount_screen(vp: SubViewport) -> Control:
+	var screen := CookingScreen.new()
+	screen.theme = ThemeFactory.build_theme()
+	screen.configure({"suppress_level_overlay": true})
+	screen.size = Vector2(VW)
+	vp.add_child(screen)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	return screen
+
+
 func _seed_select_state() -> void:
 	PlayerProgress.level = 4
 	PlayerProgress.exp = 130
@@ -85,6 +105,25 @@ func _seed_select_state() -> void:
 	PlayerProgress.pending_buff = {}
 
 
+func _seed_exp_gain_state() -> void:
+	PlayerProgress.level = 4
+	PlayerProgress.exp = 100
+	PlayerProgress.money = 1250
+	PlayerProgress.inventory.clear()
+	PlayerProgress.inventory["aji"] = 4
+	PlayerProgress.inventory["saba"] = 3
+	PlayerProgress.inventory["kasago"] = 2
+	PlayerProgress.inventory["mejina"] = 2
+	PlayerProgress.eaten_recipes = {"aji:salt_grill": 1}
+	PlayerProgress.pending_buff = {
+		"recipe_id": "salt_grill",
+		"name": "アジの塩焼き",
+		"stat": "max_energy",
+		"value": 0.05,
+		"text": "次の釣行で最大体力 +5%",
+	}
+
+
 func _seed_after_meal_state() -> void:
 	PlayerProgress.level = 5
 	PlayerProgress.exp = 20
@@ -95,6 +134,25 @@ func _seed_after_meal_state() -> void:
 		"stat": "max_energy",
 		"value": 0.05,
 		"text": "次の釣行で最大体力 +5%",
+	}
+
+
+func _fake_non_level_result() -> Dictionary:
+	return {
+		"ok": true,
+		"dish_name": "アジの塩焼き",
+		"base_exp": 20,
+		"first_time": false,
+		"first_bonus": 0,
+		"total_exp": 20,
+		"leveled_to": [],
+		"buff": {
+			"recipe_id": "salt_grill",
+			"name": "アジの塩焼き",
+			"stat": "max_energy",
+			"value": 0.05,
+			"text": "次の釣行で最大体力 +5%",
+		},
 	}
 
 
