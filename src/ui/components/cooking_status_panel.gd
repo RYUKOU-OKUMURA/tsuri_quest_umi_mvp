@@ -5,10 +5,12 @@ signal closed
 
 const GaugeBarScript = preload("res://src/ui/components/gauge_bar.gd")
 
+const STATUS_SUMMARY_BG := "res://assets/showcase/cooking/status_summary_bg.png"
 const COOKING_BG := "res://assets/showcase/cooking/cooking_room_bg.png"
 const STATUS_CARD_FRAME := "res://assets/showcase/cooking/status_card_frame.png"
 const DISH_FEATURE_AJI := "res://assets/showcase/cooking/dish_feature_aji_shioyaki.png"
 const DISH_ICON_SHEET := "res://assets/showcase/cooking/dish_icon_sheet.png"
+const FLOW_ACTION_BUTTON_FRAME := "res://assets/showcase/cooking/flow_action_button_frame.png"
 
 
 class StatusBackdropVisual:
@@ -47,6 +49,13 @@ class StatusBackdropVisual:
 class StatusIconVisual:
 	extends Control
 
+	const ICON_SHEET := "res://assets/showcase/cooking/cooking_icon_sheet.png"
+	const PLAYER_PORTRAIT := "res://assets/showcase/cooking/player_status_portrait.png"
+	const COOLER_ART := "res://assets/showcase/cooking/status_cooler_art.png"
+	const MONEY_ART := "res://assets/showcase/cooking/status_money_art.png"
+	const CLOCK_ART := "res://assets/showcase/cooking/status_clock_art.png"
+	const ICON_CELL_SIZE := 96.0
+
 	var mode := "player"
 	var accent := Color.WHITE
 
@@ -56,6 +65,12 @@ class StatusIconVisual:
 		queue_redraw()
 
 	func _draw() -> void:
+		var large_asset := _large_asset_path()
+		if large_asset != "" and _draw_texture_asset(large_asset):
+			return
+		var atlas_index := _atlas_index()
+		if atlas_index >= 0 and _draw_atlas_icon(atlas_index):
+			return
 		match mode:
 			"cooler":
 				_draw_cooler()
@@ -68,7 +83,45 @@ class StatusIconVisual:
 			_:
 				_draw_player()
 
+	func _atlas_index() -> int:
+		match mode:
+			"cooler":
+				return 5
+			"gold":
+				return 6
+			"time":
+				return 7
+			"ready":
+				return 8
+			_:
+				return -1
+
+	func _large_asset_path() -> String:
+		match mode:
+			"cooler":
+				return COOLER_ART
+			"gold":
+				return MONEY_ART
+			"time":
+				return CLOCK_ART
+			_:
+				return ""
+
+	func _draw_atlas_icon(index: int) -> bool:
+		var tex := load(ICON_SHEET) as Texture2D
+		if tex == null:
+			return false
+		var side := minf(size.x, size.y)
+		if side <= 0.0:
+			return false
+		var rect := Rect2((size - Vector2(side, side)) * 0.5, Vector2(side, side))
+		var src := Rect2(float(index) * ICON_CELL_SIZE, 0.0, ICON_CELL_SIZE, ICON_CELL_SIZE)
+		draw_texture_rect_region(tex, rect, src)
+		return true
+
 	func _draw_player() -> void:
+		if _draw_texture_asset(PLAYER_PORTRAIT):
+			return
 		var center := size * 0.5
 		draw_ellipse(center + Vector2(0.0, 45.0), 48.0, 10.0, Color(0.0, 0.0, 0.0, 0.25))
 		draw_rect(Rect2(center.x - 45.0, center.y + 5.0, 90.0, 48.0), Color("#17324d"))
@@ -81,6 +134,19 @@ class StatusIconVisual:
 		draw_arc(center + Vector2(0.0, -12.0), 13.0, 0.12, PI - 0.12, 14, Color("#6a2a1c"), 3.0)
 		draw_line(center + Vector2(-28.0, -1.0), center + Vector2(-45.0, 36.0), Color("#234f7c"), 8.0)
 		draw_line(center + Vector2(28.0, -1.0), center + Vector2(45.0, 36.0), Color("#234f7c"), 8.0)
+
+	func _draw_texture_asset(path: String) -> bool:
+		var tex := load(path) as Texture2D
+		if tex == null:
+			return false
+		var tex_size := Vector2(float(tex.get_width()), float(tex.get_height()))
+		if tex_size.x <= 0.0 or tex_size.y <= 0.0 or size.x <= 0.0 or size.y <= 0.0:
+			return false
+		var scale := minf(size.x / tex_size.x, size.y / tex_size.y)
+		var draw_size := tex_size * scale
+		var rect := Rect2((size - draw_size) * 0.5, draw_size)
+		draw_texture_rect(tex, rect, false)
+		return true
 
 	func _draw_ready() -> void:
 		_draw_player()
@@ -124,6 +190,126 @@ class StatusIconVisual:
 		draw_circle(center + Vector2(0.0, 4.0), 5.0, Color("#2a2118"))
 		draw_arc(center + Vector2(-33.0, -48.0), 16.0, PI * 0.2, PI * 1.35, 14, Color("#c59035"), 5.0)
 		draw_arc(center + Vector2(33.0, -48.0), 16.0, PI * -0.35, PI * 0.8, 14, Color("#c59035"), 5.0)
+
+
+class StatIconVisual:
+	extends Control
+
+	var mode := "energy"
+	var accent := Color.WHITE
+
+	func configure(next_mode: String, next_accent: Color) -> void:
+		mode = next_mode
+		accent = next_accent
+		queue_redraw()
+
+	func _draw() -> void:
+		_draw_badge()
+		match mode:
+			"power":
+				_draw_sword()
+			"defense":
+				_draw_shield()
+			"speed":
+				_draw_boot()
+			"luck":
+				_draw_clover()
+			_:
+				_draw_heart()
+
+	func _draw_badge() -> void:
+		var rect := Rect2(Vector2(1.0, 1.0), size - Vector2(2.0, 2.0))
+		draw_rect(rect, Color("#fff1cf"))
+		draw_rect(Rect2(rect.position, Vector2(rect.size.x, 3.0)), Color("#f4d18f"))
+		draw_line(rect.position, rect.position + Vector2(rect.size.x, 0.0), Color("#b5813a"), 1.0)
+		draw_line(rect.position, rect.position + Vector2(0.0, rect.size.y), Color("#b5813a"), 1.0)
+		draw_line(
+			rect.position + Vector2(rect.size.x, 0.0),
+			rect.position + rect.size,
+			Color("#b5813a"),
+			1.0
+		)
+		draw_line(
+			rect.position + Vector2(0.0, rect.size.y),
+			rect.position + rect.size,
+			Color("#b5813a"),
+			1.0
+		)
+
+	func _draw_heart() -> void:
+		var center := size * 0.5
+		var color := accent
+		draw_circle(center + Vector2(-5.0, -4.0), 7.0, color)
+		draw_circle(center + Vector2(5.0, -4.0), 7.0, color)
+		draw_polygon(
+			PackedVector2Array(
+				[
+					center + Vector2(-13.0, 0.0),
+					center + Vector2(13.0, 0.0),
+					center + Vector2(0.0, 15.0),
+				]
+			),
+			PackedColorArray([color, color, color])
+		)
+
+	func _draw_sword() -> void:
+		var center := size * 0.5
+		draw_line(center + Vector2(-9.0, 11.0), center + Vector2(9.0, -11.0), accent, 5.0)
+		draw_polygon(
+			PackedVector2Array(
+				[
+					center + Vector2(11.0, -14.0),
+					center + Vector2(13.0, -4.0),
+					center + Vector2(3.0, -12.0),
+				]
+			),
+			PackedColorArray([accent, accent, accent])
+		)
+		draw_line(center + Vector2(-13.0, 6.0), center + Vector2(-2.0, 16.0), Color("#fff1c7"), 3.0)
+		draw_circle(center + Vector2(-12.0, 13.0), 3.0, Color("#7b4b20"))
+
+	func _draw_shield() -> void:
+		var center := size * 0.5
+		var points := PackedVector2Array(
+			[
+				center + Vector2(0.0, -15.0),
+				center + Vector2(14.0, -9.0),
+				center + Vector2(11.0, 7.0),
+				center + Vector2(0.0, 16.0),
+				center + Vector2(-11.0, 7.0),
+				center + Vector2(-14.0, -9.0),
+			]
+		)
+		draw_polygon(points, PackedColorArray([accent, accent, accent, accent, accent, accent]))
+		draw_line(center + Vector2(0.0, -11.0), center + Vector2(0.0, 11.0), Color("#fff1c7"), 2.0)
+		draw_arc(center, 15.0, 0.0, TAU, 26, Color("#5b3516"), 2.0)
+
+	func _draw_boot() -> void:
+		var center := size * 0.5
+		draw_polygon(
+			PackedVector2Array(
+				[
+					center + Vector2(-10.0, -14.0),
+					center + Vector2(1.0, -14.0),
+					center + Vector2(4.0, 2.0),
+					center + Vector2(16.0, 7.0),
+					center + Vector2(12.0, 15.0),
+					center + Vector2(-11.0, 13.0),
+					center + Vector2(-7.0, 2.0),
+				]
+			),
+			PackedColorArray([accent, accent, accent, accent, accent, accent, accent])
+		)
+		draw_line(center + Vector2(-8.0, 14.0), center + Vector2(14.0, 14.0), Color("#5b3516"), 3.0)
+		draw_line(center + Vector2(-7.0, -5.0), center + Vector2(3.0, -5.0), Color("#fff1c7"), 2.0)
+
+	func _draw_clover() -> void:
+		var center := size * 0.5
+		draw_circle(center + Vector2(-7.0, -5.0), 7.0, accent)
+		draw_circle(center + Vector2(7.0, -5.0), 7.0, accent)
+		draw_circle(center + Vector2(-5.0, 8.0), 7.0, accent)
+		draw_circle(center + Vector2(5.0, 8.0), 7.0, accent)
+		draw_line(center + Vector2(5.0, 12.0), center + Vector2(15.0, 18.0), Color("#235f33"), 3.0)
 
 
 class HeaderMarkVisual:
@@ -184,6 +370,75 @@ class HeaderMarkVisual:
 		)
 
 
+class HeaderPlayerBadgeVisual:
+	extends Control
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		var center := size * 0.5
+		draw_rect(Rect2(2.0, 2.0, size.x - 4.0, size.y - 4.0), Color("#07121e"))
+		draw_rect(Rect2(5.0, 5.0, size.x - 10.0, size.y - 10.0), Color("#f2e4c2"))
+		draw_circle(center + Vector2(0.0, 4.0), 17.0, Color("#f2b889"))
+		draw_rect(Rect2(center.x - 20.0, center.y - 17.0, 40.0, 9.0), Color("#1d4771"))
+		draw_rect(Rect2(center.x - 15.0, center.y - 25.0, 30.0, 10.0), Color("#234f7c"))
+		draw_circle(center + Vector2(-6.0, 3.0), 2.0, Color("#1d160f"))
+		draw_circle(center + Vector2(6.0, 3.0), 2.0, Color("#1d160f"))
+		draw_arc(center + Vector2(0.0, 9.0), 7.0, 0.12, PI - 0.12, 10, Color("#6a2a1c"), 2.0)
+		draw_rect(Rect2(center.x - 16.0, center.y + 21.0, 32.0, 9.0), Color("#17324d"))
+		draw_line(Vector2(6.0, 6.0), Vector2(size.x - 6.0, 6.0), Palette.GOLD_BRIGHT, 2.0)
+		draw_line(Vector2(6.0, size.y - 6.0), Vector2(size.x - 6.0, size.y - 6.0), Palette.GOLD_BRIGHT, 2.0)
+
+
+class MealEffectCueVisual:
+	extends Control
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		var center := size * 0.5
+		var badge := Rect2(Vector2(2.0, 4.0), size - Vector2(4.0, 8.0))
+		draw_rect(badge, Color("#123924"))
+		draw_rect(Rect2(badge.position + Vector2(3.0, 3.0), badge.size - Vector2(6.0, 6.0)), Color("#1e6a3a"))
+		draw_line(badge.position, badge.position + Vector2(badge.size.x, 0.0), Palette.GOLD_BRIGHT, 2.0)
+		draw_line(
+			badge.position + Vector2(0.0, badge.size.y),
+			badge.position + badge.size,
+			Palette.GOLD_BRIGHT,
+			2.0
+		)
+		var blade := Color("#dff8ff")
+		draw_line(center + Vector2(-8.0, 10.0), center + Vector2(8.0, -12.0), blade, 4.0)
+		draw_polygon(
+			PackedVector2Array(
+				[
+					center + Vector2(10.0, -15.0),
+					center + Vector2(13.0, -5.0),
+					center + Vector2(3.0, -12.0),
+				]
+			),
+			PackedColorArray([blade, blade, blade])
+		)
+		draw_line(center + Vector2(-13.0, 4.0), center + Vector2(-2.0, 15.0), Color("#ffe5a3"), 3.0)
+		draw_circle(center + Vector2(-12.0, 13.0), 3.0, Color("#7b4b20"))
+		for i in range(3):
+			var x := center.x + 2.0 + float(i) * 8.0
+			var y := center.y + 11.0 - float(i) * 8.0
+			draw_line(Vector2(x, y + 8.0), Vector2(x, y - 7.0), Color("#a8f2a5"), 3.0)
+			draw_polygon(
+				PackedVector2Array(
+					[
+						Vector2(x, y - 11.0),
+						Vector2(x - 5.0, y - 4.0),
+						Vector2(x + 5.0, y - 4.0),
+					]
+				),
+				PackedColorArray([Color("#a8f2a5"), Color("#a8f2a5"), Color("#a8f2a5")])
+			)
+
+
 var _exp_bar: GaugeBar
 var _header_exp_bar: GaugeBar
 var _header_level_label: Label
@@ -200,6 +455,9 @@ var _cooler_count_label: Label
 var _money_label: Label
 var _play_label: Label
 var _footer_message_label: Label
+var _header_panel: Control
+var _footer_panel: Control
+var _summary_cards: Array[Control] = []
 
 
 func _build_screen() -> void:
@@ -226,9 +484,12 @@ func _build_screen() -> void:
 
 
 func _add_status_background() -> void:
-	var bg_tex := load(COOKING_BG) as Texture2D
+	var bg_tex := load(STATUS_SUMMARY_BG) as Texture2D
+	if bg_tex == null:
+		bg_tex = load(COOKING_BG) as Texture2D
 	if bg_tex != null:
 		var bg := TextureRect.new()
+		bg.name = "StatusSummaryBackground"
 		bg.texture = bg_tex
 		bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		bg.stretch_mode = TextureRect.STRETCH_SCALE
@@ -238,11 +499,12 @@ func _add_status_background() -> void:
 	else:
 		add_gradient_background(Color("#17314c"), Color("#071322"))
 
-	var scene := StatusBackdropVisual.new()
-	scene.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	scene.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(scene)
-	scene.queue_redraw()
+	if not ResourceLoader.exists(STATUS_SUMMARY_BG):
+		var scene := StatusBackdropVisual.new()
+		scene.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		scene.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(scene)
+		scene.queue_redraw()
 
 	var wash := ColorRect.new()
 	wash.color = Color(0.02, 0.06, 0.11, 0.34)
@@ -253,6 +515,7 @@ func _add_status_background() -> void:
 
 func _build_header(parent: VBoxContainer) -> void:
 	var header := _panel_box(Color("#0a2744"), Color("#06111e"), Palette.GOLD_BRIGHT, 5)
+	_header_panel = header
 	header.custom_minimum_size = Vector2(0.0, 72.0)
 	header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(header)
@@ -267,6 +530,7 @@ func _build_header(parent: VBoxContainer) -> void:
 	row.add_child(wheel)
 
 	var title := make_shadow_label("ステータス", 38, Palette.TEXT_BONE, 4)
+	title.name = "StatusTitle"
 	title.custom_minimum_size = Vector2(220.0, 0.0)
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(title)
@@ -277,25 +541,33 @@ func _build_header(parent: VBoxContainer) -> void:
 	row.add_child(subtitle)
 
 	var exp_box := _panel_box(Color("#10283f"), Color("#07121e"), Palette.GOLD_DEEP, 3)
-	exp_box.custom_minimum_size = Vector2(376.0, 0.0)
+	exp_box.name = "StatusHeaderExpBox"
+	exp_box.custom_minimum_size = Vector2(424.0, 0.0)
 	row.add_child(exp_box)
 	var exp_row := HBoxContainer.new()
 	exp_row.add_theme_constant_override("separation", 10)
 	exp_box.add_child(exp_row)
+	var player_badge := HeaderPlayerBadgeVisual.new()
+	player_badge.name = "StatusHeaderPlayerBadge"
+	player_badge.custom_minimum_size = Vector2(48.0, 0.0)
+	exp_row.add_child(player_badge)
 	_header_level_label = make_shadow_label("", 22, Palette.TEXT_BONE, 3)
-	_header_level_label.custom_minimum_size = Vector2(72.0, 0.0)
+	_header_level_label.name = "StatusHeaderLevel"
+	_header_level_label.custom_minimum_size = Vector2(64.0, 0.0)
 	_header_level_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	exp_row.add_child(_header_level_label)
 	var exp_title := make_shadow_label("EXP", 17, Palette.TEXT_BONE, 2)
 	exp_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	exp_row.add_child(exp_title)
 	_header_exp_bar = GaugeBarScript.new()
+	_header_exp_bar.name = "StatusHeaderExpBar"
 	_header_exp_bar.show_value = false
 	_header_exp_bar.custom_minimum_size = Vector2(0.0, 20.0)
 	_header_exp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_header_exp_bar.set_colors(Palette.GAUGE_CYAN, Palette.GAUGE_CYAN_HI)
 	exp_row.add_child(_header_exp_bar)
 	_header_exp_label = make_shadow_label("", 16, Palette.TEXT_BONE, 2)
+	_header_exp_label.name = "StatusHeaderExpValue"
 	_header_exp_label.custom_minimum_size = Vector2(92.0, 0.0)
 	_header_exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_header_exp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -349,6 +621,7 @@ func _build_meal_card(parent: HBoxContainer) -> void:
 	_meal_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	card.add_child(_meal_badge)
 	_meal_image = TextureRect.new()
+	_meal_image.name = "StatusMealDishImage"
 	_meal_image.custom_minimum_size = Vector2(0.0, 134.0)
 	_meal_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_meal_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -360,7 +633,7 @@ func _build_meal_card(parent: HBoxContainer) -> void:
 	_meal_effect_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_meal_effect_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	card.add_child(_meal_effect_label)
-	_meal_hint_label = _note_box(card, "")
+	_meal_hint_label = _meal_note_box(card, "")
 
 
 func _build_cooler_card(parent: HBoxContainer) -> void:
@@ -403,6 +676,7 @@ func _build_play_card(parent: HBoxContainer) -> void:
 
 func _build_footer(parent: VBoxContainer) -> void:
 	var footer := _panel_box(Color("#08213a"), Color("#06111e"), Palette.GOLD_DEEP, 4)
+	_footer_panel = footer
 	footer.custom_minimum_size = Vector2(0.0, 84.0)
 	footer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(footer)
@@ -418,9 +692,12 @@ func _build_footer(parent: VBoxContainer) -> void:
 	_footer_message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row.add_child(_footer_message_label)
 	var back := make_button("港へ戻る", _close, 190.0, true)
+	back.name = "StatusReturnButton"
 	back.custom_minimum_size = Vector2(178.0, 48.0)
 	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	back.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_apply_flow_button_style(back)
+	back.draw.connect(func() -> void: _draw_return_anchor(back))
 	row.add_child(back)
 
 
@@ -486,10 +763,12 @@ func _status_card(parent: HBoxContainer, title: String) -> VBoxContainer:
 		14.0,
 		12.0
 	)
+	panel.name = _status_card_node_name(title)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	panel.custom_minimum_size = Vector2(0.0, 0.0)
 	parent.add_child(panel)
+	_summary_cards.append(panel)
 
 	var box := VBoxContainer.new()
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -505,15 +784,48 @@ func _status_card(parent: HBoxContainer, title: String) -> VBoxContainer:
 	return box
 
 
+func _status_card_node_name(title: String) -> String:
+	match title:
+		"プレイヤー":
+			return "StatusCardPlayer"
+		"効果中の料理":
+			return "StatusCardMeal"
+		"クーラーボックス":
+			return "StatusCardCooler"
+		"所持金":
+			return "StatusCardMoney"
+		"プレイ時間":
+			return "StatusCardPlayTime"
+		_:
+			return "StatusCard"
+
+
 func _portrait_box(text: String, accent: Color) -> PanelContainer:
 	var panel := _panel_box(Color("#10283f"), Color("#07121e"), accent, 3)
 	var visual := StatusIconVisual.new()
 	visual.configure(text, accent)
+	visual.name = _status_visual_name(text)
 	visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	visual.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	visual.custom_minimum_size = Vector2(0.0, 48.0)
 	panel.add_child(visual)
 	return panel
+
+
+func _status_visual_name(text: String) -> String:
+	match text.to_upper():
+		"COOLER":
+			return "StatusCoolerArt"
+		"GOLD":
+			return "StatusMoneyArt"
+		"TIME":
+			return "StatusClockArt"
+		"PLAYER":
+			return "StatusPlayerPortrait"
+		"READY":
+			return "StatusReadyVisual"
+		_:
+			return "StatusVisual"
 
 
 func _note_box(parent: VBoxContainer, text: String) -> Label:
@@ -529,12 +841,41 @@ func _note_box(parent: VBoxContainer, text: String) -> Label:
 	return label
 
 
+func _meal_note_box(parent: VBoxContainer, text: String) -> Label:
+	var panel := _panel_box(Color("#fff1cf"), Color("#b5813a"), Color("#e0b667"), 2)
+	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	parent.add_child(panel)
+
+	var row := HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", 8)
+	panel.add_child(row)
+
+	var cue := MealEffectCueVisual.new()
+	cue.name = "StatusMealEffectCue"
+	cue.custom_minimum_size = Vector2(34.0, 34.0)
+	cue.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.add_child(cue)
+
+	var label := make_label(text, 16, Color("#3f2d1a"))
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.add_child(label)
+	return label
+
+
 func _stat_line(title: String, value: String, accent: Color) -> Control:
 	var row := HBoxContainer.new()
 	row.custom_minimum_size = Vector2(0.0, 26.0)
 	row.add_theme_constant_override("separation", 6)
-	var icon := _panel_box(accent.darkened(0.25), Color("#4b3017"), Palette.GOLD_BRIGHT, 1)
+	var icon := StatIconVisual.new()
+	icon.configure(_stat_icon_mode(title), accent)
 	icon.custom_minimum_size = Vector2(24.0, 22.0)
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(icon)
 	var name := make_label(title, 17, Color("#2a2118"))
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -546,6 +887,80 @@ func _stat_line(title: String, value: String, accent: Color) -> Control:
 	amount.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(amount)
 	return row
+
+
+func _stat_icon_mode(title: String) -> String:
+	match title:
+		"攻撃力":
+			return "power"
+		"防御力":
+			return "defense"
+		"素早さ":
+			return "speed"
+		"運":
+			return "luck"
+		_:
+			return "energy"
+
+
+func _apply_flow_button_style(button: Button) -> void:
+	var normal_fallback := _style_box(Color("#102f51"), Palette.GOLD_DEEP, Palette.GOLD_BRIGHT, 4, 6)
+	var hover_fallback := _style_box(Color("#16436c"), Palette.GOLD_BRIGHT, Color("#fff0b2"), 4, 6)
+	var pressed_fallback := _style_box(Color("#081a2d"), Color("#a06d28"), Palette.GOLD_DEEP, 4, 6)
+	var disabled_fallback := _style_box(Color("#202a31"), Color("#71614a"), Color("#8c7b62"), 3, 6)
+	button.add_theme_stylebox_override(
+		"normal",
+		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, normal_fallback, 54.0, 8.0)
+	)
+	button.add_theme_stylebox_override(
+		"hover",
+		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, hover_fallback, 54.0, 8.0)
+	)
+	button.add_theme_stylebox_override(
+		"pressed",
+		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, pressed_fallback, 54.0, 8.0)
+	)
+	button.add_theme_stylebox_override(
+		"disabled",
+		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, disabled_fallback, 54.0, 8.0)
+	)
+	button.add_theme_stylebox_override(
+		"focus",
+		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, hover_fallback, 54.0, 8.0)
+	)
+	button.add_theme_color_override("font_color", Palette.GOLD_BRIGHT)
+	button.add_theme_color_override("font_hover_color", Color("#fff1ba"))
+	button.add_theme_color_override("font_pressed_color", Color("#f0c06b"))
+	button.add_theme_color_override("font_disabled_color", Color("#b6a68d"))
+
+
+func _draw_return_anchor(button: Button) -> void:
+	var center := Vector2(28.0, button.size.y * 0.5 + 1.0)
+	var gold := Palette.GOLD_BRIGHT
+	button.draw_arc(center + Vector2(0.0, -13.0), 6.0, 0.0, TAU, 18, gold, 2.0)
+	button.draw_line(center + Vector2(0.0, -6.0), center + Vector2(0.0, 14.0), gold, 4.0)
+	button.draw_line(center + Vector2(-12.0, 1.0), center + Vector2(12.0, 1.0), gold, 3.0)
+	button.draw_arc(center + Vector2(0.0, 8.0), 17.0, 0.14, PI - 0.14, 22, gold, 3.0)
+	button.draw_polygon(
+		PackedVector2Array(
+			[
+				center + Vector2(-16.0, 8.0),
+				center + Vector2(-24.0, 9.0),
+				center + Vector2(-18.0, 17.0),
+			]
+		),
+		PackedColorArray([gold, gold, gold])
+	)
+	button.draw_polygon(
+		PackedVector2Array(
+			[
+				center + Vector2(16.0, 8.0),
+				center + Vector2(24.0, 9.0),
+				center + Vector2(18.0, 17.0),
+			]
+		),
+		PackedColorArray([gold, gold, gold])
+	)
 
 
 func _effect_summary(text: String) -> String:
@@ -566,19 +981,53 @@ func _effect_sentence(text: String) -> String:
 func _present() -> void:
 	modulate.a = 0.0
 	await get_tree().process_frame
+	_prepare_entry_part(_header_panel, -12.0)
+	for card in _summary_cards:
+		_prepare_entry_part(card, 18.0)
+	_prepare_entry_part(_footer_panel, 12.0)
 	var tw := create_tween()
 	tw.set_ease(Tween.EASE_OUT)
 	tw.set_trans(Tween.TRANS_QUAD)
 	tw.tween_property(self, "modulate:a", 1.0, 0.18)
+	_animate_entry_part(_header_panel, 0.04, -12.0)
+	for i in range(_summary_cards.size()):
+		_animate_entry_part(_summary_cards[i], 0.10 + float(i) * 0.045, 18.0)
+	_animate_entry_part(_footer_panel, 0.34, 12.0)
+
+
+func _prepare_entry_part(part: Control, offset_y: float) -> void:
+	if part == null:
+		return
+	part.modulate.a = 0.0
+	part.position.y += offset_y
+
+
+func _animate_entry_part(part: Control, delay: float, offset_y: float) -> void:
+	if part == null:
+		return
+	var target_y := part.position.y - offset_y
+	var tw := create_tween()
+	tw.set_ease(Tween.EASE_OUT)
+	tw.set_trans(Tween.TRANS_CUBIC)
+	tw.tween_interval(delay)
+	tw.tween_property(part, "position:y", target_y, 0.22)
+	tw.parallel().tween_property(part, "modulate:a", 1.0, 0.18)
 
 
 func _close() -> void:
-	closed.emit()
 	var tw := create_tween()
 	tw.set_ease(Tween.EASE_IN)
 	tw.set_trans(Tween.TRANS_QUAD)
 	tw.tween_property(self, "modulate:a", 0.0, 0.12)
-	tw.tween_callback(queue_free)
+	tw.tween_callback(
+		func() -> void:
+			closed.emit()
+			queue_free()
+	)
+
+
+func preview_accept() -> void:
+	_close()
 
 
 func _total_fish_count() -> int:

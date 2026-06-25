@@ -44,6 +44,21 @@ func _audit_cook_select() -> void:
 	var screen := await _mount_cooking_screen()
 	_audit_recipe_grid_shape("COOK_SELECT", screen)
 	await _audit_tree("COOK_SELECT", screen)
+	_expect_named_control_size("COOK_SELECT", screen, "CookingTitleBanner", Vector2(300.0, 50.0))
+	_expect_named_control_size("COOK_SELECT", screen, "FishSectionRibbon", Vector2(230.0, 34.0))
+	_expect_named_control_size("COOK_SELECT", screen, "RecipeSectionRibbon", Vector2(360.0, 34.0))
+	_expect_named_control_size("COOK_SELECT", screen, "RecipeCard_salt_grill", Vector2(100.0, 100.0))
+	_expect_named_control_size("COOK_SELECT", screen, "RecipeToDetailArrow", Vector2(28.0, 160.0))
+	_expect_named_control_size("COOK_SELECT", screen, "SelectedDishFeatureImage", Vector2(260.0, 90.0))
+	_expect_named_control_size("COOK_SELECT", screen, "CookDetailMaterialRow", Vector2(220.0, 34.0))
+	_expect_named_control_size("COOK_SELECT", screen, "CookDetailExpRow", Vector2(220.0, 34.0))
+	_expect_named_control_size("COOK_SELECT", screen, "CookDetailEffectRow", Vector2(220.0, 34.0))
+	_expect_named_control_size("COOK_SELECT", screen, "FishRowAji", Vector2(230.0, 44.0))
+	_expect_named_control_size("COOK_SELECT", screen, "FishRowSaba", Vector2(230.0, 44.0))
+	_expect_named_control_size("COOK_SELECT", screen, "FishRowKasago", Vector2(230.0, 44.0))
+	_expect_named_control_size("COOK_SELECT", screen, "FishRowMejina", Vector2(230.0, 44.0))
+	_expect_named_control_size("COOK_SELECT", screen, "CookActionCue", Vector2(70.0, 14.0))
+	_expect_named_control_size("COOK_SELECT", screen, "CookButton", Vector2(250.0, 40.0))
 	screen.queue_free()
 	await _tick()
 
@@ -51,9 +66,25 @@ func _audit_cook_select() -> void:
 func _audit_exp_gain() -> void:
 	_seed_exp_gain_state()
 	var screen := await _mount_cooking_screen()
-	screen.preview_show_reward_result(_fake_non_level_result(), 80, 100, 150, false)
+	screen.preview_show_reward_result(_fake_non_level_result(), 80, 120, 150, false)
 	await get_tree().create_timer(0.7).timeout
 	await _audit_tree("EXP_GAIN", screen)
+	_expect_named_control_size("EXP_GAIN", screen, "RewardStageBackground", Vector2(1280.0, 720.0))
+	_expect_named_control_size("EXP_GAIN", screen, "ExpGainBanner", Vector2(360.0, 44.0))
+	_expect_named_control_size("EXP_GAIN", screen, "ExpGainTitle", Vector2(220.0, 30.0))
+	_expect_named_control_size("EXP_GAIN", screen, "ExpEnergyTrail", Vector2(24.0, 100.0))
+	_expect_named_control_size("EXP_GAIN", screen, "ExpBurstFrame", Vector2(320.0, 90.0))
+	_expect_named_control_size("EXP_GAIN", screen, "ExpMessagePanel", Vector2(260.0, 42.0))
+	_expect_named_control_size("EXP_GAIN", screen, "ExpMessagePortrait", Vector2(60.0, 38.0))
+	_expect_named_control_size("EXP_GAIN", screen, "MealTableSpread", Vector2(180.0, 70.0))
+	_expect_named_control_size("EXP_GAIN", screen, "NextEffectArt", Vector2(180.0, 42.0))
+	_expect_named_control_size("EXP_GAIN", screen, "RewardCardBaseExp", Vector2(120.0, 48.0))
+	_expect_named_control_size("EXP_GAIN", screen, "RewardCardFirstBonus", Vector2(120.0, 48.0))
+	_expect_named_control_size("EXP_GAIN", screen, "RewardCardTotalExp", Vector2(120.0, 48.0))
+	_expect_named_control_size("EXP_GAIN", screen, "RewardCardNextEffect", Vector2(120.0, 48.0))
+	_expect_named_control_size("EXP_GAIN", screen, "RewardCardGrowth", Vector2(120.0, 48.0))
+	_expect_reward_status_strip("EXP_GAIN", screen)
+	_expect_named_control_size("EXP_GAIN", screen, "RewardConfirmButton", Vector2(280.0, 34.0))
 	screen.queue_free()
 	await _tick()
 
@@ -66,6 +97,22 @@ func _audit_exp_gain_level_up() -> void:
 	screen.preview_show_reward_result(result, 130, 150, 150, true)
 	await get_tree().create_timer(0.7).timeout
 	await _audit_tree("EXP_GAIN_LEVELUP", screen)
+	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "RewardStageBackground", Vector2(1280.0, 720.0))
+	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "ExpGainBanner", Vector2(360.0, 44.0))
+	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "ExpGainTitle", Vector2(220.0, 30.0))
+	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "ExpEnergyTrail", Vector2(24.0, 100.0))
+	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "ExpBurstFrame", Vector2(320.0, 90.0))
+	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "ExpMessagePanel", Vector2(260.0, 42.0))
+	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "ExpMessagePortrait", Vector2(60.0, 38.0))
+	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "MealTableSpread", Vector2(180.0, 70.0))
+	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "NextEffectArt", Vector2(180.0, 42.0))
+	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "RewardCardBaseExp", Vector2(120.0, 48.0))
+	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "RewardCardFirstBonus", Vector2(120.0, 48.0))
+	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "RewardCardTotalExp", Vector2(120.0, 48.0))
+	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "RewardCardNextEffect", Vector2(120.0, 48.0))
+	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "RewardCardGrowth", Vector2(120.0, 48.0))
+	_expect_reward_status_strip("EXP_GAIN_LEVELUP", screen)
+	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "RewardConfirmButton", Vector2(280.0, 34.0))
 	screen.queue_free()
 	await _tick()
 
@@ -78,6 +125,19 @@ func _audit_meal_result() -> void:
 	screen.preview_show_meal_reward_result(result, true)
 	await get_tree().create_timer(0.7).timeout
 	await _audit_tree("MEAL_RESULT", screen)
+	_expect_named_control_size("MEAL_RESULT", screen, "MealResultBanner", Vector2(520.0, 44.0))
+	_expect_named_control_size("MEAL_RESULT", screen, "MealResultTitle", Vector2(240.0, 30.0))
+	_expect_named_control_size("MEAL_RESULT", screen, "MealSceneActor", Vector2(90.0, 70.0))
+	_expect_named_control_size("MEAL_RESULT", screen, "MealTableSpread", Vector2(220.0, 70.0))
+	_expect_named_control_size("MEAL_RESULT", screen, "MealDishCard", Vector2(420.0, 90.0))
+	_expect_named_control_size("MEAL_RESULT", screen, "RewardDishFeatureImage", Vector2(200.0, 70.0))
+	_expect_named_control_size("MEAL_RESULT", screen, "RewardBuffSignal", Vector2(30.0, 20.0))
+	_expect_named_control_size("MEAL_RESULT", screen, "RewardCardBaseExp", Vector2(230.0, 48.0))
+	_expect_named_control_size("MEAL_RESULT", screen, "RewardCardFirstBonus", Vector2(230.0, 48.0))
+	_expect_named_control_size("MEAL_RESULT", screen, "RewardCardTotalExp", Vector2(230.0, 48.0))
+	_expect_named_control_size("MEAL_RESULT", screen, "RewardCardNextEffect", Vector2(230.0, 48.0))
+	_expect_reward_status_strip("MEAL_RESULT", screen)
+	_expect_named_control_size("MEAL_RESULT", screen, "RewardConfirmButton", Vector2(280.0, 34.0))
 	screen.queue_free()
 	await _tick()
 
@@ -91,6 +151,24 @@ func _audit_level_up() -> void:
 	panel.show_level_up(4, 5, _old_stats(), PlayerProgress.get_base_stats())
 	await get_tree().create_timer(0.45).timeout
 	await _audit_tree("LEVEL_UP_OVERLAY", panel)
+	_expect_named_control_size("LEVEL_UP_OVERLAY", panel, "LevelUpDimmer", Vector2(1280.0, 720.0))
+	_expect_named_control_size("LEVEL_UP_OVERLAY", panel, "LevelUpDialog", Vector2(850.0, 480.0))
+	_expect_named_control_size("LEVEL_UP_OVERLAY", panel, "LevelUpTitleBand", Vector2(760.0, 80.0))
+	_expect_named_control_size("LEVEL_UP_OVERLAY", panel, "LevelUpTitle", Vector2(320.0, 56.0))
+	_expect_named_control_size("LEVEL_UP_OVERLAY", panel, "LevelUpLevelLine", Vector2(260.0, 36.0))
+	_expect_named_control_size("LEVEL_UP_OVERLAY", panel, "LevelUpSourceLine", Vector2(260.0, 24.0))
+	_expect_named_control_size("LEVEL_UP_OVERLAY", panel, "LevelCrownAsset", Vector2(120.0, 28.0))
+	_expect_named_control_size("LEVEL_UP_OVERLAY", panel, "LevelLaurelLeftAsset", Vector2(80.0, 60.0))
+	_expect_named_control_size("LEVEL_UP_OVERLAY", panel, "LevelLaurelRightAsset", Vector2(80.0, 60.0))
+	_expect_named_control_size("LEVEL_UP_OVERLAY", panel, "LevelUnlockMedallionAsset", Vector2(90.0, 70.0))
+	_expect_named_control_size("LEVEL_UP_OVERLAY", panel, "LevelUnlockSpotAsset", Vector2(150.0, 42.0))
+	_expect_named_control_size("LEVEL_UP_OVERLAY", panel, "LevelUnlockRibbonAsset", Vector2(760.0, 28.0))
+	_expect_named_control_size("LEVEL_UP_OVERLAY", panel, "LevelStatRowEnergy", Vector2(260.0, 42.0))
+	_expect_named_control_size("LEVEL_UP_OVERLAY", panel, "LevelStatRowReel", Vector2(260.0, 42.0))
+	_expect_named_control_size("LEVEL_UP_OVERLAY", panel, "LevelStatRowTechnique", Vector2(260.0, 42.0))
+	_expect_named_control_size("LEVEL_UP_OVERLAY", panel, "LevelStatRowFocus", Vector2(260.0, 42.0))
+	_expect_named_control_size("LEVEL_UP_OVERLAY", panel, "LevelToSummaryCue", Vector2(160.0, 18.0))
+	_expect_named_control_size("LEVEL_UP_OVERLAY", panel, "LevelUpConfirmButton", Vector2(260.0, 40.0))
 	panel.queue_free()
 	await _tick()
 
@@ -101,6 +179,24 @@ func _audit_status_summary() -> void:
 	screen.preview_show_status_overlay()
 	await get_tree().create_timer(0.4).timeout
 	await _audit_tree("STATUS_SUMMARY", screen)
+	_expect_named_control_size("STATUS_SUMMARY", screen, "StatusSummaryBackground", Vector2(1280.0, 720.0))
+	_expect_named_control_size("STATUS_SUMMARY", screen, "StatusTitle", Vector2(190.0, 42.0))
+	_expect_named_control_size("STATUS_SUMMARY", screen, "StatusHeaderPlayerBadge", Vector2(30.0, 30.0))
+	_expect_named_control_size("STATUS_SUMMARY", screen, "StatusHeaderExpBox", Vector2(360.0, 42.0))
+	_expect_named_control_size("STATUS_SUMMARY", screen, "StatusHeaderLevel", Vector2(50.0, 24.0))
+	_expect_named_control_size("STATUS_SUMMARY", screen, "StatusHeaderExpBar", Vector2(110.0, 16.0))
+	_expect_named_control_size("STATUS_SUMMARY", screen, "StatusHeaderExpValue", Vector2(70.0, 20.0))
+	_expect_named_control_size("STATUS_SUMMARY", screen, "StatusCardPlayer", Vector2(190.0, 360.0))
+	_expect_named_control_size("STATUS_SUMMARY", screen, "StatusCardMeal", Vector2(190.0, 360.0))
+	_expect_named_control_size("STATUS_SUMMARY", screen, "StatusCardCooler", Vector2(190.0, 360.0))
+	_expect_named_control_size("STATUS_SUMMARY", screen, "StatusCardMoney", Vector2(190.0, 360.0))
+	_expect_named_control_size("STATUS_SUMMARY", screen, "StatusCardPlayTime", Vector2(190.0, 360.0))
+	_expect_named_control_size("STATUS_SUMMARY", screen, "StatusMealDishImage", Vector2(150.0, 110.0))
+	_expect_named_control_size("STATUS_SUMMARY", screen, "StatusCoolerArt", Vector2(120.0, 110.0))
+	_expect_named_control_size("STATUS_SUMMARY", screen, "StatusMoneyArt", Vector2(120.0, 110.0))
+	_expect_named_control_size("STATUS_SUMMARY", screen, "StatusClockArt", Vector2(120.0, 110.0))
+	_expect_named_control_size("STATUS_SUMMARY", screen, "StatusMealEffectCue", Vector2(28.0, 28.0))
+	_expect_named_control_size("STATUS_SUMMARY", screen, "StatusReturnButton", Vector2(150.0, 34.0))
 	screen.queue_free()
 	await _tick()
 
@@ -237,6 +333,36 @@ func _audit_recipe_grid_shape(state: String, root: Node) -> void:
 		_failures.append("%s: RecipeGrid should expose at least 5 recipe cards, got %d." % [state, card_count])
 
 
+func _expect_named_control_size(
+	state: String, root: Node, node_name: String, min_size: Vector2
+) -> void:
+	var node := _find_named(root, node_name)
+	if node == null:
+		_failures.append("%s: missing named control '%s'." % [state, node_name])
+		return
+	var control := node as Control
+	if control == null:
+		_failures.append("%s: node '%s' is not a Control." % [state, node_name])
+		return
+	if not control.is_visible_in_tree():
+		_failures.append("%s: named control '%s' is not visible." % [state, node_name])
+		return
+	var rect := control.get_global_rect()
+	if rect.size.x + TOLERANCE < min_size.x or rect.size.y + TOLERANCE < min_size.y:
+		_failures.append(
+			"%s: named control '%s' too small: size=%s min=%s"
+			% [state, node_name, rect.size, min_size]
+		)
+
+
+func _expect_reward_status_strip(state: String, root: Node) -> void:
+	_expect_named_control_size(state, root, "RewardStatusStrip", Vector2(700.0, 30.0))
+	_expect_named_control_size(state, root, "RewardStatusLevelCard", Vector2(130.0, 26.0))
+	_expect_named_control_size(state, root, "RewardStatusMealCard", Vector2(130.0, 26.0))
+	_expect_named_control_size(state, root, "RewardStatusCoolerCard", Vector2(130.0, 26.0))
+	_expect_named_control_size(state, root, "RewardStatusMoneyCard", Vector2(130.0, 26.0))
+
+
 func _find_named(node: Node, node_name: String) -> Node:
 	if node.name == node_name:
 		return node
@@ -297,7 +423,7 @@ func _seed_after_meal_state() -> void:
 
 func _seed_exp_gain_state() -> void:
 	PlayerProgress.level = 4
-	PlayerProgress.exp = 100
+	PlayerProgress.exp = 120
 	PlayerProgress.money = 1250
 	PlayerProgress.play_seconds = 12345.0
 	PlayerProgress.inventory.clear()
@@ -305,7 +431,7 @@ func _seed_exp_gain_state() -> void:
 	PlayerProgress.inventory["saba"] = 3
 	PlayerProgress.inventory["kasago"] = 2
 	PlayerProgress.inventory["mejina"] = 2
-	PlayerProgress.eaten_recipes = {"aji:salt_grill": 1}
+	PlayerProgress.eaten_recipes.clear()
 	PlayerProgress.pending_buff = {
 		"recipe_id": "salt_grill",
 		"name": "アジの塩焼き",
@@ -320,9 +446,9 @@ func _fake_non_level_result() -> Dictionary:
 		"ok": true,
 		"dish_name": "アジの塩焼き",
 		"base_exp": 20,
-		"first_time": false,
-		"first_bonus": 0,
-		"total_exp": 20,
+		"first_time": true,
+		"first_bonus": 20,
+		"total_exp": 40,
 		"leveled_to": [],
 		"buff": {
 			"recipe_id": "salt_grill",

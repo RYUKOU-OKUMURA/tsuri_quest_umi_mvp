@@ -6,13 +6,18 @@ const CookingRewardPanelScript = preload("res://src/ui/components/cooking_reward
 const CookingStatusPanelScript = preload("res://src/ui/components/cooking_status_panel.gd")
 
 const COOKING_BG := "res://assets/showcase/cooking/cooking_room_bg.png"
+const COOKING_TITLE_BANNER := "res://assets/showcase/cooking/cooking_title_banner.png"
+const COOKING_SECTION_RIBBON := "res://assets/showcase/cooking/cooking_section_ribbon.png"
 const FISH_ICON_SHEET := "res://assets/showcase/cooking/fish_icon_sheet.png"
 const DISH_ICON_SHEET := "res://assets/showcase/cooking/dish_icon_sheet.png"
 const DISH_FEATURE_AJI := "res://assets/showcase/cooking/dish_feature_aji_shioyaki.png"
 const RECIPE_GRID_FRAME := "res://assets/showcase/cooking/recipe_grid_frame.png"
 const RECIPE_CARD_FRAME := "res://assets/showcase/cooking/recipe_card_frame.png"
+const RECIPE_SELECTED_CARD_FRAME := "res://assets/showcase/cooking/recipe_selected_card_frame.png"
+const RECIPE_TO_DETAIL_ARROW := "res://assets/showcase/cooking/recipe_to_detail_arrow.png"
 const DISH_DETAIL_FRAME := "res://assets/showcase/cooking/dish_detail_frame.png"
-const FISH_ROW_FRAME := "res://assets/showcase/cooking/status_card_frame.png"
+const COOK_BUTTON_FRAME := "res://assets/showcase/cooking/cook_button_frame.png"
+const FISH_ROW_FRAME := "res://assets/showcase/cooking/fish_row_frame.png"
 
 
 class CookingSmallIcon:
@@ -159,6 +164,93 @@ class CookingSmallIcon:
 		)
 
 
+class CookActionCueVisual:
+	extends Control
+
+	var available := true
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func set_available(next_available: bool) -> void:
+		available = next_available
+		modulate = Color.WHITE if available else Color(0.62, 0.58, 0.50, 0.72)
+		queue_redraw()
+
+	func _draw() -> void:
+		var w := maxf(size.x, 1.0)
+		var h := maxf(size.y, 1.0)
+		var cy := h * 0.55
+		var left := minf(58.0, w * 0.26)
+		var right := maxf(left + 42.0, w - minf(62.0, w * 0.28))
+		var rail := Color(1.0, 0.78, 0.28, 0.72) if available else Color(0.52, 0.45, 0.36, 0.55)
+		var glow := Color(1.0, 0.95, 0.66, 0.55) if available else Color(0.58, 0.52, 0.42, 0.35)
+		var ink := Color("#3b2515") if available else Color("#6b5a44")
+		var fill := Color("#d68a31") if available else Color("#8d7453")
+		draw_line(Vector2(left, cy), Vector2(right, cy), glow, 7.0)
+		draw_line(Vector2(left, cy), Vector2(right, cy), rail, 2.5)
+		draw_colored_polygon(
+			PackedVector2Array(
+				[
+					Vector2(right + 14.0, cy),
+					Vector2(right - 3.0, cy - 7.0),
+					Vector2(right - 3.0, cy + 7.0),
+				]
+			),
+			rail
+		)
+		_draw_pot(Vector2(left - 28.0, cy + 2.0), ink, fill, glow)
+		_draw_plate(Vector2(right + 34.0, cy + 1.0), ink, fill, glow)
+		for i in range(3):
+			var x := lerpf(left + 22.0, right - 20.0, float(i) / 2.0)
+			var y := cy - 8.0 - float(i % 2) * 3.0
+			draw_circle(Vector2(x, y), 2.4, glow)
+
+	func _draw_pot(origin: Vector2, ink: Color, fill: Color, glow: Color) -> void:
+		draw_rect(Rect2(origin.x - 15.0, origin.y - 4.0, 30.0, 16.0), ink)
+		draw_rect(Rect2(origin.x - 12.0, origin.y - 1.0, 24.0, 12.0), fill)
+		draw_line(origin + Vector2(-17.0, -6.0), origin + Vector2(17.0, -6.0), ink, 4.0)
+		draw_arc(origin + Vector2(0.0, -10.0), 10.0, PI, TAU, 12, ink, 2.0)
+		draw_line(origin + Vector2(-8.0, 13.0), origin + Vector2(-14.0, 18.0), ink, 2.0)
+		draw_line(origin + Vector2(8.0, 13.0), origin + Vector2(14.0, 18.0), ink, 2.0)
+		for i in range(2):
+			draw_arc(
+				origin + Vector2(-5.0 + float(i) * 10.0, -17.0),
+				6.0,
+				-1.8,
+				0.8,
+				8,
+				glow,
+				1.8
+			)
+
+	func _draw_plate(origin: Vector2, ink: Color, fill: Color, glow: Color) -> void:
+		draw_colored_polygon(_oval_points(origin + Vector2(0.0, 9.5), 20.0, 5.5, 20), ink)
+		draw_colored_polygon(
+			_oval_points(origin + Vector2(0.0, 8.5), 16.0, 3.5, 20),
+			Color("#fff0c7") if available else Color("#a69478")
+		)
+		draw_colored_polygon(
+			PackedVector2Array(
+				[
+					origin + Vector2(-13.0, 4.0),
+					origin + Vector2(-4.0, -10.0),
+					origin + Vector2(14.0, -4.0),
+					origin + Vector2(10.0, 5.0),
+				]
+			),
+			fill
+		)
+		draw_line(origin + Vector2(-12.0, 2.0), origin + Vector2(12.0, -2.0), glow, 2.0)
+
+	func _oval_points(center: Vector2, radius_x: float, radius_y: float, segments: int) -> PackedVector2Array:
+		var points := PackedVector2Array()
+		for i in range(segments):
+			var angle := TAU * float(i) / float(segments)
+			points.append(center + Vector2(cos(angle) * radius_x, sin(angle) * radius_y))
+		return points
+
+
 const FISH_ICON_INDEX := {
 	"aji": 0,
 	"mejina": 1,
@@ -189,6 +281,7 @@ var _exp_bar: GaugeBar
 var _exp_label: Label
 var _fish_box: VBoxContainer
 var _recipe_grid: GridContainer
+var _recipe_to_detail_arrow: TextureRect
 var _dish_title: Label
 var _dish_subtitle: Label
 var _dish_image: TextureRect
@@ -199,6 +292,7 @@ var _buff_value: Label
 var _effect_count_value: Label
 var _stock_value: Label
 var _overwrite_note: Label
+var _cook_action_cue: CookActionCueVisual
 var _cook_button: Button
 var _result_title: Label
 var _result_body: HBoxContainer
@@ -255,20 +349,28 @@ func _add_cooking_background() -> void:
 
 func _build_header(layout: VBoxContainer) -> void:
 	var header := HBoxContainer.new()
-	header.custom_minimum_size = Vector2(0, 60)
+	header.custom_minimum_size = Vector2(0, 66)
 	header.add_theme_constant_override("separation", 8)
 	layout.add_child(header)
 
-	var title_card := _panel_box(Color("#25170e"), Color("#70451f"), Color("#f0c06b"), 6)
-	title_card.custom_minimum_size = Vector2(278, 0)
+	var title_card := _texture_panel_box(
+		COOKING_TITLE_BANNER,
+		30,
+		_style_box(Color("#25170e"), Color("#70451f"), Color("#f0c06b"), 6, 5),
+		24.0,
+		8.0
+	)
+	title_card.name = "CookingTitleBanner"
+	title_card.custom_minimum_size = Vector2(318, 0)
 	header.add_child(title_card)
 	var title_row := HBoxContainer.new()
 	title_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	title_row.add_theme_constant_override("separation", 10)
+	title_row.add_theme_constant_override("separation", 6)
 	title_card.add_child(title_row)
-	var title := make_shadow_label("調理場", 30, Palette.GOLD_BRIGHT, 4)
+	var title := make_shadow_label("調理場", 34, Palette.GOLD_BRIGHT, 5)
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
-	title.custom_minimum_size = Vector2(104.0, 0.0)
+	title.custom_minimum_size = Vector2(118.0, 0.0)
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title_row.add_child(title)
 
 	var status_card := _panel_box(Color("#0d2338"), Color("#70451f"), Color("#dba75b"), 6)
@@ -325,9 +427,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	var fish_layout := VBoxContainer.new()
 	fish_layout.add_theme_constant_override("separation", 6)
 	fish_panel.add_child(fish_layout)
-	var fish_title := make_shadow_label("所持している魚", 22, Palette.TEXT_BONE, 3)
-	fish_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	fish_layout.add_child(fish_title)
+	fish_layout.add_child(_section_ribbon("所持している魚", "fish", "FishSectionRibbon"))
 	_fish_box = VBoxContainer.new()
 	_fish_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_fish_box.add_theme_constant_override("separation", 6)
@@ -346,9 +446,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	var recipe_layout := VBoxContainer.new()
 	recipe_layout.add_theme_constant_override("separation", 6)
 	recipe_panel.add_child(recipe_layout)
-	var recipe_title := make_label("料理を選ぶ", 23, Color("#2e2419"), 1, Color("#fff3ce"))
-	recipe_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	recipe_layout.add_child(recipe_title)
+	recipe_layout.add_child(_section_ribbon("料理を選ぶ", "fire", "RecipeSectionRibbon"))
 	_recipe_grid = GridContainer.new()
 	_recipe_grid.name = "RecipeGrid"
 	_recipe_grid.columns = 3
@@ -356,6 +454,16 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	_recipe_grid.add_theme_constant_override("h_separation", 6)
 	_recipe_grid.add_theme_constant_override("v_separation", 7)
 	recipe_layout.add_child(_recipe_grid)
+
+	_recipe_to_detail_arrow = TextureRect.new()
+	_recipe_to_detail_arrow.name = "RecipeToDetailArrow"
+	_recipe_to_detail_arrow.texture = load(RECIPE_TO_DETAIL_ARROW) as Texture2D
+	_recipe_to_detail_arrow.custom_minimum_size = Vector2(34, 0)
+	_recipe_to_detail_arrow.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_recipe_to_detail_arrow.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_recipe_to_detail_arrow.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_recipe_to_detail_arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	body.add_child(_recipe_to_detail_arrow)
 
 	var detail_panel := _texture_panel_box(
 		DISH_DETAIL_FRAME,
@@ -377,11 +485,12 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	_dish_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	detail_layout.add_child(_dish_subtitle)
 	var dish_frame := _panel_box(Color("#6a4023"), Color("#3b2515"), Color("#e6b561"), 4)
-	dish_frame.custom_minimum_size = Vector2(0, 128)
+	dish_frame.custom_minimum_size = Vector2(0, 120)
 	dish_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_layout.add_child(dish_frame)
 	_dish_image = TextureRect.new()
-	_dish_image.custom_minimum_size = Vector2(0, 112)
+	_dish_image.name = "SelectedDishFeatureImage"
+	_dish_image.custom_minimum_size = Vector2(0, 104)
 	_dish_image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_dish_image.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_dish_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -393,36 +502,56 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	detail_layout.add_child(detail_rows)
 	var material_labels := _add_detail_story_row(
 		detail_rows,
-		"材料",
+		"CookDetailMaterialRow",
+		"必要な材料",
 		"fish",
-		Palette.GAUGE_CYAN_HI
+		Palette.GAUGE_CYAN_HI,
+		132.0
 	)
 	_material_value = material_labels[0] as Label
 	_stock_value = material_labels[1] as Label
 	var exp_labels := _add_detail_story_row(
 		detail_rows,
-		"食経験値",
+		"CookDetailExpRow",
+		"獲得EXP",
 		"exp",
-		Palette.GOLD_BRIGHT
+		Palette.GOLD_BRIGHT,
+		126.0
 	)
 	_exp_value = exp_labels[0] as Label
 	_bonus_value = exp_labels[1] as Label
 	var buff_labels := _add_detail_story_row(
 		detail_rows,
-		"食事効果",
+		"CookDetailEffectRow",
+		"次の釣行で得られる効果",
 		"buff",
-		Palette.GAUGE_GREEN_HI
+		Palette.GAUGE_GREEN_HI,
+		142.0
 	)
 	_buff_value = buff_labels[0] as Label
 	_effect_count_value = buff_labels[1] as Label
+	var cue_row := HBoxContainer.new()
+	cue_row.custom_minimum_size = Vector2(0, 24)
+	cue_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cue_row.add_theme_constant_override("separation", 8)
+	detail_layout.add_child(cue_row)
 	_overwrite_note = make_label("", 13, Color("#624b31"))
 	_overwrite_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_overwrite_note.clip_text = true
-	_overwrite_note.custom_minimum_size = Vector2(0, 18)
-	detail_layout.add_child(_overwrite_note)
+	_overwrite_note.custom_minimum_size = Vector2(0, 22)
+	_overwrite_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_overwrite_note.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	cue_row.add_child(_overwrite_note)
+	_cook_action_cue = CookActionCueVisual.new()
+	_cook_action_cue.name = "CookActionCue"
+	_cook_action_cue.custom_minimum_size = Vector2(112, 22)
+	cue_row.add_child(_cook_action_cue)
 	_cook_button = make_button("調理する", _cook_selected, 300, true)
+	_cook_button.name = "CookButton"
 	_cook_button.custom_minimum_size = Vector2(286, 46)
 	_cook_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_apply_cook_button_style()
+	_cook_button.draw.connect(func() -> void: _draw_cook_button_icon(_cook_button))
 	detail_layout.add_child(_cook_button)
 
 
@@ -476,25 +605,34 @@ func _add_detail_tile(
 
 
 func _add_detail_story_row(
-	parent: Container, title: String, icon_mode: String, accent: Color
+	parent: Container,
+	node_name: String,
+	title: String,
+	icon_mode: String,
+	accent: Color,
+	title_width: float
 ) -> Array:
 	var tile := _panel_box(Color("#fff0cf"), Color("#8b5b2c"), Color("#e6b561"), 3)
+	tile.name = node_name
 	tile.custom_minimum_size = Vector2(0, 42)
 	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(tile)
+
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	tile.add_child(row)
 
 	var title_band := _panel_box(Color("#5a3a1c"), Color("#3b2515"), Color("#d7a456"), 2)
-	title_band.custom_minimum_size = Vector2(108, 28)
+	title_band.custom_minimum_size = Vector2(title_width, 28)
 	row.add_child(title_band)
 	var title_row := HBoxContainer.new()
 	title_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	title_row.add_theme_constant_override("separation", 5)
 	title_band.add_child(title_row)
-	title_row.add_child(_small_icon(icon_mode, accent, Vector2(24.0, 0.0)))
-	var title_label := make_shadow_label(title, 12, Palette.TEXT_BONE, 2)
+	var compact := title.length() > 6
+	title_row.add_child(_small_icon(icon_mode, accent, Vector2(18.0 if compact else 24.0, 0.0)))
+	var title_size := 8 if compact else 12
+	var title_label := make_shadow_label(title, title_size, Palette.TEXT_BONE, 2)
 	title_label.custom_minimum_size = Vector2(0, 22)
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -502,7 +640,8 @@ func _add_detail_story_row(
 	title_label.clip_text = true
 	title_row.add_child(title_label)
 
-	var primary := make_label("", 16, Color("#2a2118"), 1, Color("#fff2cf"))
+	var primary_size := 12 if compact else 14
+	var primary := make_label("", primary_size, Color("#2a2118"), 1, Color("#fff2cf"))
 	primary.custom_minimum_size = Vector2(0, 24)
 	primary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	primary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -510,8 +649,8 @@ func _add_detail_story_row(
 	primary.clip_text = true
 	row.add_child(primary)
 
-	var secondary := make_label("", 14, accent, 1, Color("#fff2cf"))
-	secondary.custom_minimum_size = Vector2(150, 24)
+	var secondary := make_label("", primary_size, accent, 1, Color("#fff2cf"))
+	secondary.custom_minimum_size = Vector2(62 if compact else 108, 24)
 	secondary.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	secondary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	secondary.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -616,6 +755,7 @@ func _rebuild_fish_cards() -> void:
 func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	var fish := GameData.get_fish(fish_id)
 	var card := PanelContainer.new()
+	card.name = _fish_row_node_name(fish_id)
 	card.custom_minimum_size = Vector2(0, 56)
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
 	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -647,6 +787,30 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	row.add_child(amount)
 	_fish_cards[fish_id] = {"card": card, "marker": marker}
 	return card
+
+
+func _fish_row_node_name(fish_id: String) -> String:
+	match fish_id:
+		"aji":
+			return "FishRowAji"
+		"saba":
+			return "FishRowSaba"
+		"tai":
+			return "FishRowTai"
+		"kasago":
+			return "FishRowKasago"
+		"ika":
+			return "FishRowIka"
+		"hirame":
+			return "FishRowHirame"
+		"mejina":
+			return "FishRowMejina"
+		"isaki":
+			return "FishRowIsaki"
+		"boss_kurodai":
+			return "FishRowBossKurodai"
+		_:
+			return "FishRow"
 
 
 func _select_fish(fish_id: String) -> void:
@@ -866,7 +1030,7 @@ func _refresh_recipe_card_styles() -> void:
 		card.add_theme_stylebox_override(
 			"panel",
 			_texture_style_box(
-				RECIPE_CARD_FRAME,
+				RECIPE_SELECTED_CARD_FRAME if selected and not locked and not unavailable else RECIPE_CARD_FRAME,
 				28,
 				_style_box(
 					fill,
@@ -899,7 +1063,10 @@ func _refresh_detail() -> void:
 		_buff_value.text = "-"
 		_effect_count_value.text = "-"
 		_overwrite_note.text = ""
+		_cook_action_cue.visible = false
+		_cook_action_cue.set_available(false)
 		_cook_button.disabled = true
+		_cook_button.queue_redraw()
 		return
 	var base_exp := GameData.recipe_exp(_selected_fish_id, _selected_recipe_id)
 	var dish_key := "%s:%s" % [_selected_fish_id, _selected_recipe_id]
@@ -912,11 +1079,97 @@ func _refresh_detail() -> void:
 	_material_value.text = "%s ×1" % String(fish["name"])
 	_stock_value.text = "所持 %d → %d" % [count, maxi(0, count - 1)]
 	_exp_value.text = "+%d EXP" % total_exp
-	_bonus_value.text = "初回ボーナス +%d EXP" % base_exp if first_time else "初回 記録済み"
+	_bonus_value.text = "初回 +%d EXP" % base_exp if first_time else "初回済"
 	_buff_value.text = String(recipe.get("buff_text", ""))
-	_effect_count_value.text = "効果回数 1回"
+	_effect_count_value.text = "1回"
 	_overwrite_note.text = "調理後は食事結果へ / 既存効果を上書き。"
+	_cook_action_cue.visible = true
+	_cook_action_cue.set_available(count > 0)
 	_cook_button.disabled = count <= 0
+	_cook_button.queue_redraw()
+
+
+func _apply_cook_button_style() -> void:
+	var normal_fallback := _style_box(Color("#103a5f"), Color("#3b2515"), Palette.GOLD_BRIGHT, 4, 6)
+	var hover_fallback := _style_box(Color("#19517d"), Color("#3b2515"), Color("#ffe67a"), 4, 6)
+	var pressed_fallback := _style_box(Color("#0c2946"), Color("#2a1a10"), Palette.GOLD_DEEP, 4, 6)
+	var disabled_fallback := _style_box(Color("#5f5142"), Color("#3b3027"), Color("#8f7b5e"), 4, 6)
+	_cook_button.add_theme_stylebox_override(
+		"normal",
+		_texture_style_box(COOK_BUTTON_FRAME, 22, normal_fallback, 58.0, 8.0)
+	)
+	_cook_button.add_theme_stylebox_override(
+		"hover",
+		_texture_style_box(COOK_BUTTON_FRAME, 22, hover_fallback, 58.0, 8.0)
+	)
+	_cook_button.add_theme_stylebox_override(
+		"pressed",
+		_texture_style_box(COOK_BUTTON_FRAME, 22, pressed_fallback, 58.0, 8.0)
+	)
+	_cook_button.add_theme_stylebox_override(
+		"disabled",
+		_texture_style_box(COOK_BUTTON_FRAME, 22, disabled_fallback, 58.0, 8.0)
+	)
+	_cook_button.add_theme_stylebox_override(
+		"focus",
+		_texture_style_box(COOK_BUTTON_FRAME, 22, hover_fallback, 58.0, 8.0)
+	)
+	_cook_button.add_theme_color_override("font_color", Palette.GOLD_BRIGHT)
+	_cook_button.add_theme_color_override("font_hover_color", Color("#fff1ba"))
+	_cook_button.add_theme_color_override("font_pressed_color", Color("#f0c06b"))
+	_cook_button.add_theme_color_override("font_disabled_color", Color("#b6a68d"))
+
+
+func _draw_cook_button_icon(button: Button) -> void:
+	var active := not button.disabled
+	var center := Vector2(34.0, button.size.y * 0.5 + 1.0)
+	var ink := Color("#3b2515") if active else Color("#665847")
+	var pot := Color("#9b5a29") if active else Color("#7a6954")
+	var flame := Color("#f06a2e") if active else Color("#7a604b")
+	var glow := Color(1.0, 0.86, 0.36, 0.42) if active else Color(0.48, 0.40, 0.32, 0.22)
+	button.draw_circle(center + Vector2(4.0, 5.0), 24.0, glow)
+	button.draw_rect(Rect2(center.x - 15.0, center.y - 4.0, 30.0, 15.0), ink)
+	button.draw_rect(Rect2(center.x - 12.0, center.y - 1.0, 24.0, 11.0), pot)
+	button.draw_line(center + Vector2(-17.0, -6.0), center + Vector2(17.0, -6.0), ink, 4.0)
+	button.draw_arc(center + Vector2(0.0, -11.0), 10.0, PI, TAU, 12, ink, 2.0)
+	button.draw_colored_polygon(
+		PackedVector2Array(
+			[
+				center + Vector2(-6.0, 18.0),
+				center + Vector2(0.0, 7.0),
+				center + Vector2(6.0, 18.0),
+				center + Vector2(1.0, 23.0),
+			]
+		),
+		flame
+	)
+	button.draw_colored_polygon(
+		PackedVector2Array(
+			[
+				center + Vector2(2.0, 16.0),
+				center + Vector2(7.0, 7.0),
+				center + Vector2(12.0, 17.0),
+				center + Vector2(7.0, 22.0),
+			]
+		),
+		Color("#ffe67a") if active else Color("#96805d")
+	)
+	for i in range(2):
+		var x := center.x - 6.0 + float(i) * 12.0
+		button.draw_arc(Vector2(x, center.y - 18.0), 8.0, -1.6, 0.9, 9, glow, 2.0)
+	var arrow_x := center.x + 36.0
+	var arrow_color := Color("#ffe67a") if active else Color("#8b7654")
+	button.draw_line(Vector2(arrow_x, center.y), Vector2(arrow_x + 22.0, center.y), arrow_color, 3.0)
+	button.draw_colored_polygon(
+		PackedVector2Array(
+			[
+				Vector2(arrow_x + 28.0, center.y),
+				Vector2(arrow_x + 16.0, center.y - 7.0),
+				Vector2(arrow_x + 16.0, center.y + 7.0),
+			]
+		),
+		arrow_color
+	)
 
 
 func _cook_selected() -> void:
@@ -1013,6 +1266,14 @@ func preview_has_status_overlay() -> bool:
 	return false
 
 
+func preview_accept_status_overlay() -> bool:
+	for child in get_children():
+		if child.get_script() == CookingStatusPanelScript:
+			child.preview_accept()
+			return true
+	return false
+
+
 func preview_has_current_prep_summary() -> bool:
 	return _result_title != null and _result_title.text == "現在の準備"
 
@@ -1060,6 +1321,7 @@ func _show_status_summary() -> void:
 func _show_status_overlay() -> void:
 	var panel := CookingStatusPanelScript.new()
 	add_child(panel)
+	panel.closed.connect(func() -> void: navigate("harbor"))
 	panel.show_summary()
 
 
@@ -1188,6 +1450,33 @@ func _small_icon(mode: String, accent: Color, minimum_size: Vector2) -> CookingS
 	icon.custom_minimum_size = minimum_size
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return icon
+
+
+func _section_ribbon(text: String, icon_mode: String, node_name: String) -> PanelContainer:
+	var ribbon := _texture_panel_box(
+		COOKING_SECTION_RIBBON,
+		28,
+		_style_box(Color("#143553"), Color("#3b2515"), Palette.GOLD_DEEP, 4, 5),
+		18.0,
+		5.0
+	)
+	ribbon.name = node_name
+	ribbon.custom_minimum_size = Vector2(0.0, 42.0)
+	ribbon.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 8)
+	ribbon.add_child(row)
+	row.add_child(_small_icon(icon_mode, Palette.GOLD_BRIGHT, Vector2(28.0, 0.0)))
+	var label := make_shadow_label(text, 22, Palette.GOLD_BRIGHT, 3)
+	label.custom_minimum_size = Vector2(170.0 if text.length() >= 7 else 126.0, 0.0)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	label.clip_text = true
+	row.add_child(label)
+	row.add_child(_small_icon(icon_mode, Palette.GOLD_BRIGHT, Vector2(28.0, 0.0)))
+	return ribbon
 
 
 func _summary_card(title: String, value: String, accent: Color, icon_mode := "book") -> PanelContainer:

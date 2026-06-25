@@ -10,11 +10,15 @@ const OUT_RESULT := "/tmp/tsuri_cooking_result.png"
 const OUT_EXP := "/tmp/tsuri_cooking_exp.png"
 const OUT_LEVELUP := "/tmp/tsuri_cooking_levelup.png"
 const OUT_STATUS := "/tmp/tsuri_cooking_status.png"
+const OUT_MANIFEST := "/tmp/tsuri_cooking_capture_manifest.json"
 const VW := Vector2i(1280, 720)
+
+var _capture_manifest: Array[Dictionary] = []
 
 
 func _ready() -> void:
 	theme = ThemeFactory.build_theme()
+	_reset_manifest()
 
 	var vp := SubViewport.new()
 	vp.size = VW
@@ -32,6 +36,7 @@ func _ready() -> void:
 	if not _save_viewport(vp, OUT_SELECT):
 		get_tree().quit(1)
 		return
+	_record_capture("COOK_SELECT", OUT_SELECT, "current_prep_summary")
 	_save_viewport(vp, OUT_ALL)
 
 	screen.queue_free()
@@ -53,6 +58,7 @@ func _ready() -> void:
 	if not _save_viewport(vp, OUT_RESULT):
 		get_tree().quit(1)
 		return
+	_record_capture("MEAL_RESULT", OUT_RESULT, "MEAL_RESULT")
 
 	screen.queue_free()
 	await get_tree().process_frame
@@ -70,6 +76,7 @@ func _ready() -> void:
 	if not _save_viewport(vp, OUT_EXP):
 		get_tree().quit(1)
 		return
+	_record_capture("EXP_GAIN", OUT_EXP, "EXP_GAIN")
 
 	screen.queue_free()
 	await get_tree().process_frame
@@ -94,6 +101,7 @@ func _ready() -> void:
 	if not _save_viewport(vp, OUT_LEVELUP):
 		get_tree().quit(1)
 		return
+	_record_capture("LEVEL_UP_OVERLAY", OUT_LEVELUP, "LEVEL_UP_OVERLAY")
 
 	if not _expect_level_up_overlay(screen, "STATUS_SUMMARY transition"):
 		get_tree().quit(1)
@@ -109,6 +117,7 @@ func _ready() -> void:
 	if not _save_viewport(vp, OUT_STATUS):
 		get_tree().quit(1)
 		return
+	_record_capture("STATUS_SUMMARY", OUT_STATUS, "STATUS_SUMMARY")
 
 	get_tree().quit()
 
@@ -128,6 +137,7 @@ func _seed_select_state() -> void:
 	PlayerProgress.level = 4
 	PlayerProgress.exp = 130
 	PlayerProgress.money = 1250
+	PlayerProgress.play_seconds = 12345.0
 	PlayerProgress.inventory.clear()
 	PlayerProgress.inventory["aji"] = 4
 	PlayerProgress.inventory["saba"] = 3
@@ -219,17 +229,69 @@ func _fake_non_level_result() -> Dictionary:
 
 
 func _save_viewport(vp: SubViewport, path: String) -> bool:
-	if DisplayServer.get_name() == "headless":
-		_push_headless_capture_error(path)
-		return false
 	var img := vp.get_texture().get_image()
 	if img == null:
-		push_error("SubViewport get_image() returned null for %s" % path)
+		push_error(
+			(
+				"SubViewport get_image() returned null for %s. "
+				+ "If this happens with the headless/dummy display driver, "
+				+ "run the preview with a real display driver."
+			)
+			% path
+		)
+		return false
+	if img.is_empty():
+		push_error(
+			(
+				"SubViewport get_image() returned an empty image for %s. "
+				+ "If this happens with the headless/dummy display driver, "
+				+ "run the preview with a real display driver."
+			)
+			% path
+		)
 		return false
 	img.save_png(path)
 	return true
 
 
+func _reset_manifest() -> void:
+	_capture_manifest.clear()
+	var file_exists := FileAccess.file_exists(OUT_MANIFEST)
+	if file_exists:
+		DirAccess.remove_absolute(OUT_MANIFEST)
+
+
+func _record_capture(state_id: String, path: String, verified_state: String) -> void:
+	_capture_manifest.append(
+		{
+			"state": state_id,
+			"capture": path,
+			"verified_state": verified_state,
+			"width": VW.x,
+			"height": VW.y,
+		}
+	)
+	var payload := {
+		"version": 1,
+		"source": "tools/cooking_preview.gd",
+		"captures": _capture_manifest,
+	}
+	var file := FileAccess.open(OUT_MANIFEST, FileAccess.WRITE)
+	if file == null:
+		push_error("Failed to write cooking capture manifest: %s" % OUT_MANIFEST)
+		return
+	file.store_string(JSON.stringify(payload, "\t"))
+
+
+func _push_headless_capture_error(path: String) -> void:
+	push_error(
+		(
+			"Cannot capture %s with the headless/dummy display driver. "
+			+ "Run this scene with a real display driver, for example without --headless, "
+			+ "to generate cooking screenshots."
+		)
+		% path
+	)
 func _expect_reward_state(screen: Control, expected_state: String, context: String) -> bool:
 	if screen.preview_has_reward_overlay_state(expected_state):
 		return true
@@ -256,14 +318,3 @@ func _expect_current_prep_summary(screen: Control, context: String) -> bool:
 		return true
 	push_error("%s expected current preparation summary." % context)
 	return false
-
-
-func _push_headless_capture_error(path: String) -> void:
-	push_error(
-		(
-			"Cannot capture %s with the headless/dummy display driver. "
-			+ "Run this scene with a real display driver, for example without --headless, "
-			+ "to generate cooking screenshots."
-		)
-		% path
-	)

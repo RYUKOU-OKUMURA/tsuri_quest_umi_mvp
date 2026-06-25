@@ -4,10 +4,19 @@ extends "res://src/ui/screen_base.gd"
 signal closed
 
 const LEVEL_UP_FRAME := "res://assets/showcase/cooking/level_up_frame.png"
+const LEVEL_UNLOCK_RIBBON := "res://assets/showcase/cooking/level_unlock_ribbon.png"
+const LEVEL_STAT_ROW_FRAME := "res://assets/showcase/cooking/level_stat_row_frame.png"
+const FLOW_ACTION_BUTTON_FRAME := "res://assets/showcase/cooking/flow_action_button_frame.png"
 
 
 class LevelUpVisual:
 	extends Control
+
+	const CROWN_ASSET := "res://assets/showcase/cooking/level_crown.png"
+	const LAUREL_LEFT_ASSET := "res://assets/showcase/cooking/level_laurel_left.png"
+	const LAUREL_RIGHT_ASSET := "res://assets/showcase/cooking/level_laurel_right.png"
+	const UNLOCK_MEDALLION_ASSET := "res://assets/showcase/cooking/level_unlock_medallion.png"
+	const UNLOCK_SPOT_ASSET := "res://assets/showcase/cooking/level_unlock_spot.png"
 
 	var mode := "crown"
 
@@ -18,15 +27,38 @@ class LevelUpVisual:
 	func _draw() -> void:
 		match mode:
 			"laurel_left":
+				if _draw_texture_asset(LAUREL_LEFT_ASSET):
+					return
 				_draw_laurel(-1.0)
 			"laurel_right":
+				if _draw_texture_asset(LAUREL_RIGHT_ASSET):
+					return
 				_draw_laurel(1.0)
 			"medal":
+				if _draw_texture_asset(UNLOCK_MEDALLION_ASSET):
+					return
 				_draw_medal()
 			"spot":
+				if _draw_texture_asset(UNLOCK_SPOT_ASSET):
+					return
 				_draw_spot()
 			_:
+				if _draw_texture_asset(CROWN_ASSET):
+					return
 				_draw_crown()
+
+	func _draw_texture_asset(path: String) -> bool:
+		var tex := load(path) as Texture2D
+		if tex == null:
+			return false
+		var tex_size := Vector2(float(tex.get_width()), float(tex.get_height()))
+		if tex_size.x <= 0.0 or tex_size.y <= 0.0:
+			return false
+		var scale := minf(size.x / tex_size.x, size.y / tex_size.y)
+		var draw_size := tex_size * scale
+		var rect := Rect2((size - draw_size) * 0.5, draw_size)
+		draw_texture_rect(tex, rect, false)
+		return true
 
 	func _draw_crown() -> void:
 		var center := size * 0.5
@@ -141,6 +173,162 @@ class LevelUpVisual:
 			draw_line(Vector2(12.0, y), Vector2(size.x - 12.0, y - 6.0), Color(1.0, 1.0, 1.0, 0.28), 2.0)
 
 
+class LevelStatIconVisual:
+	extends Control
+
+	var mode := "energy"
+	var accent := Color.WHITE
+
+	func configure(next_mode: String, next_accent: Color) -> void:
+		mode = next_mode
+		accent = next_accent
+		queue_redraw()
+
+	func _draw() -> void:
+		_draw_badge()
+		match mode:
+			"reel":
+				_draw_reel()
+			"technique":
+				_draw_sword()
+			"focus":
+				_draw_target()
+			_:
+				_draw_heart()
+
+	func _draw_badge() -> void:
+		var center := size * 0.5
+		draw_circle(center, 23.0, Color("#07121e"))
+		draw_circle(center, 20.0, accent.darkened(0.20))
+		draw_arc(center, 21.0, 0.0, TAU, 36, Palette.GOLD_BRIGHT, 2.0)
+		draw_circle(center + Vector2(-6.0, -7.0), 5.0, Color(1.0, 1.0, 1.0, 0.12))
+
+	func _draw_heart() -> void:
+		var center := size * 0.5
+		var color := Palette.GAUGE_RED_HI
+		draw_circle(center + Vector2(-6.0, -5.0), 7.0, color)
+		draw_circle(center + Vector2(6.0, -5.0), 7.0, color)
+		draw_polygon(
+			PackedVector2Array(
+				[
+					center + Vector2(-14.0, 0.0),
+					center + Vector2(14.0, 0.0),
+					center + Vector2(0.0, 15.0),
+				]
+			),
+			PackedColorArray([color, color, color])
+		)
+
+	func _draw_reel() -> void:
+		var center := size * 0.5
+		var color := Palette.GAUGE_CYAN_HI
+		draw_arc(center, 14.0, 0.0, TAU, 30, color, 4.0)
+		draw_circle(center, 5.0, Color("#fff1c7"))
+		for i in range(4):
+			var a := TAU * float(i) / 4.0 + 0.35
+			draw_line(center, center + Vector2(cos(a), sin(a)) * 15.0, color, 3.0)
+		draw_circle(center + Vector2(19.0, 0.0), 4.0, Palette.GOLD_BRIGHT)
+
+	func _draw_sword() -> void:
+		var center := size * 0.5
+		var color := Palette.GOLD_BRIGHT
+		draw_line(center + Vector2(-10.0, 12.0), center + Vector2(10.0, -13.0), color, 5.0)
+		draw_polygon(
+			PackedVector2Array(
+				[
+					center + Vector2(12.0, -16.0),
+					center + Vector2(15.0, -5.0),
+					center + Vector2(4.0, -13.0),
+				]
+			),
+			PackedColorArray([color, color, color])
+		)
+		draw_line(center + Vector2(-15.0, 5.0), center + Vector2(-3.0, 16.0), Color("#fff1c7"), 3.0)
+		draw_circle(center + Vector2(-13.0, 13.0), 3.0, Color("#7b4b20"))
+
+	func _draw_target() -> void:
+		var center := size * 0.5
+		var color := Color("#d9b7ff")
+		draw_arc(center, 15.0, 0.0, TAU, 30, color, 3.0)
+		draw_arc(center, 8.0, 0.0, TAU, 24, color, 2.0)
+		draw_line(center + Vector2(-17.0, 0.0), center + Vector2(17.0, 0.0), color, 3.0)
+		draw_line(center + Vector2(0.0, -17.0), center + Vector2(0.0, 17.0), color, 3.0)
+		draw_circle(center, 4.0, Palette.GOLD_BRIGHT)
+
+
+class LevelToSummaryCueVisual:
+	extends Control
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		var w := maxf(size.x, 1.0)
+		var h := maxf(size.y, 1.0)
+		var cy := h * 0.50
+		var start_x := 10.0
+		var end_x := w - 14.0
+		var gold := Palette.GOLD_BRIGHT
+		var glow := Color("#fff1c7")
+		glow.a = 0.24
+		draw_line(Vector2(start_x, cy), Vector2(end_x, cy), glow, 7.0)
+		draw_line(Vector2(start_x, cy), Vector2(end_x, cy), gold, 2.0)
+		draw_polygon(
+			PackedVector2Array(
+				[
+					Vector2(end_x + 7.0, cy),
+					Vector2(end_x - 4.0, cy - 6.0),
+					Vector2(end_x - 4.0, cy + 6.0),
+				]
+			),
+			PackedColorArray([gold, gold, gold])
+		)
+		var card_count := 5
+		var span := maxf(1.0, w - 88.0)
+		for i in range(card_count):
+			var x := 42.0 + span * float(i) / float(card_count - 1)
+			_draw_summary_card(Vector2(x, cy), i)
+
+	func _draw_summary_card(center: Vector2, index: int) -> void:
+		var rect := Rect2(center.x - 14.0, center.y - 12.0, 28.0, 24.0)
+		draw_rect(rect.grow(2.0), Color("#07121e"))
+		draw_rect(rect, Color("#f2e4c2"))
+		draw_line(rect.position + Vector2(2.0, 4.0), rect.position + Vector2(rect.size.x - 2.0, 4.0), Color("#17324d"), 4.0)
+		match index:
+			0:
+				_draw_mini_player(center)
+			1:
+				_draw_mini_meal(center)
+			2:
+				_draw_mini_cooler(center)
+			3:
+				_draw_mini_coin(center)
+			_:
+				_draw_mini_clock(center)
+
+	func _draw_mini_player(center: Vector2) -> void:
+		draw_circle(center + Vector2(0.0, -2.0), 5.0, Color("#f2b889"))
+		draw_rect(Rect2(center.x - 7.0, center.y + 4.0, 14.0, 6.0), Color("#1d4771"))
+
+	func _draw_mini_meal(center: Vector2) -> void:
+		draw_arc(center + Vector2(0.0, 5.0), 8.0, 0.0, PI, 12, Color("#9b4f22"), 3.0)
+		draw_arc(center + Vector2(0.0, 2.0), 6.0, 0.0, PI, 10, Color("#fff1c7"), 2.0)
+
+	func _draw_mini_cooler(center: Vector2) -> void:
+		draw_rect(Rect2(center.x - 8.0, center.y - 2.0, 16.0, 10.0), Color("#1b5d8d"))
+		draw_rect(Rect2(center.x - 8.0, center.y - 2.0, 16.0, 3.0), Color("#eef4fa"))
+
+	func _draw_mini_coin(center: Vector2) -> void:
+		draw_circle(center + Vector2(-3.0, 2.0), 6.0, Palette.GOLD_BRIGHT)
+		draw_circle(center + Vector2(4.0, -1.0), 5.0, Color("#d8a13a"))
+
+	func _draw_mini_clock(center: Vector2) -> void:
+		draw_circle(center, 7.0, Color("#fff1c7"))
+		draw_arc(center, 7.0, 0.0, TAU, 18, Color("#70451f"), 1.5)
+		draw_line(center, center + Vector2(0.0, -5.0), Color("#70451f"), 1.5)
+		draw_line(center, center + Vector2(4.0, 2.0), Color("#70451f"), 1.5)
+
+
 var _dialog: PanelContainer
 var _level_line: Label
 var _stats_box: GridContainer
@@ -150,12 +338,14 @@ var _unlock_ribbon_label: Label
 var _unlock_tag: Label
 var _unlock_title: Label
 var _unlock_body: Label
+var _confirm_button: Button
 
 
 func _build_screen() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
 	var dim := ColorRect.new()
+	dim.name = "LevelUpDimmer"
 	dim.color = Color(0.0, 0.0, 0.0, 0.58)
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	dim.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -169,6 +359,7 @@ func _build_screen() -> void:
 	add_child(center)
 
 	_dialog = PanelContainer.new()
+	_dialog.name = "LevelUpDialog"
 	_dialog.custom_minimum_size = Vector2(930.0, 0.0)
 	_dialog.add_theme_stylebox_override(
 		"panel",
@@ -188,6 +379,7 @@ func _build_screen() -> void:
 	_dialog.add_child(box)
 
 	var title_band := HBoxContainer.new()
+	title_band.name = "LevelUpTitleBand"
 	title_band.alignment = BoxContainer.ALIGNMENT_CENTER
 	title_band.add_theme_constant_override("separation", 8)
 	title_band.custom_minimum_size = Vector2(840.0, 92.0)
@@ -195,6 +387,7 @@ func _build_screen() -> void:
 	box.add_child(title_band)
 
 	var left_laurel := LevelUpVisual.new()
+	left_laurel.name = "LevelLaurelLeftAsset"
 	left_laurel.configure("laurel_left")
 	left_laurel.custom_minimum_size = Vector2(108.0, 86.0)
 	title_band.add_child(left_laurel)
@@ -206,6 +399,7 @@ func _build_screen() -> void:
 	title_band.add_child(title_stack)
 
 	var crown_visual := LevelUpVisual.new()
+	crown_visual.name = "LevelCrownAsset"
 	crown_visual.configure("crown")
 	crown_visual.custom_minimum_size = Vector2(148.0, 34.0)
 	crown_visual.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -215,19 +409,23 @@ func _build_screen() -> void:
 	title_stack.add_child(crown_label)
 
 	var title := make_shadow_label("LEVEL UP!", 56, Palette.GOLD_BRIGHT, 5)
+	title.name = "LevelUpTitle"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_stack.add_child(title)
 
 	var right_laurel := LevelUpVisual.new()
+	right_laurel.name = "LevelLaurelRightAsset"
 	right_laurel.configure("laurel_right")
 	right_laurel.custom_minimum_size = Vector2(108.0, 86.0)
 	title_band.add_child(right_laurel)
 
 	_level_line = make_shadow_label("", 34, Palette.TEXT_BONE, 4)
+	_level_line.name = "LevelUpLevelLine"
 	_level_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_level_line)
 
 	var source_line := make_shadow_label("食経験値が成長に変わった", 20, Palette.GAUGE_GREEN_HI, 3)
+	source_line.name = "LevelUpSourceLine"
 	source_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(source_line)
 
@@ -246,7 +444,18 @@ func _build_screen() -> void:
 	var unlock_root := VBoxContainer.new()
 	unlock_root.add_theme_constant_override("separation", 6)
 	_unlock_card.add_child(unlock_root)
-	_unlock_ribbon = _panel_box(Color("#8d2430"), Color("#4c111a"), Palette.GOLD_BRIGHT, 3)
+	_unlock_ribbon = PanelContainer.new()
+	_unlock_ribbon.name = "LevelUnlockRibbonAsset"
+	_unlock_ribbon.add_theme_stylebox_override(
+		"panel",
+		_texture_style_box(
+			LEVEL_UNLOCK_RIBBON,
+			24,
+			_style_box(Color("#8d2430"), Color("#4c111a"), Palette.GOLD_BRIGHT, 3, 5),
+			12.0,
+			5.0
+		)
+	)
 	_unlock_ribbon.custom_minimum_size = Vector2(0.0, 34.0)
 	unlock_root.add_child(_unlock_ribbon)
 	_unlock_ribbon_label = make_shadow_label("新たな釣り場が解放！", 22, Color("#fff4d4"), 3)
@@ -271,13 +480,21 @@ func _build_screen() -> void:
 	_unlock_body = make_label("", 17, Color("#4d3924"))
 	_unlock_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	unlock_text.add_child(_unlock_body)
+	var summary_cue := LevelToSummaryCueVisual.new()
+	summary_cue.name = "LevelToSummaryCue"
+	summary_cue.custom_minimum_size = Vector2(0.0, 24.0)
+	summary_cue.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	unlock_text.add_child(summary_cue)
 	var spot := _spot_thumbnail_box()
 	spot.custom_minimum_size = Vector2(196.0, 86.0)
 	unlock_layout.add_child(spot)
 
-	var ok := make_button("OK", _close, 260.0, true)
-	ok.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	box.add_child(ok)
+	_confirm_button = make_button("OK  成果確認へ", _close, 286.0, true)
+	_confirm_button.name = "LevelUpConfirmButton"
+	_confirm_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_apply_flow_button_style(_confirm_button)
+	_confirm_button.draw.connect(func() -> void: _draw_confirm_button_cue(_confirm_button))
+	box.add_child(_confirm_button)
 
 
 func show_level_up(
@@ -305,7 +522,7 @@ func _rebuild_stats(old_stats: Dictionary, new_stats: Dictionary) -> void:
 	_clear_container(_stats_box)
 	var rows := [
 		{
-			"icon": "HP",
+			"icon": "energy",
 			"name": "最大体力",
 			"old": int(round(float(old_stats.get("max_energy", 0)))),
 			"new": int(round(float(new_stats.get("max_energy", 0)))),
@@ -313,7 +530,7 @@ func _rebuild_stats(old_stats: Dictionary, new_stats: Dictionary) -> void:
 			"color": Palette.GAUGE_RED_HI,
 		},
 		{
-			"icon": "PWR",
+			"icon": "reel",
 			"name": "巻力",
 			"old": float(old_stats.get("reel_power", 0)),
 			"new": float(new_stats.get("reel_power", 0)),
@@ -321,7 +538,7 @@ func _rebuild_stats(old_stats: Dictionary, new_stats: Dictionary) -> void:
 			"color": Palette.GAUGE_CYAN_HI,
 		},
 		{
-			"icon": "TEC",
+			"icon": "technique",
 			"name": "技量",
 			"old": int(old_stats.get("technique", 0)),
 			"new": int(new_stats.get("technique", 0)),
@@ -329,7 +546,7 @@ func _rebuild_stats(old_stats: Dictionary, new_stats: Dictionary) -> void:
 			"color": Palette.GOLD_BRIGHT,
 		},
 		{
-			"icon": "FOC",
+			"icon": "focus",
 			"name": "集中力",
 			"old": int(old_stats.get("focus", 0)),
 			"new": int(new_stats.get("focus", 0)),
@@ -345,14 +562,25 @@ func _stat_row(row: Dictionary) -> PanelContainer:
 	var old_value = row["old"]
 	var new_value = row["new"]
 	var delta := float(new_value) - float(old_value)
-	var panel := _panel_box(Color("#17324d"), Color("#07121e"), Palette.GOLD_DEEP, 3)
+	var panel := PanelContainer.new()
+	panel.name = _stat_row_node_name(String(row["icon"]))
+	panel.add_theme_stylebox_override(
+		"panel",
+		_texture_style_box(
+			LEVEL_STAT_ROW_FRAME,
+			18,
+			_style_box(Color("#17324d"), Color("#07121e"), Palette.GOLD_DEEP, 3, 5),
+			12.0,
+			5.0
+		)
+	)
 	panel.custom_minimum_size = Vector2(0.0, 54.0)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var line := HBoxContainer.new()
 	line.add_theme_constant_override("separation", 8)
 	panel.add_child(line)
 
-	var icon := _badge_box(String(row["icon"]), row["color"], Palette.TEXT_BONE)
+	var icon := _stat_icon(String(row["icon"]), row["color"])
 	icon.custom_minimum_size = Vector2(52.0, 0.0)
 	line.add_child(icon)
 
@@ -381,6 +609,28 @@ func _stat_row(row: Dictionary) -> PanelContainer:
 	return panel
 
 
+func _stat_row_node_name(icon: String) -> String:
+	match icon:
+		"energy":
+			return "LevelStatRowEnergy"
+		"reel":
+			return "LevelStatRowReel"
+		"technique":
+			return "LevelStatRowTechnique"
+		"focus":
+			return "LevelStatRowFocus"
+		_:
+			return "LevelStatRow"
+
+
+func _stat_icon(mode: String, accent: Color) -> LevelStatIconVisual:
+	var icon := LevelStatIconVisual.new()
+	icon.configure(mode, accent)
+	icon.custom_minimum_size = Vector2(52.0, 44.0)
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return icon
+
+
 func _badge_box(text: String, fill: Color, text_color: Color) -> PanelContainer:
 	var badge := PanelContainer.new()
 	badge.add_theme_stylebox_override(
@@ -399,6 +649,7 @@ func _badge_box(text: String, fill: Color, text_color: Color) -> PanelContainer:
 func _medal_box() -> PanelContainer:
 	var medal := _panel_box(Color("#6a4515"), Color("#2d1a09"), Palette.GOLD_BRIGHT, 4)
 	var visual := LevelUpVisual.new()
+	visual.name = "LevelUnlockMedallionAsset"
 	visual.configure("medal")
 	visual.custom_minimum_size = Vector2(106.0, 84.0)
 	visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -417,6 +668,7 @@ func _spot_thumbnail_box() -> PanelContainer:
 	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(tag)
 	var visual := LevelUpVisual.new()
+	visual.name = "LevelUnlockSpotAsset"
 	visual.configure("spot")
 	visual.custom_minimum_size = Vector2(0.0, 48.0)
 	visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -527,6 +779,91 @@ func _close() -> void:
 			closed.emit()
 			queue_free()
 	)
+
+
+func _apply_flow_button_style(button: Button) -> void:
+	var normal_fallback := _style_box(Color("#102f51"), Palette.GOLD_DEEP, Palette.GOLD_BRIGHT, 4, 6)
+	var hover_fallback := _style_box(Color("#16436c"), Palette.GOLD_BRIGHT, Color("#fff0b2"), 4, 6)
+	var pressed_fallback := _style_box(Color("#081a2d"), Color("#a06d28"), Palette.GOLD_DEEP, 4, 6)
+	var disabled_fallback := _style_box(Color("#202a31"), Color("#71614a"), Color("#8c7b62"), 3, 6)
+	button.add_theme_stylebox_override(
+		"normal",
+		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, normal_fallback, 76.0, 8.0)
+	)
+	button.add_theme_stylebox_override(
+		"hover",
+		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, hover_fallback, 76.0, 8.0)
+	)
+	button.add_theme_stylebox_override(
+		"pressed",
+		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, pressed_fallback, 76.0, 8.0)
+	)
+	button.add_theme_stylebox_override(
+		"disabled",
+		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, disabled_fallback, 76.0, 8.0)
+	)
+	button.add_theme_stylebox_override(
+		"focus",
+		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, hover_fallback, 76.0, 8.0)
+	)
+	button.add_theme_color_override("font_color", Palette.GOLD_BRIGHT)
+	button.add_theme_color_override("font_hover_color", Color("#fff1ba"))
+	button.add_theme_color_override("font_pressed_color", Color("#f0c06b"))
+	button.add_theme_color_override("font_disabled_color", Color("#b6a68d"))
+
+
+func _draw_confirm_button_cue(button: Button) -> void:
+	var h := maxf(button.size.y, 1.0)
+	var center_y := h * 0.5
+	var gold := Palette.GOLD_BRIGHT
+	var ink := Color("#4c2b0b")
+	var glow := Color("#fff1c7")
+	glow.a = 0.24
+
+	var crown_center := Vector2(30.0, center_y)
+	var crown := PackedVector2Array(
+		[
+			crown_center + Vector2(-15.0, 4.0),
+			crown_center + Vector2(-10.0, -8.0),
+			crown_center + Vector2(-3.0, 1.0),
+			crown_center + Vector2(0.0, -11.0),
+			crown_center + Vector2(3.0, 1.0),
+			crown_center + Vector2(10.0, -8.0),
+			crown_center + Vector2(15.0, 4.0),
+		]
+	)
+	button.draw_polyline(crown, ink, 5.0)
+	button.draw_polyline(crown, gold, 2.0)
+	button.draw_rect(Rect2(crown_center.x - 13.0, crown_center.y + 4.0, 26.0, 6.0), ink)
+	button.draw_rect(Rect2(crown_center.x - 10.0, crown_center.y + 5.0, 20.0, 3.0), glow)
+
+	var arrow_from := Vector2(52.0, center_y)
+	var arrow_to := Vector2(78.0, center_y)
+	button.draw_line(arrow_from, arrow_to, glow, 6.0)
+	button.draw_line(arrow_from, arrow_to, gold, 2.0)
+	button.draw_polygon(
+		PackedVector2Array(
+			[
+				arrow_to + Vector2(7.0, 0.0),
+				arrow_to + Vector2(-3.0, -5.0),
+				arrow_to + Vector2(-3.0, 5.0),
+			]
+		),
+		PackedColorArray([gold, gold, gold])
+	)
+
+	for i in range(3):
+		var x := 98.0 + float(i) * 15.0
+		var rect := Rect2(x - 5.0, center_y - 8.0, 11.0, 15.0)
+		button.draw_rect(rect.grow(1.5), ink)
+		button.draw_rect(rect, Color("#f2e4c2"))
+		button.draw_line(rect.position + Vector2(1.0, 3.0), rect.position + Vector2(rect.size.x - 1.0, 3.0), Color("#17324d"), 2.0)
+		if i == 0:
+			button.draw_circle(rect.position + Vector2(5.5, 9.0), 3.0, Color("#f2b889"))
+		elif i == 1:
+			button.draw_arc(rect.position + Vector2(5.5, 10.0), 4.0, 0.0, PI, 8, Color("#9b4f22"), 2.0)
+		else:
+			button.draw_circle(rect.position + Vector2(5.5, 9.0), 3.5, gold)
 
 
 func _clear_container(container: Container) -> void:

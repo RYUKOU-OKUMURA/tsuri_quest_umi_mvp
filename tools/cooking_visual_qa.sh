@@ -26,6 +26,7 @@ CAPTURES=(
   /tmp/tsuri_cooking_exp.png
   /tmp/tsuri_cooking_levelup.png
   /tmp/tsuri_cooking_status.png
+  /tmp/tsuri_cooking_capture_manifest.json
 )
 
 for capture in "${CAPTURES[@]}"; do

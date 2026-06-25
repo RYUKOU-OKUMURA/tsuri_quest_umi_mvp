@@ -4,14 +4,24 @@
 from __future__ import annotations
 
 import argparse
+import json
 import struct
 import sys
 from pathlib import Path
 
 import cooking_reference_report
+from PIL import Image
 
 
 EXPECTED_SIZE = (1280, 720)
+MANIFEST = Path("/tmp/tsuri_cooking_capture_manifest.json")
+EXPECTED_MANIFEST_STATES = {
+    "COOK_SELECT": "current_prep_summary",
+    "MEAL_RESULT": "MEAL_RESULT",
+    "EXP_GAIN": "EXP_GAIN",
+    "LEVEL_UP_OVERLAY": "LEVEL_UP_OVERLAY",
+    "STATUS_SUMMARY": "STATUS_SUMMARY",
+}
 
 
 def png_size(path: Path) -> tuple[int, int]:
@@ -30,6 +40,29 @@ def png_size(path: Path) -> tuple[int, int]:
         return width, height
 
 
+def check_visual_content(path: Path, label: str, failures: list[str]) -> None:
+    try:
+        with Image.open(path) as image:
+            rgba = image.convert("RGBA")
+            alpha_extrema = rgba.getchannel("A").getextrema()
+            if alpha_extrema[1] == 0:
+                failures.append(f"{label}: image is fully transparent at {path}")
+                return
+            rgb = rgba.convert("RGB")
+            extrema = rgb.getextrema()
+            channel_spread = max(maximum - minimum for minimum, maximum in extrema)
+            sample = rgb.resize((64, 36))
+            colors = sample.getcolors(maxcolors=(64 * 36) + 1) or []
+    except OSError as exc:
+        failures.append(f"{label}: could not inspect PNG pixels {path}: {exc}")
+        return
+
+    if channel_spread < 8:
+        failures.append(f"{label}: image has too little color variation at {path}")
+    if len(colors) < 16:
+        failures.append(f"{label}: image has too few sampled colors at {path}")
+
+
 def check_png(path: Path, label: str, failures: list[str], expected_size: tuple[int, int] | None) -> None:
     if not path.exists():
         failures.append(f"{label}: missing {path}")
@@ -43,6 +76,59 @@ def check_png(path: Path, label: str, failures: list[str], expected_size: tuple[
         failures.append(
             f"{label}: expected {expected_size[0]}x{expected_size[1]}, got {size[0]}x{size[1]} at {path}"
         )
+    check_visual_content(path, label, failures)
+
+
+def check_manifest(failures: list[str]) -> None:
+    if not MANIFEST.exists():
+        failures.append(f"capture manifest missing {MANIFEST}")
+        return
+    try:
+        payload = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        failures.append(f"capture manifest invalid JSON {MANIFEST}: {exc}")
+        return
+    captures = payload.get("captures")
+    if not isinstance(captures, list):
+        failures.append(f"capture manifest missing captures list {MANIFEST}")
+        return
+    if len(captures) != len(cooking_reference_report.STATES):
+        failures.append(
+            f"capture manifest expected {len(cooking_reference_report.STATES)} captures, got {len(captures)}"
+        )
+        return
+    by_state = {}
+    for entry in captures:
+        if not isinstance(entry, dict):
+            failures.append(f"capture manifest contains non-object entry: {entry!r}")
+            return
+        state_id = entry.get("state")
+        if state_id in by_state:
+            failures.append(f"capture manifest has duplicate state {state_id}")
+            return
+        by_state[state_id] = entry
+    for state in cooking_reference_report.STATES:
+        state_id = str(state["id"])
+        entry = by_state.get(state_id)
+        if entry is None:
+            failures.append(f"capture manifest missing state {state_id}")
+            continue
+        expected_capture = str(Path(state["capture"]))
+        if entry.get("capture") != expected_capture:
+            failures.append(
+                f"capture manifest {state_id} expected capture {expected_capture}, got {entry.get('capture')}"
+            )
+        expected_verified_state = EXPECTED_MANIFEST_STATES[state_id]
+        if entry.get("verified_state") != expected_verified_state:
+            failures.append(
+                f"capture manifest {state_id} expected verified_state {expected_verified_state}, "
+                f"got {entry.get('verified_state')}"
+            )
+        if (entry.get("width"), entry.get("height")) != EXPECTED_SIZE:
+            failures.append(
+                f"capture manifest {state_id} expected size {EXPECTED_SIZE[0]}x{EXPECTED_SIZE[1]}, "
+                f"got {entry.get('width')}x{entry.get('height')}"
+            )
 
 
 def main() -> int:
@@ -67,6 +153,8 @@ def main() -> int:
         check_png(capture, f"{state_id} capture", failures, EXPECTED_SIZE)
         if len(failures) > before and not capture.exists():
             missing_capture_failures.append(failures[-1])
+    if not missing_capture_failures:
+        check_manifest(failures)
 
     cooking_reference_report.main()
 

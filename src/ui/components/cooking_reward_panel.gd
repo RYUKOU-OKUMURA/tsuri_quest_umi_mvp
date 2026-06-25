@@ -8,11 +8,19 @@ const GaugeBarScript = preload("res://src/ui/components/gauge_bar.gd")
 const DISH_FEATURE_AJI := "res://assets/showcase/cooking/dish_feature_aji_shioyaki.png"
 const DISH_ICON_SHEET := "res://assets/showcase/cooking/dish_icon_sheet.png"
 const MEAL_SCENE_BG := "res://assets/showcase/cooking/meal_scene_bg.png"
+const EXP_STAGE_BG := "res://assets/showcase/cooking/exp_stage_bg.png"
 const MEAL_RESULT_FRAME := "res://assets/showcase/cooking/meal_result_frame.png"
+const MEAL_BANNER_FRAME := "res://assets/showcase/cooking/meal_banner_frame.png"
+const MEAL_DISH_CARD_FRAME := "res://assets/showcase/cooking/meal_dish_card_frame.png"
+const EXP_BURST_FRAME := "res://assets/showcase/cooking/exp_burst_frame.png"
+const REWARD_CARD_FRAME := "res://assets/showcase/cooking/reward_card_frame.png"
+const FLOW_ACTION_BUTTON_FRAME := "res://assets/showcase/cooking/flow_action_button_frame.png"
 
 
 class SceneActorVisual:
 	extends Control
+
+	const EATING_POSE := "res://assets/showcase/cooking/player_eating_pose.png"
 
 	var mode := "meal"
 
@@ -27,6 +35,8 @@ class SceneActorVisual:
 			_draw_eating_player()
 
 	func _draw_eating_player() -> void:
+		if _draw_texture_asset(EATING_POSE):
+			return
 		var center := size * 0.5
 		draw_ellipse(center + Vector2(0.0, 62.0), 42.0, 8.0, Color(0.0, 0.0, 0.0, 0.28))
 		draw_rect(Rect2(center.x - 42.0, center.y + 8.0, 84.0, 50.0), Color("#17324d"))
@@ -67,6 +77,114 @@ class SceneActorVisual:
 			var p := center + Vector2(-46.0 + float(i) * 15.0, -58.0 + float((i * 17) % 36))
 			draw_line(p + Vector2(-4.0, 0.0), p + Vector2(4.0, 0.0), gold, 2.0)
 			draw_line(p + Vector2(0.0, -4.0), p + Vector2(0.0, 4.0), gold, 2.0)
+
+	func _draw_texture_asset(path: String) -> bool:
+		var tex := load(path) as Texture2D
+		if tex == null:
+			return false
+		var tex_size := Vector2(float(tex.get_width()), float(tex.get_height()))
+		if tex_size.x <= 0.0 or tex_size.y <= 0.0 or size.x <= 0.0 or size.y <= 0.0:
+			return false
+		var scale := minf(size.x / tex_size.x, size.y / tex_size.y)
+		var draw_size := tex_size * scale
+		var rect := Rect2((size - draw_size) * 0.5, draw_size)
+		draw_texture_rect(tex, rect, false)
+		return true
+
+
+class MealTableSpreadVisual:
+	extends Control
+
+	const TABLE_SPREAD := "res://assets/showcase/cooking/meal_table_spread.png"
+
+	var mode := "meal"
+	var dish_texture: Texture2D
+
+	func set_mode(next_mode: String) -> void:
+		mode = next_mode
+		queue_redraw()
+
+	func set_dish_texture(texture: Texture2D) -> void:
+		dish_texture = texture
+		queue_redraw()
+
+	func _draw() -> void:
+		if mode == "meal" and _draw_texture_asset(TABLE_SPREAD):
+			return
+		_draw_dish_source()
+
+	func _draw_dish_source() -> void:
+		var center := size * 0.5
+		draw_ellipse(center + Vector2(0.0, 40.0), size.x * 0.34, 10.0, Color(0.0, 0.0, 0.0, 0.26))
+		if dish_texture != null:
+			var tex_size := Vector2(float(dish_texture.get_width()), float(dish_texture.get_height()))
+			if tex_size.x > 0.0 and tex_size.y > 0.0:
+				var scale := minf(size.x * 0.88 / tex_size.x, size.y * 0.74 / tex_size.y)
+				var draw_size := tex_size * scale
+				var rect := Rect2(Vector2((size.x - draw_size.x) * 0.5, (size.y - draw_size.y) * 0.52), draw_size)
+				draw_texture_rect(dish_texture, rect, false)
+		var cyan := Color("#6bf1ff")
+		var gold := Color("#ffe081")
+		for i in range(5):
+			var angle := -2.45 + float(i) * 0.66
+			var from := center + Vector2(cos(angle), sin(angle)) * 30.0
+			var to := center + Vector2(cos(angle), sin(angle)) * 54.0
+			var color := cyan if i % 2 == 0 else gold
+			color.a = 0.45
+			draw_line(from, to, color, 3.0)
+		for i in range(4):
+			var p := Vector2(size.x * (0.18 + float(i) * 0.19), size.y * (0.18 + float((i * 13) % 44) / 100.0))
+			draw_line(p + Vector2(-4.0, 0.0), p + Vector2(4.0, 0.0), gold, 2.0)
+			draw_line(p + Vector2(0.0, -4.0), p + Vector2(0.0, 4.0), gold, 2.0)
+
+	func _draw_texture_asset(path: String) -> bool:
+		var tex := load(path) as Texture2D
+		if tex == null:
+			return false
+		var tex_size := Vector2(float(tex.get_width()), float(tex.get_height()))
+		if tex_size.x <= 0.0 or tex_size.y <= 0.0 or size.x <= 0.0 or size.y <= 0.0:
+			return false
+		var scale := minf(size.x / tex_size.x, size.y / tex_size.y)
+		var draw_size := tex_size * scale
+		var rect := Rect2((size - draw_size) * 0.5, draw_size)
+		draw_texture_rect(tex, rect, false)
+		return true
+
+
+class ExpMessagePortraitVisual:
+	extends Control
+
+	const EXP_POSE := "res://assets/showcase/cooking/player_exp_message_pose.png"
+
+	func _draw() -> void:
+		if _draw_texture_asset(EXP_POSE):
+			return
+		var center := size * 0.5
+		draw_ellipse(center + Vector2(0.0, 31.0), 33.0, 6.0, Color(0.0, 0.0, 0.0, 0.24))
+		draw_rect(Rect2(center.x - 28.0, center.y + 7.0, 56.0, 31.0), Color("#17324d"))
+		draw_circle(center + Vector2(0.0, -11.0), 21.0, Color("#f2b889"))
+		draw_rect(Rect2(center.x - 26.0, center.y - 32.0, 52.0, 11.0), Color("#1d4771"))
+		draw_circle(center + Vector2(-8.0, -12.0), 2.5, Color("#1d160f"))
+		draw_circle(center + Vector2(8.0, -12.0), 2.5, Color("#1d160f"))
+		draw_arc(center + Vector2(0.0, -5.0), 8.0, 0.10, PI - 0.10, 10, Color("#6a2a1c"), 2.5)
+		draw_arc(center + Vector2(0.0, 17.0), 16.0, 0.0, PI, 16, Color("#fff1c7"), 3.0)
+		for i in range(3):
+			var p := center + Vector2(31.0 + float(i) * 8.0, -24.0 + float(i % 2) * 9.0)
+			draw_line(p + Vector2(-4.0, 0.0), p + Vector2(4.0, 0.0), Palette.GOLD_BRIGHT, 2.0)
+			draw_line(p + Vector2(0.0, -4.0), p + Vector2(0.0, 4.0), Palette.GOLD_BRIGHT, 2.0)
+
+	func _draw_texture_asset(path: String) -> bool:
+		var tex := load(path) as Texture2D
+		if tex == null:
+			return false
+		var tex_size := Vector2(float(tex.get_width()), float(tex.get_height()))
+		if tex_size.x <= 0.0 or tex_size.y <= 0.0 or size.x <= 0.0 or size.y <= 0.0:
+			return false
+		var scale := minf(size.x / tex_size.x, size.y / tex_size.y)
+		var draw_size := tex_size * scale
+		var rect := Rect2((size - draw_size) * 0.5, draw_size)
+		draw_texture_rect(tex, rect, false)
+		return true
 
 
 class ExpTrailVisual:
@@ -171,6 +289,9 @@ class FlowConnectorVisual:
 class RewardIconVisual:
 	extends Control
 
+	const ICON_SHEET := "res://assets/showcase/cooking/cooking_icon_sheet.png"
+	const ICON_CELL_SIZE := 96.0
+
 	var mode := "exp"
 	var accent := Color("#6bf1ff")
 
@@ -180,6 +301,9 @@ class RewardIconVisual:
 		queue_redraw()
 
 	func _draw() -> void:
+		var atlas_index := _atlas_index()
+		if atlas_index >= 0 and _draw_atlas_icon(atlas_index):
+			return
 		match mode:
 			"bonus":
 				_draw_bonus()
@@ -191,6 +315,33 @@ class RewardIconVisual:
 				_draw_growth()
 			_:
 				_draw_exp()
+
+	func _atlas_index() -> int:
+		match mode:
+			"bonus":
+				return 1
+			"total":
+				return 2
+			"buff":
+				return 3
+			"growth":
+				return 9
+			"exp":
+				return 0
+			_:
+				return -1
+
+	func _draw_atlas_icon(index: int) -> bool:
+		var tex := load(ICON_SHEET) as Texture2D
+		if tex == null:
+			return false
+		var side := minf(size.x, size.y)
+		if side <= 0.0:
+			return false
+		var rect := Rect2((size - Vector2(side, side)) * 0.5, Vector2(side, side))
+		var src := Rect2(float(index) * ICON_CELL_SIZE, 0.0, ICON_CELL_SIZE, ICON_CELL_SIZE)
+		draw_texture_rect_region(tex, rect, src)
+		return true
 
 	func _draw_exp() -> void:
 		var center := size * 0.5
@@ -260,10 +411,69 @@ class RewardIconVisual:
 		draw_arc(center + Vector2(0.0, 8.0), 16.0, 0.0, TAU, 24, Color("#ffe081"), 2.0)
 
 
+class RewardBuffSignalVisual:
+	extends Control
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		var center := size * 0.5
+		var green := Color("#75d653")
+		var cyan := Color("#6bf1ff")
+		var gold := Color("#ffe081")
+		draw_circle(center + Vector2(-2.0, 0.0), 18.0, Color("#173b28"))
+		draw_circle(center + Vector2(-2.0, 0.0), 14.0, Color("#2f7a45"))
+		var fish := PackedVector2Array(
+			[
+				center + Vector2(-14.0, -1.0),
+				center + Vector2(-5.0, -8.0),
+				center + Vector2(10.0, -4.0),
+				center + Vector2(14.0, 0.0),
+				center + Vector2(10.0, 4.0),
+				center + Vector2(-5.0, 8.0),
+			]
+		)
+		draw_colored_polygon(fish, cyan)
+		draw_colored_polygon(
+			PackedVector2Array(
+				[
+					center + Vector2(10.0, -4.0),
+					center + Vector2(21.0, -11.0),
+					center + Vector2(18.0, 0.0),
+					center + Vector2(21.0, 11.0),
+					center + Vector2(10.0, 4.0),
+				]
+			),
+			Color("#2e86b5")
+		)
+		draw_circle(center + Vector2(-9.0, -2.0), 2.0, Color("#0a1723"))
+		for x in [-24.0, 23.0]:
+			draw_line(center + Vector2(x, 19.0), center + Vector2(x, -16.0), green, 4.0)
+			draw_polygon(
+				PackedVector2Array(
+					[
+						center + Vector2(x, -22.0),
+						center + Vector2(x - 7.0, -10.0),
+						center + Vector2(x + 7.0, -10.0),
+					]
+				),
+				PackedColorArray([green, green, green])
+			)
+		for i in range(4):
+			var p := center + Vector2(-28.0 + float(i) * 18.0, -19.0 + float(i % 2) * 8.0)
+			draw_line(p + Vector2(-3.0, 0.0), p + Vector2(3.0, 0.0), gold, 1.6)
+			draw_line(p + Vector2(0.0, -3.0), p + Vector2(0.0, 3.0), gold, 1.6)
+
+
 class EffectPreviewVisual:
 	extends Control
 
+	const EFFECT_ART := "res://assets/showcase/cooking/next_effect_art.png"
+
 	func _draw() -> void:
+		if _draw_texture_asset():
+			return
 		var center := size * 0.5
 		var green := Color("#8ee65a")
 		var cyan := Color("#6bf1ff")
@@ -306,8 +516,23 @@ class EffectPreviewVisual:
 			draw_line(p + Vector2(-4.0, 0.0), p + Vector2(4.0, 0.0), gold, 2.0)
 			draw_line(p + Vector2(0.0, -4.0), p + Vector2(0.0, 4.0), gold, 2.0)
 
+	func _draw_texture_asset() -> bool:
+		var tex := load(EFFECT_ART) as Texture2D
+		if tex == null:
+			return false
+		var tex_size := Vector2(float(tex.get_width()), float(tex.get_height()))
+		if tex_size.x <= 0.0 or tex_size.y <= 0.0 or size.x <= 0.0 or size.y <= 0.0:
+			return false
+		var scale := minf(size.x / tex_size.x, size.y / tex_size.y)
+		var draw_size := tex_size * scale
+		var rect := Rect2((size - draw_size) * 0.5, draw_size)
+		draw_texture_rect(tex, rect, false)
+		return true
+
 
 var _dialog: PanelContainer
+var _stage_background: TextureRect
+var _result_banner: PanelContainer
 var _header_title: Label
 var _bridge_label: Label
 var _dish_title: Label
@@ -316,7 +541,7 @@ var _dish_card: PanelContainer
 var _scene_title: Label
 var _scene_caption: Label
 var _scene_bonus_label: Label
-var _scene_dish_image: TextureRect
+var _scene_dish_image: MealTableSpreadVisual
 var _scene_actor_visual: SceneActorVisual
 var _exp_trail_visual: ExpTrailVisual
 var _exp_focus_card: PanelContainer
@@ -345,6 +570,7 @@ var _flow_step_cards: Array[PanelContainer] = []
 var _flow_step_labels: Array[Label] = []
 var _flow_connectors: Array[FlowConnectorVisual] = []
 var _preview_state := ""
+var _closing := false
 
 var _target_exp := 0.0
 var _target_max := 1.0
@@ -416,11 +642,12 @@ func _build_screen() -> void:
 	var eater := _scene_actor_box()
 	eater.custom_minimum_size = Vector2(136.0, 0.0)
 	table.add_child(eater)
-	_scene_dish_image = TextureRect.new()
+	_scene_dish_image = MealTableSpreadVisual.new()
+	_scene_dish_image.name = "MealTableSpread"
+	_scene_dish_image.custom_minimum_size = Vector2(244.0, 86.0)
 	_scene_dish_image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_scene_dish_image.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_scene_dish_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_scene_dish_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_scene_dish_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	table.add_child(_scene_dish_image)
 	_scene_caption = make_shadow_label("湯気の立つ料理を味わった。", 17, Palette.TEXT_BONE, 2)
 	_scene_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -446,12 +673,22 @@ func _build_screen() -> void:
 	right.add_theme_constant_override("separation", 6)
 	hero.add_child(right)
 
-	var banner := _panel_box(Color("#f2e4c2"), Color("#5e391a"), Palette.GOLD_BRIGHT, 5)
-	banner.custom_minimum_size = Vector2(0.0, 58.0)
-	right.add_child(banner)
+	_result_banner = PanelContainer.new()
+	_result_banner.custom_minimum_size = Vector2(0.0, 58.0)
+	_result_banner.add_theme_stylebox_override(
+		"panel",
+		_texture_style_box(
+			MEAL_BANNER_FRAME,
+			24,
+			_style_box(Color("#f2e4c2"), Color("#5e391a"), Palette.GOLD_BRIGHT, 5, 5),
+			18.0,
+			6.0
+		)
+	)
+	right.add_child(_result_banner)
 	var banner_box := VBoxContainer.new()
 	banner_box.add_theme_constant_override("separation", 2)
-	banner.add_child(banner_box)
+	_result_banner.add_child(banner_box)
 	_header_title = make_shadow_label("いただきます！", 32, Color("#9b2f17"), 3)
 	_header_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	banner_box.add_child(_header_title)
@@ -460,13 +697,25 @@ func _build_screen() -> void:
 	_bridge_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	banner_box.add_child(_bridge_label)
 
-	_dish_card = _panel_box(Color("#0f2238"), Color("#07121e"), Palette.GOLD_DEEP, 5)
+	_dish_card = PanelContainer.new()
+	_dish_card.name = "MealDishCard"
+	_dish_card.add_theme_stylebox_override(
+		"panel",
+		_texture_style_box(
+			MEAL_DISH_CARD_FRAME,
+			24,
+			_style_box(Color("#0f2238"), Color("#07121e"), Palette.GOLD_DEEP, 5, 5),
+			14.0,
+			8.0
+		)
+	)
 	_dish_card.custom_minimum_size = Vector2(0.0, 104.0)
 	right.add_child(_dish_card)
 	var dish_row := HBoxContainer.new()
 	dish_row.add_theme_constant_override("separation", 14)
 	_dish_card.add_child(dish_row)
 	_dish_image = TextureRect.new()
+	_dish_image.name = "RewardDishFeatureImage"
 	_dish_image.custom_minimum_size = Vector2(238.0, 0.0)
 	_dish_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_dish_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -486,8 +735,19 @@ func _build_screen() -> void:
 	dish_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	dish_text.add_child(dish_note)
 
-	_exp_focus_card = _panel_box(Color("#071e34"), Color("#07121e"), Palette.GAUGE_CYAN_HI, 5)
-	_exp_focus_card.custom_minimum_size = Vector2(0.0, 104.0)
+	_exp_focus_card = PanelContainer.new()
+	_exp_focus_card.name = "ExpBurstFrame"
+	_exp_focus_card.add_theme_stylebox_override(
+		"panel",
+		_texture_style_box(
+			EXP_BURST_FRAME,
+			28,
+			_style_box(Color("#071e34"), Color("#07121e"), Palette.GAUGE_CYAN_HI, 5, 5),
+			18.0,
+			8.0
+		)
+	)
+	_exp_focus_card.custom_minimum_size = Vector2(0.0, 122.0)
 	_exp_focus_card.visible = false
 	right.add_child(_exp_focus_card)
 	var exp_focus_box := VBoxContainer.new()
@@ -508,10 +768,22 @@ func _build_screen() -> void:
 	_exp_progress_label = make_shadow_label("", 20, Palette.GAUGE_CYAN_HI, 2)
 	_exp_progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	exp_focus_box.add_child(_exp_progress_label)
+	var message_row := HBoxContainer.new()
+	message_row.name = "ExpMessagePanel"
+	message_row.add_theme_constant_override("separation", 8)
+	message_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	exp_focus_box.add_child(message_row)
+	var exp_portrait := ExpMessagePortraitVisual.new()
+	exp_portrait.name = "ExpMessagePortrait"
+	exp_portrait.custom_minimum_size = Vector2(74.0, 48.0)
+	exp_portrait.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	exp_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	message_row.add_child(exp_portrait)
 	_exp_message_label = make_shadow_label("体に力がみなぎってきた！", 17, Palette.TEXT_BONE, 2)
-	_exp_message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_exp_message_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_exp_message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_exp_message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	exp_focus_box.add_child(_exp_message_label)
+	message_row.add_child(_exp_message_label)
 
 	_build_effect_preview_card(hero)
 
@@ -547,20 +819,27 @@ func _build_screen() -> void:
 	_build_status_strip(root)
 
 	_confirm_button = make_button("OK", _close, 280.0, true)
-	_confirm_button.custom_minimum_size = Vector2(250.0, 34.0)
+	_confirm_button.name = "RewardConfirmButton"
+	_confirm_button.custom_minimum_size = Vector2(318.0, 40.0)
 	_confirm_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_apply_flow_button_style(_confirm_button)
+	_confirm_button.draw.connect(func() -> void: _draw_confirm_button_cue(_confirm_button))
 	root.add_child(_confirm_button)
 
 
 func show_meal_result(result: Dictionary) -> void:
 	_preview_state = "MEAL_RESULT"
+	_result_banner.name = "MealResultBanner"
+	_header_title.name = "MealResultTitle"
+	_set_stage_background(MEAL_SCENE_BG)
 	var dish_name := String(result.get("dish_name", "料理"))
 	_header_title.text = "%sを\n食べた！" % dish_name
 	_bridge_label.text = "%sで次の釣行効果を予約。食経験値は次に加算される。" % dish_name
 	_dish_title.text = "%sを食べた！" % dish_name
 	var dish_texture := _featured_dish_texture(String(Dictionary(result.get("buff", {})).get("recipe_id", "")))
 	_dish_image.texture = dish_texture
-	_scene_dish_image.texture = dish_texture
+	_scene_dish_image.set_dish_texture(dish_texture)
+	_scene_dish_image.set_mode("meal")
 	_scene_caption.text = "湯気の立つ%sを味わった。" % dish_name
 	_scene_bonus_label.text = _meal_bonus_badge_text(result)
 	_scene_title.text = "食べる"
@@ -584,6 +863,7 @@ func show_meal_result(result: Dictionary) -> void:
 	_refresh_status_strip(result)
 	_set_reward_line_visible(_growth_label, false)
 	_confirm_button.text = "食経験値へ進む"
+	_confirm_button.queue_redraw()
 	_refresh_meal_steps()
 	_present()
 
@@ -598,13 +878,17 @@ func show_reward(
 	level_after := 0
 ) -> void:
 	_preview_state = "EXP_GAIN_LEVELUP" if leveled else "EXP_GAIN"
+	_result_banner.name = "ExpGainBanner"
+	_header_title.name = "ExpGainTitle"
+	_set_stage_background(EXP_STAGE_BG)
 	var dish_name := String(result.get("dish_name", "料理"))
 	_header_title.text = "食経験値が成長へ！" if leveled else "食経験値を獲得！"
 	_bridge_label.text = _growth_bridge_text(dish_name, leveled, level_before, level_after)
 	_dish_title.text = "%sを食べた！" % dish_name
 	var dish_texture := _featured_dish_texture(String(Dictionary(result.get("buff", {})).get("recipe_id", "")))
 	_dish_image.texture = dish_texture
-	_scene_dish_image.texture = dish_texture
+	_scene_dish_image.set_dish_texture(dish_texture)
+	_scene_dish_image.set_mode("exp")
 	_scene_title.text = "食べた料理"
 	_scene_actor_visual.set_mode("exp")
 	_exp_trail_visual.visible = true
@@ -675,6 +959,7 @@ func show_reward(
 	else:
 		_growth_label.text = "次のレベルまで %d EXP" % maxi(0, exp_max - exp_after)
 		_confirm_button.text = "準備へ戻る"
+	_confirm_button.queue_redraw()
 	_refresh_flow_steps(leveled)
 	_present()
 
@@ -698,6 +983,134 @@ func _meal_bonus_badge_text(result: Dictionary) -> String:
 	if bool(result.get("first_time", false)):
 		return "初回ボーナス +%d EXP" % int(result.get("first_bonus", 0))
 	return "初回 記録済み"
+
+
+func _draw_confirm_button_cue(button: Button) -> void:
+	var center := Vector2(32.0, button.size.y * 0.5)
+	var active := not button.disabled
+	var gold := Palette.GOLD_BRIGHT if active else Color("#8b7654")
+	var ink := Color("#3b2515") if active else Color("#665847")
+	var cyan := Palette.GAUGE_CYAN_HI if active else Color("#607077")
+	var red := Palette.GAUGE_RED_HI if active else Color("#775a58")
+	var glow := Color(1.0, 0.82, 0.25, 0.36) if active else Color(0.42, 0.36, 0.30, 0.22)
+	button.draw_circle(center, 22.0, glow)
+	match _preview_state:
+		"MEAL_RESULT":
+			_draw_button_meal_to_exp(button, center, ink, gold, cyan)
+		"EXP_GAIN_LEVELUP":
+			_draw_button_exp_to_level(button, center, ink, gold, red)
+		_:
+			_draw_button_exp_to_summary(button, center, ink, gold, cyan)
+
+
+func _apply_flow_button_style(button: Button) -> void:
+	var normal_fallback := _style_box(Color("#102f51"), Palette.GOLD_DEEP, Palette.GOLD_BRIGHT, 4, 6)
+	var hover_fallback := _style_box(Color("#16436c"), Palette.GOLD_BRIGHT, Color("#fff0b2"), 4, 6)
+	var pressed_fallback := _style_box(Color("#081a2d"), Color("#a06d28"), Palette.GOLD_DEEP, 4, 6)
+	var disabled_fallback := _style_box(Color("#202a31"), Color("#71614a"), Color("#8c7b62"), 3, 6)
+	button.add_theme_stylebox_override(
+		"normal",
+		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, normal_fallback, 78.0, 8.0)
+	)
+	button.add_theme_stylebox_override(
+		"hover",
+		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, hover_fallback, 78.0, 8.0)
+	)
+	button.add_theme_stylebox_override(
+		"pressed",
+		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, pressed_fallback, 78.0, 8.0)
+	)
+	button.add_theme_stylebox_override(
+		"disabled",
+		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, disabled_fallback, 78.0, 8.0)
+	)
+	button.add_theme_stylebox_override(
+		"focus",
+		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, hover_fallback, 78.0, 8.0)
+	)
+	button.add_theme_color_override("font_color", Palette.GOLD_BRIGHT)
+	button.add_theme_color_override("font_hover_color", Color("#fff1ba"))
+	button.add_theme_color_override("font_pressed_color", Color("#f0c06b"))
+	button.add_theme_color_override("font_disabled_color", Color("#b6a68d"))
+
+
+func _draw_button_meal_to_exp(
+	button: Button, center: Vector2, ink: Color, gold: Color, cyan: Color
+) -> void:
+	button.draw_arc(center + Vector2(-7.0, 6.0), 13.0, 0.0, PI, 18, Color("#fff1cf"), 5.0)
+	button.draw_arc(center + Vector2(-7.0, 2.0), 10.0, 0.0, PI, 16, gold, 4.0)
+	for i in range(2):
+		var x := center.x - 15.0 + float(i) * 9.0
+		button.draw_arc(Vector2(x, center.y - 12.0), 6.0, -1.5, 0.9, 8, Color(1.0, 0.93, 0.68, 0.55), 2.0)
+	button.draw_line(center + Vector2(10.0, 0.0), center + Vector2(34.0, 0.0), gold, 3.0)
+	button.draw_colored_polygon(
+		PackedVector2Array(
+			[
+				center + Vector2(40.0, 0.0),
+				center + Vector2(28.0, -7.0),
+				center + Vector2(28.0, 7.0),
+			]
+		),
+		gold
+	)
+	button.draw_circle(center + Vector2(57.0, 0.0), 12.0, Color("#0f5d76"))
+	button.draw_circle(center + Vector2(57.0, 0.0), 7.0, cyan)
+	button.draw_line(center + Vector2(51.0, 0.0), center + Vector2(63.0, 0.0), ink, 2.0)
+
+
+func _draw_button_exp_to_level(
+	button: Button, center: Vector2, ink: Color, gold: Color, red: Color
+) -> void:
+	button.draw_circle(center + Vector2(-7.0, 0.0), 13.0, Color("#0f5d76"))
+	button.draw_circle(center + Vector2(-7.0, 0.0), 7.0, Palette.GAUGE_CYAN_HI)
+	button.draw_line(center + Vector2(9.0, 0.0), center + Vector2(34.0, 0.0), gold, 3.0)
+	button.draw_colored_polygon(
+		PackedVector2Array(
+			[
+				center + Vector2(40.0, 0.0),
+				center + Vector2(28.0, -7.0),
+				center + Vector2(28.0, 7.0),
+			]
+		),
+		gold
+	)
+	var star_center := center + Vector2(58.0, 0.0)
+	var points := PackedVector2Array()
+	for i in range(10):
+		var radius := 13.0 if i % 2 == 0 else 6.0
+		var angle := -PI * 0.5 + TAU * float(i) / 10.0
+		points.append(star_center + Vector2(cos(angle), sin(angle)) * radius)
+	button.draw_colored_polygon(points, red)
+	button.draw_line(star_center + Vector2(-9.0, 12.0), star_center + Vector2(9.0, 12.0), ink, 2.0)
+	button.draw_line(star_center + Vector2(-6.0, -14.0), star_center + Vector2(0.0, -23.0), gold, 2.0)
+	button.draw_line(star_center + Vector2(6.0, -14.0), star_center + Vector2(0.0, -23.0), gold, 2.0)
+
+
+func _draw_button_exp_to_summary(
+	button: Button, center: Vector2, ink: Color, gold: Color, cyan: Color
+) -> void:
+	button.draw_circle(center + Vector2(-9.0, 0.0), 12.0, Color("#0f5d76"))
+	button.draw_circle(center + Vector2(-9.0, 0.0), 7.0, cyan)
+	button.draw_line(center + Vector2(8.0, 0.0), center + Vector2(30.0, 0.0), gold, 3.0)
+	button.draw_colored_polygon(
+		PackedVector2Array(
+			[
+				center + Vector2(36.0, 0.0),
+				center + Vector2(24.0, -7.0),
+				center + Vector2(24.0, 7.0),
+			]
+		),
+		gold
+	)
+	for i in range(3):
+		var x := center.x + 48.0 + float(i) * 11.0
+		var rect := Rect2(x, center.y - 10.0 + float(i % 2) * 3.0, 9.0, 18.0)
+		button.draw_rect(rect, Color("#fff1cf"))
+		button.draw_rect(Rect2(rect.position, Vector2(rect.size.x, 3.0)), gold)
+		button.draw_line(rect.position, rect.position + Vector2(rect.size.x, 0.0), ink, 1.0)
+		button.draw_line(rect.position, rect.position + Vector2(0.0, rect.size.y), ink, 1.0)
+		button.draw_line(rect.position + Vector2(rect.size.x, 0.0), rect.position + rect.size, ink, 1.0)
+		button.draw_line(rect.position + Vector2(0.0, rect.size.y), rect.position + rect.size, ink, 1.0)
 
 
 func _draw_exp_focus_burst() -> void:
@@ -743,14 +1156,15 @@ func _build_status_strip(parent: VBoxContainer) -> void:
 	strip.add_theme_constant_override("separation", 8)
 	parent.add_child(strip)
 
-	_status_level_label = _status_strip_card(strip, "プレイヤーLv.", Palette.GOLD_BRIGHT)
-	_status_meal_label = _status_strip_card(strip, "効果中の料理", Palette.GAUGE_GREEN_HI)
-	_status_cooler_label = _status_strip_card(strip, "クーラーボックス", Palette.GAUGE_CYAN_HI)
-	_status_money_label = _status_strip_card(strip, "所持金", Palette.GOLD_BRIGHT)
+	_status_level_label = _status_strip_card(strip, "RewardStatusLevelCard", "プレイヤーLv.", Palette.GOLD_BRIGHT)
+	_status_meal_label = _status_strip_card(strip, "RewardStatusMealCard", "効果中の料理", Palette.GAUGE_GREEN_HI)
+	_status_cooler_label = _status_strip_card(strip, "RewardStatusCoolerCard", "クーラーボックス", Palette.GAUGE_CYAN_HI)
+	_status_money_label = _status_strip_card(strip, "RewardStatusMoneyCard", "所持金", Palette.GOLD_BRIGHT)
 
 
-func _status_strip_card(parent: HBoxContainer, title: String, accent: Color) -> Label:
+func _status_strip_card(parent: HBoxContainer, card_name: String, title: String, accent: Color) -> Label:
 	var card := _compact_panel_box(Color("#0d2338"), Color("#07121e"), Palette.GOLD_DEEP, 3)
+	card.name = card_name
 	card.custom_minimum_size = Vector2(0.0, 30.0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(card)
@@ -798,16 +1212,22 @@ func _total_fish_count() -> int:
 
 
 func _add_meal_scene_background() -> void:
-	var bg_tex := load(MEAL_SCENE_BG) as Texture2D
-	if bg_tex == null:
+	_stage_background = TextureRect.new()
+	_stage_background.name = "RewardStageBackground"
+	_stage_background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_stage_background.stretch_mode = TextureRect.STRETCH_SCALE
+	_stage_background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_stage_background.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_stage_background)
+	_set_stage_background(MEAL_SCENE_BG)
+
+
+func _set_stage_background(path: String) -> void:
+	if _stage_background == null:
 		return
-	var bg := TextureRect.new()
-	bg.texture = bg_tex
-	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	bg.stretch_mode = TextureRect.STRETCH_SCALE
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(bg)
+	var bg_tex := load(path) as Texture2D
+	if bg_tex != null:
+		_stage_background.texture = bg_tex
 
 
 func _add_reward_ambient_layer() -> void:
@@ -905,6 +1325,7 @@ func _set_flow_connector(index: int, mode: String) -> void:
 func _scene_actor_box() -> PanelContainer:
 	var panel := _panel_box(Color("#10283f"), Color("#07121e"), Palette.GOLD_DEEP, 3)
 	_scene_actor_visual = SceneActorVisual.new()
+	_scene_actor_visual.name = "MealSceneActor"
 	_scene_actor_visual.custom_minimum_size = Vector2(110.0, 0.0)
 	_scene_actor_visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_scene_actor_visual.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -936,6 +1357,7 @@ func _build_effect_preview_card(parent: HBoxContainer) -> void:
 	box.add_child(_effect_name_label)
 
 	_effect_preview_visual = EffectPreviewVisual.new()
+	_effect_preview_visual.name = "NextEffectArt"
 	_effect_preview_visual.custom_minimum_size = Vector2(0.0, 42.0)
 	_effect_preview_visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_effect_preview_visual.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -954,6 +1376,17 @@ func _build_effect_preview_card(parent: HBoxContainer) -> void:
 
 func _reward_line(parent: GridContainer, title: String, icon_mode: String, accent: Color) -> Label:
 	var card := _compact_panel_box(Color("#f2e4c2"), Color("#60401f"), Color("#d7a456"), 4)
+	card.name = _reward_card_node_name(icon_mode)
+	card.add_theme_stylebox_override(
+		"panel",
+		_texture_style_box(
+			REWARD_CARD_FRAME,
+			22,
+			_compact_style_box(Color("#0d2338"), Color("#07121e"), Palette.GOLD_DEEP, 4, 5),
+			8.0,
+			5.0
+		)
+	)
 	card.custom_minimum_size = Vector2(0.0, 54.0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(card)
@@ -967,12 +1400,30 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 	box.add_child(title_row)
 	var icon := RewardIconVisual.new()
 	icon.configure(icon_mode, accent)
-	icon.custom_minimum_size = Vector2(18.0, 15.0)
+	icon.custom_minimum_size = Vector2(24.0, 20.0)
 	title_row.add_child(icon)
-	var title_label := make_shadow_label(title, 13, Color("#60411f"), 1)
+	var title_label := make_shadow_label(title, 13, Palette.TEXT_BONE, 2)
 	title_label.custom_minimum_size = Vector2(0.0, 15.0)
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_row.add_child(title_label)
+	if icon_mode == "buff":
+		var value_row := HBoxContainer.new()
+		value_row.add_theme_constant_override("separation", 5)
+		value_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		box.add_child(value_row)
+		var signal_visual := RewardBuffSignalVisual.new()
+		signal_visual.name = "RewardBuffSignal"
+		signal_visual.custom_minimum_size = Vector2(42.0, 30.0)
+		value_row.add_child(signal_visual)
+		var buff_value := make_shadow_label("", 13, accent, 2)
+		buff_value.custom_minimum_size = Vector2(0.0, 28.0)
+		buff_value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		buff_value.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		buff_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		buff_value.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		buff_value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		value_row.add_child(buff_value)
+		return buff_value
 	var value_label := make_shadow_label("", 14, accent, 2)
 	value_label.custom_minimum_size = Vector2(0.0, 24.0)
 	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -982,6 +1433,22 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 	value_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(value_label)
 	return value_label
+
+
+func _reward_card_node_name(icon_mode: String) -> String:
+	match icon_mode:
+		"exp":
+			return "RewardCardBaseExp"
+		"bonus":
+			return "RewardCardFirstBonus"
+		"total":
+			return "RewardCardTotalExp"
+		"buff":
+			return "RewardCardNextEffect"
+		"growth":
+			return "RewardCardGrowth"
+		_:
+			return "RewardCard"
 
 
 func _set_reward_line_visible(label: Label, visible: bool) -> void:
@@ -1034,17 +1501,40 @@ func _pulse_exp_label() -> void:
 
 
 func _close() -> void:
+	if _closing:
+		return
+	_closing = true
+	_confirm_button.disabled = true
+	_apply_close_cue()
 	_dialog.pivot_offset = _dialog.size * 0.5
 	var tw := create_tween()
 	tw.set_ease(Tween.EASE_IN)
 	tw.set_trans(Tween.TRANS_QUAD)
-	tw.tween_property(_dialog, "scale", Vector2(0.88, 0.88), 0.14)
-	tw.parallel().tween_property(_dialog, "modulate:a", 0.0, 0.14)
+	tw.tween_property(_dialog, "scale", Vector2(0.92, 0.92), 0.18)
+	tw.parallel().tween_property(_dialog, "modulate:a", 0.0, 0.18)
 	tw.tween_callback(
 		func() -> void:
 			closed.emit()
 			queue_free()
 	)
+
+
+func _apply_close_cue() -> void:
+	match _preview_state:
+		"MEAL_RESULT":
+			_bridge_label.text = "食経験値へ移ります。料理の力をゲージに送ります。"
+			_set_flow_step(1, "2 EXP 起動", Color("#14385a"), Palette.GAUGE_CYAN_HI, Palette.TEXT_BONE)
+			_confirm_button.text = "食経験値へ移動中"
+		"EXP_GAIN_LEVELUP":
+			_bridge_label.text = "成長結果を開きます。"
+			_set_flow_step(2, "3 成長 表示", Color("#5a1f26"), Palette.GAUGE_RED_HI, Palette.GOLD_BRIGHT)
+			_confirm_button.text = "成長を表示中"
+		"EXP_GAIN":
+			_bridge_label.text = "食事効果と経験値を保存して、現在の準備へ戻ります。"
+			_set_flow_step(2, "3 成長 保存", Color("#17324d"), Palette.GAUGE_CYAN_HI, Palette.TEXT_BONE)
+			_confirm_button.text = "準備へ戻っています"
+		_:
+			pass
 
 
 func _panel_box(fill: Color, border: Color, inner: Color, border_width: int) -> PanelContainer:
