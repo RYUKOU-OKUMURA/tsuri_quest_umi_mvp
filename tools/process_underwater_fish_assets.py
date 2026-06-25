@@ -127,6 +127,59 @@ def _restore_fish_detail(image: Image.Image) -> Image.Image:
     return out
 
 
+def _soft_body_alpha(body: Image.Image, overlap: int) -> Image.Image:
+    alpha = body.getchannel("A")
+    if overlap <= 0:
+        return alpha
+    mask = Image.new("L", body.size, 0)
+    mask_px = mask.load()
+    alpha_px = alpha.load()
+    for y in range(body.height):
+        for x in range(body.width):
+            fade = min(1.0, x / max(1, overlap))
+            mask_px[x, y] = int(alpha_px[x, y] * fade)
+    return mask
+
+
+def _pose_runtime_fish_frame(fish: Image.Image, frame_index: int) -> Image.Image:
+    if frame_index == 0:
+        return fish
+
+    w, h = fish.size
+    tail_cut = int(w * 0.31)
+    overlap = int(w * 0.105)
+    tail_box = (0, 0, min(w, tail_cut + overlap), h)
+    body_box = (max(0, tail_cut - overlap), 0, w, h)
+    tail = fish.crop(tail_box)
+    body = fish.crop(body_box)
+
+    # Subtle authored poses from one high-quality source. The head/body stays
+    # stable for readability; the tail and rear dorsal area create the motion.
+    poses = {
+        1: (-2.4, -3, 0),
+        2: (3.2, 4, -1),
+        3: (-1.4, 1, 1),
+    }
+    angle, dy, dx = poses.get(frame_index, (0.0, 0, 0))
+    posed_tail = tail.rotate(angle, resample=Image.Resampling.BICUBIC, center=(tail.width * 0.72, tail.height * 0.52))
+    posed_tail = _clean_transparent_fish_edge(posed_tail)
+
+    out = Image.new("RGBA", fish.size, (0, 0, 0, 0))
+    out.alpha_composite(posed_tail, (dx, dy))
+    blended_body = body.copy()
+    blended_body.putalpha(_soft_body_alpha(body, overlap))
+    out.alpha_composite(blended_body, (body_box[0], 0))
+
+    # A tiny vertical body bob keeps the four cells from reading like cloned
+    # frames while avoiding visible distortion of the reference-quality fish.
+    if frame_index in (1, 3):
+        bob = -1 if frame_index == 1 else 1
+        shifted = Image.new("RGBA", fish.size, (0, 0, 0, 0))
+        shifted.alpha_composite(out, (0, bob))
+        return shifted
+    return out
+
+
 def create_kurodai_sheet() -> Image.Image:
     source = _magenta_removed(Image.open(FISH_SOURCE))
     # ImageGen passes can produce either a four-cell source sheet or a single
@@ -149,7 +202,8 @@ def create_kurodai_sheet() -> Image.Image:
         # Keep all frames visually centered, with a slight downward bias like the reference.
         x = index * frame_w + (frame_w - resized.width) // 2
         y = (frame_h - resized.height) // 2 + 8
-        sheet.alpha_composite(resized, (x, y))
+        posed = _pose_runtime_fish_frame(resized, index if source_frames == 1 else min(index, 3))
+        sheet.alpha_composite(posed, (x, y))
 
     clean_sheet = _restore_fish_detail(_clean_transparent_fish_edge(_final_despill(sheet)))
     _add_runtime_fish_edge_underlay(clean_sheet).save(FISH_SHEET)
