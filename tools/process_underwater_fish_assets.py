@@ -127,6 +127,61 @@ def _restore_fish_detail(image: Image.Image) -> Image.Image:
     return out
 
 
+def _polish_fish_material(image: Image.Image) -> Image.Image:
+    out = image.copy()
+    alpha = out.getchannel("A")
+    bbox = alpha.point(lambda value: 255 if value > 24 else 0).getbbox()
+    if bbox is None:
+        return out
+
+    x0, y0, x1, y1 = bbox
+    content_w = max(1, x1 - x0)
+    content_h = max(1, y1 - y0)
+    px = out.load()
+    for y in range(out.height):
+        for x in range(out.width):
+            r, g, b, a = px[x, y]
+            if a == 0:
+                continue
+            nx = (x - x0) / content_w
+            ny = (y - y0) / content_h
+            opacity = min(1.0, a / 255.0)
+            upper = max(0.0, min(1.0, (0.56 - ny) / 0.50))
+            belly = max(0.0, min(1.0, (ny - 0.45) / 0.42))
+            center_body = max(0.0, 1.0 - abs(nx - 0.47) / 0.52)
+            fin_tail = max(0.0, min(1.0, (0.24 - nx) / 0.22)) + max(0.0, min(1.0, (nx - 0.79) / 0.18))
+            edge = 1.0 - opacity
+
+            # Cool the upper body and fin edges so the fish sits inside the
+            # water instead of reading as a flat pasted sticker.
+            cool_mix = min(0.24, 0.082 * upper + 0.065 * fin_tail + 0.135 * edge)
+            r = int(r * (1.0 - cool_mix) + 18 * cool_mix)
+            g = int(g * (1.0 - cool_mix) + 43 * cool_mix)
+            b = int(b * (1.0 - cool_mix) + 60 * cool_mix)
+
+            # Preserve the reference-like pearly belly without letting it turn
+            # into a white flash during hit moments.
+            belly_lift = min(0.075, 0.060 * belly * center_body * opacity)
+            r = int(r * (1.0 - belly_lift) + 226 * belly_lift)
+            g = int(g * (1.0 - belly_lift) + 231 * belly_lift)
+            b = int(b * (1.0 - belly_lift) + 224 * belly_lift)
+
+            lum = (r * 0.299 + g * 0.587 + b * 0.114) / 255.0
+            if opacity > 0.60 and upper > 0.20 and lum > 0.76:
+                cap_mix = min(0.055, (lum - 0.76) * 0.22 + upper * 0.018)
+                r = int(r * (1.0 - cap_mix) + 166 * cap_mix)
+                g = int(g * (1.0 - cap_mix) + 181 * cap_mix)
+                b = int(b * (1.0 - cap_mix) + 188 * cap_mix)
+            if opacity > 0.55 and 0.18 < nx < 0.76 and 0.12 < ny < 0.62 and lum > 0.64:
+                line_mix = 0.030 * (1.0 - abs((ny - 0.35) / 0.35))
+                r = int(r * (1.0 - line_mix) + 46 * line_mix)
+                g = int(g * (1.0 - line_mix) + 58 * line_mix)
+                b = int(b * (1.0 - line_mix) + 66 * line_mix)
+
+            px[x, y] = (max(0, min(255, r)), max(0, min(255, g)), max(0, min(255, b)), a)
+    return out
+
+
 def _soft_body_alpha(body: Image.Image, overlap: int) -> Image.Image:
     alpha = body.getchannel("A")
     if overlap <= 0:
@@ -205,7 +260,7 @@ def create_kurodai_sheet() -> Image.Image:
         posed = _pose_runtime_fish_frame(resized, index if source_frames == 1 else min(index, 3))
         sheet.alpha_composite(posed, (x, y))
 
-    clean_sheet = _restore_fish_detail(_clean_transparent_fish_edge(_final_despill(sheet)))
+    clean_sheet = _polish_fish_material(_restore_fish_detail(_clean_transparent_fish_edge(_final_despill(sheet))))
     _add_runtime_fish_edge_underlay(clean_sheet).save(FISH_SHEET)
     return clean_sheet
 

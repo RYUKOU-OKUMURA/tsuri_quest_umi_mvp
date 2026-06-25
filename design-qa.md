@@ -16,6 +16,7 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Patches Made Since Previous QA
 
+- Added a kurodai material-polish pass in `tools/process_underwater_fish_assets.py` and regenerated `kurodai_showcase_sheet.png` / `kurodai_card_portrait.png`. The current fish cutout keeps the reference-derived scales and belly shine, but the upper body, fin edges, and high white patches are slightly cooled so the main fish and card portrait read less like flat pasted art on the water/paper surfaces.
 - Darkened the right-panel tackle-card runtime/static body copy in `FightSidebar` and `/tmp/tsuri_sidebar_static_compare.png`. The frame-backed tackle rows now use a warm paper-ink color instead of the global blue-gray text color, giving the equipment card closer printed-card presence without changing the layout or icon size.
 - Raised the lower-HUD A/B operation-note size in `FightHud` and `/tmp/tsuri_hud_static_compare.png`. The A/B parenthetical notes now start at 11px while L/R remains 9px, improving same-baseline readability without returning to stacked form-like notes or overflowing the narrow L/R slot.
 - Retuned the top-status location card baselines in `FightStatusBar` and `/tmp/tsuri_top_status_static_compare.png`. The location title now sits slightly higher and the depth row slightly lower, giving the navy card more of the reference's two-line status-card rhythm without changing slot ratios or reopening frame material work.
