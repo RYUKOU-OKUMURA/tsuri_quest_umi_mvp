@@ -700,8 +700,8 @@ def create_fight_hud_frame() -> None:
     _draw_inner_shadow(d, hint_body, alpha=18)
     for i in (1, 2):
         x = hint_body[0] + int((hint_body[2] - hint_body[0]) * i / 3)
-        d.line((x, hint_body[1] + 14, x, hint_body[3] - 14), fill=_rgba("#8c6733", 30), width=1)
-        d.line((x + 3, hint_body[1] + 18, x + 3, hint_body[3] - 18), fill=(255, 255, 255, 16), width=1)
+        d.line((x, hint_body[1] + 14, x, hint_body[3] - 14), fill=_rgba("#8c6733", 12), width=1)
+        d.line((x + 3, hint_body[1] + 18, x + 3, hint_body[3] - 18), fill=(255, 255, 255, 7), width=1)
     _draw_clean_card(
         image,
         menu_panel,
