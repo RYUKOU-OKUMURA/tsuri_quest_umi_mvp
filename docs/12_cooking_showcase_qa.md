@@ -31,7 +31,7 @@
   - 目的: headlessで各状態のControl構築を検証するためのスモークシーン。
   - コマンド: `HOME=/private/tmp/tsuri_home "/Applications/Godot.app/Contents/MacOS/Godot" --headless --path ... res://tools/cooking_flow_smoke.tscn`
   - 結果: 成功。
-  - 範囲: `COOK_SELECT`、非レベルアップEXP報酬、レベルアップ報酬、報酬OK後の`LEVEL_UP_OVERLAY`接続、単体レベルアップ、ステータス要約のControl構築と短時間実行。
+  - 範囲: `COOK_SELECT`、非レベルアップEXP報酬、レベルアップ報酬、報酬OK後の`LEVEL_UP_OVERLAY`接続、実際の`PlayerProgress.cook_and_eat()`経由での魚消費/初回料理記録/食事バフ/Lv.5到達/報酬OK後のレベルアップ接続、単体レベルアップ、ステータス要約のControl構築と短時間実行。
 - `tools/cooking_layout_audit.tscn`
   - 目的: headlessで5状態を1280x720固定ステージに構築し、画面外はみ出し、非正サイズ、ラベル縦クリップ、欠落テクスチャを検出する。
   - コマンド: `HOME=/private/tmp/tsuri_home "/Applications/Godot.app/Contents/MacOS/Godot" --headless --path ... res://tools/cooking_layout_audit.tscn`

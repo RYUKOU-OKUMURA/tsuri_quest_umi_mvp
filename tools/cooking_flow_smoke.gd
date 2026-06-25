@@ -42,6 +42,10 @@ func _ready() -> void:
 	screen.queue_free()
 	await _tick()
 
+	var real_flow_ok := await _run_real_cooking_level_flow()
+	if not real_flow_ok:
+		return
+
 	var level_panel := LevelUpPanelScript.new()
 	level_panel.theme = ThemeFactory.build_theme()
 	add_child(level_panel)
@@ -59,6 +63,45 @@ func _ready() -> void:
 	get_tree().quit(0)
 
 
+func _run_real_cooking_level_flow() -> bool:
+	_seed_select_state()
+	var screen := await _mount_cooking_screen(false)
+	screen.preview_cook_selected()
+	await get_tree().create_timer(0.15).timeout
+
+	if not _expect_eq(PlayerProgress.fish_count("aji"), 3, "Real cooking flow should consume one selected fish."):
+		return false
+	if not _expect_eq(PlayerProgress.level, 5, "Real cooking flow should level the player to Lv.5."):
+		return false
+	if not _expect_eq(PlayerProgress.exp, 20, "Real cooking flow should carry overflow EXP after level-up."):
+		return false
+	if not _expect_true(
+		PlayerProgress.eaten_recipes.has("aji:salt_grill"),
+		"Real cooking flow should record first-time dish history."
+	):
+		return false
+	if not _expect_eq(
+		String(PlayerProgress.pending_buff.get("recipe_id", "")),
+		"salt_grill",
+		"Real cooking flow should set the pending meal buff."
+	):
+		return false
+	if not screen.preview_accept_reward_overlay():
+		push_error("Expected real cooking reward overlay before level-up transition.")
+		get_tree().quit(1)
+		return false
+	await get_tree().create_timer(0.35).timeout
+	if not _expect_true(
+		screen.preview_has_level_up_overlay(),
+		"Real cooking reward close should open LEVEL_UP_OVERLAY."
+	):
+		return false
+
+	screen.queue_free()
+	await _tick()
+	return true
+
+
 func _mount_cooking_screen(suppress_level_overlay := true) -> Control:
 	var screen := CookingScreen.new()
 	screen.theme = ThemeFactory.build_theme()
@@ -72,6 +115,22 @@ func _mount_cooking_screen(suppress_level_overlay := true) -> Control:
 func _tick() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
+
+
+func _expect_true(value: bool, message: String) -> bool:
+	if value:
+		return true
+	push_error(message)
+	get_tree().quit(1)
+	return false
+
+
+func _expect_eq(actual: Variant, expected: Variant, message: String) -> bool:
+	if actual == expected:
+		return true
+	push_error("%s Expected %s, got %s." % [message, str(expected), str(actual)])
+	get_tree().quit(1)
+	return false
 
 
 func _seed_select_state() -> void:
