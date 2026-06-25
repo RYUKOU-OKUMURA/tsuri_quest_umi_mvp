@@ -398,12 +398,12 @@ def _draw_top_status_paper_card(
     for py in range(h):
         for px in range(w):
             edge = min(px, py, w - 1 - px, h - 1 - py)
-            edge_alpha = max(0, 58 - edge * 3)
+            edge_alpha = max(0, 72 - edge * 3)
             vertical = int(abs(py / max(1, h - 1) - 0.52) * 16)
             fleck = 0
             if (px * 13 + py * 29 + seed) % 97 == 0:
                 fleck = rng.randint(5, 16)
-            alpha = max(0, min(78, edge_alpha + vertical + fleck))
+            alpha = max(0, min(96, edge_alpha + vertical + fleck))
             if alpha > 0:
                 patina_px[px, py] = (88, 56, 28, alpha)
     patina.putalpha(Image.composite(patina.getchannel("A"), Image.new("L", (w, h), 0), mask))
@@ -448,11 +448,11 @@ def _draw_top_status_paper_card(
     image.alpha_composite(scuffs, (x0, y0))
 
     d = ImageDraw.Draw(image)
-    d.rounded_rectangle((x0, y0, x1, y1), radius=radius, outline=_rgba("#2d1d10", 156), width=1)
-    d.rounded_rectangle((x0 + 4, y0 + 4, x1 - 4, y1 - 4), radius=radius - 3, outline=_rgba("#8d642f", 168), width=2)
-    d.rounded_rectangle((x0 + 10, y0 + 10, x1 - 10, y1 - 10), radius=radius - 6, outline=_rgba("#c99b47", 92), width=1)
-    d.line((x0 + 18, y0 + 13, x1 - 18, y0 + 13), fill=(255, 246, 215, 62), width=1)
-    d.line((x0 + 18, y1 - 12, x1 - 18, y1 - 12), fill=(88, 54, 26, 58), width=1)
+    d.rounded_rectangle((x0, y0, x1, y1), radius=radius, outline=_rgba("#2d1d10", 178), width=2)
+    d.rounded_rectangle((x0 + 5, y0 + 5, x1 - 5, y1 - 5), radius=radius - 3, outline=_rgba("#8d642f", 190), width=2)
+    d.rounded_rectangle((x0 + 11, y0 + 11, x1 - 11, y1 - 11), radius=radius - 6, outline=_rgba("#c99b47", 118), width=1)
+    d.line((x0 + 18, y0 + 13, x1 - 18, y0 + 13), fill=(255, 246, 215, 82), width=1)
+    d.line((x0 + 18, y1 - 12, x1 - 18, y1 - 12), fill=(88, 54, 26, 76), width=1)
 
 
 def _draw_icon_well(d: ImageDraw.ImageDraw, center: tuple[int, int], radius: int, pale: bool = True) -> None:
@@ -526,9 +526,9 @@ def create_top_status_frame() -> None:
         else:
             _draw_top_status_paper_card(image, (x0, sy0, x1, sy1), fill, seed=10 + i)
             body = (x0 + 20, sy0 + 20, x1 - 20, sy1 - 20)
-            d.rounded_rectangle(body, radius=6, outline=_rgba("#8c6733", 24), width=1)
-            d.line((body[0] + 18, body[1] + 12, body[2] - 18, body[1] + 12), fill=_rgba("#ffffff", 32), width=1)
-            _draw_corner_brackets(d, (x0 + 8, sy0 + 8, x1 - 8, sy1 - 8), length=28, inset=10, color="#8c6733", alpha=88, width=2)
+            d.rounded_rectangle(body, radius=6, outline=_rgba("#8c6733", 34), width=1)
+            d.line((body[0] + 18, body[1] + 12, body[2] - 18, body[1] + 12), fill=_rgba("#ffffff", 38), width=1)
+            _draw_corner_brackets(d, (x0 + 8, sy0 + 8, x1 - 8, sy1 - 8), length=30, inset=10, color="#9d7134", alpha=130, width=2)
             if i == 1:
                 separator_x = x0 + 246
                 d.line((separator_x, sy0 + 46, separator_x, sy1 - 46), fill=_rgba("#b8934d", 58), width=1)

@@ -11,7 +11,7 @@ const SHOWCASE_HIT_BURST_PATH := "res://assets/showcase/underwater/hit_burst.png
 const SHOWCASE_HIT_BADGE_FULL_PATH := "res://assets/showcase/underwater/hit_badge_full.png"
 const SHOWCASE_LURE_PATH := "res://assets/showcase/underwater/fight_lure.png"
 const SHOWCASE_FISH_FRAME_COUNT := 4
-const SHOWCASE_FISH_CENTER_OFFSET := Vector2(-0.045, -0.004)
+const SHOWCASE_FISH_CENTER_OFFSET := Vector2(-0.058, 0.006)
 const HIT_BURST_CENTER_RATIO := Vector2(0.49, 0.80)
 
 var simulator: FishingSimulator
@@ -539,7 +539,7 @@ func _draw_showcase_target_fish(center: Vector2, scale_value: float, direction: 
 	var src := Rect2(frame_w * float(frame_index), 0.0, frame_w, frame_h)
 	var dst := Rect2(-draw_size * 0.5, draw_size)
 
-	_draw_ellipse(center + Vector2(0.0, draw_size.y * 0.33), draw_size.x * 0.24, draw_size.y * 0.050, Color(0.0, 0.0, 0.0, 0.052), 28)
+	_draw_ellipse(center + Vector2(0.0, draw_size.y * 0.34), draw_size.x * 0.26, draw_size.y * 0.055, Color(0.0, 0.0, 0.0, 0.058), 28)
 
 	draw_set_transform(Juicer.get_offset() + center, 0.0, Vector2(direction, 1.0))
 	draw_texture_rect_region(_showcase_fish_sheet, dst, src, Color.WHITE)
@@ -567,7 +567,7 @@ func _showcase_fish_draw_size(scale_value := -1.0) -> Vector2:
 	elif effective_scale < 0.0:
 		effective_scale = boss_ratio
 	var stamina_scale := clampf(effective_scale / boss_ratio, 0.90, 1.06)
-	var target_width_ratio := 0.515
+	var target_width_ratio := 0.525
 	var draw_width := size.x * target_width_ratio * stamina_scale
 	return Vector2(draw_width, draw_width * frame_h / frame_w)
 
