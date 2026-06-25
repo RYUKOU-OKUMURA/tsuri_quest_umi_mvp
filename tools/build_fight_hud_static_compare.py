@@ -160,7 +160,8 @@ def _draw_menu_row(draw: ImageDraw.ImageDraw, pos: tuple[float, float], key: str
     draw.line((cx - 5, cy - 5, cx + 5, cy - 5), fill=(255, 255, 255, 92), width=1)
     key_w = _text_width(key, 16)
     _draw_text(draw, (cx - key_w * 0.5, cy + 5), key, 16, "#2b2117")
-    _draw_text(draw, (pos[0] + 28, pos[1] + 4), label, 15, "#f7ecd0", stroke=1)
+    label_size = 14 if len(label) >= 6 else 15
+    _draw_text(draw, (pos[0] + 28, pos[1] + 4), label, label_size, "#f7ecd0", stroke=1)
 
 
 def build_current_hud() -> Image.Image:
@@ -233,8 +234,8 @@ def build_current_hud() -> Image.Image:
     for slot, args in zip(_hint_slots(hint), (("A", "巻く", "リールを巻く"), ("B", "緩める", "ラインを出す"), ("L/R", "調整", "テンション"))):
         _draw_key_hint(draw, slot, *args)
 
-    _draw_menu_row(draw, (menu[0] + 38, menu[1] + (menu[3] - menu[1]) * 0.42), "+", "ポーズ")
-    _draw_menu_row(draw, (menu[0] + 38, menu[1] + (menu[3] - menu[1]) * 0.78), "-", "港へ戻る")
+    _draw_menu_row(draw, (menu[0] + 38, menu[1] + (menu[3] - menu[1]) * 0.42), "+", "ポーズメニュー")
+    _draw_menu_row(draw, (menu[0] + 38, menu[1] + (menu[3] - menu[1]) * 0.78), "-", "釣りをやめる")
     return frame.convert("RGB")
 
 

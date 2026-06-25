@@ -242,11 +242,11 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 
 	_draw_panel(menu, Color("#0b355f"), Color("#08213c"), Palette.GOLD)
 	if _hud_frame != null:
-		_draw_menu_row(font, menu.position + Vector2(38.0, menu.size.y * 0.42), "+", "ポーズ")
-		_draw_menu_row(font, menu.position + Vector2(38.0, menu.size.y * 0.78), "-", "港へ戻る")
+		_draw_menu_row(font, menu.position + Vector2(38.0, menu.size.y * 0.42), "+", "ポーズメニュー")
+		_draw_menu_row(font, menu.position + Vector2(38.0, menu.size.y * 0.78), "-", "釣りをやめる")
 	else:
-		_draw_key_row(font, menu.position + Vector2(22.0, menu.size.y * 0.42), "+", "ポーズ")
-		_draw_key_row(font, menu.position + Vector2(22.0, menu.size.y * 0.78), "-", "港へ戻る")
+		_draw_key_row(font, menu.position + Vector2(22.0, menu.size.y * 0.42), "+", "ポーズメニュー")
+		_draw_key_row(font, menu.position + Vector2(22.0, menu.size.y * 0.78), "-", "釣りをやめる")
 
 
 func _draw_segment_gauge(rect: Rect2, ratio: float, safe_min: float, safe_max: float, warm: bool) -> void:
@@ -426,7 +426,8 @@ func _draw_key_row(font: Font, pos: Vector2, key: String, label: String) -> void
 	var key_size := 15
 	var key_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
 	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_w) * 0.5, 17.0), key_size, Color.WHITE, 1)
-	_draw_text(font, label, pos + Vector2(key_rect.size.x + 8.0, 3.0), 16, Color("#2b2117") if key != "+" and key != "-" else Palette.TEXT_BONE, 0 if key != "+" and key != "-" else 2)
+	var label_size := 14 if label.length() >= 6 else 16
+	_draw_text(font, label, pos + Vector2(key_rect.size.x + 8.0, 3.0), label_size, Color("#2b2117") if key != "+" and key != "-" else Palette.TEXT_BONE, 0 if key != "+" and key != "-" else 2)
 
 
 func _draw_menu_row(font: Font, pos: Vector2, key: String, label: String) -> void:
@@ -438,7 +439,8 @@ func _draw_menu_row(font: Font, pos: Vector2, key: String, label: String) -> voi
 	var key_size := 16
 	var key_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
 	_draw_text(font, key, Vector2(center.x - key_w * 0.5, center.y + 5.0), key_size, Color("#2b2117"), 0)
-	_draw_text(font, label, pos + Vector2(28.0, 4.0), 15, Palette.TEXT_BONE, 1)
+	var label_size := 14 if label.length() >= 6 else 15
+	_draw_text(font, label, pos + Vector2(28.0, 4.0), label_size, Palette.TEXT_BONE, 1)
 
 
 func _compact_control_note(note: String) -> String:
