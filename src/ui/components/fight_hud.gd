@@ -209,8 +209,8 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 		)
 	else:
 		_draw_bait_icon(bait.position + Vector2(82.0 if _hud_frame == null else 95.0, bait.size.y * 0.62))
-	_draw_text(font, "オキアミ", bait.position + Vector2(118.0, bait.size.y * (0.62 if _hud_frame != null else 0.66)), 20, Color("#2b2117"), 0)
-	_draw_text(font, "× 17", bait.position + Vector2(124.0, bait.size.y * (0.86 if _hud_frame != null else 0.92)), 19, Color("#2b2117"), 0)
+	_draw_text(font, "オキアミ", bait.position + Vector2(116.0, bait.size.y * (0.62 if _hud_frame != null else 0.66)), 22 if _hud_frame != null else 20, Color("#2b2117"), 0)
+	_draw_text(font, "× 17", bait.position + Vector2(124.0, bait.size.y * (0.88 if _hud_frame != null else 0.92)), 20 if _hud_frame != null else 19, Color("#2b2117"), 0)
 
 	_draw_panel(hint, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	_draw_text(font, "操作のヒント", hint.position + Vector2(18.0, 25.0), 18, Color("#6a4c2b"), 0)
@@ -345,28 +345,23 @@ func _draw_key_hint(font: Font, rect: Rect2, key: String, label: String) -> void
 
 
 func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String, note: String) -> void:
-	var key_w := 36.0 if key.length() <= 1 else 54.0
-	var key_rect := Rect2(rect.position + Vector2(8.0, 7.0), Vector2(key_w, 24.0))
+	var key_w := 40.0 if key.length() <= 1 else 58.0
+	var key_rect := Rect2(rect.position + Vector2(10.0, 10.0), Vector2(key_w, 26.0))
 	draw_rect(key_rect, Color("#253247"), true)
 	draw_rect(key_rect, Color("#0d1524"), false, 2.0)
 	draw_rect(key_rect.grow(-2.0), Color("#d5b56b"), false, 1.0)
 	draw_line(key_rect.position + Vector2(4.0, 4.0), key_rect.position + Vector2(key_rect.size.x - 4.0, 4.0), Color(1.0, 1.0, 1.0, 0.20), 1.0)
-	var key_size := 16
+	var key_size := 17
 	var key_text_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
-	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 18.0), key_size, Color.WHITE, 1)
-	var label_size := 17
-	var note_size := 10
-	var label_pos := key_rect.position + Vector2(key_rect.size.x + 8.0, 18.0)
+	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 19.0), key_size, Color.WHITE, 1)
+	var label_size := 19
+	var note_size := 9
+	var label_pos := key_rect.position + Vector2(key_rect.size.x + 9.0, 20.0)
 	_draw_text(font, label, label_pos, label_size, Color("#2b2117"), 0)
-	var label_w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
-	var note_text := "（%s）" % note
+	var note_text := note
 	var note_w := font.get_string_size(note_text, HORIZONTAL_ALIGNMENT_LEFT, -1, note_size).x
-	var note_x := label_pos.x + label_w + 4.0
-	if note_x + note_w > rect.end.x - 4.0:
-		note_text = note
-		note_w = font.get_string_size(note_text, HORIZONTAL_ALIGNMENT_LEFT, -1, note_size).x
-		note_x = minf(label_pos.x + label_w + 3.0, rect.end.x - note_w - 4.0)
-	_draw_text(font, note_text, Vector2(note_x, key_rect.position.y + 18.0), note_size, Color("#5a4327"), 0)
+	var note_x := minf(label_pos.x, rect.end.x - note_w - 6.0)
+	_draw_text(font, note_text, Vector2(note_x, key_rect.position.y + 31.0), note_size, Color("#5a4327"), 0)
 
 
 func _draw_key_row(font: Font, pos: Vector2, key: String, label: String) -> void:
@@ -386,11 +381,11 @@ func _hint_key_slots(hint: Rect2) -> Array[Rect2]:
 			Rect2(hint.position + Vector2(hint.size.x * 0.35, 30.0), Vector2(hint.size.x * 0.30, hint.size.y - 34.0)),
 			Rect2(hint.position + Vector2(hint.size.x - 128.0, 30.0), Vector2(120.0, 30.0)),
 		]
-	var slot_gap := 10.0
-	var slot_w := (hint.size.x - 40.0 - slot_gap * 2.0) / 3.0
-	var slot_y := hint.position.y + 27.0
-	var slot_h := 39.0
-	var x0 := hint.position.x + 19.0
+	var slot_gap := 0.0
+	var slot_w := (hint.size.x - 44.0) / 3.0
+	var slot_y := hint.position.y + 25.0
+	var slot_h := 45.0
+	var x0 := hint.position.x + 22.0
 	return [
 		Rect2(Vector2(x0, slot_y), Vector2(slot_w, slot_h)),
 		Rect2(Vector2(x0 + slot_w + slot_gap, slot_y), Vector2(slot_w, slot_h)),

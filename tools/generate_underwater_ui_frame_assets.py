@@ -541,8 +541,9 @@ def create_fight_hud_frame() -> None:
         shadow=False,
     )
     _draw_paper_slot(d, (bait_panel[0] + 14, bait_panel[1] + 12, bait_panel[2] - 14, bait_panel[1] + 44), title=True)
-    _draw_paper_slot(d, (bait_panel[0] + 76, bait_panel[1] + 55, bait_panel[2] - 18, bait_panel[3] - 16))
-    _draw_inner_shadow(d, (bait_panel[0] + 76, bait_panel[1] + 55, bait_panel[2] - 18, bait_panel[3] - 16), alpha=28)
+    bait_body = (bait_panel[0] + 64, bait_panel[1] + 55, bait_panel[2] - 18, bait_panel[3] - 16)
+    _draw_paper_slot(d, bait_body)
+    _draw_inner_shadow(d, bait_body, alpha=20)
     _draw_clean_card(
         image,
         hint_panel,
@@ -555,15 +556,13 @@ def create_fight_hud_frame() -> None:
         shadow=False,
     )
     _draw_paper_slot(d, (hint_panel[0] + 14, hint_panel[1] + 12, hint_panel[2] - 14, hint_panel[1] + 44), title=True)
-    slot_gap = 20
-    slot_x0 = hint[0] + 38
-    slot_y0 = hint[1] + 68
-    slot_w = int((hint[2] - hint[0] - 80 - slot_gap * 2) / 3)
-    slot_h = 96
-    for i in range(3):
-        x = slot_x0 + i * (slot_w + slot_gap)
-        _draw_paper_slot(d, (x, slot_y0, x + slot_w, slot_y0 + slot_h))
-        _draw_inner_shadow(d, (x, slot_y0, x + slot_w, slot_y0 + slot_h), alpha=24)
+    hint_body = (hint_panel[0] + 24, hint_panel[1] + 58, hint_panel[2] - 24, hint_panel[3] - 16)
+    _draw_paper_slot(d, hint_body)
+    _draw_inner_shadow(d, hint_body, alpha=18)
+    for i in (1, 2):
+        x = hint_body[0] + int((hint_body[2] - hint_body[0]) * i / 3)
+        d.line((x, hint_body[1] + 14, x, hint_body[3] - 14), fill=_rgba("#8c6733", 62), width=2)
+        d.line((x + 3, hint_body[1] + 18, x + 3, hint_body[3] - 18), fill=(255, 255, 255, 34), width=1)
     _draw_clean_card(
         image,
         menu_panel,
