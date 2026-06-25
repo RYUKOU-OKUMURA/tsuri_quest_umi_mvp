@@ -58,6 +58,11 @@
   - 結果: 失敗。
   - 理由: movie makerもheadless/dummy rendererでは実フレームを生成できず、同じnull texture経路に入る。
   - 判定: `--write-movie` はこの環境での代替スクショ経路として使えない。
+- `python3 tools/cooking_reference_report.py`
+  - 目的: `reference/cooking_flow/*_concept.png` と `/tmp/tsuri_cooking_*.png` を状態別に横並び表示するHTML比較レポートを生成する。
+  - 結果: 成功。
+  - 出力: `/tmp/tsuri_cooking_reference_report.html`。
+  - 判定: この環境ではキャプチャPNGが未生成のため、レポート上では5状態すべてがmissing表示になる。通常描画可能な環境で `tools/cooking_preview.gd` 実行後に再生成すれば、参照5枚との目視比較に使える。
 - `tools/cooking_flow_smoke.tscn`
   - 目的: headlessで各状態のControl構築を検証するためのスモークシーン。
   - コマンド: `HOME=/private/tmp/tsuri_home "/Applications/Godot.app/Contents/MacOS/Godot" --headless --path ... res://tools/cooking_flow_smoke.tscn`
