@@ -21,6 +21,7 @@ func _ready() -> void:
 	_stage.custom_minimum_size = VIEWPORT_SIZE
 	add_child(_stage)
 
+	_audit_required_assets()
 	await _audit_cook_select()
 	await _audit_exp_gain()
 	await _audit_meal_result()
@@ -35,6 +36,24 @@ func _ready() -> void:
 
 	print("Cooking content audit passed for 5 states.")
 	get_tree().quit(0)
+
+
+func _audit_required_assets() -> void:
+	var paths := [
+		"res://assets/showcase/cooking/cooking_room_bg.png",
+		"res://assets/showcase/cooking/meal_scene_bg.png",
+		"res://assets/showcase/cooking/fish_icon_sheet.png",
+		"res://assets/showcase/cooking/dish_icon_sheet.png",
+		"res://assets/showcase/cooking/dish_feature_aji_shioyaki.png",
+		"res://assets/showcase/cooking/recipe_card_frame.png",
+		"res://assets/showcase/cooking/dish_detail_frame.png",
+		"res://assets/showcase/cooking/meal_result_frame.png",
+		"res://assets/showcase/cooking/level_up_frame.png",
+		"res://assets/showcase/cooking/status_card_frame.png",
+	]
+	for path in paths:
+		if not ResourceLoader.exists(path):
+			_failures.append("ASSETS: missing or unimported required cooking asset '%s'." % path)
 
 
 func _audit_cook_select() -> void:

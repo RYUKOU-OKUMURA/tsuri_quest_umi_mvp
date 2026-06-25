@@ -7,6 +7,7 @@ const GaugeBarScript = preload("res://src/ui/components/gauge_bar.gd")
 
 const DISH_FEATURE_AJI := "res://assets/showcase/cooking/dish_feature_aji_shioyaki.png"
 const DISH_ICON_SHEET := "res://assets/showcase/cooking/dish_icon_sheet.png"
+const MEAL_SCENE_BG := "res://assets/showcase/cooking/meal_scene_bg.png"
 const MEAL_RESULT_FRAME := "res://assets/showcase/cooking/meal_result_frame.png"
 
 var _dialog: PanelContainer
@@ -32,8 +33,10 @@ var _target_max := 1.0
 func _build_screen() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
+	_add_meal_scene_background()
+
 	var dim := ColorRect.new()
-	dim.color = Color(0.0, 0.0, 0.0, 0.50)
+	dim.color = Color(0.0, 0.0, 0.0, 0.38)
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	dim.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(dim)
@@ -196,6 +199,19 @@ func _growth_bridge_text(
 	if leveled and level_before > 0 and level_after > level_before:
 		return "%sの食経験値が Lv.%d 到達を後押しした。" % [dish_name, level_after]
 	return "%sの食経験値がたまり、次の釣行効果も予約された。" % dish_name
+
+
+func _add_meal_scene_background() -> void:
+	var bg_tex := load(MEAL_SCENE_BG) as Texture2D
+	if bg_tex == null:
+		return
+	var bg := TextureRect.new()
+	bg.texture = bg_tex
+	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bg.stretch_mode = TextureRect.STRETCH_SCALE
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(bg)
 
 
 func preview_accept() -> void:

@@ -122,6 +122,71 @@ def cooking_room_bg() -> None:
     save(img, "cooking_room_bg.png")
 
 
+def meal_scene_bg() -> None:
+    w, h = 1280, 720
+    img = Image.new("RGBA", (w, h), rgba("201713"))
+    draw = ImageDraw.Draw(img, "RGBA")
+
+    for y in range(h):
+        t = y / max(1, h - 1)
+        top = (36, 25, 22)
+        mid = (122, 68, 34)
+        bot = (30, 22, 22)
+        if t < 0.55:
+            u = t / 0.55
+            col = tuple(int(top[i] * (1 - u) + mid[i] * u) for i in range(3))
+        else:
+            u = (t - 0.55) / 0.45
+            col = tuple(int(mid[i] * (1 - u) + bot[i] * u) for i in range(3))
+        draw.line((0, y, w, y), fill=(*col, 255))
+
+    # Table surface.
+    draw.polygon([(0, 432), (1280, 386), (1280, 720), (0, 720)], fill=(91, 48, 25, 246))
+    for y in range(448, 720, 34):
+        draw.line((0, y, 1280, y - 48), fill=(43, 24, 16, 130), width=2)
+    for x in range(-160, 1280, 160):
+        draw.line((x, 430, x + 230, 720), fill=(146, 89, 44, 70), width=3)
+
+    # Soft lantern glow behind the reward panel.
+    glow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    gd = ImageDraw.Draw(glow, "RGBA")
+    for r in range(440, 20, -16):
+        a = int(58 * (1 - r / 440) ** 1.55)
+        gd.ellipse((640 - r, 282 - r, 640 + r, 282 + r), fill=(255, 178, 82, a))
+    img.alpha_composite(glow)
+    draw = ImageDraw.Draw(img, "RGBA")
+
+    # Background shelves and cookware silhouettes.
+    draw.rounded_rectangle((70, 86, 430, 198), radius=8, fill=(37, 27, 24, 160), outline=(132, 80, 38, 150), width=3)
+    draw.rounded_rectangle((850, 82, 1210, 202), radius=8, fill=(37, 27, 24, 160), outline=(132, 80, 38, 150), width=3)
+    for x in [116, 176, 236, 934, 1004, 1074, 1144]:
+        draw.ellipse((x, 124, x + 42, 170), fill=(86, 55, 34, 180), outline=(191, 135, 68, 100), width=2)
+    for x in [314, 374, 876]:
+        draw.rounded_rectangle((x, 110, x + 46, 174), radius=8, fill=(41, 80, 64, 170), outline=(184, 135, 72, 110), width=2)
+
+    # Plates and side dishes around the focal dialog area.
+    for cx, cy, sx, sy in [(186, 548, 190, 72), (1062, 552, 210, 78), (468, 632, 150, 58), (822, 626, 150, 58)]:
+        draw.ellipse((cx - sx // 2, cy - sy // 2 + 14, cx + sx // 2, cy + sy // 2 + 18), fill=(28, 20, 16, 82))
+        draw.ellipse((cx - sx // 2, cy - sy // 2, cx + sx // 2, cy + sy // 2), fill=(224, 213, 184, 220), outline=(94, 66, 46, 180), width=4)
+        draw.ellipse((cx - sx // 3, cy - sy // 3, cx + sx // 3, cy + sy // 3), fill=(181, 128, 64, 160))
+
+    # Steam strokes near the dish area, subtle enough to stay behind text.
+    for i, x in enumerate([356, 384, 920, 948]):
+        y0 = 384 + (i % 2) * 16
+        for k in range(3):
+            draw.arc((x - 18, y0 - k * 44, x + 22, y0 + 64 - k * 44), 104, 258, fill=(255, 234, 196, 72), width=3)
+
+    # Readability vignette.
+    vignette = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    vd = ImageDraw.Draw(vignette, "RGBA")
+    for r in range(760, 180, -20):
+        a = int(82 * (1 - (760 - r) / 580) ** 1.3)
+        vd.rectangle((0, 0, w, h), outline=(8, 10, 14, a), width=18)
+    img.alpha_composite(vignette)
+    img.alpha_composite(Image.new("RGBA", (w, h), (15, 17, 24, 42)))
+    save(img, "meal_scene_bg.png")
+
+
 def fish_icon_sheet() -> None:
     names = [
         ("aji", rgba("5f8ea5"), rgba("d7eef4")),
@@ -271,6 +336,7 @@ def icon_sheets() -> None:
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     cooking_room_bg()
+    meal_scene_bg()
     fish_icon_sheet()
     dish_icon_sheet()
     dish_feature()
