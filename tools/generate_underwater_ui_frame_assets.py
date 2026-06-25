@@ -435,10 +435,10 @@ def create_sidebar_frame() -> None:
     d.line((header[0] + 24, header[3] - 10, header[2] - 24, header[3] - 10), fill=_rgba("#f4d27c", 70), width=1)
 
     _draw_clean_card(image, fish, "#f1e4c7", radius=10, border="#8c6733", inner="#d2aa58", seed=81, texture_strength=7)
-    name_band = (fish[0] + 34, fish[1] + 24, fish[2] - 34, fish[1] + 84)
-    d.rounded_rectangle(name_band, radius=5, fill=(255, 243, 215, 255), outline=_rgba("#b89b64", 92), width=1)
-    d.line((name_band[0] + 16, name_band[1] + 15, name_band[2] - 16, name_band[1] + 15), fill=_rgba("#ffffff", 82), width=1)
-    portrait_mat = (fish[0] + 42, fish[1] + 96, fish[2] - 42, fish[1] + 348)
+    title_rule_y = fish[1] + 78
+    d.line((fish[0] + 48, title_rule_y, fish[2] - 48, title_rule_y), fill=_rgba("#b89b64", 58), width=1)
+    d.line((fish[0] + 48, title_rule_y + 2, fish[2] - 48, title_rule_y + 2), fill=_rgba("#ffffff", 30), width=1)
+    portrait_mat = (fish[0] + 42, fish[1] + 88, fish[2] - 42, fish[1] + 348)
     grid = Image.new("RGBA", image.size, (0, 0, 0, 0))
     gd = ImageDraw.Draw(grid)
     for x in range(portrait_mat[0] + 38, portrait_mat[2] - 20, 46):
@@ -446,7 +446,7 @@ def create_sidebar_frame() -> None:
     for y in range(portrait_mat[1] + 38, portrait_mat[3] - 8, 48):
         gd.line((portrait_mat[0] + 18, y, portrait_mat[2] - 18, y), fill=_rgba("#c8ad76", 18), width=1)
     image.alpha_composite(grid)
-    for y in (fish[1] + 86, fish[1] + 356):
+    for y in (fish[1] + 356,):
         d.line((fish[0] + 38, y, fish[2] - 38, y), fill=_rgba("#b89b64", 58), width=1)
     _draw_corner_brackets(d, fish, length=30, inset=18, color="#a77d3b", alpha=95, width=1)
 

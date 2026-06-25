@@ -107,12 +107,12 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	var rarity := String(fish_data.get("rarity", "レア"))
 	var no_text := "No.028"
 	if compact_card:
-		var title_plaque := Rect2(inner.position + Vector2(2.0, 6.0), Vector2(inner.size.x - 4.0, 34.0))
-		var rarity_rect := Rect2(inner.position + Vector2(inner.size.x - 62.0, 11.0), Vector2(52.0, 22.0))
-		var name_rect := Rect2(title_plaque.position + Vector2(66.0, 0.0), Vector2(rarity_rect.position.x - title_plaque.position.x - 76.0, title_plaque.size.y))
-		_draw_paper_plaque(title_plaque)
-		_draw_text(font, no_text, inner.position + Vector2(11.0, 28.0), 14, Color("#665d50"), 0)
-		_draw_centered_baseline_text(font, _display_fish_name(fish_name), name_rect, inner.position.y + 29.0, 21, Palette.TEXT_DARK, 0)
+		var title_plaque := Rect2(inner.position + Vector2(7.0, 8.0), Vector2(inner.size.x - 14.0, 28.0))
+		var rarity_rect := Rect2(inner.position + Vector2(inner.size.x - 58.0, 11.0), Vector2(48.0, 20.0))
+		var name_rect := Rect2(title_plaque.position + Vector2(62.0, 0.0), Vector2(rarity_rect.position.x - title_plaque.position.x - 72.0, title_plaque.size.y))
+		draw_line(Vector2(title_plaque.position.x + 8.0, title_plaque.end.y + 3.0), Vector2(title_plaque.end.x - 8.0, title_plaque.end.y + 3.0), Color("#c9b486", 0.62), 1.0)
+		_draw_text(font, no_text, inner.position + Vector2(17.0, 27.0), 14, Color("#665d50"), 0)
+		_draw_centered_baseline_text(font, _display_fish_name(fish_name), name_rect, inner.position.y + 28.0, 20, Palette.TEXT_DARK, 0)
 		_draw_rarity_tag(font, rarity_rect, rarity)
 	else:
 		_draw_text(font, no_text, inner.position + Vector2(0.0, 26.0), 14, Color("#6b6153"), 0)
@@ -120,19 +120,19 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 		_draw_rarity_tag(font, Rect2(inner.position + Vector2(inner.size.x - 52.0, 8.0), Vector2(48.0, 22.0)), rarity)
 
 	var fish_rect := Rect2(
-		inner.position + Vector2(6.0, 52.0 if compact_card else 46.0),
+		inner.position + Vector2(6.0, 44.0 if compact_card else 46.0),
 		Vector2(
 			inner.size.x - 12.0,
-			maxf(82.0, rect.size.y * (0.46 if compact_card else 0.37))
+			maxf(82.0, rect.size.y * (0.49 if compact_card else 0.37))
 		)
 	)
 	_draw_fish_portrait(fish_rect)
-	var divider_y := fish_rect.end.y + (6.0 if _sidebar_frame != null else 6.0)
+	var divider_y := fish_rect.end.y + (3.0 if _sidebar_frame != null else 6.0)
 	draw_line(Vector2(inner.position.x + 8.0, divider_y), Vector2(inner.end.x - 8.0, divider_y), Color("#c9b486"), 1.0)
 	var estimate := (float(fish_data.get("size_min", 0.0)) + float(fish_data.get("size_max", 0.0))) * 0.5
 	var estimate_size := 21 if _sidebar_frame != null else 23
 	_draw_centered_text(font, "推定 %.1f cm" % estimate, Rect2(inner.position.x, divider_y + 8.0, inner.size.x, 30.0), estimate_size, Color("#2b2117"), 0)
-	var desc_y := divider_y + (41.0 if compact_card else 44.0)
+	var desc_y := divider_y + (39.0 if compact_card else 44.0)
 	draw_line(Vector2(inner.position.x + 8.0, desc_y - 10.0), Vector2(inner.end.x - 8.0, desc_y - 10.0), Color("#d6c299"), 1.0)
 	var detail_gap := 16.0 if compact_card else 21.0
 	var detail_font := get_theme_default_font()
@@ -217,19 +217,6 @@ func _draw_panel(rect: Rect2, fill: Color, border: Color, highlight: Color) -> v
 		rect.position + Vector2(rect.size.x - 9.0, rect.size.y - 9.0),
 	]:
 		draw_rect(Rect2(corner - Vector2(2.0, 2.0), Vector2(4.0, 4.0)), Palette.GOLD_BRIGHT, true)
-
-
-func _draw_paper_plaque(rect: Rect2) -> void:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#fff0cf")
-	style.border_color = Color("#b99d68")
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	style.shadow_color = Color(0.24, 0.14, 0.05, 0.18)
-	style.shadow_size = 2
-	draw_style_box(style, rect)
-	draw_line(rect.position + Vector2(10.0, 8.0), Vector2(rect.end.x - 10.0, rect.position.y + 8.0), Color(1.0, 1.0, 1.0, 0.45), 1.0)
-	draw_line(rect.position + Vector2(10.0, rect.size.y - 6.0), Vector2(rect.end.x - 10.0, rect.end.y - 6.0), Color("#b99d68", 0.32), 1.0)
 
 
 func _draw_text(font: Font, text: String, baseline: Vector2, font_size: int, color: Color, outline: int) -> void:
