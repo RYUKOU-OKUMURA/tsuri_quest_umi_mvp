@@ -16,6 +16,11 @@
 
 ## 検証ログ
 
+- `tools/cooking_verify.sh`
+  - 目的: 調理ショーケースのheadlessゲートを一括実行する。内容監査、1280x720レイアウト監査、実フローsmokeを順に走らせる。
+  - コマンド: `tools/cooking_verify.sh`
+  - 結果: 成功。
+  - 範囲: `tools/cooking_content_audit.tscn`、`tools/cooking_layout_audit.tscn`、`tools/cooking_flow_smoke.tscn`。
 - `HOME=/private/tmp/tsuri_home tools/validate_project.sh`
   - 結果: 成功。
   - 範囲: Godot editor import と短時間起動。GDScriptロード、autoload、シーン初期化の大枠を確認。
