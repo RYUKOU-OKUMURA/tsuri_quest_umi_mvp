@@ -359,7 +359,7 @@ def _draw_top_status_paper_card(
     radius = 10
     shadow = Image.new("RGBA", image.size, (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow)
-    sd.rounded_rectangle((x0 + 3, y0 + 4, x1 + 3, y1 + 4), radius=radius, fill=(0, 0, 0, 38))
+    sd.rounded_rectangle((x0 + 3, y0 + 4, x1 + 3, y1 + 4), radius=radius, fill=(0, 0, 0, 28))
     image.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(4)))
 
     mask = _rounded_mask((w, h), radius)
@@ -421,11 +421,11 @@ def _draw_top_status_paper_card(
     image.alpha_composite(scuffs, (x0, y0))
 
     d = ImageDraw.Draw(image)
-    d.rounded_rectangle((x0, y0, x1, y1), radius=radius, outline=_rgba("#2d1d10", 230), width=2)
-    d.rounded_rectangle((x0 + 4, y0 + 4, x1 - 4, y1 - 4), radius=radius - 3, outline=_rgba("#8d642f", 178), width=2)
-    d.rounded_rectangle((x0 + 10, y0 + 10, x1 - 10, y1 - 10), radius=radius - 6, outline=_rgba("#c99b47", 92), width=1)
-    d.line((x0 + 18, y0 + 13, x1 - 18, y0 + 13), fill=(255, 246, 215, 54), width=1)
-    d.line((x0 + 18, y1 - 12, x1 - 18, y1 - 12), fill=(88, 54, 26, 54), width=1)
+    d.rounded_rectangle((x0, y0, x1, y1), radius=radius, outline=_rgba("#2d1d10", 198), width=2)
+    d.rounded_rectangle((x0 + 4, y0 + 4, x1 - 4, y1 - 4), radius=radius - 3, outline=_rgba("#8d642f", 150), width=2)
+    d.rounded_rectangle((x0 + 10, y0 + 10, x1 - 10, y1 - 10), radius=radius - 6, outline=_rgba("#c99b47", 78), width=1)
+    d.line((x0 + 18, y0 + 13, x1 - 18, y0 + 13), fill=(255, 246, 215, 48), width=1)
+    d.line((x0 + 18, y1 - 12, x1 - 18, y1 - 12), fill=(88, 54, 26, 44), width=1)
 
 
 def _draw_icon_well(d: ImageDraw.ImageDraw, center: tuple[int, int], radius: int, pale: bool = True) -> None:
