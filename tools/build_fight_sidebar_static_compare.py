@@ -219,10 +219,10 @@ def _draw_lower_cards(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: i
     _draw_sheet_icon(base, 7, (action[0] + 14, action[1] + 6, action[0] + 36, action[1] + 28))
     _draw_text(draw, (action[0] + 40, action[1] + 5), "魚の行動", 18, "#f7ecd0", stroke=1)
     action_body = (action[0] + 8.5, action[1] + (action[3] - action[1]) * 0.170, action[2] - 8.5, action[3] - (action[3] - action[1]) * 0.035)
-    _paste_alpha_crop_contain(base, Image.open(ASSET_DIR / "fight_action_card_icon.png").convert("RGBA"), (action_body[0] + 4, action_body[1] + 10, action_body[0] + 76, action_body[1] + 82))
-    _draw_text(draw, (action_body[0] + 86, action_body[1] + 11), "突っ込み！", 20, "#2b2117")
-    _draw_wrapped(draw, (action_body[0] + 86, action_body[1] + 47), "一気に深く潜る！", action_body[2] - action_body[0] - 92, 14, "#2b2117", max_lines=1, line_gap=15)
-    _draw_wrapped(draw, (action_body[0] + 86, action_body[1] + 62), "ラインを緩めず耐えよう！", action_body[2] - action_body[0] - 92, 14, "#2b2117", max_lines=1, line_gap=15)
+    _paste_alpha_crop_contain(base, Image.open(ASSET_DIR / "fight_action_card_icon.png").convert("RGBA"), (action_body[0] + 3, action_body[1] + 7, action_body[0] + 81, action_body[1] + 85))
+    _draw_text(draw, (action_body[0] + 90, action_body[1] + 10), "突っ込み！", 21, "#22180f")
+    _draw_wrapped(draw, (action_body[0] + 90, action_body[1] + 49), "一気に深く潜る！", action_body[2] - action_body[0] - 94, 15, "#2b2117", max_lines=1, line_gap=16)
+    _draw_wrapped(draw, (action_body[0] + 90, action_body[1] + 65), "ラインを緩めず耐えよう！", action_body[2] - action_body[0] - 94, 15, "#2b2117", max_lines=1, line_gap=16)
 
     _draw_text(draw, (tackle[0] + 14, tackle[1] + 4), "タックル", 18, "#f7ecd0", stroke=1)
     body = (tackle[0] + 8.5, tackle[1] + (tackle[3] - tackle[1]) * 0.167, tackle[2] - 8.5, tackle[3] - (tackle[3] - tackle[1]) * 0.042)
@@ -233,8 +233,8 @@ def _draw_lower_cards(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: i
             text,
             body[2] - body[0] - 126,
             13,
-            "#1d1209",
-            bold=False,
+            "#160d07" if index == 0 else "#1d1209",
+            bold=index == 0,
             max_lines=1,
             line_gap=13.6,
         )

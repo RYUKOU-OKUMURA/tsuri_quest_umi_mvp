@@ -175,12 +175,12 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 	var icon_size := 42.0 if _sidebar_frame != null else 58.0
 	var text_x := 62.0 if _sidebar_frame != null else 78.0
 	if _sidebar_frame != null:
-		icon_size = 72.0
-		text_x = 86.0
-	_draw_action_icon(body.position + Vector2(40.0, body.size.y * 0.57), icon_size)
-	_draw_text(font, "%s！" % action, body.position + Vector2(text_x, 31.0), 20 if _sidebar_frame != null else 20, Color("#2b2117"), 0)
+		icon_size = 78.0
+		text_x = 90.0
+	_draw_action_icon(body.position + Vector2(42.0, body.size.y * 0.57), icon_size)
+	_draw_text(font, "%s！" % action, body.position + Vector2(text_x, 31.0), 21 if _sidebar_frame != null else 20, Color("#22180f"), 0)
 	if _sidebar_frame != null:
-		_draw_action_message(font, message, body.position + Vector2(text_x, 47.0), body.size.x - text_x - 6.0)
+		_draw_action_message(font, message, body.position + Vector2(text_x, 49.0), body.size.x - text_x - 4.0)
 	else:
 		_draw_wrapped(font, message, body.position + Vector2(72.0, 36.0), body.size.x - 82.0, 11, Palette.TEXT_DARK, 2)
 
@@ -219,7 +219,9 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	var tackle_font := get_theme_default_font() if _sidebar_frame != null else font
 	var tackle_text_color := Color("#1d1209") if _sidebar_frame != null else Palette.TEXT_DARK
 	for i in range(lines.size()):
-		_draw_wrapped(tackle_font, lines[i], body.position + text_offset + Vector2(0.0, float(i) * tackle_line_gap), text_width, tackle_font_size, tackle_text_color, 1, tackle_font_size + 2.0)
+		var line_font := FightFontsScript.bold(tackle_font) if _sidebar_frame != null and i == 0 else tackle_font
+		var line_color := Color("#160d07") if _sidebar_frame != null and i == 0 else tackle_text_color
+		_draw_wrapped(line_font, lines[i], body.position + text_offset + Vector2(0.0, float(i) * tackle_line_gap), text_width, tackle_font_size, line_color, 1, tackle_font_size + 2.0)
 	if _tackle_card_icon != null or _icons != null:
 		var icon_rect := Rect2(body.end - Vector2(134.0, 98.0), Vector2(130.0, 94.0)) if _sidebar_frame != null else Rect2(body.end - Vector2(50.0, 50.0), Vector2(40.0, 40.0))
 		_draw_tackle_icon(icon_rect)
@@ -316,8 +318,8 @@ func _draw_wrapped(
 
 func _draw_action_message(font: Font, text: String, pos: Vector2, max_width: float) -> void:
 	var first_stop := text.find("！")
-	var font_size := 14 if _sidebar_frame != null else 13
-	var gap := 15.0 if _sidebar_frame != null else 16.0
+	var font_size := 15 if _sidebar_frame != null else 13
+	var gap := 16.0 if _sidebar_frame != null else 16.0
 	if first_stop > 0 and first_stop < text.length() - 1:
 		var first := text.left(first_stop + 1).strip_edges().replace("潜ろうとしている", "潜る")
 		var second := text.substr(first_stop + 1).strip_edges()
