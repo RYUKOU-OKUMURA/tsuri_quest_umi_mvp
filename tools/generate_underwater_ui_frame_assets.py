@@ -180,11 +180,17 @@ def _draw_inner_shadow(d: ImageDraw.ImageDraw, box: tuple[int, int, int, int], *
 
 def _draw_paper_slot(d: ImageDraw.ImageDraw, box: tuple[int, int, int, int], *, title: bool = False) -> None:
     x0, y0, x1, y1 = box
-    fill = "#fff2d2" if title else "#f7edd6"
+    fill = "#f7e5c1" if title else "#f1e1c2"
     d.rounded_rectangle((x0, y0, x1, y1), radius=7, fill=_rgba(fill), outline=_rgba("#8c6733", 120), width=1)
     d.rounded_rectangle((x0 + 3, y0 + 3, x1 - 3, y1 - 3), radius=5, outline=_rgba("#d8b45d", 80), width=1)
+    d.rounded_rectangle((x0 + 6, y0 + 6, x1 - 6, y1 - 6), radius=4, outline=_rgba("#6f4a21", 20), width=1)
     d.line((x0 + 10, y0 + 8, x1 - 10, y0 + 8), fill=(255, 255, 255, 90), width=1)
     d.line((x0 + 10, y1 - 8, x1 - 10, y1 - 8), fill=(106, 73, 35, 38), width=1)
+    d.line((x0 + 7, y0 + 12, x0 + 7, y1 - 12), fill=_rgba("#6f4a21", 24), width=1)
+    d.line((x1 - 7, y0 + 12, x1 - 7, y1 - 12), fill=(255, 255, 255, 34), width=1)
+    for inset, alpha in ((12, 22), (20, 12)):
+        d.arc((x0 + inset, y0 + inset, x0 + inset + 24, y0 + inset + 24), 180, 270, fill=_rgba("#6f4a21", alpha), width=1)
+        d.arc((x1 - inset - 24, y1 - inset - 24, x1 - inset, y1 - inset), 0, 90, fill=_rgba("#6f4a21", alpha), width=1)
 
 
 def _draw_sidebar_icon_recess(image: Image.Image, box: tuple[int, int, int, int], *, seed: int) -> None:
@@ -609,12 +615,12 @@ def create_sidebar_frame() -> None:
     _draw_clean_card(
         image,
         fish,
-        "#f1e4c7",
+        "#ecd8b6",
         radius=10,
         border="#8c6733",
         inner="#d2aa58",
         seed=81,
-        texture_strength=7,
+        texture_strength=8,
         outer_alpha=166,
         outer_width=1,
         border_alpha=100,
@@ -652,12 +658,12 @@ def create_sidebar_frame() -> None:
     _draw_clean_card(
         image,
         action_body,
-        "#f2e5cb",
+        "#eedcbb",
         radius=8,
         border="#8c6733",
         inner="#d8b45d",
         seed=83,
-        texture_strength=5,
+        texture_strength=6,
         shadow=False,
         outer_alpha=112,
         outer_width=1,
@@ -681,12 +687,12 @@ def create_sidebar_frame() -> None:
     _draw_clean_card(
         image,
         tackle_body,
-        "#f2e5cb",
+        "#eedcbb",
         radius=8,
         border="#8c6733",
         inner="#d8b45d",
         seed=85,
-        texture_strength=5,
+        texture_strength=6,
         shadow=False,
         outer_alpha=112,
         outer_width=1,
@@ -843,12 +849,12 @@ def create_fight_hud_frame() -> None:
     _draw_clean_card(
         image,
         bait_panel,
-        "#f3e6cc",
+        "#eedcbb",
         radius=8,
         border="#8c6733",
         inner="#d8b45d",
         seed=51,
-        texture_strength=5,
+        texture_strength=6,
         shadow=False,
     )
     bait_title = (bait_panel[0] + 14, bait_panel[1] + 12, bait_panel[2] - 14, bait_panel[1] + 44)

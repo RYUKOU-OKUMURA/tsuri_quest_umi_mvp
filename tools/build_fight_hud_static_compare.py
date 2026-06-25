@@ -149,14 +149,14 @@ def _hint_slots(hint: tuple[float, float, float, float]) -> list[tuple[float, fl
 
 def _draw_key_hint(draw: ImageDraw.ImageDraw, slot: tuple[float, float, float, float], key: str, label: str, note: str) -> None:
     is_long = key == "L/R"
-    cap_w = 23 if not is_long else 40
-    cap_h = 20
-    cap = (slot[0] + 12, slot[1] + 8, slot[0] + 12 + cap_w, slot[1] + 8 + cap_h)
+    cap_w = 25 if not is_long else 42
+    cap_h = 21
+    cap = (slot[0] + 11, slot[1] + 7, slot[0] + 11 + cap_w, slot[1] + 7 + cap_h)
     _draw_key_cap(draw, cap, key, 10 if is_long else 12)
-    label_x = cap[0] + cap_w + (7 if is_long else 8)
+    label_x = cap[0] + cap_w + (6 if is_long else 7)
     label_size = 13
     note_size = 9 if is_long else 10
-    label_y = cap[1] + 13
+    label_y = cap[1] + 14
     _draw_text(draw, (label_x, label_y), label, label_size, "#2b2117")
     note_text = "テンション調整" if is_long else f"（{note}）"
     if not is_long:
@@ -245,8 +245,8 @@ def build_current_hud() -> Image.Image:
         )
     else:
         _draw_sheet_icon(frame, 6, (bait[0] + 58, bait[1] + 48, bait[0] + 100, bait[1] + 90))
-    _draw_text(draw, (bait[0] + 116, bait[1] + 54), "オキアミ", 21, "#2b2117")
-    _draw_text(draw, (bait[0] + 128, bait[1] + 79), "× 17", 19, "#2b2117")
+    _draw_text(draw, (bait[0] + 116, bait[1] + (bait[3] - bait[1]) * 0.56), "オキアミ", 21, "#2b2117")
+    _draw_text(draw, (bait[0] + 128, bait[1] + (bait[3] - bait[1]) * 0.74), "× 17", 19, "#2b2117")
 
     hint_title = "操作のヒント"
     hint_title_w = _text_width(hint_title, 16)
