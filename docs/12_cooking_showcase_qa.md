@@ -63,6 +63,14 @@
   - 結果: 成功。
   - 出力: `/tmp/tsuri_cooking_reference_report.html`。
   - 判定: この環境ではキャプチャPNGが未生成のため、レポート上では5状態すべてがmissing表示になる。通常描画可能な環境で `tools/cooking_preview.gd` 実行後に再生成すれば、参照5枚との目視比較に使える。
+- `python3 tools/cooking_visual_qa_check.py --allow-missing`
+  - 目的: 参照PNGの存在/形式を確認し、キャプチャ未生成を許容したうえでHTML比較レポートを再生成する。
+  - 結果: 成功。
+  - 判定: この環境では5状態のキャプチャmissingを許容してツール自体を検証した。通常描画可能な環境では `--allow-missing` を外し、`/tmp/tsuri_cooking_*.png` が5枚すべて1280x720 PNGとして存在することを最終ゲートにする。参照PNGは原寸のまま扱い、寸法一致は要求しない。
+- `python3 tools/cooking_visual_qa_check.py`
+  - 結果: 失敗。
+  - 理由: `/tmp/tsuri_cooking_select.png`、`/tmp/tsuri_cooking_result.png`、`/tmp/tsuri_cooking_exp.png`、`/tmp/tsuri_cooking_levelup.png`、`/tmp/tsuri_cooking_status.png` が未生成。
+  - 判定: 通常描画環境でのキャプチャ生成が完了するまで、視覚QAゲートは未通過として扱う。
 - `tools/cooking_flow_smoke.tscn`
   - 目的: headlessで各状態のControl構築を検証するためのスモークシーン。
   - コマンド: `HOME=/private/tmp/tsuri_home "/Applications/Godot.app/Contents/MacOS/Godot" --headless --path ... res://tools/cooking_flow_smoke.tscn`
@@ -81,6 +89,6 @@
 
 ## 未解決
 
-- P1: 現時点で既知のロジック破壊はなし。headless layout audit上の画面外はみ出し/縦クリップは解消済み。ただし実スクショ未取得のため、最終的な視覚密度、ピクセル単位の重なり、装飾の見え方は未証明。headless、通常起動、macOS display driver + dummy/opengl3 の各経路で `/tmp/tsuri_cooking_*.png` は生成できていない。
+- P1: 現時点で既知のロジック破壊はなし。headless layout audit上の画面外はみ出し/縦クリップは解消済み。ただし実スクショ未取得のため、最終的な視覚密度、ピクセル単位の重なり、装飾の見え方は未証明。headless、通常起動、macOS display driver + dummy/opengl3 の各経路で `/tmp/tsuri_cooking_*.png` は生成できていない。`tools/cooking_visual_qa_check.py` の通常モードはこのmissingを検出して失敗する。
 - P2: 生成フレーム/背景アセットの主要接続は進んだが、生成アセットは実装用の差し替えスロットであり、最終本番アートではない。料理・魚・背景は後続で品質差し替え余地あり。魚行とレシピカードは専用フレーム接続済みだが、視覚スクショで選択/ロック状態の見え方を確認する必要がある。
 - P3: steam/sparkle/粒子などの小演出は、状態別スクショでP1/P2が潰れてから追加する。

@@ -104,6 +104,7 @@ Use this extraction as the first comparison baseline. Refine it only after inspe
 4. Compare against the matching state reference.
    Put generated capture(s) next to the corresponding `reference/cooking_flow/*_concept.png`. Judge the whole state first, then focus areas. Do not rely on "the code is working" as a visual-quality signal.
    Use `python3 tools/cooking_reference_report.py` after captures exist to generate `/tmp/tsuri_cooking_reference_report.html`, a local contact sheet that pairs each reference with `/tmp/tsuri_cooking_*.png`.
+   Use `python3 tools/cooking_visual_qa_check.py` as the strict gate once captures exist. In environments where captures cannot be produced, `python3 tools/cooking_visual_qa_check.py --allow-missing` verifies references and refreshes the report while preserving the screenshot blocker.
 
 5. Decompose the state reference into asset slots.
    Prefer dedicated cooking assets under `assets/showcase/cooking/` for:
