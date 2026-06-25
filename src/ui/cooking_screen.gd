@@ -14,6 +14,151 @@ const RECIPE_CARD_FRAME := "res://assets/showcase/cooking/recipe_card_frame.png"
 const DISH_DETAIL_FRAME := "res://assets/showcase/cooking/dish_detail_frame.png"
 const FISH_ROW_FRAME := "res://assets/showcase/cooking/status_card_frame.png"
 
+
+class CookingSmallIcon:
+	extends Control
+
+	var mode := "player"
+	var accent := Color.WHITE
+
+	func configure(next_mode: String, next_accent: Color) -> void:
+		mode = next_mode
+		accent = next_accent
+		queue_redraw()
+
+	func _draw() -> void:
+		match mode:
+			"coin":
+				_draw_coin()
+			"meal":
+				_draw_meal()
+			"cooler":
+				_draw_cooler()
+			"book":
+				_draw_book()
+			"fish":
+				_draw_fish()
+			"exp":
+				_draw_exp()
+			"buff":
+				_draw_buff()
+			"fire":
+				_draw_fire()
+			_:
+				_draw_player()
+
+	func _draw_player() -> void:
+		var center := size * 0.5
+		draw_circle(center + Vector2(0.0, -7.0), 15.0, Color("#f2b889"))
+		draw_rect(Rect2(center.x - 18.0, center.y + 8.0, 36.0, 22.0), Color("#17324d"))
+		draw_rect(Rect2(center.x - 18.0, center.y - 24.0, 36.0, 9.0), Color("#234f7c"))
+		draw_circle(center + Vector2(-6.0, -8.0), 2.0, Color("#1d160f"))
+		draw_circle(center + Vector2(6.0, -8.0), 2.0, Color("#1d160f"))
+
+	func _draw_coin() -> void:
+		var center := size * 0.5
+		for i in range(3):
+			var offset := Vector2(float(i) * 7.0 - 7.0, float(i % 2) * 5.0)
+			draw_circle(center + offset, 14.0, Color("#9b641e"))
+			draw_circle(center + offset + Vector2(-2.0, -2.0), 10.0, Palette.GOLD_BRIGHT)
+			draw_arc(center + offset, 10.0, 0.0, TAU, 18, Color("#70451f"), 2.0)
+
+	func _draw_meal() -> void:
+		var center := size * 0.5
+		draw_arc(center + Vector2(0.0, 12.0), 21.0, 0.0, PI, 24, Color("#fff1cf"), 6.0)
+		draw_arc(center + Vector2(0.0, 8.0), 17.0, 0.0, PI, 22, Color("#b35f25"), 5.0)
+		for i in range(3):
+			var x := center.x - 12.0 + float(i) * 12.0
+			draw_arc(Vector2(x, center.y - 13.0), 8.0, -1.6, 0.9, 10, Color(1.0, 0.92, 0.70, 0.34), 2.0)
+
+	func _draw_cooler() -> void:
+		var center := size * 0.5
+		draw_rect(Rect2(center.x - 22.0, center.y - 6.0, 44.0, 28.0), Color("#1b5d8d"))
+		draw_rect(Rect2(center.x - 22.0, center.y - 6.0, 44.0, 7.0), Color("#eef4fa"))
+		draw_rect(Rect2(center.x - 16.0, center.y - 18.0, 32.0, 10.0), Color("#d7e3ef"))
+		draw_line(center + Vector2(-10.0, 11.0), center + Vector2(10.0, 11.0), Color("#f0f6fb"), 3.0)
+
+	func _draw_book() -> void:
+		var center := size * 0.5
+		draw_rect(Rect2(center.x - 18.0, center.y - 18.0, 36.0, 36.0), Color("#17324d"))
+		draw_rect(Rect2(center.x - 14.0, center.y - 14.0, 28.0, 28.0), Color("#f2e4c2"))
+		draw_line(center + Vector2(0.0, -14.0), center + Vector2(0.0, 14.0), Color("#8b5b2c"), 2.0)
+		draw_line(center + Vector2(-10.0, -4.0), center + Vector2(-3.0, -4.0), accent, 2.0)
+		draw_line(center + Vector2(4.0, 5.0), center + Vector2(11.0, 5.0), accent, 2.0)
+
+	func _draw_fish() -> void:
+		var center := size * 0.5
+		var body := PackedVector2Array(
+			[
+				center + Vector2(-22.0, 0.0),
+				center + Vector2(-8.0, -11.0),
+				center + Vector2(18.0, -5.0),
+				center + Vector2(23.0, 0.0),
+				center + Vector2(18.0, 5.0),
+				center + Vector2(-8.0, 11.0),
+			]
+		)
+		draw_colored_polygon(body, Color("#3e86b5"))
+		draw_colored_polygon(
+			PackedVector2Array(
+				[
+					center + Vector2(18.0, -5.0),
+					center + Vector2(30.0, -15.0),
+					center + Vector2(27.0, 0.0),
+					center + Vector2(30.0, 15.0),
+					center + Vector2(18.0, 5.0),
+				]
+			),
+			Color("#275d86")
+		)
+		draw_line(center + Vector2(-9.0, -7.0), center + Vector2(13.0, -2.0), Color("#d6eef4"), 2.0)
+		draw_circle(center + Vector2(-16.0, -2.0), 2.2, Color("#1d160f"))
+
+	func _draw_exp() -> void:
+		var center := size * 0.5
+		draw_circle(center, 19.0, Color("#0f5d76"))
+		draw_circle(center, 13.0, accent)
+		for i in range(8):
+			var angle := TAU * float(i) / 8.0
+			var from := center + Vector2(cos(angle), sin(angle)) * 21.0
+			var to := center + Vector2(cos(angle), sin(angle)) * 28.0
+			draw_line(from, to, Color("#fff2b8"), 2.0)
+		draw_circle(center, 5.0, Color("#fff2b8"))
+
+	func _draw_buff() -> void:
+		var center := size * 0.5
+		draw_circle(center, 19.0, Color("#2f7a45"))
+		draw_arc(center + Vector2(-3.0, 2.0), 13.0, -0.2, 2.8, 20, Color("#f8f0cf"), 4.0)
+		draw_line(center + Vector2(-8.0, 3.0), center + Vector2(-16.0, -4.0), Color("#f8f0cf"), 4.0)
+		draw_circle(center + Vector2(11.0, -11.0), 4.0, accent)
+
+	func _draw_fire() -> void:
+		var center := size * 0.5
+		var flame := PackedVector2Array(
+			[
+				center + Vector2(0.0, -24.0),
+				center + Vector2(15.0, -5.0),
+				center + Vector2(9.0, 19.0),
+				center + Vector2(0.0, 25.0),
+				center + Vector2(-10.0, 17.0),
+				center + Vector2(-15.0, -4.0),
+			]
+		)
+		draw_colored_polygon(flame, Color("#cf5c26"))
+		draw_colored_polygon(
+			PackedVector2Array(
+				[
+					center + Vector2(1.0, -12.0),
+					center + Vector2(8.0, 2.0),
+					center + Vector2(3.0, 14.0),
+					center + Vector2(-4.0, 14.0),
+					center + Vector2(-7.0, 0.0),
+				]
+			),
+			accent
+		)
+
+
 const FISH_ICON_INDEX := {
 	"aji": 0,
 	"mejina": 1,
@@ -49,7 +194,9 @@ var _dish_subtitle: Label
 var _dish_image: TextureRect
 var _material_value: Label
 var _exp_value: Label
+var _bonus_value: Label
 var _buff_value: Label
+var _effect_count_value: Label
 var _stock_value: Label
 var _overwrite_note: Label
 var _cook_button: Button
@@ -69,11 +216,11 @@ func configure(payload: Dictionary) -> void:
 
 func _build_screen() -> void:
 	_add_cooking_background()
-	var root := make_root_margin(10)
+	var root := make_root_margin(6)
 	var layout := VBoxContainer.new()
 	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	layout.add_theme_constant_override("separation", 8)
+	layout.add_theme_constant_override("separation", 6)
 	root.add_child(layout)
 
 	_build_header(layout)
@@ -108,7 +255,7 @@ func _add_cooking_background() -> void:
 
 func _build_header(layout: VBoxContainer) -> void:
 	var header := HBoxContainer.new()
-	header.custom_minimum_size = Vector2(0, 64)
+	header.custom_minimum_size = Vector2(0, 60)
 	header.add_theme_constant_override("separation", 8)
 	layout.add_child(header)
 
@@ -121,6 +268,7 @@ func _build_header(layout: VBoxContainer) -> void:
 	title_card.add_child(title_row)
 	var title := make_shadow_label("調理場", 30, Palette.GOLD_BRIGHT, 4)
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
+	title.custom_minimum_size = Vector2(104.0, 0.0)
 	title_row.add_child(title)
 
 	var status_card := _panel_box(Color("#0d2338"), Color("#70451f"), Color("#dba75b"), 6)
@@ -129,8 +277,10 @@ func _build_header(layout: VBoxContainer) -> void:
 	var status_row := HBoxContainer.new()
 	status_row.add_theme_constant_override("separation", 12)
 	status_card.add_child(status_row)
+	var player_icon := _small_icon("player", Palette.GAUGE_CYAN_HI, Vector2(46.0, 0.0))
+	status_row.add_child(player_icon)
 	_level_label = make_shadow_label("", 21, Palette.TEXT_BONE, 3)
-	_level_label.custom_minimum_size = Vector2(158, 0)
+	_level_label.custom_minimum_size = Vector2(138, 0)
 	status_row.add_child(_level_label)
 	_exp_bar = GaugeBarScript.new()
 	_exp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -144,12 +294,18 @@ func _build_header(layout: VBoxContainer) -> void:
 	status_row.add_child(_exp_label)
 
 	var money_card := _panel_box(Color("#0d2338"), Color("#70451f"), Color("#dba75b"), 6)
-	money_card.custom_minimum_size = Vector2(210, 0)
+	money_card.custom_minimum_size = Vector2(224, 0)
 	header.add_child(money_card)
+	var money_row := HBoxContainer.new()
+	money_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	money_row.add_theme_constant_override("separation", 8)
+	money_card.add_child(money_row)
+	money_row.add_child(_small_icon("coin", Palette.GOLD_BRIGHT, Vector2(46.0, 0.0)))
 	_money_label = make_shadow_label("", 22, Palette.GOLD_BRIGHT, 3)
+	_money_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_money_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_money_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	money_card.add_child(_money_label)
+	money_row.add_child(_money_label)
 
 	var back := make_button("港へ", func() -> void: navigate("harbor"), 96, false)
 	back.custom_minimum_size = Vector2(90, 52)
@@ -184,7 +340,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 		16.0,
 		10.0
 	)
-	recipe_panel.custom_minimum_size = Vector2(420, 0)
+	recipe_panel.custom_minimum_size = Vector2(452, 0)
 	recipe_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(recipe_panel)
 	var recipe_layout := VBoxContainer.new()
@@ -194,9 +350,10 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	recipe_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	recipe_layout.add_child(recipe_title)
 	_recipe_grid = GridContainer.new()
-	_recipe_grid.columns = 2
+	_recipe_grid.name = "RecipeGrid"
+	_recipe_grid.columns = 3
 	_recipe_grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_recipe_grid.add_theme_constant_override("h_separation", 7)
+	_recipe_grid.add_theme_constant_override("h_separation", 6)
 	_recipe_grid.add_theme_constant_override("v_separation", 7)
 	recipe_layout.add_child(_recipe_grid)
 
@@ -211,7 +368,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	detail_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(detail_panel)
 	var detail_layout := VBoxContainer.new()
-	detail_layout.add_theme_constant_override("separation", 6)
+	detail_layout.add_theme_constant_override("separation", 4)
 	detail_panel.add_child(detail_layout)
 	_dish_title = make_label("料理を選んでください", 25, Color("#2a2118"), 1, Color("#fff4d4"))
 	_dish_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -219,29 +376,51 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	_dish_subtitle = make_label("", 15, Color("#59422b"))
 	_dish_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	detail_layout.add_child(_dish_subtitle)
+	var dish_frame := _panel_box(Color("#6a4023"), Color("#3b2515"), Color("#e6b561"), 4)
+	dish_frame.custom_minimum_size = Vector2(0, 104)
+	dish_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail_layout.add_child(dish_frame)
 	_dish_image = TextureRect.new()
-	_dish_image.custom_minimum_size = Vector2(0, 142)
+	_dish_image.custom_minimum_size = Vector2(0, 88)
 	_dish_image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_dish_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_dish_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	detail_layout.add_child(_dish_image)
-	var detail_grid := GridContainer.new()
-	detail_grid.columns = 2
-	detail_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	detail_grid.add_theme_constant_override("h_separation", 6)
-	detail_grid.add_theme_constant_override("v_separation", 6)
-	detail_layout.add_child(detail_grid)
-	_material_value = _add_detail_tile(detail_grid, "材料", "")
-	_stock_value = _add_detail_tile(detail_grid, "所持数", "")
-	_exp_value = _add_detail_tile(detail_grid, "食経験値", "")
-	_buff_value = _add_detail_tile(detail_grid, "食事効果", "")
+	dish_frame.add_child(_dish_image)
+	var detail_rows := VBoxContainer.new()
+	detail_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail_rows.add_theme_constant_override("separation", 3)
+	detail_layout.add_child(detail_rows)
+	var material_labels := _add_detail_pair_tile(
+		detail_rows,
+		"材料",
+		"所持数",
+		"fish",
+		"cooler",
+		Palette.GAUGE_CYAN_HI,
+		Palette.GAUGE_CYAN_HI
+	)
+	_material_value = material_labels[0] as Label
+	_stock_value = material_labels[1] as Label
+	var exp_labels := _add_detail_pair_tile(
+		detail_rows,
+		"食経験値",
+		"初回ボーナス",
+		"exp",
+		"book",
+		Palette.GAUGE_CYAN_HI,
+		Palette.GOLD_BRIGHT
+	)
+	_exp_value = exp_labels[0] as Label
+	_bonus_value = exp_labels[1] as Label
+	_buff_value = _add_detail_tile(detail_rows, "食事効果", "", "buff", Palette.GAUGE_GREEN_HI)
+	_effect_count_value = _add_detail_tile(detail_rows, "効果回数", "", "fire", Palette.GOLD_BRIGHT)
 	_overwrite_note = make_label("", 13, Color("#624b31"))
 	_overwrite_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_overwrite_note.clip_text = true
 	_overwrite_note.custom_minimum_size = Vector2(0, 18)
 	detail_layout.add_child(_overwrite_note)
 	_cook_button = make_button("調理する", _cook_selected, 300, true)
-	_cook_button.custom_minimum_size = Vector2(286, 50)
+	_cook_button.custom_minimum_size = Vector2(286, 46)
 	_cook_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	detail_layout.add_child(_cook_button)
 
@@ -269,20 +448,76 @@ func _build_result_summary(layout: VBoxContainer) -> void:
 	result_layout.add_child(_result_body)
 
 
-func _add_detail_tile(parent: GridContainer, title: String, value: String) -> Label:
+func _add_detail_tile(
+	parent: Container, title: String, value: String, icon_mode: String, accent: Color
+) -> Label:
 	var tile := _panel_box(Color("#fff0cf"), Color("#8b5b2c"), Color("#e6b561"), 3)
-	tile.custom_minimum_size = Vector2(0, 58)
+	tile.custom_minimum_size = Vector2(0, 32)
 	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(tile)
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 0)
-	tile.add_child(box)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	tile.add_child(row)
+	row.add_child(_small_icon(icon_mode, accent, Vector2(30.0, 0.0)))
 	var title_label := make_label(title, 13, Color("#6a4a2b"))
-	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(title_label)
+	title_label.custom_minimum_size = Vector2(88, 0)
+	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(title_label)
 	var value_label := make_label(value, 17, Color("#2a2118"), 1, Color("#fff2cf"))
+	value_label.custom_minimum_size = Vector2(0, 24)
 	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	value_label.clip_text = true
+	row.add_child(value_label)
+	return value_label
+
+
+func _add_detail_pair_tile(
+	parent: Container,
+	left_title: String,
+	right_title: String,
+	left_icon: String,
+	right_icon: String,
+	left_accent: Color,
+	right_accent: Color
+) -> Array:
+	var tile := _panel_box(Color("#fff0cf"), Color("#8b5b2c"), Color("#e6b561"), 3)
+	tile.custom_minimum_size = Vector2(0, 36)
+	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	parent.add_child(tile)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	tile.add_child(row)
+
+	var left_value := _add_detail_pair_cell(row, left_title, left_icon, left_accent)
+	var divider := ColorRect.new()
+	divider.color = Color(0.545, 0.357, 0.173, 0.35)
+	divider.custom_minimum_size = Vector2(2, 0)
+	row.add_child(divider)
+	var right_value := _add_detail_pair_cell(row, right_title, right_icon, right_accent)
+	return [left_value, right_value]
+
+
+func _add_detail_pair_cell(
+	parent: HBoxContainer, title: String, icon_mode: String, accent: Color
+) -> Label:
+	var cell := HBoxContainer.new()
+	cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cell.add_theme_constant_override("separation", 5)
+	parent.add_child(cell)
+	cell.add_child(_small_icon(icon_mode, accent, Vector2(26.0, 0.0)))
+	var box := VBoxContainer.new()
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.add_theme_constant_override("separation", 0)
+	cell.add_child(box)
+	var title_label := make_label(title, 12, Color("#6a4a2b"))
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(title_label)
+	var value_label := make_label("", 16, Color("#2a2118"), 1, Color("#fff2cf"))
+	value_label.custom_minimum_size = Vector2(0, 22)
+	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	value_label.clip_text = true
@@ -419,11 +654,12 @@ func _rebuild_recipe_cards() -> void:
 		var recipe := Dictionary(entry.get("recipe", {}))
 		var recipe_id := String(recipe.get("id", ""))
 		var locked := bool(entry.get("locked", false))
-		if first_available.is_empty() and not locked:
+		var unavailable := bool(entry.get("unavailable", false))
+		if first_available.is_empty() and not locked and not unavailable:
 			first_available = recipe_id
-		if recipe_id == _selected_recipe_id and not locked:
+		if recipe_id == _selected_recipe_id and not locked and not unavailable:
 			selected_available = true
-		_recipe_grid.add_child(_make_recipe_card(recipe, locked))
+		_recipe_grid.add_child(_make_recipe_card(recipe, locked, unavailable))
 	if _selected_recipe_id.is_empty() or not selected_available:
 		_selected_recipe_id = first_available
 	_refresh_recipe_card_styles()
@@ -436,12 +672,11 @@ func _recipe_entries_for_fish(fish_id: String) -> Array[Dictionary]:
 		var recipe_id := String(recipe_id_variant)
 		var recipe := GameData.get_recipe(recipe_id)
 		var allowed = recipe.get("allowed_fish", [])
-		if fish_id not in allowed:
-			continue
 		entries.append(
 			{
 				"recipe": recipe,
 				"locked": PlayerProgress.level < int(recipe.get("unlock_level", 1)),
+				"unavailable": fish_id not in allowed,
 			}
 		)
 	entries.sort_custom(
@@ -451,24 +686,25 @@ func _recipe_entries_for_fish(fish_id: String) -> Array[Dictionary]:
 	return entries
 
 
-func _make_recipe_card(recipe: Dictionary, locked: bool) -> PanelContainer:
+func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> PanelContainer:
 	var recipe_id := String(recipe.get("id", ""))
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(198, 108)
+	card.name = "RecipeCard_%s" % recipe_id
+	card.custom_minimum_size = Vector2(130, 108)
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
-	if not locked:
+	var selectable := not locked and not unavailable
+	if selectable:
 		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		card.gui_input.connect(
 			func(event: InputEvent) -> void:
 				if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 					_select_recipe(recipe_id)
 		)
-	_recipe_cards[recipe_id] = {"card": card, "locked": locked}
-
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
 	card.add_child(box)
-	var title := make_label(String(recipe.get("name", "")), 16, Color("#251c12"), 1, Color("#fff3cf"))
+	var title_text := "？？？" if locked else String(recipe.get("name", ""))
+	var title := make_label(title_text, 16, Color("#251c12"), 1, Color("#fff3cf"))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title)
 	var image := TextureRect.new()
@@ -476,21 +712,29 @@ func _make_recipe_card(recipe: Dictionary, locked: bool) -> PanelContainer:
 	image.custom_minimum_size = Vector2(0, 48)
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	image.modulate = Color(0.46, 0.42, 0.36, 0.82) if locked else Color.WHITE
+	image.modulate = Color(0.46, 0.42, 0.36, 0.82) if locked or unavailable else Color.WHITE
 	box.add_child(image)
 	var footer_text := ""
 	if locked:
-		footer_text = "Lv.%dで解放" % int(recipe.get("unlock_level", 1))
+		footer_text = "未解放 Lv.%d" % int(recipe.get("unlock_level", 1))
+	elif unavailable:
+		footer_text = "素材違い"
 	else:
 		var dish_key := "%s:%s" % [_selected_fish_id, recipe_id]
-		var exp_amount := GameData.recipe_exp(_selected_fish_id, recipe_id)
-		footer_text = "%d EXP%s" % [
-			exp_amount,
-			" / 初回" if not PlayerProgress.eaten_recipes.has(dish_key) else "",
-		]
+		var first_time := not PlayerProgress.eaten_recipes.has(dish_key)
+		var base_exp := GameData.recipe_exp(_selected_fish_id, recipe_id)
+		var total_exp := base_exp * 2 if first_time else base_exp
+		footer_text = "%d EXP%s" % [total_exp, " 初回" if first_time else ""]
 	var footer := make_label(footer_text, 13, Color("#49351f"), 1, Color("#fff4cf"))
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(footer)
+	_recipe_cards[recipe_id] = {
+		"card": card,
+		"locked": locked,
+		"unavailable": unavailable,
+		"footer": footer,
+		"footer_text": footer_text,
+	}
 	return card
 
 
@@ -507,19 +751,23 @@ func _refresh_recipe_card_styles() -> void:
 	for recipe_id in _recipe_cards.keys():
 		var entry := Dictionary(_recipe_cards[recipe_id])
 		var card := entry.get("card") as PanelContainer
+		var footer := entry.get("footer") as Label
 		var locked := bool(entry.get("locked", false))
+		var unavailable := bool(entry.get("unavailable", false))
 		var selected := String(recipe_id) == _selected_recipe_id
 		if card == null:
 			continue
 		var fill := Color("#ffedbb") if selected else Color("#ead7ad")
 		if locked:
 			fill = Color("#8c8069")
+		elif unavailable:
+			fill = Color("#b7a884")
 		var border := Color("#f2c86d") if selected else Color("#7b5027")
 		var inner := Color("#fff6d4") if selected else Color("#c59a59")
 		var tint := Color.WHITE
 		if selected:
 			tint = Color("#fff1ba")
-		elif locked:
+		elif locked or unavailable:
 			tint = Color(0.55, 0.50, 0.42, 1.0)
 		card.self_modulate = tint
 		card.add_theme_stylebox_override(
@@ -538,6 +786,9 @@ func _refresh_recipe_card_styles() -> void:
 				8.0
 			)
 		)
+		if footer != null:
+			var base_footer := String(entry.get("footer_text", ""))
+			footer.text = "選択中 / %s" % base_footer if selected and not locked and not unavailable else base_footer
 
 
 func _refresh_detail() -> void:
@@ -550,7 +801,9 @@ func _refresh_detail() -> void:
 		_material_value.text = "-"
 		_stock_value.text = "-"
 		_exp_value.text = "-"
+		_bonus_value.text = "-"
 		_buff_value.text = "-"
+		_effect_count_value.text = "-"
 		_overwrite_note.text = ""
 		_cook_button.disabled = true
 		return
@@ -565,8 +818,10 @@ func _refresh_detail() -> void:
 	_material_value.text = "%s ×1" % String(fish["name"])
 	_stock_value.text = "%d → %d" % [count, maxi(0, count - 1)]
 	_exp_value.text = "+%d EXP%s" % [total_exp, "（初回込み）" if first_time else ""]
+	_bonus_value.text = "+%d EXP" % base_exp if first_time else "記録済み"
 	_buff_value.text = String(recipe.get("buff_text", ""))
-	_overwrite_note.text = "食事効果は次の釣行で発動し、既存効果を上書き。"
+	_effect_count_value.text = "1回"
+	_overwrite_note.text = "食事効果は次の釣行で1回発動 / 既存効果を上書き。"
 	_cook_button.disabled = count <= 0
 
 
@@ -607,7 +862,16 @@ func preview_show_reward_result(result: Dictionary, exp_before: int, exp_after: 
 	_refresh_header()
 	_refresh_detail()
 	_show_meal_result(result, leveled)
-	_show_reward_overlay(result, exp_before, exp_after, exp_max, PlayerProgress.level - 1, {}, leveled)
+	_show_exp_reward_overlay(result, exp_before, exp_after, exp_max, PlayerProgress.level - 1, {}, leveled)
+
+
+func preview_show_meal_reward_result(result: Dictionary, leveled: bool) -> void:
+	_refresh_header()
+	_refresh_detail()
+	_show_meal_result(result, leveled)
+	var panel := CookingRewardPanelScript.new()
+	add_child(panel)
+	panel.show_meal_result(result)
 
 
 func preview_accept_reward_overlay() -> bool:
@@ -646,20 +910,21 @@ func _show_status_summary() -> void:
 	_clear_container(_result_body)
 	var active_meal := "なし"
 	if not PlayerProgress.pending_buff.is_empty():
-		active_meal = "%s / %s" % [
+		active_meal = "%s / %s / 1回の釣行で発動" % [
 			String(PlayerProgress.pending_buff.get("name", "料理")),
 			String(PlayerProgress.pending_buff.get("text", "")),
 		]
-	_result_body.add_child(_summary_card("効果中の料理", active_meal, Palette.GAUGE_GREEN_HI))
+	_result_body.add_child(_summary_card("効果中の料理", active_meal, Palette.GAUGE_GREEN_HI, "meal"))
 	_result_body.add_child(
-		_summary_card("クーラーボックス", "%d 匹" % _total_fish_count(), Palette.GAUGE_CYAN_HI)
+		_summary_card("クーラーボックス", "%d 匹" % _total_fish_count(), Palette.GAUGE_CYAN_HI, "cooler")
 	)
-	_result_body.add_child(_summary_card("所持金", "%d G" % PlayerProgress.money, Palette.GOLD_BRIGHT))
+	_result_body.add_child(_summary_card("所持金", "%d G" % PlayerProgress.money, Palette.GOLD_BRIGHT, "coin"))
 	_result_body.add_child(
 		_summary_card(
 			"プレイヤー",
 			"Lv.%d / %s" % [PlayerProgress.level, PlayerProgress.get_base_stats().get("rod_name", "")],
-			Palette.TEXT_BONE
+			Palette.TEXT_BONE,
+			"player"
 		)
 	)
 
@@ -675,19 +940,57 @@ func _show_meal_result(result: Dictionary, leveled: bool) -> void:
 	_result_title.text = "%sを食べた！" % String(result.get("dish_name", "料理"))
 	_clear_container(_result_body)
 	_result_body.add_child(
-		_summary_card("食経験値", "+%d EXP" % int(result.get("total_exp", 0)), Palette.GAUGE_CYAN_HI)
+		_summary_card("食経験値", "+%d EXP" % int(result.get("total_exp", 0)), Palette.GAUGE_CYAN_HI, "book")
 	)
 	var first_text := "+%d EXP" % int(result.get("first_bonus", 0)) if bool(result.get("first_time", false)) else "記録済み"
-	_result_body.add_child(_summary_card("初回ボーナス", first_text, Palette.GOLD_BRIGHT))
+	_result_body.add_child(_summary_card("初回ボーナス", first_text, Palette.GOLD_BRIGHT, "book"))
 	var buff := Dictionary(result.get("buff", {}))
-	_result_body.add_child(_summary_card("次の釣行", String(buff.get("text", "")), Palette.GAUGE_GREEN_HI))
+	_result_body.add_child(
+		_summary_card(
+			"次の釣行",
+			"%s / 1回の釣行で発動" % String(buff.get("text", "")),
+			Palette.GAUGE_GREEN_HI,
+			"meal"
+		)
+	)
 	var remaining_exp := maxi(0, PlayerProgress.exp_to_next_level() - PlayerProgress.exp)
 	_result_body.add_child(
-		_summary_card("成長", "LEVEL UP!" if leveled else "次のレベルまで %d" % remaining_exp, Palette.GAUGE_RED_HI if leveled else Palette.TEXT_BONE)
+		_summary_card(
+			"成長",
+			"LEVEL UP!" if leveled else "次のレベルまで %d" % remaining_exp,
+			Palette.GAUGE_RED_HI if leveled else Palette.TEXT_BONE,
+			"player"
+		)
 	)
 
 
 func _show_reward_overlay(
+	result: Dictionary,
+	exp_before: int,
+	exp_after: int,
+	exp_max: int,
+	level_before: int,
+	stats_before: Dictionary,
+	leveled: bool
+) -> void:
+	var panel := CookingRewardPanelScript.new()
+	add_child(panel)
+	panel.show_meal_result(result)
+	panel.closed.connect(
+		func() -> void:
+			_show_exp_reward_overlay(
+				result,
+				exp_before,
+				exp_after,
+				exp_max,
+				level_before,
+				stats_before,
+				leveled
+			)
+	)
+
+
+func _show_exp_reward_overlay(
 	result: Dictionary,
 	exp_before: int,
 	exp_after: int,
@@ -724,13 +1027,26 @@ func _show_pending_level_up() -> void:
 	)
 
 
-func _summary_card(title: String, value: String, accent: Color) -> PanelContainer:
+func _small_icon(mode: String, accent: Color, minimum_size: Vector2) -> CookingSmallIcon:
+	var icon := CookingSmallIcon.new()
+	icon.configure(mode, accent)
+	icon.custom_minimum_size = minimum_size
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return icon
+
+
+func _summary_card(title: String, value: String, accent: Color, icon_mode := "book") -> PanelContainer:
 	var card := _panel_box(Color("#f2e4c2"), Color("#60401f"), Color("#d7a456"), 5)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.custom_minimum_size = Vector2(0, 50)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	card.add_child(row)
+	row.add_child(_small_icon(icon_mode, accent, Vector2(34.0, 0.0)))
 	var box := VBoxContainer.new()
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_theme_constant_override("separation", 0)
-	card.add_child(box)
+	row.add_child(box)
 	var title_label := make_label(title, 13, Color("#614525"))
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title_label)
