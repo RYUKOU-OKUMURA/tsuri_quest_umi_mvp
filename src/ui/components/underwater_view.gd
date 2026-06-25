@@ -100,9 +100,9 @@ func _load_texture_if_exists(path: String) -> Texture2D:
 func _draw_showcase_background() -> void:
 	_draw_cover_texture(_showcase_bg, Rect2(Vector2.ZERO, size), Color.WHITE)
 	if _showcase_color_grade != null:
-		_draw_cover_texture(_showcase_color_grade, Rect2(Vector2.ZERO, size), Color(1.0, 1.0, 1.0, 0.32))
+		_draw_cover_texture(_showcase_color_grade, Rect2(Vector2.ZERO, size), Color(1.0, 1.0, 1.0, 0.24))
 	if _showcase_seabed_detail != null:
-		_draw_cover_texture(_showcase_seabed_detail, Rect2(Vector2.ZERO, size), Color(1.0, 1.0, 1.0, 0.56))
+		_draw_cover_texture(_showcase_seabed_detail, Rect2(Vector2.ZERO, size), Color(1.0, 1.0, 1.0, 0.44))
 	# 背景PNGに重ねる軽い水中の揺らぎ。主素材を邪魔しない密度に抑える。
 	for index in range(6):
 		var y := size.y * (0.12 + float(index) * 0.085)

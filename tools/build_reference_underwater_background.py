@@ -316,7 +316,7 @@ def _add_center_floor_glints(
     y = int(h * 0.61)
     alpha = ImageChops.multiply(
         subject_mask.crop((x, y, x + patch_size[0], y + patch_size[1])),
-        _vertical_mask(patch_size, 132, 0.00, 0.96),
+        _vertical_mask(patch_size, 148, 0.00, 0.96),
     )
     alpha = ImageChops.multiply(alpha, _soft_blob_mask(patch_size, 226, seed_offset=18))
     base.alpha_composite(
@@ -394,7 +394,7 @@ def _add_center_floor_caustic_mesh(
     y = int(h * 0.64)
     patch_alpha = ImageChops.multiply(
         subject_mask.crop((x, y, x + patch_size[0], y + patch_size[1])),
-        _vertical_mask(patch_size, 92, 0.06, 1.0),
+        _vertical_mask(patch_size, 108, 0.06, 1.0),
     )
     patch_alpha = ImageChops.multiply(patch_alpha, _soft_blob_mask(patch_size, 210, seed_offset=38))
     base.alpha_composite(
@@ -435,7 +435,7 @@ def _add_center_floor_caustic_mesh(
 
     mesh_alpha = ImageChops.multiply(
         subject_mask,
-        _vertical_mask(source.size, 86, 0.50, 0.97),
+        _vertical_mask(source.size, 100, 0.50, 0.97),
     )
     base.alpha_composite(
         Image.composite(
@@ -473,7 +473,7 @@ def _add_center_sand_channel(
     y = int(h * 0.66)
     alpha = ImageChops.multiply(
         subject_mask.crop((x, y, x + patch_size[0], y + patch_size[1])),
-        _vertical_mask(patch_size, 150, 0.04, 1.0),
+        _vertical_mask(patch_size, 166, 0.04, 1.0),
     )
     alpha = ImageChops.multiply(alpha, _soft_blob_mask(patch_size, 236, seed_offset=20))
     base.alpha_composite(
@@ -503,16 +503,16 @@ def _add_center_midwater_depth(
 
     patch_size = (int(w * 0.66), int(h * 0.28))
     patch = water_source.resize(patch_size, Image.Resampling.LANCZOS)
-    patch = ImageEnhance.Brightness(patch).enhance(0.92)
-    patch = ImageEnhance.Color(patch).enhance(0.88)
-    patch = ImageEnhance.Contrast(patch).enhance(0.86)
+    patch = ImageEnhance.Brightness(patch).enhance(1.00)
+    patch = ImageEnhance.Color(patch).enhance(0.90)
+    patch = ImageEnhance.Contrast(patch).enhance(0.90)
     patch = patch.filter(ImageFilter.GaussianBlur(1.9)).convert("RGBA")
 
     x = int(w * 0.17)
     y = int(h * 0.39)
     alpha = ImageChops.multiply(
         subject_mask.crop((x, y, x + patch_size[0], y + patch_size[1])),
-        _vertical_mask(patch_size, 38, 0.00, 0.96),
+        _vertical_mask(patch_size, 28, 0.00, 0.96),
     )
     alpha = ImageChops.multiply(alpha, _soft_blob_mask(patch_size, 226, seed_offset=28))
     base.alpha_composite(
@@ -542,16 +542,16 @@ def _add_center_band_breakup(
 
     patch_size = (int(w * 0.68), int(h * 0.24))
     patch = haze_source.resize(patch_size, Image.Resampling.LANCZOS)
-    patch = ImageEnhance.Brightness(patch).enhance(0.86)
-    patch = ImageEnhance.Color(patch).enhance(0.88)
-    patch = ImageEnhance.Contrast(patch).enhance(0.86)
+    patch = ImageEnhance.Brightness(patch).enhance(0.98)
+    patch = ImageEnhance.Color(patch).enhance(0.90)
+    patch = ImageEnhance.Contrast(patch).enhance(0.90)
     patch = patch.filter(ImageFilter.GaussianBlur(2.4)).convert("RGBA")
 
     x = int(w * 0.16)
     y = int(h * 0.43)
     alpha = ImageChops.multiply(
         subject_mask.crop((x, y, x + patch_size[0], y + patch_size[1])),
-        _vertical_mask(patch_size, 34, 0.00, 0.98),
+        _vertical_mask(patch_size, 22, 0.00, 0.98),
     )
     alpha = ImageChops.multiply(alpha, _soft_blob_mask(patch_size, 214, seed_offset=32))
     base.alpha_composite(
@@ -581,7 +581,7 @@ def _add_center_midwater_light_glaze(
 
     patch_size = (int(w * 0.64), int(h * 0.36))
     patch = light_source.resize(patch_size, Image.Resampling.LANCZOS)
-    patch = ImageEnhance.Brightness(patch).enhance(1.23)
+    patch = ImageEnhance.Brightness(patch).enhance(1.32)
     patch = ImageEnhance.Color(patch).enhance(0.96)
     patch = ImageEnhance.Contrast(patch).enhance(0.82)
     patch = patch.filter(ImageFilter.GaussianBlur(1.8)).convert("RGBA")
@@ -590,7 +590,7 @@ def _add_center_midwater_light_glaze(
     y = int(h * 0.18)
     alpha = ImageChops.multiply(
         subject_mask.crop((x, y, x + patch_size[0], y + patch_size[1])),
-        _vertical_mask(patch_size, 102, 0.00, 0.96),
+        _vertical_mask(patch_size, 132, 0.00, 0.96),
     )
     alpha = ImageChops.multiply(alpha, _soft_blob_mask(patch_size, 220, seed_offset=34))
     base.alpha_composite(
@@ -600,6 +600,122 @@ def _add_center_midwater_light_glaze(
             alpha,
         ),
         (x, y),
+    )
+
+
+def _add_center_surface_ray_detail(
+    base: Image.Image,
+    source: Image.Image,
+    subject_mask: Image.Image,
+) -> None:
+    w, h = source.size
+    rays = Image.new("RGBA", source.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(rays, "RGBA")
+
+    # These are raster light accents behind the runtime fish. They use only
+    # the subject mask, so they cannot reintroduce the reference fish, line, or
+    # hit text, but they keep the center from reading as one dark replacement band.
+    for index, (x0, x1, x2, x3, alpha) in enumerate(
+        (
+            (0.25, 0.31, 0.37, 0.32, 30),
+            (0.34, 0.41, 0.50, 0.45, 38),
+            (0.47, 0.54, 0.62, 0.57, 34),
+            (0.58, 0.64, 0.71, 0.67, 27),
+        )
+    ):
+        bottom = h * (0.60 + index * 0.018)
+        draw.polygon(
+            (
+                (w * x0, 0.0),
+                (w * x1, 0.0),
+                (w * x2, bottom),
+                (w * x3, bottom),
+            ),
+            fill=(176, 239, 248, alpha),
+        )
+
+    for index in range(72):
+        col = index % 12
+        row = index // 12
+        u = 0.24 + col * 0.046 + (row % 2) * 0.014
+        v = 0.14 + row * 0.058 + math.sin(index * 1.31) * 0.010
+        radius = 0.8 + (index % 4) * 0.42
+        alpha = 28 + (index % 5) * 5
+        draw.ellipse(
+            (
+                w * u - radius,
+                h * v - radius,
+                w * u + radius,
+                h * v + radius,
+            ),
+            fill=(218, 249, 255, alpha),
+        )
+
+    ray_mask = ImageChops.multiply(
+        subject_mask,
+        _vertical_mask(source.size, 118, 0.00, 0.72),
+    )
+    ray_mask = ImageChops.multiply(ray_mask, _soft_blob_mask(source.size, 214, seed_offset=42))
+    base.alpha_composite(
+        Image.composite(
+            rays.filter(ImageFilter.GaussianBlur(7.0)),
+            Image.new("RGBA", source.size, (0, 0, 0, 0)),
+            ray_mask,
+        ),
+        (0, 0),
+    )
+
+
+def _add_center_clear_water_glaze(
+    base: Image.Image,
+    source: Image.Image,
+    subject_mask: Image.Image,
+) -> None:
+    w, h = source.size
+    glaze = Image.new("RGBA", source.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(glaze, "RGBA")
+
+    draw.ellipse(
+        (int(w * 0.14), int(h * 0.10), int(w * 0.84), int(h * 0.70)),
+        fill=(28, 145, 184, 54),
+    )
+    draw.ellipse(
+        (int(w * 0.24), -int(h * 0.08), int(w * 0.72), int(h * 0.34)),
+        fill=(132, 226, 244, 32),
+    )
+    draw.rectangle(
+        (int(w * 0.20), int(h * 0.30), int(w * 0.80), int(h * 0.58)),
+        fill=(12, 116, 166, 22),
+    )
+    draw.ellipse(
+        (int(w * 0.20), int(h * 0.54), int(w * 0.82), int(h * 0.93)),
+        fill=(82, 177, 176, 30),
+    )
+
+    for index in range(6):
+        x = w * (0.24 + index * 0.085)
+        draw.polygon(
+            (
+                (x, 0),
+                (x + w * 0.040, 0),
+                (x + w * 0.105, h * 0.64),
+                (x + w * 0.050, h * 0.64),
+            ),
+            fill=(158, 236, 247, 16 if index % 2 else 22),
+        )
+
+    alpha = ImageChops.multiply(
+        subject_mask,
+        _vertical_mask(source.size, 132, 0.00, 0.95),
+    )
+    alpha = ImageChops.multiply(alpha, _soft_blob_mask(source.size, 226, seed_offset=48))
+    base.alpha_composite(
+        Image.composite(
+            glaze.filter(ImageFilter.GaussianBlur(18.0)),
+            Image.new("RGBA", source.size, (0, 0, 0, 0)),
+            alpha,
+        ),
+        (0, 0),
     )
 
 
@@ -626,9 +742,9 @@ def _add_center_water_texture(
         (int(w * 0.72), int(h * 0.30)),
         Image.Resampling.LANCZOS,
     )
-    seabed_patch = ImageEnhance.Brightness(seabed_patch).enhance(0.78)
-    seabed_patch = ImageEnhance.Color(seabed_patch).enhance(0.82)
-    seabed_patch = ImageEnhance.Contrast(seabed_patch).enhance(0.96)
+    seabed_patch = ImageEnhance.Brightness(seabed_patch).enhance(0.90)
+    seabed_patch = ImageEnhance.Color(seabed_patch).enhance(0.86)
+    seabed_patch = ImageEnhance.Contrast(seabed_patch).enhance(1.00)
 
     seabed_alpha = ImageChops.multiply(
         subject_mask.crop(
@@ -637,7 +753,7 @@ def _add_center_water_texture(
             seabed_patch.size,
             Image.Resampling.LANCZOS,
         ),
-        _vertical_mask(seabed_patch.size, 102, 0.18, 0.98),
+        _vertical_mask(seabed_patch.size, 92, 0.18, 0.98),
     )
     seabed_alpha = ImageChops.multiply(
         seabed_alpha,
@@ -655,6 +771,7 @@ def _add_center_water_texture(
     _add_center_midwater_depth(base, source, subject_mask)
     _add_center_band_breakup(base, source, subject_mask)
     _add_center_midwater_light_glaze(base, source, subject_mask)
+    _add_center_surface_ray_detail(base, source, subject_mask)
     _add_center_seabed_shelf(base, source, subject_mask)
     _add_center_sand_channel(base, source, subject_mask)
     _add_center_floor_glints(base, source, subject_mask)
@@ -662,16 +779,16 @@ def _add_center_water_texture(
     _add_center_floor_caustic_mesh(base, source, subject_mask)
 
     floor_fragments = (
-        (source.crop((int(w * 0.08), int(h * 0.74), int(w * 0.28), int(h * 0.92))), 0.33, 0.79, 0.24, 0.11, 30),
-        (source.crop((int(w * 0.78), int(h * 0.72), int(w * 0.96), int(h * 0.92))), 0.49, 0.82, 0.21, 0.10, 24),
-        (source.crop((int(w * 0.20), int(h * 0.78), int(w * 0.38), int(h * 0.94))), 0.61, 0.83, 0.19, 0.09, 20),
+        (source.crop((int(w * 0.08), int(h * 0.74), int(w * 0.28), int(h * 0.92))), 0.33, 0.79, 0.24, 0.11, 22),
+        (source.crop((int(w * 0.78), int(h * 0.72), int(w * 0.96), int(h * 0.92))), 0.49, 0.82, 0.21, 0.10, 18),
+        (source.crop((int(w * 0.20), int(h * 0.78), int(w * 0.38), int(h * 0.94))), 0.61, 0.83, 0.19, 0.09, 16),
     )
     for fragment, u, v, patch_w_ratio, patch_h_ratio, alpha in floor_fragments:
         patch_size = (int(w * patch_w_ratio), int(h * patch_h_ratio))
         patch = fragment.resize(patch_size, Image.Resampling.LANCZOS)
-        patch = ImageEnhance.Brightness(patch).enhance(0.72)
-        patch = ImageEnhance.Color(patch).enhance(0.76)
-        patch = ImageEnhance.Contrast(patch).enhance(0.88)
+        patch = ImageEnhance.Brightness(patch).enhance(0.90)
+        patch = ImageEnhance.Color(patch).enhance(0.82)
+        patch = ImageEnhance.Contrast(patch).enhance(0.92)
         patch = patch.filter(ImageFilter.GaussianBlur(0.8)).convert("RGBA")
 
         local_mask = Image.new("L", patch_size, 0)
@@ -704,18 +821,18 @@ def _add_center_water_texture(
         )
 
     reef_fragments = (
-        (source.crop((int(w * 0.04), int(h * 0.58), int(w * 0.24), int(h * 0.88))), 0.36, 0.70, 0.28, 0.22, 28),
-        (source.crop((int(w * 0.68), int(h * 0.48), int(w * 0.94), int(h * 0.78))), 0.49, 0.61, 0.34, 0.24, 30),
-        (source.crop((int(w * 0.78), int(h * 0.54), int(w * 0.98), int(h * 0.86))), 0.57, 0.68, 0.30, 0.23, 24),
-        (source.crop((int(w * 0.66), int(h * 0.70), int(w * 0.88), int(h * 0.94))), 0.49, 0.82, 0.27, 0.14, 26),
+        (source.crop((int(w * 0.04), int(h * 0.58), int(w * 0.24), int(h * 0.88))), 0.36, 0.70, 0.28, 0.22, 12),
+        (source.crop((int(w * 0.68), int(h * 0.48), int(w * 0.94), int(h * 0.78))), 0.49, 0.61, 0.34, 0.24, 14),
+        (source.crop((int(w * 0.78), int(h * 0.54), int(w * 0.98), int(h * 0.86))), 0.57, 0.68, 0.30, 0.23, 11),
+        (source.crop((int(w * 0.66), int(h * 0.70), int(w * 0.88), int(h * 0.94))), 0.49, 0.82, 0.27, 0.14, 12),
     )
     for index, (fragment, u, v, patch_w_ratio, patch_h_ratio, alpha) in enumerate(reef_fragments):
         patch_size = (int(w * patch_w_ratio), int(h * patch_h_ratio))
         patch = fragment.resize(patch_size, Image.Resampling.LANCZOS)
-        patch = ImageEnhance.Brightness(patch).enhance(0.60)
-        patch = ImageEnhance.Color(patch).enhance(0.72)
-        patch = ImageEnhance.Contrast(patch).enhance(0.78)
-        patch = patch.filter(ImageFilter.GaussianBlur(1.8)).convert("RGBA")
+        patch = ImageEnhance.Brightness(patch).enhance(0.78)
+        patch = ImageEnhance.Color(patch).enhance(0.76)
+        patch = ImageEnhance.Contrast(patch).enhance(0.82)
+        patch = patch.filter(ImageFilter.GaussianBlur(2.4)).convert("RGBA")
         patch_alpha = ImageChops.multiply(
             _soft_blob_mask(patch_size, alpha, seed_offset=index * 2),
             _vertical_mask(patch_size, 210, 0.00, 1.0),
@@ -742,9 +859,9 @@ def _add_center_water_texture(
     mid_source.paste(left_water, (0, 0))
     mid_source.paste(right_water, (left_water.width, 0))
     mid_patch = mid_source.resize((int(w * 0.60), int(h * 0.36)), Image.Resampling.LANCZOS)
-    mid_patch = ImageEnhance.Brightness(mid_patch).enhance(0.92)
-    mid_patch = ImageEnhance.Color(mid_patch).enhance(0.88)
-    mid_patch = ImageEnhance.Contrast(mid_patch).enhance(0.94)
+    mid_patch = ImageEnhance.Brightness(mid_patch).enhance(1.04)
+    mid_patch = ImageEnhance.Color(mid_patch).enhance(0.92)
+    mid_patch = ImageEnhance.Contrast(mid_patch).enhance(0.90)
     mid_patch = mid_patch.filter(ImageFilter.GaussianBlur(0.28))
 
     mid_alpha = ImageChops.multiply(
@@ -752,7 +869,7 @@ def _add_center_water_texture(
             mid_patch.size,
             Image.Resampling.LANCZOS,
         ),
-        _vertical_mask(mid_patch.size, 54, 0.00, 0.86),
+        _vertical_mask(mid_patch.size, 70, 0.00, 0.86),
     )
     mid_alpha = ImageChops.multiply(
         mid_alpha,
@@ -767,6 +884,7 @@ def _add_center_water_texture(
         (int(w * 0.20), int(h * 0.20)),
     )
 
+    _add_center_clear_water_glaze(base, source, subject_mask)
     _add_reference_school_texture(base, source, subject_mask)
     _add_distant_fish_layer(base, source, subject_mask)
     _add_midwater_bubble_texture(base, source, subject_mask)
