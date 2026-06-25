@@ -1281,6 +1281,57 @@ def _add_canvas_reference_light_polish(
         (light_x, light_y),
     )
 
+    rays = Image.new("RGBA", CANVAS_SIZE, (0, 0, 0, 0))
+    ray_draw = ImageDraw.Draw(rays, "RGBA")
+    ray_specs = [
+        (0.25, 0.34, 0.18, 0.50, 28),
+        (0.34, 0.45, 0.27, 0.62, 34),
+        (0.47, 0.56, 0.39, 0.70, 26),
+        (0.59, 0.69, 0.50, 0.75, 20),
+    ]
+    for left, right, bottom_left, bottom_right, alpha in ray_specs:
+        ray_draw.polygon(
+            [
+                (w * left, h * 0.00),
+                (w * right, h * 0.00),
+                (w * bottom_right, h * 0.58),
+                (w * bottom_left, h * 0.58),
+            ],
+            fill=(130, 226, 255, alpha),
+        )
+    for index in range(28):
+        x = w * (0.16 + (index % 14) * 0.045)
+        y = h * (0.035 + (index // 14) * 0.048 + math.sin(index * 1.7) * 0.006)
+        ray_draw.line(
+            [
+                (x, y),
+                (x + w * 0.040, y + math.sin(index * 0.61) * h * 0.006),
+                (x + w * 0.095, y + math.sin(index * 0.77) * h * 0.010),
+            ],
+            fill=(226, 255, 248, 34 if index % 5 else 46),
+            width=1,
+        )
+    ray_gate = Image.new("L", CANVAS_SIZE, 0)
+    ray_gate_draw = ImageDraw.Draw(ray_gate)
+    ray_gate_draw.ellipse((int(w * 0.10), int(h * -0.06), int(w * 0.84), int(h * 0.70)), fill=186)
+    ray_gate = ray_gate.filter(ImageFilter.GaussianBlur(36.0))
+    broad_ray = Image.new("L", CANVAS_SIZE, 0)
+    broad_ray_draw = ImageDraw.Draw(broad_ray)
+    broad_ray_draw.ellipse((int(w * 0.14), int(h * -0.10), int(w * 0.80), int(h * 0.64)), fill=168)
+    broad_ray_draw.rectangle((int(w * 0.20), 0, int(w * 0.70), int(h * 0.32)), fill=190)
+    broad_ray = broad_ray.filter(ImageFilter.GaussianBlur(48.0))
+    ray_alpha = ImageChops.lighter(subject_mask, broad_ray)
+    ray_alpha = ImageChops.multiply(ray_alpha, _vertical_mask(CANVAS_SIZE, 106, 0.00, 0.66))
+    ray_alpha = ImageChops.multiply(ray_alpha, ray_gate)
+    result.alpha_composite(
+        Image.composite(
+            rays.filter(ImageFilter.GaussianBlur(8.0)),
+            Image.new("RGBA", CANVAS_SIZE, (0, 0, 0, 0)),
+            ray_alpha,
+        ),
+        (0, 0),
+    )
+
     left_floor = source.crop((int(w * 0.05), int(h * 0.70), int(w * 0.18), int(h * 0.96)))
     right_floor = source.crop((int(w * 0.78), int(h * 0.68), int(w * 0.98), int(h * 0.94)))
     floor_source = _stitch_reference_patches(left_floor, right_floor, align="bottom")
@@ -1322,25 +1373,36 @@ def _add_canvas_reference_light_polish(
 
     strokes = Image.new("RGBA", CANVAS_SIZE, (0, 0, 0, 0))
     stroke_draw = ImageDraw.Draw(strokes, "RGBA")
-    for index in range(48):
-        row = index % 8
-        col = index // 8
-        x = w * (0.24 + col * 0.088 + (row % 2) * 0.018)
-        y = h * (0.59 + row * 0.030)
+    for index in range(72):
+        row = index % 9
+        col = index // 9
+        x = w * (0.22 + col * 0.074 + (row % 2) * 0.018)
+        y = h * (0.57 + row * 0.028)
         points: list[tuple[float, float]] = []
         for step in range(6):
             t = step / 5.0
             points.append(
                 (
-                    x + 128.0 * t,
-                    y + math.sin(t * math.tau + index * 0.52) * (2.0 + (index % 4) * 0.45),
+                    x + 132.0 * t,
+                    y + math.sin(t * math.tau + index * 0.52) * (2.1 + (index % 4) * 0.50),
                 )
             )
-        stroke_draw.line(points, fill=(214, 250, 231, 26 if index % 4 else 38), width=1)
+        stroke_draw.line(points, fill=(218, 252, 235, 31 if index % 4 else 46), width=1)
+
+    for index in range(22):
+        x = w * (0.27 + (index % 11) * 0.044)
+        y = h * (0.67 + (index // 11) * 0.070 + ((index % 3) - 1) * 0.010)
+        stroke_draw.arc(
+            (x, y, x + w * 0.070, y + h * 0.030),
+            start=192,
+            end=344,
+            fill=(226, 255, 238, 28),
+            width=1,
+        )
 
     stroke_mask = ImageChops.multiply(
         subject_mask,
-        _vertical_mask(CANVAS_SIZE, 84, 0.48, 0.90),
+        _vertical_mask(CANVAS_SIZE, 102, 0.46, 0.92),
     )
     stroke_mask = ImageChops.multiply(stroke_mask, _soft_blob_mask(CANVAS_SIZE, 218, seed_offset=78))
     result.alpha_composite(
