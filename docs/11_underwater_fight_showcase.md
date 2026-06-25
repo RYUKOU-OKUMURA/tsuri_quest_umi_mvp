@@ -18,7 +18,7 @@
 
 `sidebar_frame.png`、`top_status_frame.png`、`fight_hud_frame.png` は、生成素材の金飾りが強すぎたため `tools/generate_underwater_ui_frame_assets.py` で参照画像寄りの紙カード/濃紺ゲージ台として作り直している。これは最終美術素材ではなく、文字・ゲージ・アイコンが破綻しない完成寄りの枠素材スロットである。`FishingScreen` では右サイドバー外側の汎用パネルを外し、専用 `sidebar_frame.png` が直接画面に出るようにしている。現行の生成ルールでは `_draw_clean_card()` を使い、黒い太枠・鋲・強い金線を減らして、参照画像の紙カード寄りに軽量化している。右パネル下段カードは、白い罫線付きフォームに見えないよう、本文ウェルとアイコン枠をテクスチャ付きの紙リセスとして焼き込み、ガイド線は短く低透過に抑える。
 
-`kurodai_showcase_sheet.png`、`kurodai_card_portrait.png`、`hit_burst.png` は、`kurodai_chroma_source.png` を元に `tools/process_underwater_fish_assets.py` で生成する。処理内容は、クロマキー除去、マゼンタ縁のデスピル、単体魚または4フレーム素材の正規化、右カード用の紙背景ポートレート生成、ヒットバッジ生成である。`kurodai_card_portrait.png` は右パネルの実表示窓に合わせた 620x330 比率にし、横長すぎる素材を縮小表示して魚の存在感を落とさない。生成元は内製差し替え用の中間素材で、画面表示は最終PNGのみを参照する。
+`kurodai_showcase_sheet.png`、`kurodai_card_portrait.png`、`hit_burst.png` は、`kurodai_chroma_source.png` を元に `tools/process_underwater_fish_assets.py` で生成する。処理内容は、クロマキー除去、マゼンタ縁のデスピル、半透明縁の再クリーニング、単体魚または4フレーム素材の正規化、実戦用シートだけに入れる薄い水中エッジ下敷き、右カード用の紙背景ポートレート生成、ヒットバッジ生成である。`kurodai_card_portrait.png` は右パネルの実表示窓に合わせた 620x330 比率にし、横長すぎる素材を縮小表示して魚の存在感を落とさない。カード用ポートレートは、水中エッジ下敷きを入れる前のクリーンな切り抜きを使い、紙面上に青いハロが出ないようにする。生成元は内製差し替え用の中間素材で、画面表示は最終PNGのみを参照する。
 
 水中ファイトの主要文字は `src/ui/fight_fonts.gd` から `MPLUS1p-Bold.ttf` を使う。通常テーマ全体は既存の `MPLUS1p-Regular.ttf` を維持し、看板画面の上部ステータス、HUD、右パネル、ヒット文字だけ太い表示に寄せる。
 
@@ -76,8 +76,8 @@
 | `assets/showcase/underwater/underwater_seabed_detail.png` | 海底/左右の密度補助 | `tools/generate_underwater_foreground_assets.py` で生成 | 透明PNG、岩場・海藻・サンゴ・水底光を含み、主役魚を邪魔しない |
 | `assets/showcase/underwater/underwater_foreground_ambience.png` | 前景密度補助 | `tools/generate_underwater_foreground_assets.py` で生成 | 透明PNG、泡柱・中央の小さな泡列・中央水底光・上部光束・水面 shimmer・遠景魚・光粒を含み主役魚を邪魔しない |
 | `assets/showcase/underwater/kurodai_chroma_source.png` | クロダイ中間素材 | リファレンス魚の切り出しを ImageGen で背景抽出 | フラットなマゼンタ背景、単体魚または横4フレーム |
-| `assets/showcase/underwater/kurodai_showcase_sheet.png` | クロダイ | `tools/process_underwater_fish_assets.py` で生成 | 透明背景、横 4 フレーム、全フレーム同サイズ |
-| `assets/showcase/underwater/kurodai_card_portrait.png` | 右カード用クロダイ | `tools/process_underwater_fish_assets.py` で生成 | 紙背景に魚を合成、620x330 前後のカード窓比率、暗い矩形を出さず、魚が紙窓の主役として大きく読める |
+| `assets/showcase/underwater/kurodai_showcase_sheet.png` | クロダイ | `tools/process_underwater_fish_assets.py` で生成 | 透明背景、横 4 フレーム、全フレーム同サイズ、マゼンタ縁を残さず青い水中背景上で輪郭が浮きすぎない |
+| `assets/showcase/underwater/kurodai_card_portrait.png` | 右カード用クロダイ | `tools/process_underwater_fish_assets.py` で生成 | 紙背景に魚を合成、620x330 前後のカード窓比率、暗い矩形や青いハロを出さず、魚が紙窓の主役として大きく読める |
 | `assets/showcase/underwater/hit_burst.png` | ヒット演出 | `tools/process_underwater_fish_assets.py` で生成 | 濃紺の水しぶき、透明背景、文字は含めない、白い放射線と泡粒は控えめにする |
 | `assets/showcase/underwater/sidebar_frame.png` | 右パネルフレーム | `tools/generate_underwater_ui_frame_assets.py` で生成 | テキストなし、魚なし、縦長フレームとして全面表示 |
 | `assets/showcase/underwater/top_status_frame.png` | 上部ステータスバー | `tools/generate_underwater_ui_frame_assets.py` で生成 | テキストなし、横長フレームとして全面表示 |
@@ -124,7 +124,7 @@
 
 ## 次に本番化する素材
 
-背景は今回パスでは固定する。次は、1) クロダイ本体の最終アート/サイズ/接地感/輪郭、2) 右パネルのカード/タグ/罫線/余白/情報密度、3) 下部HUDとボタンの質感/文字/状態表現、4) 上部ステータスのアイコン/タイポグラフィの順に詰める。
+背景は今回パスでは固定する。クロダイ本体は、マゼンタ縁の削減、低アルファ縁の整理、実戦用シートだけの薄い水中エッジ下敷きまで完了。次は、1) クロダイの subtle なフレーム差分/接地影を最終比較で必要な範囲だけ詰める、2) 右パネルのカード/タグ/罫線/余白/情報密度、3) 下部HUDとボタンの質感/文字/状態表現、4) 上部ステータスのアイコン/タイポグラフィの順に詰める。
 
 1. `sidebar_frame.png` は右パネル幅拡張、魚カード用 `kurodai_card_portrait.png` 分離、魚カード見出しの紙プラーク化、紙面の内部構造追加、行動文の意味改行、行動/タックル下段カード専用アイコン追加、下段カード本文の短縮、余白調整まで完了。`kurodai_card_portrait.png` は魚の占有率を上げ、カード内の空白感を減らした。魚カード下部は、素材側の強いガイド線を外し、Godot側の `推定 44.2 cm` と生態メモが線に切られない状態へ調整済み。生態メモは通常フォントと短い `エサ：オキアミ・カニ` 表記にして、太字小文字が暗い帯に見える問題を避けている。最新パスでは生態メモを 14px 相当に上げ、緑ドットも少し強くして、右カード下部が小さな注釈ではなく印字情報として読めるようにした。行動/タックル下段カードは、見出し帯を浅くし、紙本文ウェルを縦に広げ、アイコン占有と内部ガイド線を抑え、Godot側の二重本文パネルを外し、タックル本文を2行に圧縮し、紙スロット上端/下端に干渉しないベースラインへ調整済み。最新パスでは、下段カードのアイコン枠/本文枠の分離をやめ、専用アイコンを透明背景の切り抜き素材に再生成して、一枚の紙カード上にアイコンと本文が印字されている見え方へ寄せた。さらに本文ウェルの内枠、ガイド線、角金具の alpha を弱め、action アイコンは 56px、tackle アイコンは 68x60px へ上げた。行動本文は16px、タックル本文は20pxの二行印字を維持し、特にタックルカード右側が小さな針アイコンではなく道具ビジュアルとして読めるようにしている。次は全体比較で右パネルが再び浮く場合だけ小さく調整する。
 2. `fight_hud_frame.png` の上段は深度プレート強化、暗色化、HUDアイコン縮小/低透過化、右ラベル余白調整、18分割メーター化、未充填セグメント表示とハイライト/影追加まで完了。下段はエサ/操作/メニューの紙タイトル帯、本文スロット、濃紺メニュー行、操作ヒントの3スロット化、A/B/LRキー配置の整列、キーキャップ/ラベルの拡大と低めの再配置、キーキャップの暗い外枠/金内枠/上ハイライト、操作ヒント幅の拡張、キー下の短い補足文追加まで完了。最新パスではエサ/メニュー比率を維持したまま、焼き込み操作スロットを runtime スロットの高さに合わせてさらに厚くし、A/Bキーキャップ、主ラベル、補足文を一段大きくした。L/Rだけはキー幅と文字サイズを少し抑え、`調整 / テンション調整` が第三スロット内に収まるようにしている。`FishingScreen` と `FightHud` の表示最小高は 224px に上げ済みで、2048x456 のフレーム比率をより参照の厚い操作盤に近づけている。水中窓は少し短くなるが、最新比較では主役魚/ヒット領域の看板性は保てている。次は最終比較でまだ機械的に見える場合、HUDフレーム素材そのものの比率と小文字の光学サイズを調整する。

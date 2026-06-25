@@ -4,7 +4,7 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -82,7 +82,37 @@ def _final_despill(image: Image.Image) -> Image.Image:
     return out
 
 
-def create_kurodai_sheet() -> None:
+def _clean_transparent_fish_edge(image: Image.Image) -> Image.Image:
+    out = image.copy()
+    px = out.load()
+    for y in range(out.height):
+        for x in range(out.width):
+            r, g, b, a = px[x, y]
+            if a == 0:
+                continue
+            if a < 38:
+                px[x, y] = (r, g, b, int(a * 0.55))
+                continue
+            if a < 246 and ((r > g + 14 and b > g + 14) or (r > 112 and b > 118 and g < 118)):
+                gray = max(22, min(112, int(g * 1.18 + min(r, b) * 0.10)))
+                alpha = a
+                if a < 132:
+                    alpha = int(a * 0.78)
+                px[x, y] = (gray, min(122, gray + 7), min(140, gray + 24), alpha)
+    return out
+
+
+def _add_runtime_fish_edge_underlay(image: Image.Image) -> Image.Image:
+    alpha = image.getchannel("A")
+    expanded = alpha.filter(ImageFilter.MaxFilter(5)).filter(ImageFilter.GaussianBlur(1.15))
+    inner = alpha.filter(ImageFilter.GaussianBlur(0.35))
+    edge = ImageChops.subtract(expanded, inner).point(lambda value: int(value * 0.34))
+    underlay = Image.new("RGBA", image.size, (8, 28, 42, 0))
+    underlay.putalpha(edge)
+    return Image.alpha_composite(underlay, image)
+
+
+def create_kurodai_sheet() -> Image.Image:
     source = _magenta_removed(Image.open(FISH_SOURCE))
     # ImageGen passes can produce either a four-cell source sheet or a single
     # reference-quality fish cutout. The final runtime asset always remains a
@@ -106,11 +136,14 @@ def create_kurodai_sheet() -> None:
         y = (frame_h - resized.height) // 2 + 8
         sheet.alpha_composite(resized, (x, y))
 
-    _final_despill(sheet).save(FISH_SHEET)
+    clean_sheet = _clean_transparent_fish_edge(_final_despill(sheet))
+    _add_runtime_fish_edge_underlay(clean_sheet).save(FISH_SHEET)
+    return clean_sheet
 
 
-def create_kurodai_card_portrait() -> None:
-    sheet = Image.open(FISH_SHEET).convert("RGBA")
+def create_kurodai_card_portrait(sheet: Image.Image | None = None) -> None:
+    if sheet is None:
+        sheet = Image.open(FISH_SHEET).convert("RGBA")
     frame_w = sheet.width // 4
     frame = sheet.crop((0, 0, frame_w, sheet.height))
     crop = frame.crop(_content_bbox(frame))
@@ -228,8 +261,8 @@ def create_hit_burst() -> None:
 
 
 def main() -> None:
-    create_kurodai_sheet()
-    create_kurodai_card_portrait()
+    clean_sheet = create_kurodai_sheet()
+    create_kurodai_card_portrait(clean_sheet)
     create_hit_burst()
     print(f"processed {FISH_SHEET}, {FISH_CARD_PORTRAIT}, and {HIT_BURST}")
 
