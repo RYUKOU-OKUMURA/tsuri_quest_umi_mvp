@@ -16,6 +16,7 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Patches Made Since Previous QA
 
+- Matched the right-sidebar fish count label to the reference copy. `FightSidebar` and `/tmp/tsuri_sidebar_static_compare.png` now draw `1/1 匹` with a space before `匹`, and right-align the text by measured width so the wider label stays inside the green header.
 - Matched the lower-HUD menu copy in `FightHud` and `/tmp/tsuri_hud_static_compare.png` to the reference: the frame-backed right menu now shows `ポーズメニュー` and `釣りをやめる` instead of the shorter `ポーズ` / `港へ戻る`. Long menu labels use a 14px printed size so the reference copy fits inside the navy menu rows without clipping.
 - Split the right fish-card estimate typography in `FightSidebar` and `/tmp/tsuri_sidebar_static_compare.png`. Compact frame-backed cards now draw `推定` and `cm` with the regular font at 14px while keeping the `44.2` value as a 23px bold number, so the size row reads more like printed card hierarchy instead of one heavy debug label.
 - Lightened the lower-HUD center depth plate in `fight_hud_frame.png`, `FightHud`, and `/tmp/tsuri_hud_static_compare.png`. The baked value plaque is less black, the outline is thinner, and the runtime/static `18.6m` text drops from 31px with a 2px outline to 30px with a 1px outline so the center module reads less like a heavy debug label while staying legible.

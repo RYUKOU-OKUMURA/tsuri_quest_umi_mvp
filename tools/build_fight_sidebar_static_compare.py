@@ -162,7 +162,9 @@ def _draw_rarity(draw: ImageDraw.ImageDraw, box: tuple[float, float, float, floa
 def _draw_header(draw: ImageDraw.ImageDraw, w: int, h: int) -> None:
     header = (w * 0.044, h * 0.026, w * (0.044 + 0.912), h * (0.026 + 0.078))
     _draw_text(draw, (header[0] + 14, header[1] + header[3] - header[1] - 31), "釣り中の魚", 18, "#f7ecd0", stroke=2)
-    _draw_text(draw, (header[2] - 66, header[1] + header[3] - header[1] - 28), "1/1匹", 16, "#f7cf61", stroke=1)
+    count = "1/1 匹"
+    count_x = header[2] - _font(16).getlength(count) - 14
+    _draw_text(draw, (count_x, header[1] + header[3] - header[1] - 28), count, 16, "#f7cf61", stroke=1)
 
 
 def _draw_fish_card(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: int) -> None:

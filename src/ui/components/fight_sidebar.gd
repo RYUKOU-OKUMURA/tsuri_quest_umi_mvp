@@ -99,7 +99,10 @@ func _draw_header(font: Font, rect: Rect2) -> void:
 	var title_outline := 3 if _sidebar_frame == null else 2
 	var count_outline := 2 if _sidebar_frame == null else 1
 	_draw_text(font, "釣り中の魚", rect.position + Vector2(14.0, rect.size.y * 0.68), title_size, Palette.TEXT_BONE, title_outline)
-	_draw_text(font, "1/1匹", rect.position + Vector2(rect.size.x - 66.0, rect.size.y * 0.68), 16, Palette.GOLD_BRIGHT, count_outline)
+	var count_text := "1/1 匹"
+	var count_size := 16
+	var count_w := font.get_string_size(count_text, HORIZONTAL_ALIGNMENT_LEFT, -1, count_size).x
+	_draw_text(font, count_text, rect.position + Vector2(rect.size.x - count_w - 14.0, rect.size.y * 0.68), count_size, Palette.GOLD_BRIGHT, count_outline)
 
 
 func _draw_fish_card(font: Font, rect: Rect2) -> void:
