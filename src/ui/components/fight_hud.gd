@@ -346,18 +346,32 @@ func _draw_key_hint(font: Font, rect: Rect2, key: String, label: String) -> void
 
 func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String, note: String) -> void:
 	var is_long_key := key.length() > 1
-	var key_w := 46.0 if not is_long_key else 62.0
-	var key_rect := Rect2(rect.position + Vector2(9.0, 9.0), Vector2(key_w, 32.0))
-	draw_rect(key_rect, Color("#253247"), true)
-	draw_rect(key_rect, Color("#0d1524"), false, 2.0)
-	draw_rect(key_rect.grow(-2.0), Color("#d5b56b"), false, 1.0)
-	draw_line(key_rect.position + Vector2(4.0, 4.0), key_rect.position + Vector2(key_rect.size.x - 4.0, 4.0), Color(1.0, 1.0, 1.0, 0.20), 1.0)
+	var key_origin := rect.position + Vector2(10.0, 10.0)
+	var key_w := 34.0 if not is_long_key else 58.0
+	var key_h := 30.0
+	var key_rect := Rect2(key_origin, Vector2(key_w, key_h))
+	if is_long_key:
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color("#253247")
+		style.border_color = Color("#d5b56b")
+		style.set_border_width_all(1)
+		style.set_corner_radius_all(6)
+		style.shadow_color = Color(0.0, 0.0, 0.0, 0.24)
+		style.shadow_size = 1
+		draw_style_box(style, key_rect)
+		draw_line(key_rect.position + Vector2(6.0, 5.0), key_rect.position + Vector2(key_rect.size.x - 6.0, 5.0), Color(1.0, 1.0, 1.0, 0.18), 1.0)
+	else:
+		var center := key_rect.position + key_rect.size * 0.5
+		draw_circle(center + Vector2(1.5, 2.0), 15.0, Color(0.0, 0.0, 0.0, 0.24))
+		draw_circle(center, 14.0, Color("#253247"))
+		draw_circle(center, 14.0, Color("#d5b56b"), false, 1.0)
+		draw_line(center + Vector2(-8.0, -7.0), center + Vector2(8.0, -7.0), Color(1.0, 1.0, 1.0, 0.18), 1.0)
 	var key_size := 18 if not is_long_key else 16
 	var key_text_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
 	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 22.0), key_size, Color.WHITE, 1)
 	var label_size := 21 if not is_long_key else 20
-	var note_size := 11 if not is_long_key else 10
-	var label_pos := key_rect.position + Vector2(key_rect.size.x + (9.0 if not is_long_key else 7.0), 21.0)
+	var note_size := 11 if not is_long_key else 9
+	var label_pos := key_rect.position + Vector2(key_rect.size.x + (10.0 if not is_long_key else 7.0), 22.0)
 	_draw_text(font, label, label_pos, label_size, Color("#2b2117"), 0)
 	var note_text := _compact_control_note(note)
 	_draw_text(font, note_text, label_pos + Vector2(0.0, 13.0), note_size, Color("#5a4327"), 0)
