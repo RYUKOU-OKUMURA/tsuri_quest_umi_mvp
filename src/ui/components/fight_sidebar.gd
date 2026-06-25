@@ -151,7 +151,11 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 
 func _draw_action_card(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0d3a62"), Palette.GOLD, Palette.GOLD_BRIGHT)
-	_draw_text(font, "魚の行動", rect.position + Vector2(16.0, 25.0), 18, Palette.TEXT_BONE, 2 if _sidebar_frame != null else 3)
+	var title_x := 16.0
+	if _sidebar_frame != null:
+		_draw_action_header_icon(Rect2(rect.position + Vector2(14.0, 6.0), Vector2(22.0, 22.0)))
+		title_x = 40.0
+	_draw_text(font, "魚の行動", rect.position + Vector2(title_x, 25.0), 18, Palette.TEXT_BONE, 2 if _sidebar_frame != null else 3)
 	var body := Rect2(rect.position + Vector2(10.0, 33.0), rect.size - Vector2(20.0, 42.0))
 	if _sidebar_frame != null:
 		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.225), rect.size - Vector2(28.0, rect.size.y * 0.285))
@@ -378,6 +382,14 @@ func _draw_action_icon(center: Vector2, size_value: float = 58.0) -> void:
 	for i in range(3):
 		var splash := center + Vector2(-18.0 + float(i) * 12.0, 30.0 + float(i % 2) * 4.0)
 		draw_line(splash + Vector2(-6.0, 0.0), splash + Vector2(6.0, 0.0), Color("#35aee0"), 2.0)
+
+
+func _draw_action_header_icon(rect: Rect2) -> void:
+	if _icons != null:
+		_draw_sheet_icon(ICON_ACTION, rect)
+		return
+	if _action_card_icon != null:
+		_draw_texture_centered(_action_card_icon, rect.position + rect.size * 0.5, rect.size)
 
 
 func _draw_simple_rod(base: Vector2) -> void:

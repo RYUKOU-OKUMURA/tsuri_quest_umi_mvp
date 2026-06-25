@@ -15,6 +15,7 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Patches Made Since Previous QA
 
+- Added a small real icon-sheet glyph to the right-panel `魚の行動` title band in `FightSidebar` and the sidebar static comparison. The action card header now has reference-like information density instead of a text-only navy strip, without adding code-drawn placeholder art.
 - Rebuilt `kurodai_card_portrait.png` with a tighter 560x310 transparent canvas and larger useful alpha bounds. The right fish card now gives the kurodai more presence in `/tmp/tsuri_sidebar_static_compare.png` without adding a framed portrait window, blue halo, or extra runtime drawing.
 - Rebuilt `top_status_frame.png` with stronger parchment-edge patina and quieter highlights, then reduced the top-status runtime/static value typography slightly. `/tmp/tsuri_top_status_static_compare.png` now reads less like flat white UI cards with oversized overlay text and closer to the reference's printed paper status windows.
 - Rebuilt `fight_hud_frame.png` without the extra pale circular bait placeholder and reduced the frame-backed HUD title/edge label outlines. The bait card now relies on the extracted `hud_bait_icon.png` instead of a generated-looking icon well, and `/tmp/tsuri_hud_static_compare.png` reads less like a form-grid panel while preserving the reference-style operation card layout.

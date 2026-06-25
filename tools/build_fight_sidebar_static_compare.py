@@ -111,6 +111,15 @@ def _paste_contain(base: Image.Image, image: Image.Image, box: tuple[float, floa
     base.alpha_composite(resized, (x, y))
 
 
+def _draw_sheet_icon(base: Image.Image, index: int, box: tuple[float, float, float, float]) -> None:
+    sheet = Image.open(ASSET_DIR / "fight_icon_sheet.png").convert("RGBA")
+    cell_w = sheet.width // 3
+    cell_h = sheet.height // 3
+    src = sheet.crop(((index % 3) * cell_w, (index // 3) * cell_h, (index % 3 + 1) * cell_w, (index // 3 + 1) * cell_h))
+    icon = _resize(src, (round(box[2] - box[0]), round(box[3] - box[1])))
+    base.alpha_composite(icon, (round(box[0]), round(box[1])))
+
+
 def _draw_rarity(draw: ImageDraw.ImageDraw, box: tuple[float, float, float, float]) -> None:
     draw.rounded_rectangle(box, radius=3, fill="#96517e", outline="#ddb3ce", width=1)
     draw.line((box[0] + 4, box[1] + 3, box[2] - 4, box[1] + 3), fill=(255, 225, 245, 90), width=1)
@@ -155,7 +164,8 @@ def _draw_fish_card(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: int
 def _draw_lower_cards(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: int) -> None:
     action = (w * 0.044, h * 0.588, w * (0.044 + 0.912), h * (0.588 + 0.195))
     tackle = (w * 0.044, h * 0.798, w * (0.044 + 0.912), h * (0.798 + 0.178))
-    _draw_text(draw, (action[0] + 16, action[1] + 5), "魚の行動", 18, "#f7ecd0", stroke=2)
+    _draw_sheet_icon(base, 7, (action[0] + 14, action[1] + 6, action[0] + 36, action[1] + 28))
+    _draw_text(draw, (action[0] + 40, action[1] + 5), "魚の行動", 18, "#f7ecd0", stroke=2)
     action_body = (action[0] + 14, action[1] + (action[3] - action[1]) * 0.225, action[2] - 14, action[3] - (action[3] - action[1]) * 0.060)
     _paste_contain(base, Image.open(ASSET_DIR / "fight_action_card_icon.png").convert("RGBA"), (action_body[0] + 5, action_body[1] + 17, action_body[0] + 61, action_body[1] + 73))
     _draw_text(draw, (action_body[0] + 78, action_body[1] + 7), "突っ込み！", 23, "#2b2117")
