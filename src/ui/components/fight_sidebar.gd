@@ -132,13 +132,17 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	var estimate := (float(fish_data.get("size_min", 0.0)) + float(fish_data.get("size_max", 0.0))) * 0.5
 	var estimate_size := 21 if _sidebar_frame != null else 23
 	_draw_centered_text(font, "推定 %.1f cm" % estimate, Rect2(inner.position.x, divider_y + 8.0, inner.size.x, 30.0), estimate_size, Color("#2b2117"), 0)
-	var desc_y := divider_y + (49.0 if compact_card else 44.0)
+	var desc_y := divider_y + (41.0 if compact_card else 44.0)
 	draw_line(Vector2(inner.position.x + 8.0, desc_y - 10.0), Vector2(inner.end.x - 8.0, desc_y - 10.0), Color("#d6c299"), 1.0)
 	var detail_gap := 16.0 if compact_card else 21.0
 	var detail_font := get_theme_default_font()
-	_draw_detail_line(detail_font, "岩場周りで警戒心が強い。", Vector2(inner.position.x + 15.0, desc_y), inner.size.x - 26.0)
-	_draw_detail_line(detail_font, "エサ：オキアミ・カニ", Vector2(inner.position.x + 15.0, desc_y + detail_gap), inner.size.x - 26.0)
-	if _sidebar_frame == null:
+	if compact_card:
+		_draw_info_paragraph(detail_font, "岩場や海藻の周りに潜む警戒心の強い魚。", Vector2(inner.position.x + 15.0, desc_y), inner.size.x - 26.0)
+		_draw_detail_line(detail_font, "好むエサ：オキアミ・カニ", Vector2(inner.position.x + 15.0, desc_y + 24.0), inner.size.x - 26.0)
+		_draw_detail_line(detail_font, "主な生息域：沿岸の岩場", Vector2(inner.position.x + 15.0, desc_y + 39.0), inner.size.x - 26.0)
+	else:
+		_draw_detail_line(detail_font, "岩場周りで警戒心が強い。", Vector2(inner.position.x + 15.0, desc_y), inner.size.x - 26.0)
+		_draw_detail_line(detail_font, "エサ：オキアミ・カニ", Vector2(inner.position.x + 15.0, desc_y + detail_gap), inner.size.x - 26.0)
 		_draw_detail_line(detail_font, "生息域：沿岸の岩場・堤防周り", Vector2(inner.position.x + 16.0, desc_y + detail_gap * 2.0), inner.size.x - 28.0)
 
 
@@ -295,11 +299,16 @@ func _draw_bullet(font: Font, text: String, pos: Vector2, max_width: float) -> v
 	_draw_wrapped(font, text, pos + Vector2(14.0, -15.0), max_width - 14.0, 13, Palette.TEXT_DARK, 1)
 
 
+func _draw_info_paragraph(font: Font, text: String, pos: Vector2, max_width: float) -> void:
+	var font_size := 12 if _sidebar_frame != null else 14
+	_draw_wrapped(font, text, pos, max_width, font_size, Palette.TEXT_DARK, 2, float(font_size + 3))
+
+
 func _draw_detail_line(font: Font, text: String, pos: Vector2, max_width: float) -> void:
-	draw_circle(pos + Vector2(3.0, 10.0), 4.3, Color("#49c75a"))
+	draw_circle(pos + Vector2(3.0, 10.0), 3.8 if _sidebar_frame != null else 4.3, Color("#49c75a"))
 	var font_size := 14
 	if _sidebar_frame != null:
-		font_size = 14
+		font_size = 12
 	elif max_width < 260.0:
 		font_size = 13
 	_draw_wrapped(font, text, pos + Vector2(15.0, -1.0), max_width - 15.0, font_size, Palette.TEXT_DARK, 1)
