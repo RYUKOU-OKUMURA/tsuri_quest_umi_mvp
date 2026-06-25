@@ -152,18 +152,19 @@ func _draw_depth(font: Font, rect: Rect2) -> void:
 	var title := "タナ（深さ）"
 	var title_size := 17 if _hud_frame == null else 15
 	var title_w := font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x
-	var text_center_w := rect.size.x - (24.0 if _hud_frame != null else 0.0)
-	_draw_text(font, title, rect.position + Vector2((text_center_w - title_w) * 0.5, title_y), title_size, Palette.TEXT_BONE, 2 if _hud_frame != null else 3)
+	var text_center_w := rect.size.x - (40.0 if _hud_frame != null else 0.0)
+	_draw_text(font, title, rect.position + Vector2((text_center_w - title_w) * 0.5, title_y), title_size, Palette.TEXT_BONE, 1 if _hud_frame != null else 3)
 	var depth := 0.0
 	if simulator != null:
 		depth = simulator.depth
 	var value := "%.1fm" % depth
-	var value_size := 34 if _hud_frame == null else 32
+	var value_size := 34 if _hud_frame == null else 31
 	var value_w := font.get_string_size(value, HORIZONTAL_ALIGNMENT_LEFT, -1, value_size).x
-	_draw_text(font, value, rect.position + Vector2((text_center_w - value_w) * 0.5, 59.0 if _hud_frame == null else 64.0), value_size, Color("#eaf6ff"), 4)
-	var cx := rect.position.x + rect.size.x - 22.0
-	_draw_triangle(Vector2(cx, rect.position.y + 34.0), 14.0, Color("#29baf7"), true)
-	_draw_triangle(Vector2(cx, rect.position.y + 70.0), 14.0, Color("#ff6b3e"), false)
+	_draw_text(font, value, rect.position + Vector2((text_center_w - value_w) * 0.5, 59.0 if _hud_frame == null else 63.0), value_size, Color("#eaf6ff"), 2 if _hud_frame != null else 4)
+	var cx := rect.position.x + rect.size.x - (17.0 if _hud_frame != null else 22.0)
+	var arrow_radius := 11.0 if _hud_frame != null else 14.0
+	_draw_triangle(Vector2(cx, rect.position.y + 34.0), arrow_radius, Color("#29baf7"), true)
+	_draw_triangle(Vector2(cx, rect.position.y + 72.0), arrow_radius, Color("#ff6b3e"), false)
 
 
 func _draw_stamina(font: Font, rect: Rect2) -> void:
@@ -257,8 +258,8 @@ func _draw_segment_gauge(rect: Rect2, ratio: float, safe_min: float, safe_max: f
 	var gap := 1.5 if _hud_frame != null else 2.0
 	var seg_w := (rect.size.x - gap * float(segments - 1)) / float(segments)
 	if _hud_frame != null:
-		draw_rect(rect.grow(2.0), Color(0.0, 0.0, 0.0, 0.22), true)
-		draw_rect(rect, Color(0.0, 0.0, 0.0, 0.18), true)
+		draw_rect(rect.grow(2.0), Color(0.0, 0.0, 0.0, 0.13), true)
+		draw_rect(rect, Color(0.0, 0.0, 0.0, 0.10), true)
 	for i in range(segments):
 		var start := float(i) / float(segments)
 		var filled := start < ratio
@@ -271,12 +272,12 @@ func _draw_segment_gauge(rect: Rect2, ratio: float, safe_min: float, safe_max: f
 				color = Color("#21d34a").lerp(Color("#16c6b5"), start)
 		var seg := Rect2(rect.position + Vector2(float(i) * (seg_w + gap), 3.0), Vector2(seg_w, rect.size.y - 6.0))
 		if _hud_frame != null:
-			var alpha := 1.0 if filled else 0.32
+			var alpha := 0.96 if filled else 0.24
 			var seg_color := Color(color.r, color.g, color.b, alpha)
 			draw_rect(seg, seg_color, true)
-			draw_rect(Rect2(seg.position, Vector2(seg.size.x, maxf(1.0, seg.size.y * 0.24))), Color(1.0, 1.0, 1.0, 0.16 if filled else 0.05), true)
-			draw_rect(Rect2(Vector2(seg.position.x, seg.end.y - 2.0), Vector2(seg.size.x, 2.0)), Color(0.0, 0.0, 0.0, 0.20), true)
-			draw_rect(seg, Color(1.0, 1.0, 1.0, 0.10 if filled else 0.045), false, 1.0)
+			draw_rect(Rect2(seg.position, Vector2(seg.size.x, maxf(1.0, seg.size.y * 0.24))), Color(1.0, 1.0, 1.0, 0.12 if filled else 0.035), true)
+			draw_rect(Rect2(Vector2(seg.position.x, seg.end.y - 2.0), Vector2(seg.size.x, 2.0)), Color(0.0, 0.0, 0.0, 0.14), true)
+			draw_rect(seg, Color(1.0, 1.0, 1.0, 0.07 if filled else 0.03), false, 1.0)
 		else:
 			draw_rect(seg, color, true)
 			draw_rect(seg, Color(1.0, 1.0, 1.0, 0.13), false, 1.0)
@@ -399,12 +400,23 @@ func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String,
 	var key_size := 12 if not is_long_key else 10
 	var key_text_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
 	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 14.0), key_size, Color.WHITE, 1)
-	var label_size := 14
-	var note_size := 8 if not is_long_key else 7
+	var label_size := 13
+	var note_size := 8
 	var label_pos := key_rect.position + Vector2(key_rect.size.x + (7.0 if not is_long_key else 6.0), 15.0)
 	_draw_text(font, label, label_pos, label_size, Color("#2b2117"), 0)
+	var note_font := FightFontsScript.regular(get_theme_default_font())
 	var note_text := _compact_control_note(note)
-	_draw_text(font, note_text, label_pos + Vector2(0.0, 11.0), note_size, Color("#5a4327"), 0)
+	if is_long_key:
+		note_text = "テンション"
+	else:
+		note_text = "（%s）" % note_text
+	var label_w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
+	var note_pos := label_pos + Vector2(label_w + 4.0, -1.0)
+	var available_w := rect.end.x - note_pos.x - 4.0
+	var note_w := note_font.get_string_size(note_text, HORIZONTAL_ALIGNMENT_LEFT, -1, note_size).x
+	if note_w > available_w:
+		note_size = max(6, note_size - 1)
+	_draw_text(note_font, note_text, note_pos, note_size, Color("#493620"), 0)
 
 
 func _draw_key_row(font: Font, pos: Vector2, key: String, label: String) -> void:

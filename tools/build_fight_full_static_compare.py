@@ -76,6 +76,7 @@ def _draw_text(
     *,
     bold: bool = True,
     stroke: int = 0,
+    stroke_fill: tuple[int, int, int, int] = (0, 0, 0, 180),
 ) -> None:
     font = _font(size, bold=bold)
     ascent, _descent = font.getmetrics()
@@ -85,7 +86,7 @@ def _draw_text(
         font=font,
         fill=fill,
         stroke_width=stroke,
-        stroke_fill=(0, 0, 0, 180),
+        stroke_fill=stroke_fill,
     )
 
 
@@ -175,8 +176,8 @@ def _draw_line_lure_hit(water: Image.Image, fish_metrics: tuple[float, float, fl
     font_size = int(min(max(water.height * 0.125, 42.0), 58.0))
     text_w = _text_width(text, font_size)
     pos = (burst_center[0] - text_w * 0.5, burst_center[1] + font_size * 0.20)
-    _draw_text(draw, (pos[0] + 3, pos[1] + 4), text, font_size, "#ffe36e", stroke=8)
-    _draw_text(draw, pos, text, font_size, "#ffe36e", stroke=8)
+    _draw_text(draw, (pos[0] + 3, pos[1] + 4), text, font_size, "#ffe36e", stroke=6, stroke_fill=(0, 0, 0, 107))
+    _draw_text(draw, pos, text, font_size, "#ffe36e", stroke=6, stroke_fill=(106, 43, 8, 255))
 
 
 def build_water_window() -> Image.Image:
@@ -190,9 +191,9 @@ def build_water_window() -> Image.Image:
     draw.line((44, 0, 44, water.height), fill=(140, 209, 242, 46), width=1)
     fish_metrics = _draw_fish(water)
     _draw_line_lure_hit(water, fish_metrics)
-    draw.rectangle((0, 0, water.width - 1, water.height - 1), outline=(0, 13, 31, 92), width=2)
-    for inset in range(0, 16, 2):
-        alpha = max(0, 56 - inset * 6)
+    draw.rectangle((0, 0, water.width - 1, water.height - 1), outline=(0, 13, 31, 46), width=1)
+    for inset in range(2, 17, 3):
+        alpha = max(0, 34 - inset * 5)
         draw.rectangle((inset, inset, water.width - 1 - inset, water.height - 1 - inset), outline=(0, 8, 20, alpha), width=1)
     return water.convert("RGB")
 

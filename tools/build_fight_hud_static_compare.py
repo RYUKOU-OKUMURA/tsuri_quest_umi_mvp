@@ -78,8 +78,8 @@ def _draw_segment_gauge(
     warm: bool,
 ) -> None:
     x0, y0, x1, y1 = rect
-    draw.rectangle((x0 - 2, y0 - 2, x1 + 2, y1 + 2), fill=(0, 0, 0, 56))
-    draw.rectangle(rect, fill=(0, 0, 0, 46))
+    draw.rectangle((x0 - 2, y0 - 2, x1 + 2, y1 + 2), fill=(0, 0, 0, 34))
+    draw.rectangle(rect, fill=(0, 0, 0, 26))
     segments = 18
     gap = 1.5
     seg_w = ((x1 - x0) - gap * (segments - 1)) / segments
@@ -95,11 +95,11 @@ def _draw_segment_gauge(
         else:
             fill = (28, 205, 155, 255)
         if not filled:
-            fill = (23, 37, 52, 82)
+            fill = (23, 37, 52, 62)
         sx = x0 + i * (seg_w + gap)
         draw.rectangle((sx, y0 + 3, sx + seg_w, y1 - 3), fill=fill)
-        draw.rectangle((sx, y0 + 3, sx + seg_w, y0 + 8), fill=(255, 255, 255, 34 if filled else 10))
-        draw.rectangle((sx, y1 - 5, sx + seg_w, y1 - 3), fill=(0, 0, 0, 54))
+        draw.rectangle((sx, y0 + 3, sx + seg_w, y0 + 8), fill=(255, 255, 255, 30 if filled else 8))
+        draw.rectangle((sx, y1 - 5, sx + seg_w, y1 - 3), fill=(0, 0, 0, 36))
     if warm:
         for marker in (safe_min, safe_max):
             mx = x0 + (x1 - x0) * marker
@@ -107,6 +107,15 @@ def _draw_segment_gauge(
         mx = x0 + (x1 - x0) * ratio
         draw.line((mx + 2, y0 - 2, mx + 2, y1 + 4), fill=(0, 0, 0, 86), width=2)
         draw.line((mx, y0 - 3, mx, y1 + 4), fill="#fff8df", width=2)
+
+
+def _draw_triangle(draw: ImageDraw.ImageDraw, center: tuple[float, float], radius: float, fill: str, *, up: bool) -> None:
+    cx, cy = center
+    if up:
+        points = ((cx, cy - radius), (cx - radius, cy + radius * 0.8), (cx + radius, cy + radius * 0.8))
+    else:
+        points = ((cx, cy + radius), (cx - radius, cy - radius * 0.8), (cx + radius, cy - radius * 0.8))
+    draw.polygon(points, fill=fill)
 
 
 def _draw_key_cap(draw: ImageDraw.ImageDraw, box: tuple[float, float, float, float], label: str, size: int) -> None:
@@ -133,8 +142,16 @@ def _draw_key_hint(draw: ImageDraw.ImageDraw, slot: tuple[float, float, float, f
     cap = (slot[0] + 11, slot[1] + 10, slot[0] + 11 + cap_w, slot[1] + 10 + cap_h)
     _draw_key_cap(draw, cap, key, 10 if is_long else 12)
     label_x = cap[0] + cap_w + (6 if is_long else 7)
-    _draw_text(draw, (label_x, cap[1] + 15), label, 14, "#2b2117")
-    _draw_text(draw, (label_x, cap[1] + 26), note, 7 if is_long else 8, "#5a4327", bold=False)
+    label_size = 13
+    note_size = 8
+    label_y = cap[1] + 15
+    _draw_text(draw, (label_x, label_y), label, label_size, "#2b2117")
+    note_text = "テンション" if is_long else f"（{note}）"
+    note_x = label_x + _text_width(label, label_size) + 4
+    available = slot[2] - note_x - 4
+    if _text_width(note_text, note_size, bold=False) > available:
+        note_size = max(6, note_size - 1)
+    _draw_text(draw, (note_x, label_y - 1), note_text, note_size, "#493620", bold=False)
 
 
 def _draw_menu_row(draw: ImageDraw.ImageDraw, pos: tuple[float, float], key: str, label: str) -> None:
@@ -168,11 +185,14 @@ def build_current_hud() -> Image.Image:
 
     title = "タナ（深さ）"
     title_w = _text_width(title, 15)
-    depth_center = (depth[0] + depth[2] - 24) * 0.5
-    _draw_text(draw, (depth_center - title_w * 0.5, depth[1] + 24), title, 15, "#f7ecd0", stroke=2)
+    depth_center = (depth[0] + depth[2] - 40) * 0.5
+    _draw_text(draw, (depth_center - title_w * 0.5, depth[1] + 24), title, 15, "#f7ecd0", stroke=1)
     value = "18.6m"
-    value_w = _text_width(value, 32)
-    _draw_text(draw, (depth_center - value_w * 0.5, depth[1] + 64), value, 32, "#eaf6ff", stroke=4)
+    value_w = _text_width(value, 31)
+    _draw_text(draw, (depth_center - value_w * 0.5, depth[1] + 63), value, 31, "#eaf6ff", stroke=2)
+    arrow_x = depth[2] - 17
+    _draw_triangle(draw, (arrow_x, depth[1] + 34), 11, "#29baf7", up=True)
+    _draw_triangle(draw, (arrow_x, depth[1] + 72), 11, "#ff6b3e", up=False)
 
     _draw_sheet_icon(frame, 5, (stamina[0] + 12, stamina[1] + 10, stamina[0] + 36, stamina[1] + 34), (108, 200, 255, 220))
     _draw_text(draw, (stamina[0] + 40, stamina[1] + 26), "魚の体力", 18, "#f7ecd0", stroke=2)

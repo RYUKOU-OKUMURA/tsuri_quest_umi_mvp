@@ -173,9 +173,9 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 		icon_size = 72.0
 		text_x = 86.0
 	_draw_action_icon(body.position + Vector2(38.0, body.size.y * 0.58), icon_size)
-	_draw_text(font, "%s！" % action, body.position + Vector2(text_x, 32.0), 23 if _sidebar_frame != null else 20, Color("#2b2117"), 0)
+	_draw_text(font, "%s！" % action, body.position + Vector2(text_x, 30.0), 21 if _sidebar_frame != null else 20, Color("#2b2117"), 0)
 	if _sidebar_frame != null:
-		_draw_action_message(font, message, body.position + Vector2(text_x, 46.0), body.size.x - text_x - 6.0)
+		_draw_action_message(font, message, body.position + Vector2(text_x, 44.0), body.size.x - text_x - 6.0)
 	else:
 		_draw_wrapped(font, message, body.position + Vector2(72.0, 36.0), body.size.x - 82.0, 11, Palette.TEXT_DARK, 2)
 
@@ -287,8 +287,8 @@ func _draw_wrapped(
 
 func _draw_action_message(font: Font, text: String, pos: Vector2, max_width: float) -> void:
 	var first_stop := text.find("！")
-	var font_size := 15 if _sidebar_frame != null else 13
-	var gap := 16.0 if _sidebar_frame != null else 16.0
+	var font_size := 14 if _sidebar_frame != null else 13
+	var gap := 15.0 if _sidebar_frame != null else 16.0
 	if first_stop > 0 and first_stop < text.length() - 1:
 		var first := text.left(first_stop + 1).strip_edges().replace("潜ろうとしている", "潜る")
 		var second := text.substr(first_stop + 1).strip_edges()
@@ -337,8 +337,12 @@ func _draw_fish_portrait(rect: Rect2) -> void:
 	if _fish_card_portrait != null:
 		var tex_size := _fish_card_portrait.get_size()
 		var scale := minf(rect.size.x / tex_size.x, rect.size.y / tex_size.y)
+		if _sidebar_frame != null:
+			scale *= 0.94
 		var draw_size := tex_size * scale
 		var draw_rect := Rect2(rect.position + (rect.size - draw_size) * 0.5, draw_size)
+		if _sidebar_frame != null:
+			draw_rect.position += Vector2(-7.0, -2.0)
 		draw_texture_rect(_fish_card_portrait, draw_rect, false, Color.WHITE)
 		return
 	if _fish_sheet == null:

@@ -100,14 +100,21 @@ def _draw_wrapped(
         draw.text((xy[0], xy[1] + index * gap), line, font=_font(size, bold=bold), fill=fill)
 
 
-def _paste_contain(base: Image.Image, image: Image.Image, box: tuple[float, float, float, float]) -> None:
+def _paste_contain(
+    base: Image.Image,
+    image: Image.Image,
+    box: tuple[float, float, float, float],
+    *,
+    scale_multiplier: float = 1.0,
+    offset: tuple[float, float] = (0.0, 0.0),
+) -> None:
     width = box[2] - box[0]
     height = box[3] - box[1]
-    scale = min(width / image.width, height / image.height)
+    scale = min(width / image.width, height / image.height) * scale_multiplier
     size = (round(image.width * scale), round(image.height * scale))
     resized = _resize(image, size)
-    x = round(box[0] + (width - size[0]) * 0.5)
-    y = round(box[1] + (height - size[1]) * 0.5)
+    x = round(box[0] + (width - size[0]) * 0.5 + offset[0])
+    y = round(box[1] + (height - size[1]) * 0.5 + offset[1])
     base.alpha_composite(resized, (x, y))
 
 
@@ -154,7 +161,13 @@ def _draw_fish_card(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: int
         inner[2] - 6,
         inner[1] + 44 + max(82, (rect[3] - rect[1]) * 0.455),
     )
-    _paste_contain(base, Image.open(ASSET_DIR / "kurodai_card_portrait.png").convert("RGBA"), fish_rect)
+    _paste_contain(
+        base,
+        Image.open(ASSET_DIR / "kurodai_card_portrait.png").convert("RGBA"),
+        fish_rect,
+        scale_multiplier=0.94,
+        offset=(-7.0, -2.0),
+    )
     divider_y = fish_rect[3] + 3
     draw.line((inner[0] + 8, divider_y, inner[2] - 8, divider_y), fill="#c9b486", width=1)
     _center_text(draw, (inner[0], divider_y + 8, inner[2], divider_y + 38), "推定 44.2 cm", 20, "#2b2117")
@@ -173,9 +186,9 @@ def _draw_lower_cards(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: i
     _draw_text(draw, (action[0] + 40, action[1] + 5), "魚の行動", 18, "#f7ecd0", stroke=2)
     action_body = (action[0] + 14, action[1] + (action[3] - action[1]) * 0.225, action[2] - 14, action[3] - (action[3] - action[1]) * 0.060)
     _paste_alpha_crop_contain(base, Image.open(ASSET_DIR / "fight_action_card_icon.png").convert("RGBA"), (action_body[0] + 2, action_body[1] + 10, action_body[0] + 74, action_body[1] + 82))
-    _draw_text(draw, (action_body[0] + 86, action_body[1] + 7), "突っ込み！", 23, "#2b2117")
-    _draw_wrapped(draw, (action_body[0] + 86, action_body[1] + 46), "一気に深く潜る！", action_body[2] - action_body[0] - 92, 15, "#2b2117", max_lines=1, line_gap=16)
-    _draw_wrapped(draw, (action_body[0] + 86, action_body[1] + 62), "ラインを緩めず耐えよう！", action_body[2] - action_body[0] - 92, 15, "#2b2117", max_lines=1, line_gap=16)
+    _draw_text(draw, (action_body[0] + 86, action_body[1] + 9), "突っ込み！", 21, "#2b2117")
+    _draw_wrapped(draw, (action_body[0] + 86, action_body[1] + 44), "一気に深く潜る！", action_body[2] - action_body[0] - 92, 14, "#2b2117", max_lines=1, line_gap=15)
+    _draw_wrapped(draw, (action_body[0] + 86, action_body[1] + 59), "ラインを緩めず耐えよう！", action_body[2] - action_body[0] - 92, 14, "#2b2117", max_lines=1, line_gap=15)
 
     _draw_text(draw, (tackle[0] + 14, tackle[1] + 4), "タックル", 18, "#f7ecd0", stroke=2)
     body = (tackle[0] + 14, tackle[1] + (tackle[3] - tackle[1]) * 0.225, tackle[2] - 14, tackle[3] - (tackle[3] - tackle[1]) * 0.060)

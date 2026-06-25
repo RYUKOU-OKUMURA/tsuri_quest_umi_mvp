@@ -600,8 +600,8 @@ func _draw_hit_burst() -> void:
 	var font_size := int(clampf(size.y * 0.125, 42.0, 58.0))
 	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
 	var pos := burst_center + Vector2(-text_width * 0.5, font_size * 0.20)
-	draw_string_outline(font, pos + Vector2(3.0, 4.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 8, Color(0.0, 0.0, 0.0, 0.58))
-	draw_string_outline(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 8, Color("#4d2408"))
+	draw_string_outline(font, pos + Vector2(3.0, 4.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 6, Color(0.0, 0.0, 0.0, 0.42))
+	draw_string_outline(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 6, Color("#6a2b08"))
 	draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color("#ffe36e"))
 
 
@@ -638,9 +638,9 @@ func _draw_fight_overlay() -> void:
 
 
 func _draw_frame() -> void:
-	draw_rect(Rect2(0.0, 0.0, size.x, size.y), Color(0.01, 0.05, 0.12, 0.18), false, 2.0)
-	for index in range(8):
-		var alpha := 0.22 - float(index) * 0.025
-		var inset := float(index) * 2.0
+	draw_rect(Rect2(0.0, 0.0, size.x, size.y), Color(0.01, 0.05, 0.12, 0.12), false, 1.0)
+	for index in range(5):
+		var alpha := 0.13 - float(index) * 0.022
+		var inset := 2.0 + float(index) * 3.0
 		var frame_rect := Rect2(inset, inset, size.x - inset * 2.0, size.y - inset * 2.0)
 		draw_rect(frame_rect, Color(0.0, 0.03, 0.08, alpha), false, 1.0)

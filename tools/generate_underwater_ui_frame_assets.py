@@ -279,6 +279,12 @@ def _draw_clean_card(
     seed: int = 1,
     texture_strength: int = 6,
     shadow: bool = True,
+    outer_alpha: int = 255,
+    outer_width: int = 3,
+    border_alpha: int = 185,
+    border_width: int = 2,
+    inner_alpha: int = 105,
+    detail_alpha_scale: float = 1.0,
 ) -> None:
     x0, y0, x1, y1 = box
     w = x1 - x0
@@ -294,18 +300,18 @@ def _draw_clean_card(
     _paste_masked(image, texture, mask, (x0, y0))
 
     d = ImageDraw.Draw(image)
-    d.rounded_rectangle((x0, y0, x1, y1), radius=radius, outline=_rgba("#4a3218"), width=3)
-    d.rounded_rectangle((x0 + 5, y0 + 5, x1 - 5, y1 - 5), radius=max(2, radius - 5), outline=_rgba(border, 185), width=2)
-    d.rounded_rectangle((x0 + 10, y0 + 10, x1 - 10, y1 - 10), radius=max(2, radius - 8), outline=_rgba(inner, 105), width=1)
+    d.rounded_rectangle((x0, y0, x1, y1), radius=radius, outline=_rgba("#4a3218", outer_alpha), width=outer_width)
+    d.rounded_rectangle((x0 + 5, y0 + 5, x1 - 5, y1 - 5), radius=max(2, radius - 5), outline=_rgba(border, border_alpha), width=border_width)
+    d.rounded_rectangle((x0 + 10, y0 + 10, x1 - 10, y1 - 10), radius=max(2, radius - 8), outline=_rgba(inner, inner_alpha), width=1)
     for inset, alpha in ((14, 18), (20, 10)):
         d.rounded_rectangle(
             (x0 + inset, y0 + inset, x1 - inset, y1 - inset),
             radius=max(2, radius - 8),
-            outline=_rgba("#6f4e28", alpha),
+            outline=_rgba("#6f4e28", int(alpha * detail_alpha_scale)),
             width=1,
         )
-    d.line((x0 + 16, y0 + 14, x1 - 16, y0 + 14), fill=(255, 246, 215, 88), width=1)
-    d.line((x0 + 16, y1 - 13, x1 - 16, y1 - 13), fill=(98, 67, 36, 42), width=1)
+    d.line((x0 + 16, y0 + 14, x1 - 16, y0 + 14), fill=(255, 246, 215, int(88 * detail_alpha_scale)), width=1)
+    d.line((x0 + 16, y1 - 13, x1 - 16, y1 - 13), fill=(98, 67, 36, int(42 * detail_alpha_scale)), width=1)
 
 
 def _draw_navy_card(
@@ -376,6 +382,44 @@ def _draw_top_status_paper_card(
     patina.putalpha(Image.composite(patina.getchannel("A"), Image.new("L", (w, h), 0), mask))
     image.alpha_composite(patina, (x0, y0))
 
+    scuffs = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(scuffs)
+    for _ in range(max(10, w // 34)):
+        edge_side = rng.choice(("top", "bottom", "left", "right", "field"))
+        if edge_side == "top":
+            sx = rng.randint(12, max(12, w - 54))
+            sy = rng.randint(7, 24)
+            ex = min(w - 14, sx + rng.randint(16, 62))
+            sd.line((sx, sy, ex, sy + rng.choice((-1, 0, 1))), fill=(83, 49, 21, rng.randint(16, 34)), width=1)
+        elif edge_side == "bottom":
+            sx = rng.randint(14, max(14, w - 62))
+            sy = rng.randint(max(8, h - 26), max(8, h - 10))
+            ex = min(w - 14, sx + rng.randint(18, 76))
+            sd.line((sx, sy, ex, sy + rng.choice((-1, 0, 1))), fill=(94, 57, 25, rng.randint(15, 32)), width=1)
+        elif edge_side == "left":
+            sx = rng.randint(8, 20)
+            sy = rng.randint(18, max(18, h - 34))
+            ey = min(h - 14, sy + rng.randint(10, 44))
+            sd.line((sx, sy, sx + rng.choice((-1, 0, 1)), ey), fill=(77, 46, 21, rng.randint(12, 26)), width=1)
+        elif edge_side == "right":
+            sx = rng.randint(max(8, w - 22), max(8, w - 10))
+            sy = rng.randint(18, max(18, h - 34))
+            ey = min(h - 14, sy + rng.randint(10, 44))
+            sd.line((sx, sy, sx + rng.choice((-1, 0, 1)), ey), fill=(77, 46, 21, rng.randint(10, 24)), width=1)
+        else:
+            sx = rng.randint(34, max(34, w - 82))
+            sy = rng.randint(34, max(34, h - 34))
+            ex = min(w - 30, sx + rng.randint(18, 72))
+            sd.line((sx, sy, ex, sy + rng.choice((-1, 0, 1))), fill=(128, 91, 45, rng.randint(5, 12)), width=1)
+    for _ in range(max(6, w // 80)):
+        cx = rng.choice((rng.randint(10, 34), rng.randint(max(10, w - 34), max(10, w - 12))))
+        cy = rng.choice((rng.randint(10, 30), rng.randint(max(10, h - 30), max(10, h - 12))))
+        r = rng.randint(2, 5)
+        sd.ellipse((cx - r, cy - r, cx + r, cy + r), fill=(71, 43, 22, rng.randint(12, 26)))
+    scuffs = scuffs.filter(ImageFilter.GaussianBlur(0.18))
+    scuffs.putalpha(Image.composite(scuffs.getchannel("A"), Image.new("L", (w, h), 0), mask))
+    image.alpha_composite(scuffs, (x0, y0))
+
     d = ImageDraw.Draw(image)
     d.rounded_rectangle((x0, y0, x1, y1), radius=radius, outline=_rgba("#2d1d10", 230), width=2)
     d.rounded_rectangle((x0 + 4, y0 + 4, x1 - 4, y1 - 4), radius=radius - 3, outline=_rgba("#8d642f", 178), width=2)
@@ -424,11 +468,12 @@ def create_top_status_frame() -> None:
     split1 = int(w * 0.235)
     split2 = int(w * 0.535)
     split3 = int(w * 0.785)
+    slot_gap = 12
     slots = [
-        (8, y0, split1 - 4, y1, "#f4ead5"),
-        (split1 + 4, y0, split2 - 4, y1, "#f3e8d0"),
-        (split2 + 4, y0, split3 - 4, y1, "#f5ead4"),
-        (split3 + 4, y0, w - 8, y1, "#123554"),
+        (8, y0, split1 - slot_gap, y1, "#f4ead5"),
+        (split1 + slot_gap, y0, split2 - slot_gap, y1, "#f3e8d0"),
+        (split2 + slot_gap, y0, split3 - slot_gap, y1, "#f5ead4"),
+        (split3 + slot_gap, y0, w - 8, y1, "#123554"),
     ]
     for i, (x0, sy0, x1, sy1, fill) in enumerate(slots):
         if i == 3:
@@ -541,9 +586,41 @@ def create_sidebar_frame() -> None:
     _draw_corner_brackets(d, fish, length=30, inset=18, color="#a77d3b", alpha=95, width=1)
 
     _draw_navy_card(image, action, radius=12, seed=82)
-    _draw_clean_card(image, action_body, "#f2e5cb", radius=8, border="#8c6733", inner="#d8b45d", seed=83, texture_strength=5)
+    _draw_clean_card(
+        image,
+        action_body,
+        "#f2e5cb",
+        radius=8,
+        border="#8c6733",
+        inner="#d8b45d",
+        seed=83,
+        texture_strength=5,
+        shadow=False,
+        outer_alpha=145,
+        outer_width=2,
+        border_alpha=92,
+        border_width=1,
+        inner_alpha=34,
+        detail_alpha_scale=0.45,
+    )
     _draw_navy_card(image, tackle, radius=12, seed=84)
-    _draw_clean_card(image, tackle_body, "#f2e5cb", radius=8, border="#8c6733", inner="#d8b45d", seed=85, texture_strength=5)
+    _draw_clean_card(
+        image,
+        tackle_body,
+        "#f2e5cb",
+        radius=8,
+        border="#8c6733",
+        inner="#d8b45d",
+        seed=85,
+        texture_strength=5,
+        shadow=False,
+        outer_alpha=145,
+        outer_width=2,
+        border_alpha=92,
+        border_width=1,
+        inner_alpha=34,
+        detail_alpha_scale=0.45,
+    )
 
     for panel_index, (panel, body, icon_side) in enumerate(((action, action_body, "left"), (tackle, tackle_body, "right"))):
         d.line((panel[0] + 26, panel[1] + 39, panel[2] - 26, panel[1] + 39), fill=_rgba("#e0bd62", 104), width=2)
@@ -555,7 +632,7 @@ def create_sidebar_frame() -> None:
             width=1,
         )
         d.line((body[0] + 36, body[3] - 20, body[2] - 36, body[3] - 20), fill=_rgba("#80552a", 5), width=1)
-        _draw_corner_brackets(d, body, length=16, inset=12, color="#a77d3b", alpha=22, width=1)
+        _draw_corner_brackets(d, body, length=14, inset=12, color="#a77d3b", alpha=12, width=1)
 
     # Sparse corner accents only. Heavy rivets made the frame read as generated/debug UI.
     for cx, cy in (
