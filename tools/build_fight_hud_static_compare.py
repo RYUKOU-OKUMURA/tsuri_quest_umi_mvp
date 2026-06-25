@@ -138,9 +138,9 @@ def _draw_key_cap(draw: ImageDraw.ImageDraw, box: tuple[float, float, float, flo
 
 
 def _hint_slots(hint: tuple[float, float, float, float]) -> list[tuple[float, float, float, float]]:
-    slot_w = ((hint[2] - hint[0]) - 52) / 3
+    slot_w = ((hint[2] - hint[0]) - 44) / 3
     slot_y = hint[1] + 31
-    x0 = hint[0] + 26
+    x0 = hint[0] + 22
     return [
         (x0 + i * slot_w, slot_y, x0 + i * slot_w + slot_w, slot_y + 48)
         for i in range(3)
@@ -149,21 +149,21 @@ def _hint_slots(hint: tuple[float, float, float, float]) -> list[tuple[float, fl
 
 def _draw_key_hint(draw: ImageDraw.ImageDraw, slot: tuple[float, float, float, float], key: str, label: str, note: str) -> None:
     is_long = key == "L/R"
-    cap_w = 25 if not is_long else 42
+    cap_w = 23 if not is_long else 39
     cap_h = 21
-    cap = (slot[0] + 11, slot[1] + 7, slot[0] + 11 + cap_w, slot[1] + 7 + cap_h)
+    cap = (slot[0] + 8, slot[1] + 7, slot[0] + 8 + cap_w, slot[1] + 7 + cap_h)
     _draw_key_cap(draw, cap, key, 10 if is_long else 12)
-    label_x = cap[0] + cap_w + (5 if is_long else 7)
-    label_size = 13 if is_long else 14
+    label_x = cap[0] + cap_w + (5 if is_long else 6)
+    label_size = 14 if is_long else 15
     note_size = 10 if is_long else 11
     label_y = cap[1] + 15
     _draw_text(draw, (label_x, label_y), label, label_size, "#2b2117")
     note_text = "テンション" if is_long else f"（{note}）"
-    note_x = label_x + _text_width(label, label_size) + 2
+    note_x = label_x + _text_width(label, label_size) + (3 if is_long else 2)
     note_y = label_y
-    available = slot[2] - note_x - 2
+    available = slot[2] - note_x - 1
     if _text_width(note_text, note_size, bold=False) > available:
-        note_size = max(8, note_size - 1)
+        note_size = max(9, note_size - 1)
     _draw_text(draw, (note_x, note_y), note_text, note_size, "#2b2117", bold=False)
 
 
@@ -220,7 +220,7 @@ def build_current_hud() -> Image.Image:
     _draw_text(draw, (stamina[2] - 63, stamina[3] - 8), "強い", 14, "#fff1c7", stroke=1)
 
     bait_w = (bottom[2] - bottom[0]) * 0.265
-    menu_w = (bottom[2] - bottom[0]) * 0.190
+    menu_w = (bottom[2] - bottom[0]) * 0.175
     hint_w = bottom[2] - bottom[0] - bait_w - menu_w - gap * 2
     bait = (bottom[0], bottom[1], bottom[0] + bait_w, bottom[3])
     hint = (bait[2] + gap, bottom[1], bait[2] + gap + hint_w, bottom[3])
@@ -252,8 +252,8 @@ def build_current_hud() -> Image.Image:
     for slot, args in zip(_hint_slots(hint), (("A", "巻く", "リールを巻く"), ("B", "緩める", "ラインを出す"), ("L/R", "調整", "テンション"))):
         _draw_key_hint(draw, slot, *args)
 
-    _draw_menu_row(draw, (menu[0] + 38, menu[1] + (menu[3] - menu[1]) * 0.42), "+", "ポーズメニュー")
-    _draw_menu_row(draw, (menu[0] + 38, menu[1] + (menu[3] - menu[1]) * 0.78), "-", "釣りをやめる")
+    _draw_menu_row(draw, (menu[0] + 34, menu[1] + (menu[3] - menu[1]) * 0.42), "+", "ポーズメニュー")
+    _draw_menu_row(draw, (menu[0] + 34, menu[1] + (menu[3] - menu[1]) * 0.78), "-", "釣りをやめる")
     return frame.convert("RGB")
 
 

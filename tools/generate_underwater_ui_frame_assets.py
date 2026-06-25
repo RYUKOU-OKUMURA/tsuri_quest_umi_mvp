@@ -832,7 +832,7 @@ def create_fight_hud_frame() -> None:
     _draw_bar_well(image, (stamina[0] + 44, stamina[1] + 88, stamina[2] - 48, stamina[1] + 142))
 
     bait_w = int((bottom[2] - bottom[0]) * 0.265)
-    menu_w = int((bottom[2] - bottom[0]) * 0.190)
+    menu_w = int((bottom[2] - bottom[0]) * 0.175)
     hint_w = bottom[2] - bottom[0] - bait_w - menu_w - gap * 2
     bait = (bottom[0], bottom[1], bottom[0] + bait_w, bottom[3])
     hint = (bait[2] + gap, bottom[1], bait[2] + gap + hint_w, bottom[3])

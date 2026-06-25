@@ -199,7 +199,7 @@ func _draw_stamina(font: Font, rect: Rect2) -> void:
 func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 	var gap := 10.0
 	var bait_w := rect.size.x * (0.28 if _hud_frame == null else 0.265)
-	var menu_w := rect.size.x * (0.20 if _hud_frame == null else 0.190)
+	var menu_w := rect.size.x * (0.20 if _hud_frame == null else 0.175)
 	var hint_w := rect.size.x - bait_w - menu_w - gap * 2.0
 	var bait := Rect2(rect.position, Vector2(bait_w, rect.size.y))
 	var hint := Rect2(Vector2(bait.end.x + gap, rect.position.y), Vector2(hint_w, rect.size.y))
@@ -250,8 +250,8 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 
 	_draw_panel(menu, Color("#0b355f"), Color("#08213c"), Palette.GOLD)
 	if _hud_frame != null:
-		_draw_menu_row(font, menu.position + Vector2(38.0, menu.size.y * 0.42), "+", "ポーズメニュー")
-		_draw_menu_row(font, menu.position + Vector2(38.0, menu.size.y * 0.78), "-", "釣りをやめる")
+		_draw_menu_row(font, menu.position + Vector2(34.0, menu.size.y * 0.42), "+", "ポーズメニュー")
+		_draw_menu_row(font, menu.position + Vector2(34.0, menu.size.y * 0.78), "-", "釣りをやめる")
 	else:
 		_draw_key_row(font, menu.position + Vector2(22.0, menu.size.y * 0.42), "+", "ポーズメニュー")
 		_draw_key_row(font, menu.position + Vector2(22.0, menu.size.y * 0.78), "-", "釣りをやめる")
@@ -394,8 +394,8 @@ func _draw_key_hint(font: Font, rect: Rect2, key: String, label: String) -> void
 
 func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String, note: String, active: bool = false) -> void:
 	var is_long_key := key.length() > 1
-	var key_origin := rect.position + Vector2(11.0, 7.0)
-	var key_w := 25.0 if not is_long_key else 42.0
+	var key_origin := rect.position + Vector2(8.0, 7.0)
+	var key_w := 23.0 if not is_long_key else 39.0
 	var key_h := 21.0
 	var key_rect := Rect2(key_origin, Vector2(key_w, key_h))
 	var key_fill := Color("#253247") if not active else Color("#40516c")
@@ -419,20 +419,20 @@ func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String,
 	var key_size := 12 if not is_long_key else 10
 	var key_text_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
 	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 15.0), key_size, Color.WHITE, 1)
-	var label_size := 14 if not is_long_key else 13
+	var label_size := 15 if not is_long_key else 14
 	var note_size := 11 if not is_long_key else 10
-	var label_pos := key_rect.position + Vector2(key_rect.size.x + (7.0 if not is_long_key else 5.0), 15.0)
+	var label_pos := key_rect.position + Vector2(key_rect.size.x + (6.0 if not is_long_key else 5.0), 15.0)
 	_draw_text(font, label, label_pos, label_size, Color("#2b2117"), 0)
 	var note_font := FightFontsScript.regular(get_theme_default_font())
 	var note_text := _compact_control_note(note)
 	if not is_long_key:
 		note_text = "（%s）" % note_text
 	var label_w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
-	var note_pos := label_pos + Vector2(label_w + 2.0, 0.0)
-	var available_w := rect.end.x - note_pos.x - 2.0
+	var note_pos := label_pos + Vector2(label_w + (3.0 if is_long_key else 2.0), 0.0)
+	var available_w := rect.end.x - note_pos.x - 1.0
 	var note_w := note_font.get_string_size(note_text, HORIZONTAL_ALIGNMENT_LEFT, -1, note_size).x
 	if note_w > available_w:
-		note_size = max(8, note_size - 1)
+		note_size = max(9, note_size - 1)
 	_draw_text(note_font, note_text, note_pos, note_size, Color("#2b2117"), 0)
 
 
@@ -476,10 +476,10 @@ func _hint_key_slots(hint: Rect2) -> Array[Rect2]:
 			Rect2(hint.position + Vector2(hint.size.x - 128.0, 30.0), Vector2(120.0, 30.0)),
 		]
 	var slot_gap := 0.0
-	var slot_w := (hint.size.x - 52.0) / 3.0
+	var slot_w := (hint.size.x - 44.0) / 3.0
 	var slot_y := hint.position.y + 31.0
 	var slot_h := 48.0
-	var x0 := hint.position.x + 26.0
+	var x0 := hint.position.x + 22.0
 	return [
 		Rect2(Vector2(x0, slot_y), Vector2(slot_w, slot_h)),
 		Rect2(Vector2(x0 + slot_w + slot_gap, slot_y), Vector2(slot_w, slot_h)),
