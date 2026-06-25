@@ -57,18 +57,28 @@ func _ready() -> void:
 	await get_tree().process_frame
 
 	_seed_select_state()
-	screen = await _mount_screen(vp, false)
-	_seed_after_meal_state()
-	screen.preview_show_reward_result(fake_result, 130, 150, 150, true)
+	screen = await _mount_screen(vp)
+	var non_level_result := _fake_non_level_result()
+	_seed_after_non_level_meal_state()
+	screen.preview_show_reward_result(non_level_result, 80, 120, 150, false)
 	await get_tree().process_frame
 	await get_tree().process_frame
-	if not _expect_reward_state(screen, "EXP_GAIN_LEVELUP", "EXP_GAIN capture"):
+	if not _expect_reward_state(screen, "EXP_GAIN", "EXP_GAIN capture"):
 		get_tree().quit(1)
 		return
 	if not _save_viewport(vp, OUT_EXP):
 		get_tree().quit(1)
 		return
 
+	screen.queue_free()
+	await get_tree().process_frame
+
+	_seed_select_state()
+	screen = await _mount_screen(vp, false)
+	_seed_after_meal_state()
+	screen.preview_show_reward_result(fake_result, 130, 150, 150, true)
+	await get_tree().process_frame
+	await get_tree().process_frame
 	if not _expect_reward_state(screen, "EXP_GAIN_LEVELUP", "LEVEL_UP transition"):
 		get_tree().quit(1)
 		return
@@ -139,6 +149,19 @@ func _seed_after_meal_state() -> void:
 	}
 
 
+func _seed_after_non_level_meal_state() -> void:
+	PlayerProgress.level = 4
+	PlayerProgress.exp = 120
+	PlayerProgress.inventory["aji"] = 3
+	PlayerProgress.pending_buff = {
+		"recipe_id": "salt_grill",
+		"name": "アジの塩焼き",
+		"stat": "max_energy",
+		"value": 0.05,
+		"text": "次の釣行で最大体力 +5%",
+	}
+
+
 func _fake_meal_result() -> Dictionary:
 	return {
 		"ok": true,
@@ -148,6 +171,25 @@ func _fake_meal_result() -> Dictionary:
 		"first_bonus": 20,
 		"total_exp": 40,
 		"leveled_to": [5],
+		"buff": {
+			"recipe_id": "salt_grill",
+			"name": "アジの塩焼き",
+			"stat": "max_energy",
+			"value": 0.05,
+			"text": "次の釣行で最大体力 +5%",
+		},
+	}
+
+
+func _fake_non_level_result() -> Dictionary:
+	return {
+		"ok": true,
+		"dish_name": "アジの塩焼き",
+		"base_exp": 20,
+		"first_time": true,
+		"first_bonus": 20,
+		"total_exp": 40,
+		"leveled_to": [],
 		"buff": {
 			"recipe_id": "salt_grill",
 			"name": "アジの塩焼き",
