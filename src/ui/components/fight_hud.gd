@@ -39,7 +39,7 @@ func bind(value: FishingSimulator, fish: Dictionary, stats: Dictionary) -> void:
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	custom_minimum_size = Vector2(0.0, 178.0)
+	custom_minimum_size = Vector2(0.0, 198.0)
 	if ResourceLoader.exists(HUD_FRAME_PATH):
 		_hud_frame = load(HUD_FRAME_PATH) as Texture2D
 	if ResourceLoader.exists(ICON_SHEET_PATH):
