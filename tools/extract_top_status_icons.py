@@ -29,15 +29,17 @@ def _extract_icon(source: Image.Image, box: tuple[int, int, int, int], size: int
     crop = source.crop(box).convert("RGBA")
     alpha = Image.new("L", crop.size, 0)
     alpha.putdata([_foreground_alpha(pixel) for pixel in crop.getdata()])
-    alpha = alpha.filter(ImageFilter.GaussianBlur(0.35))
+    alpha = alpha.filter(ImageFilter.GaussianBlur(0.25))
     crop.putalpha(alpha)
 
     bbox = alpha.point(lambda value: 255 if value > 14 else 0).getbbox()
     if bbox is None:
         return Image.new("RGBA", (size, size), (0, 0, 0, 0))
     crop = crop.crop(bbox)
-    scale = min((size - 12) / crop.width, (size - 12) / crop.height)
+    scale = min((size - 14) / crop.width, (size - 14) / crop.height)
     resized = crop.resize((round(crop.width * scale), round(crop.height * scale)), Image.Resampling.LANCZOS)
+    resized = resized.filter(ImageFilter.UnsharpMask(radius=0.8, percent=145, threshold=2))
+    resized.putalpha(resized.getchannel("A").point(lambda value: 0 if value < 6 else value))
     canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     canvas.alpha_composite(resized, ((size - resized.width) // 2, (size - resized.height) // 2))
     return canvas
@@ -45,7 +47,7 @@ def _extract_icon(source: Image.Image, box: tuple[int, int, int, int], size: int
 
 def main() -> None:
     source = Image.open(REFERENCE).convert("RGBA")
-    cell = 96
+    cell = 128
     icons = [
         # clock, sun, wind, coin in the visual order used by FightStatusBar.
         (34, 22, 78, 68),
