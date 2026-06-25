@@ -1,0 +1,7 @@
+interface:
+  display_name: "Tsuri Cooking Showcase Uplift"
+  short_description: "調理フローの品質向上を状態分割と参照画像基準で進める"
+  default_prompt: "Use $tsuri-cooking-showcase-uplift to raise the cooking, meal result, EXP, level-up, and status-summary flow toward the reference mockup quality."
+
+policy:
+  allow_implicit_invocation: true
