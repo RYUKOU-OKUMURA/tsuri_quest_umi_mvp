@@ -123,16 +123,16 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 		inner.position + Vector2(6.0, 44.0 if compact_card else 46.0),
 		Vector2(
 			inner.size.x - 12.0,
-			maxf(82.0, rect.size.y * (0.49 if compact_card else 0.37))
+			maxf(82.0, rect.size.y * (0.455 if compact_card else 0.37))
 		)
 	)
 	_draw_fish_portrait(fish_rect)
 	var divider_y := fish_rect.end.y + (3.0 if _sidebar_frame != null else 6.0)
 	draw_line(Vector2(inner.position.x + 8.0, divider_y), Vector2(inner.end.x - 8.0, divider_y), Color("#c9b486"), 1.0)
 	var estimate := (float(fish_data.get("size_min", 0.0)) + float(fish_data.get("size_max", 0.0))) * 0.5
-	var estimate_size := 21 if _sidebar_frame != null else 23
+	var estimate_size := 20 if _sidebar_frame != null else 23
 	_draw_centered_text(font, "推定 %.1f cm" % estimate, Rect2(inner.position.x, divider_y + 8.0, inner.size.x, 30.0), estimate_size, Color("#2b2117"), 0)
-	var desc_y := divider_y + (48.0 if compact_card else 44.0)
+	var desc_y := divider_y + (52.0 if compact_card else 44.0)
 	draw_line(Vector2(inner.position.x + 8.0, desc_y - 12.0), Vector2(inner.end.x - 8.0, desc_y - 12.0), Color("#d6c299"), 1.0)
 	var detail_gap := 16.0 if compact_card else 21.0
 	var detail_font := get_theme_default_font()
