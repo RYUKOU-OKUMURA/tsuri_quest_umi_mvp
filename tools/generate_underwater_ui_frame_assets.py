@@ -299,6 +299,34 @@ def _draw_outer_frame(image: Image.Image, box: tuple[int, int, int, int], *, rad
     d.line((x0 + 22, y1 - 17, x1 - 22, y1 - 17), fill=(0, 0, 0, 70), width=1)
 
 
+def _draw_top_status_paper_card(
+    image: Image.Image,
+    box: tuple[int, int, int, int],
+    fill: str,
+    *,
+    seed: int,
+) -> None:
+    x0, y0, x1, y1 = box
+    w = x1 - x0
+    h = y1 - y0
+    radius = 10
+    shadow = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    sd = ImageDraw.Draw(shadow)
+    sd.rounded_rectangle((x0 + 3, y0 + 4, x1 + 3, y1 + 4), radius=radius, fill=(0, 0, 0, 38))
+    image.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(4)))
+
+    mask = _rounded_mask((w, h), radius)
+    texture = _texture((w, h), fill, seed, strength=4)
+    _paste_masked(image, texture, mask, (x0, y0))
+
+    d = ImageDraw.Draw(image)
+    d.rounded_rectangle((x0, y0, x1, y1), radius=radius, outline=_rgba("#2d1d10", 210), width=2)
+    d.rounded_rectangle((x0 + 4, y0 + 4, x1 - 4, y1 - 4), radius=radius - 3, outline=_rgba("#9f7a3d", 150), width=2)
+    d.rounded_rectangle((x0 + 10, y0 + 10, x1 - 10, y1 - 10), radius=radius - 6, outline=_rgba("#d8b45d", 70), width=1)
+    d.line((x0 + 18, y0 + 13, x1 - 18, y0 + 13), fill=(255, 246, 215, 74), width=1)
+    d.line((x0 + 18, y1 - 12, x1 - 18, y1 - 12), fill=(98, 67, 36, 34), width=1)
+
+
 def _draw_icon_well(d: ImageDraw.ImageDraw, center: tuple[int, int], radius: int, pale: bool = True) -> None:
     cx, cy = center
     fill = "#f4dfaa" if pale else "#0d2437"
@@ -357,14 +385,14 @@ def create_top_status_frame() -> None:
             d.line((x0 + 36, sy0 + 62, x1 - 36, sy0 + 62), fill=_rgba("#e0bd62", 82), width=1)
             _draw_corner_brackets(d, (x0 + 10, sy0 + 10, x1 - 10, sy1 - 10), length=32, inset=10, color="#e0bd62", alpha=105, width=2)
         else:
-            _draw_card(image, (x0, sy0, x1, sy1), fill, radius=12, seed=10 + i, texture_strength=5)
+            _draw_top_status_paper_card(image, (x0, sy0, x1, sy1), fill, seed=10 + i)
             body = (x0 + 20, sy0 + 20, x1 - 20, sy1 - 20)
-            d.rounded_rectangle(body, radius=7, outline=_rgba("#8c6733", 36), width=1)
-            d.line((body[0] + 18, body[1] + 13, body[2] - 18, body[1] + 13), fill=_rgba("#ffffff", 42), width=1)
-            _draw_corner_brackets(d, (x0 + 8, sy0 + 8, x1 - 8, sy1 - 8), length=28, inset=10, color="#8c6733", alpha=98, width=1)
+            d.rounded_rectangle(body, radius=6, outline=_rgba("#8c6733", 24), width=1)
+            d.line((body[0] + 18, body[1] + 12, body[2] - 18, body[1] + 12), fill=_rgba("#ffffff", 32), width=1)
+            _draw_corner_brackets(d, (x0 + 8, sy0 + 8, x1 - 8, sy1 - 8), length=24, inset=10, color="#8c6733", alpha=64, width=1)
             if i in (1, 2):
-                d.line((x0 + 132, sy0 + 42, x0 + 132, sy1 - 42), fill=_rgba("#b8934d", 74), width=2)
-                d.line((x0 + 138, sy0 + 48, x0 + 138, sy1 - 48), fill=_rgba("#ffffff", 42), width=1)
+                d.line((x0 + 132, sy0 + 46, x0 + 132, sy1 - 46), fill=_rgba("#b8934d", 50), width=1)
+                d.line((x0 + 136, sy0 + 50, x0 + 136, sy1 - 50), fill=_rgba("#ffffff", 28), width=1)
     image.save(OUT_DIR / "top_status_frame.png")
 
 
