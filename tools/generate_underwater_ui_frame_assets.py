@@ -316,22 +316,21 @@ def _create_sidebar_card_icon(icon_index: int, filename: str, *, seed: int) -> N
     raw = sheet.crop((col * cell_w, row * cell_h, (col + 1) * cell_w, (row + 1) * cell_h))
     crop = raw.crop(_content_bbox(raw))
 
-    canvas = _texture((168, 150), "#f3e7cd", seed, strength=5)
-    d = ImageDraw.Draw(canvas)
-    d.rounded_rectangle((3, 3, 164, 146), radius=14, outline=_rgba("#8c6733", 190), width=3)
-    d.rounded_rectangle((11, 11, 156, 138), radius=10, outline=_rgba("#d8b45d", 112), width=1)
-    d.ellipse((38, 104, 130, 128), fill=(216, 199, 160, 255))
+    canvas = Image.new("RGBA", (168, 150), (0, 0, 0, 0))
 
     max_w = 116
     max_h = 102
     scale = min(max_w / crop.width, max_h / crop.height)
     resized = crop.resize((round(crop.width * scale), round(crop.height * scale)), Image.Resampling.LANCZOS)
-    # The source icon sheet is intentionally ornate; card icons are calmer and
-    # slightly translucent so text remains the focus.
-    alpha = resized.getchannel("A").point(lambda value: int(value * 0.86))
+    # The source icon sheet is intentionally ornate; lower-card icons are kept
+    # as cutouts so the cards read as one printed paper surface, not nested UI.
+    alpha = resized.getchannel("A").point(lambda value: int(value * 0.82))
     resized.putalpha(alpha)
     x = (canvas.width - resized.width) // 2
     y = (canvas.height - resized.height) // 2 - 4
+    shadow = Image.new("RGBA", resized.size, (0, 0, 0, 0))
+    shadow.putalpha(alpha.point(lambda value: int(value * 0.18)))
+    canvas.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(2.0)), (x + 3, y + 4))
     canvas.alpha_composite(resized, (x, y))
     canvas.save(OUT_DIR / filename)
 
@@ -388,15 +387,15 @@ def create_sidebar_frame() -> None:
     for panel_index, (panel, body, icon_side) in enumerate(((action, action_body, "left"), (tackle, tackle_body, "right"))):
         d.line((panel[0] + 26, panel[1] + 39, panel[2] - 26, panel[1] + 39), fill=_rgba("#e0bd62", 104), width=2)
         d.line((panel[0] + 28, panel[1] + 44, panel[2] - 28, panel[1] + 44), fill=_rgba("#07121b", 72), width=1)
-        if icon_side == "left":
-            icon_well = (body[0] + 18, body[1] + 27, body[0] + 78, body[3] - 27)
-            text_well = (body[0] + 88, body[1] + 14, body[2] - 16, body[3] - 14)
-        else:
-            icon_well = (body[2] - 78, body[1] + 27, body[2] - 18, body[3] - 27)
-            text_well = (body[0] + 16, body[1] + 14, body[2] - 88, body[3] - 14)
-        _draw_sidebar_icon_recess(image, icon_well, seed=130 + panel_index)
-        _draw_sidebar_text_well(image, text_well, seed=140 + panel_index)
-        _draw_corner_brackets(d, body, length=22, inset=9, color="#a77d3b", alpha=88, width=1)
+        d.rounded_rectangle(
+            (body[0] + 14, body[1] + 15, body[2] - 14, body[3] - 15),
+            radius=8,
+            outline=_rgba("#a98242", 24),
+            width=1,
+        )
+        d.line((body[0] + 28, body[1] + 30, body[2] - 28, body[1] + 30), fill=(255, 255, 255, 38), width=1)
+        d.line((body[0] + 30, body[3] - 22, body[2] - 30, body[3] - 22), fill=_rgba("#80552a", 14), width=1)
+        _draw_corner_brackets(d, body, length=20, inset=10, color="#a77d3b", alpha=48, width=1)
 
     # Sparse corner accents only. Heavy rivets made the frame read as generated/debug UI.
     for cx, cy in (
