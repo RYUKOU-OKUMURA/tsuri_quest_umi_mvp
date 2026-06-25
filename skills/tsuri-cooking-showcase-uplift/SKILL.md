@@ -100,11 +100,13 @@ Use this extraction as the first comparison baseline. Refine it only after inspe
 
 3. Capture the current screen.
    Use the existing cooking preview path and keep a stable screenshot at `/tmp/tsuri_cooking.png` until state-specific captures exist. If `--headless` cannot read `SubViewport` textures on this machine, use the normal Godot invocation for capture instead of weakening the preview. If the Godot command differs, discover the local invocation rather than rewriting the preview tool.
+   For the full state set, prefer `tools/cooking_visual_qa.sh`: it clears stale `/tmp/tsuri_cooking*.png` outputs, runs `tools/cooking_preview.gd` with the real display path, then runs the strict capture check and report refresh.
 
 4. Compare against the matching state reference.
    Put generated capture(s) next to the corresponding `reference/cooking_flow/*_concept.png`. Judge the whole state first, then focus areas. Do not rely on "the code is working" as a visual-quality signal.
    Use `python3 tools/cooking_reference_report.py` after captures exist to generate `/tmp/tsuri_cooking_reference_report.html`, a local contact sheet that pairs each reference with `/tmp/tsuri_cooking_*.png`.
    Use `python3 tools/cooking_visual_qa_check.py` as the strict gate once captures exist. In environments where captures cannot be produced, `python3 tools/cooking_visual_qa_check.py --allow-missing` verifies references and refreshes the report while preserving the screenshot blocker.
+   `tools/cooking_visual_qa.sh` performs this sequence as one command; if preview capture fails, it still refreshes the report with explicit missing-capture diagnostics and exits nonzero.
 
 5. Decompose the state reference into asset slots.
    Prefer dedicated cooking assets under `assets/showcase/cooking/` for:

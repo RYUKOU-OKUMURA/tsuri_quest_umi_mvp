@@ -98,6 +98,76 @@ class ExpTrailVisual:
 			draw_line(p + Vector2(0.0, -5.0), p + Vector2(0.0, 5.0), color, 2.0)
 
 
+class FlowConnectorVisual:
+	extends Control
+
+	var mode := "idle"
+
+	func set_mode(next_mode: String) -> void:
+		mode = next_mode
+		queue_redraw()
+
+	func _draw() -> void:
+		var center_y := size.y * 0.5
+		var start := Vector2(4.0, center_y)
+		var end := Vector2(size.x - 8.0, center_y)
+		var color := Color("#46566d")
+		var glow := Color("#46566d")
+		var active := false
+		match mode:
+			"meal_to_exp":
+				color = Palette.GOLD_BRIGHT
+				glow = Color("#fff1c7")
+				active = true
+			"exp_to_growth":
+				color = Palette.GAUGE_CYAN_HI
+				glow = Color("#c9fbff")
+				active = true
+			"growth_unlock":
+				color = Palette.GAUGE_RED_HI
+				glow = Palette.GOLD_BRIGHT
+				active = true
+			_:
+				color.a = 0.38
+				glow.a = 0.20
+		if active:
+			glow.a = 0.28
+			draw_line(start + Vector2(0.0, -2.0), end + Vector2(0.0, -2.0), glow, 5.0)
+			glow.a = 0.16
+			draw_line(start + Vector2(0.0, 4.0), end + Vector2(0.0, 4.0), glow, 9.0)
+		draw_line(start, end, color, 3.0)
+		draw_polygon(
+			PackedVector2Array(
+				[
+					Vector2(size.x - 4.0, center_y),
+					Vector2(size.x - 15.0, center_y - 7.0),
+					Vector2(size.x - 15.0, center_y + 7.0),
+				]
+			),
+			PackedColorArray([color, color, color])
+		)
+		if active:
+			draw_polygon(
+				PackedVector2Array(
+					[
+						Vector2(size.x - 18.0, center_y),
+						Vector2(size.x - 27.0, center_y - 5.0),
+						Vector2(size.x - 27.0, center_y + 5.0),
+					]
+				),
+				PackedColorArray([glow, glow, glow])
+			)
+		if not active:
+			return
+		for i in range(5):
+			var x := 10.0 + float(i) * 10.5
+			var p := Vector2(x, center_y - 8.0 + float(i % 2) * 16.0)
+			var sparkle := glow
+			sparkle.a = 0.62
+			draw_line(p + Vector2(-3.0, 0.0), p + Vector2(3.0, 0.0), sparkle, 1.5)
+			draw_line(p + Vector2(0.0, -3.0), p + Vector2(0.0, 3.0), sparkle, 1.5)
+
+
 class RewardIconVisual:
 	extends Control
 
@@ -245,6 +315,7 @@ var _dish_image: TextureRect
 var _dish_card: PanelContainer
 var _scene_title: Label
 var _scene_caption: Label
+var _scene_bonus_label: Label
 var _scene_dish_image: TextureRect
 var _scene_actor_visual: SceneActorVisual
 var _exp_trail_visual: ExpTrailVisual
@@ -272,6 +343,7 @@ var _status_money_label: Label
 var _confirm_button: Button
 var _flow_step_cards: Array[PanelContainer] = []
 var _flow_step_labels: Array[Label] = []
+var _flow_connectors: Array[FlowConnectorVisual] = []
 
 var _target_exp := 0.0
 var _target_max := 1.0
@@ -315,10 +387,12 @@ func _build_screen() -> void:
 	var flow_row := HBoxContainer.new()
 	flow_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	flow_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	flow_row.add_theme_constant_override("separation", 8)
+	flow_row.add_theme_constant_override("separation", 5)
 	root.add_child(flow_row)
 	_add_flow_step(flow_row, "1 食事")
+	_add_flow_connector(flow_row)
 	_add_flow_step(flow_row, "2 EXP")
+	_add_flow_connector(flow_row)
 	_add_flow_step(flow_row, "3 成長")
 
 	var hero := HBoxContainer.new()
@@ -351,6 +425,13 @@ func _build_screen() -> void:
 	_scene_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_scene_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	scene_box.add_child(_scene_caption)
+	_scene_bonus_label = make_shadow_label("初回ボーナス", 16, Palette.GOLD_BRIGHT, 2)
+	_scene_bonus_label.custom_minimum_size = Vector2(0.0, 18.0)
+	_scene_bonus_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_scene_bonus_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_scene_bonus_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_scene_bonus_label.clip_text = true
+	scene_box.add_child(_scene_bonus_label)
 
 	_exp_trail_visual = ExpTrailVisual.new()
 	_exp_trail_visual.name = "ExpEnergyTrail"
@@ -479,6 +560,7 @@ func show_meal_result(result: Dictionary) -> void:
 	_dish_image.texture = dish_texture
 	_scene_dish_image.texture = dish_texture
 	_scene_caption.text = "湯気の立つ%sを味わった。" % dish_name
+	_scene_bonus_label.text = _meal_bonus_badge_text(result)
 	_scene_title.text = "食べる"
 	_scene_actor_visual.set_mode("meal")
 	_exp_trail_visual.visible = false
@@ -525,6 +607,7 @@ func show_reward(
 	_exp_trail_visual.visible = true
 	_exp_trail_visual.queue_redraw()
 	_scene_caption.text = "%sから食経験値が流れ込む。" % dish_name
+	_scene_bonus_label.text = _meal_bonus_badge_text(result)
 	_dish_card.visible = false
 	_exp_focus_card.visible = true
 	_effect_preview_card.visible = true
@@ -588,7 +671,7 @@ func show_reward(
 			_confirm_button.text = "成長を見る"
 	else:
 		_growth_label.text = "次のレベルまで %d EXP" % maxi(0, exp_max - exp_after)
-		_confirm_button.text = "OK"
+		_confirm_button.text = "準備へ戻る"
 	_refresh_flow_steps(leveled)
 	_present()
 
@@ -606,6 +689,12 @@ func _buff_effect_text(buff: Dictionary) -> String:
 	if text.begins_with("次の釣行で"):
 		text = text.trim_prefix("次の釣行で")
 	return "%s / 1回発動" % text
+
+
+func _meal_bonus_badge_text(result: Dictionary) -> String:
+	if bool(result.get("first_time", false)):
+		return "初回ボーナス +%d EXP" % int(result.get("first_bonus", 0))
+	return "初回 記録済み"
 
 
 func _draw_exp_focus_burst() -> void:
@@ -745,7 +834,8 @@ func preview_accept() -> void:
 
 func _add_flow_step(parent: HBoxContainer, text: String) -> void:
 	var card := _panel_box(Color("#17324d"), Color("#07121e"), Palette.GOLD_DEEP, 3)
-	card.custom_minimum_size = Vector2(150.0, 26.0)
+	card.name = "FlowStep_%d" % _flow_step_cards.size()
+	card.custom_minimum_size = Vector2(160.0, 28.0)
 	parent.add_child(card)
 	var label := make_shadow_label(text, 14, Palette.TEXT_BONE, 2)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -755,19 +845,33 @@ func _add_flow_step(parent: HBoxContainer, text: String) -> void:
 	_flow_step_labels.append(label)
 
 
+func _add_flow_connector(parent: HBoxContainer) -> void:
+	var connector := FlowConnectorVisual.new()
+	connector.name = "FlowConnector_%d" % _flow_connectors.size()
+	connector.custom_minimum_size = Vector2(60.0, 28.0)
+	connector.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(connector)
+	_flow_connectors.append(connector)
+
+
 func _refresh_flow_steps(leveled: bool) -> void:
 	_set_flow_step(0, "1 食事 完了", Color("#f2e4c2"), Palette.GOLD_BRIGHT, Color("#2a2118"))
 	_set_flow_step(1, "2 EXP 加算中", Color("#14385a"), Palette.GAUGE_CYAN_HI, Palette.TEXT_BONE)
+	_set_flow_connector(0, "meal_to_exp")
 	if leveled:
 		_set_flow_step(2, "3 成長 解放", Color("#5a1f26"), Palette.GAUGE_RED_HI, Palette.GOLD_BRIGHT)
+		_set_flow_connector(1, "growth_unlock")
 	else:
 		_set_flow_step(2, "3 成長 進行中", Color("#17324d"), Palette.GOLD_DEEP, Palette.TEXT_BONE)
+		_set_flow_connector(1, "exp_to_growth")
 
 
 func _refresh_meal_steps() -> void:
 	_set_flow_step(0, "1 食事 完了", Color("#f2e4c2"), Palette.GOLD_BRIGHT, Color("#2a2118"))
 	_set_flow_step(1, "2 EXP 待機", Color("#17324d"), Palette.GOLD_DEEP, Palette.TEXT_BONE)
 	_set_flow_step(2, "3 成長 待機", Color("#17324d"), Palette.GOLD_DEEP, Palette.TEXT_BONE)
+	_set_flow_connector(0, "meal_to_exp")
+	_set_flow_connector(1, "idle")
 
 
 func _set_flow_step(index: int, text: String, fill: Color, border: Color, text_color: Color) -> void:
@@ -778,6 +882,12 @@ func _set_flow_step(index: int, text: String, fill: Color, border: Color, text_c
 	card.add_theme_stylebox_override("panel", _style_box(fill, border, Palette.GOLD_BRIGHT, 3, 5))
 	label.text = text
 	label.add_theme_color_override("font_color", text_color)
+
+
+func _set_flow_connector(index: int, mode: String) -> void:
+	if index < 0 or index >= _flow_connectors.size():
+		return
+	_flow_connectors[index].set_mode(mode)
 
 
 func _scene_actor_box() -> PanelContainer:

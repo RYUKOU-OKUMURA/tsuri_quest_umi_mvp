@@ -21,6 +21,15 @@ func _ready() -> void:
 	_seed_exp_gain_state()
 	screen.preview_show_reward_result(non_level_result, 80, 100, 150, false)
 	await get_tree().create_timer(0.15).timeout
+	if not screen.preview_accept_reward_overlay():
+		push_error("Expected non-level EXP overlay before returning to cooking select.")
+		get_tree().quit(1)
+		return
+	await get_tree().create_timer(0.25).timeout
+	if not screen.preview_has_current_prep_summary():
+		push_error("Expected non-level EXP close to return to current preparation summary.")
+		get_tree().quit(1)
+		return
 	screen.queue_free()
 	await _tick()
 
@@ -37,6 +46,19 @@ func _ready() -> void:
 	await get_tree().create_timer(0.35).timeout
 	if not screen.preview_has_level_up_overlay():
 		push_error("Expected reward overlay close to open LEVEL_UP_OVERLAY.")
+		get_tree().quit(1)
+		return
+	if not screen.preview_has_current_prep_summary():
+		push_error("Expected LEVEL_UP_OVERLAY background to return to current preparation summary.")
+		get_tree().quit(1)
+		return
+	if not screen.preview_accept_level_up_overlay():
+		push_error("Expected LEVEL_UP_OVERLAY before status-summary transition.")
+		get_tree().quit(1)
+		return
+	await get_tree().create_timer(0.25).timeout
+	if not screen.preview_has_status_overlay():
+		push_error("Expected LEVEL_UP_OVERLAY close to open STATUS_SUMMARY.")
 		get_tree().quit(1)
 		return
 	screen.queue_free()
@@ -99,6 +121,21 @@ func _run_real_cooking_level_flow() -> bool:
 	if not _expect_true(
 		screen.preview_has_level_up_overlay(),
 		"Real cooking reward close should open LEVEL_UP_OVERLAY."
+	):
+		return false
+	if not _expect_true(
+		screen.preview_has_current_prep_summary(),
+		"Real cooking LEVEL_UP_OVERLAY background should show current preparation summary."
+	):
+		return false
+	if not screen.preview_accept_level_up_overlay():
+		push_error("Expected real cooking LEVEL_UP_OVERLAY before status-summary transition.")
+		get_tree().quit(1)
+		return false
+	await get_tree().create_timer(0.25).timeout
+	if not _expect_true(
+		screen.preview_has_status_overlay(),
+		"Real cooking LEVEL_UP_OVERLAY close should open STATUS_SUMMARY."
 	):
 		return false
 

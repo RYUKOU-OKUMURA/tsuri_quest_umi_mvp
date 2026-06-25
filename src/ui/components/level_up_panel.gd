@@ -297,6 +297,10 @@ func show_level_up(
 	_present()
 
 
+func preview_accept() -> void:
+	_close()
+
+
 func _rebuild_stats(old_stats: Dictionary, new_stats: Dictionary) -> void:
 	_clear_container(_stats_box)
 	var rows := [
@@ -512,14 +516,17 @@ func _present() -> void:
 
 
 func _close() -> void:
-	closed.emit()
 	_dialog.pivot_offset = _dialog.size * 0.5
 	var tw := create_tween()
 	tw.set_ease(Tween.EASE_IN)
 	tw.set_trans(Tween.TRANS_QUAD)
 	tw.tween_property(_dialog, "scale", Vector2(0.86, 0.86), 0.16)
 	tw.parallel().tween_property(_dialog, "modulate:a", 0.0, 0.16)
-	tw.tween_callback(queue_free)
+	tw.tween_callback(
+		func() -> void:
+			closed.emit()
+			queue_free()
+	)
 
 
 func _clear_container(container: Container) -> void:

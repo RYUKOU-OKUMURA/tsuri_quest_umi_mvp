@@ -199,6 +199,7 @@ var _meal_hint_label: Label
 var _cooler_count_label: Label
 var _money_label: Label
 var _play_label: Label
+var _footer_message_label: Label
 
 
 func _build_screen() -> void:
@@ -411,10 +412,11 @@ func _build_footer(parent: VBoxContainer) -> void:
 	var portrait := _portrait_box("READY", Palette.GAUGE_GREEN_HI)
 	portrait.custom_minimum_size = Vector2(120.0, 0.0)
 	row.add_child(portrait)
-	var message := make_shadow_label("うまい料理で力がみなぎってきた！\n次の釣りもがんばろう！", 22, Palette.TEXT_BONE, 3)
-	message.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	message.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	row.add_child(message)
+	_footer_message_label = make_shadow_label("", 22, Palette.TEXT_BONE, 3)
+	_footer_message_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_footer_message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_footer_message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	row.add_child(_footer_message_label)
 	var back := make_button("港へ戻る", _close, 190.0, true)
 	back.custom_minimum_size = Vector2(178.0, 48.0)
 	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -466,6 +468,13 @@ func show_summary() -> void:
 	_cooler_count_label.text = "%d / 20" % _total_fish_count()
 	_money_label.text = "%d G" % PlayerProgress.money
 	_play_label.text = format_play_time(PlayerProgress.play_seconds)
+	if PlayerProgress.level >= GameData.BOSS_UNLOCK_LEVEL:
+		_footer_message_label.text = (
+			"Lv.%d到達！ 港のぬしに挑めます！\n"
+			+ "効果中の料理を活かして、次の釣りへ向かおう！"
+		) % PlayerProgress.level
+	else:
+		_footer_message_label.text = "うまい料理で力がみなぎってきた！\n次の釣りもがんばろう！"
 	_present()
 
 

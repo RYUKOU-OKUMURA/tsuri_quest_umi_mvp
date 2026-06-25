@@ -69,7 +69,11 @@ func _audit_cook_select() -> void:
 			"所持している魚",
 			"料理を選ぶ",
 			"アジの塩焼き",
-			"選択中 / 40 EXP 初回",
+			"選択中 40EXP",
+			"★★",
+			"★★★",
+			"素材 アジ",
+			"素材 メジナ",
 			"煮付け",
 			"素材違い",
 			"？？？",
@@ -147,6 +151,7 @@ func _audit_exp_gain() -> void:
 			"11 / 20",
 			"所持金",
 			"1250 G",
+			"準備へ戻る",
 		]
 	)
 	await _expect_absent_texts(
@@ -159,6 +164,7 @@ func _audit_exp_gain() -> void:
 			"EATING",
 		]
 	)
+	_expect_flow_connector_modes("EXP_GAIN", screen, ["meal_to_exp", "exp_to_growth"])
 	screen.queue_free()
 	await _tick()
 
@@ -184,6 +190,7 @@ func _audit_exp_gain_level_up() -> void:
 			"EXP 130 / 150  ->  150 / 150",
 			"+40 EXP",
 			"初めて食べた料理！",
+			"初回ボーナス +20 EXP",
 			"今回の合計 +40 EXP",
 			"Lv.4 -> Lv.5 / ぬし解放",
 			"1回の釣行で発動",
@@ -198,6 +205,7 @@ func _audit_exp_gain_level_up() -> void:
 			"解放を見る",
 		]
 	)
+	_expect_flow_connector_modes("EXP_GAIN_LEVELUP", screen, ["meal_to_exp", "growth_unlock"])
 	screen.queue_free()
 	await _tick()
 
@@ -221,6 +229,7 @@ func _audit_meal_result() -> void:
 			"今回の料理",
 			"食経験値を獲得した！",
 			"はじめて作った料理！",
+			"初回ボーナス +20 EXP",
 			"合計獲得食経験値",
 			"+40 EXP",
 			"次回の釣行で効果を発揮！",
@@ -251,6 +260,7 @@ func _audit_meal_result() -> void:
 			"EATING",
 		]
 	)
+	_expect_flow_connector_modes("MEAL_RESULT", screen, ["meal_to_exp", "idle"])
 	screen.queue_free()
 	await _tick()
 
@@ -331,7 +341,8 @@ func _audit_status_summary() -> void:
 			"1250 G",
 			"プレイ時間",
 			"03:25:45",
-			"うまい料理で力がみなぎってきた！",
+			"Lv.5到達！ 港のぬしに挑めます！",
+			"効果中の料理を活かして",
 			"港へ戻る",
 		]
 	)
@@ -372,6 +383,21 @@ func _expect_absent_texts(state: String, root: Node, forbidden: Array) -> void:
 			)
 
 
+func _expect_flow_connector_modes(state: String, root: Node, expected_modes: Array) -> void:
+	for i in range(expected_modes.size()):
+		var connector := _find_named(root, "FlowConnector_%d" % i)
+		if connector == null:
+			_failures.append("%s: missing FlowConnector_%d." % [state, i])
+			continue
+		var mode := String(connector.get("mode"))
+		var expected := String(expected_modes[i])
+		if mode != expected:
+			_failures.append(
+				"%s: FlowConnector_%d should be '%s', got '%s'."
+				% [state, i, expected, mode]
+			)
+
+
 func _visible_text(root: Node) -> String:
 	var values: Array[String] = []
 	_collect_visible_text(root, values)
@@ -391,6 +417,16 @@ func _collect_visible_text(node: Node, out: Array[String]) -> void:
 			out.append(button_text)
 	for child in node.get_children():
 		_collect_visible_text(child, out)
+
+
+func _find_named(node: Node, node_name: String) -> Node:
+	if node.name == node_name:
+		return node
+	for child in node.get_children():
+		var found := _find_named(child, node_name)
+		if found != null:
+			return found
+	return null
 
 
 func _tick() -> void:

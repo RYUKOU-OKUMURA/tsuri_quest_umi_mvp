@@ -3,7 +3,6 @@ extends Control
 # PlayerProgress を一時的に捏造し、保存を伴う cook_and_eat() は呼ばない。
 const ThemeFactory = preload("res://src/ui/ui_theme.gd")
 const CookingScreen = preload("res://src/ui/cooking_screen.gd")
-const LevelUpPanelScript = preload("res://src/ui/components/level_up_panel.gd")
 
 const OUT_ALL := "/tmp/tsuri_cooking.png"
 const OUT_SELECT := "/tmp/tsuri_cooking_select.png"
@@ -52,7 +51,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 
 	_seed_select_state()
-	screen = await _mount_screen(vp)
+	screen = await _mount_screen(vp, false)
 	_seed_after_meal_state()
 	screen.preview_show_reward_result(fake_result, 130, 150, 150, true)
 	await get_tree().process_frame
@@ -61,20 +60,20 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 
-	var panel := LevelUpPanelScript.new()
-	screen.add_child(panel)
-	panel.show_level_up(4, 5, old_stats, PlayerProgress.get_base_stats())
-
-	await get_tree().create_timer(0.7).timeout
-	await get_tree().process_frame
+	if not screen.preview_accept_reward_overlay():
+		push_error("Expected EXP reward overlay before LEVEL_UP capture.")
+		get_tree().quit(1)
+		return
+	await get_tree().create_timer(0.45).timeout
 	if not _save_viewport(vp, OUT_LEVELUP):
 		get_tree().quit(1)
 		return
 
-	panel.queue_free()
-	screen.preview_show_status_overlay()
-	await get_tree().process_frame
-	await get_tree().process_frame
+	if not screen.preview_accept_level_up_overlay():
+		push_error("Expected LEVEL_UP overlay before STATUS_SUMMARY capture.")
+		get_tree().quit(1)
+		return
+	await get_tree().create_timer(0.35).timeout
 	if not _save_viewport(vp, OUT_STATUS):
 		get_tree().quit(1)
 		return
@@ -82,10 +81,10 @@ func _ready() -> void:
 	get_tree().quit()
 
 
-func _mount_screen(vp: SubViewport) -> Control:
+func _mount_screen(vp: SubViewport, suppress_level_overlay := true) -> Control:
 	var screen := CookingScreen.new()
 	screen.theme = ThemeFactory.build_theme()
-	screen.configure({"suppress_level_overlay": true})
+	screen.configure({"suppress_level_overlay": suppress_level_overlay})
 	screen.size = Vector2(VW)
 	vp.add_child(screen)
 	await get_tree().process_frame

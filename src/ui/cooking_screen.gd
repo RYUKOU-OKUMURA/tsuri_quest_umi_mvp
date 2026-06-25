@@ -368,7 +368,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	detail_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(detail_panel)
 	var detail_layout := VBoxContainer.new()
-	detail_layout.add_theme_constant_override("separation", 4)
+	detail_layout.add_theme_constant_override("separation", 5)
 	detail_panel.add_child(detail_layout)
 	_dish_title = make_label("料理を選んでください", 25, Color("#2a2118"), 1, Color("#fff4d4"))
 	_dish_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -377,43 +377,44 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	_dish_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	detail_layout.add_child(_dish_subtitle)
 	var dish_frame := _panel_box(Color("#6a4023"), Color("#3b2515"), Color("#e6b561"), 4)
-	dish_frame.custom_minimum_size = Vector2(0, 104)
+	dish_frame.custom_minimum_size = Vector2(0, 128)
 	dish_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_layout.add_child(dish_frame)
 	_dish_image = TextureRect.new()
-	_dish_image.custom_minimum_size = Vector2(0, 88)
+	_dish_image.custom_minimum_size = Vector2(0, 112)
 	_dish_image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_dish_image.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_dish_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_dish_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	dish_frame.add_child(_dish_image)
 	var detail_rows := VBoxContainer.new()
 	detail_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	detail_rows.add_theme_constant_override("separation", 3)
+	detail_rows.add_theme_constant_override("separation", 5)
 	detail_layout.add_child(detail_rows)
-	var material_labels := _add_detail_pair_tile(
+	var material_labels := _add_detail_story_row(
 		detail_rows,
 		"材料",
-		"所持数",
 		"fish",
-		"cooler",
-		Palette.GAUGE_CYAN_HI,
 		Palette.GAUGE_CYAN_HI
 	)
 	_material_value = material_labels[0] as Label
 	_stock_value = material_labels[1] as Label
-	var exp_labels := _add_detail_pair_tile(
+	var exp_labels := _add_detail_story_row(
 		detail_rows,
 		"食経験値",
-		"初回ボーナス",
 		"exp",
-		"book",
-		Palette.GAUGE_CYAN_HI,
 		Palette.GOLD_BRIGHT
 	)
 	_exp_value = exp_labels[0] as Label
 	_bonus_value = exp_labels[1] as Label
-	_buff_value = _add_detail_tile(detail_rows, "食事効果", "", "buff", Palette.GAUGE_GREEN_HI)
-	_effect_count_value = _add_detail_tile(detail_rows, "効果回数", "", "fire", Palette.GOLD_BRIGHT)
+	var buff_labels := _add_detail_story_row(
+		detail_rows,
+		"食事効果",
+		"buff",
+		Palette.GAUGE_GREEN_HI
+	)
+	_buff_value = buff_labels[0] as Label
+	_effect_count_value = buff_labels[1] as Label
 	_overwrite_note = make_label("", 13, Color("#624b31"))
 	_overwrite_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_overwrite_note.clip_text = true
@@ -472,6 +473,51 @@ func _add_detail_tile(
 	value_label.clip_text = true
 	row.add_child(value_label)
 	return value_label
+
+
+func _add_detail_story_row(
+	parent: Container, title: String, icon_mode: String, accent: Color
+) -> Array:
+	var tile := _panel_box(Color("#fff0cf"), Color("#8b5b2c"), Color("#e6b561"), 3)
+	tile.custom_minimum_size = Vector2(0, 42)
+	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	parent.add_child(tile)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	tile.add_child(row)
+
+	var title_band := _panel_box(Color("#5a3a1c"), Color("#3b2515"), Color("#d7a456"), 2)
+	title_band.custom_minimum_size = Vector2(108, 28)
+	row.add_child(title_band)
+	var title_row := HBoxContainer.new()
+	title_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	title_row.add_theme_constant_override("separation", 5)
+	title_band.add_child(title_row)
+	title_row.add_child(_small_icon(icon_mode, accent, Vector2(24.0, 0.0)))
+	var title_label := make_shadow_label(title, 12, Palette.TEXT_BONE, 2)
+	title_label.custom_minimum_size = Vector2(0, 22)
+	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	title_label.clip_text = true
+	title_row.add_child(title_label)
+
+	var primary := make_label("", 16, Color("#2a2118"), 1, Color("#fff2cf"))
+	primary.custom_minimum_size = Vector2(0, 24)
+	primary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	primary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	primary.autowrap_mode = TextServer.AUTOWRAP_OFF
+	primary.clip_text = true
+	row.add_child(primary)
+
+	var secondary := make_label("", 14, accent, 1, Color("#fff2cf"))
+	secondary.custom_minimum_size = Vector2(150, 24)
+	secondary.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	secondary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	secondary.autowrap_mode = TextServer.AUTOWRAP_OFF
+	secondary.clip_text = true
+	row.add_child(secondary)
+	return [primary, secondary]
 
 
 func _add_detail_pair_tile(
@@ -690,7 +736,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	var recipe_id := String(recipe.get("id", ""))
 	var card := PanelContainer.new()
 	card.name = "RecipeCard_%s" % recipe_id
-	card.custom_minimum_size = Vector2(130, 108)
+	card.custom_minimum_size = Vector2(130, 118)
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
 	var selectable := not locked and not unavailable
 	if selectable:
@@ -705,15 +751,36 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	card.add_child(box)
 	var title_text := "？？？" if locked else String(recipe.get("name", ""))
 	var title := make_label(title_text, 16, Color("#251c12"), 1, Color("#fff3cf"))
+	title.custom_minimum_size = Vector2(0.0, 18.0)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title.clip_text = true
 	box.add_child(title)
 	var image := TextureRect.new()
 	image.texture = _recipe_icon(recipe_id if not locked else "locked")
-	image.custom_minimum_size = Vector2(0, 48)
+	image.custom_minimum_size = Vector2(0, 38)
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	image.modulate = Color(0.46, 0.42, 0.36, 0.82) if locked or unavailable else Color.WHITE
 	box.add_child(image)
+	var stars := make_shadow_label(
+		_recipe_star_text(recipe, locked),
+		13,
+		Palette.GOLD_BRIGHT if not locked else Color("#d0c2a3"),
+		2,
+		Color("#4c2b0b")
+	)
+	stars.custom_minimum_size = Vector2(0.0, 15.0)
+	stars.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	stars.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	box.add_child(stars)
+	var material_text := _recipe_material_chip(recipe, locked, unavailable)
+	var material := make_label(material_text, 12, Color("#49351f"), 1, Color("#fff4cf"))
+	material.custom_minimum_size = Vector2(0.0, 15.0)
+	material.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	material.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	material.clip_text = true
+	box.add_child(material)
 	var footer_text := ""
 	if locked:
 		footer_text = "未解放 Lv.%d" % int(recipe.get("unlock_level", 1))
@@ -726,7 +793,10 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 		var total_exp := base_exp * 2 if first_time else base_exp
 		footer_text = "%d EXP%s" % [total_exp, " 初回" if first_time else ""]
 	var footer := make_label(footer_text, 13, Color("#49351f"), 1, Color("#fff4cf"))
+	footer.custom_minimum_size = Vector2(0.0, 16.0)
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	footer.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	footer.clip_text = true
 	box.add_child(footer)
 	_recipe_cards[recipe_id] = {
 		"card": card,
@@ -736,6 +806,29 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 		"footer_text": footer_text,
 	}
 	return card
+
+
+func _recipe_star_text(recipe: Dictionary, locked: bool) -> String:
+	if locked:
+		return "☆☆☆"
+	var multiplier := float(recipe.get("exp_multiplier", 1.0))
+	var stars := 2
+	if multiplier >= 1.3:
+		stars = 3
+	return "★★★" if stars >= 3 else "★★"
+
+
+func _recipe_material_chip(recipe: Dictionary, locked: bool, unavailable: bool) -> String:
+	if locked:
+		return "素材 ？？？"
+	if unavailable:
+		var allowed = recipe.get("allowed_fish", [])
+		if allowed is Array and not allowed.is_empty():
+			var fish := GameData.get_fish(String(allowed[0]))
+			return "素材 %s" % String(fish.get("name", "魚"))
+		return "素材違い"
+	var fish := GameData.get_fish(_selected_fish_id)
+	return "素材 %s" % String(fish.get("name", "魚"))
 
 
 func _select_recipe(recipe_id: String) -> void:
@@ -788,7 +881,8 @@ func _refresh_recipe_card_styles() -> void:
 		)
 		if footer != null:
 			var base_footer := String(entry.get("footer_text", ""))
-			footer.text = "選択中 / %s" % base_footer if selected and not locked and not unavailable else base_footer
+			var selected_footer := "選択中 %s" % base_footer.replace(" EXP", "EXP").replace(" 初回", "")
+			footer.text = selected_footer if selected and not locked and not unavailable else base_footer
 
 
 func _refresh_detail() -> void:
@@ -816,11 +910,11 @@ func _refresh_detail() -> void:
 	_dish_subtitle.text = String(recipe.get("description", ""))
 	_dish_image.texture = _featured_dish_texture(_selected_recipe_id)
 	_material_value.text = "%s ×1" % String(fish["name"])
-	_stock_value.text = "%d → %d" % [count, maxi(0, count - 1)]
-	_exp_value.text = "+%d EXP%s" % [total_exp, "（初回込み）" if first_time else ""]
-	_bonus_value.text = "+%d EXP" % base_exp if first_time else "記録済み"
+	_stock_value.text = "所持 %d → %d" % [count, maxi(0, count - 1)]
+	_exp_value.text = "+%d EXP" % total_exp
+	_bonus_value.text = "初回ボーナス +%d EXP" % base_exp if first_time else "初回 記録済み"
 	_buff_value.text = String(recipe.get("buff_text", ""))
-	_effect_count_value.text = "1回"
+	_effect_count_value.text = "効果回数 1回"
 	_overwrite_note.text = "食事効果は次の釣行で1回発動 / 既存効果を上書き。"
 	_cook_button.disabled = count <= 0
 
@@ -887,6 +981,25 @@ func preview_has_level_up_overlay() -> bool:
 		if child.get_script() == LevelUpPanelScript:
 			return true
 	return false
+
+
+func preview_accept_level_up_overlay() -> bool:
+	for child in get_children():
+		if child.get_script() == LevelUpPanelScript:
+			child.preview_accept()
+			return true
+	return false
+
+
+func preview_has_status_overlay() -> bool:
+	for child in get_children():
+		if child.get_script() == CookingStatusPanelScript:
+			return true
+	return false
+
+
+func preview_has_current_prep_summary() -> bool:
+	return _result_title != null and _result_title.text == "現在の準備"
 
 
 func preview_show_status_overlay() -> void:
@@ -1012,6 +1125,7 @@ func _show_exp_reward_overlay(
 		panel.closed.connect(_show_pending_level_up)
 	else:
 		_pending_level_up = {}
+		panel.closed.connect(_show_post_reward_select_summary)
 
 
 func _show_pending_level_up() -> void:
@@ -1019,12 +1133,19 @@ func _show_pending_level_up() -> void:
 		return
 	var payload := _pending_level_up.duplicate(true)
 	_pending_level_up = {}
+	_show_post_reward_select_summary()
 	_show_level_up(
 		int(payload.get("level_from", PlayerProgress.level)),
 		int(payload.get("level_to", PlayerProgress.level)),
 		Dictionary(payload.get("old_stats", {})),
 		Dictionary(payload.get("new_stats", {}))
 	)
+
+
+func _show_post_reward_select_summary() -> void:
+	_refresh_header()
+	_refresh_detail()
+	_show_status_summary()
 
 
 func _small_icon(mode: String, accent: Color, minimum_size: Vector2) -> CookingSmallIcon:
@@ -1065,6 +1186,14 @@ func _show_level_up(
 	var panel := LevelUpPanelScript.new()
 	add_child(panel)
 	panel.show_level_up(level_from, level_to, old_stats, new_stats)
+	panel.closed.connect(_show_post_level_status_summary)
+
+
+func _show_post_level_status_summary() -> void:
+	_refresh_header()
+	_refresh_detail()
+	_show_status_summary()
+	_show_status_overlay()
 
 
 func _total_fish_count() -> int:
