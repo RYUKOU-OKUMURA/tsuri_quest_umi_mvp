@@ -69,10 +69,10 @@ func _slot_rects(rect: Rect2) -> Array[Rect2]:
 	var y := rect.position.y + rect.size.y * 0.08
 	var h := rect.size.y * 0.84
 	return [
-		Rect2(rect.position.x + w * 0.000, y, w * 0.245, h),
-		Rect2(rect.position.x + w * 0.245, y, w * 0.310, h),
-		Rect2(rect.position.x + w * 0.555, y, w * 0.270, h),
-		Rect2(rect.position.x + w * 0.825, y, w * 0.175, h),
+		Rect2(rect.position.x + w * 0.000, y, w * 0.235, h),
+		Rect2(rect.position.x + w * 0.235, y, w * 0.300, h),
+		Rect2(rect.position.x + w * 0.535, y, w * 0.250, h),
+		Rect2(rect.position.x + w * 0.785, y, w * 0.215, h),
 	]
 
 
@@ -118,8 +118,8 @@ func _draw_status_slot(font: Font, rect: Rect2, title: String, body: String, dar
 
 
 func _draw_centered_dark_slot(font: Font, rect: Rect2, title: String, body: String) -> void:
-	var title_size := 14
-	var body_size := 22
+	var title_size := 13
+	var body_size := 20
 	var title_width := font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x
 	var body_width := font.get_string_size(body, HORIZONTAL_ALIGNMENT_LEFT, -1, body_size).x
 	_draw_text_clipped(
@@ -129,7 +129,7 @@ func _draw_centered_dark_slot(font: Font, rect: Rect2, title: String, body: Stri
 		title_size,
 		Palette.GOLD_BRIGHT,
 		rect.size.x,
-		3
+		2
 	)
 	_draw_text_clipped(
 		font,
@@ -138,7 +138,7 @@ func _draw_centered_dark_slot(font: Font, rect: Rect2, title: String, body: Stri
 		body_size,
 		Color("#eaf6ff"),
 		rect.size.x,
-		3
+		2
 	)
 
 

@@ -357,7 +357,7 @@ def _draw_top_status_paper_card(
     image.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(4)))
 
     mask = _rounded_mask((w, h), radius)
-    texture = _reference_paper_texture((w, h), fill, seed, strength=4)
+    texture = _reference_paper_texture((w, h), fill, seed, strength=6)
     _paste_masked(image, texture, mask, (x0, y0))
 
     d = ImageDraw.Draw(image)
@@ -405,9 +405,9 @@ def create_top_status_frame() -> None:
     image = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(image)
     y0, y1 = 22, 222
-    split1 = int(w * 0.245)
-    split2 = int(w * 0.555)
-    split3 = int(w * 0.825)
+    split1 = int(w * 0.235)
+    split2 = int(w * 0.535)
+    split3 = int(w * 0.785)
     slots = [
         (8, y0, split1 - 4, y1, "#f4ead5"),
         (split1 + 4, y0, split2 - 4, y1, "#f3e8d0"),
@@ -431,9 +431,14 @@ def create_top_status_frame() -> None:
             d.rounded_rectangle(body, radius=6, outline=_rgba("#8c6733", 24), width=1)
             d.line((body[0] + 18, body[1] + 12, body[2] - 18, body[1] + 12), fill=_rgba("#ffffff", 32), width=1)
             _draw_corner_brackets(d, (x0 + 8, sy0 + 8, x1 - 8, sy1 - 8), length=24, inset=10, color="#8c6733", alpha=64, width=1)
-            if i in (1, 2):
-                d.line((x0 + 132, sy0 + 46, x0 + 132, sy1 - 46), fill=_rgba("#b8934d", 50), width=1)
-                d.line((x0 + 136, sy0 + 50, x0 + 136, sy1 - 50), fill=_rgba("#ffffff", 28), width=1)
+            if i == 1:
+                separator_x = x0 + 246
+                d.line((separator_x, sy0 + 46, separator_x, sy1 - 46), fill=_rgba("#b8934d", 58), width=1)
+                d.line((separator_x + 4, sy0 + 50, separator_x + 4, sy1 - 50), fill=_rgba("#ffffff", 28), width=1)
+            elif i == 2:
+                separator_x = x0 + 132
+                d.line((separator_x, sy0 + 46, separator_x, sy1 - 46), fill=_rgba("#b8934d", 46), width=1)
+                d.line((separator_x + 4, sy0 + 50, separator_x + 4, sy1 - 50), fill=_rgba("#ffffff", 24), width=1)
     image.save(OUT_DIR / "top_status_frame.png")
 
 
