@@ -160,8 +160,19 @@ func show_reward(
 	_buff_label.text = String(buff.get("text", "次の釣行で効果を得る"))
 	if leveled:
 		if level_before > 0 and level_after > level_before:
-			_growth_label.text = "LEVEL UP! Lv.%d -> Lv.%d" % [level_before, level_after]
-			_confirm_button.text = "Lv.%dの成長を見る" % level_after
+			var boss_unlocked := (
+				level_before < GameData.BOSS_UNLOCK_LEVEL
+				and level_after >= GameData.BOSS_UNLOCK_LEVEL
+			)
+			if boss_unlocked:
+				_growth_label.text = "Lv.%d -> Lv.%d / ぬし解放" % [
+					level_before,
+					level_after,
+				]
+				_confirm_button.text = "解放を見る"
+			else:
+				_growth_label.text = "LEVEL UP! Lv.%d -> Lv.%d" % [level_before, level_after]
+				_confirm_button.text = "Lv.%dの成長を見る" % level_after
 		else:
 			_growth_label.text = "LEVEL UP! 能力上昇へ"
 			_confirm_button.text = "成長を見る"
