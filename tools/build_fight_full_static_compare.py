@@ -140,7 +140,7 @@ def _draw_fish(water: Image.Image) -> tuple[float, float, float, float]:
     y = round(center[1] - resized.height * 0.5)
     water.alpha_composite(resized, (x, y))
     flash = resized.copy()
-    flash.putalpha(flash.getchannel("A").point(lambda value: round(value * 0.14)))
+    flash.putalpha(flash.getchannel("A").point(lambda value: round(value * 0.10)))
     white = Image.new("RGBA", resized.size, (255, 255, 255, 0))
     white.putalpha(flash.getchannel("A"))
     water.alpha_composite(white, (x, y))

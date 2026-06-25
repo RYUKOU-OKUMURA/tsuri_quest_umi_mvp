@@ -108,10 +108,10 @@ def _clean_transparent_fish_edge(image: Image.Image) -> Image.Image:
 
 def _add_runtime_fish_edge_underlay(image: Image.Image) -> Image.Image:
     alpha = image.getchannel("A")
-    expanded = alpha.filter(ImageFilter.MaxFilter(5)).filter(ImageFilter.GaussianBlur(1.15))
+    expanded = alpha.filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.GaussianBlur(0.90))
     inner = alpha.filter(ImageFilter.GaussianBlur(0.35))
-    edge = ImageChops.subtract(expanded, inner).point(lambda value: int(value * 0.34))
-    underlay = Image.new("RGBA", image.size, (8, 28, 42, 0))
+    edge = ImageChops.subtract(expanded, inner).point(lambda value: int(value * 0.24))
+    underlay = Image.new("RGBA", image.size, (6, 24, 36, 0))
     underlay.putalpha(edge)
     return Image.alpha_composite(underlay, image)
 
