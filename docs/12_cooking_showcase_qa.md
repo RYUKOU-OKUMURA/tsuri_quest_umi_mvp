@@ -46,6 +46,14 @@
   - 結果: 失敗。
   - 理由: この実行環境では通常Godot起動が即時に exit 134 で終了する。
   - 判定: 通常描画スクショはこの環境では未取得。headless layout auditとsmokeで先に機械的なP1を潰す。
+- `HOME=/private/tmp/tsuri_home "/Applications/Godot.app/Contents/MacOS/Godot" --display-driver macos --rendering-driver dummy --audio-driver Dummy --path ... res://tools/cooking_preview.tscn`
+  - 結果: 失敗。
+  - 理由: 通常起動と同じく即時に exit 134 で終了する。
+  - 判定: macOS display driver + dummy renderer でも `/tmp/tsuri_cooking_*.png` は生成されない。
+- `HOME=/private/tmp/tsuri_home "/Applications/Godot.app/Contents/MacOS/Godot" --display-driver macos --rendering-driver opengl3 --rendering-method gl_compatibility --audio-driver Dummy --disable-crash-handler --log-file /tmp/tsuri_cooking_preview_godot.log --path ... res://tools/cooking_preview.tscn`
+  - 結果: 失敗。
+  - 理由: 即時に exit 134 で終了し、`/tmp/tsuri_cooking_preview_godot.log` も生成されなかった。
+  - 判定: renderer切り替えやcrash handler無効化では、この環境の通常描画キャプチャ制約は回避できない。
 - `HOME=/private/tmp/tsuri_home "/Applications/Godot.app/Contents/MacOS/Godot" --headless --write-movie /tmp/tsuri_cooking_movie.png --quit-after 10 --fixed-fps 10 --path ... res://tools/cooking_preview.tscn`
   - 結果: 失敗。
   - 理由: movie makerもheadless/dummy rendererでは実フレームを生成できず、同じnull texture経路に入る。
@@ -68,6 +76,6 @@
 
 ## 未解決
 
-- P1: 現時点で既知のロジック破壊はなし。headless layout audit上の画面外はみ出し/縦クリップは解消済み。ただし実スクショ未取得のため、最終的な視覚密度、ピクセル単位の重なり、装飾の見え方は未証明。
+- P1: 現時点で既知のロジック破壊はなし。headless layout audit上の画面外はみ出し/縦クリップは解消済み。ただし実スクショ未取得のため、最終的な視覚密度、ピクセル単位の重なり、装飾の見え方は未証明。headless、通常起動、macOS display driver + dummy/opengl3 の各経路で `/tmp/tsuri_cooking_*.png` は生成できていない。
 - P2: 生成フレーム/背景アセットの主要接続は進んだが、生成アセットは実装用の差し替えスロットであり、最終本番アートではない。料理・魚・背景は後続で品質差し替え余地あり。魚行とレシピカードは専用フレーム接続済みだが、視覚スクショで選択/ロック状態の見え方を確認する必要がある。
 - P3: steam/sparkle/粒子などの小演出は、状態別スクショでP1/P2が潰れてから追加する。
