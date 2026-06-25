@@ -209,8 +209,8 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 		)
 	else:
 		_draw_bait_icon(bait.position + Vector2(82.0 if _hud_frame == null else 95.0, bait.size.y * 0.62))
-	_draw_text(font, "オキアミ", bait.position + Vector2(116.0, bait.size.y * (0.62 if _hud_frame != null else 0.66)), 22 if _hud_frame != null else 20, Color("#2b2117"), 0)
-	_draw_text(font, "× 17", bait.position + Vector2(124.0, bait.size.y * (0.88 if _hud_frame != null else 0.92)), 20 if _hud_frame != null else 19, Color("#2b2117"), 0)
+	_draw_text(font, "オキアミ", bait.position + Vector2(116.0, bait.size.y * (0.58 if _hud_frame != null else 0.66)), 23 if _hud_frame != null else 20, Color("#2b2117"), 0)
+	_draw_text(font, "× 17", bait.position + Vector2(126.0, bait.size.y * (0.80 if _hud_frame != null else 0.92)), 21 if _hud_frame != null else 19, Color("#2b2117"), 0)
 
 	_draw_panel(hint, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	_draw_text(font, "操作のヒント", hint.position + Vector2(18.0, 25.0), 18, Color("#6a4c2b"), 0)
@@ -345,23 +345,30 @@ func _draw_key_hint(font: Font, rect: Rect2, key: String, label: String) -> void
 
 
 func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String, note: String) -> void:
-	var key_w := 40.0 if key.length() <= 1 else 58.0
-	var key_rect := Rect2(rect.position + Vector2(10.0, 10.0), Vector2(key_w, 26.0))
+	var key_w := 44.0 if key.length() <= 1 else 62.0
+	var key_rect := Rect2(rect.position + Vector2(8.0, 8.0), Vector2(key_w, 29.0))
 	draw_rect(key_rect, Color("#253247"), true)
 	draw_rect(key_rect, Color("#0d1524"), false, 2.0)
 	draw_rect(key_rect.grow(-2.0), Color("#d5b56b"), false, 1.0)
 	draw_line(key_rect.position + Vector2(4.0, 4.0), key_rect.position + Vector2(key_rect.size.x - 4.0, 4.0), Color(1.0, 1.0, 1.0, 0.20), 1.0)
-	var key_size := 17
+	var key_size := 18
 	var key_text_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
-	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 19.0), key_size, Color.WHITE, 1)
-	var label_size := 19
-	var note_size := 9
-	var label_pos := key_rect.position + Vector2(key_rect.size.x + 9.0, 20.0)
+	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 20.0), key_size, Color.WHITE, 1)
+	var label_size := 21
+	var note_size := 12
+	var label_pos := key_rect.position + Vector2(key_rect.size.x + 9.0, 22.0)
 	_draw_text(font, label, label_pos, label_size, Color("#2b2117"), 0)
-	var note_text := note
+	var note_text := _compact_control_note(note)
+	var label_w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
 	var note_w := font.get_string_size(note_text, HORIZONTAL_ALIGNMENT_LEFT, -1, note_size).x
-	var note_x := minf(label_pos.x, rect.end.x - note_w - 6.0)
-	_draw_text(font, note_text, Vector2(note_x, key_rect.position.y + 31.0), note_size, Color("#5a4327"), 0)
+	var inline_x := label_pos.x + label_w + 4.0
+	if inline_x + note_w <= rect.end.x - 4.0:
+		_draw_text(font, note_text, Vector2(inline_x, label_pos.y - 1.0), note_size, Color("#5a4327"), 0)
+	else:
+		var small_note_size := 10
+		note_w = font.get_string_size(note_text, HORIZONTAL_ALIGNMENT_LEFT, -1, small_note_size).x
+		if inline_x + note_w <= rect.end.x - 4.0:
+			_draw_text(font, note_text, Vector2(inline_x, label_pos.y - 1.0), small_note_size, Color("#5a4327"), 0)
 
 
 func _draw_key_row(font: Font, pos: Vector2, key: String, label: String) -> void:
@@ -374,6 +381,14 @@ func _draw_key_row(font: Font, pos: Vector2, key: String, label: String) -> void
 	_draw_text(font, label, pos + Vector2(key_rect.size.x + 8.0, 3.0), 16, Color("#2b2117") if key != "+" and key != "-" else Palette.TEXT_BONE, 0 if key != "+" and key != "-" else 2)
 
 
+func _compact_control_note(note: String) -> String:
+	if note.begins_with("リール"):
+		return "リール"
+	if note.begins_with("ライン"):
+		return "ライン"
+	return "テンション"
+
+
 func _hint_key_slots(hint: Rect2) -> Array[Rect2]:
 	if _hud_frame == null:
 		return [
@@ -383,7 +398,7 @@ func _hint_key_slots(hint: Rect2) -> Array[Rect2]:
 		]
 	var slot_gap := 0.0
 	var slot_w := (hint.size.x - 44.0) / 3.0
-	var slot_y := hint.position.y + 25.0
+	var slot_y := hint.position.y + 27.0
 	var slot_h := 45.0
 	var x0 := hint.position.x + 22.0
 	return [
