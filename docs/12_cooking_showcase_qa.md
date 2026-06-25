@@ -41,6 +41,11 @@
   - コマンド: `HOME=/private/tmp/tsuri_home "/Applications/Godot.app/Contents/MacOS/Godot" --headless --path ... res://tools/cooking_layout_audit.tscn`
   - 結果: 成功。
   - 範囲: `COOK_SELECT`、`EXP_GAIN`、`MEAL_RESULT`、`LEVEL_UP_OVERLAY`、`STATUS_SUMMARY`。
+- `tools/cooking_content_audit.tscn`
+  - 目的: headlessで5状態を構築し、料理名、材料、EXP、食事効果、成長予告、Lv.5解放、ステータス要約などの必須表示テキストが画面上に存在することを検出する。
+  - コマンド: `HOME=/private/tmp/tsuri_home "/Applications/Godot.app/Contents/MacOS/Godot" --headless --path ... res://tools/cooking_content_audit.tscn`
+  - 結果: 成功。
+  - 範囲: `COOK_SELECT`、`EXP_GAIN`、`MEAL_RESULT`、`LEVEL_UP_OVERLAY`、`STATUS_SUMMARY`。視覚スクショの代替ではなく、表示情報欠落の回帰防止。
 
 ## 未解決
 
