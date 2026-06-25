@@ -10,6 +10,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFilter
 ROOT = Path(__file__).resolve().parents[1]
 REFERENCE = ROOT / "reference" / "02_underwater_fight_mockup.png"
 OUTPUT = ROOT / "assets" / "showcase" / "underwater" / "underwater_battle_bg.png"
+GENERATED_CENTER_PAINTOVER = ROOT / "tools" / "source_assets" / "underwater_center_paintover_candidate.png"
 
 CANVAS_SIZE = (1672, 941)
 
@@ -1139,6 +1140,42 @@ def _harmonize(image: Image.Image) -> Image.Image:
     return image.convert("RGB")
 
 
+def _add_generated_canvas_paintover(image: Image.Image, crop_subject_mask: Image.Image) -> Image.Image:
+    if not GENERATED_CENTER_PAINTOVER.exists():
+        return image
+
+    candidate = Image.open(GENERATED_CENTER_PAINTOVER).convert("RGB")
+    if candidate.size != CANVAS_SIZE:
+        candidate = candidate.resize(CANVAS_SIZE, Image.Resampling.LANCZOS)
+
+    candidate = ImageEnhance.Brightness(candidate).enhance(1.12)
+    candidate = ImageEnhance.Color(candidate).enhance(0.94)
+    candidate = ImageEnhance.Contrast(candidate).enhance(0.96)
+    candidate = candidate.filter(ImageFilter.GaussianBlur(0.4)).convert("RGBA")
+
+    mask = _expand_to_canvas(crop_subject_mask).convert("L")
+    w, h = CANVAS_SIZE
+    center_gate = Image.new("L", CANVAS_SIZE, 0)
+    draw = ImageDraw.Draw(center_gate)
+    draw.ellipse((int(w * 0.13), int(h * 0.08), int(w * 0.86), int(h * 0.93)), fill=210)
+    draw.rectangle((int(w * 0.20), int(h * 0.50), int(w * 0.82), int(h * 0.90)), fill=245)
+    center_gate = center_gate.filter(ImageFilter.GaussianBlur(42.0))
+    mask = ImageChops.multiply(mask, center_gate)
+    mask = ImageChops.multiply(mask, _vertical_mask(CANVAS_SIZE, 224, 0.08, 0.98))
+    mask = ImageChops.multiply(mask, _soft_blob_mask(CANVAS_SIZE, 242, seed_offset=64))
+
+    result = image.convert("RGBA")
+    result.alpha_composite(
+        Image.composite(
+            candidate,
+            Image.new("RGBA", CANVAS_SIZE, (0, 0, 0, 0)),
+            mask,
+        ),
+        (0, 0),
+    )
+    return result.convert("RGB")
+
+
 def build() -> None:
     if not REFERENCE.exists():
         raise FileNotFoundError(f"Missing reference: {REFERENCE}")
@@ -1151,6 +1188,7 @@ def build() -> None:
 
     clean_crop = _remove_full_window_subjects(crop)
     background = _expand_to_canvas(clean_crop)
+    background = _add_generated_canvas_paintover(background, _make_full_window_subject_mask(crop.size))
     background = _harmonize(background)
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
