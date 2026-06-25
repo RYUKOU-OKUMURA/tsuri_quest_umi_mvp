@@ -368,6 +368,85 @@ def _add_center_floor_micro_detail(
     )
 
 
+def _add_center_floor_caustic_mesh(
+    base: Image.Image,
+    source: Image.Image,
+    subject_mask: Image.Image,
+) -> None:
+    w, h = source.size
+    left_floor = source.crop((int(w * 0.05), int(h * 0.72), int(w * 0.32), int(h * 0.96)))
+    right_floor = source.crop((int(w * 0.72), int(h * 0.70), int(w * 0.97), int(h * 0.94)))
+    floor_source = Image.new(
+        "RGB",
+        (left_floor.width + right_floor.width, max(left_floor.height, right_floor.height)),
+    )
+    floor_source.paste(left_floor, (0, floor_source.height - left_floor.height))
+    floor_source.paste(right_floor, (left_floor.width, floor_source.height - right_floor.height))
+
+    patch_size = (int(w * 0.58), int(h * 0.21))
+    patch = floor_source.resize(patch_size, Image.Resampling.LANCZOS)
+    patch = ImageEnhance.Brightness(patch).enhance(1.04)
+    patch = ImageEnhance.Color(patch).enhance(0.86)
+    patch = ImageEnhance.Contrast(patch).enhance(1.12)
+    patch = patch.filter(ImageFilter.GaussianBlur(0.35)).convert("RGBA")
+
+    x = int(w * 0.24)
+    y = int(h * 0.64)
+    patch_alpha = ImageChops.multiply(
+        subject_mask.crop((x, y, x + patch_size[0], y + patch_size[1])),
+        _vertical_mask(patch_size, 92, 0.06, 1.0),
+    )
+    patch_alpha = ImageChops.multiply(patch_alpha, _soft_blob_mask(patch_size, 210, seed_offset=38))
+    base.alpha_composite(
+        Image.composite(
+            patch,
+            Image.new("RGBA", patch_size, (0, 0, 0, 0)),
+            patch_alpha,
+        ),
+        (x, y),
+    )
+
+    mesh = Image.new("RGBA", source.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(mesh, "RGBA")
+    for index in range(34):
+        row = index % 7
+        col = index // 7
+        start_x = w * (0.26 + col * 0.095 + (row % 2) * 0.018)
+        start_y = h * (0.67 + row * 0.030)
+        points: list[tuple[float, float]] = []
+        for step in range(5):
+            t = step / 4.0
+            points.append(
+                (
+                    start_x + 98.0 * t,
+                    start_y + math.sin(t * math.pi * 2.0 + index * 0.7) * (2.2 + (index % 3) * 0.6),
+                )
+            )
+        draw.line(points, fill=(205, 249, 228, 34 if index % 3 else 46), width=1)
+    for index in range(42):
+        u = 0.26 + (index % 10) * 0.052
+        v = 0.62 + (index // 10) * 0.054
+        radius = 0.9 + (index % 4) * 0.35
+        draw.ellipse(
+            (w * u - radius, h * v - radius, w * u + radius, h * v + radius),
+            outline=(214, 250, 240, 24),
+            width=1,
+        )
+
+    mesh_alpha = ImageChops.multiply(
+        subject_mask,
+        _vertical_mask(source.size, 86, 0.50, 0.97),
+    )
+    base.alpha_composite(
+        Image.composite(
+            mesh,
+            Image.new("RGBA", source.size, (0, 0, 0, 0)),
+            mesh_alpha.filter(ImageFilter.GaussianBlur(1.0)),
+        ),
+        (0, 0),
+    )
+
+
 def _add_center_sand_channel(
     base: Image.Image,
     source: Image.Image,
@@ -580,6 +659,7 @@ def _add_center_water_texture(
     _add_center_sand_channel(base, source, subject_mask)
     _add_center_floor_glints(base, source, subject_mask)
     _add_center_floor_micro_detail(base, source, subject_mask)
+    _add_center_floor_caustic_mesh(base, source, subject_mask)
 
     floor_fragments = (
         (source.crop((int(w * 0.08), int(h * 0.74), int(w * 0.28), int(h * 0.92))), 0.33, 0.79, 0.24, 0.11, 30),
