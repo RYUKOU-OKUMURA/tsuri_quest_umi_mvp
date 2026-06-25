@@ -9,6 +9,7 @@ const COOKING_BG := "res://assets/showcase/cooking/cooking_room_bg.png"
 const FISH_ICON_SHEET := "res://assets/showcase/cooking/fish_icon_sheet.png"
 const DISH_ICON_SHEET := "res://assets/showcase/cooking/dish_icon_sheet.png"
 const DISH_FEATURE_AJI := "res://assets/showcase/cooking/dish_feature_aji_shioyaki.png"
+const RECIPE_CARD_FRAME := "res://assets/showcase/cooking/recipe_card_frame.png"
 const DISH_DETAIL_FRAME := "res://assets/showcase/cooking/dish_detail_frame.png"
 
 const FISH_ICON_INDEX := {
@@ -488,14 +489,28 @@ func _refresh_recipe_card_styles() -> void:
 		var fill := Color("#ffedbb") if selected else Color("#ead7ad")
 		if locked:
 			fill = Color("#8c8069")
+		var border := Color("#f2c86d") if selected else Color("#7b5027")
+		var inner := Color("#fff6d4") if selected else Color("#c59a59")
+		var tint := Color.WHITE
+		if selected:
+			tint = Color("#fff1ba")
+		elif locked:
+			tint = Color(0.55, 0.50, 0.42, 1.0)
+		card.self_modulate = tint
 		card.add_theme_stylebox_override(
 			"panel",
-			_style_box(
-				fill,
-				Color("#f2c86d") if selected else Color("#7b5027"),
-				Color("#fff6d4") if selected else Color("#c59a59"),
-				4,
-				6
+			_texture_style_box(
+				RECIPE_CARD_FRAME,
+				28,
+				_style_box(
+					fill,
+					border,
+					inner,
+					4,
+					6
+				),
+				12.0,
+				8.0
 			)
 		)
 
