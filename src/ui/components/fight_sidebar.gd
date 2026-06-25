@@ -156,8 +156,8 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 	var icon_size := 42.0 if _sidebar_frame != null else 58.0
 	var text_x := 62.0 if _sidebar_frame != null else 78.0
 	if _sidebar_frame != null:
-		icon_size = 50.0
-		text_x = 69.0
+		icon_size = 56.0
+		text_x = 78.0
 	_draw_action_icon(body.position + Vector2(33.0, body.size.y * 0.55), icon_size)
 	_draw_text(font, "%s！" % action, body.position + Vector2(text_x, 31.0), 25 if _sidebar_frame != null else 20, Color("#2b2117"), 0)
 	if _sidebar_frame != null:
@@ -185,12 +185,12 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 		"ロッド：%s" % rod_name,
 		"糸3号・チヌ針",
 	]
-	var tackle_font_size := 19 if _sidebar_frame != null else 12
-	var tackle_line_gap := 23.0 if _sidebar_frame != null else 16.0
+	var tackle_font_size := 20 if _sidebar_frame != null else 12
+	var tackle_line_gap := 24.0 if _sidebar_frame != null else 16.0
 	for i in range(lines.size()):
 		_draw_wrapped(font, lines[i], body.position + text_offset + Vector2(0.0, float(i) * tackle_line_gap), text_width, tackle_font_size, Palette.TEXT_DARK, 1, tackle_font_size + 3.0)
 	if _tackle_card_icon != null or _icons != null:
-		var icon_rect := Rect2(body.end - Vector2(72.0, 70.0), Vector2(64.0, 58.0)) if _sidebar_frame != null else Rect2(body.end - Vector2(50.0, 50.0), Vector2(40.0, 40.0))
+		var icon_rect := Rect2(body.end - Vector2(76.0, 72.0), Vector2(68.0, 60.0)) if _sidebar_frame != null else Rect2(body.end - Vector2(50.0, 50.0), Vector2(40.0, 40.0))
 		_draw_tackle_icon(icon_rect)
 	else:
 		_draw_simple_rod(body.position + Vector2(body.size.x - 62.0, body.size.y - 24.0))
@@ -270,8 +270,8 @@ func _draw_wrapped(
 
 func _draw_action_message(font: Font, text: String, pos: Vector2, max_width: float) -> void:
 	var first_stop := text.find("！")
-	var font_size := 15 if _sidebar_frame != null else 13
-	var gap := 15.0 if _sidebar_frame != null else 16.0
+	var font_size := 16 if _sidebar_frame != null else 13
+	var gap := 16.0 if _sidebar_frame != null else 16.0
 	if first_stop > 0 and first_stop < text.length() - 1:
 		var first := text.left(first_stop + 1)
 		var second := text.substr(first_stop + 1)
