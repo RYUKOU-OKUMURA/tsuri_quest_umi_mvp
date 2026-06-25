@@ -25,11 +25,20 @@ func _ready() -> void:
 	await _tick()
 
 	_seed_select_state()
-	screen = await _mount_cooking_screen()
+	screen = await _mount_cooking_screen(false)
 	var fake_result := _fake_level_result()
 	_seed_after_meal_state()
 	screen.preview_show_reward_result(fake_result, 130, 150, 150, true)
 	await get_tree().create_timer(0.15).timeout
+	if not screen.preview_accept_reward_overlay():
+		push_error("Expected reward overlay before level-up transition.")
+		get_tree().quit(1)
+		return
+	await get_tree().create_timer(0.35).timeout
+	if not screen.preview_has_level_up_overlay():
+		push_error("Expected reward overlay close to open LEVEL_UP_OVERLAY.")
+		get_tree().quit(1)
+		return
 	screen.queue_free()
 	await _tick()
 
@@ -50,10 +59,10 @@ func _ready() -> void:
 	get_tree().quit(0)
 
 
-func _mount_cooking_screen() -> Control:
+func _mount_cooking_screen(suppress_level_overlay := true) -> Control:
 	var screen := CookingScreen.new()
 	screen.theme = ThemeFactory.build_theme()
-	screen.configure({"suppress_level_overlay": true})
+	screen.configure({"suppress_level_overlay": suppress_level_overlay})
 	screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(screen)
 	await _tick()

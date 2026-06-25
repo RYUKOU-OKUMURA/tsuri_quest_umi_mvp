@@ -142,6 +142,10 @@ func show_reward(result: Dictionary, exp_before: int, exp_after: int, exp_max: i
 	_present()
 
 
+func preview_accept() -> void:
+	_close()
+
+
 func _add_flow_step(parent: HBoxContainer, text: String) -> void:
 	var card := _panel_box(Color("#17324d"), Color("#07121e"), Palette.GOLD_DEEP, 3)
 	card.custom_minimum_size = Vector2(150.0, 34.0)

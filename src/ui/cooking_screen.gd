@@ -563,6 +563,21 @@ func preview_show_reward_result(result: Dictionary, exp_before: int, exp_after: 
 	_show_reward_overlay(result, exp_before, exp_after, exp_max, PlayerProgress.level - 1, {}, leveled)
 
 
+func preview_accept_reward_overlay() -> bool:
+	for child in get_children():
+		if child.get_script() == CookingRewardPanelScript:
+			child.preview_accept()
+			return true
+	return false
+
+
+func preview_has_level_up_overlay() -> bool:
+	for child in get_children():
+		if child.get_script() == LevelUpPanelScript:
+			return true
+	return false
+
+
 func preview_show_status_overlay() -> void:
 	_refresh_header()
 	_refresh_detail()
