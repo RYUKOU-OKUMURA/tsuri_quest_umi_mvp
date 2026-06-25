@@ -1479,6 +1479,110 @@ def _add_canvas_reference_light_polish(
     return result.convert("RGB")
 
 
+def _add_canvas_visible_floor_density(
+    image: Image.Image,
+    reference_crop: Image.Image,
+    crop_subject_mask: Image.Image,
+) -> Image.Image:
+    source = _expand_to_canvas(reference_crop.convert("RGB"))
+    subject_mask = _expand_to_canvas(crop_subject_mask).convert("L")
+    result = image.convert("RGBA")
+    w, h = CANVAS_SIZE
+
+    # The runtime water window is much wider than the source art, so the lower
+    # seabed is partly cropped. Lift safe edge-floor pixels into the visible
+    # mid-lower band instead of adding detail only at the texture bottom.
+    left_floor = source.crop((int(w * 0.05), int(h * 0.62), int(w * 0.18), int(h * 0.88)))
+    right_floor = source.crop((int(w * 0.78), int(h * 0.60), int(w * 0.98), int(h * 0.86)))
+    floor_source = _stitch_reference_patches(left_floor, right_floor, align="bottom")
+    floor_size = (int(w * 0.62), int(h * 0.22))
+    floor_patch = floor_source.resize(floor_size, Image.Resampling.LANCZOS)
+    floor_patch = ImageEnhance.Brightness(floor_patch).enhance(1.30)
+    floor_patch = ImageEnhance.Color(floor_patch).enhance(0.94)
+    floor_patch = ImageEnhance.Contrast(floor_patch).enhance(1.12)
+    floor_patch = floor_patch.filter(ImageFilter.UnsharpMask(radius=1.0, percent=36, threshold=3)).convert("RGBA")
+
+    floor_x = int(w * 0.23)
+    floor_y = int(h * 0.47)
+    floor_gate = Image.new("L", floor_size, 0)
+    floor_draw = ImageDraw.Draw(floor_gate)
+    floor_draw.ellipse(
+        (
+            int(floor_size[0] * -0.04),
+            int(floor_size[1] * 0.00),
+            int(floor_size[0] * 1.04),
+            int(floor_size[1] * 1.12),
+        ),
+        fill=122,
+    )
+    floor_gate = floor_gate.filter(ImageFilter.GaussianBlur(26.0))
+    floor_alpha = ImageChops.multiply(
+        subject_mask.crop((floor_x, floor_y, floor_x + floor_size[0], floor_y + floor_size[1])),
+        _vertical_mask(floor_size, 118, 0.05, 1.0),
+    )
+    floor_alpha = ImageChops.multiply(floor_alpha, floor_gate)
+    floor_alpha = ImageChops.multiply(floor_alpha, _soft_blob_mask(floor_size, 218, seed_offset=82))
+    result.alpha_composite(
+        Image.composite(
+            floor_patch,
+            Image.new("RGBA", floor_size, (0, 0, 0, 0)),
+            floor_alpha,
+        ),
+        (floor_x, floor_y),
+    )
+
+    accents = Image.new("RGBA", CANVAS_SIZE, (0, 0, 0, 0))
+    accent_draw = ImageDraw.Draw(accents, "RGBA")
+    for index in range(58):
+        row = index % 7
+        col = index // 7
+        x = w * (0.26 + col * 0.066 + (row % 2) * 0.018)
+        y = h * (0.50 + row * 0.030)
+        points: list[tuple[float, float]] = []
+        for step in range(5):
+            t = step / 4.0
+            points.append(
+                (
+                    x + 118.0 * t,
+                    y + math.sin(t * math.tau + index * 0.61) * (1.8 + (index % 3) * 0.45),
+                )
+            )
+        accent_draw.line(points, fill=(223, 255, 238, 32 if index % 4 else 48), width=1)
+
+    for index in range(72):
+        col = index % 12
+        row = index // 12
+        u = 0.26 + col * 0.046 + (row % 2) * 0.013
+        v = 0.30 + row * 0.046 + math.sin(index * 1.09) * 0.008
+        radius = 0.9 + (index % 4) * 0.35
+        accent_draw.ellipse(
+            (
+                w * u - radius,
+                h * v - radius,
+                w * u + radius,
+                h * v + radius,
+            ),
+            outline=(211, 247, 248, 26 if index % 3 else 38),
+            width=1,
+        )
+
+    accent_mask = ImageChops.multiply(
+        subject_mask,
+        _vertical_mask(CANVAS_SIZE, 102, 0.24, 0.72),
+    )
+    accent_mask = ImageChops.multiply(accent_mask, _soft_blob_mask(CANVAS_SIZE, 214, seed_offset=84))
+    result.alpha_composite(
+        Image.composite(
+            accents.filter(ImageFilter.GaussianBlur(0.45)),
+            Image.new("RGBA", CANVAS_SIZE, (0, 0, 0, 0)),
+            accent_mask,
+        ),
+        (0, 0),
+    )
+
+    return result.convert("RGB")
+
+
 def build() -> None:
     if not REFERENCE.exists():
         raise FileNotFoundError(f"Missing reference: {REFERENCE}")
@@ -1494,6 +1598,7 @@ def build() -> None:
     background = _add_generated_canvas_paintover(background, _make_full_window_subject_mask(crop.size))
     background = _add_canvas_center_floor_lift(background, _make_full_window_subject_mask(crop.size))
     background = _add_canvas_reference_light_polish(background, crop, _make_full_window_subject_mask(crop.size))
+    background = _add_canvas_visible_floor_density(background, crop, _make_full_window_subject_mask(crop.size))
     background = _harmonize(background)
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
