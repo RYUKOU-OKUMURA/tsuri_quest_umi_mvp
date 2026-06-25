@@ -1148,7 +1148,7 @@ def _add_generated_canvas_paintover(image: Image.Image, crop_subject_mask: Image
     if candidate.size != CANVAS_SIZE:
         candidate = candidate.resize(CANVAS_SIZE, Image.Resampling.LANCZOS)
 
-    candidate = ImageEnhance.Brightness(candidate).enhance(1.22)
+    candidate = ImageEnhance.Brightness(candidate).enhance(1.30)
     candidate = ImageEnhance.Color(candidate).enhance(0.94)
     candidate = ImageEnhance.Contrast(candidate).enhance(0.96)
     candidate = candidate.filter(ImageFilter.GaussianBlur(0.4)).convert("RGBA")
@@ -1157,11 +1157,11 @@ def _add_generated_canvas_paintover(image: Image.Image, crop_subject_mask: Image
 
     broad_center = Image.new("L", CANVAS_SIZE, 0)
     draw = ImageDraw.Draw(broad_center)
-    draw.ellipse((int(w * 0.08), int(h * 0.02), int(w * 0.90), int(h * 0.96)), fill=216)
-    draw.rectangle((int(w * 0.16), int(h * 0.20), int(w * 0.84), int(h * 0.88)), fill=236)
+    draw.ellipse((int(w * 0.08), int(h * 0.02), int(w * 0.90), int(h * 0.96)), fill=236)
+    draw.rectangle((int(w * 0.16), int(h * 0.20), int(w * 0.84), int(h * 0.88)), fill=252)
     broad_center = broad_center.filter(ImageFilter.GaussianBlur(56.0))
-    broad_center = ImageChops.multiply(broad_center, _vertical_mask(CANVAS_SIZE, 232, 0.02, 0.98))
-    broad_center = ImageChops.multiply(broad_center, _soft_blob_mask(CANVAS_SIZE, 238, seed_offset=62))
+    broad_center = ImageChops.multiply(broad_center, _vertical_mask(CANVAS_SIZE, 250, 0.02, 0.98))
+    broad_center = ImageChops.multiply(broad_center, _soft_blob_mask(CANVAS_SIZE, 250, seed_offset=62))
 
     subject_mask = _expand_to_canvas(crop_subject_mask).convert("L")
     center_gate = Image.new("L", CANVAS_SIZE, 0)
@@ -1170,11 +1170,57 @@ def _add_generated_canvas_paintover(image: Image.Image, crop_subject_mask: Image
     draw.rectangle((int(w * 0.20), int(h * 0.50), int(w * 0.82), int(h * 0.90)), fill=255)
     center_gate = center_gate.filter(ImageFilter.GaussianBlur(42.0))
     subject_mask = ImageChops.multiply(subject_mask, center_gate)
-    subject_mask = ImageChops.multiply(subject_mask, _vertical_mask(CANVAS_SIZE, 244, 0.08, 0.98))
-    subject_mask = ImageChops.multiply(subject_mask, _soft_blob_mask(CANVAS_SIZE, 246, seed_offset=64))
+    subject_mask = ImageChops.multiply(subject_mask, _vertical_mask(CANVAS_SIZE, 255, 0.08, 0.98))
+    subject_mask = ImageChops.multiply(subject_mask, _soft_blob_mask(CANVAS_SIZE, 255, seed_offset=64))
     mask = ImageChops.lighter(broad_center, subject_mask)
 
     result = image.convert("RGBA")
+    result.alpha_composite(
+        Image.composite(
+            candidate,
+            Image.new("RGBA", CANVAS_SIZE, (0, 0, 0, 0)),
+            mask,
+        ),
+        (0, 0),
+    )
+    return result.convert("RGB")
+
+
+def _add_canvas_center_floor_lift(image: Image.Image, crop_subject_mask: Image.Image) -> Image.Image:
+    if not GENERATED_CENTER_PAINTOVER.exists():
+        return image
+
+    candidate = Image.open(GENERATED_CENTER_PAINTOVER).convert("RGB")
+    if candidate.size != CANVAS_SIZE:
+        candidate = candidate.resize(CANVAS_SIZE, Image.Resampling.LANCZOS)
+
+    candidate = ImageEnhance.Brightness(candidate).enhance(1.40)
+    candidate = ImageEnhance.Color(candidate).enhance(0.98)
+    candidate = ImageEnhance.Contrast(candidate).enhance(1.08)
+    candidate = candidate.filter(ImageFilter.GaussianBlur(0.18)).convert("RGBA")
+
+    w, h = CANVAS_SIZE
+    result = image.convert("RGBA")
+
+    floor_gate = Image.new("L", CANVAS_SIZE, 0)
+    draw = ImageDraw.Draw(floor_gate)
+    draw.ellipse((int(w * 0.18), int(h * 0.43), int(w * 0.86), int(h * 0.95)), fill=214)
+    draw.rectangle((int(w * 0.24), int(h * 0.58), int(w * 0.82), int(h * 0.88)), fill=244)
+    floor_gate = floor_gate.filter(ImageFilter.GaussianBlur(54.0))
+    floor_gate = ImageChops.multiply(floor_gate, _vertical_mask(CANVAS_SIZE, 255, 0.38, 0.98))
+    floor_gate = ImageChops.multiply(floor_gate, _soft_blob_mask(CANVAS_SIZE, 250, seed_offset=70))
+
+    subject_mask = _expand_to_canvas(crop_subject_mask).convert("L")
+    subject_gate = Image.new("L", CANVAS_SIZE, 0)
+    draw = ImageDraw.Draw(subject_gate)
+    draw.ellipse((int(w * 0.14), int(h * 0.14), int(w * 0.84), int(h * 0.88)), fill=236)
+    draw.rectangle((int(w * 0.18), int(h * 0.48), int(w * 0.80), int(h * 0.88)), fill=255)
+    subject_gate = subject_gate.filter(ImageFilter.GaussianBlur(38.0))
+    subject_mask = ImageChops.multiply(subject_mask, subject_gate)
+    subject_mask = ImageChops.multiply(subject_mask, _vertical_mask(CANVAS_SIZE, 255, 0.16, 0.98))
+    subject_mask = ImageChops.multiply(subject_mask, _soft_blob_mask(CANVAS_SIZE, 255, seed_offset=72))
+
+    mask = ImageChops.lighter(floor_gate, subject_mask)
     result.alpha_composite(
         Image.composite(
             candidate,
@@ -1199,6 +1245,7 @@ def build() -> None:
     clean_crop = _remove_full_window_subjects(crop)
     background = _expand_to_canvas(clean_crop)
     background = _add_generated_canvas_paintover(background, _make_full_window_subject_mask(crop.size))
+    background = _add_canvas_center_floor_lift(background, _make_full_window_subject_mask(crop.size))
     background = _harmonize(background)
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
