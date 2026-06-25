@@ -11,6 +11,7 @@ const MEAL_RESULT_FRAME := "res://assets/showcase/cooking/meal_result_frame.png"
 
 var _dialog: PanelContainer
 var _header_title: Label
+var _bridge_label: Label
 var _dish_title: Label
 var _dish_image: TextureRect
 var _exp_bar: GaugeBar
@@ -56,7 +57,7 @@ func _build_screen() -> void:
 	center.add_child(_dialog)
 
 	var root := VBoxContainer.new()
-	root.add_theme_constant_override("separation", 12)
+	root.add_theme_constant_override("separation", 9)
 	_dialog.add_child(root)
 
 	_header_title = make_shadow_label("いただきます！", 34, Palette.GOLD_BRIGHT, 4)
@@ -71,6 +72,11 @@ func _build_screen() -> void:
 	_add_flow_step(flow_row, "1 食事")
 	_add_flow_step(flow_row, "2 EXP")
 	_add_flow_step(flow_row, "3 成長")
+
+	_bridge_label = make_shadow_label("", 19, Palette.TEXT_BONE, 2)
+	_bridge_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_bridge_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	root.add_child(_bridge_label)
 
 	var main := HBoxContainer.new()
 	main.add_theme_constant_override("separation", 14)
@@ -101,7 +107,7 @@ func _build_screen() -> void:
 	main.add_child(reward_box)
 
 	var exp_card := _panel_box(Color("#0f2238"), Color("#07121e"), Palette.GOLD_DEEP, 5)
-	exp_card.custom_minimum_size = Vector2(0.0, 128.0)
+	exp_card.custom_minimum_size = Vector2(0.0, 118.0)
 	reward_box.add_child(exp_card)
 	var exp_layout := VBoxContainer.new()
 	exp_layout.add_theme_constant_override("separation", 7)
@@ -140,6 +146,7 @@ func show_reward(
 ) -> void:
 	var dish_name := String(result.get("dish_name", "料理"))
 	_header_title.text = "ごちそうさま！ 成長へつながった" if leveled else "ごちそうさま！ 食経験値を獲得"
+	_bridge_label.text = _growth_bridge_text(dish_name, leveled, level_before, level_after)
 	_dish_title.text = "%sを食べた！" % dish_name
 	_dish_image.texture = _featured_dish_texture(String(Dictionary(result.get("buff", {})).get("recipe_id", "")))
 
@@ -183,6 +190,14 @@ func show_reward(
 	_present()
 
 
+func _growth_bridge_text(
+	dish_name: String, leveled: bool, level_before: int, level_after: int
+) -> String:
+	if leveled and level_before > 0 and level_after > level_before:
+		return "%sの食経験値が Lv.%d 到達を後押しした。" % [dish_name, level_after]
+	return "%sの食経験値がたまり、次の釣行効果も予約された。" % dish_name
+
+
 func preview_accept() -> void:
 	_close()
 
@@ -220,7 +235,7 @@ func _set_flow_step(index: int, text: String, fill: Color, border: Color, text_c
 
 func _reward_line(parent: VBoxContainer, title: String, accent: Color) -> Label:
 	var card := _panel_box(Color("#f2e4c2"), Color("#60401f"), Color("#d7a456"), 4)
-	card.custom_minimum_size = Vector2(0.0, 58.0)
+	card.custom_minimum_size = Vector2(0.0, 54.0)
 	parent.add_child(card)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
