@@ -5,11 +5,14 @@ signal closed
 
 const GaugeBarScript = preload("res://src/ui/components/gauge_bar.gd")
 const STATUS_CARD_FRAME := "res://assets/showcase/cooking/status_card_frame.png"
+const DISH_FEATURE_AJI := "res://assets/showcase/cooking/dish_feature_aji_shioyaki.png"
+const DISH_ICON_SHEET := "res://assets/showcase/cooking/dish_icon_sheet.png"
 
 var _dialog: PanelContainer
 var _exp_bar: GaugeBar
 var _exp_label: Label
 var _stats_grid: GridContainer
+var _meal_image: TextureRect
 var _meal_label: Label
 var _cooler_label: Label
 var _money_label: Label
@@ -79,7 +82,7 @@ func _build_screen() -> void:
 	bottom.add_theme_constant_override("h_separation", 10)
 	bottom.add_theme_constant_override("v_separation", 10)
 	root.add_child(bottom)
-	_meal_label = _summary_card(bottom, "効果中の料理", Palette.GAUGE_GREEN_HI)
+	_meal_label = _meal_card(bottom)
 	_cooler_label = _summary_card(bottom, "クーラーボックス", Palette.GAUGE_CYAN_HI)
 	_money_label = _summary_card(bottom, "所持金", Palette.GOLD_BRIGHT)
 	_play_label = _summary_card(bottom, "プレイ時間", Palette.TEXT_BONE)
@@ -109,8 +112,10 @@ func show_summary() -> void:
 	_stats_grid.add_child(_stat_card("集中力", "%d" % int(stats.get("focus", 0)), Color("#d9b7ff")))
 
 	if PlayerProgress.pending_buff.is_empty():
-		_meal_label.text = "なし"
+		_meal_image.texture = null
+		_meal_label.text = "なし\n次の料理で準備"
 	else:
+		_meal_image.texture = _meal_texture(String(PlayerProgress.pending_buff.get("recipe_id", "")))
 		_meal_label.text = "%s\n%s" % [
 			String(PlayerProgress.pending_buff.get("name", "料理")),
 			String(PlayerProgress.pending_buff.get("text", "")),
@@ -119,6 +124,40 @@ func show_summary() -> void:
 	_money_label.text = "%d G" % PlayerProgress.money
 	_play_label.text = format_play_time(PlayerProgress.play_seconds)
 	_present()
+
+
+func _meal_card(parent: GridContainer) -> Label:
+	var card := _texture_panel_box(
+		STATUS_CARD_FRAME,
+		24,
+		_style_box(Color("#10283f"), Color("#07121e"), Palette.GOLD_DEEP, 4, 5),
+		16.0,
+		10.0
+	)
+	card.custom_minimum_size = Vector2(420.0, 86.0)
+	parent.add_child(card)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	card.add_child(row)
+	_meal_image = TextureRect.new()
+	_meal_image.custom_minimum_size = Vector2(102.0, 60.0)
+	_meal_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_meal_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	row.add_child(_meal_image)
+	var box := VBoxContainer.new()
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.add_theme_constant_override("separation", 2)
+	row.add_child(box)
+	var title_label := make_shadow_label("効果中の料理", 17, Palette.GOLD_BRIGHT, 2)
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(title_label)
+	var value := make_label("", 18, Palette.GAUGE_GREEN_HI, 2)
+	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	value.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	value.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(value)
+	return value
 
 
 func _summary_card(parent: GridContainer, title: String, accent: Color) -> Label:
@@ -242,6 +281,34 @@ func _style_box(fill: Color, border: Color, inner: Color, border_width: int, rad
 	sb.shadow_offset = Vector2(0.0, 3.0)
 	sb.anti_aliasing = false
 	return sb
+
+
+func _meal_texture(recipe_id: String) -> Texture2D:
+	if recipe_id == "salt_grill":
+		return load(DISH_FEATURE_AJI) as Texture2D
+	return _recipe_icon(recipe_id)
+
+
+func _recipe_icon(recipe_id: String) -> Texture2D:
+	var icon_index := 0
+	match recipe_id:
+		"sashimi":
+			icon_index = 1
+		"simmered":
+			icon_index = 2
+		"soup":
+			icon_index = 3
+		"fry":
+			icon_index = 4
+	var tex := load(DISH_ICON_SHEET) as Texture2D
+	if tex == null:
+		return null
+	var atlas := AtlasTexture.new()
+	atlas.atlas = tex
+	var cell_w := float(tex.get_width()) / 3.0
+	var cell_h := float(tex.get_height()) / 2.0
+	atlas.region = Rect2(float(icon_index % 3) * cell_w, float(int(icon_index / 3)) * cell_h, cell_w, cell_h)
+	return atlas
 
 
 func _texture_style_box(
