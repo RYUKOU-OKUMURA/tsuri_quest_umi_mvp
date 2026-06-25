@@ -367,11 +367,11 @@ func _draw_fish_portrait(rect: Rect2) -> void:
 		var tex_size := _fish_card_portrait.get_size()
 		var scale := minf(rect.size.x / tex_size.x, rect.size.y / tex_size.y)
 		if _sidebar_frame != null:
-			scale *= 0.84
+			scale *= 0.88
 		var draw_size := tex_size * scale
 		var draw_rect := Rect2(rect.position + (rect.size - draw_size) * 0.5, draw_size)
 		if _sidebar_frame != null:
-			draw_rect.position += Vector2(-7.0, -8.0)
+			draw_rect.position += Vector2(-9.0, -15.0)
 		draw_texture_rect(_fish_card_portrait, draw_rect, false, Color.WHITE)
 		return
 	if _fish_sheet == null:
