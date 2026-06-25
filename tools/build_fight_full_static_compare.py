@@ -165,12 +165,13 @@ def _draw_line_lure_hit(water: Image.Image, fish_metrics: tuple[float, float, fl
         draw.ellipse((lure[0] + 1, lure[1] - 4, lure[0] + 5, lure[1]), fill="#ffd37a")
         draw.arc((lure[0], lure[1] - 2, lure[0] + 14, lure[1] + 12), 12, 138, fill="#d8e7ef", width=2)
 
-    meter_rect = (72.0, water.height - 24.0, 72.0 + water.width * 0.56, water.height - 18.0)
-    draw.rounded_rectangle(meter_rect, radius=3, fill=(5, 20, 36, 26))
+    meter_width = min(max(water.width * 0.28, 178.0), 244.0)
+    meter_rect = (76.0, water.height - 22.0, 76.0 + meter_width, water.height - 18.0)
+    draw.rounded_rectangle(meter_rect, radius=2, fill=(5, 20, 36, 36))
     fill_w = (meter_rect[2] - meter_rect[0]) * 0.78
-    draw.rounded_rectangle((meter_rect[0], meter_rect[1], meter_rect[0] + fill_w, meter_rect[3]), radius=3, fill=(132, 240, 255, 50))
-    draw.line((meter_rect[0] + 3, meter_rect[1] + 1, meter_rect[0] + fill_w - 3, meter_rect[1] + 1), fill=(255, 255, 255, 24), width=1)
-    _draw_text(draw, (72.0, water.height - 28.0), "距離 29.8m", 10, "#c7e5f1", bold=False, stroke=1)
+    draw.rounded_rectangle((meter_rect[0], meter_rect[1], meter_rect[0] + fill_w, meter_rect[3]), radius=2, fill=(132, 240, 255, 43))
+    draw.line((meter_rect[0] + 2, meter_rect[1] + 1, meter_rect[0] + fill_w - 2, meter_rect[1] + 1), fill=(255, 255, 255, 19), width=1)
+    _draw_text(draw, (76.0, water.height - 27.0), "距離 29.8m", 9, "#b7d6e1", bold=False, stroke=1, stroke_fill=(0, 0, 0, 51))
 
     burst = Image.open(ASSET_DIR / "hit_burst.png").convert("RGBA")
     scale = min(max(water.width / 1320.0, 0.47), 0.56)

@@ -616,26 +616,27 @@ func _draw_fight_overlay() -> void:
 	var distance_ratio := clampf(
 		simulator.distance / maxf(simulator.initial_distance, 0.01), 0.0, 1.0
 	)
-	var meter_rect := Rect2(72.0, size.y - 24.0, size.x * 0.56, 6.0)
+	var meter_width := clampf(size.x * 0.28, 178.0, 244.0)
+	var meter_rect := Rect2(76.0, size.y - 22.0, meter_width, 4.0)
 	if _meter_track == null:
 		_meter_track = StyleBoxFlat.new()
-		_meter_track.bg_color = Color(0.02, 0.08, 0.14, 0.10)
-		_meter_track.set_corner_radius_all(3)
+		_meter_track.bg_color = Color(0.02, 0.08, 0.14, 0.14)
+		_meter_track.set_corner_radius_all(2)
 		_meter_fill = StyleBoxFlat.new()
-		_meter_fill.bg_color = Color(0.52, 0.94, 1.0, 0.20)
-		_meter_fill.set_corner_radius_all(3)
+		_meter_fill.bg_color = Color(0.52, 0.94, 1.0, 0.17)
+		_meter_fill.set_corner_radius_all(2)
 	draw_style_box(_meter_track, meter_rect)
 	if distance_ratio > 0.0:
 		var fill_rect := Rect2(meter_rect.position, Vector2(meter_rect.size.x * distance_ratio, meter_rect.size.y))
 		draw_style_box(_meter_fill, fill_rect)
 		draw_rect(
-			Rect2(fill_rect.position.x + 3.0, fill_rect.position.y + 1.5, fill_rect.size.x - 6.0, 1.5),
-			Color(1.0, 1.0, 1.0, 0.10),
+			Rect2(fill_rect.position.x + 2.0, fill_rect.position.y + 1.0, maxf(0.0, fill_rect.size.x - 4.0), 1.0),
+			Color(1.0, 1.0, 1.0, 0.075),
 			false
 		)
-	var label_pos := Vector2(72.0, size.y - 28.0)
-	draw_string_outline(font, label_pos, "距離 %.1fm" % simulator.distance, HORIZONTAL_ALIGNMENT_LEFT, int(meter_rect.size.x), 10, 1, Color(0.0, 0.0, 0.0, 0.24))
-	draw_string(font, label_pos, "距離 %.1fm" % simulator.distance, HORIZONTAL_ALIGNMENT_LEFT, int(meter_rect.size.x), 10, Color(0.86, 0.96, 1.0, 0.38))
+	var label_pos := Vector2(76.0, size.y - 27.0)
+	draw_string_outline(font, label_pos, "距離 %.1fm" % simulator.distance, HORIZONTAL_ALIGNMENT_LEFT, int(meter_rect.size.x), 9, 1, Color(0.0, 0.0, 0.0, 0.20))
+	draw_string(font, label_pos, "距離 %.1fm" % simulator.distance, HORIZONTAL_ALIGNMENT_LEFT, int(meter_rect.size.x), 9, Color(0.86, 0.96, 1.0, 0.32))
 
 
 func _draw_frame() -> void:
