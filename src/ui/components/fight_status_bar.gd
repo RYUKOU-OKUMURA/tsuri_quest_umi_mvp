@@ -126,7 +126,7 @@ func _draw_centered_dark_slot(font: Font, regular_font: Font, rect: Rect2, title
 	_draw_text_clipped(
 		font,
 		title,
-		Vector2(rect.position.x + (rect.size.x - title_width) * 0.5, rect.position.y + rect.size.y * 0.35),
+		Vector2(rect.position.x + (rect.size.x - title_width) * 0.5, rect.position.y + rect.size.y * 0.33),
 		title_size,
 		Palette.GOLD_BRIGHT,
 		rect.size.x,
@@ -138,7 +138,7 @@ func _draw_centered_dark_slot(font: Font, regular_font: Font, rect: Rect2, title
 	var label_width := regular_font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, depth_label_size).x
 	var value_width := font.get_string_size(depth_value, HORIZONTAL_ALIGNMENT_LEFT, -1, depth_value_size).x
 	var total_width := label_width + gap + value_width
-	var baseline := rect.position.y + rect.size.y * 0.72
+	var baseline := rect.position.y + rect.size.y * 0.75
 	var x := rect.position.x + (rect.size.x - total_width) * 0.5
 	_draw_text_clipped(regular_font, label, Vector2(x, baseline), depth_label_size, Color("#d9ecff"), label_width + 2.0, 1)
 	_draw_text_clipped(font, depth_value, Vector2(x + label_width + gap, baseline), depth_value_size, Color("#eaf6ff"), value_width + 2.0, 1)

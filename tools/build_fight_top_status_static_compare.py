@@ -118,13 +118,13 @@ def _draw_centered_dark_slot(
     title_size = 14
     label_size = 16
     value_size = 19
-    _draw_text(draw, (x0 + (w - _text_width(title, title_size)) * 0.5, y0 + h * 0.35), title, title_size, "#f1d58d", stroke=1)
+    _draw_text(draw, (x0 + (w - _text_width(title, title_size)) * 0.5, y0 + h * 0.33), title, title_size, "#f1d58d", stroke=1)
     label = "水深"
     value = body.replace("水深 ", "")
     gap = 8.0
     total_w = _regular_text_width(label, label_size) + gap + _text_width(value, value_size)
     x = x0 + (w - total_w) * 0.5
-    baseline = y0 + h * 0.72
+    baseline = y0 + h * 0.75
     _draw_text(draw, (x, baseline), label, label_size, "#d9ecff", bold=False, stroke=1)
     _draw_text(draw, (x + _regular_text_width(label, label_size) + gap, baseline), value, value_size, "#eaf6ff", stroke=1)
 

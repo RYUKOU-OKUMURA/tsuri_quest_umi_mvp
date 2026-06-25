@@ -136,7 +136,7 @@ func _draw_tension(font: Font, rect: Rect2) -> void:
 		_draw_tension_texture_icon(tension_icon_rect)
 	else:
 		_draw_hud_icon(ICON_TENSION, tension_icon_rect, Color("#ff5b63"), Color(1.0, 1.0, 1.0, 0.86))
-	_draw_text(font, "テンション", rect.position + Vector2(48.0 if _hud_frame == null else 40.0, title_y), title_size, Palette.TEXT_BONE, 2 if _hud_frame != null else 3)
+	_draw_text(font, "テンション", rect.position + Vector2(48.0 if _hud_frame == null else 40.0, title_y), title_size, Palette.TEXT_BONE, 1 if _hud_frame != null else 3)
 	var ratio := 0.0
 	var safe_min := 0.30
 	var safe_max := 0.74
@@ -182,7 +182,7 @@ func _draw_stamina(font: Font, rect: Rect2) -> void:
 	var icon_size := 34.0 if _hud_frame == null else 24.0
 	var title_size := 19 if _hud_frame == null else 18
 	_draw_hud_icon(ICON_STAMINA, Rect2(rect.position + Vector2(12.0, title_y - icon_size + 8.0), Vector2(icon_size, icon_size)), Color("#6cc8ff"), Color(1.0, 1.0, 1.0, 0.86))
-	_draw_text(font, "魚の体力", rect.position + Vector2(48.0 if _hud_frame == null else 40.0, title_y), title_size, Palette.TEXT_BONE, 2 if _hud_frame != null else 3)
+	_draw_text(font, "魚の体力", rect.position + Vector2(48.0 if _hud_frame == null else 40.0, title_y), title_size, Palette.TEXT_BONE, 1 if _hud_frame != null else 3)
 	var ratio := 1.0
 	if simulator != null:
 		ratio = simulator.fish_stamina_ratio()
@@ -228,8 +228,8 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 		)
 	else:
 		_draw_bait_icon(bait.position + Vector2(82.0 if _hud_frame == null else 95.0, bait.size.y * 0.62))
-	_draw_text(font, "オキアミ", bait.position + Vector2(116.0, bait.size.y * (0.56 if _hud_frame != null else 0.66)), 21 if _hud_frame != null else 20, Color("#2b2117"), 0)
-	_draw_text(font, "× 17", bait.position + Vector2(128.0, bait.size.y * (0.74 if _hud_frame != null else 0.92)), 19 if _hud_frame != null else 19, Color("#2b2117"), 0)
+	_draw_text(font, "オキアミ", bait.position + Vector2(116.0, bait.size.y * (0.56 if _hud_frame != null else 0.66)), 19 if _hud_frame != null else 20, Color("#2b2117"), 0)
+	_draw_text(font, "× 17", bait.position + Vector2(130.0, bait.size.y * (0.74 if _hud_frame != null else 0.92)), 17 if _hud_frame != null else 19, Color("#2b2117"), 0)
 
 	_draw_panel(hint, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	var hint_title := "操作のヒント"
@@ -420,7 +420,7 @@ func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String,
 	var key_text_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
 	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 15.0), key_size, Color.WHITE, 1)
 	var label_size := 14 if not is_long_key else 13
-	var note_size := 10 if not is_long_key else 9
+	var note_size := 11 if not is_long_key else 9
 	var label_pos := key_rect.position + Vector2(key_rect.size.x + (7.0 if not is_long_key else 5.0), 15.0)
 	_draw_text(font, label, label_pos, label_size, Color("#2b2117"), 0)
 	var note_font := FightFontsScript.regular(get_theme_default_font())

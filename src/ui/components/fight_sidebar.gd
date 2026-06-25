@@ -162,7 +162,7 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 	if _sidebar_frame != null:
 		_draw_action_header_icon(Rect2(rect.position + Vector2(14.0, 6.0), Vector2(22.0, 22.0)))
 		title_x = 40.0
-	_draw_text(font, "魚の行動", rect.position + Vector2(title_x, 25.0), 18, Palette.TEXT_BONE, 2 if _sidebar_frame != null else 3)
+	_draw_text(font, "魚の行動", rect.position + Vector2(title_x, 25.0), 18, Palette.TEXT_BONE, 1 if _sidebar_frame != null else 3)
 	var body := Rect2(rect.position + Vector2(10.0, 33.0), rect.size - Vector2(20.0, 42.0))
 	if _sidebar_frame != null:
 		body = Rect2(rect.position + Vector2(8.5, rect.size.y * 0.170), rect.size - Vector2(17.0, rect.size.y * 0.205))
@@ -188,7 +188,7 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 
 func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0d3a62"), Palette.GOLD, Palette.GOLD_BRIGHT)
-	_draw_text(font, "タックル", rect.position + Vector2(14.0, 24.0), 18, Palette.TEXT_BONE, 2 if _sidebar_frame != null else 3)
+	_draw_text(font, "タックル", rect.position + Vector2(14.0, 24.0), 18, Palette.TEXT_BONE, 1 if _sidebar_frame != null else 3)
 	var body := Rect2(rect.position + Vector2(10.0, 32.0), rect.size - Vector2(20.0, 38.0))
 	if _sidebar_frame != null:
 		body = Rect2(rect.position + Vector2(8.5, rect.size.y * 0.167), rect.size - Vector2(17.0, rect.size.y * 0.209))
@@ -217,8 +217,9 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	var tackle_font_size := 13 if _sidebar_frame != null else 12
 	var tackle_line_gap := 15.0 if _sidebar_frame != null else 16.0
 	var tackle_font := get_theme_default_font() if _sidebar_frame != null else font
+	var tackle_text_color := Color("#24190f") if _sidebar_frame != null else Palette.TEXT_DARK
 	for i in range(lines.size()):
-		_draw_wrapped(tackle_font, lines[i], body.position + text_offset + Vector2(0.0, float(i) * tackle_line_gap), text_width, tackle_font_size, Palette.TEXT_DARK, 1, tackle_font_size + 2.0)
+		_draw_wrapped(tackle_font, lines[i], body.position + text_offset + Vector2(0.0, float(i) * tackle_line_gap), text_width, tackle_font_size, tackle_text_color, 1, tackle_font_size + 2.0)
 	if _tackle_card_icon != null or _icons != null:
 		var icon_rect := Rect2(body.end - Vector2(112.0, 88.0), Vector2(106.0, 82.0)) if _sidebar_frame != null else Rect2(body.end - Vector2(50.0, 50.0), Vector2(40.0, 40.0))
 		_draw_tackle_icon(icon_rect)

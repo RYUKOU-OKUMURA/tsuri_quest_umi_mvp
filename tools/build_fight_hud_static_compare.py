@@ -155,7 +155,7 @@ def _draw_key_hint(draw: ImageDraw.ImageDraw, slot: tuple[float, float, float, f
     _draw_key_cap(draw, cap, key, 10 if is_long else 12)
     label_x = cap[0] + cap_w + (5 if is_long else 7)
     label_size = 13 if is_long else 14
-    note_size = 9 if is_long else 10
+    note_size = 9 if is_long else 11
     label_y = cap[1] + 15
     _draw_text(draw, (label_x, label_y), label, label_size, "#2b2117")
     note_text = "テンション調整" if is_long else f"（{note}）"
@@ -197,7 +197,7 @@ def build_current_hud() -> Image.Image:
         _paste_icon_contain(frame, Image.open(tension_icon_path).convert("RGBA"), tension_icon_box)
     else:
         _draw_sheet_icon(frame, 4, tension_icon_box, (255, 91, 99, 220))
-    _draw_text(draw, (tension[0] + 40, tension[1] + 26), "テンション", 18, "#f7ecd0", stroke=2)
+    _draw_text(draw, (tension[0] + 40, tension[1] + 26), "テンション", 18, "#f7ecd0", stroke=1)
     _draw_segment_gauge(draw, (tension[0] + 24, tension[1] + 43, tension[2] - 34, tension[1] + 67), 0.66, 0.30, 0.74, warm=True)
     _draw_text(draw, (tension[0] + 24, tension[3] - 8), "ゆるい", 14, "#72f47d", stroke=1)
     _draw_text(draw, (tension[2] - 74, tension[3] - 8), "きつい", 14, "#ff823e", stroke=1)
@@ -214,7 +214,7 @@ def build_current_hud() -> Image.Image:
     _draw_triangle(draw, (arrow_x, depth[1] + 72), 11, "#ff6b3e", up=False)
 
     _draw_sheet_icon(frame, 5, (stamina[0] + 12, stamina[1] + 10, stamina[0] + 36, stamina[1] + 34), (108, 200, 255, 220))
-    _draw_text(draw, (stamina[0] + 40, stamina[1] + 26), "魚の体力", 18, "#f7ecd0", stroke=2)
+    _draw_text(draw, (stamina[0] + 40, stamina[1] + 26), "魚の体力", 18, "#f7ecd0", stroke=1)
     _draw_segment_gauge(draw, (stamina[0] + 24, stamina[1] + 43, stamina[2] - 34, stamina[1] + 67), 0.72, 0.0, 1.0, warm=False)
     _draw_text(draw, (stamina[0] + 24, stamina[3] - 8), "弱い", 14, "#fff1c7", stroke=1)
     _draw_text(draw, (stamina[2] - 63, stamina[3] - 8), "強い", 14, "#fff1c7", stroke=1)
@@ -243,8 +243,8 @@ def build_current_hud() -> Image.Image:
         )
     else:
         _draw_sheet_icon(frame, 6, (bait[0] + 58, bait[1] + 48, bait[0] + 100, bait[1] + 90))
-    _draw_text(draw, (bait[0] + 116, bait[1] + (bait[3] - bait[1]) * 0.56), "オキアミ", 21, "#2b2117")
-    _draw_text(draw, (bait[0] + 128, bait[1] + (bait[3] - bait[1]) * 0.74), "× 17", 19, "#2b2117")
+    _draw_text(draw, (bait[0] + 116, bait[1] + (bait[3] - bait[1]) * 0.56), "オキアミ", 19, "#2b2117")
+    _draw_text(draw, (bait[0] + 130, bait[1] + (bait[3] - bait[1]) * 0.74), "× 17", 17, "#2b2117")
 
     hint_title = "操作のヒント"
     hint_title_w = _text_width(hint_title, 16)
