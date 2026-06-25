@@ -99,11 +99,13 @@ func _load_texture_if_exists(path: String) -> Texture2D:
 
 
 func _draw_showcase_background() -> void:
-	_draw_cover_texture(_showcase_bg, Rect2(Vector2.ZERO, size), Color.WHITE)
+	var showcase_rect := Rect2(Vector2.ZERO, size)
+	var water_window_align := Vector2(0.5, 0.24)
+	_draw_cover_texture(_showcase_bg, showcase_rect, Color.WHITE, water_window_align)
 	if _showcase_color_grade != null:
-		_draw_cover_texture(_showcase_color_grade, Rect2(Vector2.ZERO, size), Color(1.0, 1.0, 1.0, 0.12))
+		_draw_cover_texture(_showcase_color_grade, showcase_rect, Color(1.0, 1.0, 1.0, 0.10), water_window_align)
 	if _showcase_seabed_detail != null:
-		_draw_cover_texture(_showcase_seabed_detail, Rect2(Vector2.ZERO, size), Color(1.0, 1.0, 1.0, 0.26))
+		_draw_cover_texture(_showcase_seabed_detail, showcase_rect, Color(1.0, 1.0, 1.0, 0.22), water_window_align)
 	# 背景PNGに重ねる軽い水中の揺らぎ。主素材を邪魔しない密度に抑える。
 	for index in range(6):
 		var y := size.y * (0.12 + float(index) * 0.085)
@@ -113,7 +115,7 @@ func _draw_showcase_background() -> void:
 
 func _draw_showcase_ambience() -> void:
 	if _showcase_fg_ambience != null:
-		_draw_cover_texture(_showcase_fg_ambience, Rect2(Vector2.ZERO, size), Color(1.0, 1.0, 1.0, 0.72))
+		_draw_cover_texture(_showcase_fg_ambience, Rect2(Vector2.ZERO, size), Color(1.0, 1.0, 1.0, 0.72), Vector2(0.5, 0.24))
 	else:
 		_draw_showcase_fish_schools()
 		_draw_showcase_bubble_columns()
@@ -160,7 +162,7 @@ func _draw_showcase_light_specks() -> void:
 			draw_line(Vector2(x - 2.0, y), Vector2(x + 2.0, y), Color(0.90, 1.0, 1.0, alpha * 0.8), 1.0)
 
 
-func _draw_cover_texture(texture: Texture2D, target_rect: Rect2, modulate: Color) -> void:
+func _draw_cover_texture(texture: Texture2D, target_rect: Rect2, modulate: Color, align := Vector2(0.5, 0.5)) -> void:
 	if texture == null:
 		return
 	var tex_size := texture.get_size()
@@ -168,7 +170,10 @@ func _draw_cover_texture(texture: Texture2D, target_rect: Rect2, modulate: Color
 		return
 	var scale := maxf(target_rect.size.x / tex_size.x, target_rect.size.y / tex_size.y)
 	var draw_size := tex_size * scale
-	var draw_pos := target_rect.position + (target_rect.size - draw_size) * 0.5
+	var draw_pos := target_rect.position + Vector2(
+		(target_rect.size.x - draw_size.x) * align.x,
+		(target_rect.size.y - draw_size.y) * align.y
+	)
 	draw_texture_rect(texture, Rect2(draw_pos, draw_size), false, modulate)
 
 
