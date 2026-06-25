@@ -9,6 +9,7 @@ const DISH_FEATURE_AJI := "res://assets/showcase/cooking/dish_feature_aji_shioya
 const DISH_ICON_SHEET := "res://assets/showcase/cooking/dish_icon_sheet.png"
 
 var _dialog: PanelContainer
+var _header_title: Label
 var _dish_title: Label
 var _dish_image: TextureRect
 var _exp_bar: GaugeBar
@@ -17,6 +18,8 @@ var _bonus_label: Label
 var _buff_label: Label
 var _growth_label: Label
 var _confirm_button: Button
+var _flow_step_cards: Array[PanelContainer] = []
+var _flow_step_labels: Array[Label] = []
 
 var _target_exp := 0.0
 var _target_max := 1.0
@@ -46,9 +49,18 @@ func _build_screen() -> void:
 	root.add_theme_constant_override("separation", 12)
 	_dialog.add_child(root)
 
-	var title := make_shadow_label("いただきます！", 34, Palette.GOLD_BRIGHT, 4)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	root.add_child(title)
+	_header_title = make_shadow_label("いただきます！", 34, Palette.GOLD_BRIGHT, 4)
+	_header_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	root.add_child(_header_title)
+
+	var flow_row := HBoxContainer.new()
+	flow_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	flow_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	flow_row.add_theme_constant_override("separation", 8)
+	root.add_child(flow_row)
+	_add_flow_step(flow_row, "1 食事")
+	_add_flow_step(flow_row, "2 EXP")
+	_add_flow_step(flow_row, "3 成長")
 
 	var main := HBoxContainer.new()
 	main.add_theme_constant_override("separation", 14)
@@ -78,11 +90,11 @@ func _build_screen() -> void:
 	reward_box.add_theme_constant_override("separation", 8)
 	main.add_child(reward_box)
 
-	var exp_card := _panel_box(Color("#0f2238"), Color("#07121e"), Palette.GOLD_DEEP, 4)
-	exp_card.custom_minimum_size = Vector2(0.0, 116.0)
+	var exp_card := _panel_box(Color("#0f2238"), Color("#07121e"), Palette.GOLD_DEEP, 5)
+	exp_card.custom_minimum_size = Vector2(0.0, 128.0)
 	reward_box.add_child(exp_card)
 	var exp_layout := VBoxContainer.new()
-	exp_layout.add_theme_constant_override("separation", 8)
+	exp_layout.add_theme_constant_override("separation", 7)
 	exp_card.add_child(exp_layout)
 	var exp_title := make_shadow_label("食経験値を獲得！", 23, Palette.TEXT_BONE, 3)
 	exp_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -92,7 +104,7 @@ func _build_screen() -> void:
 	_exp_bar.custom_minimum_size = Vector2(0.0, 32.0)
 	_exp_bar.set_colors(Palette.GAUGE_CYAN, Palette.GAUGE_CYAN_HI)
 	exp_layout.add_child(_exp_bar)
-	_exp_label = make_shadow_label("", 25, Palette.GOLD_BRIGHT, 3)
+	_exp_label = make_shadow_label("", 32, Palette.GOLD_BRIGHT, 4)
 	_exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	exp_layout.add_child(_exp_label)
 
@@ -107,6 +119,7 @@ func _build_screen() -> void:
 
 func show_reward(result: Dictionary, exp_before: int, exp_after: int, exp_max: int, leveled: bool) -> void:
 	var dish_name := String(result.get("dish_name", "料理"))
+	_header_title.text = "ごちそうさま！ 成長へつながった" if leveled else "ごちそうさま！ 食経験値を獲得"
 	_dish_title.text = "%sを食べた！" % dish_name
 	_dish_image.texture = _featured_dish_texture(String(Dictionary(result.get("buff", {})).get("recipe_id", "")))
 
@@ -125,7 +138,39 @@ func show_reward(result: Dictionary, exp_before: int, exp_after: int, exp_max: i
 	_buff_label.text = String(buff.get("text", "次の釣行で効果を得る"))
 	_growth_label.text = "LEVEL UP! 能力上昇へ" if leveled else "次のレベルまで %d EXP" % maxi(0, exp_max - exp_after)
 	_confirm_button.text = "成長を見る" if leveled else "OK"
+	_refresh_flow_steps(leveled)
 	_present()
+
+
+func _add_flow_step(parent: HBoxContainer, text: String) -> void:
+	var card := _panel_box(Color("#17324d"), Color("#07121e"), Palette.GOLD_DEEP, 3)
+	card.custom_minimum_size = Vector2(150.0, 34.0)
+	parent.add_child(card)
+	var label := make_shadow_label(text, 17, Palette.TEXT_BONE, 2)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	card.add_child(label)
+	_flow_step_cards.append(card)
+	_flow_step_labels.append(label)
+
+
+func _refresh_flow_steps(leveled: bool) -> void:
+	_set_flow_step(0, "1 食事 完了", Color("#f2e4c2"), Palette.GOLD_BRIGHT, Color("#2a2118"))
+	_set_flow_step(1, "2 EXP 加算中", Color("#14385a"), Palette.GAUGE_CYAN_HI, Palette.TEXT_BONE)
+	if leveled:
+		_set_flow_step(2, "3 成長 解放", Color("#5a1f26"), Palette.GAUGE_RED_HI, Palette.GOLD_BRIGHT)
+	else:
+		_set_flow_step(2, "3 成長 進行中", Color("#17324d"), Palette.GOLD_DEEP, Palette.TEXT_BONE)
+
+
+func _set_flow_step(index: int, text: String, fill: Color, border: Color, text_color: Color) -> void:
+	if index < 0 or index >= _flow_step_cards.size():
+		return
+	var card := _flow_step_cards[index]
+	var label := _flow_step_labels[index]
+	card.add_theme_stylebox_override("panel", _style_box(fill, border, Palette.GOLD_BRIGHT, 3, 5))
+	label.text = text
+	label.add_theme_color_override("font_color", text_color)
 
 
 func _reward_line(parent: VBoxContainer, title: String, accent: Color) -> Label:
@@ -172,6 +217,16 @@ func _animate_exp() -> void:
 		_target_exp,
 		0.55
 	)
+	tw.tween_callback(_pulse_exp_label)
+
+
+func _pulse_exp_label() -> void:
+	_exp_label.pivot_offset = _exp_label.size * 0.5
+	var tw := create_tween()
+	tw.set_ease(Tween.EASE_OUT)
+	tw.set_trans(Tween.TRANS_BACK)
+	tw.tween_property(_exp_label, "scale", Vector2(1.12, 1.12), 0.12)
+	tw.tween_property(_exp_label, "scale", Vector2.ONE, 0.18)
 
 
 func _close() -> void:
