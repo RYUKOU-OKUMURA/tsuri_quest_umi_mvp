@@ -231,14 +231,14 @@ def _draw_lower_cards(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: i
             draw,
             (body[0] + 15, body[1] + 17 + index * 15.0),
             text,
-            body[2] - body[0] - 110,
+            body[2] - body[0] - 122,
             13,
             "#2b2117",
             bold=False,
             max_lines=1,
             line_gap=15,
         )
-    _paste_contain(base, Image.open(ASSET_DIR / "fight_tackle_card_icon.png").convert("RGBA"), (body[2] - 96, body[3] - 78, body[2] - 6, body[3] - 6))
+    _paste_contain(base, Image.open(ASSET_DIR / "fight_tackle_card_icon.png").convert("RGBA"), (body[2] - 112, body[3] - 88, body[2] - 6, body[3] - 6))
 
 
 def build_current_sidebar() -> Image.Image:
