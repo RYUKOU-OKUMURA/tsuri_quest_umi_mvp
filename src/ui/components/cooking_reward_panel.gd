@@ -41,6 +41,8 @@ func _build_screen() -> void:
 	dim.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(dim)
 
+	_add_reward_ambient_layer()
+
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
@@ -212,6 +214,32 @@ func _add_meal_scene_background() -> void:
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
+
+
+func _add_reward_ambient_layer() -> void:
+	var ambient := Control.new()
+	ambient.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	ambient.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(ambient)
+	ambient.draw.connect(
+		func() -> void:
+			var steam := Color("#fff1c7")
+			var spark := Palette.GOLD_BRIGHT
+			for i in range(6):
+				var x := 250.0 + float(i) * 154.0
+				var y := 440.0 - float(i % 3) * 26.0
+				steam.a = 0.11
+				ambient.draw_arc(Vector2(x, y), 34.0, -1.65, 1.35, 22, steam, 3.0)
+				steam.a = 0.07
+				ambient.draw_arc(Vector2(x + 18.0, y - 34.0), 25.0, -1.45, 1.2, 18, steam, 2.0)
+			for i in range(14):
+				var p := Vector2(126.0 + float((i * 89) % 1030), 96.0 + float((i * 47) % 500))
+				var r := 3.0 + float(i % 3)
+				spark.a = 0.17 if i % 2 == 0 else 0.10
+				ambient.draw_line(p + Vector2(-r, 0.0), p + Vector2(r, 0.0), spark, 2.0)
+				ambient.draw_line(p + Vector2(0.0, -r), p + Vector2(0.0, r), spark, 2.0)
+	)
+	ambient.queue_redraw()
 
 
 func preview_accept() -> void:
