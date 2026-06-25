@@ -189,8 +189,8 @@ def _draw_fish_card(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: int
         base,
         Image.open(ASSET_DIR / "kurodai_card_portrait.png").convert("RGBA"),
         fish_rect,
-        scale_multiplier=0.94,
-        offset=(-5.0, -4.0),
+        scale_multiplier=0.84,
+        offset=(-7.0, -8.0),
     )
     divider_y = fish_rect[3] + 3
     draw.line((inner[0] + 8, divider_y, inner[2] - 8, divider_y), fill="#c9b486", width=1)
