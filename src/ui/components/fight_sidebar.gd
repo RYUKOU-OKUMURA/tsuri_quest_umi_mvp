@@ -197,7 +197,7 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	var has_tackle_icon := _tackle_card_icon != null or _icons != null
 	var icon_reserved_width := 12.0
 	if has_tackle_icon:
-		icon_reserved_width = 128.0 if _sidebar_frame != null else 66.0
+		icon_reserved_width = 112.0 if _sidebar_frame != null else 66.0
 	var text_offset := Vector2(15.0, 14.0) if _sidebar_frame != null else Vector2(12.0, 14.0)
 	var text_width := body.size.x - icon_reserved_width - text_offset.x
 	var lines: Array[String] = []
@@ -214,10 +214,10 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 			"ロッド：%s" % rod_name,
 			"糸3号・チヌ針",
 		]
-	var tackle_font_size := 12 if _sidebar_frame != null else 12
-	var tackle_line_gap := 13.0 if _sidebar_frame != null else 16.0
+	var tackle_font_size := 13 if _sidebar_frame != null else 12
+	var tackle_line_gap := 13.6 if _sidebar_frame != null else 16.0
 	var tackle_font := get_theme_default_font() if _sidebar_frame != null else font
-	var tackle_text_color := Color("#24190f") if _sidebar_frame != null else Palette.TEXT_DARK
+	var tackle_text_color := Color("#1d1209") if _sidebar_frame != null else Palette.TEXT_DARK
 	for i in range(lines.size()):
 		_draw_wrapped(tackle_font, lines[i], body.position + text_offset + Vector2(0.0, float(i) * tackle_line_gap), text_width, tackle_font_size, tackle_text_color, 1, tackle_font_size + 2.0)
 	if _tackle_card_icon != null or _icons != null:

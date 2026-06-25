@@ -229,14 +229,14 @@ def _draw_lower_cards(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: i
     for index, text in enumerate(("ロッド：港の入門竿", "リール：スピニング4000番", "ライン：ナイロン3号", "ハリス：フロロ2号", "針：チヌ針")):
         _draw_wrapped(
             draw,
-            (body[0] + 15, body[1] + 14 + index * 13.0),
+            (body[0] + 15, body[1] + 14 + index * 13.6),
             text,
-            body[2] - body[0] - 142,
-            12,
-            "#24190f",
+            body[2] - body[0] - 126,
+            13,
+            "#1d1209",
             bold=False,
             max_lines=1,
-            line_gap=13,
+            line_gap=13.6,
         )
     _paste_contain(base, Image.open(ASSET_DIR / "fight_tackle_card_icon.png").convert("RGBA"), (body[2] - 134, body[3] - 98, body[2] - 4, body[3] - 4))
 
