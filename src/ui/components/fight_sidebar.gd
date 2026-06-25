@@ -131,10 +131,10 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	_draw_centered_text(font, "推定 %.1f cm" % estimate, Rect2(inner.position.x, divider_y + 8.0, inner.size.x, 30.0), estimate_size, Color("#2b2117"), 0)
 	var desc_y := divider_y + (49.0 if compact_card else 44.0)
 	draw_line(Vector2(inner.position.x + 8.0, desc_y - 10.0), Vector2(inner.end.x - 8.0, desc_y - 10.0), Color("#d6c299"), 1.0)
-	var detail_gap := 15.0 if compact_card else 21.0
+	var detail_gap := 16.0 if compact_card else 21.0
 	var detail_font := get_theme_default_font()
-	_draw_detail_line(detail_font, "岩場周りで警戒心が強い。", Vector2(inner.position.x + 16.0, desc_y), inner.size.x - 28.0)
-	_draw_detail_line(detail_font, "エサ：オキアミ・カニ", Vector2(inner.position.x + 16.0, desc_y + detail_gap), inner.size.x - 28.0)
+	_draw_detail_line(detail_font, "岩場周りで警戒心が強い。", Vector2(inner.position.x + 15.0, desc_y), inner.size.x - 26.0)
+	_draw_detail_line(detail_font, "エサ：オキアミ・カニ", Vector2(inner.position.x + 15.0, desc_y + detail_gap), inner.size.x - 26.0)
 	if _sidebar_frame == null:
 		_draw_detail_line(detail_font, "生息域：沿岸の岩場・堤防周り", Vector2(inner.position.x + 16.0, desc_y + detail_gap * 2.0), inner.size.x - 28.0)
 
@@ -153,9 +153,9 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 	if simulator != null:
 		action = simulator.action_name
 		message = simulator.action_message
-	var icon_size := 50.0 if _sidebar_frame != null else 58.0
-	var text_x := 72.0 if _sidebar_frame != null else 78.0
-	_draw_action_icon(body.position + Vector2(38.0, body.size.y * 0.55), icon_size)
+	var icon_size := 46.0 if _sidebar_frame != null else 58.0
+	var text_x := 66.0 if _sidebar_frame != null else 78.0
+	_draw_action_icon(body.position + Vector2(34.0, body.size.y * 0.55), icon_size)
 	_draw_text(font, "%s！" % action, body.position + Vector2(text_x, 32.0), 26 if _sidebar_frame != null else 20, Color("#2b2117"), 0)
 	if _sidebar_frame != null:
 		_draw_action_message(font, message, body.position + Vector2(text_x, 43.0), body.size.x - text_x - 8.0)
@@ -175,19 +175,19 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	var has_tackle_icon := _tackle_card_icon != null or _icons != null
 	var icon_reserved_width := 12.0
 	if has_tackle_icon:
-		icon_reserved_width = 50.0 if _sidebar_frame != null else 66.0
-	var text_offset := Vector2(16.0, 20.0) if _sidebar_frame != null else Vector2(12.0, 14.0)
+		icon_reserved_width = 46.0 if _sidebar_frame != null else 66.0
+	var text_offset := Vector2(14.0, 20.0) if _sidebar_frame != null else Vector2(12.0, 14.0)
 	var text_width := body.size.x - icon_reserved_width - text_offset.x
 	var lines: Array[String] = [
 		"ロッド：%s" % rod_name,
 		"糸3号・チヌ針",
 	]
-	var tackle_font_size := 17 if _sidebar_frame != null else 12
+	var tackle_font_size := 18 if _sidebar_frame != null else 12
 	var tackle_line_gap := 22.0 if _sidebar_frame != null else 16.0
 	for i in range(lines.size()):
 		_draw_wrapped(font, lines[i], body.position + text_offset + Vector2(0.0, float(i) * tackle_line_gap), text_width, tackle_font_size, Palette.TEXT_DARK, 1, tackle_font_size + 3.0)
 	if _tackle_card_icon != null or _icons != null:
-		var icon_rect := Rect2(body.end - Vector2(54.0, 60.0), Vector2(48.0, 48.0)) if _sidebar_frame != null else Rect2(body.end - Vector2(50.0, 50.0), Vector2(40.0, 40.0))
+		var icon_rect := Rect2(body.end - Vector2(50.0, 58.0), Vector2(44.0, 44.0)) if _sidebar_frame != null else Rect2(body.end - Vector2(50.0, 50.0), Vector2(40.0, 40.0))
 		_draw_tackle_icon(icon_rect)
 	else:
 		_draw_simple_rod(body.position + Vector2(body.size.x - 62.0, body.size.y - 24.0))
@@ -284,13 +284,13 @@ func _draw_bullet(font: Font, text: String, pos: Vector2, max_width: float) -> v
 
 
 func _draw_detail_line(font: Font, text: String, pos: Vector2, max_width: float) -> void:
-	draw_circle(pos + Vector2(3.0, 10.0), 4.0, Color("#49c75a"))
+	draw_circle(pos + Vector2(3.0, 10.0), 4.3, Color("#49c75a"))
 	var font_size := 14
 	if _sidebar_frame != null:
-		font_size = 13
+		font_size = 14
 	elif max_width < 260.0:
 		font_size = 13
-	_draw_wrapped(font, text, pos + Vector2(14.0, -1.0), max_width - 14.0, font_size, Palette.TEXT_DARK, 1)
+	_draw_wrapped(font, text, pos + Vector2(15.0, -1.0), max_width - 15.0, font_size, Palette.TEXT_DARK, 1)
 
 
 func _draw_rarity_tag(font: Font, rect: Rect2, rarity: String) -> void:
