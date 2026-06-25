@@ -264,10 +264,10 @@ func _draw_estimate_line(font: Font, value: float, rect: Rect2) -> void:
 	var label := "推定"
 	var number := "%.1f" % value
 	var unit := " cm"
-	var label_size := 15
-	var number_size := 24
-	var unit_size := 15
-	var gap := 6.0
+	var label_size := 16
+	var number_size := 26
+	var unit_size := 16
+	var gap := 6.5
 	var label_w := regular_font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
 	var number_w := font.get_string_size(number, HORIZONTAL_ALIGNMENT_LEFT, -1, number_size).x
 	var unit_w := regular_font.get_string_size(unit, HORIZONTAL_ALIGNMENT_LEFT, -1, unit_size).x

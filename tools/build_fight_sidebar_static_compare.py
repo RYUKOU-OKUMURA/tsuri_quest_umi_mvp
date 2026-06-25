@@ -66,21 +66,21 @@ def _estimate_line(draw: ImageDraw.ImageDraw, box: tuple[float, float, float, fl
     label = "推定"
     number = f"{value:.1f}"
     unit = " cm"
-    label_font = _font(15, bold=False)
-    number_font = _font(24)
-    unit_font = _font(15, bold=False)
-    gap = 6.0
+    label_font = _font(16, bold=False)
+    number_font = _font(26)
+    unit_font = _font(16, bold=False)
+    gap = 6.5
     label_w = label_font.getlength(label)
     number_w = number_font.getlength(number)
     unit_w = unit_font.getlength(unit)
     total_w = label_w + gap + number_w + unit_w
     x = box[0] + ((box[2] - box[0]) - total_w) * 0.5
     baseline = box[1] + 25.0
-    draw.text((x, baseline - 15.0), label, font=label_font, fill="#3f2f22")
+    draw.text((x, baseline - 16.0), label, font=label_font, fill="#3f2f22")
     x += label_w + gap
-    draw.text((x, baseline - 24.0), number, font=number_font, fill="#21170f")
+    draw.text((x, baseline - 26.0), number, font=number_font, fill="#21170f")
     x += number_w
-    draw.text((x, baseline - 15.0), unit, font=unit_font, fill="#3f2f22")
+    draw.text((x, baseline - 16.0), unit, font=unit_font, fill="#3f2f22")
 
 
 def _wrapped_lines(text: str, max_width: float, size: int, *, bold: bool, max_lines: int) -> list[str]:
