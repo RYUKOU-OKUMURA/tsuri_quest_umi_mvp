@@ -74,9 +74,9 @@ func _draw() -> void:
 	if _sidebar_frame != null:
 		draw_texture_rect(_sidebar_frame, Rect2(Vector2.ZERO, size), false, Color.WHITE)
 		header = Rect2(w * 0.055, h * 0.030, w * 0.89, h * 0.075)
-		fish_card = Rect2(w * 0.060, h * 0.109, w * 0.88, h * 0.485)
-		action_card = Rect2(w * 0.055, h * 0.605, w * 0.89, h * 0.185)
-		tackle_card = Rect2(w * 0.055, h * 0.810, w * 0.89, h * 0.165)
+		fish_card = Rect2(w * 0.060, h * 0.109, w * 0.88, h * 0.466)
+		action_card = Rect2(w * 0.055, h * 0.588, w * 0.89, h * 0.195)
+		tackle_card = Rect2(w * 0.055, h * 0.798, w * 0.89, h * 0.178)
 	else:
 		var gap := 7.0
 		var action_h := clampf(h * 0.22, 86.0, 102.0)
@@ -185,17 +185,27 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	var has_tackle_icon := _tackle_card_icon != null or _icons != null
 	var icon_reserved_width := 12.0
 	if has_tackle_icon:
-		icon_reserved_width = 66.0
-	var text_offset := Vector2(14.0, 22.0) if _sidebar_frame != null else Vector2(12.0, 14.0)
+		icon_reserved_width = 96.0 if _sidebar_frame != null else 66.0
+	var text_offset := Vector2(14.0, 15.0) if _sidebar_frame != null else Vector2(12.0, 14.0)
 	var text_width := body.size.x - icon_reserved_width - text_offset.x
-	var lines: Array[String] = [
-		"ロッド：%s" % rod_name,
-		"糸3号・チヌ針",
-	]
-	var tackle_font_size := 20 if _sidebar_frame != null else 12
-	var tackle_line_gap := 24.0 if _sidebar_frame != null else 16.0
+	var lines: Array[String] = []
+	if _sidebar_frame != null:
+		lines = [
+			"ロッド：%s" % rod_name,
+			"ライン：ナイロン3号",
+			"ハリス：フロロ2号",
+			"針：チヌ針",
+		]
+	else:
+		lines = [
+			"ロッド：%s" % rod_name,
+			"糸3号・チヌ針",
+		]
+	var tackle_font_size := 13 if _sidebar_frame != null else 12
+	var tackle_line_gap := 15.0 if _sidebar_frame != null else 16.0
+	var tackle_font := get_theme_default_font() if _sidebar_frame != null else font
 	for i in range(lines.size()):
-		_draw_wrapped(font, lines[i], body.position + text_offset + Vector2(0.0, float(i) * tackle_line_gap), text_width, tackle_font_size, Palette.TEXT_DARK, 1, tackle_font_size + 3.0)
+		_draw_wrapped(tackle_font, lines[i], body.position + text_offset + Vector2(0.0, float(i) * tackle_line_gap), text_width, tackle_font_size, Palette.TEXT_DARK, 1, tackle_font_size + 2.0)
 	if _tackle_card_icon != null or _icons != null:
 		var icon_rect := Rect2(body.end - Vector2(94.0, 76.0), Vector2(88.0, 70.0)) if _sidebar_frame != null else Rect2(body.end - Vector2(50.0, 50.0), Vector2(40.0, 40.0))
 		_draw_tackle_icon(icon_rect)
@@ -270,11 +280,11 @@ func _draw_wrapped(
 
 func _draw_action_message(font: Font, text: String, pos: Vector2, max_width: float) -> void:
 	var first_stop := text.find("！")
-	var font_size := 16 if _sidebar_frame != null else 13
+	var font_size := 15 if _sidebar_frame != null else 13
 	var gap := 16.0 if _sidebar_frame != null else 16.0
 	if first_stop > 0 and first_stop < text.length() - 1:
-		var first := text.left(first_stop + 1)
-		var second := text.substr(first_stop + 1)
+		var first := text.left(first_stop + 1).strip_edges().replace("潜ろうとしている", "潜る")
+		var second := text.substr(first_stop + 1).strip_edges()
 		_draw_wrapped(font, first, pos, max_width, font_size, Palette.TEXT_DARK, 1, gap)
 		_draw_wrapped(font, second, pos + Vector2(0.0, gap), max_width, font_size, Palette.TEXT_DARK, 1, gap)
 		return

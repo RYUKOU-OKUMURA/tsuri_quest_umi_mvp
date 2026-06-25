@@ -156,8 +156,8 @@ def create_kurodai_card_portrait(sheet: Image.Image | None = None) -> None:
     sd.ellipse((112, 240, canvas.width - 92, 292), fill=(72, 52, 31, 24))
     canvas.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(9)))
 
-    max_w = int(canvas.width * 0.90)
-    max_h = int(canvas.height * 0.84)
+    max_w = int(canvas.width * 0.96)
+    max_h = int(canvas.height * 0.93)
     scale = min(max_w / crop.width, max_h / crop.height)
     resized = crop.resize((round(crop.width * scale), round(crop.height * scale)), Image.Resampling.LANCZOS)
     x = (canvas.width - resized.width) // 2

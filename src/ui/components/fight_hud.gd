@@ -200,7 +200,9 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 	_draw_panel(bait, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	var bait_text_x := 16.0
 	var bait_label_size := 17 if _hud_frame == null else 15
-	_draw_text(font, "使用中のエサ", bait.position + Vector2(bait_text_x, 19.0), bait_label_size, Color("#6a4c2b"), 0)
+	var bait_label_color := Color("#fff1cb") if _hud_frame != null else Color("#6a4c2b")
+	var bait_label_outline := 1 if _hud_frame != null else 0
+	_draw_text(font, "使用中のエサ", bait.position + Vector2(bait_text_x, 19.0), bait_label_size, bait_label_color, bait_label_outline)
 	if _icons != null:
 		var bait_icon_size := 42.0 if _hud_frame != null else 46.0
 		_draw_sheet_icon(
@@ -213,7 +215,13 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 	_draw_text(font, "× 17", bait.position + Vector2(126.0, bait.size.y * (0.80 if _hud_frame != null else 0.92)), 21 if _hud_frame != null else 19, Color("#2b2117"), 0)
 
 	_draw_panel(hint, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
-	_draw_text(font, "操作のヒント", hint.position + Vector2(18.0, 21.0), 18, Color("#6a4c2b"), 0)
+	var hint_title := "操作のヒント"
+	if _hud_frame != null:
+		var hint_title_size := 18
+		var hint_title_w := font.get_string_size(hint_title, HORIZONTAL_ALIGNMENT_LEFT, -1, hint_title_size).x
+		_draw_text(font, hint_title, hint.position + Vector2((hint.size.x - hint_title_w) * 0.5, 22.0), hint_title_size, Palette.TEXT_BONE, 2)
+	else:
+		_draw_text(font, hint_title, hint.position + Vector2(18.0, 21.0), 18, Color("#6a4c2b"), 0)
 	if _hud_frame != null:
 		_draw_key_hint_compact(font, key_slots[0], "A", "巻く", "リールを巻く")
 		_draw_key_hint_compact(font, key_slots[1], "B", "緩める", "ラインを出す")
@@ -224,8 +232,12 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 		_draw_key_hint(font, key_slots[2], "L/R", "調整")
 
 	_draw_panel(menu, Color("#0b355f"), Color("#08213c"), Palette.GOLD)
-	_draw_key_row(font, menu.position + Vector2(22.0, menu.size.y * 0.42), "+", "ポーズ")
-	_draw_key_row(font, menu.position + Vector2(22.0, menu.size.y * 0.78), "-", "港へ戻る")
+	if _hud_frame != null:
+		_draw_menu_row(font, menu.position + Vector2(38.0, menu.size.y * 0.42), "+", "ポーズ")
+		_draw_menu_row(font, menu.position + Vector2(38.0, menu.size.y * 0.78), "-", "港へ戻る")
+	else:
+		_draw_key_row(font, menu.position + Vector2(22.0, menu.size.y * 0.42), "+", "ポーズ")
+		_draw_key_row(font, menu.position + Vector2(22.0, menu.size.y * 0.78), "-", "港へ戻る")
 
 
 func _draw_segment_gauge(rect: Rect2, ratio: float, safe_min: float, safe_max: float, warm: bool) -> void:
@@ -385,6 +397,18 @@ func _draw_key_row(font: Font, pos: Vector2, key: String, label: String) -> void
 	var key_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
 	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_w) * 0.5, 17.0), key_size, Color.WHITE, 1)
 	_draw_text(font, label, pos + Vector2(key_rect.size.x + 8.0, 3.0), 16, Color("#2b2117") if key != "+" and key != "-" else Palette.TEXT_BONE, 0 if key != "+" and key != "-" else 2)
+
+
+func _draw_menu_row(font: Font, pos: Vector2, key: String, label: String) -> void:
+	var center := pos + Vector2(0.0, -2.0)
+	draw_circle(center + Vector2(1.5, 2.0), 11.5, Color(0.0, 0.0, 0.0, 0.28))
+	draw_circle(center, 10.0, Color("#f7e8c4"))
+	draw_circle(center, 10.0, Color("#b98a42"), false, 1.0)
+	draw_line(center + Vector2(-5.5, -5.5), center + Vector2(5.5, -5.5), Color(1.0, 1.0, 1.0, 0.36), 1.0)
+	var key_size := 16
+	var key_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
+	_draw_text(font, key, Vector2(center.x - key_w * 0.5, center.y + 5.0), key_size, Color("#2b2117"), 0)
+	_draw_text(font, label, pos + Vector2(28.0, 4.0), 16, Palette.TEXT_BONE, 2)
 
 
 func _compact_control_note(note: String) -> String:

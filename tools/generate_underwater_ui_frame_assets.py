@@ -483,11 +483,11 @@ def create_sidebar_frame() -> None:
     _draw_outer_frame(image, (7, 7, w - 8, h - 8), radius=18)
 
     header = (24, 22, w - 24, 112)
-    fish = (28, 112, w - 28, 608)
-    action = (24, 620, w - 24, 812)
-    tackle = (24, 830, w - 24, h - 24)
-    action_body = (42, 664, w - 42, 798)
-    tackle_body = (42, 872, w - 42, h - 40)
+    fish = (28, 112, w - 28, 590)
+    action = (24, 602, w - 24, 802)
+    tackle = (24, 817, w - 24, h - 24)
+    action_body = (42, 647, w - 42, 787)
+    tackle_body = (42, 860, w - 42, h - 40)
 
     _draw_clean_card(
         image,
@@ -679,23 +679,27 @@ def create_fight_hud_frame() -> None:
         texture_strength=5,
         shadow=False,
     )
-    _draw_paper_slot(d, (bait_panel[0] + 14, bait_panel[1] + 12, bait_panel[2] - 14, bait_panel[1] + 44), title=True)
+    bait_title = (bait_panel[0] + 14, bait_panel[1] + 12, bait_panel[2] - 14, bait_panel[1] + 44)
+    d.rounded_rectangle(bait_title, radius=7, fill=_rgba("#8b7558", 210), outline=_rgba("#fff0c7", 52), width=1)
+    d.line((bait_title[0] + 8, bait_title[1] + 6, bait_title[2] - 8, bait_title[1] + 6), fill=(255, 255, 255, 34), width=1)
     bait_body = (bait_panel[0] + 64, bait_panel[1] + 55, bait_panel[2] - 18, bait_panel[3] - 16)
     _draw_paper_slot(d, bait_body)
     _draw_inner_shadow(d, bait_body, alpha=20)
     _draw_clean_card(
         image,
         hint_panel,
-        "#f2e4c8",
+        "#0e3a5b",
         radius=8,
-        border="#8c6733",
-        inner="#d8b45d",
+        border="#9f7a3d",
+        inner="#dfbf73",
         seed=52,
-        texture_strength=5,
+        texture_strength=4,
         shadow=False,
     )
-    _draw_paper_slot(d, (hint_panel[0] + 14, hint_panel[1] + 12, hint_panel[2] - 14, hint_panel[1] + 44), title=True)
-    hint_body = (hint_panel[0] + 22, hint_panel[1] + 52, hint_panel[2] - 22, hint_panel[3] - 12)
+    hint_title = (hint_panel[0] + 14, hint_panel[1] + 12, hint_panel[2] - 14, hint_panel[1] + 50)
+    d.rounded_rectangle(hint_title, radius=7, fill=_rgba("#092840", 160), outline=_rgba("#d8b45d", 62), width=1)
+    d.line((hint_title[0] + 12, hint_title[1] + 7, hint_title[2] - 12, hint_title[1] + 7), fill=(255, 255, 255, 28), width=1)
+    hint_body = (hint_panel[0] + 22, hint_panel[1] + 58, hint_panel[2] - 22, hint_panel[3] - 12)
     _draw_paper_slot(d, hint_body)
     _draw_inner_shadow(d, hint_body, alpha=18)
     for i in (1, 2):
