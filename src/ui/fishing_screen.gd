@@ -102,7 +102,7 @@ func _build_screen() -> void:
 
 	_fight_hud = FightHudScript.new()
 	_fight_hud.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_fight_hud.custom_minimum_size = Vector2(0.0, 206.0)
+	_fight_hud.custom_minimum_size = Vector2(0.0, 224.0)
 	_fight_hud.main_action_pressed.connect(_on_main_action_pressed)
 	_fight_hud.reel_changed.connect(func(active: bool) -> void: _simulator.set_reeling(active))
 	_fight_hud.give_line_changed.connect(func(active: bool) -> void: _simulator.set_giving_line(active))
