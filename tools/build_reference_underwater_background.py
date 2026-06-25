@@ -709,6 +709,136 @@ def _add_center_clear_water_glaze(
     )
 
 
+def _add_center_final_paintover(
+    base: Image.Image,
+    source: Image.Image,
+    subject_mask: Image.Image,
+) -> None:
+    w, h = source.size
+
+    lift_mask = ImageChops.multiply(
+        subject_mask,
+        _vertical_mask(source.size, 158, 0.08, 0.74),
+    )
+    lift_mask = ImageChops.multiply(lift_mask, _soft_blob_mask(source.size, 218, seed_offset=54))
+    lifted = ImageEnhance.Brightness(base.convert("RGB")).enhance(1.42)
+    lifted = ImageEnhance.Color(lifted).enhance(1.04)
+    lifted = ImageEnhance.Contrast(lifted).enhance(0.92).convert("RGBA")
+    base.alpha_composite(
+        Image.composite(
+            lifted,
+            Image.new("RGBA", source.size, (0, 0, 0, 0)),
+            lift_mask,
+        ),
+        (0, 0),
+    )
+
+    left_floor = source.crop((int(w * 0.04), int(h * 0.70), int(w * 0.18), int(h * 0.96)))
+    right_floor = source.crop((int(w * 0.78), int(h * 0.68), int(w * 0.98), int(h * 0.94)))
+    floor_source = _stitch_reference_patches(left_floor, right_floor, align="bottom")
+    floor_size = (int(w * 0.66), int(h * 0.24))
+    floor_patch = floor_source.resize(floor_size, Image.Resampling.LANCZOS)
+    floor_patch = ImageEnhance.Brightness(floor_patch).enhance(1.18)
+    floor_patch = ImageEnhance.Color(floor_patch).enhance(0.92)
+    floor_patch = ImageEnhance.Contrast(floor_patch).enhance(1.08)
+    floor_patch = floor_patch.filter(ImageFilter.GaussianBlur(0.5)).convert("RGBA")
+
+    floor_x = int(w * 0.19)
+    floor_y = int(h * 0.60)
+    floor_alpha = ImageChops.multiply(
+        subject_mask.crop((floor_x, floor_y, floor_x + floor_size[0], floor_y + floor_size[1])),
+        _vertical_mask(floor_size, 132, 0.05, 1.0),
+    )
+    floor_alpha = ImageChops.multiply(floor_alpha, _soft_blob_mask(floor_size, 224, seed_offset=56))
+    base.alpha_composite(
+        Image.composite(
+            floor_patch,
+            Image.new("RGBA", floor_size, (0, 0, 0, 0)),
+            floor_alpha,
+        ),
+        (floor_x, floor_y),
+    )
+
+    paint = Image.new("RGBA", source.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(paint, "RGBA")
+    draw.ellipse(
+        (int(w * 0.12), int(h * 0.14), int(w * 0.84), int(h * 0.62)),
+        fill=(45, 164, 195, 58),
+    )
+    draw.ellipse(
+        (int(w * 0.22), int(h * 0.48), int(w * 0.82), int(h * 0.90)),
+        fill=(102, 188, 178, 38),
+    )
+    draw.rectangle(
+        (int(w * 0.20), int(h * 0.38), int(w * 0.80), int(h * 0.56)),
+        fill=(40, 153, 186, 22),
+    )
+    for index, (x0, x1, x2, x3, alpha) in enumerate(
+        (
+            (0.26, 0.31, 0.36, 0.31, 26),
+            (0.36, 0.42, 0.50, 0.45, 32),
+            (0.48, 0.54, 0.61, 0.56, 28),
+            (0.58, 0.64, 0.70, 0.66, 22),
+        )
+    ):
+        draw.polygon(
+            (
+                (w * x0, 0.0),
+                (w * x1, 0.0),
+                (w * x2, h * (0.70 + index * 0.012)),
+                (w * x3, h * (0.70 + index * 0.012)),
+            ),
+            fill=(178, 236, 242, alpha),
+        )
+
+    for index in range(38):
+        row = index % 7
+        col = index // 7
+        x = w * (0.23 + col * 0.095 + (row % 2) * 0.014)
+        y = h * (0.66 + row * 0.032)
+        points: list[tuple[float, float]] = []
+        for step in range(6):
+            t = step / 5.0
+            points.append(
+                (
+                    x + 126.0 * t,
+                    y + math.sin(t * math.pi * 2.0 + index * 0.63) * (2.0 + (index % 3) * 0.7),
+                )
+            )
+        draw.line(points, fill=(211, 250, 230, 44 if index % 4 == 0 else 31), width=1)
+
+    for index in range(142):
+        col = index % 17
+        row = index // 17
+        u = 0.22 + col * 0.036 + (row % 2) * 0.012
+        v = 0.18 + row * 0.052 + math.sin(index * 1.13) * 0.009
+        radius = 0.8 + (index % 5) * 0.38
+        draw.ellipse(
+            (
+                w * u - radius,
+                h * v - radius,
+                w * u + radius,
+                h * v + radius,
+            ),
+            outline=(213, 248, 250, 24 if index % 3 else 38),
+            width=1,
+        )
+
+    alpha = ImageChops.multiply(
+        subject_mask,
+        _vertical_mask(source.size, 150, 0.04, 0.96),
+    )
+    alpha = ImageChops.multiply(alpha, _soft_blob_mask(source.size, 218, seed_offset=58))
+    base.alpha_composite(
+        Image.composite(
+            paint.filter(ImageFilter.GaussianBlur(7.0)),
+            Image.new("RGBA", source.size, (0, 0, 0, 0)),
+            alpha,
+        ),
+        (0, 0),
+    )
+
+
 def _add_center_water_texture(
     clean: Image.Image,
     source: Image.Image,
@@ -958,6 +1088,7 @@ def _add_center_water_texture(
         ),
         (0, 0),
     )
+    _add_center_final_paintover(base, source, subject_mask)
     return base.convert("RGB")
 
 
