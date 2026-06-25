@@ -126,7 +126,7 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 		inner.position + Vector2(6.0, 44.0 if compact_card else 46.0),
 		Vector2(
 			inner.size.x - 12.0,
-			maxf(82.0, rect.size.y * (0.455 if compact_card else 0.37))
+			maxf(82.0, rect.size.y * (0.425 if compact_card else 0.37))
 		)
 	)
 	_draw_fish_portrait(fish_rect)
@@ -140,9 +140,9 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	var detail_gap := 16.0 if compact_card else 21.0
 	var detail_font := get_theme_default_font()
 	if compact_card:
-		_draw_info_paragraph(detail_font, "岩場や海藻の周りに潜む警戒心の強い魚。", Vector2(inner.position.x + 15.0, desc_y), inner.size.x - 26.0)
-		_draw_detail_line(detail_font, "好むエサ：オキアミ・カニ", Vector2(inner.position.x + 15.0, desc_y + 24.0), inner.size.x - 26.0)
-		_draw_detail_line(detail_font, "主な生息域：沿岸の岩場", Vector2(inner.position.x + 15.0, desc_y + 39.0), inner.size.x - 26.0)
+		_draw_info_paragraph(detail_font, "岩場や海藻の周りに潜む警戒心の強い魚。底をねらうエサに好反応。", Vector2(inner.position.x + 15.0, desc_y), inner.size.x - 26.0)
+		_draw_detail_line(detail_font, "好むエサ：オキアミ・カニ", Vector2(inner.position.x + 15.0, desc_y + 34.0), inner.size.x - 26.0)
+		_draw_detail_line(detail_font, "主な生息域：沿岸の岩場", Vector2(inner.position.x + 15.0, desc_y + 51.0), inner.size.x - 26.0)
 	else:
 		_draw_detail_line(detail_font, "岩場周りで警戒心が強い。", Vector2(inner.position.x + 15.0, desc_y), inner.size.x - 26.0)
 		_draw_detail_line(detail_font, "エサ：オキアミ・カニ", Vector2(inner.position.x + 15.0, desc_y + detail_gap), inner.size.x - 26.0)
@@ -304,15 +304,15 @@ func _draw_bullet(font: Font, text: String, pos: Vector2, max_width: float) -> v
 
 
 func _draw_info_paragraph(font: Font, text: String, pos: Vector2, max_width: float) -> void:
-	var font_size := 12 if _sidebar_frame != null else 14
+	var font_size := 13 if _sidebar_frame != null else 14
 	_draw_wrapped(font, text, pos, max_width, font_size, Palette.TEXT_DARK, 2, float(font_size + 3))
 
 
 func _draw_detail_line(font: Font, text: String, pos: Vector2, max_width: float) -> void:
-	draw_circle(pos + Vector2(3.0, 10.0), 3.8 if _sidebar_frame != null else 4.3, Color("#49c75a"))
+	draw_circle(pos + Vector2(3.0, 10.0), 4.1 if _sidebar_frame != null else 4.3, Color("#49c75a"))
 	var font_size := 14
 	if _sidebar_frame != null:
-		font_size = 12
+		font_size = 13
 	elif max_width < 260.0:
 		font_size = 13
 	_draw_wrapped(font, text, pos + Vector2(15.0, -1.0), max_width - 15.0, font_size, Palette.TEXT_DARK, 1)
@@ -338,7 +338,7 @@ func _draw_fish_portrait(rect: Rect2) -> void:
 		var tex_size := _fish_card_portrait.get_size()
 		var scale := minf(rect.size.x / tex_size.x, rect.size.y / tex_size.y)
 		if _sidebar_frame != null:
-			scale *= 0.94
+			scale *= 0.90
 		var draw_size := tex_size * scale
 		var draw_rect := Rect2(rect.position + (rect.size - draw_size) * 0.5, draw_size)
 		if _sidebar_frame != null:

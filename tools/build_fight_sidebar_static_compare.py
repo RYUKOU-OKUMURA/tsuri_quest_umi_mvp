@@ -159,13 +159,13 @@ def _draw_fish_card(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: int
         inner[0] + 6,
         inner[1] + 44,
         inner[2] - 6,
-        inner[1] + 44 + max(82, (rect[3] - rect[1]) * 0.455),
+        inner[1] + 44 + max(82, (rect[3] - rect[1]) * 0.425),
     )
     _paste_contain(
         base,
         Image.open(ASSET_DIR / "kurodai_card_portrait.png").convert("RGBA"),
         fish_rect,
-        scale_multiplier=0.94,
+        scale_multiplier=0.90,
         offset=(-7.0, -2.0),
     )
     divider_y = fish_rect[3] + 3
@@ -173,10 +173,20 @@ def _draw_fish_card(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: int
     _center_text(draw, (inner[0], divider_y + 8, inner[2], divider_y + 38), "推定 44.2 cm", 20, "#2b2117")
     desc_y = divider_y + 52
     draw.line((inner[0] + 8, desc_y - 12, inner[2] - 8, desc_y - 12), fill="#d6c299", width=1)
-    _draw_wrapped(draw, (inner[0] + 15, desc_y), "岩場や海藻の周りに潜む警戒心の強い魚。", inner[2] - inner[0] - 26, 12, "#2b2117", bold=False, max_lines=2, line_gap=15)
-    for y, text in ((desc_y + 24, "好むエサ：オキアミ・カニ"), (desc_y + 39, "主な生息域：沿岸の岩場")):
-        draw.ellipse((inner[0] + 15, y + 6, inner[0] + 22, y + 13), fill="#49c75a")
-        _draw_wrapped(draw, (inner[0] + 30, y - 1), text, inner[2] - inner[0] - 41, 12, "#2b2117", bold=False)
+    _draw_wrapped(
+        draw,
+        (inner[0] + 15, desc_y),
+        "岩場や海藻の周りに潜む警戒心の強い魚。底をねらうエサに好反応。",
+        inner[2] - inner[0] - 26,
+        13,
+        "#2b2117",
+        bold=False,
+        max_lines=2,
+        line_gap=16,
+    )
+    for y, text in ((desc_y + 34, "好むエサ：オキアミ・カニ"), (desc_y + 51, "主な生息域：沿岸の岩場")):
+        draw.ellipse((inner[0] + 15, y + 6, inner[0] + 23, y + 14), fill="#49c75a")
+        _draw_wrapped(draw, (inner[0] + 30, y - 1), text, inner[2] - inner[0] - 41, 13, "#2b2117", bold=False)
 
 
 def _draw_lower_cards(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: int) -> None:
