@@ -44,6 +44,47 @@ def _texture(size: tuple[int, int], base: str, seed: int, strength: int = 10) ->
     return Image.frombytes("RGBA", size, bytes(pixels))
 
 
+def _reference_paper_texture(size: tuple[int, int], base: str, seed: int, strength: int = 5) -> Image.Image:
+    texture = _texture(size, base, seed, strength)
+    if not REFERENCE_MOCKUP.exists():
+        return texture
+
+    source = Image.open(REFERENCE_MOCKUP).convert("RGB")
+    paper_crops = [
+        (18, 34, 235, 112),
+        (252, 34, 540, 112),
+        (560, 34, 802, 112),
+        (1268, 126, 1650, 590),
+        (20, 730, 365, 928),
+    ]
+    rng = random.Random(seed + 173)
+    crop = source.crop(paper_crops[seed % len(paper_crops)])
+    scale = max(size[0] / crop.width, size[1] / crop.height)
+    resized = crop.resize((round(crop.width * scale), round(crop.height * scale)), Image.Resampling.BICUBIC)
+    if resized.width > size[0] or resized.height > size[1]:
+        x = rng.randint(0, max(0, resized.width - size[0]))
+        y = rng.randint(0, max(0, resized.height - size[1]))
+        resized = resized.crop((x, y, x + size[0], y + size[1]))
+    resized = resized.resize(size, Image.Resampling.BICUBIC).filter(ImageFilter.GaussianBlur(10.0))
+
+    br, bg, bb, _ = _rgba(base)
+    pixels = bytearray()
+    for r, g, b in resized.getdata():
+        luminance = (r * 0.30 + g * 0.59 + b * 0.11)
+        warm = (r - b) * 0.018
+        delta = (luminance - 205.0) * 0.16
+        pixels.extend(
+            (
+                max(0, min(255, int(br + delta + warm))),
+                max(0, min(255, int(bg + delta * 0.92 + warm * 0.35))),
+                max(0, min(255, int(bb + delta * 0.72))),
+                255,
+            )
+        )
+    reference_variation = Image.frombytes("RGBA", size, bytes(pixels))
+    return Image.blend(texture, reference_variation, 0.36)
+
+
 def _paste_masked(dst: Image.Image, src: Image.Image, mask: Image.Image, xy: tuple[int, int]) -> None:
     dst.alpha_composite(Image.composite(src, Image.new("RGBA", src.size, (0, 0, 0, 0)), mask), xy)
 
@@ -316,7 +357,7 @@ def _draw_top_status_paper_card(
     image.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(4)))
 
     mask = _rounded_mask((w, h), radius)
-    texture = _texture((w, h), fill, seed, strength=4)
+    texture = _reference_paper_texture((w, h), fill, seed, strength=4)
     _paste_masked(image, texture, mask, (x0, y0))
 
     d = ImageDraw.Draw(image)
@@ -442,10 +483,10 @@ def create_sidebar_frame() -> None:
     _draw_outer_frame(image, (7, 7, w - 8, h - 8), radius=18)
 
     header = (24, 22, w - 24, 112)
-    fish = (28, 126, w - 28, 600)
-    action = (24, 618, w - 24, 812)
+    fish = (28, 112, w - 28, 608)
+    action = (24, 620, w - 24, 812)
     tackle = (24, 830, w - 24, h - 24)
-    action_body = (42, 662, w - 42, 798)
+    action_body = (42, 664, w - 42, 798)
     tackle_body = (42, 872, w - 42, h - 40)
 
     _draw_clean_card(

@@ -74,8 +74,8 @@ func _draw() -> void:
 	if _sidebar_frame != null:
 		draw_texture_rect(_sidebar_frame, Rect2(Vector2.ZERO, size), false, Color.WHITE)
 		header = Rect2(w * 0.055, h * 0.030, w * 0.89, h * 0.075)
-		fish_card = Rect2(w * 0.060, h * 0.125, w * 0.88, h * 0.440)
-		action_card = Rect2(w * 0.055, h * 0.600, w * 0.89, h * 0.190)
+		fish_card = Rect2(w * 0.060, h * 0.109, w * 0.88, h * 0.485)
+		action_card = Rect2(w * 0.055, h * 0.605, w * 0.89, h * 0.185)
 		tackle_card = Rect2(w * 0.055, h * 0.810, w * 0.89, h * 0.165)
 	else:
 		var gap := 7.0
@@ -132,8 +132,8 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	var estimate := (float(fish_data.get("size_min", 0.0)) + float(fish_data.get("size_max", 0.0))) * 0.5
 	var estimate_size := 21 if _sidebar_frame != null else 23
 	_draw_centered_text(font, "推定 %.1f cm" % estimate, Rect2(inner.position.x, divider_y + 8.0, inner.size.x, 30.0), estimate_size, Color("#2b2117"), 0)
-	var desc_y := divider_y + (39.0 if compact_card else 44.0)
-	draw_line(Vector2(inner.position.x + 8.0, desc_y - 10.0), Vector2(inner.end.x - 8.0, desc_y - 10.0), Color("#d6c299"), 1.0)
+	var desc_y := divider_y + (48.0 if compact_card else 44.0)
+	draw_line(Vector2(inner.position.x + 8.0, desc_y - 12.0), Vector2(inner.end.x - 8.0, desc_y - 12.0), Color("#d6c299"), 1.0)
 	var detail_gap := 16.0 if compact_card else 21.0
 	var detail_font := get_theme_default_font()
 	if compact_card:
