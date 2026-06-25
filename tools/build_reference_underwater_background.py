@@ -1131,7 +1131,7 @@ def _harmonize(image: Image.Image) -> Image.Image:
     overlay = Image.new("RGBA", image.size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(overlay, "RGBA")
     w, h = image.size
-    draw.rectangle((0, 0, w, int(h * 0.10)), fill=(0, 20, 42, 14))
+    draw.rectangle((0, 0, w, int(h * 0.10)), fill=(0, 20, 42, 0))
     draw.rectangle((0, int(h * 0.78), w, h), fill=(0, 28, 42, 12))
     draw.rectangle((0, 0, int(w * 0.12), h), fill=(0, 20, 38, 18))
     draw.rectangle((int(w * 0.88), 0, w, h), fill=(0, 20, 38, 18))
@@ -1247,7 +1247,7 @@ def _add_canvas_reference_light_polish(
     light_source = _stitch_reference_patches(upper_left, upper_right)
     light_size = (int(w * 0.70), int(h * 0.50))
     light_patch = light_source.resize(light_size, Image.Resampling.LANCZOS)
-    light_patch = ImageEnhance.Brightness(light_patch).enhance(1.34)
+    light_patch = ImageEnhance.Brightness(light_patch).enhance(1.46)
     light_patch = ImageEnhance.Color(light_patch).enhance(0.96)
     light_patch = ImageEnhance.Contrast(light_patch).enhance(0.84)
     light_patch = light_patch.filter(ImageFilter.GaussianBlur(1.0)).convert("RGBA")
@@ -1263,7 +1263,7 @@ def _add_canvas_reference_light_polish(
             int(light_size[0] * 0.98),
             int(light_size[1] * 0.96),
         ),
-        fill=150,
+        fill=168,
     )
     light_gate = light_gate.filter(ImageFilter.GaussianBlur(30.0))
     broad_light = Image.new("L", light_size, 0)
@@ -1275,7 +1275,7 @@ def _add_canvas_reference_light_polish(
             int(light_size[0] * 0.96),
             int(light_size[1] * 0.78),
         ),
-        fill=118,
+        fill=134,
     )
     broad_light_draw.rectangle(
         (
@@ -1284,14 +1284,14 @@ def _add_canvas_reference_light_polish(
             int(light_size[0] * 0.84),
             int(light_size[1] * 0.42),
         ),
-        fill=138,
+        fill=154,
     )
     broad_light = broad_light.filter(ImageFilter.GaussianBlur(42.0))
     light_alpha = ImageChops.lighter(
         subject_mask.crop((light_x, light_y, light_x + light_size[0], light_y + light_size[1])),
         broad_light,
     )
-    light_alpha = ImageChops.multiply(light_alpha, _vertical_mask(light_size, 136, 0.00, 0.86))
+    light_alpha = ImageChops.multiply(light_alpha, _vertical_mask(light_size, 152, 0.00, 0.88))
     light_alpha = ImageChops.multiply(light_alpha, light_gate)
     light_alpha = ImageChops.multiply(light_alpha, _soft_blob_mask(light_size, 232, seed_offset=74))
     result.alpha_composite(
@@ -1306,10 +1306,10 @@ def _add_canvas_reference_light_polish(
     rays = Image.new("RGBA", CANVAS_SIZE, (0, 0, 0, 0))
     ray_draw = ImageDraw.Draw(rays, "RGBA")
     ray_specs = [
-        (0.25, 0.34, 0.18, 0.50, 28),
-        (0.34, 0.45, 0.27, 0.62, 34),
-        (0.47, 0.56, 0.39, 0.70, 26),
-        (0.59, 0.69, 0.50, 0.75, 20),
+        (0.25, 0.34, 0.18, 0.50, 34),
+        (0.34, 0.45, 0.27, 0.62, 42),
+        (0.47, 0.56, 0.39, 0.70, 32),
+        (0.59, 0.69, 0.50, 0.75, 24),
     ]
     for left, right, bottom_left, bottom_right, alpha in ray_specs:
         ray_draw.polygon(
@@ -1343,7 +1343,7 @@ def _add_canvas_reference_light_polish(
     broad_ray_draw.rectangle((int(w * 0.20), 0, int(w * 0.70), int(h * 0.32)), fill=190)
     broad_ray = broad_ray.filter(ImageFilter.GaussianBlur(48.0))
     ray_alpha = ImageChops.lighter(subject_mask, broad_ray)
-    ray_alpha = ImageChops.multiply(ray_alpha, _vertical_mask(CANVAS_SIZE, 106, 0.00, 0.66))
+    ray_alpha = ImageChops.multiply(ray_alpha, _vertical_mask(CANVAS_SIZE, 120, 0.00, 0.68))
     ray_alpha = ImageChops.multiply(ray_alpha, ray_gate)
     result.alpha_composite(
         Image.composite(
@@ -1354,12 +1354,52 @@ def _add_canvas_reference_light_polish(
         (0, 0),
     )
 
+    surface_bloom = Image.new("RGBA", CANVAS_SIZE, (0, 0, 0, 0))
+    bloom_draw = ImageDraw.Draw(surface_bloom, "RGBA")
+    bloom_draw.ellipse(
+        (
+            int(w * 0.14),
+            -int(h * 0.18),
+            int(w * 0.78),
+            int(h * 0.38),
+        ),
+        fill=(190, 250, 255, 42),
+    )
+    bloom_draw.rectangle(
+        (
+            int(w * 0.20),
+            0,
+            int(w * 0.72),
+            int(h * 0.15),
+        ),
+        fill=(220, 255, 255, 34),
+    )
+    for index in range(18):
+        x = w * (0.18 + index * 0.032)
+        y = h * (0.035 + math.sin(index * 0.8) * 0.012)
+        bloom_draw.line(
+            [
+                (x, y),
+                (x + w * 0.080, y + math.sin(index * 1.17) * h * 0.008),
+            ],
+            fill=(232, 255, 255, 42 if index % 3 else 58),
+            width=2,
+        )
+    bloom_alpha = Image.new("L", CANVAS_SIZE, 0)
+    bloom_gate_draw = ImageDraw.Draw(bloom_alpha)
+    bloom_gate_draw.ellipse((int(w * 0.08), -int(h * 0.12), int(w * 0.86), int(h * 0.46)), fill=210)
+    bloom_alpha = bloom_alpha.filter(ImageFilter.GaussianBlur(46.0))
+    bloom_alpha = ImageChops.multiply(bloom_alpha, _vertical_mask(CANVAS_SIZE, 178, 0.00, 0.44))
+    bloom_alpha = ImageChops.multiply(bloom_alpha, _soft_blob_mask(CANVAS_SIZE, 232, seed_offset=80))
+    surface_bloom.putalpha(ImageChops.multiply(surface_bloom.getchannel("A"), bloom_alpha))
+    result.alpha_composite(surface_bloom.filter(ImageFilter.GaussianBlur(10.0)), (0, 0))
+
     left_floor = source.crop((int(w * 0.05), int(h * 0.70), int(w * 0.18), int(h * 0.96)))
     right_floor = source.crop((int(w * 0.78), int(h * 0.68), int(w * 0.98), int(h * 0.94)))
     floor_source = _stitch_reference_patches(left_floor, right_floor, align="bottom")
     floor_size = (int(w * 0.66), int(h * 0.25))
     floor_patch = floor_source.resize(floor_size, Image.Resampling.LANCZOS)
-    floor_patch = ImageEnhance.Brightness(floor_patch).enhance(1.16)
+    floor_patch = ImageEnhance.Brightness(floor_patch).enhance(1.24)
     floor_patch = ImageEnhance.Color(floor_patch).enhance(0.92)
     floor_patch = ImageEnhance.Contrast(floor_patch).enhance(1.18)
     floor_patch = floor_patch.filter(ImageFilter.UnsharpMask(radius=1.1, percent=42, threshold=3)).convert("RGBA")
@@ -1375,12 +1415,12 @@ def _add_canvas_reference_light_polish(
             int(floor_size[0] * 1.00),
             int(floor_size[1] * 1.08),
         ),
-        fill=132,
+        fill=150,
     )
     floor_gate = floor_gate.filter(ImageFilter.GaussianBlur(24.0))
     floor_alpha = ImageChops.multiply(
         subject_mask.crop((floor_x, floor_y, floor_x + floor_size[0], floor_y + floor_size[1])),
-        _vertical_mask(floor_size, 132, 0.10, 1.0),
+        _vertical_mask(floor_size, 148, 0.08, 1.0),
     )
     floor_alpha = ImageChops.multiply(floor_alpha, floor_gate)
     floor_alpha = ImageChops.multiply(floor_alpha, _soft_blob_mask(floor_size, 226, seed_offset=76))
@@ -1409,7 +1449,7 @@ def _add_canvas_reference_light_polish(
                     y + math.sin(t * math.tau + index * 0.52) * (2.1 + (index % 4) * 0.50),
                 )
             )
-        stroke_draw.line(points, fill=(218, 252, 235, 31 if index % 4 else 46), width=1)
+        stroke_draw.line(points, fill=(222, 255, 238, 38 if index % 4 else 56), width=2 if index % 6 == 0 else 1)
 
     for index in range(22):
         x = w * (0.27 + (index % 11) * 0.044)
@@ -1418,13 +1458,13 @@ def _add_canvas_reference_light_polish(
             (x, y, x + w * 0.070, y + h * 0.030),
             start=192,
             end=344,
-            fill=(226, 255, 238, 28),
+            fill=(232, 255, 240, 34),
             width=1,
         )
 
     stroke_mask = ImageChops.multiply(
         subject_mask,
-        _vertical_mask(CANVAS_SIZE, 102, 0.46, 0.92),
+        _vertical_mask(CANVAS_SIZE, 118, 0.44, 0.92),
     )
     stroke_mask = ImageChops.multiply(stroke_mask, _soft_blob_mask(CANVAS_SIZE, 218, seed_offset=78))
     result.alpha_composite(
