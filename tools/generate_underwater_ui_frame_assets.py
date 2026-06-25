@@ -393,9 +393,8 @@ def create_sidebar_frame() -> None:
             outline=_rgba("#a98242", 14),
             width=1,
         )
-        d.line((body[0] + 32, body[1] + 30, body[2] - 32, body[1] + 30), fill=(255, 255, 255, 24), width=1)
-        d.line((body[0] + 34, body[3] - 22, body[2] - 34, body[3] - 22), fill=_rgba("#80552a", 8), width=1)
-        _draw_corner_brackets(d, body, length=18, inset=11, color="#a77d3b", alpha=34, width=1)
+        d.line((body[0] + 36, body[3] - 20, body[2] - 36, body[3] - 20), fill=_rgba("#80552a", 5), width=1)
+        _draw_corner_brackets(d, body, length=16, inset=12, color="#a77d3b", alpha=22, width=1)
 
     # Sparse corner accents only. Heavy rivets made the frame read as generated/debug UI.
     for cx, cy in (
