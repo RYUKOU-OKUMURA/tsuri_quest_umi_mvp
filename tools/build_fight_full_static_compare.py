@@ -113,8 +113,8 @@ def _draw_fish(water: Image.Image) -> tuple[float, float, float, float]:
     draw_w = water.width * 0.49 * stamina_scale
     draw_h = draw_w * fish.height / fish.width
     center = (
-        (0.42 - 0.072) * water.width,
-        (0.46 - 0.014) * water.height,
+        (0.42 - 0.082) * water.width,
+        (0.46 - 0.018) * water.height,
     )
     shadow = Image.new("RGBA", water.size, (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow)
@@ -146,9 +146,17 @@ def _draw_line_lure_hit(water: Image.Image, fish_metrics: tuple[float, float, fl
     line_origin = (water.width * 0.82, 2.0)
     lure = (center_x + fish_w * 0.44, center_y + fish_h * 0.01)
     draw.line((line_origin[0], line_origin[1], lure[0], lure[1]), fill=(235, 250, 255, 224), width=2)
-    draw.ellipse((lure[0] - 6, lure[1] - 6, lure[0] + 6, lure[1] + 6), fill="#e88b35")
-    draw.ellipse((lure[0] + 1, lure[1] - 4, lure[0] + 5, lure[1]), fill="#ffd37a")
-    draw.arc((lure[0], lure[1] - 2, lure[0] + 14, lure[1] + 12), 12, 138, fill="#d8e7ef", width=2)
+    lure_path = ASSET_DIR / "fight_lure.png"
+    if lure_path.exists():
+        lure_asset = Image.open(lure_path).convert("RGBA")
+        lure_h = min(max(water.height * 0.145, 46.0), 62.0)
+        lure_size = (round(lure_h * lure_asset.width / lure_asset.height), round(lure_h))
+        lure_asset = _resize(lure_asset, lure_size)
+        water.alpha_composite(lure_asset, (round(lure[0] - lure_asset.width * 0.5), round(lure[1] - lure_asset.height * 0.5)))
+    else:
+        draw.ellipse((lure[0] - 6, lure[1] - 6, lure[0] + 6, lure[1] + 6), fill="#e88b35")
+        draw.ellipse((lure[0] + 1, lure[1] - 4, lure[0] + 5, lure[1]), fill="#ffd37a")
+        draw.arc((lure[0], lure[1] - 2, lure[0] + 14, lure[1] + 12), 12, 138, fill="#d8e7ef", width=2)
 
     meter_rect = (68.0, water.height - 26.0, water.width - 16.0, water.height - 16.0)
     draw.rounded_rectangle(meter_rect, radius=5, fill=(5, 20, 36, 40))

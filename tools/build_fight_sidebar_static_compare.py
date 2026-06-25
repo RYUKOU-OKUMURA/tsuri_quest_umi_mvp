@@ -118,13 +118,13 @@ def _draw_rarity(draw: ImageDraw.ImageDraw, box: tuple[float, float, float, floa
 
 
 def _draw_header(draw: ImageDraw.ImageDraw, w: int, h: int) -> None:
-    header = (w * 0.055, h * 0.030, w * (0.055 + 0.89), h * (0.030 + 0.075))
-    _draw_text(draw, (header[0] + 14, header[1] + header[3] - header[1] - 31), "釣り中の魚", 19, "#f7ecd0", stroke=3)
-    _draw_text(draw, (header[2] - 66, header[1] + header[3] - header[1] - 28), "1/1匹", 16, "#f7cf61", stroke=2)
+    header = (w * 0.044, h * 0.026, w * (0.044 + 0.912), h * (0.026 + 0.078))
+    _draw_text(draw, (header[0] + 14, header[1] + header[3] - header[1] - 31), "釣り中の魚", 18, "#f7ecd0", stroke=2)
+    _draw_text(draw, (header[2] - 66, header[1] + header[3] - header[1] - 28), "1/1匹", 16, "#f7cf61", stroke=1)
 
 
 def _draw_fish_card(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: int) -> None:
-    rect = (w * 0.060, h * 0.109, w * (0.060 + 0.88), h * (0.109 + 0.466))
+    rect = (w * 0.048, h * 0.109, w * (0.048 + 0.904), h * (0.109 + 0.466))
     inner = (rect[0] + 12, rect[1] + 12, rect[2] - 12, rect[3] - 12)
     title = (inner[0] + 7, inner[1] + 8, inner[2] - 7, inner[1] + 36)
     rarity = (inner[2] - 58, inner[1] + 11, inner[2] - 10, inner[1] + 31)
@@ -153,24 +153,24 @@ def _draw_fish_card(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: int
 
 
 def _draw_lower_cards(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: int) -> None:
-    action = (w * 0.055, h * 0.588, w * (0.055 + 0.89), h * (0.588 + 0.195))
-    tackle = (w * 0.055, h * 0.798, w * (0.055 + 0.89), h * (0.798 + 0.178))
-    _draw_text(draw, (action[0] + 16, action[1] + 5), "魚の行動", 19, "#f7ecd0", stroke=3)
+    action = (w * 0.044, h * 0.588, w * (0.044 + 0.912), h * (0.588 + 0.195))
+    tackle = (w * 0.044, h * 0.798, w * (0.044 + 0.912), h * (0.798 + 0.178))
+    _draw_text(draw, (action[0] + 16, action[1] + 5), "魚の行動", 18, "#f7ecd0", stroke=2)
     action_body = (action[0] + 14, action[1] + (action[3] - action[1]) * 0.225, action[2] - 14, action[3] - (action[3] - action[1]) * 0.060)
     _paste_contain(base, Image.open(ASSET_DIR / "fight_action_card_icon.png").convert("RGBA"), (action_body[0] + 5, action_body[1] + 17, action_body[0] + 61, action_body[1] + 73))
-    _draw_text(draw, (action_body[0] + 78, action_body[1] + 9), "突っ込み！", 25, "#2b2117")
-    _draw_wrapped(draw, (action_body[0] + 78, action_body[1] + 47), "一気に深く潜る！", action_body[2] - action_body[0] - 84, 15, "#2b2117", max_lines=1, line_gap=16)
-    _draw_wrapped(draw, (action_body[0] + 78, action_body[1] + 63), "ラインを緩めず耐えよう！", action_body[2] - action_body[0] - 84, 15, "#2b2117", max_lines=1, line_gap=16)
+    _draw_text(draw, (action_body[0] + 78, action_body[1] + 7), "突っ込み！", 23, "#2b2117")
+    _draw_wrapped(draw, (action_body[0] + 78, action_body[1] + 46), "一気に深く潜る！", action_body[2] - action_body[0] - 84, 15, "#2b2117", max_lines=1, line_gap=16)
+    _draw_wrapped(draw, (action_body[0] + 78, action_body[1] + 62), "ラインを緩めず耐えよう！", action_body[2] - action_body[0] - 84, 15, "#2b2117", max_lines=1, line_gap=16)
 
-    _draw_text(draw, (tackle[0] + 14, tackle[1] + 4), "タックル", 19, "#f7ecd0", stroke=3)
+    _draw_text(draw, (tackle[0] + 14, tackle[1] + 4), "タックル", 18, "#f7ecd0", stroke=2)
     body = (tackle[0] + 14, tackle[1] + (tackle[3] - tackle[1]) * 0.225, tackle[2] - 14, tackle[3] - (tackle[3] - tackle[1]) * 0.060)
     for index, text in enumerate(("ロッド：港の入門竿", "ライン：ナイロン3号", "ハリス：フロロ2号", "針：チヌ針")):
         _draw_wrapped(
             draw,
-            (body[0] + 14, body[1] + 15 + index * 15),
+            (body[0] + 14, body[1] + 15 + index * 14.5),
             text,
             body[2] - body[0] - 110,
-            13,
+            12,
             "#2b2117",
             bold=False,
             max_lines=1,

@@ -110,10 +110,10 @@ def _draw_segment_gauge(
 
 
 def _draw_key_cap(draw: ImageDraw.ImageDraw, box: tuple[float, float, float, float], label: str, size: int) -> None:
-    draw.rounded_rectangle(box, radius=999, fill="#132132", outline="#f0c66a", width=2)
+    draw.rounded_rectangle(box, radius=999, fill="#132132", outline="#f0c66a", width=1)
     draw.arc((box[0] + 4, box[1] + 3, box[2] - 4, box[3] - 4), 200, 340, fill=(255, 244, 190, 96), width=1)
     tw = _text_width(label, size)
-    _draw_text(draw, (box[0] + (box[2] - box[0] - tw) * 0.5, box[1] + 19), label, size, "#fff5d0", stroke=1)
+    _draw_text(draw, (box[0] + (box[2] - box[0] - tw) * 0.5, box[1] + 16), label, size, "#fff5d0", stroke=1)
 
 
 def _hint_slots(hint: tuple[float, float, float, float]) -> list[tuple[float, float, float, float]]:
@@ -128,13 +128,13 @@ def _hint_slots(hint: tuple[float, float, float, float]) -> list[tuple[float, fl
 
 def _draw_key_hint(draw: ImageDraw.ImageDraw, slot: tuple[float, float, float, float], key: str, label: str, note: str) -> None:
     is_long = key == "L/R"
-    cap_w = 30 if not is_long else 50
-    cap_h = 26
-    cap = (slot[0] + 8, slot[1] + 7, slot[0] + 8 + cap_w, slot[1] + 7 + cap_h)
-    _draw_key_cap(draw, cap, key, 14 if is_long else 16)
-    label_x = cap[0] + cap_w + (7 if is_long else 9)
-    _draw_text(draw, (label_x, cap[1] + 20), label, 17 if is_long else 18, "#2b2117")
-    _draw_text(draw, (label_x, cap[1] + 32), note, 8 if is_long else 10, "#5a4327", bold=False)
+    cap_w = 26 if not is_long else 44
+    cap_h = 22
+    cap = (slot[0] + 9, slot[1] + 9, slot[0] + 9 + cap_w, slot[1] + 9 + cap_h)
+    _draw_key_cap(draw, cap, key, 12 if is_long else 14)
+    label_x = cap[0] + cap_w + (6 if is_long else 8)
+    _draw_text(draw, (label_x, cap[1] + 17), label, 16, "#2b2117")
+    _draw_text(draw, (label_x, cap[1] + 29), note, 8 if is_long else 9, "#5a4327", bold=False)
 
 
 def _draw_menu_row(draw: ImageDraw.ImageDraw, pos: tuple[float, float], key: str, label: str) -> None:
@@ -188,7 +188,22 @@ def build_current_hud() -> Image.Image:
     menu = (hint[2] + gap, bottom[1], bottom[2], bottom[3])
 
     _draw_text(draw, (bait[0] + 16, bait[1] + 19), "使用中のエサ", 15, "#fff1cb", bold=True, stroke=1)
-    _draw_sheet_icon(frame, 6, (bait[0] + 58, bait[1] + 48, bait[0] + 100, bait[1] + 90))
+    bait_icon_path = ASSET_DIR / "hud_bait_icon.png"
+    if bait_icon_path.exists():
+        bait_icon = Image.open(bait_icon_path).convert("RGBA")
+        icon_y = bait[1] + (bait[3] - bait[1]) * 0.5 - 28.0
+        icon_box = (bait[0] + 46, icon_y, bait[0] + 114, icon_y + 62)
+        scale = min((icon_box[2] - icon_box[0]) / bait_icon.width, (icon_box[3] - icon_box[1]) / bait_icon.height)
+        bait_icon = _resize(bait_icon, (round(bait_icon.width * scale), round(bait_icon.height * scale)))
+        frame.alpha_composite(
+            bait_icon,
+            (
+                round(icon_box[0] + (icon_box[2] - icon_box[0] - bait_icon.width) * 0.5),
+                round(icon_box[1] + (icon_box[3] - icon_box[1] - bait_icon.height) * 0.5),
+            ),
+        )
+    else:
+        _draw_sheet_icon(frame, 6, (bait[0] + 58, bait[1] + 48, bait[0] + 100, bait[1] + 90))
     _draw_text(draw, (bait[0] + 116, bait[1] + 54), "オキアミ", 23, "#2b2117")
     _draw_text(draw, (bait[0] + 126, bait[1] + 79), "× 17", 21, "#2b2117")
 

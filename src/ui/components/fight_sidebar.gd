@@ -73,10 +73,10 @@ func _draw() -> void:
 	var tackle_card := Rect2()
 	if _sidebar_frame != null:
 		draw_texture_rect(_sidebar_frame, Rect2(Vector2.ZERO, size), false, Color.WHITE)
-		header = Rect2(w * 0.055, h * 0.030, w * 0.89, h * 0.075)
-		fish_card = Rect2(w * 0.060, h * 0.109, w * 0.88, h * 0.466)
-		action_card = Rect2(w * 0.055, h * 0.588, w * 0.89, h * 0.195)
-		tackle_card = Rect2(w * 0.055, h * 0.798, w * 0.89, h * 0.178)
+		header = Rect2(w * 0.044, h * 0.026, w * 0.912, h * 0.078)
+		fish_card = Rect2(w * 0.048, h * 0.109, w * 0.904, h * 0.466)
+		action_card = Rect2(w * 0.044, h * 0.588, w * 0.912, h * 0.195)
+		tackle_card = Rect2(w * 0.044, h * 0.798, w * 0.912, h * 0.178)
 	else:
 		var gap := 7.0
 		var action_h := clampf(h * 0.22, 86.0, 102.0)
@@ -94,9 +94,11 @@ func _draw() -> void:
 
 func _draw_header(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Palette.DARK_PANEL, Palette.GOLD, Palette.GOLD_BRIGHT)
-	var title_size := 18 if _sidebar_frame == null else 19
-	_draw_text(font, "釣り中の魚", rect.position + Vector2(14.0, rect.size.y * 0.68), title_size, Palette.TEXT_BONE, 3)
-	_draw_text(font, "1/1匹", rect.position + Vector2(rect.size.x - 66.0, rect.size.y * 0.68), 16, Palette.GOLD_BRIGHT, 2)
+	var title_size := 18
+	var title_outline := 3 if _sidebar_frame == null else 2
+	var count_outline := 2 if _sidebar_frame == null else 1
+	_draw_text(font, "釣り中の魚", rect.position + Vector2(14.0, rect.size.y * 0.68), title_size, Palette.TEXT_BONE, title_outline)
+	_draw_text(font, "1/1匹", rect.position + Vector2(rect.size.x - 66.0, rect.size.y * 0.68), 16, Palette.GOLD_BRIGHT, count_outline)
 
 
 func _draw_fish_card(font: Font, rect: Rect2) -> void:
@@ -149,7 +151,7 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 
 func _draw_action_card(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0d3a62"), Palette.GOLD, Palette.GOLD_BRIGHT)
-	_draw_text(font, "魚の行動", rect.position + Vector2(16.0, 25.0), 19 if _sidebar_frame != null else 18, Palette.TEXT_BONE, 3)
+	_draw_text(font, "魚の行動", rect.position + Vector2(16.0, 25.0), 18, Palette.TEXT_BONE, 2 if _sidebar_frame != null else 3)
 	var body := Rect2(rect.position + Vector2(10.0, 33.0), rect.size - Vector2(20.0, 42.0))
 	if _sidebar_frame != null:
 		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.225), rect.size - Vector2(28.0, rect.size.y * 0.285))
@@ -166,16 +168,16 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 		icon_size = 56.0
 		text_x = 78.0
 	_draw_action_icon(body.position + Vector2(33.0, body.size.y * 0.57), icon_size)
-	_draw_text(font, "%s！" % action, body.position + Vector2(text_x, 34.0), 25 if _sidebar_frame != null else 20, Color("#2b2117"), 0)
+	_draw_text(font, "%s！" % action, body.position + Vector2(text_x, 32.0), 23 if _sidebar_frame != null else 20, Color("#2b2117"), 0)
 	if _sidebar_frame != null:
-		_draw_action_message(font, message, body.position + Vector2(text_x, 47.0), body.size.x - text_x - 6.0)
+		_draw_action_message(font, message, body.position + Vector2(text_x, 46.0), body.size.x - text_x - 6.0)
 	else:
 		_draw_wrapped(font, message, body.position + Vector2(72.0, 36.0), body.size.x - 82.0, 11, Palette.TEXT_DARK, 2)
 
 
 func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0d3a62"), Palette.GOLD, Palette.GOLD_BRIGHT)
-	_draw_text(font, "タックル", rect.position + Vector2(14.0, 24.0), 19 if _sidebar_frame != null else 18, Palette.TEXT_BONE, 3)
+	_draw_text(font, "タックル", rect.position + Vector2(14.0, 24.0), 18, Palette.TEXT_BONE, 2 if _sidebar_frame != null else 3)
 	var body := Rect2(rect.position + Vector2(10.0, 32.0), rect.size - Vector2(20.0, 38.0))
 	if _sidebar_frame != null:
 		body = Rect2(rect.position + Vector2(14.0, rect.size.y * 0.225), rect.size - Vector2(28.0, rect.size.y * 0.285))
@@ -201,8 +203,8 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 			"ロッド：%s" % rod_name,
 			"糸3号・チヌ針",
 		]
-	var tackle_font_size := 13 if _sidebar_frame != null else 12
-	var tackle_line_gap := 15.0 if _sidebar_frame != null else 16.0
+	var tackle_font_size := 12 if _sidebar_frame != null else 12
+	var tackle_line_gap := 14.5 if _sidebar_frame != null else 16.0
 	var tackle_font := get_theme_default_font() if _sidebar_frame != null else font
 	for i in range(lines.size()):
 		_draw_wrapped(tackle_font, lines[i], body.position + text_offset + Vector2(0.0, float(i) * tackle_line_gap), text_width, tackle_font_size, Palette.TEXT_DARK, 1, tackle_font_size + 2.0)

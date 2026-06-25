@@ -331,13 +331,13 @@ def _draw_outer_frame(image: Image.Image, box: tuple[int, int, int, int], *, rad
     d = ImageDraw.Draw(image)
     shadow = Image.new("RGBA", image.size, (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow)
-    sd.rounded_rectangle((x0 + 4, y0 + 6, x1 + 4, y1 + 6), radius=radius, fill=(0, 0, 0, 82))
-    image.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(6)))
-    d.rounded_rectangle((x0, y0, x1, y1), radius=radius, fill=_rgba("#08213a", 230), outline=_rgba("#1c1209"), width=3)
-    d.rounded_rectangle((x0 + 5, y0 + 5, x1 - 5, y1 - 5), radius=radius - 4, outline=_rgba("#d8b45d", 230), width=3)
-    d.rounded_rectangle((x0 + 11, y0 + 11, x1 - 11, y1 - 11), radius=radius - 8, outline=_rgba("#6e4b22", 180), width=2)
-    d.line((x0 + 22, y0 + 17, x1 - 22, y0 + 17), fill=(255, 240, 190, 70), width=1)
-    d.line((x0 + 22, y1 - 17, x1 - 22, y1 - 17), fill=(0, 0, 0, 70), width=1)
+    sd.rounded_rectangle((x0 + 3, y0 + 5, x1 + 3, y1 + 5), radius=radius, fill=(0, 0, 0, 54))
+    image.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(5)))
+    d.rounded_rectangle((x0, y0, x1, y1), radius=radius, fill=_rgba("#071a2d", 218), outline=_rgba("#1c1209", 220), width=2)
+    d.rounded_rectangle((x0 + 4, y0 + 4, x1 - 4, y1 - 4), radius=radius - 4, outline=_rgba("#d8b45d", 170), width=2)
+    d.rounded_rectangle((x0 + 9, y0 + 9, x1 - 9, y1 - 9), radius=radius - 8, outline=_rgba("#6e4b22", 105), width=1)
+    d.line((x0 + 22, y0 + 15, x1 - 22, y0 + 15), fill=(255, 240, 190, 42), width=1)
+    d.line((x0 + 22, y1 - 15, x1 - 22, y1 - 15), fill=(0, 0, 0, 44), width=1)
 
 
 def _draw_top_status_paper_card(
@@ -359,6 +359,22 @@ def _draw_top_status_paper_card(
     mask = _rounded_mask((w, h), radius)
     texture = _reference_paper_texture((w, h), fill, seed, strength=6)
     _paste_masked(image, texture, mask, (x0, y0))
+    patina = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    patina_px = patina.load()
+    rng = random.Random(seed + 310)
+    for py in range(h):
+        for px in range(w):
+            edge = min(px, py, w - 1 - px, h - 1 - py)
+            edge_alpha = max(0, 46 - edge * 3)
+            vertical = int(abs(py / max(1, h - 1) - 0.52) * 12)
+            fleck = 0
+            if (px * 13 + py * 29 + seed) % 97 == 0:
+                fleck = rng.randint(5, 16)
+            alpha = max(0, min(62, edge_alpha + vertical + fleck))
+            if alpha > 0:
+                patina_px[px, py] = (92, 62, 31, alpha)
+    patina.putalpha(Image.composite(patina.getchannel("A"), Image.new("L", (w, h), 0), mask))
+    image.alpha_composite(patina, (x0, y0))
 
     d = ImageDraw.Draw(image)
     d.rounded_rectangle((x0, y0, x1, y1), radius=radius, outline=_rgba("#2d1d10", 210), width=2)
@@ -485,14 +501,14 @@ def create_sidebar_frame() -> None:
     w, h = 678, 1024
     image = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(image)
-    _draw_outer_frame(image, (7, 7, w - 8, h - 8), radius=18)
+    _draw_outer_frame(image, (9, 7, w - 10, h - 8), radius=16)
 
-    header = (24, 22, w - 24, 112)
-    fish = (28, 112, w - 28, 590)
-    action = (24, 602, w - 24, 802)
-    tackle = (24, 817, w - 24, h - 24)
-    action_body = (42, 647, w - 42, 787)
-    tackle_body = (42, 860, w - 42, h - 40)
+    header = (18, 20, w - 18, 108)
+    fish = (20, 112, w - 20, 590)
+    action = (18, 602, w - 18, 802)
+    tackle = (18, 817, w - 18, h - 18)
+    action_body = (38, 647, w - 38, 787)
+    tackle_body = (38, 860, w - 38, h - 36)
 
     _draw_clean_card(
         image,
@@ -543,13 +559,13 @@ def create_sidebar_frame() -> None:
 
     # Sparse corner accents only. Heavy rivets made the frame read as generated/debug UI.
     for cx, cy in (
-        (28, 28),
-        (w - 28, 28),
-        (28, h - 28),
-        (w - 28, h - 28),
+        (24, 24),
+        (w - 24, 24),
+        (24, h - 24),
+        (w - 24, h - 24),
     ):
-        d.ellipse((cx - 7, cy - 7, cx + 7, cy + 7), fill=_rgba("#112031"), outline=_rgba("#e1be65"), width=2)
-        d.ellipse((cx - 2, cy - 2, cx + 2, cy + 2), fill=_rgba("#fff1b7", 210))
+        d.ellipse((cx - 5, cy - 5, cx + 5, cy + 5), fill=_rgba("#112031", 210), outline=_rgba("#e1be65", 150), width=1)
+        d.ellipse((cx - 1, cy - 1, cx + 1, cy + 1), fill=_rgba("#fff1b7", 170))
 
     image.save(OUT_DIR / "sidebar_frame.png")
 

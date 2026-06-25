@@ -8,8 +8,9 @@ const SHOWCASE_SEABED_DETAIL_PATH := "res://assets/showcase/underwater/underwate
 const SHOWCASE_FG_AMBIENCE_PATH := "res://assets/showcase/underwater/underwater_foreground_ambience.png"
 const SHOWCASE_FISH_SHEET_PATH := "res://assets/showcase/underwater/kurodai_showcase_sheet.png"
 const SHOWCASE_HIT_BURST_PATH := "res://assets/showcase/underwater/hit_burst.png"
+const SHOWCASE_LURE_PATH := "res://assets/showcase/underwater/fight_lure.png"
 const SHOWCASE_FISH_FRAME_COUNT := 4
-const SHOWCASE_FISH_CENTER_OFFSET := Vector2(-0.072, -0.014)
+const SHOWCASE_FISH_CENTER_OFFSET := Vector2(-0.082, -0.018)
 
 var simulator: FishingSimulator
 var fish_data: Dictionary = {}
@@ -25,6 +26,7 @@ var _showcase_seabed_detail: Texture2D
 var _showcase_fg_ambience: Texture2D
 var _showcase_fish_sheet: Texture2D
 var _showcase_hit_burst: Texture2D
+var _showcase_lure: Texture2D
 
 
 func bind_simulator(value: FishingSimulator) -> void:
@@ -90,6 +92,7 @@ func _load_showcase_assets() -> void:
 	_showcase_fg_ambience = _load_texture_if_exists(SHOWCASE_FG_AMBIENCE_PATH)
 	_showcase_fish_sheet = _load_texture_if_exists(SHOWCASE_FISH_SHEET_PATH)
 	_showcase_hit_burst = _load_texture_if_exists(SHOWCASE_HIT_BURST_PATH)
+	_showcase_lure = _load_texture_if_exists(SHOWCASE_LURE_PATH)
 
 
 func _load_texture_if_exists(path: String) -> Texture2D:
@@ -362,9 +365,20 @@ func _draw_line_and_bait() -> void:
 		bait_position = Vector2(size.x * 0.67, size.y * 0.22)
 
 	draw_line(line_origin, bait_position, Color(0.92, 0.98, 1.0, 0.88), 2.0)
-	draw_circle(bait_position, 6.0, Color("#e88b35"))
-	draw_circle(bait_position + Vector2(3.0, -2.0), 2.0, Color("#ffd37a"))
-	draw_arc(bait_position + Vector2(7.0, 5.0), 7.0, 0.2, 2.4, 12, Color("#d8e7ef"), 2.0)
+	if _showcase_lure != null:
+		_draw_showcase_lure(bait_position)
+	else:
+		draw_circle(bait_position, 6.0, Color("#e88b35"))
+		draw_circle(bait_position + Vector2(3.0, -2.0), 2.0, Color("#ffd37a"))
+		draw_arc(bait_position + Vector2(7.0, 5.0), 7.0, 0.2, 2.4, 12, Color("#d8e7ef"), 2.0)
+
+
+func _draw_showcase_lure(bait_position: Vector2) -> void:
+	var texture_size := _showcase_lure.get_size()
+	var draw_height := clampf(size.y * 0.145, 46.0, 62.0)
+	var draw_size := Vector2(draw_height * texture_size.x / texture_size.y, draw_height)
+	var draw_rect := Rect2(bait_position - draw_size * 0.5, draw_size)
+	draw_texture_rect(_showcase_lure, draw_rect, false, Color.WHITE)
 
 
 func _draw_ellipse(center: Vector2, rx: float, ry: float, color: Color, points := 28) -> void:

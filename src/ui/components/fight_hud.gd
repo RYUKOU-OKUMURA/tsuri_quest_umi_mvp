@@ -11,6 +11,7 @@ signal harbor_pressed
 const FightFontsScript = preload("res://src/ui/fight_fonts.gd")
 const HUD_FRAME_PATH := "res://assets/showcase/underwater/fight_hud_frame.png"
 const ICON_SHEET_PATH := "res://assets/showcase/underwater/fight_icon_sheet.png"
+const HUD_BAIT_ICON_PATH := "res://assets/showcase/underwater/hud_bait_icon.png"
 const ICON_TENSION := 4
 const ICON_STAMINA := 5
 const ICON_BAIT := 6
@@ -21,6 +22,7 @@ var trip_stats: Dictionary = {}
 
 var _hud_frame: Texture2D
 var _icons: Texture2D
+var _bait_icon: Texture2D
 
 var _main_rect := Rect2()
 var _reel_rect := Rect2()
@@ -44,6 +46,8 @@ func _ready() -> void:
 		_hud_frame = load(HUD_FRAME_PATH) as Texture2D
 	if ResourceLoader.exists(ICON_SHEET_PATH):
 		_icons = load(ICON_SHEET_PATH) as Texture2D
+	if ResourceLoader.exists(HUD_BAIT_ICON_PATH):
+		_bait_icon = load(HUD_BAIT_ICON_PATH) as Texture2D
 
 
 func _process(_delta: float) -> void:
@@ -203,7 +207,11 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 	var bait_label_color := Color("#fff1cb") if _hud_frame != null else Color("#6a4c2b")
 	var bait_label_outline := 1 if _hud_frame != null else 0
 	_draw_text(font, "使用中のエサ", bait.position + Vector2(bait_text_x, 19.0), bait_label_size, bait_label_color, bait_label_outline)
-	if _icons != null:
+	if _bait_icon != null:
+		_draw_bait_texture_icon(
+			Rect2(bait.position + Vector2(46.0, bait.size.y * 0.5 - 30.0 + (2.0 if _hud_frame != null else 4.0)), Vector2(68.0, 62.0))
+		)
+	elif _icons != null:
 		var bait_icon_size := 42.0 if _hud_frame != null else 46.0
 		_draw_sheet_icon(
 			ICON_BAIT,
@@ -330,6 +338,16 @@ func _draw_sheet_icon(icon_index: int, target: Rect2, modulate: Color = Color.WH
 	draw_texture_rect_region(_icons, target, src, modulate)
 
 
+func _draw_bait_texture_icon(target: Rect2) -> void:
+	if _bait_icon == null:
+		return
+	var texture_size := _bait_icon.get_size()
+	var scale := minf(target.size.x / texture_size.x, target.size.y / texture_size.y)
+	var draw_size := texture_size * scale
+	var draw_rect := Rect2(target.position + (target.size - draw_size) * 0.5, draw_size)
+	draw_texture_rect(_bait_icon, draw_rect, false, Color.WHITE)
+
+
 func _draw_triangle(center: Vector2, radius: float, color: Color, up: bool) -> void:
 	var sign := -1.0 if up else 1.0
 	draw_colored_polygon(
@@ -358,32 +376,32 @@ func _draw_key_hint(font: Font, rect: Rect2, key: String, label: String) -> void
 
 func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String, note: String) -> void:
 	var is_long_key := key.length() > 1
-	var key_origin := rect.position + Vector2(8.0, 7.0)
-	var key_w := 30.0 if not is_long_key else 50.0
-	var key_h := 26.0
+	var key_origin := rect.position + Vector2(9.0, 9.0)
+	var key_w := 26.0 if not is_long_key else 44.0
+	var key_h := 22.0
 	var key_rect := Rect2(key_origin, Vector2(key_w, key_h))
 	if is_long_key:
 		var style := StyleBoxFlat.new()
 		style.bg_color = Color("#253247")
 		style.border_color = Color("#d5b56b")
 		style.set_border_width_all(1)
-		style.set_corner_radius_all(6)
+		style.set_corner_radius_all(5)
 		style.shadow_color = Color(0.0, 0.0, 0.0, 0.24)
 		style.shadow_size = 1
 		draw_style_box(style, key_rect)
-		draw_line(key_rect.position + Vector2(6.0, 5.0), key_rect.position + Vector2(key_rect.size.x - 6.0, 5.0), Color(1.0, 1.0, 1.0, 0.18), 1.0)
+		draw_line(key_rect.position + Vector2(6.0, 4.0), key_rect.position + Vector2(key_rect.size.x - 6.0, 4.0), Color(1.0, 1.0, 1.0, 0.18), 1.0)
 	else:
 		var center := key_rect.position + key_rect.size * 0.5
-		draw_circle(center + Vector2(1.5, 2.0), 13.0, Color(0.0, 0.0, 0.0, 0.24))
-		draw_circle(center, 12.0, Color("#253247"))
-		draw_circle(center, 12.0, Color("#d5b56b"), false, 1.0)
-		draw_line(center + Vector2(-7.0, -6.0), center + Vector2(7.0, -6.0), Color(1.0, 1.0, 1.0, 0.18), 1.0)
-	var key_size := 16 if not is_long_key else 14
+		draw_circle(center + Vector2(1.2, 1.6), 11.0, Color(0.0, 0.0, 0.0, 0.22))
+		draw_circle(center, 10.0, Color("#253247"))
+		draw_circle(center, 10.0, Color("#d5b56b"), false, 1.0)
+		draw_line(center + Vector2(-6.0, -5.0), center + Vector2(6.0, -5.0), Color(1.0, 1.0, 1.0, 0.17), 1.0)
+	var key_size := 14 if not is_long_key else 12
 	var key_text_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
-	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 19.0), key_size, Color.WHITE, 1)
-	var label_size := 18 if not is_long_key else 17
-	var note_size := 10 if not is_long_key else 8
-	var label_pos := key_rect.position + Vector2(key_rect.size.x + (9.0 if not is_long_key else 7.0), 20.0)
+	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 16.0), key_size, Color.WHITE, 1)
+	var label_size := 16
+	var note_size := 9 if not is_long_key else 8
+	var label_pos := key_rect.position + Vector2(key_rect.size.x + (8.0 if not is_long_key else 6.0), 17.0)
 	_draw_text(font, label, label_pos, label_size, Color("#2b2117"), 0)
 	var note_text := _compact_control_note(note)
 	_draw_text(font, note_text, label_pos + Vector2(0.0, 12.0), note_size, Color("#5a4327"), 0)

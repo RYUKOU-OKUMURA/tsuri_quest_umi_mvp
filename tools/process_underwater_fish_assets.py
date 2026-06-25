@@ -9,10 +9,13 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont, ImageOps
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "assets" / "showcase" / "underwater"
+REFERENCE = ROOT / "reference" / "02_underwater_fight_mockup.png"
 FISH_SOURCE = OUT_DIR / "kurodai_chroma_source.png"
 FISH_SHEET = OUT_DIR / "kurodai_showcase_sheet.png"
 FISH_CARD_PORTRAIT = OUT_DIR / "kurodai_card_portrait.png"
 HIT_BURST = OUT_DIR / "hit_burst.png"
+FIGHT_LURE = OUT_DIR / "fight_lure.png"
+HUD_BAIT_ICON = OUT_DIR / "hud_bait_icon.png"
 
 
 def _magenta_removed(image: Image.Image) -> Image.Image:
@@ -256,11 +259,112 @@ def create_hit_burst() -> None:
     image.save(HIT_BURST)
 
 
+def create_fight_lure() -> None:
+    crop = Image.open(REFERENCE).convert("RGBA").crop((780, 320, 900, 420))
+    mask = Image.new("L", crop.size, 0)
+    src = crop.load()
+    raw_mask = mask.load()
+    for y in range(crop.height):
+        for x in range(crop.width):
+            r, g, b, _a = src[x, y]
+            warm_body = r > 92 and g > 38 and b < 150 and r > g + 18 and r > b + 35
+            if warm_body:
+                raw_mask[x, y] = 255
+
+    near_lure = mask.filter(ImageFilter.MaxFilter(13)).filter(ImageFilter.GaussianBlur(1.0))
+    final_mask = Image.new("L", crop.size, 0)
+    near = near_lure.load()
+    dst = final_mask.load()
+    for y in range(crop.height):
+        for x in range(crop.width):
+            if near[x, y] <= 3:
+                continue
+            r, g, b, _a = src[x, y]
+            warm_body = r > 92 and g > 38 and b < 150 and r > g + 18 and r > b + 35
+            highlight = r > 150 and g > 128 and b > 82 and r > b + 18
+            pale_hook = r > 175 and g > 175 and b > 165 and abs(r - g) < 45 and abs(g - b) < 55
+            dark_outline = r < 82 and g < 95 and b < 112 and (r + g + b) < 245
+            if warm_body or highlight or pale_hook or dark_outline:
+                dst[x, y] = min(255, max(0, int(near[x, y] * 1.8)))
+
+    final_mask = final_mask.filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.GaussianBlur(0.35))
+    lure = crop.copy()
+    lure.putalpha(final_mask)
+    bbox = final_mask.point(lambda value: 255 if value > 18 else 0).getbbox()
+    if bbox is None:
+        raise RuntimeError("fight lure extraction produced an empty mask")
+    pad = 6
+    box = (
+        max(0, bbox[0] - pad),
+        max(0, bbox[1] - pad),
+        min(lure.width, bbox[2] + pad),
+        min(lure.height, bbox[3] + pad),
+    )
+    lure = lure.crop(box)
+
+    canvas = Image.new("RGBA", (128, 96), (0, 0, 0, 0))
+    scale = min(114 / lure.width, 82 / lure.height)
+    resized = lure.resize((round(lure.width * scale), round(lure.height * scale)), Image.Resampling.LANCZOS)
+    canvas.alpha_composite(resized, ((canvas.width - resized.width) // 2, (canvas.height - resized.height) // 2))
+    canvas.save(FIGHT_LURE)
+
+
+def create_hud_bait_icon() -> None:
+    crop = Image.open(REFERENCE).convert("RGBA").crop((185, 815, 260, 895))
+    mask = Image.new("L", crop.size, 0)
+    src = crop.load()
+    raw_mask = mask.load()
+    for y in range(crop.height):
+        for x in range(crop.width):
+            r, g, b, _a = src[x, y]
+            warm_body = r > 105 and g > 35 and b < 145 and r > g + 22 and r > b + 35
+            if warm_body:
+                raw_mask[x, y] = 255
+
+    near_bait = mask.filter(ImageFilter.MaxFilter(9)).filter(ImageFilter.GaussianBlur(0.75))
+    final_mask = Image.new("L", crop.size, 0)
+    near = near_bait.load()
+    dst = final_mask.load()
+    for y in range(crop.height):
+        for x in range(crop.width):
+            if near[x, y] <= 4:
+                continue
+            r, g, b, _a = src[x, y]
+            warm_body = r > 105 and g > 35 and b < 145 and r > g + 18 and r > b + 30
+            highlight = r > 155 and g > 75 and b < 150 and r > g + 24 and r > b + 38
+            dark_outline = r < 85 and g < 75 and b < 75 and (r + g + b) < 205
+            if warm_body or highlight or dark_outline:
+                dst[x, y] = min(255, int(near[x, y] * 1.75))
+
+    final_mask = final_mask.filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.GaussianBlur(0.25))
+    bait = crop.copy()
+    bait.putalpha(final_mask)
+    bbox = final_mask.point(lambda value: 255 if value > 16 else 0).getbbox()
+    if bbox is None:
+        raise RuntimeError("HUD bait extraction produced an empty mask")
+    pad = 5
+    box = (
+        max(0, bbox[0] - pad),
+        max(0, bbox[1] - pad),
+        min(bait.width, bbox[2] + pad),
+        min(bait.height, bbox[3] + pad),
+    )
+    bait = bait.crop(box)
+
+    canvas = Image.new("RGBA", (96, 96), (0, 0, 0, 0))
+    scale = min(84 / bait.width, 84 / bait.height)
+    resized = bait.resize((round(bait.width * scale), round(bait.height * scale)), Image.Resampling.LANCZOS)
+    canvas.alpha_composite(resized, ((canvas.width - resized.width) // 2, (canvas.height - resized.height) // 2))
+    canvas.save(HUD_BAIT_ICON)
+
+
 def main() -> None:
     clean_sheet = create_kurodai_sheet()
     create_kurodai_card_portrait(clean_sheet)
     create_hit_burst()
-    print(f"processed {FISH_SHEET}, {FISH_CARD_PORTRAIT}, and {HIT_BURST}")
+    create_fight_lure()
+    create_hud_bait_icon()
+    print(f"processed {FISH_SHEET}, {FISH_CARD_PORTRAIT}, {HIT_BURST}, {FIGHT_LURE}, and {HUD_BAIT_ICON}")
 
 
 if __name__ == "__main__":
