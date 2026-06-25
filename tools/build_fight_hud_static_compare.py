@@ -161,24 +161,24 @@ def build_current_hud() -> Image.Image:
     stamina = (depth[2] + gap, top[1], depth[2] + gap + right_w, top[3])
 
     _draw_sheet_icon(frame, 4, (tension[0] + 12, tension[1] + 10, tension[0] + 36, tension[1] + 34), (255, 91, 99, 220))
-    _draw_text(draw, (tension[0] + 40, tension[1] + 26), "テンション", 18, "#f7ecd0", stroke=3)
+    _draw_text(draw, (tension[0] + 40, tension[1] + 26), "テンション", 18, "#f7ecd0", stroke=2)
     _draw_segment_gauge(draw, (tension[0] + 24, tension[1] + 43, tension[2] - 34, tension[1] + 67), 0.66, 0.30, 0.74, warm=True)
-    _draw_text(draw, (tension[0] + 24, tension[3] - 8), "ゆるい", 15, "#72f47d", stroke=2)
-    _draw_text(draw, (tension[2] - 74, tension[3] - 8), "きつい", 15, "#ff823e", stroke=2)
+    _draw_text(draw, (tension[0] + 24, tension[3] - 8), "ゆるい", 14, "#72f47d", stroke=1)
+    _draw_text(draw, (tension[2] - 74, tension[3] - 8), "きつい", 14, "#ff823e", stroke=1)
 
     title = "タナ（深さ）"
     title_w = _text_width(title, 15)
     depth_center = (depth[0] + depth[2] - 24) * 0.5
-    _draw_text(draw, (depth_center - title_w * 0.5, depth[1] + 24), title, 15, "#f7ecd0", stroke=3)
+    _draw_text(draw, (depth_center - title_w * 0.5, depth[1] + 24), title, 15, "#f7ecd0", stroke=2)
     value = "18.6m"
     value_w = _text_width(value, 32)
     _draw_text(draw, (depth_center - value_w * 0.5, depth[1] + 64), value, 32, "#eaf6ff", stroke=4)
 
     _draw_sheet_icon(frame, 5, (stamina[0] + 12, stamina[1] + 10, stamina[0] + 36, stamina[1] + 34), (108, 200, 255, 220))
-    _draw_text(draw, (stamina[0] + 40, stamina[1] + 26), "魚の体力", 18, "#f7ecd0", stroke=3)
+    _draw_text(draw, (stamina[0] + 40, stamina[1] + 26), "魚の体力", 18, "#f7ecd0", stroke=2)
     _draw_segment_gauge(draw, (stamina[0] + 24, stamina[1] + 43, stamina[2] - 34, stamina[1] + 67), 0.72, 0.0, 1.0, warm=False)
-    _draw_text(draw, (stamina[0] + 24, stamina[3] - 8), "弱い", 15, "#fff1c7", stroke=2)
-    _draw_text(draw, (stamina[2] - 63, stamina[3] - 8), "強い", 15, "#fff1c7", stroke=2)
+    _draw_text(draw, (stamina[0] + 24, stamina[3] - 8), "弱い", 14, "#fff1c7", stroke=1)
+    _draw_text(draw, (stamina[2] - 63, stamina[3] - 8), "強い", 14, "#fff1c7", stroke=1)
 
     bait_w = (bottom[2] - bottom[0]) * 0.265
     menu_w = (bottom[2] - bottom[0]) * 0.190

@@ -365,23 +365,23 @@ def _draw_top_status_paper_card(
     for py in range(h):
         for px in range(w):
             edge = min(px, py, w - 1 - px, h - 1 - py)
-            edge_alpha = max(0, 46 - edge * 3)
-            vertical = int(abs(py / max(1, h - 1) - 0.52) * 12)
+            edge_alpha = max(0, 58 - edge * 3)
+            vertical = int(abs(py / max(1, h - 1) - 0.52) * 16)
             fleck = 0
             if (px * 13 + py * 29 + seed) % 97 == 0:
                 fleck = rng.randint(5, 16)
-            alpha = max(0, min(62, edge_alpha + vertical + fleck))
+            alpha = max(0, min(78, edge_alpha + vertical + fleck))
             if alpha > 0:
-                patina_px[px, py] = (92, 62, 31, alpha)
+                patina_px[px, py] = (88, 56, 28, alpha)
     patina.putalpha(Image.composite(patina.getchannel("A"), Image.new("L", (w, h), 0), mask))
     image.alpha_composite(patina, (x0, y0))
 
     d = ImageDraw.Draw(image)
-    d.rounded_rectangle((x0, y0, x1, y1), radius=radius, outline=_rgba("#2d1d10", 210), width=2)
-    d.rounded_rectangle((x0 + 4, y0 + 4, x1 - 4, y1 - 4), radius=radius - 3, outline=_rgba("#9f7a3d", 150), width=2)
-    d.rounded_rectangle((x0 + 10, y0 + 10, x1 - 10, y1 - 10), radius=radius - 6, outline=_rgba("#d8b45d", 70), width=1)
-    d.line((x0 + 18, y0 + 13, x1 - 18, y0 + 13), fill=(255, 246, 215, 74), width=1)
-    d.line((x0 + 18, y1 - 12, x1 - 18, y1 - 12), fill=(98, 67, 36, 34), width=1)
+    d.rounded_rectangle((x0, y0, x1, y1), radius=radius, outline=_rgba("#2d1d10", 230), width=2)
+    d.rounded_rectangle((x0 + 4, y0 + 4, x1 - 4, y1 - 4), radius=radius - 3, outline=_rgba("#8d642f", 178), width=2)
+    d.rounded_rectangle((x0 + 10, y0 + 10, x1 - 10, y1 - 10), radius=radius - 6, outline=_rgba("#c99b47", 92), width=1)
+    d.line((x0 + 18, y0 + 13, x1 - 18, y0 + 13), fill=(255, 246, 215, 54), width=1)
+    d.line((x0 + 18, y1 - 12, x1 - 18, y1 - 12), fill=(88, 54, 26, 54), width=1)
 
 
 def _draw_icon_well(d: ImageDraw.ImageDraw, center: tuple[int, int], radius: int, pale: bool = True) -> None:
@@ -749,7 +749,6 @@ def create_fight_hud_frame() -> None:
             width=1,
         )
         d.line((menu_panel[0] + menu_row_pad + 12, row_y + 8, menu_panel[2] - menu_row_pad - 12, row_y + 8), fill=(255, 255, 255, 26), width=1)
-    _draw_icon_well(d, (bait[0] + 80, (bait[1] + bait[3]) // 2), 30, pale=True)
 
     # Shared separators: enough structure without returning to the previous grid-like skin.
     for x, slant in ((depth[0] - gap // 2, 18), (depth[2] + gap // 2, -18)):

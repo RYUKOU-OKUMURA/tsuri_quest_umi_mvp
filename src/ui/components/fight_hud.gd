@@ -128,7 +128,7 @@ func _draw_tension(font: Font, rect: Rect2) -> void:
 	var icon_size := 34.0 if _hud_frame == null else 24.0
 	var title_size := 19 if _hud_frame == null else 18
 	_draw_hud_icon(ICON_TENSION, Rect2(rect.position + Vector2(12.0, title_y - icon_size + 8.0), Vector2(icon_size, icon_size)), Color("#ff5b63"), Color(1.0, 1.0, 1.0, 0.86))
-	_draw_text(font, "テンション", rect.position + Vector2(48.0 if _hud_frame == null else 40.0, title_y), title_size, Palette.TEXT_BONE, 3)
+	_draw_text(font, "テンション", rect.position + Vector2(48.0 if _hud_frame == null else 40.0, title_y), title_size, Palette.TEXT_BONE, 2 if _hud_frame != null else 3)
 	var ratio := 0.0
 	var safe_min := 0.30
 	var safe_max := 0.74
@@ -138,12 +138,12 @@ func _draw_tension(font: Font, rect: Rect2) -> void:
 		safe_max = simulator.safe_max()
 	var bar := Rect2(rect.position + Vector2(24.0, bar_y), Vector2(rect.size.x - 58.0, 26.0 if _hud_frame == null else 24.0))
 	_draw_segment_gauge(bar, ratio, safe_min, safe_max, true)
-	var label_size := 16 if _hud_frame == null else 15
+	var label_size := 16 if _hud_frame == null else 14
 	var right_label_margin := 24.0 if _hud_frame == null else 34.0
-	_draw_text(font, "ゆるい", rect.position + Vector2(24.0, rect.size.y - 8.0), label_size, Color("#72f47d"), 2)
+	_draw_text(font, "ゆるい", rect.position + Vector2(24.0, rect.size.y - 8.0), label_size, Color("#72f47d"), 1 if _hud_frame != null else 2)
 	var tight := "きつい"
 	var tight_w := font.get_string_size(tight, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
-	_draw_text(font, tight, rect.position + Vector2(rect.size.x - tight_w - right_label_margin, rect.size.y - 8.0), label_size, Color("#ff823e"), 2)
+	_draw_text(font, tight, rect.position + Vector2(rect.size.x - tight_w - right_label_margin, rect.size.y - 8.0), label_size, Color("#ff823e"), 1 if _hud_frame != null else 2)
 
 
 func _draw_depth(font: Font, rect: Rect2) -> void:
@@ -153,7 +153,7 @@ func _draw_depth(font: Font, rect: Rect2) -> void:
 	var title_size := 17 if _hud_frame == null else 15
 	var title_w := font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x
 	var text_center_w := rect.size.x - (24.0 if _hud_frame != null else 0.0)
-	_draw_text(font, title, rect.position + Vector2((text_center_w - title_w) * 0.5, title_y), title_size, Palette.TEXT_BONE, 3)
+	_draw_text(font, title, rect.position + Vector2((text_center_w - title_w) * 0.5, title_y), title_size, Palette.TEXT_BONE, 2 if _hud_frame != null else 3)
 	var depth := 0.0
 	if simulator != null:
 		depth = simulator.depth
@@ -173,18 +173,18 @@ func _draw_stamina(font: Font, rect: Rect2) -> void:
 	var icon_size := 34.0 if _hud_frame == null else 24.0
 	var title_size := 19 if _hud_frame == null else 18
 	_draw_hud_icon(ICON_STAMINA, Rect2(rect.position + Vector2(12.0, title_y - icon_size + 8.0), Vector2(icon_size, icon_size)), Color("#6cc8ff"), Color(1.0, 1.0, 1.0, 0.86))
-	_draw_text(font, "魚の体力", rect.position + Vector2(48.0 if _hud_frame == null else 40.0, title_y), title_size, Palette.TEXT_BONE, 3)
+	_draw_text(font, "魚の体力", rect.position + Vector2(48.0 if _hud_frame == null else 40.0, title_y), title_size, Palette.TEXT_BONE, 2 if _hud_frame != null else 3)
 	var ratio := 1.0
 	if simulator != null:
 		ratio = simulator.fish_stamina_ratio()
 	var bar := Rect2(rect.position + Vector2(24.0, bar_y), Vector2(rect.size.x - (48.0 if _hud_frame == null else 58.0), 26.0 if _hud_frame == null else 24.0))
 	_draw_segment_gauge(bar, ratio, 0.0, 1.0, false)
-	var label_size := 16 if _hud_frame == null else 15
+	var label_size := 16 if _hud_frame == null else 14
 	var right_label_margin := 24.0 if _hud_frame == null else 34.0
-	_draw_text(font, "弱い", rect.position + Vector2(24.0, rect.size.y - 8.0), label_size, Color("#fff1c7"), 2)
+	_draw_text(font, "弱い", rect.position + Vector2(24.0, rect.size.y - 8.0), label_size, Color("#fff1c7"), 1 if _hud_frame != null else 2)
 	var strong := "強い"
 	var strong_w := font.get_string_size(strong, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
-	_draw_text(font, strong, rect.position + Vector2(rect.size.x - strong_w - right_label_margin, rect.size.y - 8.0), label_size, Color("#fff1c7"), 2)
+	_draw_text(font, strong, rect.position + Vector2(rect.size.x - strong_w - right_label_margin, rect.size.y - 8.0), label_size, Color("#fff1c7"), 1 if _hud_frame != null else 2)
 
 
 func _draw_bottom_controls(font: Font, rect: Rect2) -> void:

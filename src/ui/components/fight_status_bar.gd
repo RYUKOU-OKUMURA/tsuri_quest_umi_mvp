@@ -95,11 +95,11 @@ func _draw_status_slot(font: Font, rect: Rect2, title: String, body: String, dar
 	if not dark and title == "AM":
 		var am_y := rect.position.y + rect.size.y * 0.54
 		_draw_text_clipped(font, title, Vector2(text_x - 1.0, am_y), 14, title_color, max_width, outline)
-		_draw_text_clipped(font, body, Vector2(text_x + 29.0, am_y + 2.0), 27, body_color, max_width - 29.0, outline)
+		_draw_text_clipped(font, body, Vector2(text_x + 29.0, am_y + 2.0), 25, body_color, max_width - 29.0, outline)
 		return
 	if not dark and title == "快晴":
 		var inline_y := rect.position.y + rect.size.y * 0.57
-		_draw_text_clipped(font, title, Vector2(text_x - 1.0, inline_y), 21, body_color, max_width, outline)
+		_draw_text_clipped(font, title, Vector2(text_x - 1.0, inline_y), 20, body_color, max_width, outline)
 		var wind_icon_size := 25.0
 		var wind_x := text_x + 68.0
 		_draw_top_sheet_icon(
@@ -107,11 +107,11 @@ func _draw_status_slot(font: Font, rect: Rect2, title: String, body: String, dar
 			Rect2(Vector2(wind_x, rect.position.y + (rect.size.y - wind_icon_size) * 0.5 + 1.0), Vector2(wind_icon_size, wind_icon_size)),
 			Color(1.0, 1.0, 1.0, 0.92)
 		)
-		_draw_text_clipped(font, body, Vector2(wind_x + 29.0, inline_y), 20, Color("#173f32"), max_width - (wind_x - text_x) - 29.0, outline)
+		_draw_text_clipped(font, body, Vector2(wind_x + 29.0, inline_y), 19, Color("#173f32"), max_width - (wind_x - text_x) - 29.0, outline)
 		return
 	if not dark and title == "所持金":
 		var amount_y := rect.position.y + rect.size.y * 0.57
-		_draw_text_clipped(font, body, Vector2(text_x - 1.0, amount_y), 27, body_color, max_width + 2.0, outline)
+		_draw_text_clipped(font, body, Vector2(text_x - 1.0, amount_y), 25, body_color, max_width + 2.0, outline)
 		return
 	_draw_text_clipped(font, title, Vector2(text_x, title_y), title_size, title_color, max_width, outline)
 	_draw_text_clipped(font, body, Vector2(text_x, body_y), body_size, body_color, max_width, outline)
@@ -119,7 +119,7 @@ func _draw_status_slot(font: Font, rect: Rect2, title: String, body: String, dar
 
 func _draw_centered_dark_slot(font: Font, rect: Rect2, title: String, body: String) -> void:
 	var title_size := 13
-	var body_size := 20
+	var body_size := 19
 	var title_width := font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x
 	var body_width := font.get_string_size(body, HORIZONTAL_ALIGNMENT_LEFT, -1, body_size).x
 	_draw_text_clipped(
