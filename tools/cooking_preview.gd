@@ -41,7 +41,7 @@ func _ready() -> void:
 	var old_stats := PlayerProgress.get_base_stats()
 	var fake_result := _fake_meal_result()
 	_seed_after_meal_state()
-	screen.preview_show_meal_result(fake_result, true)
+	screen.preview_show_reward_result(fake_result, 130, 150, 150, true)
 
 	await get_tree().process_frame
 	await get_tree().process_frame

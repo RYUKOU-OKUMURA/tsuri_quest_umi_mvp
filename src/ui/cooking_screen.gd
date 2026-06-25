@@ -2,6 +2,7 @@ extends "res://src/ui/screen_base.gd"
 
 const GaugeBarScript = preload("res://src/ui/components/gauge_bar.gd")
 const LevelUpPanelScript = preload("res://src/ui/components/level_up_panel.gd")
+const CookingRewardPanelScript = preload("res://src/ui/components/cooking_reward_panel.gd")
 
 const COOKING_BG := "res://assets/showcase/cooking/cooking_room_bg.png"
 const FISH_ICON_SHEET := "res://assets/showcase/cooking/fish_icon_sheet.png"
@@ -52,6 +53,7 @@ var _result_body: HBoxContainer
 
 var _fish_cards: Dictionary = {}
 var _recipe_cards: Dictionary = {}
+var _pending_level_up: Dictionary = {}
 
 
 func configure(payload: Dictionary) -> void:
@@ -503,6 +505,8 @@ func _cook_selected() -> void:
 		return
 	var level_before := PlayerProgress.level
 	var stats_before := PlayerProgress.get_base_stats()
+	var exp_before := PlayerProgress.exp
+	var exp_max_before := PlayerProgress.exp_to_next_level()
 	var result := PlayerProgress.cook_and_eat(_selected_fish_id, _selected_recipe_id)
 	if not bool(result.get("ok", false)):
 		_show_error_result(String(result.get("message", "調理できませんでした。")))
@@ -510,12 +514,13 @@ func _cook_selected() -> void:
 
 	var leveled_to: Array = result.get("leveled_to", [])
 	_refresh_all()
-	_show_meal_result(result, not leveled_to.is_empty())
+	var leveled := not leveled_to.is_empty()
+	var reward_exp_after := exp_max_before if leveled else PlayerProgress.exp
+	_show_meal_result(result, leveled)
+	_show_reward_overlay(
+		result, exp_before, reward_exp_after, exp_max_before, level_before, stats_before, leveled
+	)
 	Juicer.add_trauma(0.16)
-	if not leveled_to.is_empty() and not _preview_suppress_level_overlay:
-		_show_level_up(
-			level_before, PlayerProgress.level, stats_before, PlayerProgress.get_base_stats()
-		)
 
 
 func preview_cook_selected() -> void:
@@ -526,6 +531,13 @@ func preview_show_meal_result(result: Dictionary, leveled: bool) -> void:
 	_refresh_header()
 	_refresh_detail()
 	_show_meal_result(result, leveled)
+
+
+func preview_show_reward_result(result: Dictionary, exp_before: int, exp_after: int, exp_max: int, leveled: bool) -> void:
+	_refresh_header()
+	_refresh_detail()
+	_show_meal_result(result, leveled)
+	_show_reward_overlay(result, exp_before, exp_after, exp_max, PlayerProgress.level - 1, {}, leveled)
 
 
 func _show_error_result(message: String) -> void:
@@ -574,6 +586,43 @@ func _show_meal_result(result: Dictionary, leveled: bool) -> void:
 	var remaining_exp := maxi(0, PlayerProgress.exp_to_next_level() - PlayerProgress.exp)
 	_result_body.add_child(
 		_summary_card("成長", "LEVEL UP!" if leveled else "次のレベルまで %d" % remaining_exp, Palette.GAUGE_RED_HI if leveled else Palette.TEXT_BONE)
+	)
+
+
+func _show_reward_overlay(
+	result: Dictionary,
+	exp_before: int,
+	exp_after: int,
+	exp_max: int,
+	level_before: int,
+	stats_before: Dictionary,
+	leveled: bool
+) -> void:
+	var panel := CookingRewardPanelScript.new()
+	add_child(panel)
+	panel.show_reward(result, exp_before, exp_after, exp_max, leveled)
+	if leveled and not _preview_suppress_level_overlay:
+		_pending_level_up = {
+			"level_from": level_before,
+			"level_to": PlayerProgress.level,
+			"old_stats": stats_before,
+			"new_stats": PlayerProgress.get_base_stats(),
+		}
+		panel.closed.connect(_show_pending_level_up)
+	else:
+		_pending_level_up = {}
+
+
+func _show_pending_level_up() -> void:
+	if _pending_level_up.is_empty():
+		return
+	var payload := _pending_level_up.duplicate(true)
+	_pending_level_up = {}
+	_show_level_up(
+		int(payload.get("level_from", PlayerProgress.level)),
+		int(payload.get("level_to", PlayerProgress.level)),
+		Dictionary(payload.get("old_stats", {})),
+		Dictionary(payload.get("new_stats", {}))
 	)
 
 
