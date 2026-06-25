@@ -149,14 +149,14 @@ def _hint_slots(hint: tuple[float, float, float, float]) -> list[tuple[float, fl
 
 def _draw_key_hint(draw: ImageDraw.ImageDraw, slot: tuple[float, float, float, float], key: str, label: str, note: str) -> None:
     is_long = key == "L/R"
-    cap_w = 23 if not is_long else 39
-    cap_h = 21
-    cap = (slot[0] + 8, slot[1] + 7, slot[0] + 8 + cap_w, slot[1] + 7 + cap_h)
-    _draw_key_cap(draw, cap, key, 10 if is_long else 12)
+    cap_w = 25 if not is_long else 43
+    cap_h = 23
+    cap = (slot[0] + 7, slot[1] + 5.5, slot[0] + 7 + cap_w, slot[1] + 5.5 + cap_h)
+    _draw_key_cap(draw, cap, key, 11 if is_long else 13)
     label_x = cap[0] + cap_w + (5 if is_long else 6)
-    label_size = 14 if is_long else 15
+    label_size = 15 if is_long else 16
     note_size = 10 if is_long else 11
-    label_y = cap[1] + 15
+    label_y = cap[1] + 16.2
     _draw_text(draw, (label_x, label_y), label, label_size, "#2b2117")
     note_text = "テンション" if is_long else f"（{note}）"
     note_x = label_x + _text_width(label, label_size) + (3 if is_long else 2)

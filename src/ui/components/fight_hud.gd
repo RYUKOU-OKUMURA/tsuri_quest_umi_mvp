@@ -394,9 +394,9 @@ func _draw_key_hint(font: Font, rect: Rect2, key: String, label: String) -> void
 
 func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String, note: String, active: bool = false) -> void:
 	var is_long_key := key.length() > 1
-	var key_origin := rect.position + Vector2(8.0, 7.0)
-	var key_w := 23.0 if not is_long_key else 39.0
-	var key_h := 21.0
+	var key_origin := rect.position + Vector2(7.0, 5.5)
+	var key_w := 25.0 if not is_long_key else 43.0
+	var key_h := 23.0
 	var key_rect := Rect2(key_origin, Vector2(key_w, key_h))
 	var key_fill := Color("#253247") if not active else Color("#40516c")
 	var key_border := Color("#d5b56b") if not active else Color("#ffe38f")
@@ -412,16 +412,16 @@ func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String,
 		draw_line(key_rect.position + Vector2(6.0, 4.0), key_rect.position + Vector2(key_rect.size.x - 6.0, 4.0), Color(1.0, 1.0, 1.0, 0.14), 1.0)
 	else:
 		var center := key_rect.position + key_rect.size * 0.5
-		draw_circle(center + Vector2(1.0, 1.4), 10.2, Color(0.0, 0.0, 0.0, 0.22))
-		draw_circle(center, 9.5, key_fill)
-		draw_circle(center, 9.5, key_border, false, 1.0)
-		draw_line(center + Vector2(-5.5, -5.0), center + Vector2(5.5, -5.0), Color(1.0, 1.0, 1.0, 0.16), 1.0)
-	var key_size := 12 if not is_long_key else 10
+		draw_circle(center + Vector2(1.0, 1.4), 11.2, Color(0.0, 0.0, 0.0, 0.22))
+		draw_circle(center, 10.5, key_fill)
+		draw_circle(center, 10.5, key_border, false, 1.0)
+		draw_line(center + Vector2(-6.0, -5.5), center + Vector2(6.0, -5.5), Color(1.0, 1.0, 1.0, 0.16), 1.0)
+	var key_size := 13 if not is_long_key else 11
 	var key_text_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
-	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 15.0), key_size, Color.WHITE, 1)
-	var label_size := 15 if not is_long_key else 14
+	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 16.2), key_size, Color.WHITE, 1)
+	var label_size := 16 if not is_long_key else 15
 	var note_size := 11 if not is_long_key else 10
-	var label_pos := key_rect.position + Vector2(key_rect.size.x + (6.0 if not is_long_key else 5.0), 15.0)
+	var label_pos := key_rect.position + Vector2(key_rect.size.x + (6.0 if not is_long_key else 5.0), 16.2)
 	_draw_text(font, label, label_pos, label_size, Color("#2b2117"), 0)
 	var note_font := FightFontsScript.regular(get_theme_default_font())
 	var note_text := _compact_control_note(note)
