@@ -915,7 +915,7 @@ func _refresh_detail() -> void:
 	_bonus_value.text = "初回ボーナス +%d EXP" % base_exp if first_time else "初回 記録済み"
 	_buff_value.text = String(recipe.get("buff_text", ""))
 	_effect_count_value.text = "効果回数 1回"
-	_overwrite_note.text = "食事効果は次の釣行で1回発動 / 既存効果を上書き。"
+	_overwrite_note.text = "調理後は食事結果へ / 既存効果を上書き。"
 	_cook_button.disabled = count <= 0
 
 
