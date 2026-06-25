@@ -107,10 +107,13 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	var rarity := String(fish_data.get("rarity", "レア"))
 	var no_text := "No.028"
 	if compact_card:
-		_draw_paper_plaque(Rect2(inner.position + Vector2(2.0, 6.0), Vector2(inner.size.x - 4.0, 34.0)))
-		_draw_text(font, no_text, inner.position + Vector2(10.0, 28.0), 14, Color("#6b6153"), 0)
-		_draw_text(font, _display_fish_name(fish_name), inner.position + Vector2(92.0, 29.0), 21, Palette.TEXT_DARK, 0)
-		_draw_rarity_tag(font, Rect2(inner.position + Vector2(inner.size.x - 58.0, 11.0), Vector2(50.0, 22.0)), rarity)
+		var title_plaque := Rect2(inner.position + Vector2(2.0, 6.0), Vector2(inner.size.x - 4.0, 34.0))
+		var rarity_rect := Rect2(inner.position + Vector2(inner.size.x - 62.0, 11.0), Vector2(52.0, 22.0))
+		var name_rect := Rect2(title_plaque.position + Vector2(66.0, 0.0), Vector2(rarity_rect.position.x - title_plaque.position.x - 76.0, title_plaque.size.y))
+		_draw_paper_plaque(title_plaque)
+		_draw_text(font, no_text, inner.position + Vector2(11.0, 28.0), 14, Color("#665d50"), 0)
+		_draw_centered_baseline_text(font, _display_fish_name(fish_name), name_rect, inner.position.y + 29.0, 21, Palette.TEXT_DARK, 0)
+		_draw_rarity_tag(font, rarity_rect, rarity)
 	else:
 		_draw_text(font, no_text, inner.position + Vector2(0.0, 26.0), 14, Color("#6b6153"), 0)
 		_draw_text(font, _display_fish_name(fish_name), inner.position + Vector2(74.0, 28.0), 20, Palette.TEXT_DARK, 0)
@@ -214,14 +217,15 @@ func _draw_panel(rect: Rect2, fill: Color, border: Color, highlight: Color) -> v
 
 func _draw_paper_plaque(rect: Rect2) -> void:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#fff3d7")
-	style.border_color = Color("#b89b64")
+	style.bg_color = Color("#fff0cf")
+	style.border_color = Color("#b99d68")
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(4)
 	style.shadow_color = Color(0.24, 0.14, 0.05, 0.18)
 	style.shadow_size = 2
 	draw_style_box(style, rect)
 	draw_line(rect.position + Vector2(10.0, 8.0), Vector2(rect.end.x - 10.0, rect.position.y + 8.0), Color(1.0, 1.0, 1.0, 0.45), 1.0)
+	draw_line(rect.position + Vector2(10.0, rect.size.y - 6.0), Vector2(rect.end.x - 10.0, rect.end.y - 6.0), Color("#b99d68", 0.32), 1.0)
 
 
 func _draw_text(font: Font, text: String, baseline: Vector2, font_size: int, color: Color, outline: int) -> void:
@@ -233,6 +237,11 @@ func _draw_text(font: Font, text: String, baseline: Vector2, font_size: int, col
 func _draw_centered_text(font: Font, text: String, rect: Rect2, font_size: int, color: Color, outline: int) -> void:
 	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 	_draw_text(font, text, rect.position + Vector2((rect.size.x - text_width) * 0.5, font_size), font_size, color, outline)
+
+
+func _draw_centered_baseline_text(font: Font, text: String, rect: Rect2, baseline_y: float, font_size: int, color: Color, outline: int) -> void:
+	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+	_draw_text(font, text, Vector2(rect.position.x + (rect.size.x - text_width) * 0.5, baseline_y), font_size, color, outline)
 
 
 func _draw_wrapped(
@@ -297,8 +306,16 @@ func _draw_detail_line(font: Font, text: String, pos: Vector2, max_width: float)
 
 
 func _draw_rarity_tag(font: Font, rect: Rect2, rarity: String) -> void:
-	draw_rect(rect, Color("#8e4f77"), true)
-	draw_rect(rect, Color("#e7b4d1"), false, 1.0)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#96517e")
+	style.border_color = Color("#ddb3ce")
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	style.shadow_color = Color(0.18, 0.07, 0.12, 0.28)
+	style.shadow_size = 1
+	draw_style_box(style, rect)
+	draw_line(rect.position + Vector2(4.0, 3.0), Vector2(rect.end.x - 4.0, rect.position.y + 3.0), Color(1.0, 0.88, 0.96, 0.35), 1.0)
+	draw_line(rect.position + Vector2(4.0, rect.size.y - 3.0), Vector2(rect.end.x - 4.0, rect.end.y - 3.0), Color(0.32, 0.12, 0.22, 0.45), 1.0)
 	var text_width := font.get_string_size(rarity, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
 	_draw_text(font, rarity, rect.position + Vector2((rect.size.x - text_width) * 0.5, 17.0), 13, Color.WHITE, 1)
 
