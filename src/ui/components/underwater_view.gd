@@ -8,6 +8,7 @@ const SHOWCASE_SEABED_DETAIL_PATH := "res://assets/showcase/underwater/underwate
 const SHOWCASE_FG_AMBIENCE_PATH := "res://assets/showcase/underwater/underwater_foreground_ambience.png"
 const SHOWCASE_FISH_SHEET_PATH := "res://assets/showcase/underwater/kurodai_showcase_sheet.png"
 const SHOWCASE_HIT_BURST_PATH := "res://assets/showcase/underwater/hit_burst.png"
+const SHOWCASE_HIT_BADGE_FULL_PATH := "res://assets/showcase/underwater/hit_badge_full.png"
 const SHOWCASE_LURE_PATH := "res://assets/showcase/underwater/fight_lure.png"
 const SHOWCASE_FISH_FRAME_COUNT := 4
 const SHOWCASE_FISH_CENTER_OFFSET := Vector2(-0.082, -0.018)
@@ -27,6 +28,7 @@ var _showcase_seabed_detail: Texture2D
 var _showcase_fg_ambience: Texture2D
 var _showcase_fish_sheet: Texture2D
 var _showcase_hit_burst: Texture2D
+var _showcase_hit_badge_full: Texture2D
 var _showcase_lure: Texture2D
 
 
@@ -93,6 +95,7 @@ func _load_showcase_assets() -> void:
 	_showcase_fg_ambience = _load_texture_if_exists(SHOWCASE_FG_AMBIENCE_PATH)
 	_showcase_fish_sheet = _load_texture_if_exists(SHOWCASE_FISH_SHEET_PATH)
 	_showcase_hit_burst = _load_texture_if_exists(SHOWCASE_HIT_BURST_PATH)
+	_showcase_hit_badge_full = _load_texture_if_exists(SHOWCASE_HIT_BADGE_FULL_PATH)
 	_showcase_lure = _load_texture_if_exists(SHOWCASE_LURE_PATH)
 
 
@@ -590,6 +593,13 @@ func _draw_hit_burst() -> void:
 		return
 	var alpha := clampf(_fish_flash, 0.0, 1.0)
 	var burst_center := size * HIT_BURST_CENTER_RATIO
+	if _showcase_hit_badge_full != null:
+		var badge_size := _showcase_hit_badge_full.get_size()
+		var badge_scale := clampf(size.x / 1320.0, 0.47, 0.56)
+		var badge_draw_size := badge_size * badge_scale
+		var badge_rect := Rect2(burst_center - badge_draw_size * 0.5, badge_draw_size)
+		draw_texture_rect(_showcase_hit_badge_full, badge_rect, false, Color(1.0, 1.0, 1.0, alpha))
+		return
 	if _showcase_hit_burst != null:
 		var tex_size := _showcase_hit_burst.get_size()
 		var scale := clampf(size.x / 1320.0, 0.47, 0.56)
@@ -598,11 +608,11 @@ func _draw_hit_burst() -> void:
 		draw_texture_rect(_showcase_hit_burst, draw_rect, false, Color(1.0, 1.0, 1.0, alpha))
 	var font := FightFontsScript.bold(get_theme_default_font())
 	var text := "ヒット！"
-	var font_size := int(clampf(size.y * 0.118, 40.0, 56.0))
+	var font_size := int(clampf(size.y * 0.108, 38.0, 52.0))
 	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
 	var pos := burst_center + Vector2(-text_width * 0.5, font_size * 0.10)
-	draw_string_outline(font, pos + Vector2(3.0, 4.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 6, Color(0.0, 0.0, 0.0, 0.42))
-	draw_string_outline(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 6, Color("#6a2b08"))
+	draw_string_outline(font, pos + Vector2(2.5, 3.5), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 5, Color(0.0, 0.0, 0.0, 0.38))
+	draw_string_outline(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 5, Color("#6a2b08"))
 	draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color("#ffe36e"))
 
 

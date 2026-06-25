@@ -13,7 +13,6 @@ const TACKLE_CARD_ICON_PATH := "res://assets/showcase/underwater/fight_tackle_ca
 const FISH_FRAME_COUNT := 4
 const ICON_ACTION := 7
 const ICON_TACKLE := 8
-const ACTION_CARD_ICON_SRC := Rect2(51.0, 13.0, 80.0, 132.0)
 
 var simulator: FishingSimulator
 var fish_data: Dictionary = {}
@@ -198,13 +197,14 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	var has_tackle_icon := _tackle_card_icon != null or _icons != null
 	var icon_reserved_width := 12.0
 	if has_tackle_icon:
-		icon_reserved_width = 108.0 if _sidebar_frame != null else 66.0
-	var text_offset := Vector2(15.0, 17.0) if _sidebar_frame != null else Vector2(12.0, 14.0)
+		icon_reserved_width = 128.0 if _sidebar_frame != null else 66.0
+	var text_offset := Vector2(15.0, 14.0) if _sidebar_frame != null else Vector2(12.0, 14.0)
 	var text_width := body.size.x - icon_reserved_width - text_offset.x
 	var lines: Array[String] = []
 	if _sidebar_frame != null:
 		lines = [
 			"ロッド：%s" % rod_name,
+			"リール：スピニング4000番",
 			"ライン：ナイロン3号",
 			"ハリス：フロロ2号",
 			"針：チヌ針",
@@ -214,14 +214,14 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 			"ロッド：%s" % rod_name,
 			"糸3号・チヌ針",
 		]
-	var tackle_font_size := 13 if _sidebar_frame != null else 12
-	var tackle_line_gap := 15.0 if _sidebar_frame != null else 16.0
+	var tackle_font_size := 12 if _sidebar_frame != null else 12
+	var tackle_line_gap := 13.0 if _sidebar_frame != null else 16.0
 	var tackle_font := get_theme_default_font() if _sidebar_frame != null else font
 	var tackle_text_color := Color("#24190f") if _sidebar_frame != null else Palette.TEXT_DARK
 	for i in range(lines.size()):
 		_draw_wrapped(tackle_font, lines[i], body.position + text_offset + Vector2(0.0, float(i) * tackle_line_gap), text_width, tackle_font_size, tackle_text_color, 1, tackle_font_size + 2.0)
 	if _tackle_card_icon != null or _icons != null:
-		var icon_rect := Rect2(body.end - Vector2(112.0, 88.0), Vector2(106.0, 82.0)) if _sidebar_frame != null else Rect2(body.end - Vector2(50.0, 50.0), Vector2(40.0, 40.0))
+		var icon_rect := Rect2(body.end - Vector2(134.0, 98.0), Vector2(130.0, 94.0)) if _sidebar_frame != null else Rect2(body.end - Vector2(50.0, 50.0), Vector2(40.0, 40.0))
 		_draw_tackle_icon(icon_rect)
 	else:
 		_draw_simple_rod(body.position + Vector2(body.size.x - 62.0, body.size.y - 24.0))
@@ -391,7 +391,7 @@ func _draw_fish_portrait(rect: Rect2) -> void:
 
 func _draw_action_icon(center: Vector2, size_value: float = 58.0) -> void:
 	if _action_card_icon != null:
-		_draw_texture_region_centered(_action_card_icon, ACTION_CARD_ICON_SRC, center, Vector2(size_value, size_value))
+		_draw_texture_centered(_action_card_icon, center, Vector2(size_value, size_value))
 		return
 	if _icons != null:
 		_draw_sheet_icon(ICON_ACTION, Rect2(center - Vector2(size_value, size_value) * 0.5, Vector2(size_value, size_value)))

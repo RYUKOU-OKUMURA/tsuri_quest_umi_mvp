@@ -14,6 +14,7 @@ FISH_SOURCE = OUT_DIR / "kurodai_chroma_source.png"
 FISH_SHEET = OUT_DIR / "kurodai_showcase_sheet.png"
 FISH_CARD_PORTRAIT = OUT_DIR / "kurodai_card_portrait.png"
 HIT_BURST = OUT_DIR / "hit_burst.png"
+HIT_BADGE_FULL = OUT_DIR / "hit_badge_full.png"
 FIGHT_LURE = OUT_DIR / "fight_lure.png"
 HUD_BAIT_ICON = OUT_DIR / "hud_bait_icon.png"
 HUD_TENSION_ICON = OUT_DIR / "hud_tension_icon.png"
@@ -161,14 +162,14 @@ def _polish_fish_material(image: Image.Image) -> Image.Image:
 
             # Preserve the reference-like pearly belly without letting it turn
             # into a white flash during hit moments.
-            belly_lift = min(0.075, 0.060 * belly * center_body * opacity)
+            belly_lift = min(0.058, 0.048 * belly * center_body * opacity)
             r = int(r * (1.0 - belly_lift) + 226 * belly_lift)
             g = int(g * (1.0 - belly_lift) + 231 * belly_lift)
             b = int(b * (1.0 - belly_lift) + 224 * belly_lift)
 
             lum = (r * 0.299 + g * 0.587 + b * 0.114) / 255.0
             if opacity > 0.60 and upper > 0.20 and lum > 0.76:
-                cap_mix = min(0.055, (lum - 0.76) * 0.22 + upper * 0.018)
+                cap_mix = min(0.078, (lum - 0.76) * 0.28 + upper * 0.024)
                 r = int(r * (1.0 - cap_mix) + 166 * cap_mix)
                 g = int(g * (1.0 - cap_mix) + 181 * cap_mix)
                 b = int(b * (1.0 - cap_mix) + 188 * cap_mix)
@@ -177,6 +178,11 @@ def _polish_fish_material(image: Image.Image) -> Image.Image:
                 r = int(r * (1.0 - line_mix) + 46 * line_mix)
                 g = int(g * (1.0 - line_mix) + 58 * line_mix)
                 b = int(b * (1.0 - line_mix) + 66 * line_mix)
+            if opacity > 0.42:
+                water_mix = min(0.062, 0.016 + upper * 0.018 + edge * 0.070 + fin_tail * 0.010)
+                r = int(r * (1.0 - water_mix) + 20 * water_mix)
+                g = int(g * (1.0 - water_mix) + 54 * water_mix)
+                b = int(b * (1.0 - water_mix) + 72 * water_mix)
 
             px[x, y] = (max(0, min(255, r)), max(0, min(255, g)), max(0, min(255, b)), a)
     return out
@@ -380,6 +386,97 @@ def create_hit_burst() -> None:
     image.save(HIT_BURST)
 
 
+def _extract_reference_hit_text() -> Image.Image:
+    crop = Image.open(REFERENCE).convert("RGBA").crop((520, 525, 750, 645))
+    w, h = crop.size
+    warm = Image.new("L", crop.size, 0)
+    src = crop.load()
+    warm_px = warm.load()
+    for y in range(h):
+        for x in range(w):
+            r, g, b, _a = src[x, y]
+            warm_body = r > 125 and g > 50 and b < 120 and r > g + 24 and r > b + 38
+            warm_highlight = r > 205 and g > 125 and b < 135
+            if warm_body or warm_highlight:
+                warm_px[x, y] = 255
+
+    # Keep the large warm connected components that form the Japanese hit text,
+    # then pull in only the nearby brown/black outline. This avoids carrying the
+    # reference water background into the runtime badge.
+    seen: set[tuple[int, int]] = set()
+    keep = Image.new("L", crop.size, 0)
+    keep_px = keep.load()
+    for sy in range(h):
+        for sx in range(w):
+            if (sx, sy) in seen or warm_px[sx, sy] == 0:
+                continue
+            stack = [(sx, sy)]
+            points: list[tuple[int, int]] = []
+            while stack:
+                x, y = stack.pop()
+                if (x, y) in seen or not (0 <= x < w and 0 <= y < h):
+                    continue
+                seen.add((x, y))
+                if warm_px[x, y] == 0:
+                    continue
+                points.append((x, y))
+                stack.extend(((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)))
+            if len(points) <= 45:
+                continue
+            xs = [point[0] for point in points]
+            ys = [point[1] for point in points]
+            x0, y0 = min(xs), min(ys)
+            if 15 < x0 < 205 and 20 < y0 < 118:
+                for x, y in points:
+                    keep_px[x, y] = 255
+
+    near = keep.filter(ImageFilter.MaxFilter(15)).filter(ImageFilter.GaussianBlur(0.55))
+    mask = Image.new("L", crop.size, 0)
+    near_px = near.load()
+    mask_px = mask.load()
+    for y in range(h):
+        for x in range(w):
+            if near_px[x, y] < 8:
+                continue
+            r, g, b, _a = src[x, y]
+            warmish = r > 100 and g > 35 and b < 130 and r > g + 18 and r > b + 28
+            brown_shadow = r > 42 and r < 135 and g < 86 and b < 78 and r >= b - 4
+            black_edge = r < 58 and g < 58 and b < 64
+            highlight = r > 185 and g > 130 and b > 70 and r > b + 25
+            if warmish or brown_shadow or black_edge or highlight:
+                mask_px[x, y] = min(255, int(near_px[x, y] * 1.9))
+
+    mask = mask.filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.GaussianBlur(0.32))
+    text = crop.copy()
+    text.putalpha(mask)
+    bbox = mask.point(lambda value: 255 if value > 14 else 0).getbbox()
+    if bbox is None:
+        raise RuntimeError("hit text extraction produced an empty mask")
+    pad = 4
+    text = text.crop(
+        (
+            max(0, bbox[0] - pad),
+            max(0, bbox[1] - pad),
+            min(w, bbox[2] + pad),
+            min(h, bbox[3] + pad),
+        )
+    )
+    return text
+
+
+def create_hit_badge_full() -> None:
+    if not HIT_BURST.exists():
+        create_hit_burst()
+    badge = Image.open(HIT_BURST).convert("RGBA")
+    text = _extract_reference_hit_text()
+    scale = min(badge.width * 0.43 / text.width, badge.height * 0.52 / text.height)
+    resized = text.resize((round(text.width * scale), round(text.height * scale)), Image.Resampling.LANCZOS)
+    x = (badge.width - resized.width) // 2 + 2
+    y = round(badge.height * 0.43 - resized.height * 0.5)
+    badge.alpha_composite(resized, (x, y))
+    badge.save(HIT_BADGE_FULL)
+
+
 def create_fight_lure() -> None:
     crop = Image.open(REFERENCE).convert("RGBA").crop((780, 320, 900, 420))
     mask = Image.new("L", crop.size, 0)
@@ -518,10 +615,11 @@ def main() -> None:
     clean_sheet = create_kurodai_sheet()
     create_kurodai_card_portrait(clean_sheet)
     create_hit_burst()
+    create_hit_badge_full()
     create_fight_lure()
     create_hud_bait_icon()
     create_hud_tension_icon()
-    print(f"processed {FISH_SHEET}, {FISH_CARD_PORTRAIT}, {HIT_BURST}, {FIGHT_LURE}, {HUD_BAIT_ICON}, and {HUD_TENSION_ICON}")
+    print(f"processed {FISH_SHEET}, {FISH_CARD_PORTRAIT}, {HIT_BURST}, {HIT_BADGE_FULL}, {FIGHT_LURE}, {HUD_BAIT_ICON}, and {HUD_TENSION_ICON}")
 
 
 if __name__ == "__main__":

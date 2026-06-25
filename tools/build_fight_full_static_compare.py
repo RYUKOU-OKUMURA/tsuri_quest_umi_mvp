@@ -173,18 +173,23 @@ def _draw_line_lure_hit(water: Image.Image, fish_metrics: tuple[float, float, fl
     draw.line((meter_rect[0] + 2, meter_rect[1] + 1, meter_rect[0] + fill_w - 2, meter_rect[1] + 1), fill=(255, 255, 255, 19), width=1)
     _draw_text(draw, (76.0, water.height - 27.0), "距離 29.8m", 9, "#b7d6e1", bold=False, stroke=1, stroke_fill=(0, 0, 0, 51))
 
-    burst = Image.open(ASSET_DIR / "hit_burst.png").convert("RGBA")
-    scale = min(max(water.width / 1320.0, 0.47), 0.56)
-    burst_size = (round(burst.width * scale), round(burst.height * scale))
-    burst = _resize(burst, burst_size)
     burst_center = (water.width * 0.49, water.height * 0.765)
-    water.alpha_composite(burst, (round(burst_center[0] - burst.width * 0.5), round(burst_center[1] - burst.height * 0.5)))
-    text = "ヒット！"
-    font_size = int(min(max(water.height * 0.118, 40.0), 56.0))
-    text_w = _text_width(text, font_size)
-    pos = (burst_center[0] - text_w * 0.5, burst_center[1] + font_size * 0.10)
-    _draw_text(draw, (pos[0] + 3, pos[1] + 4), text, font_size, "#ffe36e", stroke=6, stroke_fill=(0, 0, 0, 107))
-    _draw_text(draw, pos, text, font_size, "#ffe36e", stroke=6, stroke_fill=(106, 43, 8, 255))
+    scale = min(max(water.width / 1320.0, 0.47), 0.56)
+    full_badge_path = ASSET_DIR / "hit_badge_full.png"
+    if full_badge_path.exists():
+        badge = Image.open(full_badge_path).convert("RGBA")
+        badge = _resize(badge, (round(badge.width * scale), round(badge.height * scale)))
+        water.alpha_composite(badge, (round(burst_center[0] - badge.width * 0.5), round(burst_center[1] - badge.height * 0.5)))
+    else:
+        burst = Image.open(ASSET_DIR / "hit_burst.png").convert("RGBA")
+        burst = _resize(burst, (round(burst.width * scale), round(burst.height * scale)))
+        water.alpha_composite(burst, (round(burst_center[0] - burst.width * 0.5), round(burst_center[1] - burst.height * 0.5)))
+        text = "ヒット！"
+        font_size = int(min(max(water.height * 0.108, 38.0), 52.0))
+        text_w = _text_width(text, font_size)
+        pos = (burst_center[0] - text_w * 0.5, burst_center[1] + font_size * 0.10)
+        _draw_text(draw, (pos[0] + 2.5, pos[1] + 3.5), text, font_size, "#ffe36e", stroke=5, stroke_fill=(0, 0, 0, 97))
+        _draw_text(draw, pos, text, font_size, "#ffe36e", stroke=5, stroke_fill=(106, 43, 8, 255))
 
 
 def build_water_window() -> Image.Image:
