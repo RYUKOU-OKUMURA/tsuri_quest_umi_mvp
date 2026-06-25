@@ -167,15 +167,15 @@ def _draw_line_lure_hit(water: Image.Image, fish_metrics: tuple[float, float, fl
     _draw_text(draw, (72.0, water.height - 28.0), "距離 29.8m", 10, "#c7e5f1", bold=False, stroke=1)
 
     burst = Image.open(ASSET_DIR / "hit_burst.png").convert("RGBA")
-    scale = min(max(water.width / 1450.0, 0.42), 0.50)
+    scale = min(max(water.width / 1320.0, 0.47), 0.56)
     burst_size = (round(burst.width * scale), round(burst.height * scale))
     burst = _resize(burst, burst_size)
-    burst_center = (water.width * 0.49, water.height * 0.805)
+    burst_center = (water.width * 0.49, water.height * 0.765)
     water.alpha_composite(burst, (round(burst_center[0] - burst.width * 0.5), round(burst_center[1] - burst.height * 0.5)))
     text = "ヒット！"
-    font_size = int(min(max(water.height * 0.125, 42.0), 58.0))
+    font_size = int(min(max(water.height * 0.118, 40.0), 56.0))
     text_w = _text_width(text, font_size)
-    pos = (burst_center[0] - text_w * 0.5, burst_center[1] + font_size * 0.20)
+    pos = (burst_center[0] - text_w * 0.5, burst_center[1] + font_size * 0.10)
     _draw_text(draw, (pos[0] + 3, pos[1] + 4), text, font_size, "#ffe36e", stroke=6, stroke_fill=(0, 0, 0, 107))
     _draw_text(draw, pos, text, font_size, "#ffe36e", stroke=6, stroke_fill=(106, 43, 8, 255))
 

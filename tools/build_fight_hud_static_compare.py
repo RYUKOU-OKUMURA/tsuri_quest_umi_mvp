@@ -188,8 +188,8 @@ def build_current_hud() -> Image.Image:
     depth_center = (depth[0] + depth[2] - 40) * 0.5
     _draw_text(draw, (depth_center - title_w * 0.5, depth[1] + 24), title, 15, "#f7ecd0", stroke=1)
     value = "18.6m"
-    value_w = _text_width(value, 31)
-    _draw_text(draw, (depth_center - value_w * 0.5, depth[1] + 63), value, 31, "#eaf6ff", stroke=2)
+    value_w = _text_width(value, 30)
+    _draw_text(draw, (depth_center - value_w * 0.5, depth[1] + 63), value, 30, "#eaf6ff", stroke=1)
     arrow_x = depth[2] - 17
     _draw_triangle(draw, (arrow_x, depth[1] + 34), 11, "#29baf7", up=True)
     _draw_triangle(draw, (arrow_x, depth[1] + 72), 11, "#ff6b3e", up=False)

@@ -11,6 +11,7 @@ const SHOWCASE_HIT_BURST_PATH := "res://assets/showcase/underwater/hit_burst.png
 const SHOWCASE_LURE_PATH := "res://assets/showcase/underwater/fight_lure.png"
 const SHOWCASE_FISH_FRAME_COUNT := 4
 const SHOWCASE_FISH_CENTER_OFFSET := Vector2(-0.082, -0.018)
+const HIT_BURST_CENTER_RATIO := Vector2(0.49, 0.765)
 
 var simulator: FishingSimulator
 var fish_data: Dictionary = {}
@@ -588,18 +589,18 @@ func _draw_hit_burst() -> void:
 	if _fish_flash <= 0.02 or simulator == null:
 		return
 	var alpha := clampf(_fish_flash, 0.0, 1.0)
-	var burst_center := Vector2(size.x * 0.49, size.y * 0.805)
+	var burst_center := size * HIT_BURST_CENTER_RATIO
 	if _showcase_hit_burst != null:
 		var tex_size := _showcase_hit_burst.get_size()
-		var scale := clampf(size.x / 1450.0, 0.42, 0.50)
+		var scale := clampf(size.x / 1320.0, 0.47, 0.56)
 		var draw_size := tex_size * scale
 		var draw_rect := Rect2(burst_center - draw_size * 0.5, draw_size)
 		draw_texture_rect(_showcase_hit_burst, draw_rect, false, Color(1.0, 1.0, 1.0, alpha))
 	var font := FightFontsScript.bold(get_theme_default_font())
 	var text := "ヒット！"
-	var font_size := int(clampf(size.y * 0.125, 42.0, 58.0))
+	var font_size := int(clampf(size.y * 0.118, 40.0, 56.0))
 	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
-	var pos := burst_center + Vector2(-text_width * 0.5, font_size * 0.20)
+	var pos := burst_center + Vector2(-text_width * 0.5, font_size * 0.10)
 	draw_string_outline(font, pos + Vector2(3.0, 4.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 6, Color(0.0, 0.0, 0.0, 0.42))
 	draw_string_outline(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 6, Color("#6a2b08"))
 	draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color("#ffe36e"))

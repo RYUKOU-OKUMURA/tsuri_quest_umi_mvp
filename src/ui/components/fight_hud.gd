@@ -158,9 +158,9 @@ func _draw_depth(font: Font, rect: Rect2) -> void:
 	if simulator != null:
 		depth = simulator.depth
 	var value := "%.1fm" % depth
-	var value_size := 34 if _hud_frame == null else 31
+	var value_size := 34 if _hud_frame == null else 30
 	var value_w := font.get_string_size(value, HORIZONTAL_ALIGNMENT_LEFT, -1, value_size).x
-	_draw_text(font, value, rect.position + Vector2((text_center_w - value_w) * 0.5, 59.0 if _hud_frame == null else 63.0), value_size, Color("#eaf6ff"), 2 if _hud_frame != null else 4)
+	_draw_text(font, value, rect.position + Vector2((text_center_w - value_w) * 0.5, 59.0 if _hud_frame == null else 63.0), value_size, Color("#eaf6ff"), 1 if _hud_frame != null else 4)
 	var cx := rect.position.x + rect.size.x - (17.0 if _hud_frame != null else 22.0)
 	var arrow_radius := 11.0 if _hud_frame != null else 14.0
 	_draw_triangle(Vector2(cx, rect.position.y + 34.0), arrow_radius, Color("#29baf7"), true)

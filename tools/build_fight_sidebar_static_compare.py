@@ -62,6 +62,27 @@ def _center_text(
     draw.text((x, y), text, font=font, fill=fill)
 
 
+def _estimate_line(draw: ImageDraw.ImageDraw, box: tuple[float, float, float, float], value: float) -> None:
+    label = "推定"
+    number = f"{value:.1f}"
+    unit = " cm"
+    label_font = _font(14, bold=False)
+    number_font = _font(23)
+    unit_font = _font(14, bold=False)
+    gap = 6.0
+    label_w = label_font.getlength(label)
+    number_w = number_font.getlength(number)
+    unit_w = unit_font.getlength(unit)
+    total_w = label_w + gap + number_w + unit_w
+    x = box[0] + ((box[2] - box[0]) - total_w) * 0.5
+    baseline = box[1] + 25.0
+    draw.text((x, baseline - 14.0), label, font=label_font, fill="#4d3c2c")
+    x += label_w + gap
+    draw.text((x, baseline - 23.0), number, font=number_font, fill="#2b2117")
+    x += number_w
+    draw.text((x, baseline - 14.0), unit, font=unit_font, fill="#4d3c2c")
+
+
 def _wrapped_lines(text: str, max_width: float, size: int, *, bold: bool, max_lines: int) -> list[str]:
     font = _font(size, bold=bold)
     lines: list[str] = []
@@ -170,7 +191,7 @@ def _draw_fish_card(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: int
     )
     divider_y = fish_rect[3] + 3
     draw.line((inner[0] + 8, divider_y, inner[2] - 8, divider_y), fill="#c9b486", width=1)
-    _center_text(draw, (inner[0], divider_y + 8, inner[2], divider_y + 38), "推定 44.2 cm", 20, "#2b2117")
+    _estimate_line(draw, (inner[0], divider_y + 7, inner[2], divider_y + 39), 44.2)
     desc_y = divider_y + 52
     draw.line((inner[0] + 8, desc_y - 12, inner[2] - 8, desc_y - 12), fill="#d6c299", width=1)
     _draw_wrapped(

@@ -133,8 +133,10 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	var divider_y := fish_rect.end.y + (3.0 if _sidebar_frame != null else 6.0)
 	draw_line(Vector2(inner.position.x + 8.0, divider_y), Vector2(inner.end.x - 8.0, divider_y), Color("#c9b486"), 1.0)
 	var estimate := (float(fish_data.get("size_min", 0.0)) + float(fish_data.get("size_max", 0.0))) * 0.5
-	var estimate_size := 20 if _sidebar_frame != null else 23
-	_draw_centered_text(font, "推定 %.1f cm" % estimate, Rect2(inner.position.x, divider_y + 8.0, inner.size.x, 30.0), estimate_size, Color("#2b2117"), 0)
+	if compact_card:
+		_draw_estimate_line(font, estimate, Rect2(inner.position.x, divider_y + 7.0, inner.size.x, 32.0))
+	else:
+		_draw_centered_text(font, "推定 %.1f cm" % estimate, Rect2(inner.position.x, divider_y + 8.0, inner.size.x, 30.0), 23, Color("#2b2117"), 0)
 	var desc_y := divider_y + (52.0 if compact_card else 44.0)
 	draw_line(Vector2(inner.position.x + 8.0, desc_y - 12.0), Vector2(inner.end.x - 8.0, desc_y - 12.0), Color("#d6c299"), 1.0)
 	var detail_gap := 16.0 if compact_card else 21.0
@@ -250,6 +252,28 @@ func _draw_centered_text(font: Font, text: String, rect: Rect2, font_size: int, 
 func _draw_centered_baseline_text(font: Font, text: String, rect: Rect2, baseline_y: float, font_size: int, color: Color, outline: int) -> void:
 	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 	_draw_text(font, text, Vector2(rect.position.x + (rect.size.x - text_width) * 0.5, baseline_y), font_size, color, outline)
+
+
+func _draw_estimate_line(font: Font, value: float, rect: Rect2) -> void:
+	var regular_font := FightFontsScript.regular(get_theme_default_font())
+	var label := "推定"
+	var number := "%.1f" % value
+	var unit := " cm"
+	var label_size := 14
+	var number_size := 23
+	var unit_size := 14
+	var gap := 6.0
+	var label_w := regular_font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
+	var number_w := font.get_string_size(number, HORIZONTAL_ALIGNMENT_LEFT, -1, number_size).x
+	var unit_w := regular_font.get_string_size(unit, HORIZONTAL_ALIGNMENT_LEFT, -1, unit_size).x
+	var total_w := label_w + gap + number_w + unit_w
+	var x := rect.position.x + (rect.size.x - total_w) * 0.5
+	var baseline := rect.position.y + 25.0
+	_draw_text(regular_font, label, Vector2(x, baseline - 1.0), label_size, Color("#4d3c2c"), 0)
+	x += label_w + gap
+	_draw_text(font, number, Vector2(x, baseline), number_size, Color("#2b2117"), 0)
+	x += number_w
+	_draw_text(regular_font, unit, Vector2(x, baseline - 1.0), unit_size, Color("#4d3c2c"), 0)
 
 
 func _draw_wrapped(
