@@ -7,6 +7,7 @@ const GaugeBarScript = preload("res://src/ui/components/gauge_bar.gd")
 
 const DISH_FEATURE_AJI := "res://assets/showcase/cooking/dish_feature_aji_shioyaki.png"
 const DISH_ICON_SHEET := "res://assets/showcase/cooking/dish_icon_sheet.png"
+const MEAL_RESULT_FRAME := "res://assets/showcase/cooking/meal_result_frame.png"
 
 var _dialog: PanelContainer
 var _header_title: Label
@@ -41,7 +42,14 @@ func _build_screen() -> void:
 	_dialog = PanelContainer.new()
 	_dialog.custom_minimum_size = Vector2(860.0, 0.0)
 	_dialog.add_theme_stylebox_override(
-		"panel", _style_box(Color("#10283f"), Color("#5e391a"), Palette.GOLD_BRIGHT, 6, 8)
+		"panel",
+		_texture_style_box(
+			MEAL_RESULT_FRAME,
+			34,
+			_style_box(Color("#10283f"), Color("#5e391a"), Palette.GOLD_BRIGHT, 6, 8),
+			22.0,
+			16.0
+		)
 	)
 	center.add_child(_dialog)
 
@@ -267,6 +275,31 @@ func _style_box(fill: Color, border: Color, inner: Color, border_width: int, rad
 	sb.shadow_size = 6
 	sb.shadow_offset = Vector2(0.0, 3.0)
 	sb.anti_aliasing = false
+	return sb
+
+
+func _texture_style_box(
+	path: String, margin: int, fallback: StyleBox, content_x: float, content_y: float
+) -> StyleBox:
+	var tex := load(path) as Texture2D
+	if tex == null:
+		return fallback
+	var sb := StyleBoxTexture.new()
+	sb.texture = tex
+	sb.texture_margin_left = margin
+	sb.texture_margin_top = margin
+	sb.texture_margin_right = margin
+	sb.texture_margin_bottom = margin
+	sb.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+	sb.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+	sb.expand_margin_left = 6.0
+	sb.expand_margin_top = 6.0
+	sb.expand_margin_right = 6.0
+	sb.expand_margin_bottom = 6.0
+	sb.content_margin_left = content_x
+	sb.content_margin_top = content_y
+	sb.content_margin_right = content_x
+	sb.content_margin_bottom = content_y
 	return sb
 
 

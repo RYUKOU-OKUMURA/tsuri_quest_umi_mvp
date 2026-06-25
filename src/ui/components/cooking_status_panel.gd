@@ -4,6 +4,7 @@ extends "res://src/ui/screen_base.gd"
 signal closed
 
 const GaugeBarScript = preload("res://src/ui/components/gauge_bar.gd")
+const STATUS_CARD_FRAME := "res://assets/showcase/cooking/status_card_frame.png"
 
 var _dialog: PanelContainer
 var _exp_bar: GaugeBar
@@ -121,7 +122,13 @@ func show_summary() -> void:
 
 
 func _summary_card(parent: GridContainer, title: String, accent: Color) -> Label:
-	var card := _panel_box(Color("#10283f"), Color("#07121e"), Palette.GOLD_DEEP, 4)
+	var card := _texture_panel_box(
+		STATUS_CARD_FRAME,
+		24,
+		_style_box(Color("#10283f"), Color("#07121e"), Palette.GOLD_DEEP, 4, 5),
+		16.0,
+		10.0
+	)
 	card.custom_minimum_size = Vector2(420.0, 86.0)
 	parent.add_child(card)
 	var box := VBoxContainer.new()
@@ -140,7 +147,13 @@ func _summary_card(parent: GridContainer, title: String, accent: Color) -> Label
 
 
 func _stat_card(title: String, value: String, accent: Color) -> PanelContainer:
-	var card := _panel_box(Color("#f8edcf"), Color("#60401f"), Color("#d7a456"), 4)
+	var card := _texture_panel_box(
+		STATUS_CARD_FRAME,
+		24,
+		_style_box(Color("#f8edcf"), Color("#60401f"), Color("#d7a456"), 4, 5),
+		14.0,
+		8.0
+	)
 	card.custom_minimum_size = Vector2(250.0, 70.0)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 0)
@@ -204,6 +217,16 @@ func _panel_box(fill: Color, border: Color, inner: Color, border_width: int) -> 
 	return panel
 
 
+func _texture_panel_box(
+	path: String, margin: int, fallback: StyleBox, content_x: float, content_y: float
+) -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override(
+		"panel", _texture_style_box(path, margin, fallback, content_x, content_y)
+	)
+	return panel
+
+
 func _style_box(fill: Color, border: Color, inner: Color, border_width: int, radius: int) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = fill
@@ -218,4 +241,29 @@ func _style_box(fill: Color, border: Color, inner: Color, border_width: int, rad
 	sb.shadow_size = 6
 	sb.shadow_offset = Vector2(0.0, 3.0)
 	sb.anti_aliasing = false
+	return sb
+
+
+func _texture_style_box(
+	path: String, margin: int, fallback: StyleBox, content_x: float, content_y: float
+) -> StyleBox:
+	var tex := load(path) as Texture2D
+	if tex == null:
+		return fallback
+	var sb := StyleBoxTexture.new()
+	sb.texture = tex
+	sb.texture_margin_left = margin
+	sb.texture_margin_top = margin
+	sb.texture_margin_right = margin
+	sb.texture_margin_bottom = margin
+	sb.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+	sb.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+	sb.expand_margin_left = 5.0
+	sb.expand_margin_top = 5.0
+	sb.expand_margin_right = 5.0
+	sb.expand_margin_bottom = 5.0
+	sb.content_margin_left = content_x
+	sb.content_margin_top = content_y
+	sb.content_margin_right = content_x
+	sb.content_margin_bottom = content_y
 	return sb

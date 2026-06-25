@@ -9,6 +9,7 @@ const COOKING_BG := "res://assets/showcase/cooking/cooking_room_bg.png"
 const FISH_ICON_SHEET := "res://assets/showcase/cooking/fish_icon_sheet.png"
 const DISH_ICON_SHEET := "res://assets/showcase/cooking/dish_icon_sheet.png"
 const DISH_FEATURE_AJI := "res://assets/showcase/cooking/dish_feature_aji_shioyaki.png"
+const DISH_DETAIL_FRAME := "res://assets/showcase/cooking/dish_detail_frame.png"
 
 const FISH_ICON_INDEX := {
 	"aji": 0,
@@ -190,7 +191,13 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	_recipe_grid.add_theme_constant_override("v_separation", 7)
 	recipe_layout.add_child(_recipe_grid)
 
-	var detail_panel := _panel_box(Color("#f4e7c8"), Color("#5e391a"), Color("#e6b561"), 6)
+	var detail_panel := _texture_panel_box(
+		DISH_DETAIL_FRAME,
+		34,
+		_style_box(Color("#f4e7c8"), Color("#5e391a"), Color("#e6b561"), 6, 5),
+		18.0,
+		12.0
+	)
 	detail_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(detail_panel)
@@ -723,6 +730,16 @@ func _panel_box(fill: Color, border: Color, inner: Color, border_width: int) -> 
 	return panel
 
 
+func _texture_panel_box(
+	path: String, margin: int, fallback: StyleBox, content_x: float, content_y: float
+) -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override(
+		"panel", _texture_style_box(path, margin, fallback, content_x, content_y)
+	)
+	return panel
+
+
 func _style_box(fill: Color, border: Color, inner: Color, border_width: int, radius: int) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = fill
@@ -737,6 +754,31 @@ func _style_box(fill: Color, border: Color, inner: Color, border_width: int, rad
 	sb.shadow_size = 4
 	sb.shadow_offset = Vector2(0.0, 2.0)
 	sb.anti_aliasing = false
+	return sb
+
+
+func _texture_style_box(
+	path: String, margin: int, fallback: StyleBox, content_x: float, content_y: float
+) -> StyleBox:
+	var tex := load(path) as Texture2D
+	if tex == null:
+		return fallback
+	var sb := StyleBoxTexture.new()
+	sb.texture = tex
+	sb.texture_margin_left = margin
+	sb.texture_margin_top = margin
+	sb.texture_margin_right = margin
+	sb.texture_margin_bottom = margin
+	sb.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+	sb.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+	sb.expand_margin_left = 6.0
+	sb.expand_margin_top = 6.0
+	sb.expand_margin_right = 6.0
+	sb.expand_margin_bottom = 6.0
+	sb.content_margin_left = content_x
+	sb.content_margin_top = content_y
+	sb.content_margin_right = content_x
+	sb.content_margin_bottom = content_y
 	return sb
 
 

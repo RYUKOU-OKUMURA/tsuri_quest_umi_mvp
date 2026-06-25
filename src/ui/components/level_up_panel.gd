@@ -3,6 +3,8 @@ extends "res://src/ui/screen_base.gd"
 # レベル遷移、能力上昇、Lv.5 解放を一画面の報酬ピークとして見せる。
 signal closed
 
+const LEVEL_UP_FRAME := "res://assets/showcase/cooking/level_up_frame.png"
+
 var _dialog: PanelContainer
 var _level_line: Label
 var _stats_box: VBoxContainer
@@ -29,7 +31,14 @@ func _build_screen() -> void:
 	_dialog = PanelContainer.new()
 	_dialog.custom_minimum_size = Vector2(760.0, 0.0)
 	_dialog.add_theme_stylebox_override(
-		"panel", _style_box(Color("#10233a"), Color("#7b4b20"), Palette.GOLD_BRIGHT, 6, 8)
+		"panel",
+		_texture_style_box(
+			LEVEL_UP_FRAME,
+			36,
+			_style_box(Color("#10233a"), Color("#7b4b20"), Palette.GOLD_BRIGHT, 6, 8),
+			22.0,
+			18.0
+		)
 	)
 	center.add_child(_dialog)
 
@@ -254,4 +263,29 @@ func _style_box(fill: Color, border: Color, inner: Color, border_width: int, rad
 	sb.shadow_size = 6
 	sb.shadow_offset = Vector2(0.0, 3.0)
 	sb.anti_aliasing = false
+	return sb
+
+
+func _texture_style_box(
+	path: String, margin: int, fallback: StyleBox, content_x: float, content_y: float
+) -> StyleBox:
+	var tex := load(path) as Texture2D
+	if tex == null:
+		return fallback
+	var sb := StyleBoxTexture.new()
+	sb.texture = tex
+	sb.texture_margin_left = margin
+	sb.texture_margin_top = margin
+	sb.texture_margin_right = margin
+	sb.texture_margin_bottom = margin
+	sb.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+	sb.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+	sb.expand_margin_left = 7.0
+	sb.expand_margin_top = 7.0
+	sb.expand_margin_right = 7.0
+	sb.expand_margin_bottom = 7.0
+	sb.content_margin_left = content_x
+	sb.content_margin_top = content_y
+	sb.content_margin_right = content_x
+	sb.content_margin_bottom = content_y
 	return sb
