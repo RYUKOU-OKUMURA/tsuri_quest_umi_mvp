@@ -9,6 +9,7 @@ const SHOWCASE_FG_AMBIENCE_PATH := "res://assets/showcase/underwater/underwater_
 const SHOWCASE_FISH_SHEET_PATH := "res://assets/showcase/underwater/kurodai_showcase_sheet.png"
 const SHOWCASE_HIT_BURST_PATH := "res://assets/showcase/underwater/hit_burst.png"
 const SHOWCASE_FISH_FRAME_COUNT := 4
+const SHOWCASE_FISH_CENTER_OFFSET := Vector2(-0.055, -0.012)
 
 var simulator: FishingSimulator
 var fish_data: Dictionary = {}
@@ -343,15 +344,13 @@ func _draw_line_and_bait() -> void:
 		simulator.state == FishingSimulator.State.FIGHT
 		or simulator.state == FishingSimulator.State.CAUGHT
 	):
-		var fish_center := Vector2(
-			simulator.visual_position.x * size.x, simulator.visual_position.y * size.y
-		)
+		var fish_center := _target_fish_center()
 		var fish_scale := 1.10 if bool(fish_data.get("boss", false)) else 1.0
 		var forward_offset := 56.0 * fish_scale
 		var vertical_offset := 4.0
 		if _showcase_fish_sheet != null:
 			var fish_draw_size := _showcase_fish_draw_size()
-			forward_offset = fish_draw_size.x * 0.38
+			forward_offset = fish_draw_size.x * 0.44
 			vertical_offset = fish_draw_size.y * 0.01
 		bait_position = fish_center + Vector2(forward_offset * simulator.visual_direction, vertical_offset)
 	elif simulator.state == FishingSimulator.State.READY:
@@ -375,9 +374,7 @@ func _draw_ellipse(center: Vector2, rx: float, ry: float, color: Color, points :
 func _draw_target_fish() -> void:
 	if simulator.state == FishingSimulator.State.READY:
 		return
-	var center := Vector2(
-		simulator.visual_position.x * size.x, simulator.visual_position.y * size.y
-	)
+	var center := _target_fish_center()
 	var boss_scale := 1.42 if bool(fish_data.get("boss", false)) else 1.0
 	var stamina_scale := lerpf(0.92, 1.04, simulator.fish_stamina_ratio())
 	var scale_value := boss_scale * stamina_scale
@@ -528,6 +525,13 @@ func _draw_showcase_target_fish(center: Vector2, scale_value: float, direction: 
 	draw_set_transform(Juicer.get_offset())
 
 
+func _target_fish_center() -> Vector2:
+	var center := Vector2(simulator.visual_position.x * size.x, simulator.visual_position.y * size.y)
+	if _showcase_fish_sheet != null:
+		center += SHOWCASE_FISH_CENTER_OFFSET * size
+	return center
+
+
 func _showcase_fish_draw_size(scale_value := -1.0) -> Vector2:
 	if _showcase_fish_sheet == null:
 		return Vector2.ZERO
@@ -540,7 +544,7 @@ func _showcase_fish_draw_size(scale_value := -1.0) -> Vector2:
 	elif effective_scale < 0.0:
 		effective_scale = boss_ratio
 	var stamina_scale := clampf(effective_scale / boss_ratio, 0.90, 1.06)
-	var target_width_ratio := 0.54 if bool(fish_data.get("boss", false)) else 0.55
+	var target_width_ratio := 0.50 if bool(fish_data.get("boss", false)) else 0.51
 	var draw_width := size.x * target_width_ratio * stamina_scale
 	return Vector2(draw_width, draw_width * frame_h / frame_w)
 
@@ -565,16 +569,16 @@ func _draw_hit_burst() -> void:
 	if _fish_flash <= 0.02 or simulator == null:
 		return
 	var alpha := clampf(_fish_flash, 0.0, 1.0)
-	var burst_center := Vector2(size.x * 0.50, size.y * 0.835)
+	var burst_center := Vector2(size.x * 0.49, size.y * 0.805)
 	if _showcase_hit_burst != null:
 		var tex_size := _showcase_hit_burst.get_size()
-		var scale := clampf(size.x / 1370.0, 0.50, 0.66)
+		var scale := clampf(size.x / 1370.0, 0.44, 0.56)
 		var draw_size := tex_size * scale
 		var draw_rect := Rect2(burst_center - draw_size * 0.5, draw_size)
 		draw_texture_rect(_showcase_hit_burst, draw_rect, false, Color(1.0, 1.0, 1.0, alpha))
 	var font := FightFontsScript.bold(get_theme_default_font())
 	var text := "ヒット！"
-	var font_size := int(clampf(size.y * 0.16, 48.0, 76.0))
+	var font_size := int(clampf(size.y * 0.135, 44.0, 64.0))
 	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
 	var pos := burst_center + Vector2(-text_width * 0.5, font_size * 0.20)
 	draw_string_outline(font, pos + Vector2(3.0, 4.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 8, Color(0.0, 0.0, 0.0, 0.58))
