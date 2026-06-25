@@ -15,7 +15,9 @@ var _dish_title: Label
 var _dish_image: TextureRect
 var _exp_bar: GaugeBar
 var _exp_label: Label
+var _base_label: Label
 var _bonus_label: Label
+var _total_label: Label
 var _buff_label: Label
 var _growth_label: Label
 var _confirm_button: Button
@@ -116,7 +118,9 @@ func _build_screen() -> void:
 	_exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	exp_layout.add_child(_exp_label)
 
+	_base_label = _reward_line(reward_box, "基本EXP", Palette.GAUGE_CYAN_HI)
 	_bonus_label = _reward_line(reward_box, "初回ボーナス", Palette.GOLD_BRIGHT)
+	_total_label = _reward_line(reward_box, "合計獲得", Palette.GAUGE_GREEN_HI)
 	_buff_label = _reward_line(reward_box, "次の釣行", Palette.GAUGE_GREEN_HI)
 	_growth_label = _reward_line(reward_box, "成長", Palette.GAUGE_RED_HI)
 
@@ -136,11 +140,13 @@ func show_reward(result: Dictionary, exp_before: int, exp_after: int, exp_max: i
 	_exp_bar.max_value = _target_max
 	_exp_bar.set_value(clampf(float(exp_before), 0.0, _target_max))
 	_exp_label.text = "+%d EXP" % int(result.get("total_exp", 0))
+	_base_label.text = "料理の経験値 +%d EXP" % int(result.get("base_exp", 0))
 
 	if bool(result.get("first_time", false)):
 		_bonus_label.text = "初めて食べた料理！ 追加 +%d EXP" % int(result.get("first_bonus", 0))
 	else:
-		_bonus_label.text = "食べたことのある料理。基本EXPを獲得。"
+		_bonus_label.text = "記録済み。今回は基本EXPのみ。"
+	_total_label.text = "今回の合計 +%d EXP" % int(result.get("total_exp", 0))
 
 	var buff := Dictionary(result.get("buff", {}))
 	_buff_label.text = String(buff.get("text", "次の釣行で効果を得る"))
