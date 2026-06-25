@@ -153,18 +153,18 @@ def create_kurodai_card_portrait(sheet: Image.Image | None = None) -> None:
     # Match the in-game sidebar portrait window, but keep the card paper and
     # rules in sidebar_frame.png so the fish reads as printed on one card
     # surface instead of sitting inside a second framed panel.
-    canvas = Image.new("RGBA", (620, 330), (0, 0, 0, 0))
+    canvas = Image.new("RGBA", (560, 310), (0, 0, 0, 0))
     shadow = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow)
-    sd.ellipse((112, 240, canvas.width - 92, 292), fill=(72, 52, 31, 24))
+    sd.ellipse((74, 226, canvas.width - 64, 276), fill=(72, 52, 31, 22))
     canvas.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(9)))
 
-    max_w = int(canvas.width * 0.96)
-    max_h = int(canvas.height * 0.93)
+    max_w = int(canvas.width * 0.985)
+    max_h = int(canvas.height * 0.955)
     scale = min(max_w / crop.width, max_h / crop.height)
     resized = crop.resize((round(crop.width * scale), round(crop.height * scale)), Image.Resampling.LANCZOS)
     x = (canvas.width - resized.width) // 2
-    y = (canvas.height - resized.height) // 2 - 4
+    y = (canvas.height - resized.height) // 2 - 5
     canvas.alpha_composite(resized, (x, y))
     canvas.save(FISH_CARD_PORTRAIT)
 

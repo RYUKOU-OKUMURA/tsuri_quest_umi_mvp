@@ -15,6 +15,7 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Patches Made Since Previous QA
 
+- Rebuilt `kurodai_card_portrait.png` with a tighter 560x310 transparent canvas and larger useful alpha bounds. The right fish card now gives the kurodai more presence in `/tmp/tsuri_sidebar_static_compare.png` without adding a framed portrait window, blue halo, or extra runtime drawing.
 - Rebuilt `top_status_frame.png` with stronger parchment-edge patina and quieter highlights, then reduced the top-status runtime/static value typography slightly. `/tmp/tsuri_top_status_static_compare.png` now reads less like flat white UI cards with oversized overlay text and closer to the reference's printed paper status windows.
 - Rebuilt `fight_hud_frame.png` without the extra pale circular bait placeholder and reduced the frame-backed HUD title/edge label outlines. The bait card now relies on the extracted `hud_bait_icon.png` instead of a generated-looking icon well, and `/tmp/tsuri_hud_static_compare.png` reads less like a form-grid panel while preserving the reference-style operation card layout.
 - Rebuilt `sidebar_frame.png` with a thinner outer frame, quieter gold lines, smaller corner accents, and wider card insets. `FightSidebar` and `tools/build_fight_sidebar_static_compare.py` now share the updated right-panel ratios, so `/tmp/tsuri_sidebar_static_compare.png` reads less like a heavy green/gold debug skin and closer to the reference's JRPG information-card stack.
