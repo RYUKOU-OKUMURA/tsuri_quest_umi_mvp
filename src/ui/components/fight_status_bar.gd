@@ -95,24 +95,24 @@ func _draw_status_slot(font: Font, regular_font: Font, rect: Rect2, title: Strin
 	var body_y := rect.position.y + rect.size.y * 0.72
 	if not dark and title == "AM":
 		var am_y := rect.position.y + rect.size.y * 0.54
-		_draw_text_clipped(regular_font, title, Vector2(text_x - 2.0, am_y), 15, title_color, max_width, outline)
-		_draw_text_clipped(font, body, Vector2(text_x + 31.0, am_y + 1.0), 24, body_color, max_width - 31.0, outline)
+		_draw_text_clipped(regular_font, title, Vector2(text_x - 2.0, am_y), 14, title_color, max_width, outline)
+		_draw_text_clipped(font, body, Vector2(text_x + 29.0, am_y + 1.0), 22, body_color, max_width - 29.0, outline)
 		return
 	if not dark and title == "快晴":
 		var inline_y := rect.position.y + rect.size.y * 0.57
-		_draw_text_clipped(font, title, Vector2(text_x - 1.0, inline_y), 20, body_color, max_width, outline)
-		var wind_icon_size := 23.0
-		var wind_x := text_x + 68.0
+		_draw_text_clipped(font, title, Vector2(text_x - 1.0, inline_y), 19, body_color, max_width, outline)
+		var wind_icon_size := 21.0
+		var wind_x := text_x + 66.0
 		_draw_top_sheet_icon(
 			ICON_WIND,
 			Rect2(Vector2(wind_x, rect.position.y + (rect.size.y - wind_icon_size) * 0.5 + 1.0), Vector2(wind_icon_size, wind_icon_size)),
 			Color(1.0, 1.0, 1.0, 0.92)
 		)
-		_draw_text_clipped(font, body, Vector2(wind_x + 28.0, inline_y), 18, Color("#173f32"), max_width - (wind_x - text_x) - 28.0, outline)
+		_draw_text_clipped(font, body, Vector2(wind_x + 26.0, inline_y), 17, Color("#173f32"), max_width - (wind_x - text_x) - 26.0, outline)
 		return
 	if not dark and title == "所持金":
 		var amount_y := rect.position.y + rect.size.y * 0.57
-		_draw_text_clipped(font, body, Vector2(text_x - 1.0, amount_y), 24, body_color, max_width + 2.0, outline)
+		_draw_text_clipped(font, body, Vector2(text_x - 1.0, amount_y), 22, body_color, max_width + 2.0, outline)
 		return
 	_draw_text_clipped(font, title, Vector2(text_x, title_y), title_size, title_color, max_width, outline)
 	_draw_text_clipped(font, body, Vector2(text_x, body_y), body_size, body_color, max_width, outline)
@@ -147,7 +147,7 @@ func _draw_centered_dark_slot(font: Font, regular_font: Font, rect: Rect2, title
 func _draw_status_icon(rect: Rect2, icon_index: int) -> void:
 	if _top_icons == null and _icons == null:
 		return
-	var icon_size := clampf(rect.size.y * 0.64, 40.0, 46.0)
+	var icon_size := clampf(rect.size.y * 0.60, 36.0, 42.0)
 	var icon_rect := Rect2(
 		rect.position + Vector2(11.0, (rect.size.y - icon_size) * 0.5 + 1.0),
 		Vector2(icon_size, icon_size)

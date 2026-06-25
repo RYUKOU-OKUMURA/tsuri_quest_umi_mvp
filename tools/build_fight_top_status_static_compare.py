@@ -93,7 +93,7 @@ def _draw_top_icon(base: Image.Image, index: int, slot: tuple[float, float, floa
     cell_w = sheet.width // 4
     src = sheet.crop((index * cell_w, 0, (index + 1) * cell_w, sheet.height))
     slot_h = slot[3] - slot[1]
-    icon_size = min(max(slot_h * 0.64, 40.0), 46.0)
+    icon_size = min(max(slot_h * 0.60, 36.0), 42.0)
     icon = _resize(src, (round(icon_size), round(icon_size)))
     base.alpha_composite(icon, (round(slot[0] + 11), round(slot[1] + (slot_h - icon_size) * 0.5 + 1)))
 
@@ -137,19 +137,19 @@ def _draw_status_slot(base: Image.Image, draw: ImageDraw.ImageDraw, slot: tuple[
     max_width = x1 - text_x - 10.0
     if title == "AM":
         baseline = y0 + h * 0.54
-        _draw_text(draw, (text_x - 2, baseline), title, 15, "#6d4d25", bold=False, max_width=max_width)
-        _draw_text(draw, (text_x + 31, baseline + 1), body, 24, "#21170f", max_width=max_width - 31)
+        _draw_text(draw, (text_x - 2, baseline), title, 14, "#6d4d25", bold=False, max_width=max_width)
+        _draw_text(draw, (text_x + 29, baseline + 1), body, 22, "#21170f", max_width=max_width - 29)
         return
     if title == "快晴":
         baseline = y0 + h * 0.57
-        _draw_text(draw, (text_x - 1, baseline), title, 20, "#21170f", max_width=max_width)
-        wind_size = 23.0
-        wind_x = text_x + 68.0
+        _draw_text(draw, (text_x - 1, baseline), title, 19, "#21170f", max_width=max_width)
+        wind_size = 21.0
+        wind_x = text_x + 66.0
         _draw_inline_wind_icon(base, (wind_x, y0 + (h - wind_size) * 0.5 + 1, wind_x + wind_size, y0 + (h - wind_size) * 0.5 + 1 + wind_size))
-        _draw_text(draw, (wind_x + 28, baseline), body, 18, "#173f32", max_width=max_width - (wind_x - text_x) - 28)
+        _draw_text(draw, (wind_x + 26, baseline), body, 17, "#173f32", max_width=max_width - (wind_x - text_x) - 26)
         return
     if title == "所持金":
-        _draw_text(draw, (text_x - 1, y0 + h * 0.57), body, 24, "#21170f", max_width=max_width + 2)
+        _draw_text(draw, (text_x - 1, y0 + h * 0.57), body, 22, "#21170f", max_width=max_width + 2)
 
 
 def build_current_status() -> Image.Image:
