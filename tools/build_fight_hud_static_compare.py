@@ -78,8 +78,8 @@ def _draw_segment_gauge(
     warm: bool,
 ) -> None:
     x0, y0, x1, y1 = rect
-    draw.rectangle((x0 - 2, y0 - 2, x1 + 2, y1 + 2), fill=(0, 0, 0, 34))
-    draw.rectangle(rect, fill=(0, 0, 0, 26))
+    draw.rectangle((x0 - 2, y0 - 2, x1 + 2, y1 + 2), fill=(0, 0, 0, 23))
+    draw.rectangle(rect, fill=(0, 0, 0, 15))
     segments = 18
     gap = 1.5
     seg_w = ((x1 - x0) - gap * (segments - 1)) / segments
@@ -95,11 +95,11 @@ def _draw_segment_gauge(
         else:
             fill = (28, 205, 155, 255)
         if not filled:
-            fill = (23, 37, 52, 62)
+            fill = (23, 37, 52, 46)
         sx = x0 + i * (seg_w + gap)
-        draw.rectangle((sx, y0 + 3, sx + seg_w, y1 - 3), fill=fill)
-        draw.rectangle((sx, y0 + 3, sx + seg_w, y0 + 8), fill=(255, 255, 255, 30 if filled else 8))
-        draw.rectangle((sx, y1 - 5, sx + seg_w, y1 - 3), fill=(0, 0, 0, 36))
+        draw.rectangle((sx, y0 + 2, sx + seg_w, y1 - 2), fill=fill)
+        draw.rectangle((sx, y0 + 2, sx + seg_w, y0 + 7), fill=(255, 255, 255, 36 if filled else 7))
+        draw.rectangle((sx, y1 - 4, sx + seg_w, y1 - 2), fill=(0, 0, 0, 28))
     if warm:
         for marker in (safe_min, safe_max):
             mx = x0 + (x1 - x0) * marker

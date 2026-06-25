@@ -650,10 +650,10 @@ def create_sidebar_frame() -> None:
 def _draw_bar_well(image: Image.Image, box: tuple[int, int, int, int]) -> None:
     x0, y0, x1, y1 = box
     d = ImageDraw.Draw(image)
-    d.rounded_rectangle((x0, y0, x1, y1), radius=8, fill=_rgba("#07121b", 235), outline=_rgba("#22384c", 190), width=2)
+    d.rounded_rectangle((x0, y0, x1, y1), radius=8, fill=_rgba("#07121b", 206), outline=_rgba("#22384c", 158), width=2)
     for x in range(x0 + 44, x1, 92):
-        d.line((x, y0 + 7, x, y1 - 7), fill=(255, 255, 255, 7), width=1)
-    d.line((x0 + 7, y0 + 5, x1 - 7, y0 + 5), fill=(255, 255, 255, 26), width=1)
+        d.line((x, y0 + 7, x, y1 - 7), fill=(255, 255, 255, 5), width=1)
+    d.line((x0 + 7, y0 + 5, x1 - 7, y0 + 5), fill=(255, 255, 255, 34), width=1)
 
 
 def create_fight_hud_frame() -> None:
@@ -713,14 +713,14 @@ def create_fight_hud_frame() -> None:
         (depth[2] - 70, depth[3] - 8),
         (depth[0] + 70, depth[3] - 8),
     ]
-    d.polygon(plate_shadow, fill=(0, 0, 0, 72))
+    d.polygon(plate_shadow, fill=(0, 0, 0, 54))
     plate = [
         (depth[0] + 24, depth[1] + 12),
         (depth[2] - 24, depth[1] + 12),
         (depth[2] - 70, depth[3] - 16),
         (depth[0] + 70, depth[3] - 16),
     ]
-    d.polygon(plate, fill=_rgba("#123b61", 238))
+    d.polygon(plate, fill=_rgba("#123b61", 224))
     for inset, alpha, width_px in ((0, 145, 3), (10, 62, 2)):
         d.line(
             (depth[0] + 24 + inset, depth[1] + 12, depth[0] + 70 + inset, depth[3] - 16),

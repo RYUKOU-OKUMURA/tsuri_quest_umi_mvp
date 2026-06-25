@@ -258,8 +258,8 @@ func _draw_segment_gauge(rect: Rect2, ratio: float, safe_min: float, safe_max: f
 	var gap := 1.5 if _hud_frame != null else 2.0
 	var seg_w := (rect.size.x - gap * float(segments - 1)) / float(segments)
 	if _hud_frame != null:
-		draw_rect(rect.grow(2.0), Color(0.0, 0.0, 0.0, 0.13), true)
-		draw_rect(rect, Color(0.0, 0.0, 0.0, 0.10), true)
+		draw_rect(rect.grow(2.0), Color(0.0, 0.0, 0.0, 0.09), true)
+		draw_rect(rect, Color(0.0, 0.0, 0.0, 0.06), true)
 	for i in range(segments):
 		var start := float(i) / float(segments)
 		var filled := start < ratio
@@ -270,14 +270,14 @@ func _draw_segment_gauge(rect: Rect2, ratio: float, safe_min: float, safe_max: f
 				color = color.lerp(Color("#d95524"), clampf((start - 0.55) / 0.45, 0.0, 1.0))
 			else:
 				color = Color("#21d34a").lerp(Color("#16c6b5"), start)
-		var seg := Rect2(rect.position + Vector2(float(i) * (seg_w + gap), 3.0), Vector2(seg_w, rect.size.y - 6.0))
+		var seg := Rect2(rect.position + Vector2(float(i) * (seg_w + gap), 2.0), Vector2(seg_w, rect.size.y - 4.0))
 		if _hud_frame != null:
-			var alpha := 0.96 if filled else 0.24
+			var alpha := 0.98 if filled else 0.18
 			var seg_color := Color(color.r, color.g, color.b, alpha)
 			draw_rect(seg, seg_color, true)
-			draw_rect(Rect2(seg.position, Vector2(seg.size.x, maxf(1.0, seg.size.y * 0.24))), Color(1.0, 1.0, 1.0, 0.12 if filled else 0.035), true)
-			draw_rect(Rect2(Vector2(seg.position.x, seg.end.y - 2.0), Vector2(seg.size.x, 2.0)), Color(0.0, 0.0, 0.0, 0.14), true)
-			draw_rect(seg, Color(1.0, 1.0, 1.0, 0.07 if filled else 0.03), false, 1.0)
+			draw_rect(Rect2(seg.position, Vector2(seg.size.x, maxf(1.0, seg.size.y * 0.24))), Color(1.0, 1.0, 1.0, 0.14 if filled else 0.026), true)
+			draw_rect(Rect2(Vector2(seg.position.x, seg.end.y - 2.0), Vector2(seg.size.x, 2.0)), Color(0.0, 0.0, 0.0, 0.11), true)
+			draw_rect(seg, Color(1.0, 1.0, 1.0, 0.08 if filled else 0.022), false, 1.0)
 		else:
 			draw_rect(seg, color, true)
 			draw_rect(seg, Color(1.0, 1.0, 1.0, 0.13), false, 1.0)
