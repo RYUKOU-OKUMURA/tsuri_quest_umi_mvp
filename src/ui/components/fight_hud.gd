@@ -419,8 +419,8 @@ func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String,
 	var key_size := 12 if not is_long_key else 10
 	var key_text_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
 	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 15.0), key_size, Color.WHITE, 1)
-	var label_size := 13 if not is_long_key else 12
-	var note_size := 9 if not is_long_key else 8
+	var label_size := 14 if not is_long_key else 13
+	var note_size := 10 if not is_long_key else 9
 	var label_pos := key_rect.position + Vector2(key_rect.size.x + (7.0 if not is_long_key else 5.0), 15.0)
 	_draw_text(font, label, label_pos, label_size, Color("#2b2117"), 0)
 	var note_font := FightFontsScript.regular(get_theme_default_font())
@@ -428,12 +428,12 @@ func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String,
 	if not is_long_key:
 		note_text = "（%s）" % note_text
 	var label_w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
-	var note_pos := label_pos + Vector2(label_w + (3.0 if not is_long_key else 2.0), 0.0)
+	var note_pos := label_pos + Vector2(label_w + 2.0, 0.0)
 	var available_w := rect.end.x - note_pos.x - 2.0
 	var note_w := note_font.get_string_size(note_text, HORIZONTAL_ALIGNMENT_LEFT, -1, note_size).x
 	if note_w > available_w:
-		note_size = max(7, note_size - 1)
-	_draw_text(note_font, note_text, note_pos, note_size, Color("#513b20"), 0)
+		note_size = max(8, note_size - 1)
+	_draw_text(note_font, note_text, note_pos, note_size, Color("#3f2f22"), 0)
 
 
 func _draw_key_row(font: Font, pos: Vector2, key: String, label: String) -> void:

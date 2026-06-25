@@ -154,17 +154,17 @@ def _draw_key_hint(draw: ImageDraw.ImageDraw, slot: tuple[float, float, float, f
     cap = (slot[0] + 11, slot[1] + 7, slot[0] + 11 + cap_w, slot[1] + 7 + cap_h)
     _draw_key_cap(draw, cap, key, 10 if is_long else 12)
     label_x = cap[0] + cap_w + (5 if is_long else 7)
-    label_size = 12 if is_long else 13
-    note_size = 8 if is_long else 9
+    label_size = 13 if is_long else 14
+    note_size = 9 if is_long else 10
     label_y = cap[1] + 15
     _draw_text(draw, (label_x, label_y), label, label_size, "#2b2117")
     note_text = "テンション調整" if is_long else f"（{note}）"
-    note_x = label_x + _text_width(label, label_size) + (2 if is_long else 3)
+    note_x = label_x + _text_width(label, label_size) + 2
     note_y = label_y
     available = slot[2] - note_x - 2
     if _text_width(note_text, note_size, bold=False) > available:
-        note_size = max(7, note_size - 1)
-    _draw_text(draw, (note_x, note_y), note_text, note_size, "#513b20", bold=False)
+        note_size = max(8, note_size - 1)
+    _draw_text(draw, (note_x, note_y), note_text, note_size, "#3f2f22", bold=False)
 
 
 def _draw_menu_row(draw: ImageDraw.ImageDraw, pos: tuple[float, float], key: str, label: str) -> None:

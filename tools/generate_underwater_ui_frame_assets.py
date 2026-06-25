@@ -589,8 +589,8 @@ def create_sidebar_frame() -> None:
     fish = (12, 94, w - 12, 594)
     action = (10, 606, w - 10, 806)
     tackle = (10, 820, w - 10, h - 12)
-    action_body = (26, 645, w - 26, 795)
-    tackle_body = (26, 857, w - 26, h - 28)
+    action_body = (18, 640, w - 18, 799)
+    tackle_body = (18, 852, w - 18, h - 20)
 
     _draw_clean_card(
         image,
@@ -648,12 +648,12 @@ def create_sidebar_frame() -> None:
         action,
         radius=12,
         seed=82,
-        outer_alpha=142,
+        outer_alpha=112,
         outer_width=1,
-        border_alpha=92,
+        border_alpha=64,
         border_width=1,
-        inner_alpha=54,
-        detail_alpha_scale=0.46,
+        inner_alpha=34,
+        detail_alpha_scale=0.30,
     )
     _draw_clean_card(
         image,
@@ -665,24 +665,24 @@ def create_sidebar_frame() -> None:
         seed=83,
         texture_strength=6,
         shadow=False,
-        outer_alpha=112,
+        outer_alpha=84,
         outer_width=1,
-        border_alpha=72,
+        border_alpha=48,
         border_width=1,
-        inner_alpha=28,
-        detail_alpha_scale=0.36,
+        inner_alpha=16,
+        detail_alpha_scale=0.22,
     )
     _draw_navy_card(
         image,
         tackle,
         radius=12,
         seed=84,
-        outer_alpha=142,
+        outer_alpha=112,
         outer_width=1,
-        border_alpha=92,
+        border_alpha=64,
         border_width=1,
-        inner_alpha=54,
-        detail_alpha_scale=0.46,
+        inner_alpha=34,
+        detail_alpha_scale=0.30,
     )
     _draw_clean_card(
         image,
@@ -694,25 +694,25 @@ def create_sidebar_frame() -> None:
         seed=85,
         texture_strength=6,
         shadow=False,
-        outer_alpha=112,
+        outer_alpha=84,
         outer_width=1,
-        border_alpha=72,
+        border_alpha=48,
         border_width=1,
-        inner_alpha=28,
-        detail_alpha_scale=0.36,
+        inner_alpha=16,
+        detail_alpha_scale=0.22,
     )
 
     for panel_index, (panel, body, icon_side) in enumerate(((action, action_body, "left"), (tackle, tackle_body, "right"))):
-        d.line((panel[0] + 26, panel[1] + 39, panel[2] - 26, panel[1] + 39), fill=_rgba("#e0bd62", 34), width=1)
-        d.line((panel[0] + 28, panel[1] + 44, panel[2] - 28, panel[1] + 44), fill=_rgba("#07121b", 18), width=1)
+        d.line((panel[0] + 26, panel[1] + 39, panel[2] - 26, panel[1] + 39), fill=_rgba("#e0bd62", 22), width=1)
+        d.line((panel[0] + 28, panel[1] + 44, panel[2] - 28, panel[1] + 44), fill=_rgba("#07121b", 10), width=1)
         d.rounded_rectangle(
             (body[0] + 12, body[1] + 13, body[2] - 12, body[3] - 13),
             radius=8,
-            outline=_rgba("#a98242", 8),
+            outline=_rgba("#a98242", 3),
             width=1,
         )
-        d.line((body[0] + 36, body[3] - 18, body[2] - 36, body[3] - 18), fill=_rgba("#80552a", 4), width=1)
-        _draw_corner_brackets(d, body, length=13, inset=11, color="#a77d3b", alpha=8, width=1)
+        d.line((body[0] + 36, body[3] - 18, body[2] - 36, body[3] - 18), fill=_rgba("#80552a", 2), width=1)
+        _draw_corner_brackets(d, body, length=13, inset=11, color="#a77d3b", alpha=3, width=1)
 
     # Sparse corner accents only. Heavy rivets made the frame read as generated/debug UI.
     for cx, cy in (

@@ -96,11 +96,11 @@ func _draw_status_slot(font: Font, regular_font: Font, rect: Rect2, title: Strin
 	if not dark and title == "AM":
 		var am_y := rect.position.y + rect.size.y * 0.54
 		_draw_text_clipped(regular_font, title, Vector2(text_x - 2.0, am_y), 14, title_color, max_width, outline)
-		_draw_text_clipped(font, body, Vector2(text_x + 29.0, am_y + 1.0), 22, body_color, max_width - 29.0, outline)
+		_draw_text_clipped(font, body, Vector2(text_x + 29.0, am_y + 1.0), 23, body_color, max_width - 29.0, outline)
 		return
 	if not dark and title == "快晴":
 		var inline_y := rect.position.y + rect.size.y * 0.57
-		_draw_text_clipped(font, title, Vector2(text_x - 1.0, inline_y), 19, body_color, max_width, outline)
+		_draw_text_clipped(font, title, Vector2(text_x - 1.0, inline_y), 20, body_color, max_width, outline)
 		var wind_icon_size := 21.0
 		var wind_x := text_x + 66.0
 		_draw_top_sheet_icon(
@@ -108,20 +108,20 @@ func _draw_status_slot(font: Font, regular_font: Font, rect: Rect2, title: Strin
 			Rect2(Vector2(wind_x, rect.position.y + (rect.size.y - wind_icon_size) * 0.5 + 1.0), Vector2(wind_icon_size, wind_icon_size)),
 			Color(1.0, 1.0, 1.0, 0.92)
 		)
-		_draw_text_clipped(font, body, Vector2(wind_x + 26.0, inline_y), 17, Color("#173f32"), max_width - (wind_x - text_x) - 26.0, outline)
+		_draw_text_clipped(font, body, Vector2(wind_x + 26.0, inline_y), 18, Color("#173f32"), max_width - (wind_x - text_x) - 26.0, outline)
 		return
 	if not dark and title == "所持金":
 		var amount_y := rect.position.y + rect.size.y * 0.57
-		_draw_text_clipped(font, body, Vector2(text_x - 1.0, amount_y), 22, body_color, max_width + 2.0, outline)
+		_draw_text_clipped(font, body, Vector2(text_x - 1.0, amount_y), 23, body_color, max_width + 2.0, outline)
 		return
 	_draw_text_clipped(font, title, Vector2(text_x, title_y), title_size, title_color, max_width, outline)
 	_draw_text_clipped(font, body, Vector2(text_x, body_y), body_size, body_color, max_width, outline)
 
 
 func _draw_centered_dark_slot(font: Font, regular_font: Font, rect: Rect2, title: String, body: String) -> void:
-	var title_size := 13
-	var depth_label_size := 15
-	var depth_value_size := 18
+	var title_size := 14
+	var depth_label_size := 16
+	var depth_value_size := 19
 	var title_width := font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x
 	_draw_text_clipped(
 		font,

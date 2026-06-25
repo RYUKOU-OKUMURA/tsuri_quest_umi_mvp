@@ -115,9 +115,9 @@ def _draw_centered_dark_slot(
     x0, y0, x1, y1 = slot
     w = x1 - x0
     h = y1 - y0
-    title_size = 13
-    label_size = 15
-    value_size = 18
+    title_size = 14
+    label_size = 16
+    value_size = 19
     _draw_text(draw, (x0 + (w - _text_width(title, title_size)) * 0.5, y0 + h * 0.35), title, title_size, "#f1d58d", stroke=1)
     label = "水深"
     value = body.replace("水深 ", "")
@@ -138,18 +138,18 @@ def _draw_status_slot(base: Image.Image, draw: ImageDraw.ImageDraw, slot: tuple[
     if title == "AM":
         baseline = y0 + h * 0.54
         _draw_text(draw, (text_x - 2, baseline), title, 14, "#6d4d25", bold=False, max_width=max_width)
-        _draw_text(draw, (text_x + 29, baseline + 1), body, 22, "#21170f", max_width=max_width - 29)
+        _draw_text(draw, (text_x + 29, baseline + 1), body, 23, "#21170f", max_width=max_width - 29)
         return
     if title == "快晴":
         baseline = y0 + h * 0.57
-        _draw_text(draw, (text_x - 1, baseline), title, 19, "#21170f", max_width=max_width)
+        _draw_text(draw, (text_x - 1, baseline), title, 20, "#21170f", max_width=max_width)
         wind_size = 21.0
         wind_x = text_x + 66.0
         _draw_inline_wind_icon(base, (wind_x, y0 + (h - wind_size) * 0.5 + 1, wind_x + wind_size, y0 + (h - wind_size) * 0.5 + 1 + wind_size))
-        _draw_text(draw, (wind_x + 26, baseline), body, 17, "#173f32", max_width=max_width - (wind_x - text_x) - 26)
+        _draw_text(draw, (wind_x + 26, baseline), body, 18, "#173f32", max_width=max_width - (wind_x - text_x) - 26)
         return
     if title == "所持金":
-        _draw_text(draw, (text_x - 1, y0 + h * 0.57), body, 22, "#21170f", max_width=max_width + 2)
+        _draw_text(draw, (text_x - 1, y0 + h * 0.57), body, 23, "#21170f", max_width=max_width + 2)
 
 
 def build_current_status() -> Image.Image:

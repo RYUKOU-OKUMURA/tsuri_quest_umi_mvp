@@ -165,7 +165,7 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 	_draw_text(font, "魚の行動", rect.position + Vector2(title_x, 25.0), 18, Palette.TEXT_BONE, 2 if _sidebar_frame != null else 3)
 	var body := Rect2(rect.position + Vector2(10.0, 33.0), rect.size - Vector2(20.0, 42.0))
 	if _sidebar_frame != null:
-		body = Rect2(rect.position + Vector2(12.5, rect.size.y * 0.195), rect.size - Vector2(25.0, rect.size.y * 0.250))
+		body = Rect2(rect.position + Vector2(8.5, rect.size.y * 0.170), rect.size - Vector2(17.0, rect.size.y * 0.205))
 	else:
 		_draw_panel(body, Color("#f3e8cd"), Palette.WOOD_DARK, Palette.GOLD)
 	var action := "待機"
@@ -191,7 +191,7 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	_draw_text(font, "タックル", rect.position + Vector2(14.0, 24.0), 18, Palette.TEXT_BONE, 2 if _sidebar_frame != null else 3)
 	var body := Rect2(rect.position + Vector2(10.0, 32.0), rect.size - Vector2(20.0, 38.0))
 	if _sidebar_frame != null:
-		body = Rect2(rect.position + Vector2(12.5, rect.size.y * 0.193), rect.size - Vector2(25.0, rect.size.y * 0.276))
+		body = Rect2(rect.position + Vector2(8.5, rect.size.y * 0.167), rect.size - Vector2(17.0, rect.size.y * 0.209))
 	else:
 		_draw_panel(body, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	var rod_name := _short_rod_name(String(trip_stats.get("rod_name", "港の入門竿")))
@@ -263,9 +263,9 @@ func _draw_estimate_line(font: Font, value: float, rect: Rect2) -> void:
 	var label := "推定"
 	var number := "%.1f" % value
 	var unit := " cm"
-	var label_size := 14
-	var number_size := 23
-	var unit_size := 14
+	var label_size := 15
+	var number_size := 24
+	var unit_size := 15
 	var gap := 6.0
 	var label_w := regular_font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
 	var number_w := font.get_string_size(number, HORIZONTAL_ALIGNMENT_LEFT, -1, number_size).x
@@ -273,11 +273,11 @@ func _draw_estimate_line(font: Font, value: float, rect: Rect2) -> void:
 	var total_w := label_w + gap + number_w + unit_w
 	var x := rect.position.x + (rect.size.x - total_w) * 0.5
 	var baseline := rect.position.y + 25.0
-	_draw_text(regular_font, label, Vector2(x, baseline - 1.0), label_size, Color("#4d3c2c"), 0)
+	_draw_text(regular_font, label, Vector2(x, baseline - 1.0), label_size, Color("#3f2f22"), 0)
 	x += label_w + gap
-	_draw_text(font, number, Vector2(x, baseline), number_size, Color("#2b2117"), 0)
+	_draw_text(font, number, Vector2(x, baseline), number_size, Color("#21170f"), 0)
 	x += number_w
-	_draw_text(regular_font, unit, Vector2(x, baseline - 1.0), unit_size, Color("#4d3c2c"), 0)
+	_draw_text(regular_font, unit, Vector2(x, baseline - 1.0), unit_size, Color("#3f2f22"), 0)
 
 
 func _draw_wrapped(
@@ -334,17 +334,17 @@ func _draw_bullet(font: Font, text: String, pos: Vector2, max_width: float) -> v
 func _draw_info_paragraph(font: Font, text: String, pos: Vector2, max_width: float) -> void:
 	var font_size := 14
 	var gap := 16.0 if _sidebar_frame != null else float(font_size + 3)
-	_draw_wrapped(font, text, pos, max_width, font_size, Palette.TEXT_DARK, 2, gap)
+	_draw_wrapped(font, text, pos, max_width, font_size, Color("#24190f"), 2, gap)
 
 
 func _draw_detail_line(font: Font, text: String, pos: Vector2, max_width: float) -> void:
-	draw_circle(pos + Vector2(3.0, 10.0), 4.1 if _sidebar_frame != null else 4.3, Color("#49c75a"))
+	draw_circle(pos + Vector2(3.0, 10.0), 4.4 if _sidebar_frame != null else 4.3, Color("#3fbd50"))
 	var font_size := 14
 	if _sidebar_frame != null:
 		font_size = 13
 	elif max_width < 260.0:
 		font_size = 13
-	_draw_wrapped(font, text, pos + Vector2(15.0, -1.0), max_width - 15.0, font_size, Palette.TEXT_DARK, 1)
+	_draw_wrapped(font, text, pos + Vector2(15.0, -1.0), max_width - 15.0, font_size, Color("#24190f"), 1)
 
 
 func _draw_rarity_tag(font: Font, rect: Rect2, rarity: String) -> void:
