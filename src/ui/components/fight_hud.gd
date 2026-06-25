@@ -219,15 +219,15 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 		)
 	else:
 		_draw_bait_icon(bait.position + Vector2(82.0 if _hud_frame == null else 95.0, bait.size.y * 0.62))
-	_draw_text(font, "オキアミ", bait.position + Vector2(116.0, bait.size.y * (0.58 if _hud_frame != null else 0.66)), 23 if _hud_frame != null else 20, Color("#2b2117"), 0)
-	_draw_text(font, "× 17", bait.position + Vector2(126.0, bait.size.y * (0.80 if _hud_frame != null else 0.92)), 21 if _hud_frame != null else 19, Color("#2b2117"), 0)
+	_draw_text(font, "オキアミ", bait.position + Vector2(116.0, bait.size.y * (0.58 if _hud_frame != null else 0.66)), 21 if _hud_frame != null else 20, Color("#2b2117"), 0)
+	_draw_text(font, "× 17", bait.position + Vector2(128.0, bait.size.y * (0.80 if _hud_frame != null else 0.92)), 19 if _hud_frame != null else 19, Color("#2b2117"), 0)
 
 	_draw_panel(hint, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	var hint_title := "操作のヒント"
 	if _hud_frame != null:
-		var hint_title_size := 18
+		var hint_title_size := 16
 		var hint_title_w := font.get_string_size(hint_title, HORIZONTAL_ALIGNMENT_LEFT, -1, hint_title_size).x
-		_draw_text(font, hint_title, hint.position + Vector2((hint.size.x - hint_title_w) * 0.5, 22.0), hint_title_size, Palette.TEXT_BONE, 2)
+		_draw_text(font, hint_title, hint.position + Vector2((hint.size.x - hint_title_w) * 0.5, 21.0), hint_title_size, Palette.TEXT_BONE, 1)
 	else:
 		_draw_text(font, hint_title, hint.position + Vector2(18.0, 21.0), 18, Color("#6a4c2b"), 0)
 	if _hud_frame != null:
@@ -376,35 +376,35 @@ func _draw_key_hint(font: Font, rect: Rect2, key: String, label: String) -> void
 
 func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String, note: String) -> void:
 	var is_long_key := key.length() > 1
-	var key_origin := rect.position + Vector2(9.0, 9.0)
-	var key_w := 26.0 if not is_long_key else 44.0
-	var key_h := 22.0
+	var key_origin := rect.position + Vector2(11.0, 10.0)
+	var key_w := 22.0 if not is_long_key else 38.0
+	var key_h := 19.0
 	var key_rect := Rect2(key_origin, Vector2(key_w, key_h))
 	if is_long_key:
 		var style := StyleBoxFlat.new()
 		style.bg_color = Color("#253247")
 		style.border_color = Color("#d5b56b")
 		style.set_border_width_all(1)
-		style.set_corner_radius_all(5)
+		style.set_corner_radius_all(4)
 		style.shadow_color = Color(0.0, 0.0, 0.0, 0.24)
 		style.shadow_size = 1
 		draw_style_box(style, key_rect)
-		draw_line(key_rect.position + Vector2(6.0, 4.0), key_rect.position + Vector2(key_rect.size.x - 6.0, 4.0), Color(1.0, 1.0, 1.0, 0.18), 1.0)
+		draw_line(key_rect.position + Vector2(6.0, 4.0), key_rect.position + Vector2(key_rect.size.x - 6.0, 4.0), Color(1.0, 1.0, 1.0, 0.14), 1.0)
 	else:
 		var center := key_rect.position + key_rect.size * 0.5
-		draw_circle(center + Vector2(1.2, 1.6), 11.0, Color(0.0, 0.0, 0.0, 0.22))
-		draw_circle(center, 10.0, Color("#253247"))
-		draw_circle(center, 10.0, Color("#d5b56b"), false, 1.0)
-		draw_line(center + Vector2(-6.0, -5.0), center + Vector2(6.0, -5.0), Color(1.0, 1.0, 1.0, 0.17), 1.0)
-	var key_size := 14 if not is_long_key else 12
+		draw_circle(center + Vector2(1.0, 1.4), 9.3, Color(0.0, 0.0, 0.0, 0.20))
+		draw_circle(center, 8.5, Color("#253247"))
+		draw_circle(center, 8.5, Color("#d5b56b"), false, 1.0)
+		draw_line(center + Vector2(-5.0, -4.5), center + Vector2(5.0, -4.5), Color(1.0, 1.0, 1.0, 0.14), 1.0)
+	var key_size := 12 if not is_long_key else 10
 	var key_text_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
-	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 16.0), key_size, Color.WHITE, 1)
-	var label_size := 16
-	var note_size := 9 if not is_long_key else 8
-	var label_pos := key_rect.position + Vector2(key_rect.size.x + (8.0 if not is_long_key else 6.0), 17.0)
+	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 14.0), key_size, Color.WHITE, 1)
+	var label_size := 14
+	var note_size := 8 if not is_long_key else 7
+	var label_pos := key_rect.position + Vector2(key_rect.size.x + (7.0 if not is_long_key else 6.0), 15.0)
 	_draw_text(font, label, label_pos, label_size, Color("#2b2117"), 0)
 	var note_text := _compact_control_note(note)
-	_draw_text(font, note_text, label_pos + Vector2(0.0, 12.0), note_size, Color("#5a4327"), 0)
+	_draw_text(font, note_text, label_pos + Vector2(0.0, 11.0), note_size, Color("#5a4327"), 0)
 
 
 func _draw_key_row(font: Font, pos: Vector2, key: String, label: String) -> void:
@@ -426,7 +426,7 @@ func _draw_menu_row(font: Font, pos: Vector2, key: String, label: String) -> voi
 	var key_size := 16
 	var key_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
 	_draw_text(font, key, Vector2(center.x - key_w * 0.5, center.y + 5.0), key_size, Color("#2b2117"), 0)
-	_draw_text(font, label, pos + Vector2(28.0, 4.0), 16, Palette.TEXT_BONE, 2)
+	_draw_text(font, label, pos + Vector2(28.0, 4.0), 15, Palette.TEXT_BONE, 1)
 
 
 func _compact_control_note(note: String) -> String:

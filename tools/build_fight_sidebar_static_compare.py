@@ -111,6 +111,11 @@ def _paste_contain(base: Image.Image, image: Image.Image, box: tuple[float, floa
     base.alpha_composite(resized, (x, y))
 
 
+def _paste_alpha_crop_contain(base: Image.Image, image: Image.Image, box: tuple[float, float, float, float]) -> None:
+    bbox = image.getchannel("A").getbbox()
+    _paste_contain(base, image.crop(bbox) if bbox is not None else image, box)
+
+
 def _draw_sheet_icon(base: Image.Image, index: int, box: tuple[float, float, float, float]) -> None:
     sheet = Image.open(ASSET_DIR / "fight_icon_sheet.png").convert("RGBA")
     cell_w = sheet.width // 3
@@ -167,10 +172,10 @@ def _draw_lower_cards(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: i
     _draw_sheet_icon(base, 7, (action[0] + 14, action[1] + 6, action[0] + 36, action[1] + 28))
     _draw_text(draw, (action[0] + 40, action[1] + 5), "魚の行動", 18, "#f7ecd0", stroke=2)
     action_body = (action[0] + 14, action[1] + (action[3] - action[1]) * 0.225, action[2] - 14, action[3] - (action[3] - action[1]) * 0.060)
-    _paste_contain(base, Image.open(ASSET_DIR / "fight_action_card_icon.png").convert("RGBA"), (action_body[0] + 5, action_body[1] + 17, action_body[0] + 61, action_body[1] + 73))
-    _draw_text(draw, (action_body[0] + 78, action_body[1] + 7), "突っ込み！", 23, "#2b2117")
-    _draw_wrapped(draw, (action_body[0] + 78, action_body[1] + 46), "一気に深く潜る！", action_body[2] - action_body[0] - 84, 15, "#2b2117", max_lines=1, line_gap=16)
-    _draw_wrapped(draw, (action_body[0] + 78, action_body[1] + 62), "ラインを緩めず耐えよう！", action_body[2] - action_body[0] - 84, 15, "#2b2117", max_lines=1, line_gap=16)
+    _paste_alpha_crop_contain(base, Image.open(ASSET_DIR / "fight_action_card_icon.png").convert("RGBA"), (action_body[0] + 2, action_body[1] + 10, action_body[0] + 74, action_body[1] + 82))
+    _draw_text(draw, (action_body[0] + 86, action_body[1] + 7), "突っ込み！", 23, "#2b2117")
+    _draw_wrapped(draw, (action_body[0] + 86, action_body[1] + 46), "一気に深く潜る！", action_body[2] - action_body[0] - 92, 15, "#2b2117", max_lines=1, line_gap=16)
+    _draw_wrapped(draw, (action_body[0] + 86, action_body[1] + 62), "ラインを緩めず耐えよう！", action_body[2] - action_body[0] - 92, 15, "#2b2117", max_lines=1, line_gap=16)
 
     _draw_text(draw, (tackle[0] + 14, tackle[1] + 4), "タックル", 18, "#f7ecd0", stroke=2)
     body = (tackle[0] + 14, tackle[1] + (tackle[3] - tackle[1]) * 0.225, tackle[2] - 14, tackle[3] - (tackle[3] - tackle[1]) * 0.060)

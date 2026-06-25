@@ -109,10 +109,10 @@ def _draw_centered_dark_slot(
     x0, y0, x1, y1 = slot
     w = x1 - x0
     h = y1 - y0
-    title_size = 13
-    body_size = 19
-    _draw_text(draw, (x0 + (w - _text_width(title, title_size)) * 0.5, y0 + h * 0.35), title, title_size, "#f1d58d", stroke=2)
-    _draw_text(draw, (x0 + (w - _text_width(body, body_size)) * 0.5, y0 + h * 0.69), body, body_size, "#eaf6ff", stroke=2)
+    title_size = 12
+    body_size = 18
+    _draw_text(draw, (x0 + (w - _text_width(title, title_size)) * 0.5, y0 + h * 0.35), title, title_size, "#f1d58d", stroke=1)
+    _draw_text(draw, (x0 + (w - _text_width(body, body_size)) * 0.5, y0 + h * 0.69), body, body_size, "#eaf6ff", stroke=1)
 
 
 def _draw_status_slot(base: Image.Image, draw: ImageDraw.ImageDraw, slot: tuple[float, float, float, float], title: str, body: str) -> None:
@@ -124,18 +124,18 @@ def _draw_status_slot(base: Image.Image, draw: ImageDraw.ImageDraw, slot: tuple[
     if title == "AM":
         baseline = y0 + h * 0.54
         _draw_text(draw, (text_x - 1, baseline), title, 14, "#6d4d25", max_width=max_width)
-        _draw_text(draw, (text_x + 29, baseline + 2), body, 25, "#21170f", max_width=max_width - 29)
+        _draw_text(draw, (text_x + 29, baseline + 2), body, 24, "#21170f", max_width=max_width - 29)
         return
     if title == "快晴":
         baseline = y0 + h * 0.57
-        _draw_text(draw, (text_x - 1, baseline), title, 20, "#21170f", max_width=max_width)
-        wind_size = 25.0
+        _draw_text(draw, (text_x - 1, baseline), title, 19, "#21170f", max_width=max_width)
+        wind_size = 24.0
         wind_x = text_x + 68.0
         _draw_inline_wind_icon(base, (wind_x, y0 + (h - wind_size) * 0.5 + 1, wind_x + wind_size, y0 + (h - wind_size) * 0.5 + 1 + wind_size))
-        _draw_text(draw, (wind_x + 29, baseline), body, 19, "#173f32", max_width=max_width - (wind_x - text_x) - 29)
+        _draw_text(draw, (wind_x + 28, baseline), body, 18, "#173f32", max_width=max_width - (wind_x - text_x) - 28)
         return
     if title == "所持金":
-        _draw_text(draw, (text_x - 1, y0 + h * 0.57), body, 25, "#21170f", max_width=max_width + 2)
+        _draw_text(draw, (text_x - 1, y0 + h * 0.57), body, 24, "#21170f", max_width=max_width + 2)
 
 
 def build_current_status() -> Image.Image:

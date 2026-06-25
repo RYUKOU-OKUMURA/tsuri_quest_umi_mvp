@@ -10,7 +10,7 @@ const SHOWCASE_FISH_SHEET_PATH := "res://assets/showcase/underwater/kurodai_show
 const SHOWCASE_HIT_BURST_PATH := "res://assets/showcase/underwater/hit_burst.png"
 const SHOWCASE_LURE_PATH := "res://assets/showcase/underwater/fight_lure.png"
 const SHOWCASE_FISH_FRAME_COUNT := 4
-const SHOWCASE_FISH_CENTER_OFFSET := Vector2(-0.082, -0.018)
+const SHOWCASE_FISH_CENTER_OFFSET := Vector2(-0.067, -0.018)
 
 var simulator: FishingSimulator
 var fish_data: Dictionary = {}
@@ -563,7 +563,7 @@ func _showcase_fish_draw_size(scale_value := -1.0) -> Vector2:
 	elif effective_scale < 0.0:
 		effective_scale = boss_ratio
 	var stamina_scale := clampf(effective_scale / boss_ratio, 0.90, 1.06)
-	var target_width_ratio := 0.465 if bool(fish_data.get("boss", false)) else 0.49
+	var target_width_ratio := 0.49
 	var draw_width := size.x * target_width_ratio * stamina_scale
 	return Vector2(draw_width, draw_width * frame_h / frame_w)
 
@@ -615,26 +615,26 @@ func _draw_fight_overlay() -> void:
 	var distance_ratio := clampf(
 		simulator.distance / maxf(simulator.initial_distance, 0.01), 0.0, 1.0
 	)
-	var meter_rect := Rect2(68.0, size.y - 26.0, size.x - 84.0, 10.0)
+	var meter_rect := Rect2(72.0, size.y - 24.0, size.x * 0.56, 6.0)
 	if _meter_track == null:
 		_meter_track = StyleBoxFlat.new()
-		_meter_track.bg_color = Color(0.02, 0.08, 0.14, 0.16)
-		_meter_track.set_corner_radius_all(5)
+		_meter_track.bg_color = Color(0.02, 0.08, 0.14, 0.10)
+		_meter_track.set_corner_radius_all(3)
 		_meter_fill = StyleBoxFlat.new()
-		_meter_fill.bg_color = Color(0.52, 0.94, 1.0, 0.34)
-		_meter_fill.set_corner_radius_all(5)
+		_meter_fill.bg_color = Color(0.52, 0.94, 1.0, 0.20)
+		_meter_fill.set_corner_radius_all(3)
 	draw_style_box(_meter_track, meter_rect)
 	if distance_ratio > 0.0:
 		var fill_rect := Rect2(meter_rect.position, Vector2(meter_rect.size.x * distance_ratio, meter_rect.size.y))
 		draw_style_box(_meter_fill, fill_rect)
 		draw_rect(
 			Rect2(fill_rect.position.x + 3.0, fill_rect.position.y + 1.5, fill_rect.size.x - 6.0, 1.5),
-			Color(1.0, 1.0, 1.0, 0.22),
+			Color(1.0, 1.0, 1.0, 0.10),
 			false
 		)
-	var label_pos := Vector2(68.0, size.y - 30.0)
-	draw_string_outline(font, label_pos, "距離 %.1fm" % simulator.distance, HORIZONTAL_ALIGNMENT_LEFT, int(size.x - 84.0), 12, 2, Color(0.0, 0.0, 0.0, 0.32))
-	draw_string(font, label_pos, "距離 %.1fm" % simulator.distance, HORIZONTAL_ALIGNMENT_LEFT, int(size.x - 84.0), 12, Color(0.86, 0.96, 1.0, 0.48))
+	var label_pos := Vector2(72.0, size.y - 28.0)
+	draw_string_outline(font, label_pos, "距離 %.1fm" % simulator.distance, HORIZONTAL_ALIGNMENT_LEFT, int(meter_rect.size.x), 10, 1, Color(0.0, 0.0, 0.0, 0.24))
+	draw_string(font, label_pos, "距離 %.1fm" % simulator.distance, HORIZONTAL_ALIGNMENT_LEFT, int(meter_rect.size.x), 10, Color(0.86, 0.96, 1.0, 0.38))
 
 
 func _draw_frame() -> void:

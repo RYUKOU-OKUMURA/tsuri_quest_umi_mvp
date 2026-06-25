@@ -111,9 +111,9 @@ def _draw_segment_gauge(
 
 def _draw_key_cap(draw: ImageDraw.ImageDraw, box: tuple[float, float, float, float], label: str, size: int) -> None:
     draw.rounded_rectangle(box, radius=999, fill="#132132", outline="#f0c66a", width=1)
-    draw.arc((box[0] + 4, box[1] + 3, box[2] - 4, box[3] - 4), 200, 340, fill=(255, 244, 190, 96), width=1)
+    draw.arc((box[0] + 4, box[1] + 3, box[2] - 4, box[3] - 4), 200, 340, fill=(255, 244, 190, 76), width=1)
     tw = _text_width(label, size)
-    _draw_text(draw, (box[0] + (box[2] - box[0] - tw) * 0.5, box[1] + 16), label, size, "#fff5d0", stroke=1)
+    _draw_text(draw, (box[0] + (box[2] - box[0] - tw) * 0.5, box[1] + 14), label, size, "#fff5d0", stroke=1)
 
 
 def _hint_slots(hint: tuple[float, float, float, float]) -> list[tuple[float, float, float, float]]:
@@ -128,13 +128,13 @@ def _hint_slots(hint: tuple[float, float, float, float]) -> list[tuple[float, fl
 
 def _draw_key_hint(draw: ImageDraw.ImageDraw, slot: tuple[float, float, float, float], key: str, label: str, note: str) -> None:
     is_long = key == "L/R"
-    cap_w = 26 if not is_long else 44
-    cap_h = 22
-    cap = (slot[0] + 9, slot[1] + 9, slot[0] + 9 + cap_w, slot[1] + 9 + cap_h)
-    _draw_key_cap(draw, cap, key, 12 if is_long else 14)
-    label_x = cap[0] + cap_w + (6 if is_long else 8)
-    _draw_text(draw, (label_x, cap[1] + 17), label, 16, "#2b2117")
-    _draw_text(draw, (label_x, cap[1] + 29), note, 8 if is_long else 9, "#5a4327", bold=False)
+    cap_w = 22 if not is_long else 38
+    cap_h = 19
+    cap = (slot[0] + 11, slot[1] + 10, slot[0] + 11 + cap_w, slot[1] + 10 + cap_h)
+    _draw_key_cap(draw, cap, key, 10 if is_long else 12)
+    label_x = cap[0] + cap_w + (6 if is_long else 7)
+    _draw_text(draw, (label_x, cap[1] + 15), label, 14, "#2b2117")
+    _draw_text(draw, (label_x, cap[1] + 26), note, 7 if is_long else 8, "#5a4327", bold=False)
 
 
 def _draw_menu_row(draw: ImageDraw.ImageDraw, pos: tuple[float, float], key: str, label: str) -> None:
@@ -143,7 +143,7 @@ def _draw_menu_row(draw: ImageDraw.ImageDraw, pos: tuple[float, float], key: str
     draw.line((cx - 5, cy - 5, cx + 5, cy - 5), fill=(255, 255, 255, 92), width=1)
     key_w = _text_width(key, 16)
     _draw_text(draw, (cx - key_w * 0.5, cy + 5), key, 16, "#2b2117")
-    _draw_text(draw, (pos[0] + 28, pos[1] + 4), label, 16, "#f7ecd0", stroke=2)
+    _draw_text(draw, (pos[0] + 28, pos[1] + 4), label, 15, "#f7ecd0", stroke=1)
 
 
 def build_current_hud() -> Image.Image:
@@ -204,12 +204,12 @@ def build_current_hud() -> Image.Image:
         )
     else:
         _draw_sheet_icon(frame, 6, (bait[0] + 58, bait[1] + 48, bait[0] + 100, bait[1] + 90))
-    _draw_text(draw, (bait[0] + 116, bait[1] + 54), "オキアミ", 23, "#2b2117")
-    _draw_text(draw, (bait[0] + 126, bait[1] + 79), "× 17", 21, "#2b2117")
+    _draw_text(draw, (bait[0] + 116, bait[1] + 54), "オキアミ", 21, "#2b2117")
+    _draw_text(draw, (bait[0] + 128, bait[1] + 79), "× 17", 19, "#2b2117")
 
     hint_title = "操作のヒント"
-    hint_title_w = _text_width(hint_title, 18)
-    _draw_text(draw, (hint[0] + (hint[2] - hint[0] - hint_title_w) * 0.5, hint[1] + 22), hint_title, 18, "#f7ecd0", stroke=2)
+    hint_title_w = _text_width(hint_title, 16)
+    _draw_text(draw, (hint[0] + (hint[2] - hint[0] - hint_title_w) * 0.5, hint[1] + 21), hint_title, 16, "#f7ecd0", stroke=1)
     for slot, args in zip(_hint_slots(hint), (("A", "巻く", "リールを巻く"), ("B", "緩める", "ラインを出す"), ("L/R", "調整", "テンション"))):
         _draw_key_hint(draw, slot, *args)
 

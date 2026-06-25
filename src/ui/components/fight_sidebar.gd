@@ -13,6 +13,7 @@ const TACKLE_CARD_ICON_PATH := "res://assets/showcase/underwater/fight_tackle_ca
 const FISH_FRAME_COUNT := 4
 const ICON_ACTION := 7
 const ICON_TACKLE := 8
+const ACTION_CARD_ICON_SRC := Rect2(51.0, 13.0, 80.0, 132.0)
 
 var simulator: FishingSimulator
 var fish_data: Dictionary = {}
@@ -169,9 +170,9 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 	var icon_size := 42.0 if _sidebar_frame != null else 58.0
 	var text_x := 62.0 if _sidebar_frame != null else 78.0
 	if _sidebar_frame != null:
-		icon_size = 56.0
-		text_x = 78.0
-	_draw_action_icon(body.position + Vector2(33.0, body.size.y * 0.57), icon_size)
+		icon_size = 72.0
+		text_x = 86.0
+	_draw_action_icon(body.position + Vector2(38.0, body.size.y * 0.58), icon_size)
 	_draw_text(font, "%s！" % action, body.position + Vector2(text_x, 32.0), 23 if _sidebar_frame != null else 20, Color("#2b2117"), 0)
 	if _sidebar_frame != null:
 		_draw_action_message(font, message, body.position + Vector2(text_x, 46.0), body.size.x - text_x - 6.0)
@@ -356,7 +357,7 @@ func _draw_fish_portrait(rect: Rect2) -> void:
 
 func _draw_action_icon(center: Vector2, size_value: float = 58.0) -> void:
 	if _action_card_icon != null:
-		_draw_texture_centered(_action_card_icon, center, Vector2(size_value, size_value))
+		_draw_texture_region_centered(_action_card_icon, ACTION_CARD_ICON_SRC, center, Vector2(size_value, size_value))
 		return
 	if _icons != null:
 		_draw_sheet_icon(ICON_ACTION, Rect2(center - Vector2(size_value, size_value) * 0.5, Vector2(size_value, size_value)))
@@ -414,6 +415,13 @@ func _draw_texture_centered(texture: Texture2D, center: Vector2, max_size: Vecto
 	var draw_size := tex_size * scale
 	var rect := Rect2(center - draw_size * 0.5, draw_size)
 	draw_texture_rect(texture, rect, false, Color.WHITE)
+
+
+func _draw_texture_region_centered(texture: Texture2D, src: Rect2, center: Vector2, max_size: Vector2) -> void:
+	var scale := minf(max_size.x / src.size.x, max_size.y / src.size.y)
+	var draw_size := src.size * scale
+	var rect := Rect2(center - draw_size * 0.5, draw_size)
+	draw_texture_rect_region(texture, rect, src, Color.WHITE)
 
 
 func _display_fish_name(name: String) -> String:
