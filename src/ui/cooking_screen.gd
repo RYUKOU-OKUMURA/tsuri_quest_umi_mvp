@@ -11,6 +11,7 @@ const DISH_ICON_SHEET := "res://assets/showcase/cooking/dish_icon_sheet.png"
 const DISH_FEATURE_AJI := "res://assets/showcase/cooking/dish_feature_aji_shioyaki.png"
 const RECIPE_CARD_FRAME := "res://assets/showcase/cooking/recipe_card_frame.png"
 const DISH_DETAIL_FRAME := "res://assets/showcase/cooking/dish_detail_frame.png"
+const FISH_ROW_FRAME := "res://assets/showcase/cooking/status_card_frame.png"
 
 const FISH_ICON_INDEX := {
 	"aji": 0,
@@ -335,13 +336,17 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 				_select_fish(fish_id)
 	)
-	_fish_cards[fish_id] = card
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
+	row.add_theme_constant_override("separation", 6)
 	card.add_child(row)
+	var marker := make_shadow_label("", 18, Palette.GOLD_BRIGHT, 2)
+	marker.custom_minimum_size = Vector2(16, 0)
+	marker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	marker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(marker)
 	var icon := TextureRect.new()
 	icon.texture = _fish_icon(fish_id)
-	icon.custom_minimum_size = Vector2(74, 40)
+	icon.custom_minimum_size = Vector2(64, 40)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	row.add_child(icon)
@@ -352,6 +357,7 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	var amount := make_label("× %d" % count, 18, Color("#241b12"), 1, Color("#fff2ca"))
 	amount.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(amount)
+	_fish_cards[fish_id] = {"card": card, "marker": marker}
 	return card
 
 
@@ -368,18 +374,30 @@ func _select_fish(fish_id: String) -> void:
 func _refresh_fish_card_styles() -> void:
 	for fish_id in _fish_cards.keys():
 		var selected := String(fish_id) == _selected_fish_id
-		var card := _fish_cards[fish_id] as PanelContainer
-		if card != null:
-			card.add_theme_stylebox_override(
-				"panel",
+		var entry := Dictionary(_fish_cards[fish_id])
+		var card := entry.get("card") as PanelContainer
+		var marker := entry.get("marker") as Label
+		if card == null:
+			continue
+		card.self_modulate = Color("#fff1bc") if selected else Color("#f3dfb9")
+		card.add_theme_stylebox_override(
+			"panel",
+			_texture_style_box(
+				FISH_ROW_FRAME,
+				24,
 				_style_box(
 					Color("#ffefbd") if selected else Color("#ead9b4"),
 					Color("#f4c96e") if selected else Color("#6a421f"),
 					Color("#ffffff") if selected else Color("#c29250"),
 					4,
 					6
-				)
+				),
+				10.0,
+				6.0
 			)
+		)
+		if marker != null:
+			marker.text = ">" if selected else ""
 
 
 func _rebuild_recipe_cards() -> void:
