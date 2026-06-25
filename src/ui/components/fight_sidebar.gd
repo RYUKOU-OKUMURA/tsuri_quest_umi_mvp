@@ -190,7 +190,7 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	for i in range(lines.size()):
 		_draw_wrapped(font, lines[i], body.position + text_offset + Vector2(0.0, float(i) * tackle_line_gap), text_width, tackle_font_size, Palette.TEXT_DARK, 1, tackle_font_size + 3.0)
 	if _tackle_card_icon != null or _icons != null:
-		var icon_rect := Rect2(body.end - Vector2(76.0, 69.0), Vector2(68.0, 60.0)) if _sidebar_frame != null else Rect2(body.end - Vector2(50.0, 50.0), Vector2(40.0, 40.0))
+		var icon_rect := Rect2(body.end - Vector2(94.0, 76.0), Vector2(88.0, 70.0)) if _sidebar_frame != null else Rect2(body.end - Vector2(50.0, 50.0), Vector2(40.0, 40.0))
 		_draw_tackle_icon(icon_rect)
 	else:
 		_draw_simple_rod(body.position + Vector2(body.size.x - 62.0, body.size.y - 24.0))

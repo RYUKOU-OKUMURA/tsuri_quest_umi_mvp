@@ -10,6 +10,12 @@ from PIL import Image, ImageDraw, ImageFilter
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "assets" / "showcase" / "underwater"
 ICON_SHEET = OUT_DIR / "fight_icon_sheet.png"
+REFERENCE_MOCKUP = ROOT / "reference" / "02_underwater_fight_mockup.png"
+
+REFERENCE_SIDEBAR_ICON_CROPS = {
+    "fight_action_card_icon.png": (1266, 602, 1335, 704),
+    "fight_tackle_card_icon.png": (1530, 802, 1642, 908),
+}
 
 
 def _rgba(hex_value: str, alpha: int = 255) -> tuple[int, int, int, int]:
@@ -56,6 +62,63 @@ def _content_bbox(image: Image.Image) -> tuple[int, int, int, int]:
     x0, y0, x1, y1 = bbox
     pad = max(10, int(max(x1 - x0, y1 - y0) * 0.05))
     return (max(0, x0 - pad), max(0, y0 - pad), min(image.width, x1 + pad), min(image.height, y1 + pad))
+
+
+def _transparentize_paper_cutout(crop: Image.Image) -> Image.Image:
+    image = crop.convert("RGBA")
+    pixels = image.load()
+    paper_mask = Image.new("L", image.size, 0)
+    mask_pixels = paper_mask.load()
+
+    def is_paper_like(x: int, y: int) -> bool:
+        r, g, b, a = pixels[x, y]
+        if a <= 0:
+            return False
+        saturation = max(r, g, b) - min(r, g, b)
+        return r > 170 and g > 145 and b > 100 and r >= g >= b - 10 and saturation < 105
+
+    stack: list[tuple[int, int]] = []
+    for x in range(image.width):
+        stack.extend([(x, 0), (x, image.height - 1)])
+    for y in range(image.height):
+        stack.extend([(0, y), (image.width - 1, y)])
+    while stack:
+        x, y = stack.pop()
+        if x < 0 or y < 0 or x >= image.width or y >= image.height:
+            continue
+        if mask_pixels[x, y] != 0 or not is_paper_like(x, y):
+            continue
+        mask_pixels[x, y] = 255
+        stack.extend([(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)])
+
+    softened = paper_mask.filter(ImageFilter.GaussianBlur(1.1))
+    softened_pixels = softened.load()
+    for y in range(image.height):
+        for x in range(image.width):
+            r, g, b, a = pixels[x, y]
+            remove = softened_pixels[x, y]
+            pixels[x, y] = (r, g, b, max(0, int(a * (255 - remove) / 255)))
+    bbox = _content_bbox(image)
+    return image.crop(bbox)
+
+
+def _reference_sidebar_icon(filename: str, canvas_size: tuple[int, int]) -> Image.Image | None:
+    if not REFERENCE_MOCKUP.exists() or filename not in REFERENCE_SIDEBAR_ICON_CROPS:
+        return None
+    source = Image.open(REFERENCE_MOCKUP).convert("RGBA")
+    cutout = _transparentize_paper_cutout(source.crop(REFERENCE_SIDEBAR_ICON_CROPS[filename]))
+    canvas = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
+    max_w = int(canvas.width * 0.86)
+    max_h = int(canvas.height * 0.88)
+    scale = min(max_w / cutout.width, max_h / cutout.height)
+    resized = cutout.resize((round(cutout.width * scale), round(cutout.height * scale)), Image.Resampling.LANCZOS)
+    x = (canvas.width - resized.width) // 2
+    y = (canvas.height - resized.height) // 2
+    shadow = Image.new("RGBA", resized.size, (0, 0, 0, 0))
+    shadow.putalpha(resized.getchannel("A").point(lambda value: int(value * 0.18)))
+    canvas.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(2.0)), (x + 3, y + 4))
+    canvas.alpha_composite(resized, (x, y))
+    return canvas
 
 
 def _draw_paper_inset(d: ImageDraw.ImageDraw, box: tuple[int, int, int, int], *, alpha: int = 42) -> None:
@@ -306,6 +369,10 @@ def create_top_status_frame() -> None:
 
 
 def _create_sidebar_card_icon(icon_index: int, filename: str, *, seed: int) -> None:
+    reference_icon = _reference_sidebar_icon(filename, (168, 150))
+    if reference_icon is not None:
+        reference_icon.save(OUT_DIR / filename)
+        return
     if not ICON_SHEET.exists():
         return
     sheet = Image.open(ICON_SHEET).convert("RGBA")
