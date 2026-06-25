@@ -26,6 +26,9 @@ func _ready() -> void:
 
 	_seed_select_state()
 	var screen := await _mount_screen(vp)
+	if not _expect_current_prep_summary(screen, "COOK_SELECT capture"):
+		get_tree().quit(1)
+		return
 	if not _save_viewport(vp, OUT_SELECT):
 		get_tree().quit(1)
 		return
@@ -43,6 +46,9 @@ func _ready() -> void:
 
 	await get_tree().process_frame
 	await get_tree().process_frame
+	if not _expect_reward_state(screen, "MEAL_RESULT", "MEAL_RESULT capture"):
+		get_tree().quit(1)
+		return
 	if not _save_viewport(vp, OUT_RESULT):
 		get_tree().quit(1)
 		return
@@ -56,24 +62,39 @@ func _ready() -> void:
 	screen.preview_show_reward_result(fake_result, 130, 150, 150, true)
 	await get_tree().process_frame
 	await get_tree().process_frame
+	if not _expect_reward_state(screen, "EXP_GAIN_LEVELUP", "EXP_GAIN capture"):
+		get_tree().quit(1)
+		return
 	if not _save_viewport(vp, OUT_EXP):
 		get_tree().quit(1)
 		return
 
+	if not _expect_reward_state(screen, "EXP_GAIN_LEVELUP", "LEVEL_UP transition"):
+		get_tree().quit(1)
+		return
 	if not screen.preview_accept_reward_overlay():
-		push_error("Expected EXP reward overlay before LEVEL_UP capture.")
+		push_error("Expected EXP_GAIN_LEVELUP overlay before LEVEL_UP capture.")
 		get_tree().quit(1)
 		return
 	await get_tree().create_timer(0.45).timeout
+	if not _expect_level_up_overlay(screen, "LEVEL_UP capture"):
+		get_tree().quit(1)
+		return
 	if not _save_viewport(vp, OUT_LEVELUP):
 		get_tree().quit(1)
 		return
 
+	if not _expect_level_up_overlay(screen, "STATUS_SUMMARY transition"):
+		get_tree().quit(1)
+		return
 	if not screen.preview_accept_level_up_overlay():
-		push_error("Expected LEVEL_UP overlay before STATUS_SUMMARY capture.")
+		push_error("Expected LEVEL_UP_OVERLAY before STATUS_SUMMARY capture.")
 		get_tree().quit(1)
 		return
 	await get_tree().create_timer(0.35).timeout
+	if not _expect_status_overlay(screen, "STATUS_SUMMARY capture"):
+		get_tree().quit(1)
+		return
 	if not _save_viewport(vp, OUT_STATUS):
 		get_tree().quit(1)
 		return
@@ -147,6 +168,34 @@ func _save_viewport(vp: SubViewport, path: String) -> bool:
 		return false
 	img.save_png(path)
 	return true
+
+
+func _expect_reward_state(screen: Control, expected_state: String, context: String) -> bool:
+	if screen.preview_has_reward_overlay_state(expected_state):
+		return true
+	push_error("%s expected reward overlay state '%s'." % [context, expected_state])
+	return false
+
+
+func _expect_level_up_overlay(screen: Control, context: String) -> bool:
+	if screen.preview_has_level_up_overlay():
+		return true
+	push_error("%s expected LEVEL_UP_OVERLAY." % context)
+	return false
+
+
+func _expect_status_overlay(screen: Control, context: String) -> bool:
+	if screen.preview_has_status_overlay():
+		return true
+	push_error("%s expected STATUS_SUMMARY overlay." % context)
+	return false
+
+
+func _expect_current_prep_summary(screen: Control, context: String) -> bool:
+	if screen.preview_has_current_prep_summary():
+		return true
+	push_error("%s expected current preparation summary." % context)
+	return false
 
 
 func _push_headless_capture_error(path: String) -> void:

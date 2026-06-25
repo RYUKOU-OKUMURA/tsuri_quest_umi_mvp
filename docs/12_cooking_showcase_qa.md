@@ -75,7 +75,7 @@
   - 目的: 古い `/tmp/tsuri_cooking*.png` を消してから、通常描画の `tools/cooking_preview.gd` で5状態を撮影し、成功時に `tools/cooking_visual_qa_check.py` の厳格ゲートとHTML比較レポート更新を一括実行する。
   - 結果: 失敗（exit 134）。
   - 理由: 通常Godot起動が exit 134 で終了する既知制約に当たる。失敗時も `--allow-missing` で `/tmp/tsuri_cooking_reference_report.html` を更新し、missing captureを明示することを確認した。
-  - 判定: 通常描画可能な環境での最終視覚QA用コマンドとして採用する。この環境では非ゼロ終了を正しい未通過シグナルとして扱う。`tools/cooking_preview.gd` は手動でLEVEL_UPを重ねず、EXP報酬を閉じてLEVEL_UP、OK後にSTATUS_SUMMARYへ進む実遷移で `/tmp/tsuri_cooking_levelup.png` と `/tmp/tsuri_cooking_status.png` を撮る。
+  - 判定: 通常描画可能な環境での最終視覚QA用コマンドとして採用する。この環境では非ゼロ終了を正しい未通過シグナルとして扱う。`tools/cooking_preview.gd` は手動でLEVEL_UPを重ねず、EXP報酬を閉じてLEVEL_UP、OK後にSTATUS_SUMMARYへ進む実遷移で `/tmp/tsuri_cooking_levelup.png` と `/tmp/tsuri_cooking_status.png` を撮る。保存前には `COOK_SELECT` の現在準備、`MEAL_RESULT`、`EXP_GAIN_LEVELUP`、`LEVEL_UP_OVERLAY`、`STATUS_SUMMARY` が実際に出ているかを確認し、状態取り違えのスクショを残さない。
 - `tools/cooking_flow_smoke.tscn`
   - 目的: headlessで各状態のControl構築を検証するためのスモークシーン。
   - コマンド: `HOME=/private/tmp/tsuri_home "/Applications/Godot.app/Contents/MacOS/Godot" --headless --path ... res://tools/cooking_flow_smoke.tscn`

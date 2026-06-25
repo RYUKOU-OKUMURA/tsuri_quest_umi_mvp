@@ -976,6 +976,13 @@ func preview_accept_reward_overlay() -> bool:
 	return false
 
 
+func preview_has_reward_overlay_state(expected_state: String) -> bool:
+	for child in get_children():
+		if child.get_script() == CookingRewardPanelScript:
+			return child.preview_state() == expected_state
+	return false
+
+
 func preview_has_level_up_overlay() -> bool:
 	for child in get_children():
 		if child.get_script() == LevelUpPanelScript:

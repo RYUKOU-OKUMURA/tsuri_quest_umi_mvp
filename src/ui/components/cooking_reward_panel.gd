@@ -344,6 +344,7 @@ var _confirm_button: Button
 var _flow_step_cards: Array[PanelContainer] = []
 var _flow_step_labels: Array[Label] = []
 var _flow_connectors: Array[FlowConnectorVisual] = []
+var _preview_state := ""
 
 var _target_exp := 0.0
 var _target_max := 1.0
@@ -552,6 +553,7 @@ func _build_screen() -> void:
 
 
 func show_meal_result(result: Dictionary) -> void:
+	_preview_state = "MEAL_RESULT"
 	var dish_name := String(result.get("dish_name", "料理"))
 	_header_title.text = "%sを\n食べた！" % dish_name
 	_bridge_label.text = "%sで次の釣行効果を予約。食経験値は次に加算される。" % dish_name
@@ -595,6 +597,7 @@ func show_reward(
 	level_before := 0,
 	level_after := 0
 ) -> void:
+	_preview_state = "EXP_GAIN_LEVELUP" if leveled else "EXP_GAIN"
 	var dish_name := String(result.get("dish_name", "料理"))
 	_header_title.text = "食経験値が成長へ！" if leveled else "食経験値を獲得！"
 	_bridge_label.text = _growth_bridge_text(dish_name, leveled, level_before, level_after)
@@ -830,6 +833,10 @@ func _add_reward_ambient_layer() -> void:
 
 func preview_accept() -> void:
 	_close()
+
+
+func preview_state() -> String:
+	return _preview_state
 
 
 func _add_flow_step(parent: HBoxContainer, text: String) -> void:
