@@ -935,9 +935,17 @@ func _cook_selected() -> void:
 	_refresh_all()
 	var leveled := not leveled_to.is_empty()
 	var reward_exp_after := exp_max_before if leveled else PlayerProgress.exp
+	var meal_status_snapshot := _meal_status_snapshot(level_before, exp_before, exp_max_before)
 	_show_meal_result(result, leveled)
 	_show_reward_overlay(
-		result, exp_before, reward_exp_after, exp_max_before, level_before, stats_before, leveled
+		result,
+		exp_before,
+		reward_exp_after,
+		exp_max_before,
+		level_before,
+		stats_before,
+		leveled,
+		meal_status_snapshot
 	)
 	Juicer.add_trauma(0.16)
 
@@ -1091,11 +1099,12 @@ func _show_reward_overlay(
 	exp_max: int,
 	level_before: int,
 	stats_before: Dictionary,
-	leveled: bool
+	leveled: bool,
+	meal_status_snapshot := {}
 ) -> void:
 	var panel := CookingRewardPanelScript.new()
 	add_child(panel)
-	panel.show_meal_result(result)
+	panel.show_meal_result(_with_meal_status_snapshot(result, meal_status_snapshot))
 	panel.closed.connect(
 		func() -> void:
 			_show_exp_reward_overlay(
@@ -1108,6 +1117,24 @@ func _show_reward_overlay(
 				leveled
 			)
 	)
+
+
+func _meal_status_snapshot(level_before: int, exp_before: int, exp_max_before: int) -> Dictionary:
+	return {
+		"level": level_before,
+		"exp": exp_before,
+		"exp_max": exp_max_before,
+		"fish_total": _total_fish_count(),
+		"money": PlayerProgress.money,
+	}
+
+
+func _with_meal_status_snapshot(result: Dictionary, meal_status_snapshot: Dictionary) -> Dictionary:
+	if meal_status_snapshot.is_empty() or result.has("status_snapshot"):
+		return result
+	var display_result := result.duplicate(true)
+	display_result["status_snapshot"] = meal_status_snapshot.duplicate(true)
+	return display_result
 
 
 func _show_exp_reward_overlay(

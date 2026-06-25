@@ -215,6 +215,7 @@ func _audit_meal_result() -> void:
 	var screen := await _mount_cooking_screen()
 	var result := _fake_level_result()
 	_seed_after_meal_state()
+	result["status_snapshot"] = _meal_status_snapshot(4, 130, 150)
 	screen.preview_show_meal_reward_result(result, true)
 	await get_tree().create_timer(0.7).timeout
 	await _expect_texts(
@@ -236,7 +237,7 @@ func _audit_meal_result() -> void:
 			"次の釣行で最大体力 +5%",
 			"1回の釣行で発動",
 			"プレイヤーLv.",
-			"Lv.5  20/190 EXP",
+			"Lv.4  130/150 EXP",
 			"効果中の料理",
 			"アジの塩焼き / あと1回",
 			"クーラーボックス",
@@ -254,6 +255,7 @@ func _audit_meal_result() -> void:
 			"次の釣行で効果！",
 			"EXP 130 / 150",
 			"Lv.4 -> Lv.5 / ぬし解放",
+			"Lv.5  20/190 EXP",
 			"PLAYER",
 			"DISH",
 			"POWER",
@@ -465,6 +467,23 @@ func _seed_after_meal_state() -> void:
 		"value": 0.05,
 		"text": "次の釣行で最大体力 +5%",
 	}
+
+
+func _meal_status_snapshot(level_before: int, exp_before: int, exp_max_before: int) -> Dictionary:
+	return {
+		"level": level_before,
+		"exp": exp_before,
+		"exp_max": exp_max_before,
+		"fish_total": _total_fish_count(),
+		"money": PlayerProgress.money,
+	}
+
+
+func _total_fish_count() -> int:
+	var total := 0
+	for fish_id in GameData.get_all_fish_ids():
+		total += PlayerProgress.fish_count(fish_id)
+	return total
 
 
 func _seed_exp_gain_state() -> void:

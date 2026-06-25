@@ -39,10 +39,11 @@ func _ready() -> void:
 
 	_seed_select_state()
 	screen = await _mount_screen(vp)
-	var old_stats := PlayerProgress.get_base_stats()
 	var fake_result := _fake_meal_result()
 	_seed_after_meal_state()
-	screen.preview_show_meal_reward_result(fake_result, true)
+	var meal_result := fake_result.duplicate(true)
+	meal_result["status_snapshot"] = _meal_status_snapshot(4, 130, 150)
+	screen.preview_show_meal_reward_result(meal_result, true)
 
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -162,6 +163,16 @@ func _seed_after_non_level_meal_state() -> void:
 	}
 
 
+func _meal_status_snapshot(level_before: int, exp_before: int, exp_max_before: int) -> Dictionary:
+	return {
+		"level": level_before,
+		"exp": exp_before,
+		"exp_max": exp_max_before,
+		"fish_total": _total_fish_count(),
+		"money": PlayerProgress.money,
+	}
+
+
 func _fake_meal_result() -> Dictionary:
 	return {
 		"ok": true,
@@ -179,6 +190,13 @@ func _fake_meal_result() -> Dictionary:
 			"text": "次の釣行で最大体力 +5%",
 		},
 	}
+
+
+func _total_fish_count() -> int:
+	var total := 0
+	for fish_id in GameData.get_all_fish_ids():
+		total += PlayerProgress.fish_count(fish_id)
+	return total
 
 
 func _fake_non_level_result() -> Dictionary:

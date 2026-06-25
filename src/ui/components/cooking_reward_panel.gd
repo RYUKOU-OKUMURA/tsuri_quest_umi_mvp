@@ -773,16 +773,21 @@ func _status_strip_card(parent: HBoxContainer, title: String, accent: Color) -> 
 func _refresh_status_strip(result: Dictionary) -> void:
 	if _status_level_label == null:
 		return
-	var next_exp := PlayerProgress.exp_to_next_level()
+	var snapshot := Dictionary(result.get("status_snapshot", {}))
+	var level := int(snapshot.get("level", PlayerProgress.level))
+	var exp := int(snapshot.get("exp", PlayerProgress.exp))
+	var next_exp := int(snapshot.get("exp_max", PlayerProgress.exp_to_next_level()))
+	var fish_total := int(snapshot.get("fish_total", _total_fish_count()))
+	var money := int(snapshot.get("money", PlayerProgress.money))
 	_status_level_label.text = "Lv.%d  %d/%d EXP" % [
-		PlayerProgress.level,
-		PlayerProgress.exp,
+		level,
+		exp,
 		next_exp,
 	]
 	var buff := Dictionary(result.get("buff", {}))
 	_status_meal_label.text = "%s / あと1回" % String(buff.get("name", result.get("dish_name", "料理")))
-	_status_cooler_label.text = "%d / 20" % _total_fish_count()
-	_status_money_label.text = "%d G" % PlayerProgress.money
+	_status_cooler_label.text = "%d / 20" % fish_total
+	_status_money_label.text = "%d G" % money
 
 
 func _total_fish_count() -> int:
