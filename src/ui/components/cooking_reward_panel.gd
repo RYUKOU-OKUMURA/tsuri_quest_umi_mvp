@@ -581,7 +581,7 @@ func show_meal_result(result: Dictionary) -> void:
 	_buff_label.text = "次回の釣行で効果を発揮！\n%s" % _buff_effect_text(buff)
 	_refresh_status_strip(result)
 	_set_reward_line_visible(_growth_label, false)
-	_confirm_button.text = "EXP加算へ"
+	_confirm_button.text = "食経験値へ進む"
 	_refresh_meal_steps()
 	_present()
 
@@ -868,7 +868,7 @@ func _refresh_flow_steps(leveled: bool) -> void:
 
 func _refresh_meal_steps() -> void:
 	_set_flow_step(0, "1 食事 完了", Color("#f2e4c2"), Palette.GOLD_BRIGHT, Color("#2a2118"))
-	_set_flow_step(1, "2 EXP 待機", Color("#17324d"), Palette.GOLD_DEEP, Palette.TEXT_BONE)
+	_set_flow_step(1, "2 EXP 次へ", Color("#17324d"), Palette.GOLD_DEEP, Palette.TEXT_BONE)
 	_set_flow_step(2, "3 成長 待機", Color("#17324d"), Palette.GOLD_DEEP, Palette.TEXT_BONE)
 	_set_flow_connector(0, "meal_to_exp")
 	_set_flow_connector(1, "idle")

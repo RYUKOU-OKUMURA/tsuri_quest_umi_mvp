@@ -222,7 +222,7 @@ func _audit_meal_result() -> void:
 		screen,
 		[
 			"食べた！",
-			"2 EXP 待機",
+			"2 EXP 次へ",
 			"3 成長 待機",
 			"食経験値は次に加算される",
 			"アジの塩焼きを食べた！",
@@ -243,7 +243,7 @@ func _audit_meal_result() -> void:
 			"10 / 20",
 			"所持金",
 			"1250 G",
-			"EXP加算へ",
+			"食経験値へ進む",
 		]
 	)
 	await _expect_absent_texts(
