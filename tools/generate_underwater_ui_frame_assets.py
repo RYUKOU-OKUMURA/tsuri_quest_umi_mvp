@@ -582,6 +582,43 @@ def _draw_corner_brackets(
         d.line((*start, *end), fill=_rgba(color, alpha), width=width)
 
 
+def _draw_card_corner_plates(
+    image: Image.Image,
+    box: tuple[int, int, int, int],
+    *,
+    inset: int = 12,
+    length: int = 24,
+    color: str = "#c79a4a",
+    alpha: int = 74,
+    width: int = 2,
+) -> None:
+    x0, y0, x1, y1 = box
+    overlay = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(overlay)
+    corners = (
+        (x0 + inset, y0 + inset, 1, 1),
+        (x1 - inset, y0 + inset, -1, 1),
+        (x0 + inset, y1 - inset, 1, -1),
+        (x1 - inset, y1 - inset, -1, -1),
+    )
+    for cx, cy, sx, sy in corners:
+        shadow = (0, 0, 0, max(8, alpha // 3))
+        main = _rgba(color, alpha)
+        hi = (255, 237, 172, max(12, int(alpha * 0.48)))
+        low = (81, 49, 20, max(10, int(alpha * 0.42)))
+        d.line((cx + 1, cy + 2, cx + sx * length + 1, cy + 2), fill=shadow, width=width + 1)
+        d.line((cx + 1, cy + 2, cx + 1, cy + sy * length + 2), fill=shadow, width=width + 1)
+        d.line((cx, cy, cx + sx * length, cy), fill=main, width=width)
+        d.line((cx, cy, cx, cy + sy * length), fill=main, width=width)
+        d.line((cx + sx * 5, cy + sy * 5, cx + sx * 14, cy + sy * 5), fill=hi, width=1)
+        d.line((cx + sx * 5, cy + sy * 5, cx + sx * 5, cy + sy * 14), fill=hi, width=1)
+        d.line((cx + sx * (length - 8), cy + sy * 3, cx + sx * length, cy + sy * 3), fill=low, width=1)
+        d.line((cx + sx * 3, cy + sy * (length - 8), cx + sx * 3, cy + sy * length), fill=low, width=1)
+        r = 3
+        d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=_rgba("#f2cf72", max(18, int(alpha * 0.78))), outline=_rgba("#4d2f17", max(20, int(alpha * 0.55))), width=1)
+    image.alpha_composite(overlay.filter(ImageFilter.GaussianBlur(0.12)))
+
+
 def create_top_status_frame() -> None:
     w, h = 1774, 248
     image = Image.new("RGBA", (w, h), (0, 0, 0, 0))
@@ -706,6 +743,7 @@ def create_sidebar_frame() -> None:
     )
     d.line((header[0] + 24, header[3] - 15, header[2] - 24, header[3] - 15), fill=_rgba("#063626", 54), width=1)
     d.line((header[0] + 24, header[3] - 10, header[2] - 24, header[3] - 10), fill=_rgba("#f4d27c", 34), width=1)
+    _draw_card_corner_plates(image, header, inset=14, length=22, color="#d2aa58", alpha=54, width=1)
 
     _draw_clean_card(
         image,
@@ -748,6 +786,7 @@ def create_sidebar_frame() -> None:
     for y in (fish[1] + 348,):
         d.line((fish[0] + 38, y, fish[2] - 38, y), fill=_rgba("#b89b64", 58), width=1)
     _draw_corner_brackets(d, fish, length=30, inset=18, color="#a77d3b", alpha=66, width=1)
+    _draw_card_corner_plates(image, fish, inset=18, length=27, color="#b8873f", alpha=70, width=2)
 
     _draw_navy_card(
         image,
@@ -763,6 +802,7 @@ def create_sidebar_frame() -> None:
         inner_alpha=28,
         detail_alpha_scale=0.30,
     )
+    _draw_card_corner_plates(image, action, inset=13, length=24, color="#d0a452", alpha=58, width=1)
     _draw_clean_card(
         image,
         action_body,
@@ -791,6 +831,7 @@ def create_sidebar_frame() -> None:
         grid_alpha=6,
         scuff_alpha=8,
     )
+    _draw_card_corner_plates(image, action_body, inset=10, length=18, color="#b8873f", alpha=36, width=1)
     _draw_navy_card(
         image,
         tackle,
@@ -805,6 +846,7 @@ def create_sidebar_frame() -> None:
         inner_alpha=28,
         detail_alpha_scale=0.30,
     )
+    _draw_card_corner_plates(image, tackle, inset=13, length=24, color="#d0a452", alpha=58, width=1)
     _draw_clean_card(
         image,
         tackle_body,
@@ -833,6 +875,7 @@ def create_sidebar_frame() -> None:
         grid_alpha=6,
         scuff_alpha=8,
     )
+    _draw_card_corner_plates(image, tackle_body, inset=10, length=18, color="#b8873f", alpha=36, width=1)
 
     for panel_index, (panel, body, icon_side) in enumerate(((action, action_body, "left"), (tackle, tackle_body, "right"))):
         d.line((panel[0] + 26, panel[1] + 39, panel[2] - 26, panel[1] + 39), fill=_rgba("#e0bd62", 32), width=1)
