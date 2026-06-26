@@ -20,7 +20,7 @@
 
 最新の本番カード素材パスでは、`tools/source_assets/sidebar_frame_material_source.png` を追加し、生成された空のJRPGカードスキンを `sidebar_frame.png` の既存 header / fish / action / tackle スロットへリサイズ合成する。これにより、右パネルの座標、魚ポートレート、タックル5行、下段カード比率は変えず、紙面、濃紺帯、金属角、細いベベルだけを本番素材寄りにする。
 
-下部HUDの本番カード素材パスでは、`tools/source_assets/fight_hud_material_source.png` を追加し、空のJRPG下部操作盤スキンを `fight_hud_frame.png` の既存 top gauge / bait / operation / menu スロットへリサイズ合成する。これにより、HUD高、A/B/LR/+/-キーサイズ、ゲージ座標、操作文字ベースライン、エサ/操作/メニュー比率は変えず、黒い機械箱感を弱めて紙カードと濃紺操作盤の素材感だけを上げる。
+下部HUDの本番カード素材パスでは、`tools/source_assets/fight_hud_material_source.png` を追加し、空のJRPG下部操作盤スキンを `fight_hud_frame.png` の既存 top gauge / bait / operation / menu スロットへリサイズ合成する。最新採用ソースは、前素材より紙面、金縁、濃紺パネルの密度が強い 1774x887 の候補で、HUD高、A/B/LR/+/-キーサイズ、ゲージ座標、操作文字ベースライン、エサ/操作/メニュー比率は変えず、黒い機械箱感を弱めて紙カードと濃紺操作盤の素材感だけを上げる。
 
 上部ステータスの本番カード素材パスでは、`tools/source_assets/top_status_material_source.png` を追加し、空の横長ステータスカードスキンを `top_status_frame.png` の左3つの紙札スロットへ低アルファで合成する。右端の濃紺地点カード、23.5%/30.0%/25.0%/21.5%のスロット比率、AM/時刻間隔、アイコン座標、文字サイズは変えず、白い無地札感を少し抑える素材上乗せとして扱う。
 
@@ -84,7 +84,7 @@
 | `tools/source_assets/underwater_battle_bg_source.png` | 代替水中背景の元画像 | 旧本番寄り背景PNGの保存元 | Godotインポート対象外、参照抽出を使わない場合の後処理ソース |
 | `tools/source_assets/kurodai_final_art_source.png` | 最終魚アート入力 | ImageGen で作成した手描き寄りクロダイ素材 | Godotインポート対象外、`tools/process_underwater_fish_assets.py` が存在時に優先する。単色マゼンタ背景、単体魚、鱗・ヒレ・目・陰影が読める本番魚素材 |
 | `tools/source_assets/sidebar_frame_material_source.png` | 右パネル本番カード素材ソース | ImageGen で作成した空のJRPGカードスキン | Godotインポート対象外、`tools/generate_underwater_ui_frame_assets.py` が既存スロットへ合成して `sidebar_frame.png` を再生成する |
-| `tools/source_assets/fight_hud_material_source.png` | 下部HUD本番カード素材ソース | ImageGen で作成した空のJRPG下部操作盤スキン | Godotインポート対象外、`tools/generate_underwater_ui_frame_assets.py` が既存 top gauge / bait / operation / menu スロットへ合成して `fight_hud_frame.png` を再生成する。HUD座標、キーサイズ、操作文字、カード比率は変えない |
+| `tools/source_assets/fight_hud_material_source.png` | 下部HUD本番カード素材ソース | ImageGen で作成した空のJRPG下部操作盤スキン | Godotインポート対象外、`tools/generate_underwater_ui_frame_assets.py` が既存 top gauge / bait / operation / menu スロットへ合成して `fight_hud_frame.png` を再生成する。現行採用ソースは 1774x887 に正規化済み。HUD座標、キーサイズ、操作文字、カード比率は変えない |
 | `tools/source_assets/top_status_material_source.png` | 上部ステータス本番カード素材ソース | ImageGen で作成した空の横長JRPGステータスカードスキン | Godotインポート対象外、`tools/generate_underwater_ui_frame_assets.py` が左3つの紙札スロットへ低アルファで合成して `top_status_frame.png` を再生成する。右端濃紺カード、スロット比率、文字/アイコン座標は変えない |
 | `assets/showcase/underwater/underwater_color_grade.png` | 背景の奥行き/光調整 | `tools/generate_underwater_foreground_assets.py` で生成 | 透明PNG、外周暗部・海底の締まり・水面光を含み、魚/ヒット演出を覆わない |
 | `assets/showcase/underwater/underwater_seabed_detail.png` | 海底/左右の密度補助 | `tools/generate_underwater_foreground_assets.py` で生成 | 透明PNG、岩場・海藻・サンゴ・水底光を含み、主役魚を邪魔しない |
