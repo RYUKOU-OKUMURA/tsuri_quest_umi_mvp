@@ -14,6 +14,11 @@ const ICON_SHEET_PATH := "res://assets/showcase/underwater/fight_icon_sheet.png"
 const HUD_BAIT_ICON_PATH := "res://assets/showcase/underwater/hud_bait_icon.png"
 const HUD_TENSION_ICON_PATH := "res://assets/showcase/underwater/hud_tension_icon.png"
 const HUD_STAMINA_ICON_PATH := "res://assets/showcase/underwater/hud_stamina_icon.png"
+const HUD_KEY_A_PATH := "res://assets/showcase/underwater/hud_key_a.png"
+const HUD_KEY_B_PATH := "res://assets/showcase/underwater/hud_key_b.png"
+const HUD_KEY_LR_PATH := "res://assets/showcase/underwater/hud_key_lr.png"
+const HUD_KEY_PLUS_PATH := "res://assets/showcase/underwater/hud_key_plus.png"
+const HUD_KEY_MINUS_PATH := "res://assets/showcase/underwater/hud_key_minus.png"
 const ICON_TENSION := 4
 const ICON_STAMINA := 5
 const ICON_BAIT := 6
@@ -27,6 +32,11 @@ var _icons: Texture2D
 var _bait_icon: Texture2D
 var _tension_icon: Texture2D
 var _stamina_icon: Texture2D
+var _key_a_icon: Texture2D
+var _key_b_icon: Texture2D
+var _key_lr_icon: Texture2D
+var _key_plus_icon: Texture2D
+var _key_minus_icon: Texture2D
 
 var _main_rect := Rect2()
 var _reel_rect := Rect2()
@@ -56,6 +66,16 @@ func _ready() -> void:
 		_tension_icon = load(HUD_TENSION_ICON_PATH) as Texture2D
 	if ResourceLoader.exists(HUD_STAMINA_ICON_PATH):
 		_stamina_icon = load(HUD_STAMINA_ICON_PATH) as Texture2D
+	if ResourceLoader.exists(HUD_KEY_A_PATH):
+		_key_a_icon = load(HUD_KEY_A_PATH) as Texture2D
+	if ResourceLoader.exists(HUD_KEY_B_PATH):
+		_key_b_icon = load(HUD_KEY_B_PATH) as Texture2D
+	if ResourceLoader.exists(HUD_KEY_LR_PATH):
+		_key_lr_icon = load(HUD_KEY_LR_PATH) as Texture2D
+	if ResourceLoader.exists(HUD_KEY_PLUS_PATH):
+		_key_plus_icon = load(HUD_KEY_PLUS_PATH) as Texture2D
+	if ResourceLoader.exists(HUD_KEY_MINUS_PATH):
+		_key_minus_icon = load(HUD_KEY_MINUS_PATH) as Texture2D
 
 
 func _process(_delta: float) -> void:
@@ -371,11 +391,15 @@ func _draw_tension_texture_icon(target: Rect2) -> void:
 
 
 func _draw_texture_icon(texture: Texture2D, target: Rect2) -> void:
+	_draw_texture_icon_modulated(texture, target, Color.WHITE)
+
+
+func _draw_texture_icon_modulated(texture: Texture2D, target: Rect2, modulate: Color) -> void:
 	var texture_size := texture.get_size()
 	var scale := minf(target.size.x / texture_size.x, target.size.y / texture_size.y)
 	var draw_size := texture_size * scale
 	var draw_rect := Rect2(target.position + (target.size - draw_size) * 0.5, draw_size)
-	draw_texture_rect(texture, draw_rect, false, Color.WHITE)
+	draw_texture_rect(texture, draw_rect, false, modulate)
 
 
 func _draw_triangle(center: Vector2, radius: float, color: Color, up: bool) -> void:
@@ -410,6 +434,32 @@ func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String,
 	var key_w := 27.0 if not is_long_key else 46.0
 	var key_h := 24.0
 	var key_rect := Rect2(key_origin, Vector2(key_w, key_h))
+	var key_texture := _key_texture(key)
+	if _hud_frame != null and key_texture != null:
+		var modulate := Color(1.13, 1.10, 1.02, 1.0) if active else Color.WHITE
+		_draw_texture_icon_modulated(key_texture, key_rect, modulate)
+	else:
+		_draw_procedural_key_cap(font, key_rect, key, active)
+	var label_size := 17 if not is_long_key else 16
+	var note_size := 11 if not is_long_key else 10
+	var label_pos := key_rect.position + Vector2(key_rect.size.x + (5.0 if not is_long_key else 4.0), 17.0)
+	_draw_text(font, label, label_pos, label_size, Color("#21170f"), 0)
+	var note_font := FightFontsScript.regular(get_theme_default_font())
+	var note_text := _compact_control_note(note)
+	if not is_long_key:
+		note_text = "（%s）" % note_text
+	var label_w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
+	var note_pos := label_pos + Vector2(label_w + (3.0 if is_long_key else 2.0), 0.0)
+	var available_w := rect.end.x - note_pos.x - 1.0
+	var note_w := note_font.get_string_size(note_text, HORIZONTAL_ALIGNMENT_LEFT, -1, note_size).x
+	while note_w > available_w and note_size > 9:
+		note_size = max(9, note_size - 1)
+		note_w = note_font.get_string_size(note_text, HORIZONTAL_ALIGNMENT_LEFT, -1, note_size).x
+	_draw_text(note_font, note_text, note_pos, note_size, Color("#3a2a18"), 0)
+
+
+func _draw_procedural_key_cap(font: Font, key_rect: Rect2, key: String, active: bool) -> void:
+	var is_long_key := key.length() > 1
 	var key_fill := Color("#1c2029")
 	match key:
 		"A":
@@ -438,22 +488,6 @@ func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String,
 	var key_size := 14 if not is_long_key else 12
 	var key_text_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
 	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 17.0), key_size, Color.WHITE, 1)
-	var label_size := 17 if not is_long_key else 16
-	var note_size := 11 if not is_long_key else 10
-	var label_pos := key_rect.position + Vector2(key_rect.size.x + (5.0 if not is_long_key else 4.0), 17.0)
-	_draw_text(font, label, label_pos, label_size, Color("#21170f"), 0)
-	var note_font := FightFontsScript.regular(get_theme_default_font())
-	var note_text := _compact_control_note(note)
-	if not is_long_key:
-		note_text = "（%s）" % note_text
-	var label_w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
-	var note_pos := label_pos + Vector2(label_w + (3.0 if is_long_key else 2.0), 0.0)
-	var available_w := rect.end.x - note_pos.x - 1.0
-	var note_w := note_font.get_string_size(note_text, HORIZONTAL_ALIGNMENT_LEFT, -1, note_size).x
-	while note_w > available_w and note_size > 9:
-		note_size = max(9, note_size - 1)
-		note_w = note_font.get_string_size(note_text, HORIZONTAL_ALIGNMENT_LEFT, -1, note_size).x
-	_draw_text(note_font, note_text, note_pos, note_size, Color("#3a2a18"), 0)
 
 
 func _draw_key_row(font: Font, pos: Vector2, key: String, label: String) -> void:
@@ -469,15 +503,34 @@ func _draw_key_row(font: Font, pos: Vector2, key: String, label: String) -> void
 
 func _draw_menu_row(font: Font, pos: Vector2, key: String, label: String) -> void:
 	var center := pos + Vector2(0.0, -2.0)
-	draw_circle(center + Vector2(1.5, 2.0), 11.5, Color(0.0, 0.0, 0.0, 0.28))
-	draw_circle(center, 10.0, Color("#f7e8c4"))
-	draw_circle(center, 10.0, Color("#b98a42"), false, 1.0)
-	draw_line(center + Vector2(-5.5, -5.5), center + Vector2(5.5, -5.5), Color(1.0, 1.0, 1.0, 0.36), 1.0)
-	var key_size := 16
-	var key_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
-	_draw_text(font, key, Vector2(center.x - key_w * 0.5, center.y + 5.0), key_size, Color("#2b2117"), 0)
+	var key_texture := _key_texture(key)
+	if _hud_frame != null and key_texture != null:
+		_draw_texture_icon(key_texture, Rect2(center - Vector2(12.0, 12.0), Vector2(24.0, 24.0)))
+	else:
+		draw_circle(center + Vector2(1.5, 2.0), 11.5, Color(0.0, 0.0, 0.0, 0.28))
+		draw_circle(center, 10.0, Color("#f7e8c4"))
+		draw_circle(center, 10.0, Color("#b98a42"), false, 1.0)
+		draw_line(center + Vector2(-5.5, -5.5), center + Vector2(5.5, -5.5), Color(1.0, 1.0, 1.0, 0.36), 1.0)
+		var key_size := 16
+		var key_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
+		_draw_text(font, key, Vector2(center.x - key_w * 0.5, center.y + 5.0), key_size, Color("#2b2117"), 0)
 	var label_size := 14 if label.length() >= 6 else 15
 	_draw_text(font, label, pos + Vector2(28.0, 4.0), label_size, Palette.TEXT_BONE, 1)
+
+
+func _key_texture(key: String) -> Texture2D:
+	match key:
+		"A":
+			return _key_a_icon
+		"B":
+			return _key_b_icon
+		"L/R":
+			return _key_lr_icon
+		"+":
+			return _key_plus_icon
+		"-":
+			return _key_minus_icon
+	return null
 
 
 func _compact_control_note(note: String) -> String:

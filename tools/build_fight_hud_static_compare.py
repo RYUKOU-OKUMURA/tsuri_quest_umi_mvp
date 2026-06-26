@@ -130,7 +130,21 @@ def _draw_triangle(draw: ImageDraw.ImageDraw, center: tuple[float, float], radiu
     draw.polygon(points, fill=fill)
 
 
-def _draw_key_cap(draw: ImageDraw.ImageDraw, box: tuple[float, float, float, float], label: str, size: int) -> None:
+def _key_icon_path(label: str) -> Path:
+    return {
+        "A": ASSET_DIR / "hud_key_a.png",
+        "B": ASSET_DIR / "hud_key_b.png",
+        "L/R": ASSET_DIR / "hud_key_lr.png",
+        "+": ASSET_DIR / "hud_key_plus.png",
+        "-": ASSET_DIR / "hud_key_minus.png",
+    }.get(label, ASSET_DIR / "__missing_keycap.png")
+
+
+def _draw_key_cap(base: Image.Image, draw: ImageDraw.ImageDraw, box: tuple[float, float, float, float], label: str, size: int) -> None:
+    icon_path = _key_icon_path(label)
+    if icon_path.exists():
+        _paste_icon_contain(base, Image.open(icon_path).convert("RGBA"), box)
+        return
     fill = {"A": "#28445f", "B": "#3a3023", "L/R": "#1c2029"}.get(label, "#1c2029")
     draw.rounded_rectangle(box, radius=999, fill=fill, outline="#f0c66a", width=1)
     draw.arc((box[0] + 4, box[1] + 3, box[2] - 4, box[3] - 4), 200, 340, fill=(255, 244, 190, 76), width=1)
@@ -148,12 +162,12 @@ def _hint_slots(hint: tuple[float, float, float, float]) -> list[tuple[float, fl
     ]
 
 
-def _draw_key_hint(draw: ImageDraw.ImageDraw, slot: tuple[float, float, float, float], key: str, label: str, note: str) -> None:
+def _draw_key_hint(base: Image.Image, draw: ImageDraw.ImageDraw, slot: tuple[float, float, float, float], key: str, label: str, note: str) -> None:
     is_long = key == "L/R"
     cap_w = 27 if not is_long else 46
     cap_h = 24
     cap = (slot[0] + 6.5, slot[1] + 5, slot[0] + 6.5 + cap_w, slot[1] + 5 + cap_h)
-    _draw_key_cap(draw, cap, key, 12 if is_long else 14)
+    _draw_key_cap(base, draw, cap, key, 12 if is_long else 14)
     label_x = cap[0] + cap_w + (4 if is_long else 5)
     label_size = 16 if is_long else 17
     note_size = 10 if is_long else 11
@@ -168,12 +182,16 @@ def _draw_key_hint(draw: ImageDraw.ImageDraw, slot: tuple[float, float, float, f
     _draw_text(draw, (note_x, note_y), note_text, note_size, "#3a2a18", bold=False)
 
 
-def _draw_menu_row(draw: ImageDraw.ImageDraw, pos: tuple[float, float], key: str, label: str) -> None:
+def _draw_menu_row(base: Image.Image, draw: ImageDraw.ImageDraw, pos: tuple[float, float], key: str, label: str) -> None:
     cx, cy = pos[0], pos[1] - 2
-    draw.ellipse((cx - 10, cy - 10, cx + 10, cy + 10), fill="#f7e8c4", outline="#b98a42", width=1)
-    draw.line((cx - 5, cy - 5, cx + 5, cy - 5), fill=(255, 255, 255, 92), width=1)
-    key_w = _text_width(key, 16)
-    _draw_text(draw, (cx - key_w * 0.5, cy + 5), key, 16, "#2b2117")
+    icon_path = _key_icon_path(key)
+    if icon_path.exists():
+        _paste_icon_contain(base, Image.open(icon_path).convert("RGBA"), (cx - 12, cy - 12, cx + 12, cy + 12))
+    else:
+        draw.ellipse((cx - 10, cy - 10, cx + 10, cy + 10), fill="#f7e8c4", outline="#b98a42", width=1)
+        draw.line((cx - 5, cy - 5, cx + 5, cy - 5), fill=(255, 255, 255, 92), width=1)
+        key_w = _text_width(key, 16)
+        _draw_text(draw, (cx - key_w * 0.5, cy + 5), key, 16, "#2b2117")
     label_size = 14 if len(label) >= 6 else 15
     _draw_text(draw, (pos[0] + 28, pos[1] + 4), label, label_size, "#f7ecd0", stroke=1)
 
@@ -256,10 +274,10 @@ def build_current_hud() -> Image.Image:
     hint_title_w = _text_width(hint_title, 16)
     _draw_text(draw, (hint[0] + (hint[2] - hint[0] - hint_title_w) * 0.5, hint[1] + 21), hint_title, 16, "#f7ecd0", stroke=1)
     for slot, args in zip(_hint_slots(hint), (("A", "巻く", "リールを巻く"), ("B", "緩める", "ラインを出す"), ("L/R", "調整", "テンション"))):
-        _draw_key_hint(draw, slot, *args)
+        _draw_key_hint(frame, draw, slot, *args)
 
-    _draw_menu_row(draw, (menu[0] + 34, menu[1] + (menu[3] - menu[1]) * 0.42), "+", "ポーズメニュー")
-    _draw_menu_row(draw, (menu[0] + 34, menu[1] + (menu[3] - menu[1]) * 0.78), "-", "釣りをやめる")
+    _draw_menu_row(frame, draw, (menu[0] + 34, menu[1] + (menu[3] - menu[1]) * 0.42), "+", "ポーズメニュー")
+    _draw_menu_row(frame, draw, (menu[0] + 34, menu[1] + (menu[3] - menu[1]) * 0.78), "-", "釣りをやめる")
     return frame.convert("RGB")
 
 

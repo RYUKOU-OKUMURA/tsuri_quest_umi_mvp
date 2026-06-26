@@ -19,6 +19,11 @@ FIGHT_LURE = OUT_DIR / "fight_lure.png"
 HUD_BAIT_ICON = OUT_DIR / "hud_bait_icon.png"
 HUD_TENSION_ICON = OUT_DIR / "hud_tension_icon.png"
 HUD_STAMINA_ICON = OUT_DIR / "hud_stamina_icon.png"
+HUD_KEY_A = OUT_DIR / "hud_key_a.png"
+HUD_KEY_B = OUT_DIR / "hud_key_b.png"
+HUD_KEY_LR = OUT_DIR / "hud_key_lr.png"
+HUD_KEY_PLUS = OUT_DIR / "hud_key_plus.png"
+HUD_KEY_MINUS = OUT_DIR / "hud_key_minus.png"
 
 
 def _magenta_removed(image: Image.Image) -> Image.Image:
@@ -734,6 +739,82 @@ def create_hud_stamina_icon() -> None:
     canvas.save(HUD_STAMINA_ICON)
 
 
+def _create_keycap_from_reference(
+    box: tuple[int, int, int, int],
+    output: Path,
+    *,
+    canvas_size: tuple[int, int],
+    light_key: bool,
+) -> None:
+    crop = Image.open(REFERENCE).convert("RGBA").crop(box)
+    src = crop.load()
+    seed_mask = Image.new("L", crop.size, 0)
+    seed_px = seed_mask.load()
+    for y in range(crop.height):
+        for x in range(crop.width):
+            r, g, b, _a = src[x, y]
+            if light_key:
+                keep = r > 170 and g > 145 and b > 105 and (r - b) > 28
+            else:
+                keep = r < 92 and g < 92 and b < 104
+            if keep:
+                seed_px[x, y] = 255
+
+    near = seed_mask.filter(ImageFilter.MaxFilter(11)).filter(ImageFilter.GaussianBlur(0.45))
+    mask = Image.new("L", crop.size, 0)
+    near_px = near.load()
+    mask_px = mask.load()
+    for y in range(crop.height):
+        for x in range(crop.width):
+            if near_px[x, y] <= 4:
+                continue
+            r, g, b, _a = src[x, y]
+            saturation = max(r, g, b) - min(r, g, b)
+            if light_key:
+                circle = r > 160 and g > 135 and b > 90 and r >= g >= b - 10
+                glyph = r < 92 and g < 82 and b < 72
+                highlight = r > 220 and g > 205 and b > 170
+                keep = circle or glyph or highlight
+            else:
+                body = r < 112 and g < 112 and b < 122
+                glyph = r > 180 and g > 175 and b > 160 and saturation < 75
+                edge = r > 90 and g > 72 and b > 48 and r < 170 and g < 145
+                keep = body or glyph or edge
+            if keep:
+                mask_px[x, y] = min(255, int(near_px[x, y] * 1.85))
+
+    mask = mask.filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.GaussianBlur(0.25))
+    keycap = crop.copy()
+    keycap.putalpha(mask)
+    bbox = mask.point(lambda value: 255 if value > 16 else 0).getbbox()
+    if bbox is None:
+        raise RuntimeError(f"keycap extraction produced an empty mask for {output.name}")
+    pad = 3
+    keycap = keycap.crop(
+        (
+            max(0, bbox[0] - pad),
+            max(0, bbox[1] - pad),
+            min(keycap.width, bbox[2] + pad),
+            min(keycap.height, bbox[3] + pad),
+        )
+    )
+    keycap = ImageEnhance.Contrast(keycap).enhance(1.05)
+    keycap = ImageEnhance.Sharpness(keycap).enhance(1.08)
+    canvas = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
+    scale = min((canvas.width - 4) / keycap.width, (canvas.height - 4) / keycap.height)
+    resized = keycap.resize((round(keycap.width * scale), round(keycap.height * scale)), Image.Resampling.LANCZOS)
+    canvas.alpha_composite(resized, ((canvas.width - resized.width) // 2, (canvas.height - resized.height) // 2))
+    canvas.save(output)
+
+
+def create_hud_keycaps() -> None:
+    _create_keycap_from_reference((397, 858, 437, 898), HUD_KEY_A, canvas_size=(64, 64), light_key=False)
+    _create_keycap_from_reference((586, 858, 626, 898), HUD_KEY_B, canvas_size=(64, 64), light_key=False)
+    _create_keycap_from_reference((785, 861, 863, 895), HUD_KEY_LR, canvas_size=(96, 64), light_key=False)
+    _create_keycap_from_reference((1028, 826, 1070, 868), HUD_KEY_PLUS, canvas_size=(64, 64), light_key=True)
+    _create_keycap_from_reference((1028, 872, 1070, 914), HUD_KEY_MINUS, canvas_size=(64, 64), light_key=True)
+
+
 def main() -> None:
     clean_sheet = create_kurodai_sheet()
     create_kurodai_card_portrait(clean_sheet)
@@ -743,9 +824,11 @@ def main() -> None:
     create_hud_bait_icon()
     create_hud_tension_icon()
     create_hud_stamina_icon()
+    create_hud_keycaps()
     print(
         f"processed {FISH_SHEET}, {FISH_CARD_PORTRAIT}, {HIT_BURST}, {HIT_BADGE_FULL}, "
-        f"{FIGHT_LURE}, {HUD_BAIT_ICON}, {HUD_TENSION_ICON}, and {HUD_STAMINA_ICON}"
+        f"{FIGHT_LURE}, {HUD_BAIT_ICON}, {HUD_TENSION_ICON}, {HUD_STAMINA_ICON}, "
+        f"{HUD_KEY_A}, {HUD_KEY_B}, {HUD_KEY_LR}, {HUD_KEY_PLUS}, and {HUD_KEY_MINUS}"
     )
 
 
