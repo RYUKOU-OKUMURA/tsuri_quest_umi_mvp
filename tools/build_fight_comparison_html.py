@@ -10,6 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 REFERENCE = ROOT / "reference" / "02_underwater_fight_mockup.png"
 CAPTURE = Path("/tmp/tsuri_fishing_fight.png")
+STATIC_CAPTURE = Path("/tmp/tsuri_fishing_fight_static.png")
 OUT = Path("/tmp/tsuri_fight_compare.html")
 
 
@@ -17,8 +18,17 @@ def file_url(path: Path) -> str:
     return path.resolve().as_uri()
 
 
+def current_capture_path() -> Path:
+    if not CAPTURE.exists():
+        return STATIC_CAPTURE
+    if STATIC_CAPTURE.exists() and STATIC_CAPTURE.stat().st_mtime > CAPTURE.stat().st_mtime:
+        return STATIC_CAPTURE
+    return CAPTURE
+
+
 def main() -> int:
-    missing = [str(path) for path in (REFERENCE, CAPTURE) if not path.exists()]
+    capture_path = current_capture_path()
+    missing = [str(path) for path in (REFERENCE, capture_path) if not path.exists()]
     if missing:
         print("Missing required image(s):")
         for path in missing:
@@ -118,14 +128,15 @@ def main() -> int:
       <img alt="reference underwater fight mockup" src="{file_url(REFERENCE)}">
     </figure>
     <figure>
-      <figcaption><span>Current Capture</span><span class="path">{escape(str(CAPTURE))}</span></figcaption>
-      <img alt="current underwater fight capture" src="{file_url(CAPTURE)}">
+      <figcaption><span>Current Capture</span><span class="path">{escape(str(capture_path))}</span></figcaption>
+      <img alt="current underwater fight capture" src="{file_url(capture_path)}">
     </figure>
   </main>
 </body>
 </html>
 """
     OUT.write_text(html, encoding="utf-8")
+    print(f"current capture source: {capture_path}")
     print(OUT)
     return 0
 

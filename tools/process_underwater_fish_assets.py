@@ -9,8 +9,10 @@ from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFilter, ImageFo
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "assets" / "showcase" / "underwater"
+SOURCE_ASSET_DIR = ROOT / "tools" / "source_assets"
 REFERENCE = ROOT / "reference" / "02_underwater_fight_mockup.png"
 FISH_SOURCE = OUT_DIR / "kurodai_chroma_source.png"
+FINAL_FISH_SOURCE = SOURCE_ASSET_DIR / "kurodai_final_art_source.png"
 FISH_SHEET = OUT_DIR / "kurodai_showcase_sheet.png"
 FISH_CARD_PORTRAIT = OUT_DIR / "kurodai_card_portrait.png"
 HIT_BURST = OUT_DIR / "hit_burst.png"
@@ -26,21 +28,43 @@ HUD_KEY_PLUS = OUT_DIR / "hud_key_plus.png"
 HUD_KEY_MINUS = OUT_DIR / "hud_key_minus.png"
 
 
+def _fish_source_path() -> Path:
+    return FINAL_FISH_SOURCE if FINAL_FISH_SOURCE.exists() else FISH_SOURCE
+
+
+def _border_key_color(image: Image.Image) -> tuple[int, int, int]:
+    rgb = image.convert("RGB")
+    samples: list[tuple[int, int, int]] = []
+    step_x = max(1, rgb.width // 80)
+    step_y = max(1, rgb.height // 80)
+    px = rgb.load()
+    for x in range(0, rgb.width, step_x):
+        samples.append(px[x, 0])
+        samples.append(px[x, rgb.height - 1])
+    for y in range(0, rgb.height, step_y):
+        samples.append(px[0, y])
+        samples.append(px[rgb.width - 1, y])
+    return tuple(sorted(channel)[len(channel) // 2] for channel in zip(*samples))
+
+
 def _magenta_removed(image: Image.Image) -> Image.Image:
     src = image.convert("RGBA")
     out = Image.new("RGBA", src.size, (0, 0, 0, 0))
+    key_r, key_g, key_b = _border_key_color(src)
     px = src.load()
     dst = out.load()
     for y in range(src.height):
         for x in range(src.width):
             r, g, b, a = px[x, y]
-            # The ImageGen source uses a flat #ff00ff key with antialiased edges.
-            dist = math.sqrt((r - 255) ** 2 + g**2 + (b - 255) ** 2)
-            if dist < 36:
+            # Image generation can return a visually flat key color whose
+            # actual RGB values drift from exact #ff00ff. Sample the border so
+            # final-art candidates can be dropped in without manual cleanup.
+            dist = math.sqrt((r - key_r) ** 2 + (g - key_g) ** 2 + (b - key_b) ** 2)
+            if dist < 42:
                 continue
             alpha = a
-            if dist < 130:
-                alpha = int(a * (dist - 36) / 94)
+            if dist < 155:
+                alpha = int(a * (dist - 42) / 113)
             # Despill magenta from the antialiased edge. The fish itself is
             # gray/silver, so purple edge pixels should become cool dark linework.
             if r > 125 and b > 125 and g < 115:
@@ -326,7 +350,7 @@ def _pose_runtime_fish_frame(fish: Image.Image, frame_index: int) -> Image.Image
 
 
 def create_kurodai_sheet() -> Image.Image:
-    source = _magenta_removed(Image.open(FISH_SOURCE))
+    source = _magenta_removed(Image.open(_fish_source_path()))
     # ImageGen passes can produce either a four-cell source sheet or a single
     # reference-quality fish cutout. The final runtime asset always remains a
     # four-frame sheet, but single-source art should be duplicated instead of
