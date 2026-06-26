@@ -291,6 +291,7 @@ def _draw_clean_card(
     border_width: int = 2,
     inner_alpha: int = 105,
     detail_alpha_scale: float = 1.0,
+    reference_paper: bool = False,
 ) -> None:
     x0, y0, x1, y1 = box
     w = x1 - x0
@@ -302,7 +303,11 @@ def _draw_clean_card(
         image.alpha_composite(shadow_layer.filter(ImageFilter.GaussianBlur(4)))
 
     mask = _rounded_mask((w, h), radius)
-    texture = _texture((w, h), fill, seed, texture_strength)
+    texture = (
+        _reference_paper_texture((w, h), fill, seed, texture_strength)
+        if reference_paper
+        else _texture((w, h), fill, seed, texture_strength)
+    )
     _paste_masked(image, texture, mask, (x0, y0))
 
     d = ImageDraw.Draw(image)
@@ -627,6 +632,7 @@ def create_sidebar_frame() -> None:
         border_width=1,
         inner_alpha=58,
         detail_alpha_scale=0.58,
+        reference_paper=True,
     )
     title_rule_y = fish[1] + 76
     d.line((fish[0] + 48, title_rule_y, fish[2] - 48, title_rule_y), fill=_rgba("#b89b64", 58), width=1)
@@ -671,6 +677,7 @@ def create_sidebar_frame() -> None:
         border_width=1,
         inner_alpha=34,
         detail_alpha_scale=0.55,
+        reference_paper=True,
     )
     _draw_navy_card(
         image,
@@ -700,6 +707,7 @@ def create_sidebar_frame() -> None:
         border_width=1,
         inner_alpha=34,
         detail_alpha_scale=0.55,
+        reference_paper=True,
     )
 
     for panel_index, (panel, body, icon_side) in enumerate(((action, action_body, "left"), (tackle, tackle_body, "right"))):
