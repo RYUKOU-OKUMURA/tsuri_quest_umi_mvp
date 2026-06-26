@@ -332,6 +332,8 @@ def _draw_navy_card(
     radius: int = 16,
     seed: int = 7,
     shadow: bool = True,
+    fill: str = "#113654",
+    overlay_line_alpha: int = 10,
     outer_alpha: int = 255,
     outer_width: int = 3,
     border_alpha: int = 185,
@@ -342,7 +344,7 @@ def _draw_navy_card(
     _draw_clean_card(
         image,
         box,
-        "#113654",
+        fill,
         radius=radius,
         border="#9f7a3d",
         inner="#dfbf73",
@@ -360,7 +362,7 @@ def _draw_navy_card(
     od = ImageDraw.Draw(overlay)
     for i in range(5):
         y = int((i + 1) * overlay.height / 11)
-        od.line((18, y, overlay.width - 18, y), fill=(92, 178, 214, 10), width=1)
+        od.line((18, y, overlay.width - 18, y), fill=(92, 178, 214, overlay_line_alpha), width=1)
     image.alpha_composite(overlay, (x0, y0))
 
 
@@ -369,13 +371,13 @@ def _draw_outer_frame(image: Image.Image, box: tuple[int, int, int, int], *, rad
     d = ImageDraw.Draw(image)
     shadow = Image.new("RGBA", image.size, (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow)
-    sd.rounded_rectangle((x0 + 2, y0 + 4, x1 + 2, y1 + 4), radius=radius, fill=(0, 0, 0, 18))
+    sd.rounded_rectangle((x0 + 2, y0 + 4, x1 + 2, y1 + 4), radius=radius, fill=(0, 0, 0, 12))
     image.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(4)))
-    d.rounded_rectangle((x0, y0, x1, y1), radius=radius, fill=_rgba("#071a2d", 132), outline=_rgba("#1c1209", 82), width=1)
-    d.rounded_rectangle((x0 + 4, y0 + 4, x1 - 4, y1 - 4), radius=radius - 4, outline=_rgba("#d8b45d", 62), width=1)
-    d.rounded_rectangle((x0 + 8, y0 + 8, x1 - 8, y1 - 8), radius=radius - 8, outline=_rgba("#6e4b22", 28), width=1)
-    d.line((x0 + 22, y0 + 14, x1 - 22, y0 + 14), fill=(255, 240, 190, 13), width=1)
-    d.line((x0 + 22, y1 - 14, x1 - 22, y1 - 14), fill=(0, 0, 0, 12), width=1)
+    d.rounded_rectangle((x0, y0, x1, y1), radius=radius, fill=_rgba("#071a2d", 78), outline=_rgba("#1c1209", 46), width=1)
+    d.rounded_rectangle((x0 + 4, y0 + 4, x1 - 4, y1 - 4), radius=radius - 4, outline=_rgba("#d8b45d", 56), width=1)
+    d.rounded_rectangle((x0 + 8, y0 + 8, x1 - 8, y1 - 8), radius=radius - 8, outline=_rgba("#6e4b22", 18), width=1)
+    d.line((x0 + 22, y0 + 14, x1 - 22, y0 + 14), fill=(255, 240, 190, 9), width=1)
+    d.line((x0 + 22, y1 - 14, x1 - 22, y1 - 14), fill=(0, 0, 0, 7), width=1)
 
 
 def _draw_top_status_paper_card(
@@ -654,12 +656,14 @@ def create_sidebar_frame() -> None:
         action,
         radius=12,
         seed=82,
-        outer_alpha=138,
+        fill="#0d4164",
+        overlay_line_alpha=5,
+        outer_alpha=104,
         outer_width=1,
-        border_alpha=96,
+        border_alpha=82,
         border_width=1,
-        inner_alpha=44,
-        detail_alpha_scale=0.42,
+        inner_alpha=28,
+        detail_alpha_scale=0.30,
     )
     _draw_clean_card(
         image,
@@ -684,12 +688,14 @@ def create_sidebar_frame() -> None:
         tackle,
         radius=12,
         seed=84,
-        outer_alpha=138,
+        fill="#0d4164",
+        overlay_line_alpha=5,
+        outer_alpha=104,
         outer_width=1,
-        border_alpha=96,
+        border_alpha=82,
         border_width=1,
-        inner_alpha=44,
-        detail_alpha_scale=0.42,
+        inner_alpha=28,
+        detail_alpha_scale=0.30,
     )
     _draw_clean_card(
         image,
@@ -711,9 +717,9 @@ def create_sidebar_frame() -> None:
     )
 
     for panel_index, (panel, body, icon_side) in enumerate(((action, action_body, "left"), (tackle, tackle_body, "right"))):
-        d.line((panel[0] + 26, panel[1] + 39, panel[2] - 26, panel[1] + 39), fill=_rgba("#e0bd62", 42), width=1)
-        d.line((panel[0] + 28, panel[1] + 44, panel[2] - 28, panel[1] + 44), fill=_rgba("#07121b", 24), width=1)
-        d.line((panel[0] + 42, panel[1] + 15, panel[2] - 42, panel[1] + 15), fill=_rgba("#72c1e4", 16), width=1)
+        d.line((panel[0] + 26, panel[1] + 39, panel[2] - 26, panel[1] + 39), fill=_rgba("#e0bd62", 32), width=1)
+        d.line((panel[0] + 28, panel[1] + 44, panel[2] - 28, panel[1] + 44), fill=_rgba("#07121b", 14), width=1)
+        d.line((panel[0] + 42, panel[1] + 15, panel[2] - 42, panel[1] + 15), fill=_rgba("#72c1e4", 7), width=1)
         d.rounded_rectangle(
             (body[0] + 12, body[1] + 13, body[2] - 12, body[3] - 13),
             radius=8,
@@ -730,8 +736,8 @@ def create_sidebar_frame() -> None:
         (24, h - 24),
         (w - 24, h - 24),
     ):
-        d.ellipse((cx - 4, cy - 4, cx + 4, cy + 4), fill=_rgba("#112031", 112), outline=_rgba("#e1be65", 64), width=1)
-        d.ellipse((cx - 1, cy - 1, cx + 1, cy + 1), fill=_rgba("#fff1b7", 72))
+        d.ellipse((cx - 4, cy - 4, cx + 4, cy + 4), fill=_rgba("#112031", 72), outline=_rgba("#e1be65", 48), width=1)
+        d.ellipse((cx - 1, cy - 1, cx + 1, cy + 1), fill=_rgba("#fff1b7", 50))
 
     image.save(OUT_DIR / "sidebar_frame.png")
 
