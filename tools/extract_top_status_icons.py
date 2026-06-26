@@ -38,9 +38,10 @@ def _extract_icon(source: Image.Image, box: tuple[int, int, int, int], size: int
     crop = crop.crop(bbox)
     scale = min((size - padding) / crop.width, (size - padding) / crop.height)
     resized = crop.resize((round(crop.width * scale), round(crop.height * scale)), Image.Resampling.LANCZOS)
-    resized = ImageEnhance.Contrast(resized).enhance(1.04)
-    resized = resized.filter(ImageFilter.UnsharpMask(radius=0.8, percent=145, threshold=2))
-    resized.putalpha(resized.getchannel("A").point(lambda value: 0 if value < 9 else min(255, int(value * 1.04))))
+    resized = ImageEnhance.Contrast(resized).enhance(1.02)
+    resized = resized.filter(ImageFilter.SMOOTH)
+    resized = resized.filter(ImageFilter.UnsharpMask(radius=0.7, percent=70, threshold=3))
+    resized.putalpha(resized.getchannel("A").point(lambda value: 0 if value < 12 else min(255, int(value * 0.98))))
     canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     canvas.alpha_composite(resized, ((size - resized.width) // 2, (size - resized.height) // 2))
     return canvas

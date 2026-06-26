@@ -208,6 +208,36 @@ def _draw_paper_slot(d: ImageDraw.ImageDraw, box: tuple[int, int, int, int], *, 
         d.arc((x1 - inset - 24, y1 - inset - 24, x1 - inset, y1 - inset), 0, 90, fill=_rgba("#6f4a21", alpha), width=1)
 
 
+def _draw_reference_paper_slot(
+    image: Image.Image,
+    box: tuple[int, int, int, int],
+    *,
+    seed: int,
+    crop_box: tuple[int, int, int, int],
+) -> None:
+    x0, y0, x1, y1 = box
+    w = x1 - x0
+    h = y1 - y0
+    mask = _rounded_mask((w, h), 7)
+    texture = _reference_paper_texture(
+        (w, h),
+        "#f1e1c2",
+        seed,
+        strength=5,
+        crop_box=crop_box,
+        blend=0.50,
+        blur=7.0,
+    )
+    _paste_masked(image, texture, mask, (x0, y0))
+    d = ImageDraw.Draw(image)
+    d.rounded_rectangle((x0, y0, x1, y1), radius=7, outline=_rgba("#8c6733", 96), width=1)
+    d.rounded_rectangle((x0 + 3, y0 + 3, x1 - 3, y1 - 3), radius=5, outline=_rgba("#d8b45d", 42), width=1)
+    d.line((x0 + 10, y0 + 8, x1 - 10, y0 + 8), fill=(255, 255, 255, 42), width=1)
+    d.line((x0 + 10, y1 - 8, x1 - 10, y1 - 8), fill=(106, 73, 35, 22), width=1)
+    d.line((x0 + 7, y0 + 12, x0 + 7, y1 - 12), fill=_rgba("#6f4a21", 10), width=1)
+    d.line((x1 - 7, y0 + 12, x1 - 7, y1 - 12), fill=(255, 255, 255, 16), width=1)
+
+
 def _draw_sidebar_icon_recess(image: Image.Image, box: tuple[int, int, int, int], *, seed: int) -> None:
     x0, y0, x1, y1 = box
     w = x1 - x0
@@ -591,8 +621,8 @@ def create_top_status_frame() -> None:
         else:
             _draw_top_status_paper_card(image, (x0, sy0, x1, sy1), fill, seed=10 + i)
             body = (x0 + 20, sy0 + 20, x1 - 20, sy1 - 20)
-            d.rounded_rectangle(body, radius=6, outline=_rgba("#8c6733", 34), width=1)
-            d.line((body[0] + 18, body[1] + 12, body[2] - 18, body[1] + 12), fill=_rgba("#ffffff", 38), width=1)
+            d.rounded_rectangle(body, radius=6, outline=_rgba("#8c6733", 14), width=1)
+            d.line((body[0] + 18, body[1] + 12, body[2] - 18, body[1] + 12), fill=_rgba("#ffffff", 18), width=1)
             _draw_corner_brackets(d, (x0 + 8, sy0 + 8, x1 - 8, sy1 - 8), length=30, inset=10, color="#9d7134", alpha=130, width=2)
             if i == 1:
                 separator_x = x0 + 246
@@ -964,7 +994,7 @@ def create_fight_hud_frame() -> None:
     d.rounded_rectangle(bait_title, radius=7, fill=_rgba("#8b7558", 210), outline=_rgba("#fff0c7", 52), width=1)
     d.line((bait_title[0] + 8, bait_title[1] + 6, bait_title[2] - 8, bait_title[1] + 6), fill=(255, 255, 255, 34), width=1)
     bait_body = (bait_panel[0] + 58, bait_panel[1] + 55, bait_panel[2] - 16, bait_panel[3] - 14)
-    _draw_paper_slot(d, bait_body)
+    _draw_reference_paper_slot(image, bait_body, seed=151, crop_box=(36, 772, 360, 928))
     _draw_inner_shadow(d, bait_body, alpha=20)
     _draw_clean_card(
         image,
@@ -981,7 +1011,7 @@ def create_fight_hud_frame() -> None:
     d.rounded_rectangle(hint_title, radius=7, fill=_rgba("#092840", 160), outline=_rgba("#d8b45d", 62), width=1)
     d.line((hint_title[0] + 12, hint_title[1] + 7, hint_title[2] - 12, hint_title[1] + 7), fill=(255, 255, 255, 28), width=1)
     hint_body = (hint_panel[0] + 16, hint_panel[1] + 54, hint_panel[2] - 16, hint_panel[3] - 8)
-    _draw_paper_slot(d, hint_body)
+    _draw_reference_paper_slot(image, hint_body, seed=152, crop_box=(380, 772, 1010, 928))
     _draw_inner_shadow(d, hint_body, alpha=14)
     for i in (1, 2):
         x = hint_body[0] + int((hint_body[2] - hint_body[0]) * i / 3)
