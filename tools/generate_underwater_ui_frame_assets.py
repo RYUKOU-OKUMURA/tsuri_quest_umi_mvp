@@ -14,6 +14,7 @@ ICON_SHEET = OUT_DIR / "fight_icon_sheet.png"
 REFERENCE_MOCKUP = ROOT / "reference" / "02_underwater_fight_mockup.png"
 SIDEBAR_FRAME_MATERIAL_SOURCE = SOURCE_ASSET_DIR / "sidebar_frame_material_source.png"
 FIGHT_HUD_MATERIAL_SOURCE = SOURCE_ASSET_DIR / "fight_hud_material_source.png"
+TOP_STATUS_MATERIAL_SOURCE = SOURCE_ASSET_DIR / "top_status_material_source.png"
 
 REFERENCE_SIDEBAR_ICON_CROPS = {
     "fight_action_card_icon.png": (1266, 602, 1335, 704),
@@ -222,6 +223,31 @@ def _apply_fight_hud_material_source(image: Image.Image) -> None:
         x0, y0, x1, y1 = target
         patch = source.crop(crop_box).resize((x1 - x0, y1 - y0), Image.Resampling.LANCZOS)
         mask = _rounded_region_mask(patch.size, radius, alpha)
+        image.alpha_composite(Image.composite(patch, Image.new("RGBA", patch.size, (0, 0, 0, 0)), mask), (x0, y0))
+
+
+def _apply_top_status_material_source(image: Image.Image, slots: list[tuple[int, int, int, int, str]]) -> None:
+    if not TOP_STATUS_MATERIAL_SOURCE.exists():
+        return
+    source = Image.open(TOP_STATUS_MATERIAL_SOURCE).convert("RGBA")
+    source_w, source_h = source.size
+    crop_y0 = int(source_h * 0.31)
+    crop_y1 = int(source_h * 0.57)
+    crop_ranges = [
+        (0.012, 0.210),
+        (0.218, 0.494),
+        (0.505, 0.724),
+        (0.733, 0.934),
+    ]
+    for i, (x0, y0, x1, y1, _fill) in enumerate(slots):
+        if i == 3:
+            continue
+        crop_x0 = int(source_w * crop_ranges[i][0])
+        crop_x1 = int(source_w * crop_ranges[i][1])
+        patch = source.crop((crop_x0, crop_y0, crop_x1, crop_y1)).resize((x1 - x0, y1 - y0), Image.Resampling.LANCZOS)
+        # Treat the generated image as material paint only; runtime text/icon
+        # positions and the accepted top-status slot ratios stay fixed.
+        mask = _rounded_region_mask(patch.size, 12, 52)
         image.alpha_composite(Image.composite(patch, Image.new("RGBA", patch.size, (0, 0, 0, 0)), mask), (x0, y0))
 
 
@@ -717,6 +743,7 @@ def create_top_status_frame() -> None:
                 separator_x = x0 + 132
                 d.line((separator_x, sy0 + 46, separator_x, sy1 - 46), fill=_rgba("#b8934d", 46), width=1)
                 d.line((separator_x + 4, sy0 + 50, separator_x + 4, sy1 - 50), fill=_rgba("#ffffff", 24), width=1)
+    _apply_top_status_material_source(image, slots)
     image.save(OUT_DIR / "top_status_frame.png")
 
 

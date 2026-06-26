@@ -70,6 +70,8 @@ Avoid: smooth generic 3D render, photo cutout, cartoon mascot, oversized eye, wh
 
 下部HUDは `tools/source_assets/fight_hud_material_source.png` を本番素材ソースとして使う。`tools/generate_underwater_ui_frame_assets.py` は、この生成カードスキンを既存の top gauge / bait / operation / menu スロットへリサイズ合成する。これにより、HUD高、A/B/LR/+/-キーサイズ、ゲージ座標、操作文字ベースライン、エサ/操作/メニュー比率を守ったまま、黒い機械箱感を弱めて紙カードと濃紺操作盤の素材感だけを本番寄りにする。
 
+上部ステータスは `tools/source_assets/top_status_material_source.png` を本番素材ソースとして使う。`tools/generate_underwater_ui_frame_assets.py` は、この生成カードスキンを左3つの紙札スロットへ低アルファで合成する。右端の濃紺地点カード、スロット比率、AM/時刻間隔、アイコン座標、文字サイズは維持し、白い無地札感を弱める素材上乗せだけに留める。
+
 必要条件:
 
 - 参照画像のJRPG情報カードらしい紙面、濃紺帯、金属角、細い罫線
