@@ -51,7 +51,7 @@ Avoid: smooth generic 3D render, photo cutout, cartoon mascot, oversized eye, wh
 
 ## 専用UIフォント/アイコン
 
-現在の v1 では `src/ui/fight_fonts.gd` の fight-screen 用 M PLUS 1p と参照由来PNGアイコンを使う。DotGothic16 の全面置換は `/tmp/tsuri_font_candidate_compare.png` で、数値、右カード本文、HUDラベルが細くなりすぎるため採用しない。次フェーズでは、座標やサイズを変えずに、文字と小アイコンの完成度だけを上げる。フォントを変える場合は、全テキスト一括置換ではなく、見出し/数値/本文の役割ごとに重さを保てるJP対応フォントか、文字素材化を検討する。
+現在の v1 では `src/ui/fight_fonts.gd` の fight-screen 用 M PLUS 1p と参照由来PNGアイコンを使う。主要UI/数値/見出しは `MPLUS1p-ExtraBold.ttf`、本文や単位/説明は `MPLUS1p-Regular.ttf` を使い分ける。DotGothic16 の全面置換は `/tmp/tsuri_font_candidate_compare.png` で、数値、右カード本文、HUDラベルが細くなりすぎるため採用しない。DelaGothicOne と RocknRoll One も `/tmp/tsuri_font_top_candidates_compare.png` で、ロゴ化または軽すぎる表示になるため採用しない。次フェーズでは、座標やサイズを変えずに、文字と小アイコンの完成度だけを上げる。フォントを変える場合は、全テキスト一括置換ではなく、見出し/数値/本文の役割ごとに重さを保てるJP対応フォントか、文字素材化を検討する。
 
 対象:
 

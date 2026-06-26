@@ -26,7 +26,7 @@
 
 `kurodai_showcase_sheet.png`、`kurodai_card_portrait.png`、`hit_burst.png`、`fight_lure.png`、`hud_bait_icon.png`、`hud_tension_icon.png`、`hud_stamina_icon.png`、`hud_key_a.png`、`hud_key_b.png`、`hud_key_lr.png`、`hud_key_plus.png`、`hud_key_minus.png` は、`tools/source_assets/kurodai_final_art_source.png` がある場合はそれを優先し、なければ `kurodai_chroma_source.png` と `reference/02_underwater_fight_mockup.png` を元に `tools/process_underwater_fish_assets.py` で生成する。最終魚アート入力は、単なるクロマキー技術検証ではなく、鱗・ヒレ・目・陰影が読める手描き寄りの本番魚素材として扱う。処理内容は、境界色サンプリングによるクロマキー除去、マゼンタ縁のデスピル、半透明縁の再クリーニング、単体魚または4フレーム素材の正規化、透明化で落ちた鱗/ヒレのコントラストを戻す控えめなシャープ/ディテール復元、上半身・ヒレ端・高輝度部を少し水中寄りに冷ますマテリアル調整、腹側の白浮きを抑える控えめな明度キャップ、参照に近い背びれ/尾びれ/頭部線を読ませる最終魚アート用の線締め、低アルファの明るい切り抜き縁の抑制、透明縁/上半身/ヒレ端だけに足す低アルファの水色馴染み、単体魚ソースから作る控えめな尾びれ側の4フレーム差分、実戦用シートだけに入れる薄い水中エッジ下敷き、右カード用の透明ポートレート生成、ヒットバッジ生成、参照モックアップからの透明なエビ/疑似餌素材抽出、下部HUD用の透明なオキアミアイコン、テンション用ハートアイコン、魚体力用の小魚アイコン、A/B/LR/+/-キーキャップ抽出である。`kurodai_showcase_sheet.png` のフレーム差分は頭・目・胴体の鱗を安定させ、尾びれと尾柄付近だけを少し動かす。4セルを完全な複製に戻すと実戦画面で静止画が貼られた印象になるため、同一素材からの小さなポーズ差分を保つ。`kurodai_card_portrait.png` は右パネルの実表示窓に合わせた 560x310 の透明キャンバスにし、横長すぎる素材や透明余白で魚の存在感を落とさない。カード内の魚はリファレンスの図鑑カードに合わせて左向きにし、紙背景や丸角窓は持たせず、透明切り抜きと薄い接地影だけにする。現行生成ではカード用ポートレートの実魚 alpha bbox を約480px幅まで広げて、右カード上のクロダイが参照より小さく見える問題を弱める。カード側の紙面、淡いグリッド、仕切り線は `sidebar_frame.png` が持つ。カード用ポートレートは、水中エッジ下敷きを入れる前のクリーンな切り抜きを使い、紙面上に青いハロが出ないようにする。`fight_lure.png` はコード描画の丸/針ではなく水中糸先の小さな暖色餌として表示し、青背景や魚の端を透明マスクで落とす。`hud_bait_icon.png` は下部HUDの紙カード上に載せる大きめのオキアミ絵として使い、水中ルアー素材を無理に流用しない。`hud_tension_icon.png` は下部HUDのテンション見出しに使う小さな参照由来ハートで、共通アイコンシートを赤く塗りつぶした代替表示へ戻さない。`hud_stamina_icon.png` は下部HUDの魚体力見出しに使う小さな参照由来魚アイコンで、共通アイコンシートを水色に塗った代替表示へ戻さない。`hud_key_a.png` / `hud_key_b.png` / `hud_key_lr.png` / `hud_key_plus.png` / `hud_key_minus.png` は下部HUDの操作ヒントと右メニューで使う参照由来キーキャップで、コード描画キーはこれらがない場合のフォールバックに限定する。生成元は内製差し替え用の中間素材で、画面表示は最終PNGのみを参照する。水中窓の枠は、多重インセット線を重ねると参照よりモニター/デバッグ画面に見えるため、showcase path では低アルファの外周1pxとごく薄い内側ハイライト1pxだけに留める。
 
-水中ファイトの主要文字は `src/ui/fight_fonts.gd` から `MPLUS1p-Regular.ttf` / `MPLUS1p-Bold.ttf` を読み込む。通常テーマ全体とは別に、看板画面の上部ステータス、HUD、右パネル、ヒット文字だけ水中ファイト専用フォント経路へ寄せる。現行v1ではアンチエイリアスをOFFにして、滑らかな現代アプリ文字ではなく、参照のJRPGカードに近い硬めの印字として読ませる。ただし小さい説明やカード内の単位/ラベルまで太字にすると黒い帯やデバッグラベルに見えるため、右魚カードの推定サイズ行などは通常フォントの小ラベル/単位と太字の数値を分けて印字する。
+水中ファイトの主要文字は `src/ui/fight_fonts.gd` から `MPLUS1p-Regular.ttf` / `MPLUS1p-ExtraBold.ttf` を読み込む。通常テーマ全体とは別に、看板画面の上部ステータス、HUD、右パネル、ヒット文字だけ水中ファイト専用フォント経路へ寄せる。現行v1ではアンチエイリアスをOFFにして、滑らかな現代アプリ文字ではなく、参照のJRPGカードに近い硬めの印字として読ませる。ただし小さい説明やカード内の単位/ラベルまで太字にすると黒い帯やデバッグラベルに見えるため、右魚カードの推定サイズ行などは通常フォントの小ラベル/単位と太字の数値を分けて印字する。
 
 次フェーズでは、コード生成の簡易素材を磨くのではなく、以下を満たす完成素材を作ってから組み込む。
 
@@ -107,7 +107,8 @@
 | `assets/showcase/underwater/fight_action_card_icon.png` | 右パネル行動カードアイコン | `tools/generate_underwater_ui_frame_assets.py` で参照画像下段カードから切り出し、紙背景を透明化 | 透明背景の切り抜きアイコン、本文を圧迫せず一枚紙カード上に印字する |
 | `assets/showcase/underwater/fight_tackle_card_icon.png` | 右パネルタックルカードアイコン | `tools/generate_underwater_ui_frame_assets.py` で参照画像下段カードから切り出し、紙背景を透明化 | 透明背景の切り抜きアイコン、本文を圧迫せず一枚紙カード上に印字する |
 | `assets/fonts/MPLUS1p-Regular.ttf` | 水中ファイト本文UIフォント | Google Fonts の M PLUS 1p Regular | OFL同梱、魚カード説明、タックル本文、単位/小ラベル用 |
-| `assets/fonts/MPLUS1p-Bold.ttf` | 水中ファイト主要UIフォント | Google Fonts の M PLUS 1p Bold | OFL同梱、見出し/数値/ヒット文字用 |
+| `assets/fonts/MPLUS1p-ExtraBold.ttf` | 水中ファイト主要UIフォント | Google Fonts の M PLUS 1p ExtraBold | OFL同梱、見出し/数値/ヒット文字用。通常テーマや本文は `MPLUS1p-Regular.ttf` を維持する |
+| `assets/fonts/MPLUS1p-Bold.ttf` | 既存UI互換用フォント | Google Fonts の M PLUS 1p Bold | OFL同梱、既存テーマ互換として保持 |
 | `assets/fonts/OFL-MPLUS1p.txt` | M PLUS 1p ライセンス | Google Fonts 由来 | フォント更新時も保持 |
 
 ## 実装方針

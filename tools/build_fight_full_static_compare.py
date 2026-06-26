@@ -25,7 +25,7 @@ from build_fight_top_status_static_compare import build_current_status  # noqa: 
 
 REFERENCE = ROOT / "reference" / "02_underwater_fight_mockup.png"
 ASSET_DIR = ROOT / "assets" / "showcase" / "underwater"
-FONT_BOLD = ROOT / "assets" / "fonts" / "MPLUS1p-Bold.ttf"
+FONT_BOLD = ROOT / "assets" / "fonts" / "MPLUS1p-ExtraBold.ttf"
 FONT_REGULAR = ROOT / "assets" / "fonts" / "MPLUS1p-Regular.ttf"
 OUT = Path("/tmp/tsuri_full_static_compare.png")
 CURRENT_OUT = Path("/tmp/tsuri_fishing_fight_static.png")

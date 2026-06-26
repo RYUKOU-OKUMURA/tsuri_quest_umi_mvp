@@ -3,7 +3,7 @@ extends RefCounted
 # 通常テーマのフォントと分けて、参照画像に近い太い見出し/数値を安定して使う。
 
 const REGULAR_PATH := "res://assets/fonts/MPLUS1p-Regular.ttf"
-const BOLD_PATH := "res://assets/fonts/MPLUS1p-Bold.ttf"
+const BOLD_PATH := "res://assets/fonts/MPLUS1p-ExtraBold.ttf"
 const ANTIALIASING := TextServer.FONT_ANTIALIASING_NONE
 
 static var _regular: FontFile
