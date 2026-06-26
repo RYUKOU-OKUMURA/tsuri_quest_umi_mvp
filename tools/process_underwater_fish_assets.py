@@ -188,6 +188,73 @@ def _polish_fish_material(image: Image.Image) -> Image.Image:
     return out
 
 
+def _final_fish_art_readability_pass(image: Image.Image) -> Image.Image:
+    """Raise authored fish linework without changing runtime placement/scale."""
+    out = image.copy()
+    alpha = out.getchannel("A")
+    bbox = alpha.point(lambda value: 255 if value > 24 else 0).getbbox()
+    if bbox is None:
+        return out
+
+    gray = out.convert("L")
+    edge_map = gray.filter(ImageFilter.FIND_EDGES).filter(ImageFilter.GaussianBlur(0.35))
+    x0, y0, x1, y1 = bbox
+    content_w = max(1, x1 - x0)
+    content_h = max(1, y1 - y0)
+    px = out.load()
+    edge_px = edge_map.load()
+
+    for y in range(out.height):
+        for x in range(out.width):
+            r, g, b, a = px[x, y]
+            if a == 0:
+                continue
+
+            nx = (x - x0) / content_w
+            ny = (y - y0) / content_h
+            opacity = a / 255.0
+            lum = (r * 0.299 + g * 0.587 + b * 0.114) / 255.0
+            upper = max(0.0, min(1.0, (0.58 - ny) / 0.48))
+            belly = max(0.0, min(1.0, (ny - 0.54) / 0.30))
+            rear_fin = max(0.0, min(1.0, (0.34 - nx) / 0.28))
+            head = max(0.0, min(1.0, (nx - 0.66) / 0.20))
+            silhouette = max(0.0, min(1.0, (1.0 - opacity) * 1.8))
+            line_edge = min(1.0, edge_px[x, y] / 255.0)
+
+            line_mix = 0.0
+            if opacity > 0.34:
+                line_mix += 0.070 * line_edge
+                line_mix += 0.044 * upper * (1.0 - belly)
+                line_mix += 0.034 * rear_fin
+                line_mix += 0.025 * head
+                if lum < 0.42:
+                    line_mix += 0.060
+                if opacity < 0.82:
+                    line_mix += 0.050 * silhouette
+            line_mix = min(0.20, line_mix)
+            r = int(r * (1.0 - line_mix) + 16 * line_mix)
+            g = int(g * (1.0 - line_mix) + 24 * line_mix)
+            b = int(b * (1.0 - line_mix) + 31 * line_mix)
+
+            if opacity > 0.62 and belly > 0.18 and lum > 0.74:
+                cap_mix = min(0.085, (lum - 0.74) * 0.20 + belly * 0.030)
+                r = int(r * (1.0 - cap_mix) + 172 * cap_mix)
+                g = int(g * (1.0 - cap_mix) + 184 * cap_mix)
+                b = int(b * (1.0 - cap_mix) + 186 * cap_mix)
+
+            if 0 < a < 150 and lum > 0.50:
+                alpha_trim = 0.92 - min(0.18, silhouette * 0.10 + line_edge * 0.05)
+                a = int(a * alpha_trim)
+
+            px[x, y] = (
+                max(0, min(255, r)),
+                max(0, min(255, g)),
+                max(0, min(255, b)),
+                max(0, min(255, a)),
+            )
+    return out
+
+
 def _soft_body_alpha(body: Image.Image, overlap: int) -> Image.Image:
     alpha = body.getchannel("A")
     if overlap <= 0:
@@ -266,7 +333,9 @@ def create_kurodai_sheet() -> Image.Image:
         posed = _pose_runtime_fish_frame(resized, index if source_frames == 1 else min(index, 3))
         sheet.alpha_composite(posed, (x, y))
 
-    clean_sheet = _polish_fish_material(_restore_fish_detail(_clean_transparent_fish_edge(_final_despill(sheet))))
+    clean_sheet = _final_fish_art_readability_pass(
+        _polish_fish_material(_restore_fish_detail(_clean_transparent_fish_edge(_final_despill(sheet))))
+    )
     _add_runtime_fish_edge_underlay(clean_sheet).save(FISH_SHEET)
     return clean_sheet
 
