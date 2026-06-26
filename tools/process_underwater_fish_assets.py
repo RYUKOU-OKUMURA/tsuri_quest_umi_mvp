@@ -226,6 +226,11 @@ def _final_fish_art_readability_pass(image: Image.Image) -> Image.Image:
             head = max(0.0, min(1.0, (nx - 0.66) / 0.20))
             silhouette = max(0.0, min(1.0, (1.0 - opacity) * 1.8))
             line_edge = min(1.0, edge_px[x, y] / 255.0)
+            scale_field = (
+                1.0
+                if 0.19 <= nx <= 0.77 and 0.18 <= ny <= 0.68
+                else 0.0
+            )
 
             line_mix = 0.0
             if opacity > 0.34:
@@ -233,6 +238,7 @@ def _final_fish_art_readability_pass(image: Image.Image) -> Image.Image:
                 line_mix += 0.044 * upper * (1.0 - belly)
                 line_mix += 0.034 * rear_fin
                 line_mix += 0.025 * head
+                line_mix += 0.024 * scale_field * line_edge * max(0.0, 0.74 - lum)
                 if lum < 0.42:
                     line_mix += 0.060
                 if opacity < 0.82:
@@ -247,6 +253,11 @@ def _final_fish_art_readability_pass(image: Image.Image) -> Image.Image:
                 r = int(r * (1.0 - cap_mix) + 172 * cap_mix)
                 g = int(g * (1.0 - cap_mix) + 184 * cap_mix)
                 b = int(b * (1.0 - cap_mix) + 186 * cap_mix)
+            elif opacity > 0.60 and scale_field > 0.0 and line_edge > 0.08 and lum < 0.62:
+                scale_ink = min(0.060, line_edge * 0.055)
+                r = int(r * (1.0 - scale_ink) + 24 * scale_ink)
+                g = int(g * (1.0 - scale_ink) + 31 * scale_ink)
+                b = int(b * (1.0 - scale_ink) + 37 * scale_ink)
 
             if 0 < a < 150 and lum > 0.50:
                 alpha_trim = 0.92 - min(0.18, silhouette * 0.10 + line_edge * 0.05)
