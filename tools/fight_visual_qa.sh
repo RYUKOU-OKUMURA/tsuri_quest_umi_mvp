@@ -18,6 +18,7 @@ python3 tools/build_fight_sidebar_static_compare.py || exit 1
 python3 tools/build_fight_hud_static_compare.py || exit 1
 python3 tools/build_fight_top_status_static_compare.py || exit 1
 python3 tools/build_fight_full_static_compare.py || exit 1
+python3 tools/build_fish_asset_contact_sheet.py || exit 1
 
 if [[ "${TSURI_FIGHT_RUNTIME_CAPTURE:-0}" == "1" ]]; then
   if [[ -z "$GODOT" ]]; then
@@ -43,5 +44,6 @@ echo "/tmp/tsuri_sidebar_static_compare.png"
 echo "/tmp/tsuri_hud_static_compare.png"
 echo "/tmp/tsuri_top_status_static_compare.png"
 echo "/tmp/tsuri_full_static_compare.png"
+echo "/tmp/tsuri_fish_asset_contact.png"
 echo "/tmp/tsuri_fight_compare.png"
 echo "/tmp/tsuri_fight_compare.html"

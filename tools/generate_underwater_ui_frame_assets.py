@@ -9,8 +9,10 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "assets" / "showcase" / "underwater"
+SOURCE_ASSET_DIR = ROOT / "tools" / "source_assets"
 ICON_SHEET = OUT_DIR / "fight_icon_sheet.png"
 REFERENCE_MOCKUP = ROOT / "reference" / "02_underwater_fight_mockup.png"
+SIDEBAR_FRAME_MATERIAL_SOURCE = SOURCE_ASSET_DIR / "sidebar_frame_material_source.png"
 
 REFERENCE_SIDEBAR_ICON_CROPS = {
     "fight_action_card_icon.png": (1266, 602, 1335, 704),
@@ -175,6 +177,32 @@ def _reference_sidebar_icon(filename: str, canvas_size: tuple[int, int]) -> Imag
     canvas.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(2.0)), (x + 3, y + 4))
     canvas.alpha_composite(resized, (x, y))
     return canvas
+
+
+def _rounded_region_mask(size: tuple[int, int], radius: int, alpha: int = 242) -> Image.Image:
+    mask = Image.new("L", size, 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, size[0] - 1, size[1] - 1), radius=radius, fill=alpha)
+    return mask.filter(ImageFilter.GaussianBlur(0.35))
+
+
+def _apply_sidebar_material_source(image: Image.Image) -> None:
+    if not SIDEBAR_FRAME_MATERIAL_SOURCE.exists():
+        return
+    source = Image.open(SIDEBAR_FRAME_MATERIAL_SOURCE).convert("RGBA")
+    sw, sh = source.size
+    # The generated source is used only as authored material. Runtime geometry
+    # stays owned by the existing sidebar slot coordinates.
+    regions = [
+        ((10, 12, 668, 91), (18, 14, sw - 18, 184), 16),
+        ((12, 94, 666, 594), (22, 184, sw - 22, 1190), 14),
+        ((10, 606, 668, 806), (20, 1190, sw - 20, 1482), 13),
+        ((10, 820, 668, 1012), (20, 1482, sw - 20, sh - 20), 13),
+    ]
+    for target, crop_box, radius in regions:
+        x0, y0, x1, y1 = target
+        patch = source.crop(crop_box).resize((x1 - x0, y1 - y0), Image.Resampling.LANCZOS)
+        mask = _rounded_region_mask(patch.size, radius)
+        image.alpha_composite(Image.composite(patch, Image.new("RGBA", patch.size, (0, 0, 0, 0)), mask), (x0, y0))
 
 
 def _draw_paper_inset(d: ImageDraw.ImageDraw, box: tuple[int, int, int, int], *, alpha: int = 42) -> None:
@@ -889,6 +917,8 @@ def create_sidebar_frame() -> None:
         )
         d.line((body[0] + 36, body[3] - 18, body[2] - 36, body[3] - 18), fill=_rgba("#80552a", 16), width=1)
         _draw_corner_brackets(d, body, length=13, inset=11, color="#a77d3b", alpha=22, width=1)
+
+    _apply_sidebar_material_source(image)
 
     # Sparse corner accents only. Heavy rivets made the frame read as generated/debug UI.
     for cx, cy in (
