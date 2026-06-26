@@ -216,7 +216,11 @@ def _draw_fish_card(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: int
 def _draw_lower_cards(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: int) -> None:
     action = (w * 0.0148, h * 0.5918, w * (0.0148 + 0.9705), h * (0.5918 + 0.1953))
     tackle = (w * 0.0148, h * 0.8008, w * (0.0148 + 0.9705), h * (0.8008 + 0.1875))
-    _draw_sheet_icon(base, 7, (action[0] + 14, action[1] + 6, action[0] + 36, action[1] + 28))
+    _paste_alpha_crop_contain(
+        base,
+        Image.open(ASSET_DIR / "fight_action_card_icon.png").convert("RGBA"),
+        (action[0] + 14, action[1] + 6, action[0] + 36, action[1] + 28),
+    )
     _draw_text(draw, (action[0] + 40, action[1] + 5), "魚の行動", 18, "#f7ecd0", stroke=1)
     action_body = (action[0] + 8.5, action[1] + (action[3] - action[1]) * 0.170, action[2] - 8.5, action[3] - (action[3] - action[1]) * 0.035)
     _paste_alpha_crop_contain(base, Image.open(ASSET_DIR / "fight_action_card_icon.png").convert("RGBA"), (action_body[0] + 3, action_body[1] + 7, action_body[0] + 81, action_body[1] + 85))

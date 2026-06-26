@@ -41,6 +41,7 @@ func set_fish(fish: Dictionary, stats: Dictionary) -> void:
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	if ResourceLoader.exists(FISH_SHEET_PATH):
 		_fish_sheet = load(FISH_SHEET_PATH) as Texture2D
 	if ResourceLoader.exists(FISH_CARD_PORTRAIT_PATH):
@@ -143,7 +144,7 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	var desc_y := divider_y + (52.0 if compact_card else 44.0)
 	draw_line(Vector2(inner.position.x + 8.0, desc_y - 12.0), Vector2(inner.end.x - 8.0, desc_y - 12.0), Color("#d6c299"), 1.0)
 	var detail_gap := 16.0 if compact_card else 21.0
-	var detail_font := get_theme_default_font()
+	var detail_font := FightFontsScript.regular(get_theme_default_font())
 	if compact_card:
 		_draw_info_paragraph(detail_font, "岩場や海藻の周りに潜む警戒心の強い魚。底をねらうエサに好反応。", Vector2(inner.position.x + 15.0, desc_y), inner.size.x - 26.0)
 		_draw_detail_line(detail_font, "好むエサ：オキアミ・カニ", Vector2(inner.position.x + 15.0, desc_y + 35.0), inner.size.x - 26.0)
@@ -216,7 +217,7 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 		]
 	var tackle_font_size := 13 if _sidebar_frame != null else 12
 	var tackle_line_gap := 13.6 if _sidebar_frame != null else 16.0
-	var tackle_font := get_theme_default_font() if _sidebar_frame != null else font
+	var tackle_font := FightFontsScript.regular(get_theme_default_font()) if _sidebar_frame != null else font
 	var tackle_text_color := Color("#1d1209") if _sidebar_frame != null else Palette.TEXT_DARK
 	for i in range(lines.size()):
 		var line_font := FightFontsScript.bold(tackle_font) if _sidebar_frame != null and i == 0 else tackle_font
@@ -422,11 +423,11 @@ func _draw_action_icon(center: Vector2, size_value: float = 58.0) -> void:
 
 
 func _draw_action_header_icon(rect: Rect2) -> void:
-	if _icons != null:
-		_draw_sheet_icon(ICON_ACTION, rect)
-		return
 	if _action_card_icon != null:
 		_draw_texture_centered(_action_card_icon, rect.position + rect.size * 0.5, rect.size)
+		return
+	if _icons != null:
+		_draw_sheet_icon(ICON_ACTION, rect)
 
 
 func _draw_simple_rod(base: Vector2) -> void:

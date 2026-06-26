@@ -56,6 +56,7 @@ func bind(value: FishingSimulator, fish: Dictionary, stats: Dictionary) -> void:
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	custom_minimum_size = Vector2(0.0, 224.0)
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	if ResourceLoader.exists(HUD_FRAME_PATH):
 		_hud_frame = load(HUD_FRAME_PATH) as Texture2D
 	if ResourceLoader.exists(ICON_SHEET_PATH):

@@ -620,7 +620,7 @@ func _draw_fight_overlay() -> void:
 	if simulator.state != FishingSimulator.State.FIGHT:
 		return
 
-	var font := get_theme_default_font()
+	var font := FightFontsScript.regular(get_theme_default_font())
 
 	# 水中画面は魚と背景を主役にし、詳細情報は右パネルとHUDに寄せる。
 	var distance_ratio := clampf(

@@ -11,6 +11,7 @@ from PIL import Image, ImageDraw
 ROOT = Path(__file__).resolve().parents[1]
 REFERENCE = ROOT / "reference" / "02_underwater_fight_mockup.png"
 CAPTURE = Path("/tmp/tsuri_fishing_fight.png")
+STATIC_CAPTURE = Path("/tmp/tsuri_fishing_fight_static.png")
 OUT_FULL = Path("/tmp/tsuri_fight_compare.png")
 OUT_FRAME = Path("/tmp/tsuri_frame_focus_compare.png")
 OUT_FISH = Path("/tmp/tsuri_fish_hit_focus.png")
@@ -30,7 +31,15 @@ def _label(draw: ImageDraw.ImageDraw, xy: tuple[int, int], text: str) -> None:
     draw.text(xy, text, fill=TEXT)
 
 
-def build_full(reference: Image.Image, capture: Image.Image) -> None:
+def _current_capture_path() -> Path:
+    if not CAPTURE.exists():
+        return STATIC_CAPTURE
+    if STATIC_CAPTURE.exists() and STATIC_CAPTURE.stat().st_mtime > CAPTURE.stat().st_mtime:
+        return STATIC_CAPTURE
+    return CAPTURE
+
+
+def build_full(reference: Image.Image, capture: Image.Image, capture_path: Path) -> None:
     label_h = 34
     scale_h = 720
     ref = _fit_height(reference, scale_h)
@@ -38,13 +47,13 @@ def build_full(reference: Image.Image, capture: Image.Image) -> None:
     out = Image.new("RGB", (ref.width + cur.width + 24, scale_h + label_h + 16), BG)
     draw = ImageDraw.Draw(out)
     _label(draw, (8, 8), "REFERENCE: 02_underwater_fight_mockup.png")
-    _label(draw, (ref.width + 24, 8), "CURRENT: /tmp/tsuri_fishing_fight.png")
+    _label(draw, (ref.width + 24, 8), f"CURRENT: {capture_path}")
     out.paste(ref, (8, label_h))
     out.paste(cur, (ref.width + 16, label_h))
     out.save(OUT_FULL)
 
 
-def build_frame_focus(reference: Image.Image, capture: Image.Image) -> None:
+def build_frame_focus(reference: Image.Image, capture: Image.Image, capture_path: Path) -> None:
     ref_ui = reference.crop((0, 610, reference.width, reference.height))
     cur_ui = capture.crop((0, 430, capture.width, capture.height))
     ref = _fit_height(ref_ui, 330)
@@ -52,13 +61,13 @@ def build_frame_focus(reference: Image.Image, capture: Image.Image) -> None:
     out = Image.new("RGB", (ref.width + cur.width + 28, 390), BG)
     draw = ImageDraw.Draw(out)
     _label(draw, (8, 8), "REFERENCE HUD / RIGHT PANEL REGION")
-    _label(draw, (ref.width + 20, 8), "CURRENT HUD / RIGHT PANEL REGION")
+    _label(draw, (ref.width + 20, 8), f"CURRENT HUD / RIGHT PANEL REGION: {capture_path.name}")
     out.paste(ref, (8, 40))
     out.paste(cur, (ref.width + 20, 40))
     out.save(OUT_FRAME)
 
 
-def build_fish_focus(reference: Image.Image, capture: Image.Image) -> None:
+def build_fish_focus(reference: Image.Image, capture: Image.Image, capture_path: Path) -> None:
     ref_fish = reference.crop((0, 85, 1260, 612))
     cur_fish = capture.crop((0, 84, 980, 455))
     ref = _fit_width(ref_fish, 720)
@@ -66,14 +75,15 @@ def build_fish_focus(reference: Image.Image, capture: Image.Image) -> None:
     out = Image.new("RGB", (1460, max(ref.height, cur.height) + 80), BG)
     draw = ImageDraw.Draw(out)
     _label(draw, (12, 12), "REFERENCE FISH/HIT REGION")
-    _label(draw, (740, 12), "CURRENT WATER REGION")
+    _label(draw, (740, 12), f"CURRENT WATER REGION: {capture_path.name}")
     out.paste(ref, (12, 40))
     out.paste(cur, (740, 40))
     out.save(OUT_FISH)
 
 
 def main() -> int:
-    missing = [path for path in (REFERENCE, CAPTURE) if not path.exists()]
+    capture_path = _current_capture_path()
+    missing = [path for path in (REFERENCE, capture_path) if not path.exists()]
     if missing:
         print("Missing required image(s):")
         for path in missing:
@@ -81,10 +91,11 @@ def main() -> int:
         return 1
 
     reference = Image.open(REFERENCE).convert("RGB")
-    capture = Image.open(CAPTURE).convert("RGB")
-    build_full(reference, capture)
-    build_frame_focus(reference, capture)
-    build_fish_focus(reference, capture)
+    capture = Image.open(capture_path).convert("RGB")
+    build_full(reference, capture, capture_path)
+    build_frame_focus(reference, capture, capture_path)
+    build_fish_focus(reference, capture, capture_path)
+    print(f"current capture source: {capture_path}")
     print(OUT_FULL)
     print(OUT_FRAME)
     print(OUT_FISH)

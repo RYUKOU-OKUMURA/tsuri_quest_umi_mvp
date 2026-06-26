@@ -44,7 +44,15 @@ def _texture(size: tuple[int, int], base: str, seed: int, strength: int = 10) ->
     return Image.frombytes("RGBA", size, bytes(pixels))
 
 
-def _reference_paper_texture(size: tuple[int, int], base: str, seed: int, strength: int = 5) -> Image.Image:
+def _reference_paper_texture(
+    size: tuple[int, int],
+    base: str,
+    seed: int,
+    strength: int = 5,
+    crop_box: tuple[int, int, int, int] | None = None,
+    blend: float = 0.36,
+    blur: float = 10.0,
+) -> Image.Image:
     texture = _texture(size, base, seed, strength)
     if not REFERENCE_MOCKUP.exists():
         return texture
@@ -58,14 +66,14 @@ def _reference_paper_texture(size: tuple[int, int], base: str, seed: int, streng
         (20, 730, 365, 928),
     ]
     rng = random.Random(seed + 173)
-    crop = source.crop(paper_crops[seed % len(paper_crops)])
+    crop = source.crop(crop_box if crop_box is not None else paper_crops[seed % len(paper_crops)])
     scale = max(size[0] / crop.width, size[1] / crop.height)
     resized = crop.resize((round(crop.width * scale), round(crop.height * scale)), Image.Resampling.BICUBIC)
     if resized.width > size[0] or resized.height > size[1]:
         x = rng.randint(0, max(0, resized.width - size[0]))
         y = rng.randint(0, max(0, resized.height - size[1]))
         resized = resized.crop((x, y, x + size[0], y + size[1]))
-    resized = resized.resize(size, Image.Resampling.BICUBIC).filter(ImageFilter.GaussianBlur(10.0))
+    resized = resized.resize(size, Image.Resampling.BICUBIC).filter(ImageFilter.GaussianBlur(blur))
 
     br, bg, bb, _ = _rgba(base)
     pixels = bytearray()
@@ -82,7 +90,7 @@ def _reference_paper_texture(size: tuple[int, int], base: str, seed: int, streng
             )
         )
     reference_variation = Image.frombytes("RGBA", size, bytes(pixels))
-    return Image.blend(texture, reference_variation, 0.36)
+    return Image.blend(texture, reference_variation, blend)
 
 
 def _paste_masked(dst: Image.Image, src: Image.Image, mask: Image.Image, xy: tuple[int, int]) -> None:
@@ -299,6 +307,7 @@ def _draw_clean_card(
     inner_alpha: int = 105,
     detail_alpha_scale: float = 1.0,
     reference_paper: bool = False,
+    reference_crop: tuple[int, int, int, int] | None = None,
 ) -> None:
     x0, y0, x1, y1 = box
     w = x1 - x0
@@ -311,7 +320,15 @@ def _draw_clean_card(
 
     mask = _rounded_mask((w, h), radius)
     texture = (
-        _reference_paper_texture((w, h), fill, seed, texture_strength)
+        _reference_paper_texture(
+            (w, h),
+            fill,
+            seed,
+            texture_strength,
+            crop_box=reference_crop,
+            blend=0.48 if reference_crop is not None else 0.36,
+            blur=8.0 if reference_crop is not None else 10.0,
+        )
         if reference_paper
         else _texture((w, h), fill, seed, texture_strength)
     )
@@ -676,6 +693,7 @@ def create_sidebar_frame() -> None:
         inner_alpha=58,
         detail_alpha_scale=0.58,
         reference_paper=True,
+        reference_crop=(1264, 116, 1656, 590),
     )
     title_rule_y = fish[1] + 76
     d.line((fish[0] + 48, title_rule_y, fish[2] - 48, title_rule_y), fill=_rgba("#b89b64", 58), width=1)
@@ -732,6 +750,7 @@ def create_sidebar_frame() -> None:
         inner_alpha=34,
         detail_alpha_scale=0.55,
         reference_paper=True,
+        reference_crop=(1264, 624, 1655, 742),
     )
     _draw_sidebar_paper_detail(
         image,
@@ -773,6 +792,7 @@ def create_sidebar_frame() -> None:
         inner_alpha=34,
         detail_alpha_scale=0.55,
         reference_paper=True,
+        reference_crop=(1264, 808, 1655, 928),
     )
     _draw_sidebar_paper_detail(
         image,
