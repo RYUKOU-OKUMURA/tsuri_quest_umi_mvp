@@ -4,7 +4,7 @@ from __future__ import annotations
 import random
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -148,6 +148,13 @@ def _reference_sidebar_icon(filename: str, canvas_size: tuple[int, int]) -> Imag
         return None
     source = Image.open(REFERENCE_MOCKUP).convert("RGBA")
     cutout = _transparentize_paper_cutout(source.crop(REFERENCE_SIDEBAR_ICON_CROPS[filename]))
+    if filename == "fight_action_card_icon.png":
+        cutout = ImageEnhance.Color(cutout).enhance(1.08)
+        cutout = ImageEnhance.Contrast(cutout).enhance(1.10)
+        cutout = ImageEnhance.Sharpness(cutout).enhance(1.08)
+        cutout = cutout.resize((round(cutout.width * 1.18), cutout.height), Image.Resampling.LANCZOS)
+    else:
+        cutout = ImageEnhance.Sharpness(cutout).enhance(1.04)
     canvas = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
     max_w = int(canvas.width * 0.86)
     max_h = int(canvas.height * 0.88)
