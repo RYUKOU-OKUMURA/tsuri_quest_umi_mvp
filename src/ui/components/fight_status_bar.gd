@@ -94,9 +94,9 @@ func _draw_status_slot(font: Font, regular_font: Font, rect: Rect2, title: Strin
 	var title_y := rect.position.y + rect.size.y * 0.40
 	var body_y := rect.position.y + rect.size.y * 0.72
 	if not dark and title == "AM":
-		var am_y := rect.position.y + rect.size.y * 0.55
-		_draw_text_clipped(regular_font, title, Vector2(text_x - 4.0, am_y), 14, title_color, max_width, outline)
-		_draw_text_clipped(font, body, Vector2(text_x + 26.0, am_y + 1.0), 24, body_color, max_width - 26.0, outline)
+		var am_y := rect.position.y + rect.size.y * 0.56
+		_draw_text_clipped(font, title, Vector2(text_x - 4.0, am_y), 16, Color("#21170f"), max_width, outline)
+		_draw_text_clipped(font, body, Vector2(text_x + 31.0, am_y + 1.0), 24, body_color, max_width - 31.0, outline)
 		return
 	if not dark and title == "快晴":
 		var inline_y := rect.position.y + rect.size.y * 0.57

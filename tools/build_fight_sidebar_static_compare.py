@@ -226,19 +226,26 @@ def _draw_lower_cards(base: Image.Image, draw: ImageDraw.ImageDraw, w: int, h: i
 
     _draw_text(draw, (tackle[0] + 14, tackle[1] + 4), "タックル", 18, "#f7ecd0", stroke=1)
     body = (tackle[0] + 8.5, tackle[1] + (tackle[3] - tackle[1]) * 0.167, tackle[2] - 8.5, tackle[3] - (tackle[3] - tackle[1]) * 0.042)
-    for index, text in enumerate(("ロッド：港の入門竿", "リール：スピニング4000番", "ライン：ナイロン3号", "ハリス：フロロ2号", "針：チヌ針")):
+    tackle_rows = (
+        "ロッド：港の入門竿",
+        "リール：スピニング4000番",
+        "ライン：ナイロン3号",
+        "ハリス：フロロ2号",
+        "針：チヌ針",
+    )
+    for index, text in enumerate(tackle_rows):
         _draw_wrapped(
             draw,
-            (body[0] + 15, body[1] + 14 + index * 13.6),
+            (body[0] + 14, body[1] + 12 + index * 13.6),
             text,
-            body[2] - body[0] - 126,
+            body[2] - body[0] - 118,
             13,
             "#160d07" if index == 0 else "#1d1209",
             bold=index == 0,
             max_lines=1,
             line_gap=13.6,
         )
-    _paste_contain(base, Image.open(ASSET_DIR / "fight_tackle_card_icon.png").convert("RGBA"), (body[2] - 134, body[3] - 98, body[2] - 4, body[3] - 4))
+    _paste_contain(base, Image.open(ASSET_DIR / "fight_tackle_card_icon.png").convert("RGBA"), (body[2] - 122, body[3] - 90, body[2] - 4, body[3] - 4))
 
 
 def build_current_sidebar() -> Image.Image:

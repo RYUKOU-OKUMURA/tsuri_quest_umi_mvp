@@ -120,19 +120,19 @@ def _draw_fish(water: Image.Image) -> tuple[float, float, float, float]:
     draw_w = water.width * 0.525 * stamina_scale
     draw_h = draw_w * fish.height / fish.width
     center = (
-        (0.42 - 0.058) * water.width,
-        (0.46 + 0.006) * water.height,
+        (0.42 - 0.070) * water.width,
+        (0.46 + 0.008) * water.height,
     )
     shadow = Image.new("RGBA", water.size, (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow)
     sd.ellipse(
         (
-            center[0] - draw_w * 0.26,
-            center[1] + draw_h * 0.285,
-            center[0] + draw_w * 0.26,
-            center[1] + draw_h * 0.395,
+            center[0] - draw_w * 0.30,
+            center[1] + draw_h * 0.284,
+            center[0] + draw_w * 0.30,
+            center[1] + draw_h * 0.416,
         ),
-        fill=(0, 0, 0, 15),
+        fill=(0, 0, 0, 18),
     )
     water.alpha_composite(shadow)
     resized = _resize(fish, (round(draw_w), round(draw_h)))

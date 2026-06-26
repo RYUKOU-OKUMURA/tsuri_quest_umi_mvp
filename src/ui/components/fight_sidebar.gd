@@ -197,8 +197,8 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	var has_tackle_icon := _tackle_card_icon != null or _icons != null
 	var icon_reserved_width := 12.0
 	if has_tackle_icon:
-		icon_reserved_width = 112.0 if _sidebar_frame != null else 66.0
-	var text_offset := Vector2(15.0, 14.0) if _sidebar_frame != null else Vector2(12.0, 14.0)
+		icon_reserved_width = 104.0 if _sidebar_frame != null else 66.0
+	var text_offset := Vector2(14.0, 12.0) if _sidebar_frame != null else Vector2(12.0, 14.0)
 	var text_width := body.size.x - icon_reserved_width - text_offset.x
 	var lines: Array[String] = []
 	if _sidebar_frame != null:
@@ -223,7 +223,7 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 		var line_color := Color("#160d07") if _sidebar_frame != null and i == 0 else tackle_text_color
 		_draw_wrapped(line_font, lines[i], body.position + text_offset + Vector2(0.0, float(i) * tackle_line_gap), text_width, tackle_font_size, line_color, 1, tackle_font_size + 2.0)
 	if _tackle_card_icon != null or _icons != null:
-		var icon_rect := Rect2(body.end - Vector2(134.0, 98.0), Vector2(130.0, 94.0)) if _sidebar_frame != null else Rect2(body.end - Vector2(50.0, 50.0), Vector2(40.0, 40.0))
+		var icon_rect := Rect2(body.end - Vector2(122.0, 90.0), Vector2(118.0, 86.0)) if _sidebar_frame != null else Rect2(body.end - Vector2(50.0, 50.0), Vector2(40.0, 40.0))
 		_draw_tackle_icon(icon_rect)
 	else:
 		_draw_simple_rod(body.position + Vector2(body.size.x - 62.0, body.size.y - 24.0))

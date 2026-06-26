@@ -11,7 +11,7 @@ const SHOWCASE_HIT_BURST_PATH := "res://assets/showcase/underwater/hit_burst.png
 const SHOWCASE_HIT_BADGE_FULL_PATH := "res://assets/showcase/underwater/hit_badge_full.png"
 const SHOWCASE_LURE_PATH := "res://assets/showcase/underwater/fight_lure.png"
 const SHOWCASE_FISH_FRAME_COUNT := 4
-const SHOWCASE_FISH_CENTER_OFFSET := Vector2(-0.058, 0.006)
+const SHOWCASE_FISH_CENTER_OFFSET := Vector2(-0.070, 0.008)
 const HIT_BURST_CENTER_RATIO := Vector2(0.49, 0.80)
 
 var simulator: FishingSimulator
@@ -539,7 +539,7 @@ func _draw_showcase_target_fish(center: Vector2, scale_value: float, direction: 
 	var src := Rect2(frame_w * float(frame_index), 0.0, frame_w, frame_h)
 	var dst := Rect2(-draw_size * 0.5, draw_size)
 
-	_draw_ellipse(center + Vector2(0.0, draw_size.y * 0.34), draw_size.x * 0.26, draw_size.y * 0.055, Color(0.0, 0.0, 0.0, 0.058), 28)
+	_draw_ellipse(center + Vector2(0.0, draw_size.y * 0.35), draw_size.x * 0.30, draw_size.y * 0.066, Color(0.0, 0.0, 0.0, 0.072), 28)
 
 	draw_set_transform(Juicer.get_offset() + center, 0.0, Vector2(direction, 1.0))
 	draw_texture_rect_region(_showcase_fish_sheet, dst, src, Color.WHITE)

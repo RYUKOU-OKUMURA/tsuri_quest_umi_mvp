@@ -136,9 +136,9 @@ def _draw_status_slot(base: Image.Image, draw: ImageDraw.ImageDraw, slot: tuple[
     text_x = x0 + icon_space
     max_width = x1 - text_x - 10.0
     if title == "AM":
-        baseline = y0 + h * 0.55
-        _draw_text(draw, (text_x - 4, baseline), title, 14, "#6d4d25", bold=False, max_width=max_width)
-        _draw_text(draw, (text_x + 26, baseline + 1), body, 24, "#21170f", max_width=max_width - 26)
+        baseline = y0 + h * 0.56
+        _draw_text(draw, (text_x - 4, baseline), title, 16, "#21170f", max_width=max_width)
+        _draw_text(draw, (text_x + 31, baseline + 1), body, 24, "#21170f", max_width=max_width - 31)
         return
     if title == "快晴":
         baseline = y0 + h * 0.57

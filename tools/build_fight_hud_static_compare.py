@@ -131,10 +131,11 @@ def _draw_triangle(draw: ImageDraw.ImageDraw, center: tuple[float, float], radiu
 
 
 def _draw_key_cap(draw: ImageDraw.ImageDraw, box: tuple[float, float, float, float], label: str, size: int) -> None:
-    draw.rounded_rectangle(box, radius=999, fill="#132132", outline="#f0c66a", width=1)
+    fill = {"A": "#28445f", "B": "#3a3023", "L/R": "#1c2029"}.get(label, "#1c2029")
+    draw.rounded_rectangle(box, radius=999, fill=fill, outline="#f0c66a", width=1)
     draw.arc((box[0] + 4, box[1] + 3, box[2] - 4, box[3] - 4), 200, 340, fill=(255, 244, 190, 76), width=1)
     tw = _text_width(label, size)
-    _draw_text(draw, (box[0] + (box[2] - box[0] - tw) * 0.5, box[1] + 14), label, size, "#fff5d0", stroke=1)
+    _draw_text(draw, (box[0] + (box[2] - box[0] - tw) * 0.5, box[1] + 15), label, size, "#fff5d0", stroke=1)
 
 
 def _hint_slots(hint: tuple[float, float, float, float]) -> list[tuple[float, float, float, float]]:
@@ -149,22 +150,22 @@ def _hint_slots(hint: tuple[float, float, float, float]) -> list[tuple[float, fl
 
 def _draw_key_hint(draw: ImageDraw.ImageDraw, slot: tuple[float, float, float, float], key: str, label: str, note: str) -> None:
     is_long = key == "L/R"
-    cap_w = 25 if not is_long else 43
-    cap_h = 23
-    cap = (slot[0] + 7, slot[1] + 5.5, slot[0] + 7 + cap_w, slot[1] + 5.5 + cap_h)
-    _draw_key_cap(draw, cap, key, 11 if is_long else 13)
-    label_x = cap[0] + cap_w + (5 if is_long else 6)
-    label_size = 15 if is_long else 16
+    cap_w = 27 if not is_long else 46
+    cap_h = 24
+    cap = (slot[0] + 6.5, slot[1] + 5, slot[0] + 6.5 + cap_w, slot[1] + 5 + cap_h)
+    _draw_key_cap(draw, cap, key, 12 if is_long else 14)
+    label_x = cap[0] + cap_w + (4 if is_long else 5)
+    label_size = 16 if is_long else 17
     note_size = 10 if is_long else 11
-    label_y = cap[1] + 16.2
-    _draw_text(draw, (label_x, label_y), label, label_size, "#2b2117")
+    label_y = cap[1] + 17
+    _draw_text(draw, (label_x, label_y), label, label_size, "#21170f")
     note_text = "テンション" if is_long else f"（{note}）"
     note_x = label_x + _text_width(label, label_size) + (3 if is_long else 2)
     note_y = label_y
     available = slot[2] - note_x - 1
-    if _text_width(note_text, note_size, bold=False) > available:
+    while _text_width(note_text, note_size, bold=False) > available and note_size > 9:
         note_size = max(9, note_size - 1)
-    _draw_text(draw, (note_x, note_y), note_text, note_size, "#2b2117", bold=False)
+    _draw_text(draw, (note_x, note_y), note_text, note_size, "#3a2a18", bold=False)
 
 
 def _draw_menu_row(draw: ImageDraw.ImageDraw, pos: tuple[float, float], key: str, label: str) -> None:

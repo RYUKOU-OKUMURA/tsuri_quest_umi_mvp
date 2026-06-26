@@ -394,11 +394,18 @@ func _draw_key_hint(font: Font, rect: Rect2, key: String, label: String) -> void
 
 func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String, note: String, active: bool = false) -> void:
 	var is_long_key := key.length() > 1
-	var key_origin := rect.position + Vector2(7.0, 5.5)
-	var key_w := 25.0 if not is_long_key else 43.0
-	var key_h := 23.0
+	var key_origin := rect.position + Vector2(6.5, 5.0)
+	var key_w := 27.0 if not is_long_key else 46.0
+	var key_h := 24.0
 	var key_rect := Rect2(key_origin, Vector2(key_w, key_h))
-	var key_fill := Color("#253247") if not active else Color("#40516c")
+	var key_fill := Color("#1c2029")
+	match key:
+		"A":
+			key_fill = Color("#28445f")
+		"B":
+			key_fill = Color("#3a3023")
+	if active:
+		key_fill = key_fill.lightened(0.18)
 	var key_border := Color("#d5b56b") if not active else Color("#ffe38f")
 	if is_long_key:
 		var style := StyleBoxFlat.new()
@@ -412,17 +419,17 @@ func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String,
 		draw_line(key_rect.position + Vector2(6.0, 4.0), key_rect.position + Vector2(key_rect.size.x - 6.0, 4.0), Color(1.0, 1.0, 1.0, 0.14), 1.0)
 	else:
 		var center := key_rect.position + key_rect.size * 0.5
-		draw_circle(center + Vector2(1.0, 1.4), 11.2, Color(0.0, 0.0, 0.0, 0.22))
-		draw_circle(center, 10.5, key_fill)
-		draw_circle(center, 10.5, key_border, false, 1.0)
+		draw_circle(center + Vector2(1.0, 1.4), 12.1, Color(0.0, 0.0, 0.0, 0.22))
+		draw_circle(center, 11.4, key_fill)
+		draw_circle(center, 11.4, key_border, false, 1.0)
 		draw_line(center + Vector2(-6.0, -5.5), center + Vector2(6.0, -5.5), Color(1.0, 1.0, 1.0, 0.16), 1.0)
-	var key_size := 13 if not is_long_key else 11
+	var key_size := 14 if not is_long_key else 12
 	var key_text_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
-	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 16.2), key_size, Color.WHITE, 1)
-	var label_size := 16 if not is_long_key else 15
+	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 17.0), key_size, Color.WHITE, 1)
+	var label_size := 17 if not is_long_key else 16
 	var note_size := 11 if not is_long_key else 10
-	var label_pos := key_rect.position + Vector2(key_rect.size.x + (6.0 if not is_long_key else 5.0), 16.2)
-	_draw_text(font, label, label_pos, label_size, Color("#2b2117"), 0)
+	var label_pos := key_rect.position + Vector2(key_rect.size.x + (5.0 if not is_long_key else 4.0), 17.0)
+	_draw_text(font, label, label_pos, label_size, Color("#21170f"), 0)
 	var note_font := FightFontsScript.regular(get_theme_default_font())
 	var note_text := _compact_control_note(note)
 	if not is_long_key:
@@ -431,9 +438,10 @@ func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String,
 	var note_pos := label_pos + Vector2(label_w + (3.0 if is_long_key else 2.0), 0.0)
 	var available_w := rect.end.x - note_pos.x - 1.0
 	var note_w := note_font.get_string_size(note_text, HORIZONTAL_ALIGNMENT_LEFT, -1, note_size).x
-	if note_w > available_w:
+	while note_w > available_w and note_size > 9:
 		note_size = max(9, note_size - 1)
-	_draw_text(note_font, note_text, note_pos, note_size, Color("#2b2117"), 0)
+		note_w = note_font.get_string_size(note_text, HORIZONTAL_ALIGNMENT_LEFT, -1, note_size).x
+	_draw_text(note_font, note_text, note_pos, note_size, Color("#3a2a18"), 0)
 
 
 func _draw_key_row(font: Font, pos: Vector2, key: String, label: String) -> void:
