@@ -1,8 +1,8 @@
 # Underwater Fight Design QA
 
-final result: v1 accepted for the current pass; remaining ideal-quality work is split into later asset phases
+final result: v1 showcase accepted for the current pass; remaining ideal-quality work is split into later asset phases
 
-Date: 2026-06-25
+Date: 2026-06-26
 
 Source visual truth: `reference/02_underwater_fight_mockup.png`
 Implementation screenshot: `/tmp/tsuri_fishing_fight.png`
@@ -14,6 +14,15 @@ Focused fish/hit comparison evidence: `/tmp/tsuri_fish_hit_focus.png`
 Side-by-side page: `/tmp/tsuri_fight_compare.html`
 Viewport: 1280x720
 State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
+
+## V1 Convergence Gate
+
+- PASS: `/tmp/tsuri_fight_compare.png` and `/tmp/tsuri_full_static_compare.png` show no P1 breakage in the accepted v1 screen. The background has no obvious black band, hard mask boundary, subject ghost, or unreadable fish/line/lure/hit interaction.
+- PASS: Background, fish placement/scale/shadow, HUD key slots, top AM/time spacing, right-panel ratios, and the tackle-card values are frozen for this pass. Do not reopen them for isolated micro-adjustments.
+- PASS: Right-bottom tackle card remains fixed at five 13px rows, a 104px icon lane, and a 118x86px rod/reel cutout.
+- PASS: The latest kurodai source is accepted as the current v1 fish because it improves dorsal spines, dark bands, and scale density without adding halo, cropped fins, line/lure unreadability, or sidebar text collision.
+- REMAINING: The screen is not declared final ideal art. The remaining quality gap is limited to separate asset phases: a clearly superior authored fish source, dedicated UI font/icon production, and fully authored production card materials.
+- RULE: Future changes must beat the current full-screen side-by-side comparison as a whole. Do not resume background brightness/bubbles/floor-light, fish position, HUD key sizing, tackle row count, or top-status spacing loops unless a P1 regression appears.
 
 ## Patches Made Since Previous QA
 
