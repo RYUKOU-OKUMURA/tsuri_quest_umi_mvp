@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PIL import Image, ImageFilter
+from PIL import Image, ImageEnhance, ImageFilter
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,7 +25,7 @@ def _foreground_alpha(pixel: tuple[int, int, int, int]) -> int:
     return max(0, min(255, alpha))
 
 
-def _extract_icon(source: Image.Image, box: tuple[int, int, int, int], size: int) -> Image.Image:
+def _extract_icon(source: Image.Image, box: tuple[int, int, int, int], size: int, *, padding: int = 14) -> Image.Image:
     crop = source.crop(box).convert("RGBA")
     alpha = Image.new("L", crop.size, 0)
     alpha.putdata([_foreground_alpha(pixel) for pixel in crop.getdata()])
@@ -36,10 +36,11 @@ def _extract_icon(source: Image.Image, box: tuple[int, int, int, int], size: int
     if bbox is None:
         return Image.new("RGBA", (size, size), (0, 0, 0, 0))
     crop = crop.crop(bbox)
-    scale = min((size - 14) / crop.width, (size - 14) / crop.height)
+    scale = min((size - padding) / crop.width, (size - padding) / crop.height)
     resized = crop.resize((round(crop.width * scale), round(crop.height * scale)), Image.Resampling.LANCZOS)
+    resized = ImageEnhance.Contrast(resized).enhance(1.04)
     resized = resized.filter(ImageFilter.UnsharpMask(radius=0.8, percent=145, threshold=2))
-    resized.putalpha(resized.getchannel("A").point(lambda value: 0 if value < 6 else value))
+    resized.putalpha(resized.getchannel("A").point(lambda value: 0 if value < 9 else min(255, int(value * 1.04))))
     canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     canvas.alpha_composite(resized, ((size - resized.width) // 2, (size - resized.height) // 2))
     return canvas
@@ -50,14 +51,14 @@ def main() -> None:
     cell = 128
     icons = [
         # clock, sun, wind, coin in the visual order used by FightStatusBar.
-        (34, 22, 78, 68),
-        (316, 22, 362, 68),
-        (466, 24, 515, 65),
-        (692, 22, 741, 68),
+        ((34, 22, 78, 68), 6),
+        ((316, 22, 362, 68), 6),
+        ((466, 24, 515, 65), 14),
+        ((692, 22, 741, 68), 6),
     ]
     sheet = Image.new("RGBA", (cell * len(icons), cell), (0, 0, 0, 0))
-    for i, box in enumerate(icons):
-        sheet.alpha_composite(_extract_icon(source, box, cell), (i * cell, 0))
+    for i, (box, padding) in enumerate(icons):
+        sheet.alpha_composite(_extract_icon(source, box, cell, padding=padding), (i * cell, 0))
     OUT.parent.mkdir(parents=True, exist_ok=True)
     sheet.save(OUT)
     print(OUT)
