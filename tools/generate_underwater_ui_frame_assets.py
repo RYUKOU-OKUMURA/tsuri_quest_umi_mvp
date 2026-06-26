@@ -13,6 +13,7 @@ SOURCE_ASSET_DIR = ROOT / "tools" / "source_assets"
 ICON_SHEET = OUT_DIR / "fight_icon_sheet.png"
 REFERENCE_MOCKUP = ROOT / "reference" / "02_underwater_fight_mockup.png"
 SIDEBAR_FRAME_MATERIAL_SOURCE = SOURCE_ASSET_DIR / "sidebar_frame_material_source.png"
+FIGHT_HUD_MATERIAL_SOURCE = SOURCE_ASSET_DIR / "fight_hud_material_source.png"
 
 REFERENCE_SIDEBAR_ICON_CROPS = {
     "fight_action_card_icon.png": (1266, 602, 1335, 704),
@@ -202,6 +203,25 @@ def _apply_sidebar_material_source(image: Image.Image) -> None:
         x0, y0, x1, y1 = target
         patch = source.crop(crop_box).resize((x1 - x0, y1 - y0), Image.Resampling.LANCZOS)
         mask = _rounded_region_mask(patch.size, radius)
+        image.alpha_composite(Image.composite(patch, Image.new("RGBA", patch.size, (0, 0, 0, 0)), mask), (x0, y0))
+
+
+def _apply_fight_hud_material_source(image: Image.Image) -> None:
+    if not FIGHT_HUD_MATERIAL_SOURCE.exists():
+        return
+    source = Image.open(FIGHT_HUD_MATERIAL_SOURCE).convert("RGBA")
+    # The generated source is treated as paint/material only. The authored HUD
+    # slot coordinates, key sizes, and runtime text positions stay fixed.
+    regions = [
+        ((28, 29, 2019, 237), (20, 222, 1754, 412), 16, 235),
+        ((38, 261, 555, 418), (20, 424, 482, 628), 13, 224),
+        ((584, 261, 1650, 418), (492, 424, 1410, 628), 13, 224),
+        ((1678, 261, 2009, 418), (1418, 424, 1756, 628), 13, 224),
+    ]
+    for target, crop_box, radius, alpha in regions:
+        x0, y0, x1, y1 = target
+        patch = source.crop(crop_box).resize((x1 - x0, y1 - y0), Image.Resampling.LANCZOS)
+        mask = _rounded_region_mask(patch.size, radius, alpha)
         image.alpha_composite(Image.composite(patch, Image.new("RGBA", patch.size, (0, 0, 0, 0)), mask), (x0, y0))
 
 
@@ -1112,6 +1132,8 @@ def create_fight_hud_frame() -> None:
             width=1,
         )
         d.line((menu_panel[0] + menu_row_pad + 12, row_y + 8, menu_panel[2] - menu_row_pad - 12, row_y + 8), fill=(255, 255, 255, 26), width=1)
+
+    _apply_fight_hud_material_source(image)
 
     # Shared separators: enough structure without returning to the previous grid-like skin.
     for x, slant in ((depth[0] - gap // 2, 18), (depth[2] + gap // 2, -18)):

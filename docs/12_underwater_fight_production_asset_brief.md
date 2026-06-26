@@ -20,7 +20,7 @@ P1破綻がない限り、背景やレイアウトの微調整へ戻らない。
 
 差し替え前に必ず `tools/build_fish_asset_contact_sheet.py` で候補をプレビューする。候補処理後フレームが現行ランタイム魚より弱い、欠ける、背景が混じる、ハロが出る、鱗やヒレが失われる場合は採用しない。
 
-現行採用ソースは、右向き全身クロダイを純マゼンタ背景で生成した `tools/source_assets/kurodai_final_art_source.png` である。`/tmp/tsuri_fish_asset_contact.png` と `/tmp/tsuri_fight_compare.png` では、前ソースより鱗密度、背びれ、黒帯、輪郭が強くなっている。参照画像の魚より少し滑らかな描画ではあるため、次に更新する場合は、同じレイアウトに載せた全画面比較でこの現行採用ソースを明確に上回る候補だけを使う。
+現行採用ソースは、右向き全身クロダイを純マゼンタ背景で生成した `tools/source_assets/kurodai_final_art_source.png` である。最新採用候補は、前ソースより鱗密度、背びれ、黒帯、輪郭が強く、`/tmp/tsuri_fish_asset_contact.png`、`/tmp/tsuri_fish_three_way_processed.png`、`/tmp/tsuri_fight_compare.png` で確認済みである。より暗い2枚目候補は口元と頭部の主張が強く、参照魚から離れるため採用しない。参照画像の魚より少し滑らかな描画ではあるため、次に更新する場合は、同じレイアウトに載せた全画面比較でこの現行採用ソースを明確に上回る候補だけを使う。
 
 生成/制作する魚は、右向きのクロダイ単体。背景、泡、水中光、釣り糸、ルアー、影、文字、UI枠は入れない。既存パイプラインへそのまま渡せるよう、純マゼンタ `#ff00ff` 背景のPNGを基本にする。透明背景を使う場合は、黒い半透明縁や暗いRGB値が透明ピクセルに残らないかを確認する。
 
@@ -51,7 +51,7 @@ Avoid: smooth generic 3D render, photo cutout, cartoon mascot, oversized eye, wh
 
 ## 専用UIフォント/アイコン
 
-現在の v1 では `src/ui/fight_fonts.gd` の fight-screen 用 M PLUS 1p と参照由来PNGアイコンを使う。次フェーズでは、座標やサイズを変えずに、文字と小アイコンの完成度だけを上げる。
+現在の v1 では `src/ui/fight_fonts.gd` の fight-screen 用 M PLUS 1p と参照由来PNGアイコンを使う。DotGothic16 の全面置換は `/tmp/tsuri_font_candidate_compare.png` で、数値、右カード本文、HUDラベルが細くなりすぎるため採用しない。次フェーズでは、座標やサイズを変えずに、文字と小アイコンの完成度だけを上げる。フォントを変える場合は、全テキスト一括置換ではなく、見出し/数値/本文の役割ごとに重さを保てるJP対応フォントか、文字素材化を検討する。
 
 対象:
 
@@ -67,6 +67,8 @@ Avoid: smooth generic 3D render, photo cutout, cartoon mascot, oversized eye, wh
 対象は `assets/showcase/underwater/sidebar_frame.png`、`assets/showcase/underwater/fight_hud_frame.png`、`assets/showcase/underwater/top_status_frame.png`。現在は生成スクリプトと参照紙テクスチャで完成寄りにしているが、理想品質では専用に描いたカードスキンへ置き換える。
 
 右サイドバーは `tools/source_assets/sidebar_frame_material_source.png` を本番素材ソースとして使う。`tools/generate_underwater_ui_frame_assets.py` は、この生成カードスキンを直接全体置換せず、既存の header / fish / action / tackle スロットへリサイズ合成する。これにより、runtime文字座標、魚ポートレート、タックル5行、下段カード比率を守ったまま、紙面、濃紺帯、金属角、細いベベルだけを本番寄りにする。
+
+下部HUDは `tools/source_assets/fight_hud_material_source.png` を本番素材ソースとして使う。`tools/generate_underwater_ui_frame_assets.py` は、この生成カードスキンを既存の top gauge / bait / operation / menu スロットへリサイズ合成する。これにより、HUD高、A/B/LR/+/-キーサイズ、ゲージ座標、操作文字ベースライン、エサ/操作/メニュー比率を守ったまま、黒い機械箱感を弱めて紙カードと濃紺操作盤の素材感だけを本番寄りにする。
 
 必要条件:
 
