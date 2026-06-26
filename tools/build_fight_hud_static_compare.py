@@ -214,7 +214,12 @@ def build_current_hud() -> Image.Image:
     _draw_triangle(draw, (arrow_x, depth[1] + 34), 11, "#29baf7", up=True)
     _draw_triangle(draw, (arrow_x, depth[1] + 72), 11, "#ff6b3e", up=False)
 
-    _draw_sheet_icon(frame, 5, (stamina[0] + 12, stamina[1] + 10, stamina[0] + 36, stamina[1] + 34), (108, 200, 255, 220))
+    stamina_icon_path = ASSET_DIR / "hud_stamina_icon.png"
+    stamina_icon_box = (stamina[0] + 12, stamina[1] + 10, stamina[0] + 36, stamina[1] + 34)
+    if stamina_icon_path.exists():
+        _paste_icon_contain(frame, Image.open(stamina_icon_path).convert("RGBA"), stamina_icon_box)
+    else:
+        _draw_sheet_icon(frame, 5, stamina_icon_box, (108, 200, 255, 220))
     _draw_text(draw, (stamina[0] + 40, stamina[1] + 26), "魚の体力", 18, "#f7ecd0", stroke=1)
     _draw_segment_gauge(draw, (stamina[0] + 24, stamina[1] + 43, stamina[2] - 34, stamina[1] + 67), 0.72, 0.0, 1.0, warm=False)
     _draw_text(draw, (stamina[0] + 24, stamina[3] - 8), "弱い", 14, "#fff1c7", stroke=1)

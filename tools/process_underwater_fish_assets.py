@@ -18,6 +18,7 @@ HIT_BADGE_FULL = OUT_DIR / "hit_badge_full.png"
 FIGHT_LURE = OUT_DIR / "fight_lure.png"
 HUD_BAIT_ICON = OUT_DIR / "hud_bait_icon.png"
 HUD_TENSION_ICON = OUT_DIR / "hud_tension_icon.png"
+HUD_STAMINA_ICON = OUT_DIR / "hud_stamina_icon.png"
 
 
 def _magenta_removed(image: Image.Image) -> Image.Image:
@@ -680,6 +681,59 @@ def create_hud_tension_icon() -> None:
     canvas.save(HUD_TENSION_ICON)
 
 
+def create_hud_stamina_icon() -> None:
+    crop = Image.open(REFERENCE).convert("RGBA").crop((786, 663, 846, 698))
+    mask = Image.new("L", crop.size, 0)
+    src = crop.load()
+    raw_mask = mask.load()
+    for y in range(crop.height):
+        for x in range(crop.width):
+            r, g, b, _a = src[x, y]
+            blue_body = b > 92 and g > 70 and b > r + 24 and g > r - 18
+            cyan_highlight = b > 135 and g > 120 and r < 150
+            if blue_body or cyan_highlight:
+                raw_mask[x, y] = 255
+
+    near_icon = mask.filter(ImageFilter.MaxFilter(7)).filter(ImageFilter.GaussianBlur(0.55))
+    final_mask = Image.new("L", crop.size, 0)
+    near = near_icon.load()
+    dst = final_mask.load()
+    for y in range(crop.height):
+        for x in range(crop.width):
+            if near[x, y] <= 5:
+                continue
+            r, g, b, _a = src[x, y]
+            blue_body = b > 88 and g > 62 and b > r + 18 and g > r - 24
+            cyan_highlight = b > 128 and g > 110 and r < 160
+            dark_outline = b > 46 and g > 36 and r < 70 and b > r + 8
+            pale_glint = b > 150 and g > 150 and r > 120 and abs(g - b) < 50
+            if blue_body or cyan_highlight or dark_outline or pale_glint:
+                dst[x, y] = min(255, int(near[x, y] * 1.70))
+
+    final_mask = final_mask.filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.GaussianBlur(0.22))
+    icon = crop.copy()
+    icon.putalpha(final_mask)
+    bbox = final_mask.point(lambda value: 255 if value > 16 else 0).getbbox()
+    if bbox is None:
+        raise RuntimeError("HUD stamina extraction produced an empty mask")
+    pad = 3
+    box = (
+        max(0, bbox[0] - pad),
+        max(0, bbox[1] - pad),
+        min(icon.width, bbox[2] + pad),
+        min(icon.height, bbox[3] + pad),
+    )
+    icon = icon.crop(box)
+    icon = ImageEnhance.Contrast(icon).enhance(1.10)
+    icon = ImageEnhance.Sharpness(icon).enhance(1.16)
+
+    canvas = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    scale = min(60 / icon.width, 48 / icon.height)
+    resized = icon.resize((round(icon.width * scale), round(icon.height * scale)), Image.Resampling.LANCZOS)
+    canvas.alpha_composite(resized, ((canvas.width - resized.width) // 2, (canvas.height - resized.height) // 2))
+    canvas.save(HUD_STAMINA_ICON)
+
+
 def main() -> None:
     clean_sheet = create_kurodai_sheet()
     create_kurodai_card_portrait(clean_sheet)
@@ -688,7 +742,11 @@ def main() -> None:
     create_fight_lure()
     create_hud_bait_icon()
     create_hud_tension_icon()
-    print(f"processed {FISH_SHEET}, {FISH_CARD_PORTRAIT}, {HIT_BURST}, {HIT_BADGE_FULL}, {FIGHT_LURE}, {HUD_BAIT_ICON}, and {HUD_TENSION_ICON}")
+    create_hud_stamina_icon()
+    print(
+        f"processed {FISH_SHEET}, {FISH_CARD_PORTRAIT}, {HIT_BURST}, {HIT_BADGE_FULL}, "
+        f"{FIGHT_LURE}, {HUD_BAIT_ICON}, {HUD_TENSION_ICON}, and {HUD_STAMINA_ICON}"
+    )
 
 
 if __name__ == "__main__":

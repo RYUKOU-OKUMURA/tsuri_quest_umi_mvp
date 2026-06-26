@@ -13,6 +13,7 @@ const HUD_FRAME_PATH := "res://assets/showcase/underwater/fight_hud_frame.png"
 const ICON_SHEET_PATH := "res://assets/showcase/underwater/fight_icon_sheet.png"
 const HUD_BAIT_ICON_PATH := "res://assets/showcase/underwater/hud_bait_icon.png"
 const HUD_TENSION_ICON_PATH := "res://assets/showcase/underwater/hud_tension_icon.png"
+const HUD_STAMINA_ICON_PATH := "res://assets/showcase/underwater/hud_stamina_icon.png"
 const ICON_TENSION := 4
 const ICON_STAMINA := 5
 const ICON_BAIT := 6
@@ -25,6 +26,7 @@ var _hud_frame: Texture2D
 var _icons: Texture2D
 var _bait_icon: Texture2D
 var _tension_icon: Texture2D
+var _stamina_icon: Texture2D
 
 var _main_rect := Rect2()
 var _reel_rect := Rect2()
@@ -52,6 +54,8 @@ func _ready() -> void:
 		_bait_icon = load(HUD_BAIT_ICON_PATH) as Texture2D
 	if ResourceLoader.exists(HUD_TENSION_ICON_PATH):
 		_tension_icon = load(HUD_TENSION_ICON_PATH) as Texture2D
+	if ResourceLoader.exists(HUD_STAMINA_ICON_PATH):
+		_stamina_icon = load(HUD_STAMINA_ICON_PATH) as Texture2D
 
 
 func _process(_delta: float) -> void:
@@ -181,7 +185,11 @@ func _draw_stamina(font: Font, rect: Rect2) -> void:
 	var bar_y := 42.0 if _hud_frame == null else 43.0
 	var icon_size := 34.0 if _hud_frame == null else 24.0
 	var title_size := 19 if _hud_frame == null else 18
-	_draw_hud_icon(ICON_STAMINA, Rect2(rect.position + Vector2(12.0, title_y - icon_size + 8.0), Vector2(icon_size, icon_size)), Color("#6cc8ff"), Color(1.0, 1.0, 1.0, 0.86))
+	var stamina_icon_rect := Rect2(rect.position + Vector2(12.0, title_y - icon_size + 8.0), Vector2(icon_size, icon_size))
+	if _hud_frame != null and _stamina_icon != null:
+		_draw_texture_icon(_stamina_icon, stamina_icon_rect)
+	else:
+		_draw_hud_icon(ICON_STAMINA, stamina_icon_rect, Color("#6cc8ff"), Color(1.0, 1.0, 1.0, 0.86))
 	_draw_text(font, "魚の体力", rect.position + Vector2(48.0 if _hud_frame == null else 40.0, title_y), title_size, Palette.TEXT_BONE, 1 if _hud_frame != null else 3)
 	var ratio := 1.0
 	if simulator != null:
@@ -359,11 +367,15 @@ func _draw_bait_texture_icon(target: Rect2) -> void:
 func _draw_tension_texture_icon(target: Rect2) -> void:
 	if _tension_icon == null:
 		return
-	var texture_size := _tension_icon.get_size()
+	_draw_texture_icon(_tension_icon, target)
+
+
+func _draw_texture_icon(texture: Texture2D, target: Rect2) -> void:
+	var texture_size := texture.get_size()
 	var scale := minf(target.size.x / texture_size.x, target.size.y / texture_size.y)
 	var draw_size := texture_size * scale
 	var draw_rect := Rect2(target.position + (target.size - draw_size) * 0.5, draw_size)
-	draw_texture_rect(_tension_icon, draw_rect, false, Color.WHITE)
+	draw_texture_rect(texture, draw_rect, false, Color.WHITE)
 
 
 func _draw_triangle(center: Vector2, radius: float, color: Color, up: bool) -> void:
