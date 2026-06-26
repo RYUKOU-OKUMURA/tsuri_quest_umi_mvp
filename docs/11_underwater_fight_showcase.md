@@ -103,6 +103,7 @@
 
 ## 実装方針
 
+- 水中ファイトの標準QA更新は `./tools/fight_visual_qa.sh` を使う。このスクリプトは `/tmp/tsuri_sidebar_static_compare.png`、`/tmp/tsuri_hud_static_compare.png`、`/tmp/tsuri_top_status_static_compare.png`、`/tmp/tsuri_full_static_compare.png`、`/tmp/tsuri_fight_compare.png`、`/tmp/tsuri_fight_compare.html` を更新する。実ランタイムキャプチャを試す場合だけ `TSURI_FIGHT_RUNTIME_CAPTURE=1 ./tools/fight_visual_qa.sh` を使う。実キャプチャが環境都合で失敗した場合は古い `/tmp/tsuri_fishing_fight.png` を残さず、静的比較を正式なfallbackとして使う。
 - `UnderwaterView` は上記 PNG が存在すれば素材版を優先する。
 - PNG がない場合は既存の procedural 描画にフォールバックする。
 - `UnderwaterView` の showcase テクスチャは、プロジェクト既定の NEAREST ではなく LINEAR で表示する。UI枠はチャンキーなままでよいが、水中背景・魚・ヒット演出はリファレンスのなめらかなイラスト感に近づけるため、縮小時の硬いピクセル段差を抑える。

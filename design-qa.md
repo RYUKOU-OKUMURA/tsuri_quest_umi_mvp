@@ -6,6 +6,7 @@ Date: 2026-06-25
 
 Source visual truth: `reference/02_underwater_fight_mockup.png`
 Implementation screenshot: `/tmp/tsuri_fishing_fight.png`
+QA refresh command: `./tools/fight_visual_qa.sh`
 Full-view comparison evidence: `/tmp/tsuri_fight_compare.png`
 Static full-view comparison evidence: `/tmp/tsuri_full_static_compare.png`
 Focused frame comparison evidence: `/tmp/tsuri_frame_focus_compare.png`
@@ -16,6 +17,7 @@ State: underwater fight, kurodai hit moment, depth 18.6m, action `突進`
 
 ## Patches Made Since Previous QA
 
+- Improved fight-screen visual QA reliability without changing screen pixels. Added `tools/fight_visual_qa.sh` as the standard comparison refresh command: it regenerates sidebar/HUD/top-status/full static boards, optionally tries a runtime capture with `TSURI_FIGHT_RUNTIME_CAPTURE=1`, and always rebuilds `/tmp/tsuri_fight_compare.png` plus `/tmp/tsuri_fight_compare.html` from the freshest valid source. `tools/fishing_fight_preview.gd` now removes stale `/tmp/tsuri_fishing_fight.png` before capture attempts and reports the static fallback path when `SubViewport.get_image()` is unavailable, preventing old runtime pixels from being mistaken for current QA evidence.
 - Continued the dedicated UI typography phase without changing card geometry, text coordinates, icon sizes, background, fish placement, HUD key sizing, top AM/time spacing, or tackle density. `src/ui/fight_fonts.gd` now renders the fight-screen M PLUS 1p fonts with antialiasing disabled, matching the global JRPG theme direction and reducing the remaining smooth modern-app text read across the frame-backed fight UI. Static comparison boards still use PIL text as deterministic layout mirrors, so runtime text crispness must be checked with a real-display Godot capture when available.
 - Continued the dedicated UI icon phase on the top status row without changing slot ratios, icon draw sizes, text coordinates, or AM/time spacing. `tools/extract_top_status_icons.py` now uses a smoother post-extraction pass with lighter contrast, lower unsharp strength, and a slightly stricter low-alpha cutoff, reducing hard pixel-stepped icon edges while keeping the same reference-derived clock/sun/wind/coin source. Regenerated `/tmp/tsuri_top_status_static_compare.png`, `/tmp/tsuri_full_static_compare.png`, `/tmp/tsuri_fight_compare.png`, and `/tmp/tsuri_fight_compare.html`.
 - Continued the authored production-card-material phase on the lower HUD without changing HUD height, bait/menu proportions, key-cap sizes, text coordinates, or the single-row operation grammar. `fight_hud_frame.png` now uses matching reference-paper crops for the bait and operation-hint paper bodies, so those slots read less like flat generated beige panels while `オキアミ ×17` and the A/B/LR operation text remain readable. Regenerated `/tmp/tsuri_hud_static_compare.png`, `/tmp/tsuri_full_static_compare.png`, `/tmp/tsuri_fight_compare.png`, and `/tmp/tsuri_fight_compare.html`.

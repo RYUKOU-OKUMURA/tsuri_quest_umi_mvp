@@ -8,6 +8,10 @@ const VW := Vector2i(1280, 720)
 
 
 func _ready() -> void:
+	if FileAccess.file_exists(OUT):
+		var remove_error := DirAccess.remove_absolute(OUT)
+		if remove_error != OK:
+			push_warning("Failed to remove stale fight capture: %s" % OUT)
 	PlayerProgress.level = max(PlayerProgress.level, GameData.BOSS_UNLOCK_LEVEL)
 	PlayerProgress.money = 12450
 
@@ -80,7 +84,7 @@ func _ready() -> void:
 
 	var img := vp.get_texture().get_image()
 	if img == null:
-		push_error("SubViewport get_image() returned null")
+		push_error("SubViewport get_image() returned null; run with a real display driver or use /tmp/tsuri_fishing_fight_static.png from tools/build_fight_full_static_compare.py")
 		get_tree().quit(1)
 		return
 	img.save_png(OUT)
