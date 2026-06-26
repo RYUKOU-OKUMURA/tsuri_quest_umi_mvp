@@ -380,6 +380,40 @@ def _draw_outer_frame(image: Image.Image, box: tuple[int, int, int, int], *, rad
     d.line((x0 + 22, y1 - 14, x1 - 22, y1 - 14), fill=(0, 0, 0, 7), width=1)
 
 
+def _draw_sidebar_paper_detail(
+    image: Image.Image,
+    box: tuple[int, int, int, int],
+    *,
+    seed: int,
+    vertical_step: int = 46,
+    horizontal_step: int = 44,
+    grid_alpha: int = 12,
+    scuff_alpha: int = 13,
+) -> None:
+    x0, y0, x1, y1 = box
+    overlay = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(overlay)
+    for x in range(x0 + vertical_step, x1, vertical_step):
+        d.line((x, y0, x, y1), fill=_rgba("#c4a56a", grid_alpha), width=1)
+    for y in range(y0 + horizontal_step, y1, horizontal_step):
+        d.line((x0, y, x1, y), fill=_rgba("#b7975c", grid_alpha + 3), width=1)
+
+    rng = random.Random(seed)
+    for _ in range(max(8, (x1 - x0) // 48)):
+        sx = rng.randint(x0 + 8, max(x0 + 8, x1 - 62))
+        sy = rng.randint(y0 + 8, max(y0 + 8, y1 - 12))
+        ex = min(x1 - 8, sx + rng.randint(18, 74))
+        alpha = rng.randint(max(3, scuff_alpha - 6), scuff_alpha)
+        d.line((sx, sy, ex, sy + rng.choice((-1, 0, 1))), fill=(116, 78, 36, alpha), width=1)
+    for _ in range(max(4, (x1 - x0) // 95)):
+        cx = rng.randint(x0 + 18, max(x0 + 18, x1 - 18))
+        cy = rng.randint(y0 + 18, max(y0 + 18, y1 - 18))
+        rx = rng.randint(4, 12)
+        ry = rng.randint(2, 7)
+        d.ellipse((cx - rx, cy - ry, cx + rx, cy + ry), fill=(109, 73, 34, rng.randint(3, max(4, scuff_alpha - 3))))
+    image.alpha_composite(overlay.filter(ImageFilter.GaussianBlur(0.15)))
+
+
 def _draw_top_status_paper_card(
     image: Image.Image,
     box: tuple[int, int, int, int],
@@ -639,13 +673,22 @@ def create_sidebar_frame() -> None:
     title_rule_y = fish[1] + 76
     d.line((fish[0] + 48, title_rule_y, fish[2] - 48, title_rule_y), fill=_rgba("#b89b64", 58), width=1)
     d.line((fish[0] + 48, title_rule_y + 2, fish[2] - 48, title_rule_y + 2), fill=_rgba("#ffffff", 30), width=1)
+    _draw_sidebar_paper_detail(
+        image,
+        (fish[0] + 40, fish[1] + 90, fish[2] - 40, fish[3] - 28),
+        seed=181,
+        vertical_step=45,
+        horizontal_step=46,
+        grid_alpha=9,
+        scuff_alpha=10,
+    )
     portrait_mat = (fish[0] + 42, fish[1] + 86, fish[2] - 42, fish[1] + 340)
     grid = Image.new("RGBA", image.size, (0, 0, 0, 0))
     gd = ImageDraw.Draw(grid)
     for x in range(portrait_mat[0] + 38, portrait_mat[2] - 20, 46):
-        gd.line((x, portrait_mat[1] + 12, x, portrait_mat[3] - 8), fill=_rgba("#c8ad76", 12), width=1)
+        gd.line((x, portrait_mat[1] + 12, x, portrait_mat[3] - 8), fill=_rgba("#c8ad76", 18), width=1)
     for y in range(portrait_mat[1] + 38, portrait_mat[3] - 8, 48):
-        gd.line((portrait_mat[0] + 18, y, portrait_mat[2] - 18, y), fill=_rgba("#c8ad76", 18), width=1)
+        gd.line((portrait_mat[0] + 18, y, portrait_mat[2] - 18, y), fill=_rgba("#c8ad76", 22), width=1)
     image.alpha_composite(grid)
     for y in (fish[1] + 348,):
         d.line((fish[0] + 38, y, fish[2] - 38, y), fill=_rgba("#b89b64", 58), width=1)
@@ -683,6 +726,15 @@ def create_sidebar_frame() -> None:
         detail_alpha_scale=0.55,
         reference_paper=True,
     )
+    _draw_sidebar_paper_detail(
+        image,
+        (action_body[0] + 18, action_body[1] + 17, action_body[2] - 18, action_body[3] - 17),
+        seed=183,
+        vertical_step=52,
+        horizontal_step=38,
+        grid_alpha=6,
+        scuff_alpha=8,
+    )
     _draw_navy_card(
         image,
         tackle,
@@ -714,6 +766,15 @@ def create_sidebar_frame() -> None:
         inner_alpha=34,
         detail_alpha_scale=0.55,
         reference_paper=True,
+    )
+    _draw_sidebar_paper_detail(
+        image,
+        (tackle_body[0] + 18, tackle_body[1] + 17, tackle_body[2] - 18, tackle_body[3] - 17),
+        seed=185,
+        vertical_step=52,
+        horizontal_step=34,
+        grid_alpha=6,
+        scuff_alpha=8,
     )
 
     for panel_index, (panel, body, icon_side) in enumerate(((action, action_body, "left"), (tackle, tackle_body, "right"))):
