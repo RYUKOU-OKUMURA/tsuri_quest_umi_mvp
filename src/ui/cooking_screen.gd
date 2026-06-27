@@ -468,7 +468,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	_recipe_grid.columns = 3
 	_recipe_grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_recipe_grid.add_theme_constant_override("h_separation", 8)
-	_recipe_grid.add_theme_constant_override("v_separation", 10)
+	_recipe_grid.add_theme_constant_override("v_separation", 12)
 	recipe_layout.add_child(_recipe_grid)
 
 	_recipe_to_detail_arrow = TextureRect.new()
@@ -958,7 +958,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	var recipe_id := String(recipe.get("id", ""))
 	var card := PanelContainer.new()
 	card.name = "RecipeCard_%s" % recipe_id
-	card.custom_minimum_size = Vector2(134, 146)
+	card.custom_minimum_size = Vector2(134, 164)
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
 	var selectable := not locked and not unavailable
 	if selectable:
@@ -972,15 +972,16 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	box.add_theme_constant_override("separation", 2)
 	card.add_child(box)
 	var title_text := "？？？" if locked else String(recipe.get("name", ""))
-	var title := make_label(title_text, 16, Color("#251c12"), 1, Color("#fff3cf"))
-	title.custom_minimum_size = Vector2(0.0, 20.0)
+	var title := make_shadow_label(title_text, 15, Color("#251c12"), 1, Color("#fff3cf"))
+	title.custom_minimum_size = Vector2(0.0, 26.0)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title.clip_text = true
 	box.add_child(title)
 	var image := TextureRect.new()
 	image.texture = _recipe_icon(recipe_id if not locked else "locked")
-	image.custom_minimum_size = Vector2(0, 70)
+	image.custom_minimum_size = Vector2(0, 76)
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	image.modulate = Color(0.46, 0.42, 0.36, 0.82) if locked or unavailable else Color.WHITE
@@ -1033,7 +1034,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 func _make_recipe_book_card() -> PanelContainer:
 	var card := PanelContainer.new()
 	card.name = "RecipeCard_Book"
-	card.custom_minimum_size = Vector2(134, 146)
+	card.custom_minimum_size = Vector2(134, 164)
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.self_modulate = Color(0.72, 0.66, 0.54, 1.0)
 	card.add_theme_stylebox_override(
@@ -1049,15 +1050,16 @@ func _make_recipe_book_card() -> PanelContainer:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
 	card.add_child(box)
-	var title := make_label("料理図鑑", 16, Color("#251c12"), 1, Color("#fff3cf"))
-	title.custom_minimum_size = Vector2(0.0, 20.0)
+	var title := make_shadow_label("料理図鑑", 15, Color("#251c12"), 1, Color("#fff3cf"))
+	title.custom_minimum_size = Vector2(0.0, 26.0)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title.clip_text = true
 	box.add_child(title)
 	var image := TextureRect.new()
 	image.texture = _recipe_icon("locked")
-	image.custom_minimum_size = Vector2(0, 70)
+	image.custom_minimum_size = Vector2(0, 76)
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	image.modulate = Color(0.62, 0.58, 0.50, 0.88)
