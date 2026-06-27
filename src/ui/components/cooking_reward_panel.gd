@@ -657,6 +657,7 @@ func _build_screen() -> void:
 	scene_box.add_child(_scene_title)
 	_scene_visual_stack = Control.new()
 	_scene_visual_stack.name = "MealSceneVisualStack"
+	_scene_visual_stack.clip_contents = true
 	_scene_visual_stack.custom_minimum_size = Vector2(0.0, 164.0)
 	_scene_visual_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_scene_visual_stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -890,7 +891,7 @@ func show_meal_result(result: Dictionary) -> void:
 	_dish_image.texture = dish_texture
 	_scene_dish_image.set_dish_texture(dish_texture)
 	_scene_dish_image.set_mode("meal")
-	_set_scene_result_art_visible(true)
+	_set_scene_result_art_visible(false)
 	_scene_caption.text = "湯気の立つ%sを味わった。" % dish_name
 	_scene_bonus_label.text = _meal_bonus_badge_text(result)
 	_scene_title.text = "食べる"
@@ -1444,11 +1445,11 @@ func _apply_meal_result_composition() -> void:
 		_scene_visual_stack.custom_minimum_size = Vector2(0.0, 232.0)
 	if _scene_actor_panel != null:
 		_scene_actor_panel.visible = true
-		_scene_actor_panel.custom_minimum_size = Vector2(168.0, 0.0)
+		_scene_actor_panel.custom_minimum_size = Vector2(138.0, 0.0)
 	if _scene_table != null:
-		_scene_table.add_theme_constant_override("separation", 10)
+		_scene_table.add_theme_constant_override("separation", 6)
 	if _scene_dish_image != null:
-		_scene_dish_image.custom_minimum_size = Vector2(236.0, 168.0)
+		_scene_dish_image.custom_minimum_size = Vector2(278.0, 188.0)
 	if _dish_card != null:
 		_dish_card.custom_minimum_size = Vector2(0.0, 222.0)
 	if _dish_image != null:
