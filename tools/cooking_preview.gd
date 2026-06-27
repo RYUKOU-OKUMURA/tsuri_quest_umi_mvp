@@ -47,7 +47,7 @@ func _ready() -> void:
 	var fake_result := _fake_meal_result()
 	_seed_after_meal_state()
 	var meal_result := fake_result.duplicate(true)
-	meal_result["status_snapshot"] = _meal_status_snapshot(4, 130, 150)
+	meal_result["status_snapshot"] = _meal_status_snapshot(7, 165, 285)
 	screen.preview_show_meal_reward_result(meal_result, true)
 
 	await get_tree().process_frame
@@ -67,7 +67,7 @@ func _ready() -> void:
 	screen = await _mount_screen(vp)
 	var non_level_result := _fake_non_level_result()
 	_seed_after_non_level_meal_state()
-	screen.preview_show_reward_result(non_level_result, 80, 120, 150, false)
+	screen.preview_show_reward_result(non_level_result, 127, 165, 285, false)
 	await get_tree().process_frame
 	await get_tree().process_frame
 	if not _expect_reward_state(screen, "EXP_GAIN", "EXP_GAIN capture"):
@@ -84,7 +84,7 @@ func _ready() -> void:
 	_seed_select_state()
 	screen = await _mount_screen(vp, false)
 	_seed_after_meal_state()
-	screen.preview_show_reward_result(fake_result, 130, 150, 150, true)
+	screen.preview_show_reward_result(fake_result, 165, 285, 285, true)
 	await get_tree().process_frame
 	await get_tree().process_frame
 	if not _expect_reward_state(screen, "EXP_GAIN_LEVELUP", "LEVEL_UP transition"):
@@ -136,42 +136,49 @@ func _mount_screen(vp: SubViewport, suppress_level_overlay := true) -> Control:
 
 
 func _seed_select_state() -> void:
-	PlayerProgress.level = 4
-	PlayerProgress.exp = 130
-	PlayerProgress.money = 1250
-	PlayerProgress.play_seconds = 12345.0
+	PlayerProgress.level = 7
+	PlayerProgress.exp = 165
+	PlayerProgress.money = 10170
+	PlayerProgress.play_seconds = 10028.0
 	PlayerProgress.inventory.clear()
-	PlayerProgress.inventory["aji"] = 4
-	PlayerProgress.inventory["saba"] = 3
-	PlayerProgress.inventory["kasago"] = 2
 	PlayerProgress.inventory["mejina"] = 2
+	PlayerProgress.inventory["kasago"] = 2
+	PlayerProgress.inventory["isaki"] = 1
+	PlayerProgress.inventory["saba"] = 1
 	PlayerProgress.eaten_recipes.clear()
 	PlayerProgress.pending_buff = {}
 
 
 func _seed_after_meal_state() -> void:
-	PlayerProgress.level = 5
-	PlayerProgress.exp = 20
-	PlayerProgress.inventory["aji"] = 3
+	PlayerProgress.level = 8
+	PlayerProgress.exp = 6
+	PlayerProgress.inventory.clear()
+	PlayerProgress.inventory["mejina"] = 2
+	PlayerProgress.inventory["kasago"] = 2
+	PlayerProgress.inventory["saba"] = 1
 	PlayerProgress.pending_buff = {
-		"recipe_id": "salt_grill",
-		"name": "アジの塩焼き",
-		"stat": "max_energy",
-		"value": 0.05,
-		"text": "次の釣行で最大体力 +5%",
+		"recipe_id": "soup",
+		"name": "イサキのつみれ汁",
+		"stat": "energy_regen",
+		"value": 0.18,
+		"text": "次の釣行で体力回復 +18%",
 	}
 
 
 func _seed_after_non_level_meal_state() -> void:
-	PlayerProgress.level = 4
-	PlayerProgress.exp = 120
-	PlayerProgress.inventory["aji"] = 3
+	PlayerProgress.level = 7
+	PlayerProgress.exp = 165
+	PlayerProgress.inventory.clear()
+	PlayerProgress.inventory["mejina"] = 1
+	PlayerProgress.inventory["kasago"] = 2
+	PlayerProgress.inventory["isaki"] = 1
+	PlayerProgress.inventory["saba"] = 1
 	PlayerProgress.pending_buff = {
-		"recipe_id": "salt_grill",
-		"name": "アジの塩焼き",
-		"stat": "max_energy",
-		"value": 0.05,
-		"text": "次の釣行で最大体力 +5%",
+		"recipe_id": "simmered",
+		"name": "メジナの煮付け",
+		"stat": "safe_max",
+		"value": 0.10,
+		"text": "次の釣行で安全テンション域 +10%",
 	}
 
 
@@ -188,18 +195,18 @@ func _meal_status_snapshot(level_before: int, exp_before: int, exp_max_before: i
 func _fake_meal_result() -> Dictionary:
 	return {
 		"ok": true,
-		"dish_name": "アジの塩焼き",
-		"base_exp": 20,
+		"dish_name": "イサキのつみれ汁",
+		"base_exp": 63,
 		"first_time": true,
-		"first_bonus": 20,
-		"total_exp": 40,
-		"leveled_to": [5],
+		"first_bonus": 63,
+		"total_exp": 126,
+		"leveled_to": [8],
 		"buff": {
-			"recipe_id": "salt_grill",
-			"name": "アジの塩焼き",
-			"stat": "max_energy",
-			"value": 0.05,
-			"text": "次の釣行で最大体力 +5%",
+			"recipe_id": "soup",
+			"name": "イサキのつみれ汁",
+			"stat": "energy_regen",
+			"value": 0.18,
+			"text": "次の釣行で体力回復 +18%",
 		},
 	}
 
@@ -214,18 +221,18 @@ func _total_fish_count() -> int:
 func _fake_non_level_result() -> Dictionary:
 	return {
 		"ok": true,
-		"dish_name": "アジの塩焼き",
-		"base_exp": 20,
-		"first_time": true,
-		"first_bonus": 20,
-		"total_exp": 40,
+		"dish_name": "メジナの煮付け",
+		"base_exp": 38,
+		"first_time": false,
+		"first_bonus": 0,
+		"total_exp": 38,
 		"leveled_to": [],
 		"buff": {
-			"recipe_id": "salt_grill",
-			"name": "アジの塩焼き",
-			"stat": "max_energy",
-			"value": 0.05,
-			"text": "次の釣行で最大体力 +5%",
+			"recipe_id": "simmered",
+			"name": "メジナの煮付け",
+			"stat": "safe_max",
+			"value": 0.10,
+			"text": "次の釣行で安全テンション域 +10%",
 		},
 	}
 
