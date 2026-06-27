@@ -686,23 +686,23 @@ func _build_play_card(parent: HBoxContainer) -> void:
 func _build_footer(parent: VBoxContainer) -> void:
 	var footer := _panel_box(Color("#08213a"), Color("#06111e"), Palette.GOLD_DEEP, 4)
 	_footer_panel = footer
-	footer.custom_minimum_size = Vector2(0.0, 84.0)
+	footer.custom_minimum_size = Vector2(0.0, 94.0)
 	footer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(footer)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 16)
 	footer.add_child(row)
 	var portrait := _portrait_box("READY", Palette.GAUGE_GREEN_HI)
-	portrait.custom_minimum_size = Vector2(120.0, 0.0)
+	portrait.custom_minimum_size = Vector2(136.0, 0.0)
 	row.add_child(portrait)
-	_footer_message_label = make_shadow_label("", 22, Palette.TEXT_BONE, 3)
+	_footer_message_label = make_shadow_label("", 24, Palette.TEXT_BONE, 3)
 	_footer_message_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_footer_message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_footer_message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row.add_child(_footer_message_label)
 	var back := make_button("港へ戻る", _close, 190.0, true)
 	back.name = "StatusReturnButton"
-	back.custom_minimum_size = Vector2(178.0, 48.0)
+	back.custom_minimum_size = Vector2(216.0, 54.0)
 	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	back.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_apply_flow_button_style(back)
