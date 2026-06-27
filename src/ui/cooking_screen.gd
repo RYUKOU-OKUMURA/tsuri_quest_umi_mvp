@@ -23,6 +23,16 @@ const DISH_DETAIL_FRAME := "res://assets/showcase/cooking/dish_detail_frame.png"
 const COOK_BUTTON_FRAME := "res://assets/showcase/cooking/cook_button_frame.png"
 const FISH_ROW_FRAME := "res://assets/showcase/cooking/fish_row_frame.png"
 const PLAYER_HEADER_PORTRAIT := "res://assets/showcase/cooking/player_status_portrait_pixel.png"
+const FISH_CARD_PORTRAIT_PATHS := {
+	"aji": "res://assets/showcase/underwater/fish/aji_card_portrait.png",
+	"saba": "res://assets/showcase/underwater/fish/saba_card_portrait.png",
+	"tai": "res://assets/showcase/underwater/fish/madai_card_portrait.png",
+	"kasago": "res://assets/showcase/underwater/fish/kasago_card_portrait.png",
+	"hirame": "res://assets/showcase/underwater/fish/hirame_card_portrait.png",
+	"mejina": "res://assets/showcase/underwater/fish/mejina_card_portrait.png",
+	"isaki": "res://assets/showcase/underwater/fish/isaki_card_portrait.png",
+	"boss_kurodai": "res://assets/showcase/underwater/fish/kurodai_card_portrait.png",
+}
 
 
 class CookingSmallIcon:
@@ -427,7 +437,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	layout.add_child(body)
 
 	var fish_panel := _panel_box(Color("#10283d"), Color("#5e391a"), Color("#e4b461"), 6)
-	fish_panel.custom_minimum_size = Vector2(276, 0)
+	fish_panel.custom_minimum_size = Vector2(292, 0)
 	fish_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(fish_panel)
 	var fish_layout := VBoxContainer.new()
@@ -784,7 +794,7 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	var owned := count > 0
 	var card := PanelContainer.new()
 	card.name = _fish_row_node_name(fish_id)
-	card.custom_minimum_size = Vector2(0, 75)
+	card.custom_minimum_size = Vector2(0, 68)
 	card.mouse_filter = Control.MOUSE_FILTER_STOP if owned else Control.MOUSE_FILTER_IGNORE
 	if owned:
 		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -794,7 +804,7 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 					_select_fish(fish_id)
 		)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 7)
+	row.add_theme_constant_override("separation", 5)
 	card.add_child(row)
 	var marker := make_shadow_label("", 18, Palette.GOLD_BRIGHT, 2)
 	marker.custom_minimum_size = Vector2(18, 0)
@@ -803,21 +813,21 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	row.add_child(marker)
 	var icon := TextureRect.new()
 	icon.texture = _fish_icon(fish_id)
-	icon.custom_minimum_size = Vector2(80, 54)
+	icon.custom_minimum_size = Vector2(96, 50)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.modulate = Color.WHITE if owned else Color(0.42, 0.40, 0.34, 0.72)
+	icon.modulate = Color(1.16, 1.10, 1.02, 1.0) if owned else Color(0.36, 0.34, 0.30, 0.76)
 	row.add_child(icon)
 	var display_name := _fish_row_display_name(fish_id, String(fish.get("name", fish_id)))
-	var name := make_label(display_name, 19, Color("#241b12"), 1, Color("#fff2ca"))
+	var name := make_label(display_name, 18, Color("#241b12"), 1, Color("#fff2ca"))
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	name.autowrap_mode = TextServer.AUTOWRAP_OFF
 	name.clip_text = true
 	row.add_child(name)
 	var amount_text := "× %d" % count if owned else "未所持"
-	var amount := make_label(amount_text, 18 if owned else 14, Color("#241b12"), 1, Color("#fff2ca"))
-	amount.custom_minimum_size = Vector2(50.0, 0.0)
+	var amount := make_label(amount_text, 17 if owned else 13, Color("#241b12"), 1, Color("#fff2ca"))
+	amount.custom_minimum_size = Vector2(48.0, 0.0)
 	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	amount.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(amount)
@@ -1664,6 +1674,9 @@ func _atlas(path: String, index: int, columns: int, rows: int) -> Texture2D:
 
 
 func _fish_icon(fish_id: String) -> Texture2D:
+	var portrait_path := String(FISH_CARD_PORTRAIT_PATHS.get(fish_id, ""))
+	if not portrait_path.is_empty() and ResourceLoader.exists(portrait_path):
+		return load(portrait_path) as Texture2D
 	return _atlas(FISH_ICON_SHEET, int(FISH_ICON_INDEX.get(fish_id, 0)), 1, 6)
 
 
