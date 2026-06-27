@@ -1362,9 +1362,30 @@ func _show_error_result(message: String) -> void:
 func _show_status_summary() -> void:
 	if _flow_state != FlowState.COOK_SELECT:
 		_flow_state = FlowState.COOK_SELECT
-	_set_result_summary_compact(true)
+	_set_result_summary_compact(false)
 	_result_title.text = "現在の準備"
 	_clear_container(_result_body)
+	_result_body.add_child(
+		_prep_summary_card(
+			"プレイヤーLv.",
+			"Lv.%d  %d/%d" % [
+				PlayerProgress.level,
+				PlayerProgress.exp,
+				PlayerProgress.exp_to_next_level(),
+			],
+			Palette.GOLD_BRIGHT,
+			"player"
+		)
+	)
+	_result_body.add_child(
+		_prep_summary_card("効果中の料理", _current_meal_summary_text(), Palette.GAUGE_GREEN_HI, "meal")
+	)
+	_result_body.add_child(
+		_prep_summary_card("クーラーボックス", "%d / 20" % _total_fish_count(), Palette.GAUGE_CYAN_HI, "cooler")
+	)
+	_result_body.add_child(
+		_prep_summary_card("所持金", "%d G" % PlayerProgress.money, Palette.GOLD_BRIGHT, "coin")
+	)
 
 
 func _show_status_overlay() -> void:
@@ -1372,6 +1393,14 @@ func _show_status_overlay() -> void:
 	add_child(panel)
 	panel.closed.connect(func() -> void: navigate("harbor"))
 	panel.show_summary()
+
+
+func _current_meal_summary_text() -> String:
+	var buff := PlayerProgress.pending_buff
+	if buff.is_empty():
+		return "なし"
+	var name := String(buff.get("name", "料理効果"))
+	return "%s / 1回" % name
 
 
 func _show_meal_result(result: Dictionary, leveled: bool) -> void:
@@ -1564,9 +1593,33 @@ func _summary_card(title: String, value: String, accent: Color, icon_mode := "bo
 	return card
 
 
+func _prep_summary_card(title: String, value: String, accent: Color, icon_mode := "book") -> PanelContainer:
+	var card := _panel_box(Color("#0d2338"), Color("#60401f"), Color("#d7a456"), 4)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.custom_minimum_size = Vector2(0, 48)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	card.add_child(row)
+	row.add_child(_small_icon(icon_mode, accent, Vector2(38.0, 0.0)))
+	var title_label := make_shadow_label(title, 12, Palette.TEXT_BONE, 2)
+	title_label.custom_minimum_size = Vector2(104.0, 0.0)
+	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	title_label.clip_text = true
+	row.add_child(title_label)
+	var value_label := make_shadow_label(value, 14, accent, 2)
+	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	value_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	value_label.clip_text = true
+	row.add_child(value_label)
+	return card
+
+
 func _set_result_summary_compact(compact: bool) -> void:
 	if _result_panel != null:
-		_result_panel.custom_minimum_size = Vector2(0, 58 if compact else 94)
+		_result_panel.custom_minimum_size = Vector2(0, 58 if compact else 112)
 	if _result_body != null:
 		_result_body.visible = not compact
 
