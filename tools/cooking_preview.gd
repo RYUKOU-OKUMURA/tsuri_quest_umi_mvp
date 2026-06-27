@@ -110,7 +110,9 @@ func _ready() -> void:
 		push_error("Expected LEVEL_UP_OVERLAY before STATUS_SUMMARY capture.")
 		get_tree().quit(1)
 		return
-	await get_tree().create_timer(0.35).timeout
+	if not await _wait_for_level_up_overlay_to_close(screen, "STATUS_SUMMARY capture"):
+		get_tree().quit(1)
+		return
 	if not _expect_status_overlay(screen, "STATUS_SUMMARY capture"):
 		get_tree().quit(1)
 		return
@@ -310,6 +312,15 @@ func _expect_status_overlay(screen: Control, context: String) -> bool:
 	if screen.preview_has_status_overlay():
 		return true
 	push_error("%s expected STATUS_SUMMARY overlay." % context)
+	return false
+
+
+func _wait_for_level_up_overlay_to_close(screen: Control, context: String) -> bool:
+	for i in range(24):
+		await get_tree().process_frame
+		if not screen.preview_has_level_up_overlay():
+			return true
+	push_error("%s expected LEVEL_UP_OVERLAY to close before capture." % context)
 	return false
 
 

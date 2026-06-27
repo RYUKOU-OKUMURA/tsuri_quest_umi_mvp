@@ -514,7 +514,8 @@ func show_level_up(
 
 
 func preview_accept() -> void:
-	_close()
+	closed.emit()
+	queue_free()
 
 
 func _rebuild_stats(old_stats: Dictionary, new_stats: Dictionary) -> void:
