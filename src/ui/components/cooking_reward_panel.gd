@@ -872,6 +872,7 @@ func show_meal_result(result: Dictionary) -> void:
 	_header_title.name = "MealResultTitle"
 	_set_stage_background(MEAL_SCENE_BG)
 	var dish_name := String(result.get("dish_name", "料理"))
+	_set_header_title_font_size(25)
 	_header_title.text = "%sを\n食べた！" % dish_name
 	_bridge_label.text = "%sで次の釣行効果を予約。食経験値は次に加算される。" % dish_name
 	_dish_title.text = "%sを食べた！" % dish_name
@@ -922,6 +923,7 @@ func show_reward(
 	_header_title.name = "ExpGainTitle"
 	_set_stage_background(EXP_STAGE_BG)
 	var dish_name := String(result.get("dish_name", "料理"))
+	_set_header_title_font_size(30)
 	_header_title.text = "食経験値が成長へ！" if leveled else "食経験値を獲得！"
 	_bridge_label.text = _growth_bridge_text(dish_name, leveled, level_before, level_after)
 	_dish_title.text = "%sを食べた！" % dish_name
@@ -1399,6 +1401,11 @@ func _set_scene_result_art_visible(visible: bool) -> void:
 		_scene_result_image.visible = visible
 	if _scene_table != null:
 		_scene_table.modulate.a = 0.0 if visible else 1.0
+
+
+func _set_header_title_font_size(font_size: int) -> void:
+	if _header_title != null:
+		_header_title.add_theme_font_size_override("font_size", font_size)
 
 
 func _build_effect_preview_card(parent: HBoxContainer) -> void:
