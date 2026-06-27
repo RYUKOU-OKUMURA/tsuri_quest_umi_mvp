@@ -17,6 +17,7 @@ class LevelUpVisual:
 	const LAUREL_RIGHT_ASSET := "res://assets/showcase/cooking/level_laurel_right.png"
 	const UNLOCK_MEDALLION_ASSET := "res://assets/showcase/cooking/level_unlock_medallion.png"
 	const UNLOCK_SPOT_ASSET := "res://assets/showcase/cooking/level_unlock_spot.png"
+	const USE_CUTOUT_TEXTURE_ASSETS := false
 
 	var mode := "crown"
 
@@ -27,23 +28,23 @@ class LevelUpVisual:
 	func _draw() -> void:
 		match mode:
 			"laurel_left":
-				if _draw_texture_asset(LAUREL_LEFT_ASSET):
+				if USE_CUTOUT_TEXTURE_ASSETS and _draw_texture_asset(LAUREL_LEFT_ASSET):
 					return
 				_draw_laurel(-1.0)
 			"laurel_right":
-				if _draw_texture_asset(LAUREL_RIGHT_ASSET):
+				if USE_CUTOUT_TEXTURE_ASSETS and _draw_texture_asset(LAUREL_RIGHT_ASSET):
 					return
 				_draw_laurel(1.0)
 			"medal":
-				if _draw_texture_asset(UNLOCK_MEDALLION_ASSET):
+				if USE_CUTOUT_TEXTURE_ASSETS and _draw_texture_asset(UNLOCK_MEDALLION_ASSET):
 					return
 				_draw_medal()
 			"spot":
-				if _draw_texture_asset(UNLOCK_SPOT_ASSET):
+				if USE_CUTOUT_TEXTURE_ASSETS and _draw_texture_asset(UNLOCK_SPOT_ASSET):
 					return
 				_draw_spot()
 			_:
-				if _draw_texture_asset(CROWN_ASSET):
+				if USE_CUTOUT_TEXTURE_ASSETS and _draw_texture_asset(CROWN_ASSET):
 					return
 				_draw_crown()
 

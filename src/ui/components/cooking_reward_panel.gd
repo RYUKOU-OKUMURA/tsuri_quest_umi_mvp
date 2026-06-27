@@ -21,6 +21,7 @@ class SceneActorVisual:
 	extends Control
 
 	const EATING_POSE := "res://assets/showcase/cooking/player_eating_pose.png"
+	const USE_CUTOUT_TEXTURE_ASSETS := false
 
 	var mode := "meal"
 
@@ -35,7 +36,7 @@ class SceneActorVisual:
 			_draw_eating_player()
 
 	func _draw_eating_player() -> void:
-		if _draw_texture_asset(EATING_POSE):
+		if USE_CUTOUT_TEXTURE_ASSETS and _draw_texture_asset(EATING_POSE):
 			return
 		var center := size * 0.5
 		draw_ellipse(center + Vector2(0.0, 62.0), 42.0, 8.0, Color(0.0, 0.0, 0.0, 0.28))
@@ -96,6 +97,7 @@ class MealTableSpreadVisual:
 	extends Control
 
 	const TABLE_SPREAD := "res://assets/showcase/cooking/meal_table_spread.png"
+	const USE_CUTOUT_TEXTURE_ASSETS := false
 
 	var mode := "meal"
 	var dish_texture: Texture2D
@@ -109,7 +111,7 @@ class MealTableSpreadVisual:
 		queue_redraw()
 
 	func _draw() -> void:
-		if mode == "meal" and _draw_texture_asset(TABLE_SPREAD):
+		if USE_CUTOUT_TEXTURE_ASSETS and mode == "meal" and _draw_texture_asset(TABLE_SPREAD):
 			return
 		_draw_dish_source()
 
@@ -155,9 +157,10 @@ class ExpMessagePortraitVisual:
 	extends Control
 
 	const EXP_POSE := "res://assets/showcase/cooking/player_exp_message_pose.png"
+	const USE_CUTOUT_TEXTURE_ASSETS := false
 
 	func _draw() -> void:
-		if _draw_texture_asset(EXP_POSE):
+		if USE_CUTOUT_TEXTURE_ASSETS and _draw_texture_asset(EXP_POSE):
 			return
 		var center := size * 0.5
 		draw_ellipse(center + Vector2(0.0, 31.0), 33.0, 6.0, Color(0.0, 0.0, 0.0, 0.24))
@@ -291,6 +294,7 @@ class RewardIconVisual:
 
 	const ICON_SHEET := "res://assets/showcase/cooking/cooking_icon_sheet.png"
 	const ICON_CELL_SIZE := 96.0
+	const USE_CUTOUT_TEXTURE_ASSETS := false
 
 	var mode := "exp"
 	var accent := Color("#6bf1ff")
@@ -302,7 +306,7 @@ class RewardIconVisual:
 
 	func _draw() -> void:
 		var atlas_index := _atlas_index()
-		if atlas_index >= 0 and _draw_atlas_icon(atlas_index):
+		if USE_CUTOUT_TEXTURE_ASSETS and atlas_index >= 0 and _draw_atlas_icon(atlas_index):
 			return
 		match mode:
 			"bonus":
@@ -470,9 +474,10 @@ class EffectPreviewVisual:
 	extends Control
 
 	const EFFECT_ART := "res://assets/showcase/cooking/next_effect_art.png"
+	const USE_CUTOUT_TEXTURE_ASSETS := false
 
 	func _draw() -> void:
-		if _draw_texture_asset():
+		if USE_CUTOUT_TEXTURE_ASSETS and _draw_texture_asset():
 			return
 		var center := size * 0.5
 		var green := Color("#8ee65a")
@@ -626,8 +631,8 @@ func _build_screen() -> void:
 	hero.add_theme_constant_override("separation", 10)
 	root.add_child(hero)
 
-	var scene_card := _panel_box(Color("#22150c"), Color("#5e391a"), Palette.GOLD_BRIGHT, 5)
-	scene_card.custom_minimum_size = Vector2(430.0, 152.0)
+	var scene_card := _panel_box(Color(0.10, 0.06, 0.03, 0.72), Color("#5e391a"), Palette.GOLD_BRIGHT, 5)
+	scene_card.custom_minimum_size = Vector2(390.0, 178.0)
 	hero.add_child(scene_card)
 	var scene_box := VBoxContainer.new()
 	scene_box.add_theme_constant_override("separation", 6)
@@ -640,11 +645,11 @@ func _build_screen() -> void:
 	table.add_theme_constant_override("separation", 10)
 	scene_box.add_child(table)
 	var eater := _scene_actor_box()
-	eater.custom_minimum_size = Vector2(136.0, 0.0)
+	eater.custom_minimum_size = Vector2(112.0, 0.0)
 	table.add_child(eater)
 	_scene_dish_image = MealTableSpreadVisual.new()
 	_scene_dish_image.name = "MealTableSpread"
-	_scene_dish_image.custom_minimum_size = Vector2(244.0, 86.0)
+	_scene_dish_image.custom_minimum_size = Vector2(220.0, 98.0)
 	_scene_dish_image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_scene_dish_image.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scene_dish_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -674,7 +679,7 @@ func _build_screen() -> void:
 	hero.add_child(right)
 
 	_result_banner = PanelContainer.new()
-	_result_banner.custom_minimum_size = Vector2(0.0, 58.0)
+	_result_banner.custom_minimum_size = Vector2(0.0, 68.0)
 	_result_banner.add_theme_stylebox_override(
 		"panel",
 		_texture_style_box(
@@ -709,7 +714,7 @@ func _build_screen() -> void:
 			8.0
 		)
 	)
-	_dish_card.custom_minimum_size = Vector2(0.0, 104.0)
+	_dish_card.custom_minimum_size = Vector2(0.0, 116.0)
 	right.add_child(_dish_card)
 	var dish_row := HBoxContainer.new()
 	dish_row.add_theme_constant_override("separation", 14)
@@ -747,7 +752,7 @@ func _build_screen() -> void:
 			8.0
 		)
 	)
-	_exp_focus_card.custom_minimum_size = Vector2(0.0, 122.0)
+	_exp_focus_card.custom_minimum_size = Vector2(0.0, 132.0)
 	_exp_focus_card.visible = false
 	right.add_child(_exp_focus_card)
 	var exp_focus_box := VBoxContainer.new()
@@ -794,7 +799,7 @@ func _build_screen() -> void:
 	root.add_child(_reward_grid)
 
 	_exp_card = _panel_box(Color("#0f2238"), Color("#07121e"), Palette.GOLD_DEEP, 5)
-	_exp_card.custom_minimum_size = Vector2(300.0, 120.0)
+	_exp_card.custom_minimum_size = Vector2(280.0, 100.0)
 	_exp_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_reward_grid.add_child(_exp_card)
 	var exp_layout := VBoxContainer.new()
@@ -1387,7 +1392,7 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 			5.0
 		)
 	)
-	card.custom_minimum_size = Vector2(0.0, 54.0)
+	card.custom_minimum_size = Vector2(0.0, 62.0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(card)
 	var box := VBoxContainer.new()
@@ -1397,14 +1402,18 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 	var title_row := HBoxContainer.new()
 	title_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	title_row.add_theme_constant_override("separation", 4)
+	title_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(title_row)
 	var icon := RewardIconVisual.new()
 	icon.configure(icon_mode, accent)
 	icon.custom_minimum_size = Vector2(24.0, 20.0)
 	title_row.add_child(icon)
 	var title_label := make_shadow_label(title, 13, Palette.TEXT_BONE, 2)
-	title_label.custom_minimum_size = Vector2(0.0, 15.0)
+	title_label.custom_minimum_size = Vector2(0.0, 18.0)
+	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	title_label.clip_text = true
 	title_row.add_child(title_label)
 	if icon_mode == "buff":
 		var value_row := HBoxContainer.new()
@@ -1415,22 +1424,24 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 		signal_visual.name = "RewardBuffSignal"
 		signal_visual.custom_minimum_size = Vector2(42.0, 30.0)
 		value_row.add_child(signal_visual)
-		var buff_value := make_shadow_label("", 13, accent, 2)
-		buff_value.custom_minimum_size = Vector2(0.0, 28.0)
+		var buff_value := make_shadow_label("", 12, accent, 2)
+		buff_value.custom_minimum_size = Vector2(0.0, 34.0)
 		buff_value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		buff_value.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		buff_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		buff_value.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		buff_value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		buff_value.autowrap_mode = TextServer.AUTOWRAP_OFF
+		buff_value.clip_text = true
 		value_row.add_child(buff_value)
 		return buff_value
-	var value_label := make_shadow_label("", 14, accent, 2)
-	value_label.custom_minimum_size = Vector2(0.0, 24.0)
+	var value_label := make_shadow_label("", 12, accent, 2)
+	value_label.custom_minimum_size = Vector2(0.0, 30.0)
 	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	value_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	value_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	value_label.clip_text = true
 	box.add_child(value_label)
 	return value_label
 

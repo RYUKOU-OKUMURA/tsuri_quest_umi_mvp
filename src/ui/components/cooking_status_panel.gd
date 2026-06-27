@@ -55,6 +55,7 @@ class StatusIconVisual:
 	const MONEY_ART := "res://assets/showcase/cooking/status_money_art.png"
 	const CLOCK_ART := "res://assets/showcase/cooking/status_clock_art.png"
 	const ICON_CELL_SIZE := 96.0
+	const USE_CUTOUT_TEXTURE_ASSETS := false
 
 	var mode := "player"
 	var accent := Color.WHITE
@@ -66,10 +67,10 @@ class StatusIconVisual:
 
 	func _draw() -> void:
 		var large_asset := _large_asset_path()
-		if large_asset != "" and _draw_texture_asset(large_asset):
+		if USE_CUTOUT_TEXTURE_ASSETS and large_asset != "" and _draw_texture_asset(large_asset):
 			return
 		var atlas_index := _atlas_index()
-		if atlas_index >= 0 and _draw_atlas_icon(atlas_index):
+		if USE_CUTOUT_TEXTURE_ASSETS and atlas_index >= 0 and _draw_atlas_icon(atlas_index):
 			return
 		match mode:
 			"cooler":
@@ -120,7 +121,7 @@ class StatusIconVisual:
 		return true
 
 	func _draw_player() -> void:
-		if _draw_texture_asset(PLAYER_PORTRAIT):
+		if USE_CUTOUT_TEXTURE_ASSETS and _draw_texture_asset(PLAYER_PORTRAIT):
 			return
 		var center := size * 0.5
 		draw_ellipse(center + Vector2(0.0, 45.0), 48.0, 10.0, Color(0.0, 0.0, 0.0, 0.25))
@@ -979,26 +980,22 @@ func _effect_sentence(text: String) -> String:
 
 
 func _present() -> void:
-	modulate.a = 0.0
+	modulate.a = 1.0
 	await get_tree().process_frame
 	_prepare_entry_part(_header_panel, -12.0)
 	for card in _summary_cards:
 		_prepare_entry_part(card, 18.0)
 	_prepare_entry_part(_footer_panel, 12.0)
-	var tw := create_tween()
-	tw.set_ease(Tween.EASE_OUT)
-	tw.set_trans(Tween.TRANS_QUAD)
-	tw.tween_property(self, "modulate:a", 1.0, 0.18)
-	_animate_entry_part(_header_panel, 0.04, -12.0)
+	_animate_entry_part(_header_panel, 0.02, -12.0)
 	for i in range(_summary_cards.size()):
-		_animate_entry_part(_summary_cards[i], 0.10 + float(i) * 0.045, 18.0)
-	_animate_entry_part(_footer_panel, 0.34, 12.0)
+		_animate_entry_part(_summary_cards[i], 0.05 + float(i) * 0.025, 18.0)
+	_animate_entry_part(_footer_panel, 0.20, 12.0)
 
 
 func _prepare_entry_part(part: Control, offset_y: float) -> void:
 	if part == null:
 		return
-	part.modulate.a = 0.0
+	part.modulate.a = 1.0
 	part.position.y += offset_y
 
 
@@ -1011,7 +1008,6 @@ func _animate_entry_part(part: Control, delay: float, offset_y: float) -> void:
 	tw.set_trans(Tween.TRANS_CUBIC)
 	tw.tween_interval(delay)
 	tw.tween_property(part, "position:y", target_y, 0.22)
-	tw.parallel().tween_property(part, "modulate:a", 1.0, 0.18)
 
 
 func _close() -> void:
