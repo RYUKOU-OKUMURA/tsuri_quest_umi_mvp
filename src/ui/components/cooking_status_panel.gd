@@ -904,11 +904,11 @@ func _meal_note_box(parent: VBoxContainer, text: String) -> Label:
 
 func _stat_line(title: String, value: String, accent: Color) -> Control:
 	var row := HBoxContainer.new()
-	row.custom_minimum_size = Vector2(0.0, 26.0)
-	row.add_theme_constant_override("separation", 6)
+	row.custom_minimum_size = Vector2(0.0, 30.0)
+	row.add_theme_constant_override("separation", 8)
 	var icon := StatIconVisual.new()
 	icon.configure(_stat_icon_mode(title), accent)
-	icon.custom_minimum_size = Vector2(24.0, 22.0)
+	icon.custom_minimum_size = Vector2(34.0, 28.0)
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(icon)
 	var name := make_label(title, 17, Color("#2a2118"))
