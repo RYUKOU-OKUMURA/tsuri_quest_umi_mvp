@@ -30,40 +30,52 @@ HUD_KEY_MINUS = OUT_DIR / "hud_key_minus.png"
 
 FISH_VARIANTS = {
     "aji": {
-        "top": (112, 169, 190),
-        "bottom": (205, 221, 218),
-        "line": (232, 194, 86),
-        "mark": "side_line",
+        "body": "slender",
+        "top": "#4f7f96",
+        "mid": "#95bac4",
+        "bottom": "#dde7df",
+        "ink": "#1f3d4d",
+        "accent": "#d2a94a",
     },
     "mejina": {
-        "top": (54, 78, 86),
-        "bottom": (131, 148, 139),
-        "line": (30, 41, 45),
-        "mark": "soft_bands",
+        "body": "deep_oval",
+        "top": "#2f454b",
+        "mid": "#627579",
+        "bottom": "#a6aaa2",
+        "ink": "#16252b",
+        "accent": "#4b5960",
     },
     "kasago": {
-        "top": (164, 82, 58),
-        "bottom": (224, 151, 105),
-        "line": (92, 41, 32),
-        "mark": "spots",
+        "body": "rockfish",
+        "top": "#9f4936",
+        "mid": "#c97955",
+        "bottom": "#e0aa78",
+        "ink": "#5a271f",
+        "accent": "#f0c28d",
     },
     "isaki": {
-        "top": (113, 137, 121),
-        "bottom": (207, 199, 153),
-        "line": (222, 191, 86),
-        "mark": "yellow_stripes",
+        "body": "striped_oval",
+        "top": "#536f67",
+        "mid": "#8f9f8e",
+        "bottom": "#d7d0a9",
+        "ink": "#2d423c",
+        "accent": "#d3b54c",
     },
     "saba": {
-        "top": (54, 97, 128),
-        "bottom": (195, 215, 216),
-        "line": (28, 50, 78),
-        "mark": "mackerel",
+        "body": "mackerel",
+        "top": "#2f6689",
+        "mid": "#7fa8b8",
+        "bottom": "#d6e2df",
+        "ink": "#1b3a55",
+        "accent": "#5f879a",
     },
     "kurodai": {
-        "top": (58, 72, 82),
-        "bottom": (168, 177, 174),
-        "line": (29, 38, 46),
-        "mark": "soft_bands",
+        "body": "kurodai",
+        "top": "#3a4852",
+        "mid": "#707b7d",
+        "bottom": "#a8b1ae",
+        "ink": "#1d262e",
+        "accent": "#394956",
     },
 }
 
@@ -389,87 +401,177 @@ def _pose_runtime_fish_frame(fish: Image.Image, frame_index: int) -> Image.Image
     return out
 
 
-def _tint_fish_sheet(sheet: Image.Image, variant: dict[str, object]) -> Image.Image:
-    out = sheet.convert("RGBA")
-    alpha = out.getchannel("A")
-    top = variant["top"]
-    bottom = variant["bottom"]
-    px = out.load()
-    for y in range(out.height):
-        t = y / max(1, out.height - 1)
-        for x in range(out.width):
-            r, g, b, a = px[x, y]
-            if a == 0:
-                continue
-            lum = (r * 0.299 + g * 0.587 + b * 0.114) / 255.0
-            shade = 0.54 + lum * 0.74
-            target = tuple(int(top[i] * (1.0 - t) + bottom[i] * t) for i in range(3))
-            mix = 0.68
-            nr = int(r * (1.0 - mix) + min(255, target[0] * shade) * mix)
-            ng = int(g * (1.0 - mix) + min(255, target[1] * shade) * mix)
-            nb = int(b * (1.0 - mix) + min(255, target[2] * shade) * mix)
-            px[x, y] = (nr, ng, nb, a)
-    out.putalpha(alpha)
-    return out
+def _hex_rgb(hex_value: str) -> tuple[int, int, int]:
+    value = hex_value.lstrip("#")
+    return (int(value[0:2], 16), int(value[2:4], 16), int(value[4:6], 16))
 
 
-def _draw_variant_marks(sheet: Image.Image, variant: dict[str, object]) -> Image.Image:
-    out = sheet.convert("RGBA")
-    draw = ImageDraw.Draw(out, "RGBA")
-    frame_w = out.width // 4
-    line = variant["line"]
-    mark = str(variant["mark"])
-    for frame in range(4):
-        ox = frame * frame_w
-        if mark == "side_line":
+def _mix_rgb(a: tuple[int, int, int], b: tuple[int, int, int], t: float) -> tuple[int, int, int]:
+    return tuple(round(a[i] * (1.0 - t) + b[i] * t) for i in range(3))
+
+
+def _draw_gradient_body(canvas: Image.Image, bbox: tuple[int, int, int, int], variant: dict[str, object]) -> Image.Image:
+    top = _hex_rgb(str(variant["top"]))
+    mid = _hex_rgb(str(variant["mid"]))
+    bottom = _hex_rgb(str(variant["bottom"]))
+    body_mask = Image.new("L", canvas.size, 0)
+    md = ImageDraw.Draw(body_mask)
+    md.ellipse(bbox, fill=255)
+
+    gradient = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
+    gd = ImageDraw.Draw(gradient)
+    y0, y1 = bbox[1], bbox[3]
+    for y in range(max(0, y0), min(canvas.height, y1 + 1)):
+        t = (y - y0) / max(1, y1 - y0)
+        if t < 0.45:
+            color = _mix_rgb(top, mid, t / 0.45)
+        else:
+            color = _mix_rgb(mid, bottom, (t - 0.45) / 0.55)
+        gd.line((bbox[0], y, bbox[2], y), fill=(*color, 255), width=1)
+    gradient.putalpha(body_mask)
+    canvas.alpha_composite(gradient)
+    return body_mask
+
+
+def _species_geometry(kind: str) -> tuple[float, float, float, float]:
+    if kind == "slender":
+        return (330.0, 160.0, 382.0, 92.0)
+    if kind == "deep_oval":
+        return (334.0, 162.0, 330.0, 158.0)
+    if kind == "rockfish":
+        return (338.0, 166.0, 344.0, 132.0)
+    if kind == "striped_oval":
+        return (334.0, 162.0, 364.0, 122.0)
+    if kind == "mackerel":
+        return (330.0, 158.0, 420.0, 100.0)
+    return (334.0, 162.0, 350.0, 140.0)
+
+
+def _draw_species_frame(fish_id: str, variant: dict[str, object], frame_index: int) -> Image.Image:
+    kind = str(variant["body"])
+    cx, cy, body_w, body_h = _species_geometry(kind)
+    tail_sway = [0.0, -8.0, 9.0, 4.0][frame_index]
+    canvas = Image.new("RGBA", (640, 320), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(canvas, "RGBA")
+    ink = _hex_rgb(str(variant["ink"]))
+    accent = _hex_rgb(str(variant["accent"]))
+    top = _hex_rgb(str(variant["top"]))
+    mid = _hex_rgb(str(variant["mid"]))
+    bottom = _hex_rgb(str(variant["bottom"]))
+
+    tail_base_x = cx - body_w * 0.48
+    head_x = cx + body_w * 0.46
+    tail_tip_x = tail_base_x - body_w * (0.20 if kind in ("slender", "mackerel") else 0.16)
+    tail_h = body_h * (0.72 if kind == "rockfish" else 0.55)
+    draw.polygon(
+        [
+            (tail_base_x + 10, cy - body_h * 0.20),
+            (tail_tip_x, cy - tail_h + tail_sway),
+            (tail_tip_x + body_w * 0.08, cy),
+            (tail_tip_x, cy + tail_h + tail_sway),
+            (tail_base_x + 10, cy + body_h * 0.20),
+        ],
+        fill=(*_mix_rgb(top, ink, 0.25), 235),
+    )
+    draw.line([(tail_tip_x + body_w * 0.08, cy), (tail_base_x + 8, cy)], fill=(*ink, 120), width=2)
+
+    bbox = (
+        round(cx - body_w * 0.50),
+        round(cy - body_h * 0.50),
+        round(cx + body_w * 0.50),
+        round(cy + body_h * 0.50),
+    )
+    body_mask = _draw_gradient_body(canvas, bbox, variant)
+    draw = ImageDraw.Draw(canvas, "RGBA")
+    draw.ellipse(bbox, outline=(*ink, 175), width=3)
+
+    # Species-specific fins and markings. Avoid long artificial guide lines.
+    if kind == "rockfish":
+        for i in range(7):
+            x = cx - body_w * 0.30 + i * body_w * 0.075
+            draw.polygon(
+                [(x, cy - body_h * 0.46), (x + body_w * 0.035, cy - body_h * 0.82), (x + body_w * 0.07, cy - body_h * 0.42)],
+                fill=(*_mix_rgb(top, ink, 0.18), 215),
+            )
+        for i in range(24):
+            x = cx - body_w * 0.35 + (i % 8) * body_w * 0.075
+            y = cy - body_h * 0.20 + (i // 8) * body_h * 0.18 + (i % 2) * 3
+            draw.ellipse((x - 4, y - 3, x + 4, y + 3), fill=(*ink, 96))
+        mouth_y = cy + body_h * 0.11
+        draw.line([(head_x - 8, mouth_y), (head_x + 24, mouth_y + 5)], fill=(*ink, 190), width=4)
+    elif kind == "mackerel":
+        for i in range(9):
+            x = cx - body_w * 0.34 + i * body_w * 0.07
             points = [
-                (ox + frame_w * 0.20, out.height * 0.47),
-                (ox + frame_w * 0.42, out.height * 0.43),
-                (ox + frame_w * 0.77, out.height * 0.45),
+                (x, cy - body_h * 0.39),
+                (x + body_w * 0.035, cy - body_h * 0.30),
+                (x + body_w * 0.005, cy - body_h * 0.21),
+                (x + body_w * 0.040, cy - body_h * 0.11),
             ]
-            draw.line(points, fill=(*line, 135), width=5, joint="curve")
-        elif mark == "soft_bands":
-            for i in range(5):
-                x = ox + int(frame_w * (0.30 + i * 0.085))
-                draw.line(
-                    [(x, out.height * 0.24), (x + 18, out.height * 0.72)],
-                    fill=(*line, 82),
-                    width=8,
-                )
-        elif mark == "spots":
-            for i in range(18):
-                x = ox + int(frame_w * (0.22 + (i % 6) * 0.095))
-                y = int(out.height * (0.30 + (i // 6) * 0.13 + (i % 2) * 0.035))
-                draw.ellipse((x - 4, y - 3, x + 4, y + 3), fill=(*line, 118))
-        elif mark == "yellow_stripes":
-            for i in range(3):
-                y = int(out.height * (0.35 + i * 0.085))
-                draw.line(
-                    [(ox + frame_w * 0.24, y), (ox + frame_w * 0.76, y - 7)],
-                    fill=(*line, 128),
-                    width=4,
-                )
-        elif mark == "mackerel":
-            for i in range(7):
-                x = ox + int(frame_w * (0.23 + i * 0.075))
-                points = [
-                    (x, out.height * 0.25),
-                    (x + 14, out.height * 0.31),
-                    (x - 3, out.height * 0.38),
-                    (x + 13, out.height * 0.45),
-                ]
-                draw.line(points, fill=(*line, 128), width=4)
-    out.putalpha(sheet.getchannel("A"))
-    return _clean_transparent_fish_edge(out)
+            draw.line(points, fill=(*ink, 118), width=4)
+    elif kind == "striped_oval":
+        for i in range(3):
+            y = cy - body_h * (0.21 - i * 0.15)
+            draw.arc((cx - body_w * 0.35, y - 10, cx + body_w * 0.25, y + 30), 188, 350, fill=(*accent, 120), width=3)
+    elif kind == "deep_oval":
+        for i in range(5):
+            x = cx - body_w * 0.24 + i * body_w * 0.09
+            draw.line([(x, cy - body_h * 0.34), (x + 14, cy + body_h * 0.34)], fill=(*ink, 80), width=7)
+    elif kind == "slender":
+        for i in range(9):
+            x = cx - body_w * 0.32 + i * body_w * 0.064
+            draw.arc((x - 9, cy - body_h * 0.12, x + 10, cy + body_h * 0.20), 250, 75, fill=(*_mix_rgb(mid, ink, 0.25), 76), width=2)
+
+    dorsal = [
+        (cx - body_w * 0.20, cy - body_h * 0.42),
+        (cx + body_w * 0.02, cy - body_h * (0.78 if kind in ("deep_oval", "rockfish") else 0.62)),
+        (cx + body_w * 0.24, cy - body_h * 0.35),
+    ]
+    draw.polygon(dorsal, fill=(*_mix_rgb(top, ink, 0.18), 215))
+    ventral = [
+        (cx - body_w * 0.04, cy + body_h * 0.38),
+        (cx + body_w * 0.08, cy + body_h * 0.70),
+        (cx + body_w * 0.20, cy + body_h * 0.34),
+    ]
+    draw.polygon(ventral, fill=(*_mix_rgb(bottom, ink, 0.16), 200))
+    pectoral = [
+        (cx + body_w * 0.11, cy + body_h * 0.03),
+        (cx - body_w * 0.05, cy + body_h * 0.34),
+        (cx + body_w * 0.20, cy + body_h * 0.25),
+    ]
+    draw.polygon(pectoral, fill=(*_mix_rgb(mid, ink, 0.26), 175))
+
+    for i in range(9):
+        x = cx - body_w * 0.28 + i * body_w * 0.065
+        draw.arc((x - 10, cy - body_h * 0.23, x + 12, cy + body_h * 0.27), 270, 85, fill=(*bottom, 55), width=1)
+
+    eye = (head_x - body_w * 0.060, cy - body_h * 0.15)
+    draw.ellipse((eye[0] - 8, eye[1] - 8, eye[0] + 8, eye[1] + 8), fill=(240, 226, 172, 255), outline=(*ink, 180), width=2)
+    draw.ellipse((eye[0] - 4, eye[1] - 4, eye[0] + 4, eye[1] + 4), fill=(20, 24, 22, 255))
+    draw.line([(head_x - 6, cy + body_h * 0.06), (head_x + 14, cy + body_h * 0.09)], fill=(*ink, 170), width=2)
+    draw.arc((head_x - body_w * 0.17, cy - body_h * 0.26, head_x - body_w * 0.06, cy + body_h * 0.26), 78, 270, fill=(*ink, 105), width=3)
+
+    # Clip any body-detail overshoot and add a light water-friendly polish.
+    alpha = canvas.getchannel("A").filter(ImageFilter.GaussianBlur(0.15))
+    canvas.putalpha(alpha)
+    return _clean_transparent_fish_edge(canvas)
 
 
-def create_fish_variant_assets(base_sheet: Image.Image, fish_id: str, variant: dict[str, object]) -> None:
+def _create_species_sheet(fish_id: str, variant: dict[str, object]) -> Image.Image:
+    frame_w, frame_h = 640, 320
+    sheet = Image.new("RGBA", (frame_w * 4, frame_h), (0, 0, 0, 0))
+    for frame_index in range(4):
+        frame = _draw_species_frame(fish_id, variant, frame_index)
+        sheet.alpha_composite(frame, (frame_w * frame_index, 0))
+    return _add_runtime_fish_edge_underlay(_final_fish_art_readability_pass(_restore_fish_detail(sheet)))
+
+
+def create_fish_variant_assets(_base_sheet: Image.Image, fish_id: str, variant: dict[str, object]) -> None:
     FISH_VARIANT_DIR.mkdir(parents=True, exist_ok=True)
-    sheet = _draw_variant_marks(_tint_fish_sheet(base_sheet, variant), variant)
-    sheet = _final_fish_art_readability_pass(_restore_fish_detail(sheet))
+    sheet = _base_sheet if fish_id == "kurodai" else _create_species_sheet(fish_id, variant)
     sheet_path = FISH_VARIANT_DIR / f"{fish_id}_showcase_sheet.png"
     card_path = FISH_VARIANT_DIR / f"{fish_id}_card_portrait.png"
-    _add_runtime_fish_edge_underlay(sheet).save(sheet_path)
+    sheet.save(sheet_path)
     create_fish_card_portrait(sheet, card_path)
 
 
