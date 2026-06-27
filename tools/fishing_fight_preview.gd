@@ -3,15 +3,18 @@ extends Control
 # 既存の釣り画面をファイト中に進め、素材ベースの UnderwaterView を PNG 保存する。
 const ThemeFactory = preload("res://src/ui/ui_theme.gd")
 const FishingScreen = preload("res://src/ui/fishing_screen.gd")
-const OUT := "/tmp/tsuri_fishing_fight.png"
+const DEFAULT_OUT := "/tmp/tsuri_fishing_fight.png"
 const VW := Vector2i(1280, 720)
 
 
 func _ready() -> void:
-	if FileAccess.file_exists(OUT):
-		var remove_error := DirAccess.remove_absolute(OUT)
+	var out := OS.get_environment("TSURI_FIGHT_CAPTURE_OUT")
+	if out.is_empty():
+		out = DEFAULT_OUT
+	if FileAccess.file_exists(out):
+		var remove_error := DirAccess.remove_absolute(out)
 		if remove_error != OK:
-			push_warning("Failed to remove stale fight capture: %s" % OUT)
+			push_warning("Failed to remove stale fight capture: %s" % out)
 	PlayerProgress.level = max(PlayerProgress.level, GameData.BOSS_UNLOCK_LEVEL)
 	PlayerProgress.money = 12450
 
@@ -33,14 +36,17 @@ func _ready() -> void:
 	# ファイト画面を直接確認するため、通常の待ち時間を飛ばして状態を作る。
 	s._target_option.select(1)
 	s._prepare_new_attempt()
-	var showcase_fish := GameData.get_fish("boss_kurodai").duplicate(true)
-	showcase_fish["name"] = "クロダイ"
-	showcase_fish["rarity"] = "レア"
-	showcase_fish["boss"] = false
-	showcase_fish["size_min"] = 40.2
-	showcase_fish["size_max"] = 48.2
-	showcase_fish["start_distance"] = 38.0
-	showcase_fish["start_depth"] = 18.0
+	var requested_fish_id := OS.get_environment("TSURI_FIGHT_FISH_ID")
+	var showcase_fish := GameData.get_fish(requested_fish_id).duplicate(true) if not requested_fish_id.is_empty() else {}
+	if showcase_fish.is_empty():
+		showcase_fish = GameData.get_fish("boss_kurodai").duplicate(true)
+		showcase_fish["name"] = "クロダイ"
+		showcase_fish["rarity"] = "レア"
+		showcase_fish["boss"] = false
+		showcase_fish["size_min"] = 40.2
+		showcase_fish["size_max"] = 48.2
+		showcase_fish["start_distance"] = 38.0
+		showcase_fish["start_depth"] = 18.0
 	s._current_fish = showcase_fish
 	s._simulator.prepare(showcase_fish, s._trip_stats)
 	s._view.bind_simulator(s._simulator)
@@ -87,5 +93,5 @@ func _ready() -> void:
 		push_error("SubViewport get_image() returned null; run with a real display driver or use /tmp/tsuri_fishing_fight_static.png from tools/build_fight_full_static_compare.py")
 		get_tree().quit(1)
 		return
-	img.save_png(OUT)
+	img.save_png(out)
 	get_tree().quit()

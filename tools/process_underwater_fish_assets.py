@@ -9,6 +9,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFilter, ImageFo
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "assets" / "showcase" / "underwater"
+FISH_VARIANT_DIR = OUT_DIR / "fish"
 SOURCE_ASSET_DIR = ROOT / "tools" / "source_assets"
 REFERENCE = ROOT / "reference" / "02_underwater_fight_mockup.png"
 FISH_SOURCE = OUT_DIR / "kurodai_chroma_source.png"
@@ -26,6 +27,45 @@ HUD_KEY_B = OUT_DIR / "hud_key_b.png"
 HUD_KEY_LR = OUT_DIR / "hud_key_lr.png"
 HUD_KEY_PLUS = OUT_DIR / "hud_key_plus.png"
 HUD_KEY_MINUS = OUT_DIR / "hud_key_minus.png"
+
+FISH_VARIANTS = {
+    "aji": {
+        "top": (112, 169, 190),
+        "bottom": (205, 221, 218),
+        "line": (232, 194, 86),
+        "mark": "side_line",
+    },
+    "mejina": {
+        "top": (54, 78, 86),
+        "bottom": (131, 148, 139),
+        "line": (30, 41, 45),
+        "mark": "soft_bands",
+    },
+    "kasago": {
+        "top": (164, 82, 58),
+        "bottom": (224, 151, 105),
+        "line": (92, 41, 32),
+        "mark": "spots",
+    },
+    "isaki": {
+        "top": (113, 137, 121),
+        "bottom": (207, 199, 153),
+        "line": (222, 191, 86),
+        "mark": "yellow_stripes",
+    },
+    "saba": {
+        "top": (54, 97, 128),
+        "bottom": (195, 215, 216),
+        "line": (28, 50, 78),
+        "mark": "mackerel",
+    },
+    "kurodai": {
+        "top": (58, 72, 82),
+        "bottom": (168, 177, 174),
+        "line": (29, 38, 46),
+        "mark": "soft_bands",
+    },
+}
 
 
 def _fish_source_path() -> Path:
@@ -349,6 +389,90 @@ def _pose_runtime_fish_frame(fish: Image.Image, frame_index: int) -> Image.Image
     return out
 
 
+def _tint_fish_sheet(sheet: Image.Image, variant: dict[str, object]) -> Image.Image:
+    out = sheet.convert("RGBA")
+    alpha = out.getchannel("A")
+    top = variant["top"]
+    bottom = variant["bottom"]
+    px = out.load()
+    for y in range(out.height):
+        t = y / max(1, out.height - 1)
+        for x in range(out.width):
+            r, g, b, a = px[x, y]
+            if a == 0:
+                continue
+            lum = (r * 0.299 + g * 0.587 + b * 0.114) / 255.0
+            shade = 0.54 + lum * 0.74
+            target = tuple(int(top[i] * (1.0 - t) + bottom[i] * t) for i in range(3))
+            mix = 0.68
+            nr = int(r * (1.0 - mix) + min(255, target[0] * shade) * mix)
+            ng = int(g * (1.0 - mix) + min(255, target[1] * shade) * mix)
+            nb = int(b * (1.0 - mix) + min(255, target[2] * shade) * mix)
+            px[x, y] = (nr, ng, nb, a)
+    out.putalpha(alpha)
+    return out
+
+
+def _draw_variant_marks(sheet: Image.Image, variant: dict[str, object]) -> Image.Image:
+    out = sheet.convert("RGBA")
+    draw = ImageDraw.Draw(out, "RGBA")
+    frame_w = out.width // 4
+    line = variant["line"]
+    mark = str(variant["mark"])
+    for frame in range(4):
+        ox = frame * frame_w
+        if mark == "side_line":
+            points = [
+                (ox + frame_w * 0.20, out.height * 0.47),
+                (ox + frame_w * 0.42, out.height * 0.43),
+                (ox + frame_w * 0.77, out.height * 0.45),
+            ]
+            draw.line(points, fill=(*line, 135), width=5, joint="curve")
+        elif mark == "soft_bands":
+            for i in range(5):
+                x = ox + int(frame_w * (0.30 + i * 0.085))
+                draw.line(
+                    [(x, out.height * 0.24), (x + 18, out.height * 0.72)],
+                    fill=(*line, 82),
+                    width=8,
+                )
+        elif mark == "spots":
+            for i in range(18):
+                x = ox + int(frame_w * (0.22 + (i % 6) * 0.095))
+                y = int(out.height * (0.30 + (i // 6) * 0.13 + (i % 2) * 0.035))
+                draw.ellipse((x - 4, y - 3, x + 4, y + 3), fill=(*line, 118))
+        elif mark == "yellow_stripes":
+            for i in range(3):
+                y = int(out.height * (0.35 + i * 0.085))
+                draw.line(
+                    [(ox + frame_w * 0.24, y), (ox + frame_w * 0.76, y - 7)],
+                    fill=(*line, 128),
+                    width=4,
+                )
+        elif mark == "mackerel":
+            for i in range(7):
+                x = ox + int(frame_w * (0.23 + i * 0.075))
+                points = [
+                    (x, out.height * 0.25),
+                    (x + 14, out.height * 0.31),
+                    (x - 3, out.height * 0.38),
+                    (x + 13, out.height * 0.45),
+                ]
+                draw.line(points, fill=(*line, 128), width=4)
+    out.putalpha(sheet.getchannel("A"))
+    return _clean_transparent_fish_edge(out)
+
+
+def create_fish_variant_assets(base_sheet: Image.Image, fish_id: str, variant: dict[str, object]) -> None:
+    FISH_VARIANT_DIR.mkdir(parents=True, exist_ok=True)
+    sheet = _draw_variant_marks(_tint_fish_sheet(base_sheet, variant), variant)
+    sheet = _final_fish_art_readability_pass(_restore_fish_detail(sheet))
+    sheet_path = FISH_VARIANT_DIR / f"{fish_id}_showcase_sheet.png"
+    card_path = FISH_VARIANT_DIR / f"{fish_id}_card_portrait.png"
+    _add_runtime_fish_edge_underlay(sheet).save(sheet_path)
+    create_fish_card_portrait(sheet, card_path)
+
+
 def create_kurodai_sheet() -> Image.Image:
     source = _magenta_removed(Image.open(_fish_source_path()))
     # ImageGen passes can produce either a four-cell source sheet or a single
@@ -381,9 +505,7 @@ def create_kurodai_sheet() -> Image.Image:
     return clean_sheet
 
 
-def create_kurodai_card_portrait(sheet: Image.Image | None = None) -> None:
-    if sheet is None:
-        sheet = Image.open(FISH_SHEET).convert("RGBA")
+def create_fish_card_portrait(sheet: Image.Image, output: Path) -> None:
     frame_w = sheet.width // 4
     frame = sheet.crop((0, 0, frame_w, sheet.height))
     crop = ImageOps.mirror(frame.crop(_content_bbox(frame)))
@@ -403,7 +525,13 @@ def create_kurodai_card_portrait(sheet: Image.Image | None = None) -> None:
     x = (canvas.width - resized.width) // 2
     y = (canvas.height - resized.height) // 2 - 5
     canvas.alpha_composite(resized, (x, y))
-    canvas.save(FISH_CARD_PORTRAIT)
+    canvas.save(output)
+
+
+def create_kurodai_card_portrait(sheet: Image.Image | None = None) -> None:
+    if sheet is None:
+        sheet = Image.open(FISH_SHEET).convert("RGBA")
+    create_fish_card_portrait(sheet, FISH_CARD_PORTRAIT)
 
 
 def _rgba(hex_value: str, alpha: int = 255) -> tuple[int, int, int, int]:
@@ -853,6 +981,8 @@ def create_hud_keycaps() -> None:
 def main() -> None:
     clean_sheet = create_kurodai_sheet()
     create_kurodai_card_portrait(clean_sheet)
+    for fish_id, variant in FISH_VARIANTS.items():
+        create_fish_variant_assets(clean_sheet, fish_id, variant)
     create_hit_burst()
     create_hit_badge_full()
     create_fight_lure()
@@ -861,7 +991,7 @@ def main() -> None:
     create_hud_stamina_icon()
     create_hud_keycaps()
     print(
-        f"processed {FISH_SHEET}, {FISH_CARD_PORTRAIT}, {HIT_BURST}, {HIT_BADGE_FULL}, "
+        f"processed {FISH_SHEET}, {FISH_CARD_PORTRAIT}, {FISH_VARIANT_DIR}, {HIT_BURST}, {HIT_BADGE_FULL}, "
         f"{FIGHT_LURE}, {HUD_BAIT_ICON}, {HUD_TENSION_ICON}, {HUD_STAMINA_ICON}, "
         f"{HUD_KEY_A}, {HUD_KEY_B}, {HUD_KEY_LR}, {HUD_KEY_PLUS}, and {HUD_KEY_MINUS}"
     )

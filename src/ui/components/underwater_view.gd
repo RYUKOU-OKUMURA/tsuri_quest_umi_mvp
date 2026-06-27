@@ -2,11 +2,11 @@ class_name UnderwaterView
 extends Control
 
 const FightFontsScript = preload("res://src/ui/fight_fonts.gd")
+const FightFishAssetsScript = preload("res://src/ui/fight_fish_assets.gd")
 const SHOWCASE_BG_PATH := "res://assets/showcase/underwater/underwater_battle_bg.png"
 const SHOWCASE_COLOR_GRADE_PATH := "res://assets/showcase/underwater/underwater_color_grade.png"
 const SHOWCASE_SEABED_DETAIL_PATH := "res://assets/showcase/underwater/underwater_seabed_detail.png"
 const SHOWCASE_FG_AMBIENCE_PATH := "res://assets/showcase/underwater/underwater_foreground_ambience.png"
-const SHOWCASE_FISH_SHEET_PATH := "res://assets/showcase/underwater/kurodai_showcase_sheet.png"
 const SHOWCASE_HIT_BURST_PATH := "res://assets/showcase/underwater/hit_burst.png"
 const SHOWCASE_HIT_BADGE_FULL_PATH := "res://assets/showcase/underwater/hit_badge_full.png"
 const SHOWCASE_LURE_PATH := "res://assets/showcase/underwater/fight_lure.png"
@@ -35,6 +35,7 @@ var _showcase_lure: Texture2D
 func bind_simulator(value: FishingSimulator) -> void:
 	simulator = value
 	fish_data = simulator.fish_data
+	_load_fish_assets_for_current_fish()
 	queue_redraw()
 
 
@@ -93,10 +94,17 @@ func _load_showcase_assets() -> void:
 	_showcase_color_grade = _load_texture_if_exists(SHOWCASE_COLOR_GRADE_PATH)
 	_showcase_seabed_detail = _load_texture_if_exists(SHOWCASE_SEABED_DETAIL_PATH)
 	_showcase_fg_ambience = _load_texture_if_exists(SHOWCASE_FG_AMBIENCE_PATH)
-	_showcase_fish_sheet = _load_texture_if_exists(SHOWCASE_FISH_SHEET_PATH)
+	_load_fish_assets_for_current_fish()
 	_showcase_hit_burst = _load_texture_if_exists(SHOWCASE_HIT_BURST_PATH)
 	_showcase_hit_badge_full = _load_texture_if_exists(SHOWCASE_HIT_BADGE_FULL_PATH)
 	_showcase_lure = _load_texture_if_exists(SHOWCASE_LURE_PATH)
+
+
+func _load_fish_assets_for_current_fish() -> void:
+	var fish_sheet_path := FightFishAssetsScript.sheet_path(fish_data)
+	_showcase_fish_sheet = _load_texture_if_exists(fish_sheet_path)
+	if _showcase_fish_sheet == null:
+		_showcase_fish_sheet = _load_texture_if_exists(FightFishAssetsScript.LEGACY_SHEET_PATH)
 
 
 func _load_texture_if_exists(path: String) -> Texture2D:

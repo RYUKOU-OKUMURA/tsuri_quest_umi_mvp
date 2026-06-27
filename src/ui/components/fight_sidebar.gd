@@ -4,8 +4,7 @@ extends Control
 # 魚カード、行動カード、タックルカードをまとめて描画し、参照画像の情報密度に寄せる。
 
 const FightFontsScript = preload("res://src/ui/fight_fonts.gd")
-const FISH_SHEET_PATH := "res://assets/showcase/underwater/kurodai_showcase_sheet.png"
-const FISH_CARD_PORTRAIT_PATH := "res://assets/showcase/underwater/kurodai_card_portrait.png"
+const FightFishAssetsScript = preload("res://src/ui/fight_fish_assets.gd")
 const SIDEBAR_FRAME_PATH := "res://assets/showcase/underwater/sidebar_frame.png"
 const ICON_SHEET_PATH := "res://assets/showcase/underwater/fight_icon_sheet.png"
 const ACTION_CARD_ICON_PATH := "res://assets/showcase/underwater/fight_action_card_icon.png"
@@ -30,22 +29,21 @@ func bind(value: FishingSimulator, fish: Dictionary, stats: Dictionary) -> void:
 	simulator = value
 	fish_data = fish.duplicate(true)
 	trip_stats = stats.duplicate(true)
+	_load_fish_assets_for_current_fish()
 	queue_redraw()
 
 
 func set_fish(fish: Dictionary, stats: Dictionary) -> void:
 	fish_data = fish.duplicate(true)
 	trip_stats = stats.duplicate(true)
+	_load_fish_assets_for_current_fish()
 	queue_redraw()
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	if ResourceLoader.exists(FISH_SHEET_PATH):
-		_fish_sheet = load(FISH_SHEET_PATH) as Texture2D
-	if ResourceLoader.exists(FISH_CARD_PORTRAIT_PATH):
-		_fish_card_portrait = load(FISH_CARD_PORTRAIT_PATH) as Texture2D
+	_load_fish_assets_for_current_fish()
 	if ResourceLoader.exists(SIDEBAR_FRAME_PATH):
 		_sidebar_frame = load(SIDEBAR_FRAME_PATH) as Texture2D
 	if ResourceLoader.exists(ICON_SHEET_PATH):
@@ -54,6 +52,21 @@ func _ready() -> void:
 		_action_card_icon = load(ACTION_CARD_ICON_PATH) as Texture2D
 	if ResourceLoader.exists(TACKLE_CARD_ICON_PATH):
 		_tackle_card_icon = load(TACKLE_CARD_ICON_PATH) as Texture2D
+
+
+func _load_fish_assets_for_current_fish() -> void:
+	_fish_sheet = _load_texture_if_exists(FightFishAssetsScript.sheet_path(fish_data))
+	if _fish_sheet == null:
+		_fish_sheet = _load_texture_if_exists(FightFishAssetsScript.LEGACY_SHEET_PATH)
+	_fish_card_portrait = _load_texture_if_exists(FightFishAssetsScript.card_portrait_path(fish_data))
+	if _fish_card_portrait == null:
+		_fish_card_portrait = _load_texture_if_exists(FightFishAssetsScript.LEGACY_CARD_PORTRAIT_PATH)
+
+
+func _load_texture_if_exists(path: String) -> Texture2D:
+	if ResourceLoader.exists(path) or FileAccess.file_exists(path):
+		return load(path) as Texture2D
+	return null
 
 
 func _process(_delta: float) -> void:
@@ -145,14 +158,16 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	draw_line(Vector2(inner.position.x + 8.0, desc_y - 12.0), Vector2(inner.end.x - 8.0, desc_y - 12.0), Color("#d6c299"), 1.0)
 	var detail_gap := 16.0 if compact_card else 21.0
 	var detail_font := FightFontsScript.regular(get_theme_default_font())
+	var behavior := String(fish_data.get("behavior", "ラインを見ながら、テンションを保とう。"))
+	var habitat := String(fish_data.get("habitat", "沿岸"))
 	if compact_card:
-		_draw_info_paragraph(detail_font, "岩場や海藻の周りに潜む警戒心の強い魚。底をねらうエサに好反応。", Vector2(inner.position.x + 15.0, desc_y), inner.size.x - 26.0)
-		_draw_detail_line(detail_font, "好むエサ：オキアミ・カニ", Vector2(inner.position.x + 15.0, desc_y + 35.0), inner.size.x - 26.0)
-		_draw_detail_line(detail_font, "主な生息域：沿岸の岩場", Vector2(inner.position.x + 15.0, desc_y + 52.0), inner.size.x - 26.0)
+		_draw_info_paragraph(detail_font, behavior, Vector2(inner.position.x + 15.0, desc_y), inner.size.x - 26.0)
+		_draw_detail_line(detail_font, "好むエサ：オキアミ", Vector2(inner.position.x + 15.0, desc_y + 35.0), inner.size.x - 26.0)
+		_draw_detail_line(detail_font, "主な生息域：%s" % habitat, Vector2(inner.position.x + 15.0, desc_y + 52.0), inner.size.x - 26.0)
 	else:
-		_draw_detail_line(detail_font, "岩場周りで警戒心が強い。", Vector2(inner.position.x + 15.0, desc_y), inner.size.x - 26.0)
-		_draw_detail_line(detail_font, "エサ：オキアミ・カニ", Vector2(inner.position.x + 15.0, desc_y + detail_gap), inner.size.x - 26.0)
-		_draw_detail_line(detail_font, "生息域：沿岸の岩場・堤防周り", Vector2(inner.position.x + 16.0, desc_y + detail_gap * 2.0), inner.size.x - 28.0)
+		_draw_detail_line(detail_font, behavior, Vector2(inner.position.x + 15.0, desc_y), inner.size.x - 26.0)
+		_draw_detail_line(detail_font, "エサ：オキアミ", Vector2(inner.position.x + 15.0, desc_y + detail_gap), inner.size.x - 26.0)
+		_draw_detail_line(detail_font, "生息域：%s" % habitat, Vector2(inner.position.x + 16.0, desc_y + detail_gap * 2.0), inner.size.x - 28.0)
 
 
 
