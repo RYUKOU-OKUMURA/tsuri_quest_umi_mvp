@@ -926,6 +926,8 @@ func _rebuild_recipe_cards() -> void:
 		if recipe_id == _selected_recipe_id and not locked and not unavailable:
 			selected_available = true
 		_recipe_grid.add_child(_make_recipe_card(recipe, locked, unavailable))
+	for _i in range(maxi(0, 6 - entries.size())):
+		_recipe_grid.add_child(_make_recipe_book_card())
 	if _selected_recipe_id.is_empty() or not selected_available:
 		_selected_recipe_id = first_available
 	_refresh_recipe_card_styles()
@@ -1025,6 +1027,58 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 		"footer": footer,
 		"footer_text": footer_text,
 	}
+	return card
+
+
+func _make_recipe_book_card() -> PanelContainer:
+	var card := PanelContainer.new()
+	card.name = "RecipeCard_Book"
+	card.custom_minimum_size = Vector2(134, 146)
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.self_modulate = Color(0.72, 0.66, 0.54, 1.0)
+	card.add_theme_stylebox_override(
+		"panel",
+		_texture_style_box(
+			RECIPE_CARD_FRAME,
+			28,
+			_style_box(Color("#b7a884"), Color("#7b5027"), Color("#c59a59"), 4, 6),
+			12.0,
+			8.0
+		)
+	)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 2)
+	card.add_child(box)
+	var title := make_label("料理図鑑", 16, Color("#251c12"), 1, Color("#fff3cf"))
+	title.custom_minimum_size = Vector2(0.0, 20.0)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title.clip_text = true
+	box.add_child(title)
+	var image := TextureRect.new()
+	image.texture = _recipe_icon("locked")
+	image.custom_minimum_size = Vector2(0, 70)
+	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	image.modulate = Color(0.62, 0.58, 0.50, 0.88)
+	box.add_child(image)
+	var stars := make_shadow_label("☆☆☆", 13, Color("#d0c2a3"), 2, Color("#4c2b0b"))
+	stars.custom_minimum_size = Vector2(0.0, 17.0)
+	stars.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	stars.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	box.add_child(stars)
+	var material := make_label("新しい献立", 12, Color("#49351f"), 1, Color("#fff4cf"))
+	material.custom_minimum_size = Vector2(0.0, 16.0)
+	material.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	material.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	material.clip_text = true
+	box.add_child(material)
+	var footer := make_label("準備中", 13, Color("#49351f"), 1, Color("#fff4cf"))
+	footer.custom_minimum_size = Vector2(0.0, 17.0)
+	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	footer.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	footer.clip_text = true
+	box.add_child(footer)
 	return card
 
 
