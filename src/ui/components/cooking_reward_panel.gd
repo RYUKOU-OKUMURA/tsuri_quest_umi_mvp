@@ -874,7 +874,7 @@ func show_meal_result(result: Dictionary) -> void:
 	if bool(result.get("first_time", false)):
 		_bonus_label.text = "はじめて作った料理！\n+%d EXP" % int(result.get("first_bonus", 0))
 	else:
-		_bonus_label.text = "記録済み。今回は基本EXPのみ。"
+		_bonus_label.text = "記録済み。\n今回は基本EXPのみ。"
 	_total_label.text = "合計獲得食経験値\n+%d EXP" % int(result.get("total_exp", 0))
 
 	var buff := Dictionary(result.get("buff", {}))
@@ -946,7 +946,7 @@ func show_reward(
 	if bool(result.get("first_time", false)):
 		_bonus_label.text = "初めて食べた料理！\n+%d EXP" % int(result.get("first_bonus", 0))
 	else:
-		_bonus_label.text = "記録済み。今回は基本EXPのみ。"
+		_bonus_label.text = "記録済み。\n今回は基本EXPのみ。"
 	_total_label.text = "今回の合計 +%d EXP" % int(result.get("total_exp", 0))
 
 	var buff := Dictionary(result.get("buff", {}))
