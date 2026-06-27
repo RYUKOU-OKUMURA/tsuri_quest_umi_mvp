@@ -742,11 +742,9 @@ func _rebuild_fish_cards() -> void:
 	_clear_container(_fish_box)
 	_fish_cards.clear()
 	var first_id := ""
-	for fish_id in GameData.get_all_fish_ids():
+	for fish_id in _fish_display_ids():
 		var count := PlayerProgress.fish_count(fish_id)
-		if count <= 0:
-			continue
-		if first_id.is_empty():
+		if count > 0 and first_id.is_empty():
 			first_id = fish_id
 		_fish_box.add_child(_make_fish_card(fish_id, count))
 	if first_id.is_empty():
@@ -761,18 +759,39 @@ func _rebuild_fish_cards() -> void:
 	_refresh_fish_card_styles()
 
 
+func _fish_display_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for fish_id in GameData.get_all_fish_ids():
+		var fish_key := String(fish_id)
+		if PlayerProgress.fish_count(fish_key) > 0:
+			ids.append(fish_key)
+	if not ids.has("boss_kurodai"):
+		ids.append("boss_kurodai")
+	for fish_id in GameData.get_all_fish_ids():
+		var fish_key := String(fish_id)
+		if ids.has(fish_key):
+			continue
+		if ids.size() < 5:
+			ids.append(fish_key)
+		if ids.size() >= 5:
+			break
+	return ids
+
+
 func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	var fish := GameData.get_fish(fish_id)
+	var owned := count > 0
 	var card := PanelContainer.new()
 	card.name = _fish_row_node_name(fish_id)
 	card.custom_minimum_size = Vector2(0, 56)
-	card.mouse_filter = Control.MOUSE_FILTER_STOP
-	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	card.gui_input.connect(
-		func(event: InputEvent) -> void:
-			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-				_select_fish(fish_id)
-	)
+	card.mouse_filter = Control.MOUSE_FILTER_STOP if owned else Control.MOUSE_FILTER_IGNORE
+	if owned:
+		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		card.gui_input.connect(
+			func(event: InputEvent) -> void:
+				if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+					_select_fish(fish_id)
+		)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
 	card.add_child(row)
@@ -786,16 +805,29 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	icon.custom_minimum_size = Vector2(64, 40)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.modulate = Color.WHITE if owned else Color(0.42, 0.40, 0.34, 0.72)
 	row.add_child(icon)
-	var name := make_label(String(fish.get("name", fish_id)), 18, Color("#241b12"), 1, Color("#fff2ca"))
+	var display_name := _fish_row_display_name(fish_id, String(fish.get("name", fish_id)))
+	var name := make_label(display_name, 18, Color("#241b12"), 1, Color("#fff2ca"))
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	name.autowrap_mode = TextServer.AUTOWRAP_OFF
+	name.clip_text = true
 	row.add_child(name)
-	var amount := make_label("× %d" % count, 18, Color("#241b12"), 1, Color("#fff2ca"))
+	var amount_text := "× %d" % count if owned else "未所持"
+	var amount := make_label(amount_text, 18 if owned else 14, Color("#241b12"), 1, Color("#fff2ca"))
+	amount.custom_minimum_size = Vector2(46.0, 0.0)
+	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	amount.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(amount)
-	_fish_cards[fish_id] = {"card": card, "marker": marker}
+	_fish_cards[fish_id] = {"card": card, "marker": marker, "owned": owned}
 	return card
+
+
+func _fish_row_display_name(fish_id: String, fallback: String) -> String:
+	if fish_id == "boss_kurodai":
+		return "港のぬし"
+	return fallback
 
 
 func _fish_row_node_name(fish_id: String) -> String:
@@ -838,18 +870,19 @@ func _refresh_fish_card_styles() -> void:
 		var entry := Dictionary(_fish_cards[fish_id])
 		var card := entry.get("card") as PanelContainer
 		var marker := entry.get("marker") as Label
+		var owned := bool(entry.get("owned", true))
 		if card == null:
 			continue
-		card.self_modulate = Color("#fff1bc") if selected else Color("#f3dfb9")
+		card.self_modulate = Color("#fff1bc") if selected else Color("#f3dfb9" if owned else "#8f846c")
 		card.add_theme_stylebox_override(
 			"panel",
 			_texture_style_box(
 				FISH_ROW_FRAME,
 				24,
 				_style_box(
-					Color("#ffefbd") if selected else Color("#ead9b4"),
-					Color("#f4c96e") if selected else Color("#6a421f"),
-					Color("#ffffff") if selected else Color("#c29250"),
+					Color("#ffefbd") if selected else Color("#ead9b4" if owned else "#9a8f76"),
+					Color("#f4c96e") if selected else Color("#6a421f" if owned else "#4d3e2c"),
+					Color("#ffffff") if selected else Color("#c29250" if owned else "#756349"),
 					4,
 					6
 				),
