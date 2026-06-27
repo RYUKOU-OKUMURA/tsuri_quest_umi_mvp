@@ -610,7 +610,7 @@ func _build_screen() -> void:
 	add_child(center)
 
 	_dialog = PanelContainer.new()
-	_dialog.custom_minimum_size = Vector2(1150.0, 0.0)
+	_dialog.custom_minimum_size = Vector2(1168.0, 0.0)
 	_dialog.add_theme_stylebox_override(
 		"panel",
 		_texture_style_box(
@@ -624,7 +624,7 @@ func _build_screen() -> void:
 	center.add_child(_dialog)
 
 	var root := VBoxContainer.new()
-	root.add_theme_constant_override("separation", 2)
+	root.add_theme_constant_override("separation", 4)
 	_dialog.add_child(root)
 
 	var flow_row := HBoxContainer.new()
@@ -639,21 +639,21 @@ func _build_screen() -> void:
 	_add_flow_step(flow_row, "3 成長")
 
 	var hero := HBoxContainer.new()
-	hero.add_theme_constant_override("separation", 10)
+	hero.add_theme_constant_override("separation", 12)
 	root.add_child(hero)
 
 	var scene_card := _panel_box(Color(0.10, 0.06, 0.03, 0.72), Color("#5e391a"), Palette.GOLD_BRIGHT, 5)
-	scene_card.custom_minimum_size = Vector2(410.0, 226.0)
+	scene_card.custom_minimum_size = Vector2(438.0, 244.0)
 	hero.add_child(scene_card)
 	var scene_box := VBoxContainer.new()
 	scene_box.add_theme_constant_override("separation", 5)
 	scene_card.add_child(scene_box)
-	_scene_title = make_shadow_label("食べる", 24, Palette.GOLD_BRIGHT, 3)
+	_scene_title = make_shadow_label("食べる", 27, Palette.GOLD_BRIGHT, 3)
 	_scene_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	scene_box.add_child(_scene_title)
 	var scene_visual_stack := Control.new()
 	scene_visual_stack.name = "MealSceneVisualStack"
-	scene_visual_stack.custom_minimum_size = Vector2(0.0, 148.0)
+	scene_visual_stack.custom_minimum_size = Vector2(0.0, 164.0)
 	scene_visual_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scene_visual_stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scene_box.add_child(scene_visual_stack)
@@ -673,16 +673,16 @@ func _build_screen() -> void:
 	_scene_table.add_theme_constant_override("separation", 10)
 	scene_visual_stack.add_child(_scene_table)
 	var eater := _scene_actor_box()
-	eater.custom_minimum_size = Vector2(166.0, 0.0)
+	eater.custom_minimum_size = Vector2(176.0, 0.0)
 	_scene_table.add_child(eater)
 	_scene_dish_image = MealTableSpreadVisual.new()
 	_scene_dish_image.name = "MealTableSpread"
-	_scene_dish_image.custom_minimum_size = Vector2(238.0, 124.0)
+	_scene_dish_image.custom_minimum_size = Vector2(252.0, 132.0)
 	_scene_dish_image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_scene_dish_image.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scene_dish_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_scene_table.add_child(_scene_dish_image)
-	_scene_caption = make_shadow_label("湯気の立つ料理を味わった。", 17, Palette.TEXT_BONE, 2)
+	_scene_caption = make_shadow_label("湯気の立つ料理を味わった。", 18, Palette.TEXT_BONE, 2)
 	_scene_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_scene_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	scene_box.add_child(_scene_caption)
@@ -707,7 +707,7 @@ func _build_screen() -> void:
 	hero.add_child(right)
 
 	_result_banner = PanelContainer.new()
-	_result_banner.custom_minimum_size = Vector2(0.0, 84.0)
+	_result_banner.custom_minimum_size = Vector2(0.0, 96.0)
 	_result_banner.add_theme_stylebox_override(
 		"panel",
 		_texture_style_box(
@@ -722,7 +722,7 @@ func _build_screen() -> void:
 	var banner_box := VBoxContainer.new()
 	banner_box.add_theme_constant_override("separation", 2)
 	_result_banner.add_child(banner_box)
-	_header_title = make_shadow_label("いただきます！", 30, Color("#9b2f17"), 3)
+	_header_title = make_shadow_label("いただきます！", 32, Color("#9b2f17"), 3)
 	_header_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_header_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	banner_box.add_child(_header_title)
@@ -744,14 +744,14 @@ func _build_screen() -> void:
 			8.0
 		)
 	)
-	_dish_card.custom_minimum_size = Vector2(0.0, 146.0)
+	_dish_card.custom_minimum_size = Vector2(0.0, 166.0)
 	right.add_child(_dish_card)
 	var dish_row := HBoxContainer.new()
 	dish_row.add_theme_constant_override("separation", 14)
 	_dish_card.add_child(dish_row)
 	_dish_image = TextureRect.new()
 	_dish_image.name = "RewardDishFeatureImage"
-	_dish_image.custom_minimum_size = Vector2(260.0, 0.0)
+	_dish_image.custom_minimum_size = Vector2(304.0, 0.0)
 	_dish_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_dish_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	dish_row.add_child(_dish_image)
@@ -759,16 +759,16 @@ func _build_screen() -> void:
 	dish_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	dish_text.alignment = BoxContainer.ALIGNMENT_CENTER
 	dish_row.add_child(dish_text)
-	var dish_tag := make_shadow_label("今回の料理", 18, Palette.GOLD_BRIGHT, 2)
+	var dish_tag := make_shadow_label("今回の料理", 19, Palette.GOLD_BRIGHT, 2)
 	dish_tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	dish_text.add_child(dish_tag)
-	_dish_title = make_shadow_label("", 28, Palette.TEXT_BONE, 3)
-	_dish_title.custom_minimum_size = Vector2(0.0, 58.0)
+	_dish_title = make_shadow_label("", 30, Palette.TEXT_BONE, 3)
+	_dish_title.custom_minimum_size = Vector2(0.0, 64.0)
 	_dish_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_dish_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_dish_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	dish_text.add_child(_dish_title)
-	var dish_note := make_shadow_label("料理を食べて、体に力が湧いてきた。", 16, Palette.TEXT_BONE, 2)
+	var dish_note := make_shadow_label("料理を食べて、体に力が湧いてきた。", 17, Palette.TEXT_BONE, 2)
 	dish_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	dish_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	dish_text.add_child(dish_note)
@@ -830,8 +830,8 @@ func _build_screen() -> void:
 
 	_reward_grid = GridContainer.new()
 	_reward_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_reward_grid.add_theme_constant_override("h_separation", 6)
-	_reward_grid.add_theme_constant_override("v_separation", 6)
+	_reward_grid.add_theme_constant_override("h_separation", 8)
+	_reward_grid.add_theme_constant_override("v_separation", 8)
 	root.add_child(_reward_grid)
 
 	_exp_card = _panel_box(Color("#0f2238"), Color("#07121e"), Palette.GOLD_DEEP, 5)
@@ -874,8 +874,8 @@ func show_meal_result(result: Dictionary) -> void:
 	_header_title.name = "MealResultTitle"
 	_set_stage_background(MEAL_SCENE_BG)
 	var dish_name := String(result.get("dish_name", "料理"))
-	_set_result_banner_height(84.0)
-	_set_header_title_font_size(25)
+	_set_result_banner_height(104.0)
+	_set_header_title_font_size(28)
 	_set_bridge_font_size(16)
 	_set_exp_label_font_size(56)
 	_header_title.text = "%sを\n食べた！" % dish_name
@@ -1488,12 +1488,12 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 			5.0
 		)
 	)
-	card.custom_minimum_size = Vector2(0.0, 86.0)
+	card.custom_minimum_size = Vector2(0.0, 104.0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(card)
 	var box := VBoxContainer.new()
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_theme_constant_override("separation", 2)
+	box.add_theme_constant_override("separation", 4)
 	card.add_child(box)
 	var title_row := HBoxContainer.new()
 	title_row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -1502,10 +1502,10 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 	box.add_child(title_row)
 	var icon := RewardIconVisual.new()
 	icon.configure(icon_mode, accent)
-	icon.custom_minimum_size = Vector2(28.0, 24.0)
+	icon.custom_minimum_size = Vector2(34.0, 30.0)
 	title_row.add_child(icon)
-	var title_label := make_shadow_label(title, 15, Palette.TEXT_BONE, 2)
-	title_label.custom_minimum_size = Vector2(0.0, 22.0)
+	var title_label := make_shadow_label(title, 16, Palette.TEXT_BONE, 2)
+	title_label.custom_minimum_size = Vector2(0.0, 24.0)
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -1518,20 +1518,20 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 		box.add_child(value_row)
 		var signal_visual := RewardBuffSignalVisual.new()
 		signal_visual.name = "RewardBuffSignal"
-		signal_visual.custom_minimum_size = Vector2(46.0, 40.0)
+		signal_visual.custom_minimum_size = Vector2(54.0, 48.0)
 		value_row.add_child(signal_visual)
-		var buff_value := make_shadow_label("", 13, accent, 2)
-		buff_value.custom_minimum_size = Vector2(0.0, 44.0)
+		var buff_value := make_shadow_label("", 14, accent, 2)
+		buff_value.custom_minimum_size = Vector2(0.0, 50.0)
 		buff_value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		buff_value.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		buff_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		buff_value.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		buff_value.autowrap_mode = TextServer.AUTOWRAP_OFF
-		buff_value.clip_text = true
+		buff_value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		buff_value.clip_text = false
 		value_row.add_child(buff_value)
 		return buff_value
-	var value_label := make_shadow_label("", 14, accent, 2)
-	value_label.custom_minimum_size = Vector2(0.0, 44.0)
+	var value_label := make_shadow_label("", 16, accent, 3)
+	value_label.custom_minimum_size = Vector2(0.0, 50.0)
 	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
