@@ -364,7 +364,7 @@ func _build_screen() -> void:
 
 	_dialog = PanelContainer.new()
 	_dialog.name = "LevelUpDialog"
-	_dialog.custom_minimum_size = Vector2(930.0, 0.0)
+	_dialog.custom_minimum_size = Vector2(1000.0, 0.0)
 	_dialog.add_theme_stylebox_override(
 		"panel",
 		_texture_style_box(
@@ -379,68 +379,68 @@ func _build_screen() -> void:
 
 	var box := VBoxContainer.new()
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_theme_constant_override("separation", 5)
+	box.add_theme_constant_override("separation", 3)
 	_dialog.add_child(box)
 
 	var title_band := HBoxContainer.new()
 	title_band.name = "LevelUpTitleBand"
 	title_band.alignment = BoxContainer.ALIGNMENT_CENTER
-	title_band.add_theme_constant_override("separation", 8)
-	title_band.custom_minimum_size = Vector2(840.0, 92.0)
+	title_band.add_theme_constant_override("separation", 12)
+	title_band.custom_minimum_size = Vector2(900.0, 120.0)
 	title_band.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(title_band)
 
 	var left_laurel := _level_asset_texture(
-		"LevelLaurelLeftAsset", LevelUpVisual.LAUREL_LEFT_ASSET, Vector2(108.0, 86.0)
+		"LevelLaurelLeftAsset", LevelUpVisual.LAUREL_LEFT_ASSET, Vector2(130.0, 108.0)
 	)
 	title_band.add_child(left_laurel)
 
 	var title_stack := VBoxContainer.new()
 	title_stack.alignment = BoxContainer.ALIGNMENT_CENTER
 	title_stack.add_theme_constant_override("separation", 0)
-	title_stack.custom_minimum_size = Vector2(580.0, 0.0)
+	title_stack.custom_minimum_size = Vector2(620.0, 0.0)
 	title_band.add_child(title_stack)
 
 	var crown_visual := _level_asset_texture(
-		"LevelCrownAsset", LevelUpVisual.CROWN_ASSET, Vector2(148.0, 34.0)
+		"LevelCrownAsset", LevelUpVisual.CROWN_ASSET, Vector2(176.0, 42.0)
 	)
 	crown_visual.stretch_mode = TextureRect.STRETCH_SCALE
 	crown_visual.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	title_stack.add_child(crown_visual)
-	var crown_label := make_shadow_label("成長の証", 16, Palette.GOLD_BRIGHT, 3)
+	var crown_label := make_shadow_label("成長の証", 14, Palette.GOLD_BRIGHT, 3)
 	crown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_stack.add_child(crown_label)
 
-	var title := make_shadow_label("LEVEL UP!", 56, Palette.GOLD_BRIGHT, 5)
+	var title := make_shadow_label("LEVEL UP!", 78, Palette.GOLD_BRIGHT, 7)
 	title.name = "LevelUpTitle"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_stack.add_child(title)
 
 	var right_laurel := _level_asset_texture(
-		"LevelLaurelRightAsset", LevelUpVisual.LAUREL_RIGHT_ASSET, Vector2(108.0, 86.0)
+		"LevelLaurelRightAsset", LevelUpVisual.LAUREL_RIGHT_ASSET, Vector2(130.0, 108.0)
 	)
 	title_band.add_child(right_laurel)
 
-	_level_line = make_shadow_label("", 34, Palette.TEXT_BONE, 4)
+	_level_line = make_shadow_label("", 39, Palette.TEXT_BONE, 4)
 	_level_line.name = "LevelUpLevelLine"
 	_level_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_level_line)
 
-	var source_line := make_shadow_label("食経験値が成長に変わった", 20, Palette.GAUGE_GREEN_HI, 3)
+	var source_line := make_shadow_label("食経験値が成長に変わった", 18, Palette.GAUGE_GREEN_HI, 3)
 	source_line.name = "LevelUpSourceLine"
 	source_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(source_line)
 
 	_stats_box = GridContainer.new()
 	_stats_box.columns = 2
-	_stats_box.add_theme_constant_override("h_separation", 10)
-	_stats_box.add_theme_constant_override("v_separation", 7)
-	_stats_box.custom_minimum_size = Vector2(820.0, 0.0)
+	_stats_box.add_theme_constant_override("h_separation", 12)
+	_stats_box.add_theme_constant_override("v_separation", 6)
+	_stats_box.custom_minimum_size = Vector2(860.0, 0.0)
 	_stats_box.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(_stats_box)
 
 	_unlock_card = _panel_box(Color("#f2e4c2"), Color("#70451f"), Palette.GOLD_BRIGHT, 5)
-	_unlock_card.custom_minimum_size = Vector2(820.0, 130.0)
+	_unlock_card.custom_minimum_size = Vector2(860.0, 146.0)
 	_unlock_card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(_unlock_card)
 	var unlock_root := VBoxContainer.new()
@@ -458,9 +458,9 @@ func _build_screen() -> void:
 			5.0
 		)
 	)
-	_unlock_ribbon.custom_minimum_size = Vector2(0.0, 34.0)
+	_unlock_ribbon.custom_minimum_size = Vector2(0.0, 38.0)
 	unlock_root.add_child(_unlock_ribbon)
-	_unlock_ribbon_label = make_shadow_label("新たな釣り場が解放！", 22, Color("#fff4d4"), 3)
+	_unlock_ribbon_label = make_shadow_label("新たな釣り場が解放！", 24, Color("#fff4d4"), 3)
 	_unlock_ribbon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_unlock_ribbon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_unlock_ribbon.add_child(_unlock_ribbon_label)
@@ -469,7 +469,7 @@ func _build_screen() -> void:
 	unlock_layout.add_theme_constant_override("separation", 12)
 	unlock_root.add_child(unlock_layout)
 	var unlock_icon := _medal_box()
-	unlock_icon.custom_minimum_size = Vector2(112.0, 0.0)
+	unlock_icon.custom_minimum_size = Vector2(128.0, 0.0)
 	unlock_layout.add_child(unlock_icon)
 	var unlock_text := VBoxContainer.new()
 	unlock_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -477,9 +477,9 @@ func _build_screen() -> void:
 	unlock_layout.add_child(unlock_text)
 	_unlock_tag = make_shadow_label("", 16, Palette.GAUGE_RED_HI, 2)
 	unlock_text.add_child(_unlock_tag)
-	_unlock_title = make_label("", 22, Color("#2a2118"), 1, Color("#fff4d4"))
+	_unlock_title = make_label("", 24, Color("#2a2118"), 1, Color("#fff4d4"))
 	unlock_text.add_child(_unlock_title)
-	_unlock_body = make_label("", 17, Color("#4d3924"))
+	_unlock_body = make_label("", 16, Color("#4d3924"))
 	_unlock_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	unlock_text.add_child(_unlock_body)
 	var summary_cue := LevelToSummaryCueVisual.new()
@@ -488,7 +488,7 @@ func _build_screen() -> void:
 	summary_cue.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	unlock_text.add_child(summary_cue)
 	var spot := _spot_thumbnail_box()
-	spot.custom_minimum_size = Vector2(196.0, 86.0)
+	spot.custom_minimum_size = Vector2(216.0, 94.0)
 	unlock_layout.add_child(spot)
 
 	_confirm_button = make_button("OK  成果確認へ", _close, 286.0, true)
@@ -583,35 +583,35 @@ func _stat_row(row: Dictionary) -> PanelContainer:
 			5.0
 		)
 	)
-	panel.custom_minimum_size = Vector2(0.0, 54.0)
+	panel.custom_minimum_size = Vector2(0.0, 56.0)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var line := HBoxContainer.new()
 	line.add_theme_constant_override("separation", 8)
 	panel.add_child(line)
 
 	var icon := _stat_icon(String(row["icon"]), row["color"])
-	icon.custom_minimum_size = Vector2(52.0, 0.0)
+	icon.custom_minimum_size = Vector2(54.0, 0.0)
 	line.add_child(icon)
 
 	var name := make_label(String(row["name"]), 20, Palette.TEXT_BONE, 2)
-	name.custom_minimum_size = Vector2(104.0, 0.0)
+	name.custom_minimum_size = Vector2(112.0, 0.0)
 	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	line.add_child(name)
 
 	var fmt := String(row["fmt"])
 	var old_text := fmt % old_value
 	var new_text := fmt % new_value
-	var values := make_shadow_label("%s  ->  %s" % [old_text, new_text], 24, Palette.TEXT_BONE, 3)
+	var values := make_shadow_label("%s  ->  %s" % [old_text, new_text], 25, Palette.TEXT_BONE, 3)
 	values.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	values.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	values.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	line.add_child(values)
 
 	var gain_text := "%.1f" % delta if fmt == "%.1f" else "%d" % int(round(delta))
-	var gain := make_shadow_label("+%s" % gain_text, 22, Palette.GAUGE_GREEN_HI, 3)
+	var gain := make_shadow_label("+%s" % gain_text, 23, Palette.GAUGE_GREEN_HI, 3)
 	if absf(delta) < 0.01:
 		gain.text = "-"
-	gain.custom_minimum_size = Vector2(70.0, 0.0)
+	gain.custom_minimum_size = Vector2(76.0, 0.0)
 	gain.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	gain.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	line.add_child(gain)
@@ -658,7 +658,7 @@ func _badge_box(text: String, fill: Color, text_color: Color) -> PanelContainer:
 func _medal_box() -> PanelContainer:
 	var medal := _panel_box(Color("#6a4515"), Color("#2d1a09"), Palette.GOLD_BRIGHT, 4)
 	var visual := _level_asset_texture(
-		"LevelUnlockMedallionAsset", LevelUpVisual.UNLOCK_MEDALLION_ASSET, Vector2(106.0, 84.0)
+		"LevelUnlockMedallionAsset", LevelUpVisual.UNLOCK_MEDALLION_ASSET, Vector2(120.0, 96.0)
 	)
 	visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	visual.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -676,14 +676,14 @@ func _spot_thumbnail_box() -> PanelContainer:
 	_spot_tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_spot_tag)
 	var visual := _level_asset_texture(
-		"LevelUnlockSpotAsset", LevelUpVisual.UNLOCK_SPOT_ASSET, Vector2(0.0, 48.0), true
+		"LevelUnlockSpotAsset", LevelUpVisual.UNLOCK_SPOT_ASSET, Vector2(0.0, 56.0), true
 	)
 	visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(visual)
-	_spot_title = make_shadow_label("港の大岩", 22, Palette.TEXT_BONE, 3)
+	_spot_title = make_shadow_label("港の大岩", 24, Palette.TEXT_BONE, 3)
 	_spot_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_spot_title)
-	_spot_subtitle = make_shadow_label("外洋への挑戦", 16, Palette.GAUGE_CYAN_HI, 2)
+	_spot_subtitle = make_shadow_label("外洋への挑戦", 15, Palette.GAUGE_CYAN_HI, 2)
 	_spot_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_spot_subtitle)
 	return panel
@@ -723,13 +723,13 @@ func _add_burst_layer() -> void:
 	burst.draw.connect(
 		func() -> void:
 			var center := burst.size * 0.5
-			for i in range(28):
-				var a := TAU * float(i) / 28.0
-				var inner := center + Vector2(cos(a), sin(a)) * 135.0
-				var outer := center + Vector2(cos(a), sin(a)) * 390.0
+			for i in range(36):
+				var a := TAU * float(i) / 36.0
+				var inner := center + Vector2(cos(a), sin(a)) * 112.0
+				var outer := center + Vector2(cos(a), sin(a)) * 455.0
 				var color := Palette.GOLD_BRIGHT
-				color.a = 0.22 if i % 2 == 0 else 0.10
-				burst.draw_line(inner, outer, color, 5.0)
+				color.a = 0.30 if i % 2 == 0 else 0.13
+				burst.draw_line(inner, outer, color, 6.0)
 			var crown_y := center.y - 250.0
 			var crown_x := center.x
 			var crown := PackedVector2Array(
@@ -744,12 +744,12 @@ func _add_burst_layer() -> void:
 				]
 			)
 			var crown_color := Palette.GOLD_BRIGHT
-			crown_color.a = 0.30
-			burst.draw_polyline(crown, crown_color, 5.0)
+			crown_color.a = 0.40
+			burst.draw_polyline(crown, crown_color, 6.0)
 			var laurel := Palette.GOLD_BRIGHT
-			laurel.a = 0.24
-			burst.draw_arc(center + Vector2(-315.0, -185.0), 66.0, -1.25, 1.15, 18, laurel, 5.0)
-			burst.draw_arc(center + Vector2(315.0, -185.0), 66.0, 1.99, 4.39, 18, laurel, 5.0)
+			laurel.a = 0.34
+			burst.draw_arc(center + Vector2(-340.0, -190.0), 78.0, -1.25, 1.15, 20, laurel, 6.0)
+			burst.draw_arc(center + Vector2(340.0, -190.0), 78.0, 1.99, 4.39, 20, laurel, 6.0)
 	)
 	burst.queue_redraw()
 
@@ -768,18 +768,18 @@ func _add_confetti_layer() -> void:
 				Palette.GAUGE_GREEN_HI,
 				Color("#d9b7ff"),
 			]
-			for i in range(34):
+			for i in range(46):
 				var x := 82.0 + float((i * 143) % 1120)
 				var y := 38.0 + float((i * 59) % 560)
 				var s := 4.0 + float(i % 4)
 				var color: Color = colors[i % colors.size()]
-				color.a = 0.62
+				color.a = 0.70
 				confetti.draw_rect(Rect2(Vector2(x, y), Vector2(s + 5.0, s)), color)
 			var spark := Palette.GOLD_BRIGHT
-			for i in range(16):
+			for i in range(24):
 				var p := Vector2(130.0 + float((i * 211) % 1000), 84.0 + float((i * 97) % 470))
 				var r := 4.0 + float(i % 3)
-				spark.a = 0.38
+				spark.a = 0.46
 				confetti.draw_line(p + Vector2(-r, 0.0), p + Vector2(r, 0.0), spark, 2.0)
 				confetti.draw_line(p + Vector2(0.0, -r), p + Vector2(0.0, r), spark, 2.0)
 	)
