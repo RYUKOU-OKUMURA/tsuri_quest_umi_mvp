@@ -298,6 +298,7 @@ var _stock_value: Label
 var _overwrite_note: Label
 var _cook_action_cue: CookActionCueVisual
 var _cook_button: Button
+var _result_panel: PanelContainer
 var _result_title: Label
 var _result_body: HBoxContainer
 var _status_button: Button
@@ -561,7 +562,8 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 
 func _build_result_summary(layout: VBoxContainer) -> void:
 	var result_panel := _panel_box(Color("#0f2338"), Color("#5e391a"), Color("#e3b15e"), 6)
-	result_panel.custom_minimum_size = Vector2(0, 94)
+	_result_panel = result_panel
+	result_panel.custom_minimum_size = Vector2(0, 58)
 	layout.add_child(result_panel)
 	var result_layout := VBoxContainer.new()
 	result_layout.add_theme_constant_override("separation", 4)
@@ -569,6 +571,9 @@ func _build_result_summary(layout: VBoxContainer) -> void:
 	var title_row := HBoxContainer.new()
 	title_row.add_theme_constant_override("separation", 10)
 	result_layout.add_child(title_row)
+	var left_spacer := Control.new()
+	left_spacer.custom_minimum_size = Vector2(92, 0)
+	title_row.add_child(left_spacer)
 	_result_title = make_shadow_label("", 18, Palette.GOLD_BRIGHT, 3)
 	_result_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_result_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -1291,6 +1296,7 @@ func preview_show_status_overlay() -> void:
 
 func _show_error_result(message: String) -> void:
 	_flow_state = FlowState.MEAL_RESULT
+	_set_result_summary_compact(false)
 	_result_title.text = "調理できませんでした"
 	_clear_container(_result_body)
 	_result_body.add_child(_summary_card("確認", message, Palette.GAUGE_RED_HI))
@@ -1299,27 +1305,9 @@ func _show_error_result(message: String) -> void:
 func _show_status_summary() -> void:
 	if _flow_state != FlowState.COOK_SELECT:
 		_flow_state = FlowState.COOK_SELECT
+	_set_result_summary_compact(true)
 	_result_title.text = "現在の準備"
 	_clear_container(_result_body)
-	var active_meal := "なし"
-	if not PlayerProgress.pending_buff.is_empty():
-		active_meal = "%s / %s / 1回の釣行で発動" % [
-			String(PlayerProgress.pending_buff.get("name", "料理")),
-			String(PlayerProgress.pending_buff.get("text", "")),
-		]
-	_result_body.add_child(_summary_card("効果中の料理", active_meal, Palette.GAUGE_GREEN_HI, "meal"))
-	_result_body.add_child(
-		_summary_card("クーラーボックス", "%d 匹" % _total_fish_count(), Palette.GAUGE_CYAN_HI, "cooler")
-	)
-	_result_body.add_child(_summary_card("所持金", "%d G" % PlayerProgress.money, Palette.GOLD_BRIGHT, "coin"))
-	_result_body.add_child(
-		_summary_card(
-			"プレイヤー",
-			"Lv.%d / %s" % [PlayerProgress.level, PlayerProgress.get_base_stats().get("rod_name", "")],
-			Palette.TEXT_BONE,
-			"player"
-		)
-	)
 
 
 func _show_status_overlay() -> void:
@@ -1331,6 +1319,7 @@ func _show_status_overlay() -> void:
 
 func _show_meal_result(result: Dictionary, leveled: bool) -> void:
 	_flow_state = FlowState.MEAL_RESULT if not leveled else FlowState.EXP_GAIN
+	_set_result_summary_compact(false)
 	_result_title.text = "%sを食べた！" % String(result.get("dish_name", "料理"))
 	_clear_container(_result_body)
 	_result_body.add_child(
@@ -1505,6 +1494,13 @@ func _summary_card(title: String, value: String, accent: Color, icon_mode := "bo
 	value_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_child(value_label)
 	return card
+
+
+func _set_result_summary_compact(compact: bool) -> void:
+	if _result_panel != null:
+		_result_panel.custom_minimum_size = Vector2(0, 58 if compact else 94)
+	if _result_body != null:
+		_result_body.visible = not compact
 
 
 func _show_level_up(

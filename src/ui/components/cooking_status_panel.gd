@@ -54,7 +54,7 @@ class StatusIconVisual:
 	extends Control
 
 	const ICON_SHEET := "res://assets/showcase/cooking/cooking_icon_sheet.png"
-	const PLAYER_PORTRAIT := "res://assets/showcase/cooking/player_status_portrait.png"
+	const PLAYER_PORTRAIT := "res://assets/showcase/cooking/player_status_portrait_pixel.png"
 	const COOLER_ART := "res://assets/showcase/cooking/status_cooler_art.png"
 	const MONEY_ART := "res://assets/showcase/cooking/status_money_art.png"
 	const CLOCK_ART := "res://assets/showcase/cooking/status_clock_art.png"
@@ -823,6 +823,8 @@ func _status_texture_visual(text: String) -> Control:
 	var path := ""
 	match text.to_upper():
 		"PLAYER":
+			path = StatusIconVisual.PLAYER_PORTRAIT
+		"READY":
 			path = StatusIconVisual.PLAYER_PORTRAIT
 		"COOLER":
 			path = StatusIconVisual.COOLER_ART
