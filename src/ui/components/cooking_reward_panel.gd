@@ -1458,11 +1458,11 @@ func _apply_meal_result_composition() -> void:
 		_scene_visual_stack.custom_minimum_size = Vector2(0.0, 232.0)
 	if _scene_actor_panel != null:
 		_scene_actor_panel.visible = true
-		_scene_actor_panel.custom_minimum_size = Vector2(138.0, 0.0)
+		_scene_actor_panel.custom_minimum_size = Vector2(170.0, 0.0)
 	if _scene_table != null:
 		_scene_table.add_theme_constant_override("separation", 6)
 	if _scene_dish_image != null:
-		_scene_dish_image.custom_minimum_size = Vector2(278.0, 188.0)
+		_scene_dish_image.custom_minimum_size = Vector2(246.0, 188.0)
 	if _dish_card != null:
 		_dish_card.custom_minimum_size = Vector2(0.0, 222.0)
 	if _dish_image != null:
