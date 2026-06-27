@@ -903,6 +903,7 @@ func show_meal_result(result: Dictionary) -> void:
 	_effect_preview_card.visible = false
 
 	_exp_card.visible = false
+	_reward_grid.visible = true
 	_reward_grid.columns = 4
 	_base_label.text = "食経験値を獲得した！\n+%d EXP" % int(result.get("base_exp", 0))
 	if bool(result.get("first_time", false)):
@@ -958,6 +959,7 @@ func show_reward(
 	_exp_focus_card.visible = true
 	_effect_preview_card.visible = true
 	_exp_card.visible = false
+	_reward_grid.visible = false
 	_reward_grid.columns = 5
 	_set_reward_line_visible(_growth_label, true)
 
@@ -1472,19 +1474,19 @@ func _apply_meal_result_composition() -> void:
 
 func _apply_exp_gain_composition() -> void:
 	if _scene_card != null:
-		_scene_card.custom_minimum_size = Vector2(318.0, 320.0)
+		_scene_card.custom_minimum_size = Vector2(340.0, 360.0)
 	if _scene_visual_stack != null:
-		_scene_visual_stack.custom_minimum_size = Vector2(0.0, 236.0)
+		_scene_visual_stack.custom_minimum_size = Vector2(0.0, 258.0)
 	if _scene_actor_panel != null:
 		_scene_actor_panel.visible = false
 	if _scene_table != null:
 		_scene_table.add_theme_constant_override("separation", 0)
 	if _scene_dish_image != null:
-		_scene_dish_image.custom_minimum_size = Vector2(288.0, 188.0)
+		_scene_dish_image.custom_minimum_size = Vector2(306.0, 210.0)
 	if _exp_focus_card != null:
-		_exp_focus_card.custom_minimum_size = Vector2(0.0, 250.0)
+		_exp_focus_card.custom_minimum_size = Vector2(0.0, 306.0)
 	if _effect_preview_card != null:
-		_effect_preview_card.custom_minimum_size = Vector2(244.0, 312.0)
+		_effect_preview_card.custom_minimum_size = Vector2(254.0, 360.0)
 	if _dish_image != null:
 		_dish_image.custom_minimum_size = Vector2(304.0, 0.0)
 	_set_reward_cards_height(84.0)

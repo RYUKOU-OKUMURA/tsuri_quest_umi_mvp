@@ -252,11 +252,9 @@ func _audit_exp_gain() -> void:
 			"次の釣行で効果！",
 			"EXP 80 / 150  ->  120 / 150",
 			"+40 EXP",
-			"初めて食べた料理！",
 			"初回ボーナス +20 EXP",
 			"次の釣行で最大体力 +5%",
 			"1回の釣行で発動",
-			"次のレベルまで 30 EXP",
 			"プレイヤーLv.",
 			"Lv.4  120/150 EXP",
 			"効果中の料理",
@@ -294,11 +292,6 @@ func _audit_exp_gain() -> void:
 		"res://assets/showcase/cooking/dish_feature_aji_shioyaki.png"
 	)
 	_expect_named_node("EXP_GAIN", screen, "NextEffectArt")
-	_expect_named_node("EXP_GAIN", screen, "RewardCardBaseExp")
-	_expect_named_node("EXP_GAIN", screen, "RewardCardFirstBonus")
-	_expect_named_node("EXP_GAIN", screen, "RewardCardTotalExp")
-	_expect_named_node("EXP_GAIN", screen, "RewardCardNextEffect")
-	_expect_named_node("EXP_GAIN", screen, "RewardCardGrowth")
 	_expect_reward_status_strip("EXP_GAIN", screen)
 	_expect_named_node("EXP_GAIN", screen, "RewardConfirmButton")
 	_expect_named_controls_not_visible(
@@ -307,6 +300,11 @@ func _audit_exp_gain() -> void:
 		[
 			"MealDishCard",
 			"RewardDishFeatureImage",
+			"RewardCardBaseExp",
+			"RewardCardFirstBonus",
+			"RewardCardTotalExp",
+			"RewardCardNextEffect",
+			"RewardCardGrowth",
 		]
 	)
 	_expect_button_texture_style(
@@ -339,10 +337,7 @@ func _audit_exp_gain_level_up() -> void:
 			"次の釣行で効果！",
 			"EXP 130 / 150  ->  150 / 150",
 			"+40 EXP",
-			"初めて食べた料理！",
 			"初回ボーナス +20 EXP",
-			"今回の合計 +40 EXP",
-			"Lv.4 -> Lv.5 / ぬし解放",
 			"1回の釣行で発動",
 			"プレイヤーLv.",
 			"Lv.5  20/190 EXP",
@@ -371,11 +366,6 @@ func _audit_exp_gain_level_up() -> void:
 		"res://assets/showcase/cooking/dish_feature_aji_shioyaki.png"
 	)
 	_expect_named_node("EXP_GAIN_LEVELUP", screen, "NextEffectArt")
-	_expect_named_node("EXP_GAIN_LEVELUP", screen, "RewardCardBaseExp")
-	_expect_named_node("EXP_GAIN_LEVELUP", screen, "RewardCardFirstBonus")
-	_expect_named_node("EXP_GAIN_LEVELUP", screen, "RewardCardTotalExp")
-	_expect_named_node("EXP_GAIN_LEVELUP", screen, "RewardCardNextEffect")
-	_expect_named_node("EXP_GAIN_LEVELUP", screen, "RewardCardGrowth")
 	_expect_reward_status_strip("EXP_GAIN_LEVELUP", screen)
 	_expect_named_node("EXP_GAIN_LEVELUP", screen, "RewardConfirmButton")
 	_expect_named_controls_not_visible(
@@ -384,6 +374,11 @@ func _audit_exp_gain_level_up() -> void:
 		[
 			"MealDishCard",
 			"RewardDishFeatureImage",
+			"RewardCardBaseExp",
+			"RewardCardFirstBonus",
+			"RewardCardTotalExp",
+			"RewardCardNextEffect",
+			"RewardCardGrowth",
 		]
 	)
 	_expect_button_texture_style(

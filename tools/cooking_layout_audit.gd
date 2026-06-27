@@ -78,11 +78,17 @@ func _audit_exp_gain() -> void:
 	_expect_named_control_size("EXP_GAIN", screen, "ExpMessagePortrait", Vector2(60.0, 38.0))
 	_expect_named_control_size("EXP_GAIN", screen, "MealTableSpread", Vector2(180.0, 70.0))
 	_expect_named_control_size("EXP_GAIN", screen, "NextEffectArt", Vector2(180.0, 42.0))
-	_expect_named_control_size("EXP_GAIN", screen, "RewardCardBaseExp", Vector2(120.0, 48.0))
-	_expect_named_control_size("EXP_GAIN", screen, "RewardCardFirstBonus", Vector2(120.0, 48.0))
-	_expect_named_control_size("EXP_GAIN", screen, "RewardCardTotalExp", Vector2(120.0, 48.0))
-	_expect_named_control_size("EXP_GAIN", screen, "RewardCardNextEffect", Vector2(120.0, 48.0))
-	_expect_named_control_size("EXP_GAIN", screen, "RewardCardGrowth", Vector2(120.0, 48.0))
+	_expect_named_controls_hidden(
+		"EXP_GAIN",
+		screen,
+		[
+			"RewardCardBaseExp",
+			"RewardCardFirstBonus",
+			"RewardCardTotalExp",
+			"RewardCardNextEffect",
+			"RewardCardGrowth",
+		]
+	)
 	_expect_reward_status_strip("EXP_GAIN", screen)
 	_expect_named_control_size("EXP_GAIN", screen, "RewardConfirmButton", Vector2(280.0, 34.0))
 	screen.queue_free()
@@ -106,11 +112,17 @@ func _audit_exp_gain_level_up() -> void:
 	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "ExpMessagePortrait", Vector2(60.0, 38.0))
 	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "MealTableSpread", Vector2(180.0, 70.0))
 	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "NextEffectArt", Vector2(180.0, 42.0))
-	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "RewardCardBaseExp", Vector2(120.0, 48.0))
-	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "RewardCardFirstBonus", Vector2(120.0, 48.0))
-	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "RewardCardTotalExp", Vector2(120.0, 48.0))
-	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "RewardCardNextEffect", Vector2(120.0, 48.0))
-	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "RewardCardGrowth", Vector2(120.0, 48.0))
+	_expect_named_controls_hidden(
+		"EXP_GAIN_LEVELUP",
+		screen,
+		[
+			"RewardCardBaseExp",
+			"RewardCardFirstBonus",
+			"RewardCardTotalExp",
+			"RewardCardNextEffect",
+			"RewardCardGrowth",
+		]
+	)
 	_expect_reward_status_strip("EXP_GAIN_LEVELUP", screen)
 	_expect_named_control_size("EXP_GAIN_LEVELUP", screen, "RewardConfirmButton", Vector2(280.0, 34.0))
 	screen.queue_free()
@@ -353,6 +365,23 @@ func _expect_named_control_size(
 			"%s: named control '%s' too small: size=%s min=%s"
 			% [state, node_name, rect.size, min_size]
 		)
+
+
+func _expect_named_controls_hidden(state: String, root: Node, node_names: Array) -> void:
+	for node_name in node_names:
+		var node := _find_named(root, String(node_name))
+		if node == null:
+			_failures.append("%s: missing named control '%s'." % [state, String(node_name)])
+			continue
+		var control := node as Control
+		if control == null:
+			_failures.append("%s: node '%s' is not a Control." % [state, String(node_name)])
+			continue
+		if control.is_visible_in_tree():
+			_failures.append(
+				"%s: named control '%s' should be hidden in this composition."
+				% [state, String(node_name)]
+			)
 
 
 func _expect_reward_status_strip(state: String, root: Node) -> void:
