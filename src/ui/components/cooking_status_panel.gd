@@ -9,6 +9,10 @@ const STATUS_SUMMARY_BG := "res://assets/showcase/cooking/status_summary_bg.png"
 const COOKING_BG := "res://assets/showcase/cooking/cooking_room_bg.png"
 const STATUS_CARD_FRAME := "res://assets/showcase/cooking/status_card_frame.png"
 const DISH_FEATURE_AJI := "res://assets/showcase/cooking/dish_feature_aji_shioyaki.png"
+const DISH_FEATURE_SASHIMI := "res://assets/showcase/cooking/dish_feature_sashimi.png"
+const DISH_FEATURE_SIMMERED := "res://assets/showcase/cooking/dish_feature_simmered.png"
+const DISH_FEATURE_SOUP := "res://assets/showcase/cooking/dish_feature_soup.png"
+const DISH_FEATURE_FRY := "res://assets/showcase/cooking/dish_feature_fry.png"
 const DISH_ICON_SHEET := "res://assets/showcase/cooking/dish_icon_sheet.png"
 const FLOW_ACTION_BUTTON_FRAME := "res://assets/showcase/cooking/flow_action_button_frame.png"
 
@@ -1081,8 +1085,17 @@ func _style_box(fill: Color, border: Color, inner: Color, border_width: int, rad
 
 
 func _meal_texture(recipe_id: String) -> Texture2D:
-	if recipe_id == "salt_grill":
-		return load(DISH_FEATURE_AJI) as Texture2D
+	match recipe_id:
+		"salt_grill":
+			return load(DISH_FEATURE_AJI) as Texture2D
+		"sashimi":
+			return load(DISH_FEATURE_SASHIMI) as Texture2D
+		"simmered":
+			return load(DISH_FEATURE_SIMMERED) as Texture2D
+		"soup":
+			return load(DISH_FEATURE_SOUP) as Texture2D
+		"fry":
+			return load(DISH_FEATURE_FRY) as Texture2D
 	return _recipe_icon(recipe_id)
 
 

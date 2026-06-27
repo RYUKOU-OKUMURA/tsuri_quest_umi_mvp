@@ -11,6 +11,10 @@ const COOKING_SECTION_RIBBON := "res://assets/showcase/cooking/cooking_section_r
 const FISH_ICON_SHEET := "res://assets/showcase/cooking/fish_icon_sheet.png"
 const DISH_ICON_SHEET := "res://assets/showcase/cooking/dish_icon_sheet.png"
 const DISH_FEATURE_AJI := "res://assets/showcase/cooking/dish_feature_aji_shioyaki.png"
+const DISH_FEATURE_SASHIMI := "res://assets/showcase/cooking/dish_feature_sashimi.png"
+const DISH_FEATURE_SIMMERED := "res://assets/showcase/cooking/dish_feature_simmered.png"
+const DISH_FEATURE_SOUP := "res://assets/showcase/cooking/dish_feature_soup.png"
+const DISH_FEATURE_FRY := "res://assets/showcase/cooking/dish_feature_fry.png"
 const RECIPE_GRID_FRAME := "res://assets/showcase/cooking/recipe_grid_frame.png"
 const RECIPE_CARD_FRAME := "res://assets/showcase/cooking/recipe_card_frame.png"
 const RECIPE_SELECTED_CARD_FRAME := "res://assets/showcase/cooking/recipe_selected_card_frame.png"
@@ -451,8 +455,8 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	_recipe_grid.name = "RecipeGrid"
 	_recipe_grid.columns = 3
 	_recipe_grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_recipe_grid.add_theme_constant_override("h_separation", 6)
-	_recipe_grid.add_theme_constant_override("v_separation", 7)
+	_recipe_grid.add_theme_constant_override("h_separation", 8)
+	_recipe_grid.add_theme_constant_override("v_separation", 10)
 	recipe_layout.add_child(_recipe_grid)
 
 	_recipe_to_detail_arrow = TextureRect.new()
@@ -900,7 +904,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	var recipe_id := String(recipe.get("id", ""))
 	var card := PanelContainer.new()
 	card.name = "RecipeCard_%s" % recipe_id
-	card.custom_minimum_size = Vector2(130, 118)
+	card.custom_minimum_size = Vector2(134, 146)
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
 	var selectable := not locked and not unavailable
 	if selectable:
@@ -922,7 +926,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	box.add_child(title)
 	var image := TextureRect.new()
 	image.texture = _recipe_icon(recipe_id if not locked else "locked")
-	image.custom_minimum_size = Vector2(0, 38)
+	image.custom_minimum_size = Vector2(0, 62)
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	image.modulate = Color(0.46, 0.42, 0.36, 0.82) if locked or unavailable else Color.WHITE
@@ -1618,6 +1622,15 @@ func _recipe_icon(recipe_id: String) -> Texture2D:
 
 
 func _featured_dish_texture(recipe_id: String) -> Texture2D:
-	if recipe_id == "salt_grill":
-		return load(DISH_FEATURE_AJI) as Texture2D
+	match recipe_id:
+		"salt_grill":
+			return load(DISH_FEATURE_AJI) as Texture2D
+		"sashimi":
+			return load(DISH_FEATURE_SASHIMI) as Texture2D
+		"simmered":
+			return load(DISH_FEATURE_SIMMERED) as Texture2D
+		"soup":
+			return load(DISH_FEATURE_SOUP) as Texture2D
+		"fry":
+			return load(DISH_FEATURE_FRY) as Texture2D
 	return _recipe_icon(recipe_id)

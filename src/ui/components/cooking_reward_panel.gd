@@ -6,6 +6,10 @@ signal closed
 const GaugeBarScript = preload("res://src/ui/components/gauge_bar.gd")
 
 const DISH_FEATURE_AJI := "res://assets/showcase/cooking/dish_feature_aji_shioyaki.png"
+const DISH_FEATURE_SASHIMI := "res://assets/showcase/cooking/dish_feature_sashimi.png"
+const DISH_FEATURE_SIMMERED := "res://assets/showcase/cooking/dish_feature_simmered.png"
+const DISH_FEATURE_SOUP := "res://assets/showcase/cooking/dish_feature_soup.png"
+const DISH_FEATURE_FRY := "res://assets/showcase/cooking/dish_feature_fry.png"
 const DISH_ICON_SHEET := "res://assets/showcase/cooking/dish_icon_sheet.png"
 const MEAL_SCENE_BG := "res://assets/showcase/cooking/meal_scene_bg.png"
 const EXP_STAGE_BG := "res://assets/showcase/cooking/exp_stage_bg.png"
@@ -552,7 +556,7 @@ var _exp_trail_visual: ExpTrailVisual
 var _exp_focus_card: PanelContainer
 var _exp_message_label: Label
 var _effect_preview_card: PanelContainer
-var _effect_preview_visual: EffectPreviewVisual
+var _effect_preview_visual: TextureRect
 var _effect_name_label: Label
 var _effect_text_label: Label
 var _effect_duration_label: Label
@@ -1340,7 +1344,7 @@ func _scene_actor_box() -> PanelContainer:
 
 func _build_effect_preview_card(parent: HBoxContainer) -> void:
 	_effect_preview_card = _compact_panel_box(Color("#f2e4c2"), Color("#274b2f"), Color("#8ee65a"), 4)
-	_effect_preview_card.custom_minimum_size = Vector2(232.0, 146.0)
+	_effect_preview_card.custom_minimum_size = Vector2(232.0, 166.0)
 	_effect_preview_card.visible = false
 	parent.add_child(_effect_preview_card)
 
@@ -1361,11 +1365,14 @@ func _build_effect_preview_card(parent: HBoxContainer) -> void:
 	_effect_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_effect_name_label)
 
-	_effect_preview_visual = EffectPreviewVisual.new()
+	_effect_preview_visual = TextureRect.new()
 	_effect_preview_visual.name = "NextEffectArt"
-	_effect_preview_visual.custom_minimum_size = Vector2(0.0, 42.0)
+	_effect_preview_visual.texture = load(EffectPreviewVisual.EFFECT_ART) as Texture2D
+	_effect_preview_visual.custom_minimum_size = Vector2(0.0, 70.0)
 	_effect_preview_visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_effect_preview_visual.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_effect_preview_visual.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_effect_preview_visual.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	box.add_child(_effect_preview_visual)
 
 	_effect_text_label = make_shadow_label("", 12, Color("#2a2118"), 1, Color("#fff1c7"))
@@ -1620,8 +1627,17 @@ func _texture_style_box(
 
 
 func _featured_dish_texture(recipe_id: String) -> Texture2D:
-	if recipe_id == "salt_grill":
-		return load(DISH_FEATURE_AJI) as Texture2D
+	match recipe_id:
+		"salt_grill":
+			return load(DISH_FEATURE_AJI) as Texture2D
+		"sashimi":
+			return load(DISH_FEATURE_SASHIMI) as Texture2D
+		"simmered":
+			return load(DISH_FEATURE_SIMMERED) as Texture2D
+		"soup":
+			return load(DISH_FEATURE_SOUP) as Texture2D
+		"fry":
+			return load(DISH_FEATURE_FRY) as Texture2D
 	return _recipe_icon(recipe_id)
 
 
