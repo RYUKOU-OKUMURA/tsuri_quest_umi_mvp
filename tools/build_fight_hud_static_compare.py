@@ -276,8 +276,11 @@ def build_current_hud() -> Image.Image:
     for slot, args in zip(_hint_slots(hint), (("A", "巻く", "リールを巻く"), ("B", "緩める", "ラインを出す"), ("L/R", "調整", "テンション"))):
         _draw_key_hint(frame, draw, slot, *args)
 
-    _draw_menu_row(frame, draw, (menu[0] + 34, menu[1] + (menu[3] - menu[1]) * 0.42), "+", "ポーズメニュー")
-    _draw_menu_row(frame, draw, (menu[0] + 34, menu[1] + (menu[3] - menu[1]) * 0.78), "-", "釣りをやめる")
+    menu_h = menu[3] - menu[1]
+    harbor = (menu[0] + 9, menu[1] + menu_h * 0.24, menu[2] - 9, menu[1] + menu_h * 0.80)
+    draw.rounded_rectangle(harbor, radius=4, fill=(14, 70, 111, 220), outline=(215, 183, 102, 224), width=1)
+    draw.line((harbor[0] + 7, harbor[1] + 4, harbor[2] - 7, harbor[1] + 4), fill=(255, 255, 255, 31), width=1)
+    _draw_menu_row(frame, draw, (harbor[0] + 25, harbor[1] + (harbor[3] - harbor[1]) * 0.57), "-", "港へ戻る")
     return frame.convert("RGB")
 
 

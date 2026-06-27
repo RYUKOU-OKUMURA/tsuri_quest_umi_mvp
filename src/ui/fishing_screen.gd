@@ -31,6 +31,9 @@ var _result_overlay: ColorRect
 var _result_title: Label
 var _result_details: Label
 var _retry_button: Button
+var _quit_overlay: ColorRect
+var _quit_title: Label
+var _quit_details: Label
 
 
 func _build_screen() -> void:
@@ -107,7 +110,7 @@ func _build_screen() -> void:
 	_fight_hud.main_action_pressed.connect(_on_main_action_pressed)
 	_fight_hud.reel_changed.connect(func(active: bool) -> void: _simulator.set_reeling(active))
 	_fight_hud.give_line_changed.connect(func(active: bool) -> void: _simulator.set_giving_line(active))
-	_fight_hud.harbor_pressed.connect(func() -> void: navigate("harbor"))
+	_fight_hud.harbor_pressed.connect(_request_harbor_return)
 	left_column.add_child(_fight_hud)
 
 	var info_panel := MarginContainer.new()
@@ -145,6 +148,7 @@ func _build_screen() -> void:
 	info_box.add_child(_fight_sidebar)
 
 	_create_result_overlay()
+	_create_quit_overlay()
 	_prepare_new_attempt()
 	_update_ui()
 
@@ -189,8 +193,51 @@ func _create_result_overlay() -> void:
 	row.add_child(harbor_button)
 
 
+func _create_quit_overlay() -> void:
+	_quit_overlay = ColorRect.new()
+	_quit_overlay.color = Color(0.0, 0.0, 0.0, 0.66)
+	_quit_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_quit_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	_quit_overlay.visible = false
+	add_child(_quit_overlay)
+
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_quit_overlay.add_child(center)
+	var panel := make_panel()
+	panel.custom_minimum_size = Vector2(560, 260)
+	center.add_child(panel)
+	var box := VBoxContainer.new()
+	box.custom_minimum_size = Vector2(500, 0)
+	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	box.add_theme_constant_override("separation", 16)
+	panel.add_child(box)
+
+	_quit_title = make_label("港へ戻る", 32, Color("#7b431e"))
+	_quit_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_quit_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.add_child(_quit_title)
+
+	_quit_details = make_label("", 19)
+	_quit_details.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_quit_details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_quit_details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.add_child(_quit_details)
+
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 12)
+	box.add_child(row)
+	var cancel_button := make_button("続ける", _hide_harbor_confirm, 180)
+	row.add_child(cancel_button)
+	var confirm_button := make_button("港へ戻る", _confirm_harbor_return, 180, true)
+	row.add_child(confirm_button)
+
+
 func _process(delta: float) -> void:
 	if _simulator == null:
+		return
+	if _quit_overlay != null and _quit_overlay.visible:
 		return
 	_simulator.tick(delta)
 	_update_ui()
@@ -201,6 +248,17 @@ func _input(event: InputEvent) -> void:
 	if _simulator == null or not event is InputEventKey:
 		return
 	var key_event := event as InputEventKey
+	if _quit_overlay != null and _quit_overlay.visible:
+		if key_event.pressed and not key_event.echo:
+			if key_event.keycode == KEY_ENTER or key_event.keycode == KEY_KP_ENTER:
+				_confirm_harbor_return()
+				get_viewport().set_input_as_handled()
+			elif key_event.keycode == KEY_ESCAPE:
+				_hide_harbor_confirm()
+				get_viewport().set_input_as_handled()
+		return
+	if _result_overlay != null and _result_overlay.visible:
+		return
 	if key_event.keycode == KEY_SPACE:
 		_simulator.set_reeling(key_event.pressed)
 		get_viewport().set_input_as_handled()
@@ -214,6 +272,17 @@ func _input(event: InputEvent) -> void:
 	):
 		_on_main_action_pressed()
 		get_viewport().set_input_as_handled()
+	elif (
+		key_event.pressed
+		and not key_event.echo
+		and (
+			key_event.keycode == KEY_ESCAPE
+			or key_event.keycode == KEY_MINUS
+			or key_event.keycode == KEY_KP_SUBTRACT
+		)
+	):
+		_request_harbor_return()
+		get_viewport().set_input_as_handled()
 
 
 func _on_target_mode_changed(_index: int) -> void:
@@ -223,6 +292,8 @@ func _on_target_mode_changed(_index: int) -> void:
 func _prepare_new_attempt() -> void:
 	_result_recorded = false
 	_result_overlay.visible = false
+	if _quit_overlay != null:
+		_quit_overlay.visible = false
 	if _target_option.selected == 1 and PlayerProgress.level >= GameData.BOSS_UNLOCK_LEVEL:
 		_current_fish = GameData.get_fish("boss_kurodai")
 	else:
@@ -253,6 +324,40 @@ func _on_main_action_pressed() -> void:
 			_simulator.cast()
 		FishingSimulator.State.BITE:
 			_simulator.hook()
+
+
+func _request_harbor_return() -> void:
+	if _simulator == null:
+		navigate("harbor")
+		return
+	if _result_overlay != null and _result_overlay.visible:
+		return
+	if _simulator.state == FishingSimulator.State.READY:
+		navigate("harbor")
+		return
+	_simulator.set_reeling(false)
+	_simulator.set_giving_line(false)
+	if _quit_details != null:
+		_quit_details.text = _harbor_return_message()
+	if _quit_overlay != null:
+		_quit_overlay.visible = true
+
+
+func _harbor_return_message() -> String:
+	if _simulator != null and _simulator.state == FishingSimulator.State.FIGHT:
+		return "ファイトを中断すると魚は逃げます。港へ戻りますか？"
+	return "釣りを中断して港へ戻りますか？"
+
+
+func _hide_harbor_confirm() -> void:
+	if _quit_overlay != null:
+		_quit_overlay.visible = false
+
+
+func _confirm_harbor_return() -> void:
+	if _quit_overlay != null:
+		_quit_overlay.visible = false
+	navigate("harbor")
 
 
 func _on_state_changed(_new_state: int) -> void:

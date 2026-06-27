@@ -112,7 +112,7 @@ func _draw_header(font: Font, rect: Rect2) -> void:
 	var title_outline := 3 if _sidebar_frame == null else 1
 	var count_outline := 2 if _sidebar_frame == null else 1
 	var baseline_y := rect.size.y * (0.62 if _sidebar_frame != null else 0.68)
-	var title_text := "釣り中の魚" if _fish_is_revealed() else "釣り中の反応"
+	var title_text := "釣り中の魚" if _fish_is_revealed() else "未確認の魚影"
 	_draw_text(font, title_text, rect.position + Vector2(14.0, baseline_y), title_size, Palette.TEXT_BONE, title_outline)
 	var count_text := "1/1 匹" if _fish_is_revealed() else "未確認"
 	var count_size := 16
@@ -283,7 +283,7 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 	if _sidebar_frame != null:
 		_draw_action_header_icon(Rect2(rect.position + Vector2(14.0, 6.0), Vector2(22.0, 22.0)))
 		title_x = 40.0
-	var title := "魚の行動" if _fish_is_revealed() else "海中の反応"
+	var title := "魚の行動" if _fish_is_revealed() else "今の状況"
 	_draw_text(font, title, rect.position + Vector2(title_x, 25.0), 18, Palette.TEXT_BONE, 1 if _sidebar_frame != null else 3)
 	var body := Rect2(rect.position + Vector2(10.0, 33.0), rect.size - Vector2(20.0, 42.0))
 	if _sidebar_frame != null:

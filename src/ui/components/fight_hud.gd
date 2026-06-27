@@ -237,7 +237,10 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 	var key_slots := _hint_key_slots(hint)
 	_reel_rect = key_slots[0]
 	_give_rect = key_slots[1]
-	_harbor_rect = Rect2(menu.position, menu.size)
+	_harbor_rect = Rect2(
+		menu.position + Vector2(9.0, menu.size.y * 0.24),
+		Vector2(menu.size.x - 18.0, menu.size.y * 0.56)
+	)
 
 	_draw_panel(bait, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	var bait_text_x := 16.0
@@ -278,12 +281,11 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 		_draw_key_hint(font, key_slots[2], "L/R", "調整")
 
 	_draw_panel(menu, Color("#0b355f"), Color("#08213c"), Palette.GOLD)
+	_draw_menu_button(_harbor_rect)
 	if _hud_frame != null:
-		_draw_menu_row(font, menu.position + Vector2(34.0, menu.size.y * 0.42), "+", "ポーズメニュー")
-		_draw_menu_row(font, menu.position + Vector2(34.0, menu.size.y * 0.78), "-", "釣りをやめる")
+		_draw_menu_row(font, _harbor_rect.position + Vector2(25.0, _harbor_rect.size.y * 0.57), "-", "港へ戻る")
 	else:
-		_draw_key_row(font, menu.position + Vector2(22.0, menu.size.y * 0.42), "+", "ポーズメニュー")
-		_draw_key_row(font, menu.position + Vector2(22.0, menu.size.y * 0.78), "-", "釣りをやめる")
+		_draw_key_row(font, _harbor_rect.position + Vector2(12.0, _harbor_rect.size.y * 0.57), "-", "港へ戻る")
 
 
 func _draw_segment_gauge(rect: Rect2, ratio: float, safe_min: float, safe_max: float, warm: bool) -> void:
@@ -343,6 +345,18 @@ func _draw_panel(rect: Rect2, fill: Color, border: Color, highlight: Color) -> v
 		body.position + Vector2(body.size.x - 8.0, body.size.y - 8.0),
 	]:
 		draw_circle(corner, 2.2, highlight)
+
+
+func _draw_menu_button(rect: Rect2) -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#0e466f", 0.86) if _hud_frame != null else Color("#123f63")
+	style.border_color = Color("#d7b766", 0.88)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.shadow_color = Color(0.0, 0.0, 0.0, 0.28)
+	style.shadow_size = 2
+	draw_style_box(style, rect)
+	draw_line(rect.position + Vector2(7.0, 4.0), rect.position + Vector2(rect.size.x - 7.0, 4.0), Color(1.0, 1.0, 1.0, 0.12), 1.0)
 
 
 func _draw_text(font: Font, text: String, baseline: Vector2, font_size: int, color: Color, outline: int) -> void:
