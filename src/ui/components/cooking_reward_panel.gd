@@ -785,25 +785,25 @@ func _build_screen() -> void:
 			8.0
 		)
 	)
-	_exp_focus_card.custom_minimum_size = Vector2(0.0, 198.0)
+	_exp_focus_card.custom_minimum_size = Vector2(0.0, 216.0)
 	_exp_focus_card.visible = false
 	right.add_child(_exp_focus_card)
 	var exp_focus_box := VBoxContainer.new()
-	exp_focus_box.add_theme_constant_override("separation", 4)
+	exp_focus_box.add_theme_constant_override("separation", 5)
 	_exp_focus_card.add_child(exp_focus_box)
 	_exp_focus_card.draw.connect(_draw_exp_focus_burst)
-	var exp_focus_tag := make_shadow_label("食経験値", 21, Palette.TEXT_BONE, 3)
+	var exp_focus_tag := make_shadow_label("食経験値", 22, Palette.TEXT_BONE, 3)
 	exp_focus_tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	exp_focus_box.add_child(exp_focus_tag)
-	_exp_label = make_shadow_label("+0 EXP", 56, Palette.GOLD_BRIGHT, 6)
+	_exp_label = make_shadow_label("+0 EXP", 62, Palette.GOLD_BRIGHT, 7)
 	_exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	exp_focus_box.add_child(_exp_label)
 	_exp_bar = GaugeBarScript.new()
 	_exp_bar.show_value = false
-	_exp_bar.custom_minimum_size = Vector2(0.0, 38.0)
+	_exp_bar.custom_minimum_size = Vector2(0.0, 46.0)
 	_exp_bar.set_colors(Palette.GAUGE_CYAN, Palette.GAUGE_CYAN_HI)
 	exp_focus_box.add_child(_exp_bar)
-	_exp_progress_label = make_shadow_label("", 20, Palette.GAUGE_CYAN_HI, 2)
+	_exp_progress_label = make_shadow_label("", 22, Palette.GAUGE_CYAN_HI, 2)
 	_exp_progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	exp_focus_box.add_child(_exp_progress_label)
 	var message_row := HBoxContainer.new()
@@ -814,13 +814,13 @@ func _build_screen() -> void:
 	var exp_portrait := TextureRect.new()
 	exp_portrait.name = "ExpMessagePortrait"
 	exp_portrait.texture = load(PLAYER_EXP_POSE) as Texture2D
-	exp_portrait.custom_minimum_size = Vector2(96.0, 56.0)
+	exp_portrait.custom_minimum_size = Vector2(108.0, 62.0)
 	exp_portrait.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	exp_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	exp_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	exp_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	message_row.add_child(exp_portrait)
-	_exp_message_label = make_shadow_label("体に力がみなぎってきた！", 16, Palette.TEXT_BONE, 2)
+	_exp_message_label = make_shadow_label("体に力がみなぎってきた！", 17, Palette.TEXT_BONE, 2)
 	_exp_message_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_exp_message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_exp_message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -931,7 +931,7 @@ func show_reward(
 	_set_result_banner_height(92.0)
 	_set_header_title_font_size(36)
 	_set_bridge_font_size(14)
-	_set_exp_label_font_size(64)
+	_set_exp_label_font_size(72)
 	_header_title.text = "食経験値が成長へ！" if leveled else "食経験値を獲得！"
 	_bridge_label.text = _growth_bridge_text(dish_name, leveled, level_before, level_after)
 	_dish_title.text = "%sを食べた！" % dish_name
@@ -1171,23 +1171,23 @@ func _draw_exp_focus_burst() -> void:
 	var center := Vector2(rect.size.x * 0.5, rect.size.y * 0.48)
 	var gold := Palette.GOLD_BRIGHT
 	var cyan := Palette.GAUGE_CYAN_HI
-	for i in range(18):
-		var angle := TAU * float(i) / 18.0
-		var from := center + Vector2(cos(angle), sin(angle)) * 20.0
-		var to := center + Vector2(cos(angle), sin(angle)) * 210.0
+	for i in range(22):
+		var angle := TAU * float(i) / 22.0
+		var from := center + Vector2(cos(angle), sin(angle)) * 16.0
+		var to := center + Vector2(cos(angle), sin(angle)) * 252.0
 		var color := gold if i % 2 == 0 else cyan
-		color.a = 0.12 if i % 2 == 0 else 0.08
-		_exp_focus_card.draw_line(from, to, color, 4.0)
-	for i in range(5):
-		var width := rect.size.x - 68.0 - float(i) * 18.0
-		var y := rect.size.y * 0.62 + float(i) * 2.0
+		color.a = 0.16 if i % 2 == 0 else 0.11
+		_exp_focus_card.draw_line(from, to, color, 5.0)
+	for i in range(6):
+		var width := rect.size.x - 48.0 - float(i) * 18.0
+		var y := rect.size.y * 0.60 + float(i) * 2.0
 		var color := cyan
-		color.a = 0.10 - float(i) * 0.012
+		color.a = 0.15 - float(i) * 0.014
 		_exp_focus_card.draw_rect(
-			Rect2(Vector2((rect.size.x - width) * 0.5, y), Vector2(width, 10.0)),
+			Rect2(Vector2((rect.size.x - width) * 0.5, y), Vector2(width, 12.0)),
 			color
 		)
-	for i in range(16):
+	for i in range(22):
 		var p := Vector2(
 			rect.size.x * (0.12 + float((i * 37) % 78) / 100.0),
 			rect.size.y * (0.14 + float((i * 23) % 64) / 100.0)
@@ -1433,7 +1433,7 @@ func _set_result_banner_height(height: float) -> void:
 
 func _build_effect_preview_card(parent: HBoxContainer) -> void:
 	_effect_preview_card = _compact_panel_box(Color("#f2e4c2"), Color("#274b2f"), Color("#8ee65a"), 4)
-	_effect_preview_card.custom_minimum_size = Vector2(238.0, 192.0)
+	_effect_preview_card.custom_minimum_size = Vector2(252.0, 208.0)
 	_effect_preview_card.visible = false
 	parent.add_child(_effect_preview_card)
 
@@ -1442,34 +1442,34 @@ func _build_effect_preview_card(parent: HBoxContainer) -> void:
 	box.add_theme_constant_override("separation", 2)
 	_effect_preview_card.add_child(box)
 
-	var title := make_shadow_label("次の釣行で効果！", 15, Color("#fff1c7"), 2)
+	var title := make_shadow_label("次の釣行で効果！", 16, Color("#fff1c7"), 2)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_color_override("font_color", Palette.TEXT_BONE)
 	var title_panel := _compact_panel_box(Color("#173b28"), Color("#07121e"), Palette.GAUGE_GREEN_HI, 3)
-	title_panel.custom_minimum_size = Vector2(0.0, 24.0)
+	title_panel.custom_minimum_size = Vector2(0.0, 28.0)
 	title_panel.add_child(title)
 	box.add_child(title_panel)
 
-	_effect_name_label = make_shadow_label("次回効果", 19, Color("#1f6b32"), 2, Color("#fff1c7"))
+	_effect_name_label = make_shadow_label("次回効果", 20, Color("#1f6b32"), 2, Color("#fff1c7"))
 	_effect_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_effect_name_label)
 
 	_effect_preview_visual = TextureRect.new()
 	_effect_preview_visual.name = "NextEffectArt"
 	_effect_preview_visual.texture = load(EffectPreviewVisual.EFFECT_ART) as Texture2D
-	_effect_preview_visual.custom_minimum_size = Vector2(0.0, 88.0)
+	_effect_preview_visual.custom_minimum_size = Vector2(0.0, 102.0)
 	_effect_preview_visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_effect_preview_visual.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_effect_preview_visual.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_effect_preview_visual.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	box.add_child(_effect_preview_visual)
 
-	_effect_text_label = make_shadow_label("", 12, Color("#2a2118"), 1, Color("#fff1c7"))
+	_effect_text_label = make_shadow_label("", 13, Color("#2a2118"), 1, Color("#fff1c7"))
 	_effect_text_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_effect_text_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_effect_text_label)
 
-	_effect_duration_label = make_shadow_label("", 11, Color("#235f33"), 1, Color("#fff1c7"))
+	_effect_duration_label = make_shadow_label("", 12, Color("#235f33"), 1, Color("#fff1c7"))
 	_effect_duration_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_effect_duration_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_effect_duration_label)
