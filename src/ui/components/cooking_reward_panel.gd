@@ -640,7 +640,7 @@ func _build_screen() -> void:
 	root.add_child(hero)
 
 	var scene_card := _panel_box(Color(0.10, 0.06, 0.03, 0.72), Color("#5e391a"), Palette.GOLD_BRIGHT, 5)
-	scene_card.custom_minimum_size = Vector2(390.0, 178.0)
+	scene_card.custom_minimum_size = Vector2(410.0, 214.0)
 	hero.add_child(scene_card)
 	var scene_box := VBoxContainer.new()
 	scene_box.add_theme_constant_override("separation", 6)
@@ -653,11 +653,11 @@ func _build_screen() -> void:
 	table.add_theme_constant_override("separation", 10)
 	scene_box.add_child(table)
 	var eater := _scene_actor_box()
-	eater.custom_minimum_size = Vector2(150.0, 0.0)
+	eater.custom_minimum_size = Vector2(166.0, 0.0)
 	table.add_child(eater)
 	_scene_dish_image = MealTableSpreadVisual.new()
 	_scene_dish_image.name = "MealTableSpread"
-	_scene_dish_image.custom_minimum_size = Vector2(220.0, 98.0)
+	_scene_dish_image.custom_minimum_size = Vector2(238.0, 124.0)
 	_scene_dish_image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_scene_dish_image.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scene_dish_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -687,7 +687,7 @@ func _build_screen() -> void:
 	hero.add_child(right)
 
 	_result_banner = PanelContainer.new()
-	_result_banner.custom_minimum_size = Vector2(0.0, 68.0)
+	_result_banner.custom_minimum_size = Vector2(0.0, 82.0)
 	_result_banner.add_theme_stylebox_override(
 		"panel",
 		_texture_style_box(
@@ -702,10 +702,10 @@ func _build_screen() -> void:
 	var banner_box := VBoxContainer.new()
 	banner_box.add_theme_constant_override("separation", 2)
 	_result_banner.add_child(banner_box)
-	_header_title = make_shadow_label("いただきます！", 32, Color("#9b2f17"), 3)
+	_header_title = make_shadow_label("いただきます！", 30, Color("#9b2f17"), 3)
 	_header_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	banner_box.add_child(_header_title)
-	_bridge_label = make_shadow_label("", 18, Color("#4f3b25"), 1)
+	_bridge_label = make_shadow_label("", 16, Color("#4f3b25"), 1)
 	_bridge_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_bridge_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	banner_box.add_child(_bridge_label)
@@ -722,7 +722,7 @@ func _build_screen() -> void:
 			8.0
 		)
 	)
-	_dish_card.custom_minimum_size = Vector2(0.0, 116.0)
+	_dish_card.custom_minimum_size = Vector2(0.0, 128.0)
 	right.add_child(_dish_card)
 	var dish_row := HBoxContainer.new()
 	dish_row.add_theme_constant_override("separation", 14)
@@ -760,7 +760,7 @@ func _build_screen() -> void:
 			8.0
 		)
 	)
-	_exp_focus_card.custom_minimum_size = Vector2(0.0, 132.0)
+	_exp_focus_card.custom_minimum_size = Vector2(0.0, 164.0)
 	_exp_focus_card.visible = false
 	right.add_child(_exp_focus_card)
 	var exp_focus_box := VBoxContainer.new()
@@ -770,7 +770,7 @@ func _build_screen() -> void:
 	var exp_focus_tag := make_shadow_label("食経験値", 20, Palette.TEXT_BONE, 3)
 	exp_focus_tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	exp_focus_box.add_child(exp_focus_tag)
-	_exp_label = make_shadow_label("+0 EXP", 36, Palette.GOLD_BRIGHT, 5)
+	_exp_label = make_shadow_label("+0 EXP", 42, Palette.GOLD_BRIGHT, 5)
 	_exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	exp_focus_box.add_child(_exp_label)
 	_exp_bar = GaugeBarScript.new()
@@ -789,7 +789,7 @@ func _build_screen() -> void:
 	var exp_portrait := TextureRect.new()
 	exp_portrait.name = "ExpMessagePortrait"
 	exp_portrait.texture = load(PLAYER_EXP_POSE) as Texture2D
-	exp_portrait.custom_minimum_size = Vector2(90.0, 58.0)
+	exp_portrait.custom_minimum_size = Vector2(100.0, 64.0)
 	exp_portrait.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	exp_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	exp_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -806,11 +806,11 @@ func _build_screen() -> void:
 	_reward_grid = GridContainer.new()
 	_reward_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_reward_grid.add_theme_constant_override("h_separation", 6)
-	_reward_grid.add_theme_constant_override("v_separation", 4)
+	_reward_grid.add_theme_constant_override("v_separation", 6)
 	root.add_child(_reward_grid)
 
 	_exp_card = _panel_box(Color("#0f2238"), Color("#07121e"), Palette.GOLD_DEEP, 5)
-	_exp_card.custom_minimum_size = Vector2(280.0, 100.0)
+	_exp_card.custom_minimum_size = Vector2(280.0, 112.0)
 	_exp_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_reward_grid.add_child(_exp_card)
 	var exp_layout := VBoxContainer.new()
@@ -941,7 +941,7 @@ func show_reward(
 	_base_label.text = "料理の経験値 +%d EXP" % int(result.get("base_exp", 0))
 
 	if bool(result.get("first_time", false)):
-		_bonus_label.text = "初めて食べた料理！ 追加 +%d EXP" % int(result.get("first_bonus", 0))
+		_bonus_label.text = "初めて食べた料理！\n+%d EXP" % int(result.get("first_bonus", 0))
 	else:
 		_bonus_label.text = "記録済み。今回は基本EXPのみ。"
 	_total_label.text = "今回の合計 +%d EXP" % int(result.get("total_exp", 0))
@@ -1167,7 +1167,7 @@ func _draw_exp_focus_burst() -> void:
 func _build_status_strip(parent: VBoxContainer) -> void:
 	var strip := HBoxContainer.new()
 	strip.name = "RewardStatusStrip"
-	strip.custom_minimum_size = Vector2(0.0, 38.0)
+	strip.custom_minimum_size = Vector2(0.0, 46.0)
 	strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	strip.add_theme_constant_override("separation", 8)
 	parent.add_child(strip)
@@ -1181,17 +1181,17 @@ func _build_status_strip(parent: VBoxContainer) -> void:
 func _status_strip_card(parent: HBoxContainer, card_name: String, title: String, accent: Color) -> Label:
 	var card := _compact_panel_box(Color("#0d2338"), Color("#07121e"), Palette.GOLD_DEEP, 3)
 	card.name = card_name
-	card.custom_minimum_size = Vector2(0.0, 30.0)
+	card.custom_minimum_size = Vector2(0.0, 38.0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(card)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	card.add_child(row)
-	var title_label := make_shadow_label(title, 12, Palette.TEXT_BONE, 2)
+	var title_label := make_shadow_label(title, 13, Palette.TEXT_BONE, 2)
 	title_label.custom_minimum_size = Vector2(84.0, 0.0)
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(title_label)
-	var value := make_shadow_label("", 15, accent, 2)
+	var value := make_shadow_label("", 16, accent, 2)
 	value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	value.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -1371,7 +1371,7 @@ func _set_scene_actor_mode(mode: String) -> void:
 
 func _build_effect_preview_card(parent: HBoxContainer) -> void:
 	_effect_preview_card = _compact_panel_box(Color("#f2e4c2"), Color("#274b2f"), Color("#8ee65a"), 4)
-	_effect_preview_card.custom_minimum_size = Vector2(232.0, 166.0)
+	_effect_preview_card.custom_minimum_size = Vector2(238.0, 192.0)
 	_effect_preview_card.visible = false
 	parent.add_child(_effect_preview_card)
 
@@ -1395,7 +1395,7 @@ func _build_effect_preview_card(parent: HBoxContainer) -> void:
 	_effect_preview_visual = TextureRect.new()
 	_effect_preview_visual.name = "NextEffectArt"
 	_effect_preview_visual.texture = load(EffectPreviewVisual.EFFECT_ART) as Texture2D
-	_effect_preview_visual.custom_minimum_size = Vector2(0.0, 70.0)
+	_effect_preview_visual.custom_minimum_size = Vector2(0.0, 88.0)
 	_effect_preview_visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_effect_preview_visual.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_effect_preview_visual.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -1426,7 +1426,7 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 			5.0
 		)
 	)
-	card.custom_minimum_size = Vector2(0.0, 62.0)
+	card.custom_minimum_size = Vector2(0.0, 78.0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(card)
 	var box := VBoxContainer.new()
@@ -1442,8 +1442,8 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 	icon.configure(icon_mode, accent)
 	icon.custom_minimum_size = Vector2(24.0, 20.0)
 	title_row.add_child(icon)
-	var title_label := make_shadow_label(title, 13, Palette.TEXT_BONE, 2)
-	title_label.custom_minimum_size = Vector2(0.0, 18.0)
+	var title_label := make_shadow_label(title, 14, Palette.TEXT_BONE, 2)
+	title_label.custom_minimum_size = Vector2(0.0, 20.0)
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -1456,10 +1456,10 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 		box.add_child(value_row)
 		var signal_visual := RewardBuffSignalVisual.new()
 		signal_visual.name = "RewardBuffSignal"
-		signal_visual.custom_minimum_size = Vector2(42.0, 30.0)
+		signal_visual.custom_minimum_size = Vector2(48.0, 36.0)
 		value_row.add_child(signal_visual)
-		var buff_value := make_shadow_label("", 12, accent, 2)
-		buff_value.custom_minimum_size = Vector2(0.0, 34.0)
+		var buff_value := make_shadow_label("", 13, accent, 2)
+		buff_value.custom_minimum_size = Vector2(0.0, 40.0)
 		buff_value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		buff_value.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		buff_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -1468,8 +1468,8 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 		buff_value.clip_text = true
 		value_row.add_child(buff_value)
 		return buff_value
-	var value_label := make_shadow_label("", 12, accent, 2)
-	value_label.custom_minimum_size = Vector2(0.0, 30.0)
+	var value_label := make_shadow_label("", 13, accent, 2)
+	value_label.custom_minimum_size = Vector2(0.0, 40.0)
 	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
