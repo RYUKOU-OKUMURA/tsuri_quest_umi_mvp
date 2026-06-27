@@ -724,9 +724,11 @@ func _build_screen() -> void:
 	_result_banner.add_child(banner_box)
 	_header_title = make_shadow_label("いただきます！", 30, Color("#9b2f17"), 3)
 	_header_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_header_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	banner_box.add_child(_header_title)
 	_bridge_label = make_shadow_label("", 16, Color("#4f3b25"), 1)
 	_bridge_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_bridge_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_bridge_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	banner_box.add_child(_bridge_label)
 
@@ -872,7 +874,10 @@ func show_meal_result(result: Dictionary) -> void:
 	_header_title.name = "MealResultTitle"
 	_set_stage_background(MEAL_SCENE_BG)
 	var dish_name := String(result.get("dish_name", "料理"))
+	_set_result_banner_height(84.0)
 	_set_header_title_font_size(25)
+	_set_bridge_font_size(16)
+	_set_exp_label_font_size(56)
 	_header_title.text = "%sを\n食べた！" % dish_name
 	_bridge_label.text = "%sで次の釣行効果を予約。食経験値は次に加算される。" % dish_name
 	_dish_title.text = "%sを食べた！" % dish_name
@@ -923,7 +928,10 @@ func show_reward(
 	_header_title.name = "ExpGainTitle"
 	_set_stage_background(EXP_STAGE_BG)
 	var dish_name := String(result.get("dish_name", "料理"))
-	_set_header_title_font_size(30)
+	_set_result_banner_height(92.0)
+	_set_header_title_font_size(36)
+	_set_bridge_font_size(14)
+	_set_exp_label_font_size(64)
 	_header_title.text = "食経験値が成長へ！" if leveled else "食経験値を獲得！"
 	_bridge_label.text = _growth_bridge_text(dish_name, leveled, level_before, level_after)
 	_dish_title.text = "%sを食べた！" % dish_name
@@ -1011,8 +1019,8 @@ func _growth_bridge_text(
 	dish_name: String, leveled: bool, level_before: int, level_after: int
 ) -> String:
 	if leveled and level_before > 0 and level_after > level_before:
-		return "%sの食経験値が Lv.%d 到達を後押しした。" % [dish_name, level_after]
-	return "%sの食経験値がたまり、次の釣行効果も予約された。" % dish_name
+		return "%sの食経験値が Lv.%d 到達へ！" % [dish_name, level_after]
+	return "%sの食経験値がたまり、力が満ちた。" % dish_name
 
 
 func _buff_effect_text(buff: Dictionary) -> String:
@@ -1406,6 +1414,21 @@ func _set_scene_result_art_visible(visible: bool) -> void:
 func _set_header_title_font_size(font_size: int) -> void:
 	if _header_title != null:
 		_header_title.add_theme_font_size_override("font_size", font_size)
+
+
+func _set_bridge_font_size(font_size: int) -> void:
+	if _bridge_label != null:
+		_bridge_label.add_theme_font_size_override("font_size", font_size)
+
+
+func _set_exp_label_font_size(font_size: int) -> void:
+	if _exp_label != null:
+		_exp_label.add_theme_font_size_override("font_size", font_size)
+
+
+func _set_result_banner_height(height: float) -> void:
+	if _result_banner != null:
+		_result_banner.custom_minimum_size = Vector2(0.0, height)
 
 
 func _build_effect_preview_card(parent: HBoxContainer) -> void:
