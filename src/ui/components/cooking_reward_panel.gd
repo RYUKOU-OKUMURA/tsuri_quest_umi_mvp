@@ -585,6 +585,7 @@ var _status_meal_label: Label
 var _status_cooler_label: Label
 var _status_money_label: Label
 var _confirm_button: Button
+var _flow_row: HBoxContainer
 var _flow_step_cards: Array[PanelContainer] = []
 var _flow_step_labels: Array[Label] = []
 var _flow_connectors: Array[FlowConnectorVisual] = []
@@ -630,16 +631,16 @@ func _build_screen() -> void:
 	root.add_theme_constant_override("separation", 4)
 	_dialog.add_child(root)
 
-	var flow_row := HBoxContainer.new()
-	flow_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	flow_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	flow_row.add_theme_constant_override("separation", 5)
-	root.add_child(flow_row)
-	_add_flow_step(flow_row, "1 食事")
-	_add_flow_connector(flow_row)
-	_add_flow_step(flow_row, "2 EXP")
-	_add_flow_connector(flow_row)
-	_add_flow_step(flow_row, "3 成長")
+	_flow_row = HBoxContainer.new()
+	_flow_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_flow_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_flow_row.add_theme_constant_override("separation", 4)
+	root.add_child(_flow_row)
+	_add_flow_step(_flow_row, "1 食事")
+	_add_flow_connector(_flow_row)
+	_add_flow_step(_flow_row, "2 EXP")
+	_add_flow_connector(_flow_row)
+	_add_flow_step(_flow_row, "3 成長")
 
 	var hero := HBoxContainer.new()
 	hero.add_theme_constant_override("separation", 12)
@@ -1323,9 +1324,9 @@ func preview_state() -> String:
 func _add_flow_step(parent: HBoxContainer, text: String) -> void:
 	var card := _panel_box(Color("#17324d"), Color("#07121e"), Palette.GOLD_DEEP, 3)
 	card.name = "FlowStep_%d" % _flow_step_cards.size()
-	card.custom_minimum_size = Vector2(160.0, 28.0)
+	card.custom_minimum_size = Vector2(138.0, 22.0)
 	parent.add_child(card)
-	var label := make_shadow_label(text, 14, Palette.TEXT_BONE, 2)
+	var label := make_shadow_label(text, 12, Palette.TEXT_BONE, 2)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	card.add_child(label)
@@ -1336,7 +1337,7 @@ func _add_flow_step(parent: HBoxContainer, text: String) -> void:
 func _add_flow_connector(parent: HBoxContainer) -> void:
 	var connector := FlowConnectorVisual.new()
 	connector.name = "FlowConnector_%d" % _flow_connectors.size()
-	connector.custom_minimum_size = Vector2(60.0, 28.0)
+	connector.custom_minimum_size = Vector2(48.0, 22.0)
 	connector.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(connector)
 	_flow_connectors.append(connector)
