@@ -562,7 +562,11 @@ func _build_header(parent: VBoxContainer) -> void:
 	_header_level_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	exp_row.add_child(_header_level_label)
 	var exp_title := make_shadow_label("EXP", 17, Palette.TEXT_BONE, 2)
+	exp_title.custom_minimum_size = Vector2(42.0, 0.0)
+	exp_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	exp_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	exp_title.autowrap_mode = TextServer.AUTOWRAP_OFF
+	exp_title.clip_text = true
 	exp_row.add_child(exp_title)
 	_header_exp_bar = GaugeBarScript.new()
 	_header_exp_bar.name = "StatusHeaderExpBar"
