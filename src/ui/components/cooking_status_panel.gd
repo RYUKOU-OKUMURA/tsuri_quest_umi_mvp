@@ -807,14 +807,37 @@ func _status_card_node_name(title: String) -> String:
 
 func _portrait_box(text: String, accent: Color) -> PanelContainer:
 	var panel := _panel_box(Color("#10283f"), Color("#07121e"), accent, 3)
-	var visual := StatusIconVisual.new()
-	visual.configure(text, accent)
+	var visual := _status_texture_visual(text)
+	if visual == null:
+		visual = StatusIconVisual.new()
+		(visual as StatusIconVisual).configure(text, accent)
 	visual.name = _status_visual_name(text)
 	visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	visual.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	visual.custom_minimum_size = Vector2(0.0, 48.0)
 	panel.add_child(visual)
 	return panel
+
+
+func _status_texture_visual(text: String) -> Control:
+	var path := ""
+	match text.to_upper():
+		"PLAYER":
+			path = StatusIconVisual.PLAYER_PORTRAIT
+		"COOLER":
+			path = StatusIconVisual.COOLER_ART
+		"GOLD":
+			path = StatusIconVisual.MONEY_ART
+		"TIME":
+			path = StatusIconVisual.CLOCK_ART
+		_:
+			return null
+	var visual := TextureRect.new()
+	visual.texture = load(path) as Texture2D
+	visual.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	visual.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	visual.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return visual
 
 
 func _status_visual_name(text: String) -> String:

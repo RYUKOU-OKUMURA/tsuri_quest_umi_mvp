@@ -387,10 +387,9 @@ func _build_screen() -> void:
 	title_band.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(title_band)
 
-	var left_laurel := LevelUpVisual.new()
-	left_laurel.name = "LevelLaurelLeftAsset"
-	left_laurel.configure("laurel_left")
-	left_laurel.custom_minimum_size = Vector2(108.0, 86.0)
+	var left_laurel := _level_asset_texture(
+		"LevelLaurelLeftAsset", LevelUpVisual.LAUREL_LEFT_ASSET, Vector2(108.0, 86.0)
+	)
 	title_band.add_child(left_laurel)
 
 	var title_stack := VBoxContainer.new()
@@ -399,10 +398,10 @@ func _build_screen() -> void:
 	title_stack.custom_minimum_size = Vector2(580.0, 0.0)
 	title_band.add_child(title_stack)
 
-	var crown_visual := LevelUpVisual.new()
-	crown_visual.name = "LevelCrownAsset"
-	crown_visual.configure("crown")
-	crown_visual.custom_minimum_size = Vector2(148.0, 34.0)
+	var crown_visual := _level_asset_texture(
+		"LevelCrownAsset", LevelUpVisual.CROWN_ASSET, Vector2(148.0, 34.0)
+	)
+	crown_visual.stretch_mode = TextureRect.STRETCH_SCALE
 	crown_visual.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	title_stack.add_child(crown_visual)
 	var crown_label := make_shadow_label("成長の証", 16, Palette.GOLD_BRIGHT, 3)
@@ -414,10 +413,9 @@ func _build_screen() -> void:
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_stack.add_child(title)
 
-	var right_laurel := LevelUpVisual.new()
-	right_laurel.name = "LevelLaurelRightAsset"
-	right_laurel.configure("laurel_right")
-	right_laurel.custom_minimum_size = Vector2(108.0, 86.0)
+	var right_laurel := _level_asset_texture(
+		"LevelLaurelRightAsset", LevelUpVisual.LAUREL_RIGHT_ASSET, Vector2(108.0, 86.0)
+	)
 	title_band.add_child(right_laurel)
 
 	_level_line = make_shadow_label("", 34, Palette.TEXT_BONE, 4)
@@ -649,10 +647,9 @@ func _badge_box(text: String, fill: Color, text_color: Color) -> PanelContainer:
 
 func _medal_box() -> PanelContainer:
 	var medal := _panel_box(Color("#6a4515"), Color("#2d1a09"), Palette.GOLD_BRIGHT, 4)
-	var visual := LevelUpVisual.new()
-	visual.name = "LevelUnlockMedallionAsset"
-	visual.configure("medal")
-	visual.custom_minimum_size = Vector2(106.0, 84.0)
+	var visual := _level_asset_texture(
+		"LevelUnlockMedallionAsset", LevelUpVisual.UNLOCK_MEDALLION_ASSET, Vector2(106.0, 84.0)
+	)
 	visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	visual.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	medal.add_child(visual)
@@ -668,10 +665,9 @@ func _spot_thumbnail_box() -> PanelContainer:
 	var tag := make_shadow_label("新釣り場", 15, Palette.GOLD_BRIGHT, 2)
 	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(tag)
-	var visual := LevelUpVisual.new()
-	visual.name = "LevelUnlockSpotAsset"
-	visual.configure("spot")
-	visual.custom_minimum_size = Vector2(0.0, 48.0)
+	var visual := _level_asset_texture(
+		"LevelUnlockSpotAsset", LevelUpVisual.UNLOCK_SPOT_ASSET, Vector2(0.0, 48.0), true
+	)
 	visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(visual)
 	var title := make_shadow_label("港の大岩", 22, Palette.TEXT_BONE, 3)
@@ -681,6 +677,23 @@ func _spot_thumbnail_box() -> PanelContainer:
 	sea.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(sea)
 	return panel
+
+
+func _level_asset_texture(
+	node_name: String, path: String, minimum_size: Vector2, cover_frame := false
+) -> TextureRect:
+	var visual := TextureRect.new()
+	visual.name = node_name
+	visual.texture = load(path) as Texture2D
+	visual.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	visual.stretch_mode = (
+		TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		if cover_frame
+		else TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	)
+	visual.custom_minimum_size = minimum_size
+	visual.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return visual
 
 
 func _add_burst_layer() -> void:
