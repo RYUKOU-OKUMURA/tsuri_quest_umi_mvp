@@ -11,6 +11,7 @@ const DISH_FEATURE_SIMMERED := "res://assets/showcase/cooking/dish_feature_simme
 const DISH_FEATURE_SOUP := "res://assets/showcase/cooking/dish_feature_soup.png"
 const DISH_FEATURE_FRY := "res://assets/showcase/cooking/dish_feature_fry.png"
 const DISH_ICON_SHEET := "res://assets/showcase/cooking/dish_icon_sheet.png"
+const MEAL_RESULT_SCENE_ART := "res://assets/showcase/cooking/meal_result_scene_art_v2.png"
 const PLAYER_EATING_POSE := "res://assets/showcase/cooking/player_eating_pose_pixel_tight.png"
 const PLAYER_EXP_POSE := "res://assets/showcase/cooking/player_exp_message_pose_pixel.png"
 const PLAYER_EXP_SCENE_POSE := "res://assets/showcase/cooking/player_exp_pose_pixel_tight.png"
@@ -553,6 +554,8 @@ var _dish_card: PanelContainer
 var _scene_title: Label
 var _scene_caption: Label
 var _scene_bonus_label: Label
+var _scene_result_image: TextureRect
+var _scene_table: HBoxContainer
 var _scene_dish_image: MealTableSpreadVisual
 var _scene_actor_visual: SceneActorVisual
 var _scene_actor_image: TextureRect
@@ -640,28 +643,45 @@ func _build_screen() -> void:
 	root.add_child(hero)
 
 	var scene_card := _panel_box(Color(0.10, 0.06, 0.03, 0.72), Color("#5e391a"), Palette.GOLD_BRIGHT, 5)
-	scene_card.custom_minimum_size = Vector2(410.0, 214.0)
+	scene_card.custom_minimum_size = Vector2(410.0, 226.0)
 	hero.add_child(scene_card)
 	var scene_box := VBoxContainer.new()
-	scene_box.add_theme_constant_override("separation", 6)
+	scene_box.add_theme_constant_override("separation", 5)
 	scene_card.add_child(scene_box)
 	_scene_title = make_shadow_label("食べる", 24, Palette.GOLD_BRIGHT, 3)
 	_scene_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	scene_box.add_child(_scene_title)
-	var table := HBoxContainer.new()
-	table.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	table.add_theme_constant_override("separation", 10)
-	scene_box.add_child(table)
+	var scene_visual_stack := Control.new()
+	scene_visual_stack.name = "MealSceneVisualStack"
+	scene_visual_stack.custom_minimum_size = Vector2(0.0, 148.0)
+	scene_visual_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scene_visual_stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scene_box.add_child(scene_visual_stack)
+	_scene_result_image = TextureRect.new()
+	_scene_result_image.name = "MealResultSceneArt"
+	_scene_result_image.texture = load(MEAL_RESULT_SCENE_ART) as Texture2D
+	_scene_result_image.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_scene_result_image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_scene_result_image.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_scene_result_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_scene_result_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_scene_result_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	scene_visual_stack.add_child(_scene_result_image)
+	_scene_table = HBoxContainer.new()
+	_scene_table.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_scene_table.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_scene_table.add_theme_constant_override("separation", 10)
+	scene_visual_stack.add_child(_scene_table)
 	var eater := _scene_actor_box()
 	eater.custom_minimum_size = Vector2(166.0, 0.0)
-	table.add_child(eater)
+	_scene_table.add_child(eater)
 	_scene_dish_image = MealTableSpreadVisual.new()
 	_scene_dish_image.name = "MealTableSpread"
 	_scene_dish_image.custom_minimum_size = Vector2(238.0, 124.0)
 	_scene_dish_image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_scene_dish_image.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scene_dish_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	table.add_child(_scene_dish_image)
+	_scene_table.add_child(_scene_dish_image)
 	_scene_caption = make_shadow_label("湯気の立つ料理を味わった。", 17, Palette.TEXT_BONE, 2)
 	_scene_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_scene_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -859,6 +879,7 @@ func show_meal_result(result: Dictionary) -> void:
 	_dish_image.texture = dish_texture
 	_scene_dish_image.set_dish_texture(dish_texture)
 	_scene_dish_image.set_mode("meal")
+	_set_scene_result_art_visible(true)
 	_scene_caption.text = "湯気の立つ%sを味わった。" % dish_name
 	_scene_bonus_label.text = _meal_bonus_badge_text(result)
 	_scene_title.text = "食べる"
@@ -908,6 +929,7 @@ func show_reward(
 	_dish_image.texture = dish_texture
 	_scene_dish_image.set_dish_texture(dish_texture)
 	_scene_dish_image.set_mode("exp")
+	_set_scene_result_art_visible(false)
 	_scene_title.text = "食べた料理"
 	_set_scene_actor_mode("exp")
 	_exp_trail_visual.visible = true
@@ -1370,6 +1392,13 @@ func _set_scene_actor_mode(mode: String) -> void:
 		return
 	var path := PLAYER_EXP_SCENE_POSE if mode == "exp" else PLAYER_EATING_POSE
 	_scene_actor_image.texture = load(path) as Texture2D
+
+
+func _set_scene_result_art_visible(visible: bool) -> void:
+	if _scene_result_image != null:
+		_scene_result_image.visible = visible
+	if _scene_table != null:
+		_scene_table.modulate.a = 0.0 if visible else 1.0
 
 
 func _build_effect_preview_card(parent: HBoxContainer) -> void:
