@@ -11,6 +11,8 @@ const DISH_FEATURE_SIMMERED := "res://assets/showcase/cooking/dish_feature_simme
 const DISH_FEATURE_SOUP := "res://assets/showcase/cooking/dish_feature_soup.png"
 const DISH_FEATURE_FRY := "res://assets/showcase/cooking/dish_feature_fry.png"
 const DISH_ICON_SHEET := "res://assets/showcase/cooking/dish_icon_sheet.png"
+const PLAYER_EATING_POSE := "res://assets/showcase/cooking/player_eating_pose.png"
+const PLAYER_EXP_POSE := "res://assets/showcase/cooking/player_exp_message_pose.png"
 const MEAL_SCENE_BG := "res://assets/showcase/cooking/meal_scene_bg.png"
 const EXP_STAGE_BG := "res://assets/showcase/cooking/exp_stage_bg.png"
 const MEAL_RESULT_FRAME := "res://assets/showcase/cooking/meal_result_frame.png"
@@ -552,6 +554,7 @@ var _scene_caption: Label
 var _scene_bonus_label: Label
 var _scene_dish_image: MealTableSpreadVisual
 var _scene_actor_visual: SceneActorVisual
+var _scene_actor_image: TextureRect
 var _exp_trail_visual: ExpTrailVisual
 var _exp_focus_card: PanelContainer
 var _exp_message_label: Label
@@ -649,7 +652,7 @@ func _build_screen() -> void:
 	table.add_theme_constant_override("separation", 10)
 	scene_box.add_child(table)
 	var eater := _scene_actor_box()
-	eater.custom_minimum_size = Vector2(112.0, 0.0)
+	eater.custom_minimum_size = Vector2(150.0, 0.0)
 	table.add_child(eater)
 	_scene_dish_image = MealTableSpreadVisual.new()
 	_scene_dish_image.name = "MealTableSpread"
@@ -782,10 +785,13 @@ func _build_screen() -> void:
 	message_row.add_theme_constant_override("separation", 8)
 	message_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	exp_focus_box.add_child(message_row)
-	var exp_portrait := ExpMessagePortraitVisual.new()
+	var exp_portrait := TextureRect.new()
 	exp_portrait.name = "ExpMessagePortrait"
-	exp_portrait.custom_minimum_size = Vector2(74.0, 48.0)
+	exp_portrait.texture = load(PLAYER_EXP_POSE) as Texture2D
+	exp_portrait.custom_minimum_size = Vector2(90.0, 58.0)
 	exp_portrait.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	exp_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	exp_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	exp_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	message_row.add_child(exp_portrait)
 	_exp_message_label = make_shadow_label("体に力がみなぎってきた！", 17, Palette.TEXT_BONE, 2)
@@ -852,7 +858,7 @@ func show_meal_result(result: Dictionary) -> void:
 	_scene_caption.text = "湯気の立つ%sを味わった。" % dish_name
 	_scene_bonus_label.text = _meal_bonus_badge_text(result)
 	_scene_title.text = "食べる"
-	_scene_actor_visual.set_mode("meal")
+	_set_scene_actor_mode("meal")
 	_exp_trail_visual.visible = false
 	_dish_card.visible = true
 	_exp_focus_card.visible = false
@@ -899,7 +905,7 @@ func show_reward(
 	_scene_dish_image.set_dish_texture(dish_texture)
 	_scene_dish_image.set_mode("exp")
 	_scene_title.text = "食べた料理"
-	_scene_actor_visual.set_mode("exp")
+	_set_scene_actor_mode("exp")
 	_exp_trail_visual.visible = true
 	_exp_trail_visual.queue_redraw()
 	_scene_caption.text = "%sから食経験値が流れ込む。" % dish_name
@@ -1333,13 +1339,33 @@ func _set_flow_connector(index: int, mode: String) -> void:
 
 func _scene_actor_box() -> PanelContainer:
 	var panel := _panel_box(Color("#10283f"), Color("#07121e"), Palette.GOLD_DEEP, 3)
+	_scene_actor_image = TextureRect.new()
+	_scene_actor_image.name = "MealSceneActor"
+	_scene_actor_image.texture = load(PLAYER_EATING_POSE) as Texture2D
+	_scene_actor_image.custom_minimum_size = Vector2(148.0, 0.0)
+	_scene_actor_image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_scene_actor_image.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_scene_actor_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_scene_actor_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_scene_actor_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(_scene_actor_image)
 	_scene_actor_visual = SceneActorVisual.new()
-	_scene_actor_visual.name = "MealSceneActor"
+	_scene_actor_visual.name = "MealSceneActorFallback"
 	_scene_actor_visual.custom_minimum_size = Vector2(110.0, 0.0)
 	_scene_actor_visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_scene_actor_visual.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_scene_actor_visual.visible = false
 	panel.add_child(_scene_actor_visual)
 	return panel
+
+
+func _set_scene_actor_mode(mode: String) -> void:
+	if _scene_actor_visual != null:
+		_scene_actor_visual.set_mode(mode)
+	if _scene_actor_image == null:
+		return
+	var path := PLAYER_EXP_POSE if mode == "exp" else PLAYER_EATING_POSE
+	_scene_actor_image.texture = load(path) as Texture2D
 
 
 func _build_effect_preview_card(parent: HBoxContainer) -> void:
