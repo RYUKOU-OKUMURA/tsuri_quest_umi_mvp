@@ -1426,7 +1426,7 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 			5.0
 		)
 	)
-	card.custom_minimum_size = Vector2(0.0, 78.0)
+	card.custom_minimum_size = Vector2(0.0, 86.0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(card)
 	var box := VBoxContainer.new()
@@ -1440,10 +1440,10 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 	box.add_child(title_row)
 	var icon := RewardIconVisual.new()
 	icon.configure(icon_mode, accent)
-	icon.custom_minimum_size = Vector2(24.0, 20.0)
+	icon.custom_minimum_size = Vector2(28.0, 24.0)
 	title_row.add_child(icon)
-	var title_label := make_shadow_label(title, 14, Palette.TEXT_BONE, 2)
-	title_label.custom_minimum_size = Vector2(0.0, 20.0)
+	var title_label := make_shadow_label(title, 15, Palette.TEXT_BONE, 2)
+	title_label.custom_minimum_size = Vector2(0.0, 22.0)
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -1456,10 +1456,10 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 		box.add_child(value_row)
 		var signal_visual := RewardBuffSignalVisual.new()
 		signal_visual.name = "RewardBuffSignal"
-		signal_visual.custom_minimum_size = Vector2(48.0, 36.0)
+		signal_visual.custom_minimum_size = Vector2(46.0, 40.0)
 		value_row.add_child(signal_visual)
 		var buff_value := make_shadow_label("", 13, accent, 2)
-		buff_value.custom_minimum_size = Vector2(0.0, 40.0)
+		buff_value.custom_minimum_size = Vector2(0.0, 44.0)
 		buff_value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		buff_value.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		buff_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -1468,8 +1468,8 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 		buff_value.clip_text = true
 		value_row.add_child(buff_value)
 		return buff_value
-	var value_label := make_shadow_label("", 13, accent, 2)
-	value_label.custom_minimum_size = Vector2(0.0, 40.0)
+	var value_label := make_shadow_label("", 14, accent, 2)
+	value_label.custom_minimum_size = Vector2(0.0, 44.0)
 	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
