@@ -958,7 +958,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	var recipe_id := String(recipe.get("id", ""))
 	var card := PanelContainer.new()
 	card.name = "RecipeCard_%s" % recipe_id
-	card.custom_minimum_size = Vector2(134, 164)
+	card.custom_minimum_size = Vector2(134, 200)
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
 	var selectable := not locked and not unavailable
 	if selectable:
@@ -969,7 +969,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 					_select_recipe(recipe_id)
 		)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 2)
+	box.add_theme_constant_override("separation", 4)
 	card.add_child(box)
 	var title_text := "？？？" if locked else String(recipe.get("name", ""))
 	var title := make_shadow_label(title_text, 15, Color("#251c12"), 1, Color("#fff3cf"))
@@ -981,7 +981,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	box.add_child(title)
 	var image := TextureRect.new()
 	image.texture = _recipe_icon(recipe_id if not locked else "locked")
-	image.custom_minimum_size = Vector2(0, 76)
+	image.custom_minimum_size = Vector2(0, 104)
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	image.modulate = Color(0.46, 0.42, 0.36, 0.82) if locked or unavailable else Color.WHITE
@@ -1034,7 +1034,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 func _make_recipe_book_card() -> PanelContainer:
 	var card := PanelContainer.new()
 	card.name = "RecipeCard_Book"
-	card.custom_minimum_size = Vector2(134, 164)
+	card.custom_minimum_size = Vector2(134, 200)
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.self_modulate = Color(0.72, 0.66, 0.54, 1.0)
 	card.add_theme_stylebox_override(
@@ -1048,7 +1048,7 @@ func _make_recipe_book_card() -> PanelContainer:
 		)
 	)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 2)
+	box.add_theme_constant_override("separation", 4)
 	card.add_child(box)
 	var title := make_shadow_label("料理図鑑", 15, Color("#251c12"), 1, Color("#fff3cf"))
 	title.custom_minimum_size = Vector2(0.0, 26.0)
@@ -1059,7 +1059,7 @@ func _make_recipe_book_card() -> PanelContainer:
 	box.add_child(title)
 	var image := TextureRect.new()
 	image.texture = _recipe_icon("locked")
-	image.custom_minimum_size = Vector2(0, 76)
+	image.custom_minimum_size = Vector2(0, 104)
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	image.modulate = Color(0.62, 0.58, 0.50, 0.88)
@@ -1338,6 +1338,7 @@ func preview_show_meal_reward_result(result: Dictionary, leveled: bool) -> void:
 	_refresh_header()
 	_refresh_detail()
 	_show_meal_result(result, leveled)
+	_set_result_summary_compact(true)
 	var panel := CookingRewardPanelScript.new()
 	add_child(panel)
 	panel.show_meal_result(result)
@@ -1499,6 +1500,7 @@ func _show_reward_overlay(
 	leveled: bool,
 	meal_status_snapshot := {}
 ) -> void:
+	_set_result_summary_compact(true)
 	var panel := CookingRewardPanelScript.new()
 	add_child(panel)
 	panel.show_meal_result(_with_meal_status_snapshot(result, meal_status_snapshot))
@@ -1543,6 +1545,7 @@ func _show_exp_reward_overlay(
 	stats_before: Dictionary,
 	leveled: bool
 ) -> void:
+	_set_result_summary_compact(true)
 	var panel := CookingRewardPanelScript.new()
 	add_child(panel)
 	panel.show_reward(result, exp_before, exp_after, exp_max, leveled, level_before, PlayerProgress.level)

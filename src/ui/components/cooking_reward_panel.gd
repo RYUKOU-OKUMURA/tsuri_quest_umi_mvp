@@ -1033,7 +1033,7 @@ func _buff_effect_text(buff: Dictionary) -> String:
 	var text := String(buff.get("text", "次の釣行で効果を得る"))
 	if text.begins_with("次の釣行で"):
 		text = text.trim_prefix("次の釣行で")
-	return "%s / 1回発動" % text
+	return "%s / 1回の釣行で発動" % text
 
 
 func _meal_bonus_badge_text(result: Dictionary) -> String:
