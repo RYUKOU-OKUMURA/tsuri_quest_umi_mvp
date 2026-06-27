@@ -183,7 +183,7 @@ func _draw_unknown_fish_card(font: Font, rect: Rect2) -> void:
 	var state_rect := Rect2(inner.position + Vector2(inner.size.x - 74.0, 11.0), Vector2(64.0, 20.0))
 	var title_rect := Rect2(title_plaque.position + Vector2(62.0, 0.0), Vector2(state_rect.position.x - title_plaque.position.x - 72.0, title_plaque.size.y))
 	draw_line(Vector2(title_plaque.position.x + 8.0, title_plaque.end.y + 3.0), Vector2(title_plaque.end.x - 8.0, title_plaque.end.y + 3.0), Color("#c9b486", 0.62), 1.0)
-	_draw_text(font, "No.???", inner.position + Vector2(17.0, 27.0), 14, Color("#665d50"), 0)
+	_draw_text(font, "魚影", inner.position + Vector2(17.0, 27.0), 14, Color("#665d50"), 0)
 	_draw_centered_baseline_text(font, "未確認の魚影", title_rect, inner.position.y + 28.0, 19, Palette.TEXT_DARK, 0)
 	_draw_unknown_state_tag(font, state_rect, _unknown_short_status())
 
