@@ -19,6 +19,7 @@ enum State {
 var state: int = State.READY
 var fish_data: Dictionary = {}
 var player_stats: Dictionary = {}
+var fish_revealed: bool = false
 
 var tension: float = 0.32
 var fish_stamina: float = 0.0
@@ -55,6 +56,7 @@ func prepare(target_fish: Dictionary, stats: Dictionary) -> void:
 	fish_data = target_fish.duplicate(true)
 	player_stats = stats.duplicate(true)
 	state = State.READY
+	fish_revealed = false
 	tension = 0.32
 	fish_stamina_max = maxf(1.0, float(fish_data.get("stamina", 40.0)))
 	fish_stamina = fish_stamina_max
@@ -93,8 +95,9 @@ func hook() -> bool:
 	tension = 0.38
 	_action_timer = 0.2
 	_slack_timer = 0.0
+	fish_revealed = true
 	action_name = "ヒット"
-	_set_message("ヒット！ テンションを保って巻き上げよう！")
+	_set_message("魚影を確認！ テンションを保って巻き上げよう！")
 	_set_state(State.FIGHT)
 	return true
 
@@ -176,7 +179,7 @@ func _tick_casting(delta: float) -> void:
 	if _phase_timer <= 0.0:
 		_phase_timer = _rng.randf_range(1.2, 2.8)
 		action_name = "待機"
-		_set_message("水中の様子を見ながら待とう……")
+		_set_message("魚の気配を待とう……")
 		_set_state(State.WAITING)
 
 
@@ -187,7 +190,7 @@ func _tick_waiting(delta: float) -> void:
 	if _phase_timer <= 0.0:
 		_phase_timer = _rng.randf_range(1.0, 1.7)
 		action_name = "接近"
-		_set_message("魚がエサへ近づいている……")
+		_set_message("魚影がエサへ近づいている……")
 		_set_state(State.APPROACH)
 
 

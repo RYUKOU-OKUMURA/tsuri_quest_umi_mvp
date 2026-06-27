@@ -82,6 +82,7 @@ func _build_screen() -> void:
 
 	var message_layer := Control.new()
 	message_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	message_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	water_panel.add_child(message_layer)
 	_message_panel = make_panel(true)
 	_message_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -304,8 +305,10 @@ func _set_message_text(message: String) -> void:
 	_message_label.text = message
 	if _message_panel != null:
 		var show_message := not message.strip_edges().is_empty()
-		if _simulator != null and _simulator.state == FishingSimulator.State.FIGHT:
-			show_message = false
+		if _simulator != null:
+			show_message = show_message and _simulator.state != FishingSimulator.State.READY
+			if _simulator.state == FishingSimulator.State.FIGHT:
+				show_message = false
 		_message_panel.visible = show_message
 
 
@@ -315,7 +318,7 @@ func _update_view_visibility(delta: float) -> void:
 	var underwater := (
 		_simulator.state == FishingSimulator.State.FIGHT
 		or _simulator.state == FishingSimulator.State.CAUGHT
-		or _simulator.state == FishingSimulator.State.ESCAPED
+		or (_simulator.state == FishingSimulator.State.ESCAPED and _simulator.fish_revealed)
 	)
 	var k := 1.0 - exp(-10.0 * delta)
 	_surface_view.modulate.a = lerpf(_surface_view.modulate.a, 0.0 if underwater else 1.0, k)

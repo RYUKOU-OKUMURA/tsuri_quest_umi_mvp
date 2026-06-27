@@ -112,8 +112,9 @@ func _draw_header(font: Font, rect: Rect2) -> void:
 	var title_outline := 3 if _sidebar_frame == null else 1
 	var count_outline := 2 if _sidebar_frame == null else 1
 	var baseline_y := rect.size.y * (0.62 if _sidebar_frame != null else 0.68)
-	_draw_text(font, "釣り中の魚", rect.position + Vector2(14.0, baseline_y), title_size, Palette.TEXT_BONE, title_outline)
-	var count_text := "1/1 匹"
+	var title_text := "釣り中の魚" if _fish_is_revealed() else "釣り中の反応"
+	_draw_text(font, title_text, rect.position + Vector2(14.0, baseline_y), title_size, Palette.TEXT_BONE, title_outline)
+	var count_text := "1/1 匹" if _fish_is_revealed() else "未確認"
 	var count_size := 16
 	var count_w := font.get_string_size(count_text, HORIZONTAL_ALIGNMENT_LEFT, -1, count_size).x
 	_draw_text(font, count_text, rect.position + Vector2(rect.size.x - count_w - 14.0, baseline_y), count_size, Palette.GOLD_BRIGHT, count_outline)
@@ -121,6 +122,9 @@ func _draw_header(font: Font, rect: Rect2) -> void:
 
 func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
+	if not _fish_is_revealed():
+		_draw_unknown_fish_card(font, rect)
+		return
 	var compact_card := _sidebar_frame != null or rect.size.y <= 300.0
 	var inner := rect.grow(-10.0 if _sidebar_frame == null else -12.0)
 	var fish_name := String(fish_data.get("name", "クロダイ"))
@@ -171,6 +175,107 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 		_draw_detail_line(detail_font, "生息域：%s" % habitat, Vector2(inner.position.x + 16.0, desc_y + detail_gap * 2.0), inner.size.x - 28.0)
 
 
+func _draw_unknown_fish_card(font: Font, rect: Rect2) -> void:
+	var compact_card := _sidebar_frame != null or rect.size.y <= 300.0
+	var inner := rect.grow(-10.0 if _sidebar_frame == null else -12.0)
+	var regular_font := FightFontsScript.regular(get_theme_default_font())
+	var title_plaque := Rect2(inner.position + Vector2(7.0, 8.0), Vector2(inner.size.x - 14.0, 28.0))
+	var state_rect := Rect2(inner.position + Vector2(inner.size.x - 74.0, 11.0), Vector2(64.0, 20.0))
+	var title_rect := Rect2(title_plaque.position + Vector2(62.0, 0.0), Vector2(state_rect.position.x - title_plaque.position.x - 72.0, title_plaque.size.y))
+	draw_line(Vector2(title_plaque.position.x + 8.0, title_plaque.end.y + 3.0), Vector2(title_plaque.end.x - 8.0, title_plaque.end.y + 3.0), Color("#c9b486", 0.62), 1.0)
+	_draw_text(font, "No.???", inner.position + Vector2(17.0, 27.0), 14, Color("#665d50"), 0)
+	_draw_centered_baseline_text(font, "未確認の魚影", title_rect, inner.position.y + 28.0, 19, Palette.TEXT_DARK, 0)
+	_draw_unknown_state_tag(font, state_rect, _unknown_short_status())
+
+	var signal_rect := Rect2(
+		inner.position + Vector2(6.0, 44.0 if compact_card else 46.0),
+		Vector2(
+			inner.size.x - 12.0,
+			maxf(82.0, rect.size.y * (0.425 if compact_card else 0.37))
+		)
+	)
+	_draw_unknown_signal_art(font, signal_rect)
+	var divider_y := signal_rect.end.y + (3.0 if _sidebar_frame != null else 6.0)
+	draw_line(Vector2(inner.position.x + 8.0, divider_y), Vector2(inner.end.x - 8.0, divider_y), Color("#c9b486"), 1.0)
+	_draw_unknown_reaction_line(font, Rect2(inner.position.x, divider_y + 7.0, inner.size.x, 32.0))
+	var desc_y := divider_y + (37.0 if compact_card else 36.0)
+	draw_line(Vector2(inner.position.x + 8.0, desc_y - 12.0), Vector2(inner.end.x - 8.0, desc_y - 12.0), Color("#d6c299"), 1.0)
+	_draw_wrapped(regular_font, _unknown_description(), Vector2(inner.position.x + 15.0, desc_y), inner.size.x - 26.0, 13, Color("#1b1109"), 1, 15.0)
+	_draw_detail_line(regular_font, "狙い：%s" % _target_mode_text(), Vector2(inner.position.x + 15.0, desc_y + 22.0), inner.size.x - 26.0)
+	_draw_detail_line(regular_font, "タナ：%s / エサ：オキアミ" % _current_depth_text(), Vector2(inner.position.x + 15.0, desc_y + 38.0), inner.size.x - 26.0)
+
+
+func _draw_unknown_signal_art(font: Font, rect: Rect2) -> void:
+	var paper_glow := Rect2(rect.position + Vector2(4.0, 5.0), rect.size - Vector2(8.0, 10.0))
+	draw_rect(paper_glow, Color("#e6d5ad", 0.18), true)
+	draw_rect(paper_glow, Color("#a97a37", 0.14), false, 1.0)
+	for index in range(5):
+		var y := paper_glow.position.y + paper_glow.size.y * (0.16 + float(index) * 0.17)
+		draw_line(
+			Vector2(paper_glow.position.x + 12.0, y),
+			Vector2(paper_glow.end.x - 12.0, y + sin(float(index) * 1.6) * 2.0),
+			Color("#8b744b", 0.10),
+			1.0
+		)
+	var center := paper_glow.position + paper_glow.size * Vector2(0.50, 0.48)
+	var pulse := 0.0
+	if simulator != null:
+		pulse = 0.5 + 0.5 * sin(Time.get_ticks_msec() / 360.0)
+	for index in range(4):
+		var radius := (22.0 + float(index) * 18.0) * (0.94 + pulse * 0.06)
+		var alpha := 0.20 - float(index) * 0.035
+		draw_arc(center, radius, 0.0, TAU, 48, Color("#207f9a", alpha), 1.3)
+	draw_line(center + Vector2(-78.0, 0.0), center + Vector2(78.0, 0.0), Color("#1b6b83", 0.20), 1.0)
+	draw_line(center + Vector2(0.0, -46.0), center + Vector2(0.0, 46.0), Color("#1b6b83", 0.16), 1.0)
+	var shadow_center := center + Vector2(sin(Time.get_ticks_msec() / 420.0) * 4.0, 5.0)
+	_draw_ellipse(shadow_center, rect.size.x * 0.18, rect.size.y * 0.11, Color("#122f3a", 0.28), 36)
+	var tail := PackedVector2Array([
+		shadow_center + Vector2(-rect.size.x * 0.13, 0.0),
+		shadow_center + Vector2(-rect.size.x * 0.22, -rect.size.y * 0.09),
+		shadow_center + Vector2(-rect.size.x * 0.22, rect.size.y * 0.09),
+	])
+	draw_colored_polygon(tail, Color("#102a33", 0.24))
+	var lure := center + Vector2(rect.size.x * 0.20, -rect.size.y * 0.11)
+	draw_line(lure + Vector2(0.0, -40.0), lure, Color("#4d6c72", 0.35), 1.1)
+	draw_circle(lure, 5.0, Color("#c0783e", 0.82))
+	draw_circle(lure + Vector2(2.0, -1.5), 1.8, Color("#ffe0a2", 0.82))
+	var status := _unknown_reaction_label()
+	var status_size := 17
+	var status_width := font.get_string_size(status, HORIZONTAL_ALIGNMENT_LEFT, -1, status_size).x
+	_draw_text(font, status, Vector2(center.x - status_width * 0.5, paper_glow.end.y - 10.0), status_size, Color("#31404a"), 0)
+
+
+func _draw_unknown_reaction_line(font: Font, rect: Rect2) -> void:
+	var regular_font := FightFontsScript.regular(get_theme_default_font())
+	var label := "反応"
+	var value := _unknown_reaction_label()
+	var label_size := 16
+	var value_size := 24
+	var gap := 8.0
+	var label_w := regular_font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
+	var value_w := font.get_string_size(value, HORIZONTAL_ALIGNMENT_LEFT, -1, value_size).x
+	var total_w := label_w + gap + value_w
+	var x := rect.position.x + (rect.size.x - total_w) * 0.5
+	var baseline := rect.position.y + 24.0
+	_draw_text(regular_font, label, Vector2(x, baseline - 1.0), label_size, Color("#3f2f22"), 0)
+	x += label_w + gap
+	_draw_text(font, value, Vector2(x, baseline), value_size, _unknown_reaction_color(), 0)
+
+
+func _draw_unknown_state_tag(font: Font, rect: Rect2, text: String) -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#3f6f78")
+	style.border_color = Color("#a6d6d9")
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	style.shadow_color = Color(0.06, 0.12, 0.14, 0.25)
+	style.shadow_size = 1
+	draw_style_box(style, rect)
+	draw_line(rect.position + Vector2(4.0, 3.0), Vector2(rect.end.x - 4.0, rect.position.y + 3.0), Color(1.0, 1.0, 1.0, 0.30), 1.0)
+	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
+	_draw_text(font, text, rect.position + Vector2((rect.size.x - text_width) * 0.5, 16.0), 12, Color.WHITE, 1)
+
+
 
 func _draw_action_card(font: Font, rect: Rect2) -> void:
 	_draw_panel(rect, Color("#0d3a62"), Palette.GOLD, Palette.GOLD_BRIGHT)
@@ -178,7 +283,8 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 	if _sidebar_frame != null:
 		_draw_action_header_icon(Rect2(rect.position + Vector2(14.0, 6.0), Vector2(22.0, 22.0)))
 		title_x = 40.0
-	_draw_text(font, "魚の行動", rect.position + Vector2(title_x, 25.0), 18, Palette.TEXT_BONE, 1 if _sidebar_frame != null else 3)
+	var title := "魚の行動" if _fish_is_revealed() else "海中の反応"
+	_draw_text(font, title, rect.position + Vector2(title_x, 25.0), 18, Palette.TEXT_BONE, 1 if _sidebar_frame != null else 3)
 	var body := Rect2(rect.position + Vector2(10.0, 33.0), rect.size - Vector2(20.0, 42.0))
 	if _sidebar_frame != null:
 		body = Rect2(rect.position + Vector2(8.5, rect.size.y * 0.170), rect.size - Vector2(17.0, rect.size.y * 0.205))
@@ -187,8 +293,12 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 	var action := "待機"
 	var message := "ラインを見ながら、テンションを保とう。"
 	if simulator != null:
-		action = simulator.action_name
-		message = simulator.action_message
+		if _fish_is_revealed():
+			action = simulator.action_name
+			message = simulator.action_message
+		else:
+			action = _unknown_action_title()
+			message = _unknown_action_message()
 	var icon_size := 42.0 if _sidebar_frame != null else 58.0
 	var text_x := 62.0 if _sidebar_frame != null else 78.0
 	if _sidebar_frame != null:
@@ -365,6 +475,145 @@ func _draw_detail_line(font: Font, text: String, pos: Vector2, max_width: float)
 	elif max_width < 260.0:
 		font_size = 13
 	_draw_wrapped(font, text, pos + Vector2(15.0, -1.0), max_width - 15.0, font_size, Color("#1b1109"), 1)
+
+
+func _fish_is_revealed() -> bool:
+	return simulator != null and bool(simulator.fish_revealed)
+
+
+func _unknown_short_status() -> String:
+	if simulator == null:
+		return "未確認"
+	match simulator.state:
+		FishingSimulator.State.READY:
+			return "準備中"
+		FishingSimulator.State.CASTING:
+			return "投入"
+		FishingSimulator.State.WAITING:
+			return "探索中"
+		FishingSimulator.State.APPROACH:
+			return "魚影"
+		FishingSimulator.State.BITE:
+			return "アタリ"
+		FishingSimulator.State.ESCAPED:
+			return "消失"
+		_:
+			return "未確認"
+
+
+func _unknown_reaction_label() -> String:
+	if simulator == null:
+		return "反応待ち"
+	match simulator.state:
+		FishingSimulator.State.READY:
+			return "準備中"
+		FishingSimulator.State.CASTING:
+			return "仕掛け投入"
+		FishingSimulator.State.WAITING:
+			return "気配を探知中"
+		FishingSimulator.State.APPROACH:
+			return "魚影あり"
+		FishingSimulator.State.BITE:
+			return "強いアタリ"
+		FishingSimulator.State.ESCAPED:
+			return "反応消失"
+		_:
+			return "反応待ち"
+
+
+func _unknown_reaction_color() -> Color:
+	if simulator == null:
+		return Color("#31525e")
+	match simulator.state:
+		FishingSimulator.State.BITE:
+			return Color("#b45122")
+		FishingSimulator.State.APPROACH:
+			return Color("#1f7a6f")
+		FishingSimulator.State.ESCAPED:
+			return Color("#68727a")
+		_:
+			return Color("#31525e")
+
+
+func _unknown_description() -> String:
+	if simulator == null:
+		return "仕掛けへの反応を見ながら、魚影が見える瞬間を待とう。"
+	match simulator.state:
+		FishingSimulator.State.READY:
+			return "狙いを決めて仕掛けを投げると、水中の反応を探り始める。"
+		FishingSimulator.State.CASTING:
+			return "仕掛けがタナへ沈んでいる。魚影はまだ確認できない。"
+		FishingSimulator.State.WAITING:
+			return "水面と糸の変化を見ながら、魚の気配を探っている。"
+		FishingSimulator.State.APPROACH:
+			return "エサの近くに魚影がある。正体はまだ水中で確認できない。"
+		FishingSimulator.State.BITE:
+			return "何かが食いついた。アワセるまで魚の正体は分からない。"
+		FishingSimulator.State.ESCAPED:
+			return "魚影を確認する前に反応が消えた。次のアタリを待とう。"
+		_:
+			return "仕掛けへの反応を見ながら、魚影が見える瞬間を待とう。"
+
+
+func _unknown_action_title() -> String:
+	if simulator == null:
+		return "反応待ち"
+	match simulator.state:
+		FishingSimulator.State.READY:
+			return "準備"
+		FishingSimulator.State.CASTING:
+			return "投入"
+		FishingSimulator.State.WAITING:
+			return "探索"
+		FishingSimulator.State.APPROACH:
+			return "接近"
+		FishingSimulator.State.BITE:
+			return "アタリ"
+		FishingSimulator.State.ESCAPED:
+			return "消失"
+		_:
+			return "反応待ち"
+
+
+func _unknown_action_message() -> String:
+	if simulator == null:
+		return "水面と糸の変化から反応を読もう。"
+	match simulator.state:
+		FishingSimulator.State.READY:
+			return "狙いを決めて仕掛けを投げよう。"
+		FishingSimulator.State.CASTING:
+			return "仕掛けを投入した。タナまで沈めよう。"
+		FishingSimulator.State.WAITING:
+			return "水中の反応を探っている。"
+		FishingSimulator.State.APPROACH:
+			return "魚影がエサへ近づいている。"
+		FishingSimulator.State.BITE:
+			return "食いついた！すぐにアワセよう。"
+		FishingSimulator.State.ESCAPED:
+			return "反応が消えた。正体は分からないままだ。"
+		_:
+			return "水面と糸の変化から反応を読もう。"
+
+
+func _target_mode_text() -> String:
+	if bool(fish_data.get("boss", false)):
+		return "港のぬし狙い"
+	return "通常魚狙い"
+
+
+func _current_depth_text() -> String:
+	if simulator == null:
+		return "--.-m"
+	return "%.1fm" % simulator.depth
+
+
+func _draw_ellipse(center: Vector2, rx: float, ry: float, color: Color, points := 28) -> void:
+	var arr := PackedVector2Array()
+	arr.resize(points)
+	for index in range(points):
+		var angle := TAU * float(index) / float(points)
+		arr[index] = center + Vector2(cos(angle) * rx, sin(angle) * ry)
+	draw_colored_polygon(arr, color)
 
 
 func _draw_rarity_tag(font: Font, rect: Rect2, rarity: String) -> void:

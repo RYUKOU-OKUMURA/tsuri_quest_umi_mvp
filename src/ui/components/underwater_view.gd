@@ -421,7 +421,7 @@ func _draw_ellipse(center: Vector2, rx: float, ry: float, color: Color, points :
 
 
 func _draw_target_fish() -> void:
-	if simulator.state == FishingSimulator.State.READY:
+	if simulator.state == FishingSimulator.State.READY or not bool(simulator.fish_revealed):
 		return
 	var center := _target_fish_center()
 	var stamina_scale := lerpf(0.92, 1.04, simulator.fish_stamina_ratio())
@@ -630,7 +630,7 @@ func _showcase_fish_frame_index() -> int:
 
 
 func _draw_hit_burst() -> void:
-	if _fish_flash <= 0.02 or simulator == null:
+	if _fish_flash <= 0.02 or simulator == null or not bool(simulator.fish_revealed):
 		return
 	var alpha := clampf(_fish_flash, 0.0, 1.0)
 	var burst_center := size * HIT_BURST_CENTER_RATIO
@@ -658,7 +658,7 @@ func _draw_hit_burst() -> void:
 
 
 func _draw_fight_overlay() -> void:
-	if simulator.state != FishingSimulator.State.FIGHT:
+	if simulator.state != FishingSimulator.State.FIGHT or not bool(simulator.fish_revealed):
 		return
 
 	var font := FightFontsScript.regular(get_theme_default_font())
