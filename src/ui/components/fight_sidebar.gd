@@ -125,7 +125,8 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	var inner := rect.grow(-10.0 if _sidebar_frame == null else -12.0)
 	var fish_name := String(fish_data.get("name", "クロダイ"))
 	var rarity := String(fish_data.get("rarity", "レア"))
-	var no_text := "No.028"
+	var no_text := String(fish_data.get("fish_no", "No.---"))
+	var preferred_bait := String(fish_data.get("preferred_bait", "オキアミ"))
 	if compact_card:
 		var title_plaque := Rect2(inner.position + Vector2(7.0, 8.0), Vector2(inner.size.x - 14.0, 28.0))
 		var rarity_rect := Rect2(inner.position + Vector2(inner.size.x - 58.0, 11.0), Vector2(48.0, 20.0))
@@ -162,11 +163,11 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	var habitat := String(fish_data.get("habitat", "沿岸"))
 	if compact_card:
 		_draw_info_paragraph(detail_font, behavior, Vector2(inner.position.x + 15.0, desc_y), inner.size.x - 26.0)
-		_draw_detail_line(detail_font, "好むエサ：オキアミ", Vector2(inner.position.x + 15.0, desc_y + 35.0), inner.size.x - 26.0)
+		_draw_detail_line(detail_font, "好むエサ：%s" % preferred_bait, Vector2(inner.position.x + 15.0, desc_y + 35.0), inner.size.x - 26.0)
 		_draw_detail_line(detail_font, "主な生息域：%s" % habitat, Vector2(inner.position.x + 15.0, desc_y + 52.0), inner.size.x - 26.0)
 	else:
 		_draw_detail_line(detail_font, behavior, Vector2(inner.position.x + 15.0, desc_y), inner.size.x - 26.0)
-		_draw_detail_line(detail_font, "エサ：オキアミ", Vector2(inner.position.x + 15.0, desc_y + detail_gap), inner.size.x - 26.0)
+		_draw_detail_line(detail_font, "エサ：%s" % preferred_bait, Vector2(inner.position.x + 15.0, desc_y + detail_gap), inner.size.x - 26.0)
 		_draw_detail_line(detail_font, "生息域：%s" % habitat, Vector2(inner.position.x + 16.0, desc_y + detail_gap * 2.0), inner.size.x - 28.0)
 
 

@@ -270,33 +270,43 @@ func _tick_fight(delta: float) -> void:
 
 func _choose_fish_action() -> void:
 	var boss := bool(fish_data.get("boss", false))
+	var profile: Dictionary = fish_data.get("action_profile", {})
+	var messages: Dictionary = fish_data.get("action_messages", {})
+	var dash_weight := float(profile.get("dash", 0.34 if boss else 0.30))
+	var dive_weight := float(profile.get("dive", 0.26 if boss else 0.22))
+	var turn_weight := float(profile.get("turn", 0.20 if boss else 0.21))
+	var rest_weight := float(profile.get("rest", 0.20 if boss else 0.27))
+	var total_weight := maxf(0.01, dash_weight + dive_weight + turn_weight + rest_weight)
 	var roll := _rng.randf()
+	var dash_cut := dash_weight / total_weight
+	var dive_cut := dash_cut + dive_weight / total_weight
+	var turn_cut := dive_cut + turn_weight / total_weight
 	if boss:
-		if roll < 0.34:
-			_set_action("突進", 1.75, _rng.randf_range(0.75, 1.25), "ぬしが激しく突進した！ 巻くのを止めよう！")
+		if roll < dash_cut:
+			_set_action("突進", 1.75, _rng.randf_range(0.75, 1.25), String(messages.get("dash", "ぬしが激しく突進した！ 巻くのを止めよう！")))
 			tension += 0.075
-		elif roll < 0.60:
-			_set_action("潜水", 1.45, _rng.randf_range(0.95, 1.45), "ぬしが海底へ潜る！ 糸を出して耐えよう！")
-			depth += _rng.randf_range(1.8, 3.2)
+		elif roll < dive_cut:
+			_set_action("潜水", 1.45, _rng.randf_range(0.95, 1.45), String(messages.get("dive", "ぬしが海底へ潜る！ 糸を出して耐えよう！")))
+			depth += _rng.randf_range(_motion_value("dive_depth_min", 1.8), _motion_value("dive_depth_max", 3.2))
 			tension += 0.045
-		elif roll < 0.80:
-			_set_action("反転", 1.20, _rng.randf_range(0.55, 0.90), "急反転！ テンションの変化に注意！")
+		elif roll < turn_cut:
+			_set_action("反転", 1.20, _rng.randf_range(0.55, 0.90), String(messages.get("turn", "急反転！ テンションの変化に注意！")))
 			visual_direction *= -1.0
 			tension += 0.035
 		else:
-			_set_action("休む", 0.38, _rng.randf_range(0.65, 1.05), "ぬしの動きが鈍った。今が巻き時だ！")
+			_set_action("休む", 0.38, _rng.randf_range(0.65, 1.05), String(messages.get("rest", "ぬしの動きが鈍った。今が巻き時だ！")))
 	else:
-		if roll < 0.30:
-			_set_action("突進", 1.48, _rng.randf_range(0.65, 1.10), "魚が走った！ 無理に巻かず耐えよう！")
+		if roll < dash_cut:
+			_set_action("突進", 1.48, _rng.randf_range(0.65, 1.10), String(messages.get("dash", "魚が走った！ 無理に巻かず耐えよう！")))
 			tension += 0.045
-		elif roll < 0.52:
-			_set_action("潜水", 1.22, _rng.randf_range(0.70, 1.20), "魚が深く潜ろうとしている！")
-			depth += _rng.randf_range(0.8, 2.0)
-		elif roll < 0.73:
-			_set_action("方向転換", 1.02, _rng.randf_range(0.55, 0.90), "魚が方向を変えた。ゲージをよく見よう。")
+		elif roll < dive_cut:
+			_set_action("潜水", 1.22, _rng.randf_range(0.70, 1.20), String(messages.get("dive", "魚が深く潜ろうとしている！")))
+			depth += _rng.randf_range(_motion_value("dive_depth_min", 0.8), _motion_value("dive_depth_max", 2.0))
+		elif roll < turn_cut:
+			_set_action("方向転換", 1.02, _rng.randf_range(0.55, 0.90), String(messages.get("turn", "魚が方向を変えた。ゲージをよく見よう。")))
 			visual_direction *= -1.0
 		else:
-			_set_action("休む", 0.40, _rng.randf_range(0.70, 1.15), "魚が疲れている。巻き上げるチャンス！")
+			_set_action("休む", 0.40, _rng.randf_range(0.70, 1.15), String(messages.get("rest", "魚が疲れている。巻き上げるチャンス！")))
 
 
 func _set_action(name: String, multiplier: float, duration: float, text: String) -> void:
@@ -309,14 +319,27 @@ func _set_action(name: String, multiplier: float, duration: float, text: String)
 func _update_visual_position(delta: float, fish_speed: float) -> void:
 	var distance_factor := clampf(distance / initial_distance, 0.0, 1.3)
 	var target_x := lerpf(0.78, 0.28, distance_factor / 1.3)
-	var target_y := clampf(depth / 25.0, 0.22, 0.82)
-	var wave := sin(_visual_time * (2.2 + fish_speed)) * 0.018
+	var wave_freq := _motion_value("wave_freq", 2.2 + fish_speed)
+	var wave_amp := _motion_value("wave_amp", 0.018)
+	var jitter := _motion_value("jitter", 0.0)
+	target_x += sin(_visual_time * wave_freq * 2.1) * jitter
+	var target_y := clampf(depth / 25.0 + _motion_value("depth_bias", 0.0), 0.22, 0.84)
+	var wave := sin(_visual_time * wave_freq) * wave_amp
 	visual_position.x = lerpf(visual_position.x, target_x, minf(1.0, delta * 1.8))
 	visual_position.y = lerpf(visual_position.y, target_y + wave, minf(1.0, delta * 1.8))
 	if action_name == "突進":
-		visual_position.x -= visual_direction * delta * 0.05 * fish_speed
+		visual_position.x -= visual_direction * delta * _motion_value("dash_shift", 0.05) * fish_speed
+	elif action_name == "潜水":
+		visual_position.y += delta * _motion_value("dive_shift", 0.040) * fish_speed
 	elif action_name == "反転" or action_name == "方向転換":
-		visual_position.x += visual_direction * delta * 0.035
+		visual_position.x += visual_direction * delta * _motion_value("turn_shift", 0.035)
+	visual_position.x = clampf(visual_position.x, 0.14, 0.86)
+	visual_position.y = clampf(visual_position.y, 0.22, 0.84)
+
+
+func _motion_value(key: String, fallback: float) -> float:
+	var motion: Dictionary = fish_data.get("motion", {})
+	return float(motion.get(key, fallback))
 
 
 func _catch_fish() -> void:

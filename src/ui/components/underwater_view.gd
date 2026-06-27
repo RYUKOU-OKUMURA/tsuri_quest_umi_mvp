@@ -30,6 +30,8 @@ var _showcase_fish_sheet: Texture2D
 var _showcase_hit_burst: Texture2D
 var _showcase_hit_badge_full: Texture2D
 var _showcase_lure: Texture2D
+var _lure_draw_position := Vector2.ZERO
+var _lure_draw_on_top := false
 
 
 func bind_simulator(value: FishingSimulator) -> void:
@@ -84,6 +86,7 @@ func _draw() -> void:
 		return
 	_draw_line_and_bait()
 	_draw_target_fish()
+	_draw_lure_overlay()
 	_draw_fight_overlay()
 	_draw_hit_burst()
 	_draw_frame()
@@ -360,23 +363,38 @@ func _draw_line_and_bait() -> void:
 	var bait_position := Vector2(
 		size.x * 0.65, clampf(float(fish_data.get("start_depth", 8.0)) / 25.0, 0.30, 0.80) * size.y
 	)
+	_lure_draw_on_top = false
 	if (
 		simulator.state == FishingSimulator.State.FIGHT
 		or simulator.state == FishingSimulator.State.CAUGHT
 	):
-		var fish_center := _target_fish_center()
-		var fish_scale := 1.10 if bool(fish_data.get("boss", false)) else 1.0
-		var forward_offset := 56.0 * fish_scale
-		var vertical_offset := 4.0
-		if _showcase_fish_sheet != null:
-			var fish_draw_size := _showcase_fish_draw_size()
-			forward_offset = fish_draw_size.x * 0.44
-			vertical_offset = fish_draw_size.y * 0.01
-		bait_position = fish_center + Vector2(forward_offset * simulator.visual_direction, vertical_offset)
+		bait_position = _target_fish_hook_position()
+		_lure_draw_on_top = true
 	elif simulator.state == FishingSimulator.State.READY:
 		bait_position = Vector2(size.x * 0.67, size.y * 0.22)
 
-	draw_line(line_origin, bait_position, Color(0.92, 0.98, 1.0, 0.88), 2.0)
+	_lure_draw_position = bait_position
+	_draw_fishing_line(line_origin, bait_position)
+	if _lure_draw_on_top:
+		return
+	_draw_lure_at(bait_position)
+
+
+func _draw_fishing_line(line_origin: Vector2, bait_position: Vector2) -> void:
+	var sag := clampf((bait_position.y - line_origin.y) * 0.035, 4.0, 18.0)
+	var mid := line_origin.lerp(bait_position, 0.58) + Vector2(0.0, sag + sin(_time * 1.8) * 1.4)
+	var points := PackedVector2Array([line_origin, mid, bait_position])
+	draw_polyline(points, Color(0.05, 0.14, 0.20, 0.22), 3.1, false)
+	draw_polyline(points, Color(0.92, 0.98, 1.0, 0.72), 1.55, false)
+	draw_polyline(points, Color(1.0, 1.0, 1.0, 0.32), 0.75, false)
+
+
+func _draw_lure_overlay() -> void:
+	if _lure_draw_on_top:
+		_draw_lure_at(_lure_draw_position)
+
+
+func _draw_lure_at(bait_position: Vector2) -> void:
 	if _showcase_lure != null:
 		_draw_showcase_lure(bait_position)
 	else:
@@ -406,9 +424,8 @@ func _draw_target_fish() -> void:
 	if simulator.state == FishingSimulator.State.READY:
 		return
 	var center := _target_fish_center()
-	var boss_scale := 1.42 if bool(fish_data.get("boss", false)) else 1.0
 	var stamina_scale := lerpf(0.92, 1.04, simulator.fish_stamina_ratio())
-	var scale_value := boss_scale * stamina_scale
+	var scale_value := _fish_visual_scale() * stamina_scale
 	var direction := simulator.visual_direction
 	if _showcase_fish_sheet != null:
 		_draw_showcase_target_fish(center, scale_value, direction)
@@ -568,16 +585,32 @@ func _showcase_fish_draw_size(scale_value := -1.0) -> Vector2:
 		return Vector2.ZERO
 	var frame_w := float(_showcase_fish_sheet.get_width()) / float(SHOWCASE_FISH_FRAME_COUNT)
 	var frame_h := float(_showcase_fish_sheet.get_height())
-	var boss_ratio := 1.42 if bool(fish_data.get("boss", false)) else 1.0
+	var base_scale := _fish_visual_scale()
 	var effective_scale := scale_value
 	if effective_scale < 0.0 and simulator != null:
-		effective_scale = boss_ratio * lerpf(0.92, 1.04, simulator.fish_stamina_ratio())
+		effective_scale = base_scale * lerpf(0.92, 1.04, simulator.fish_stamina_ratio())
 	elif effective_scale < 0.0:
-		effective_scale = boss_ratio
-	var stamina_scale := clampf(effective_scale / boss_ratio, 0.90, 1.06)
+		effective_scale = base_scale
 	var target_width_ratio := 0.525
-	var draw_width := size.x * target_width_ratio * stamina_scale
+	var draw_width := size.x * target_width_ratio * effective_scale
 	return Vector2(draw_width, draw_width * frame_h / frame_w)
+
+
+func _fish_visual_scale() -> float:
+	var fallback := 1.42 if bool(fish_data.get("boss", false)) else 1.0
+	return maxf(0.35, float(fish_data.get("visual_scale", fallback)))
+
+
+func _target_fish_hook_position() -> Vector2:
+	var center := _target_fish_center()
+	var direction := simulator.visual_direction
+	if _showcase_fish_sheet != null:
+		var fish_draw_size := _showcase_fish_draw_size()
+		var anchor_x := clampf(float(fish_data.get("line_anchor_x", 0.43)), 0.20, 0.50)
+		var anchor_y := clampf(float(fish_data.get("line_anchor_y", 0.02)), -0.22, 0.22)
+		return center + Vector2(fish_draw_size.x * anchor_x * direction, fish_draw_size.y * anchor_y)
+	var fallback_scale := _fish_visual_scale()
+	return center + Vector2(78.0 * fallback_scale * direction, 4.0 * fallback_scale)
 
 
 func _showcase_fish_frame_index() -> int:

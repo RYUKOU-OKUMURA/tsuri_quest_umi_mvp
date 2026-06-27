@@ -24,6 +24,14 @@ const FISH: Dictionary = {
 		"color": "#9cc9d8",
 		"habitat": "港内・堤防周り",
 		"behavior": "小刻みに方向転換する。初心者向け。",
+		"fish_no": "No.001",
+		"preferred_bait": "アミエビ",
+		"visual_scale": 0.82,
+		"line_anchor_x": 0.455,
+		"line_anchor_y": 0.02,
+		"motion": {"wave_amp": 0.026, "wave_freq": 4.8, "dash_shift": 0.040, "turn_shift": 0.060, "dive_shift": 0.020, "jitter": 0.006, "depth_bias": 0.0},
+		"action_profile": {"dash": 0.22, "dive": 0.08, "turn": 0.45, "rest": 0.25},
+		"action_messages": {"dash": "アジが小さく走った！ テンションを保とう！", "dive": "アジが少し潜る！ 焦らず合わせよう。", "turn": "アジが素早く向きを変えた！", "rest": "アジの動きが緩んだ。巻き上げよう！"},
 	},
 	"mejina":
 	{
@@ -45,6 +53,14 @@ const FISH: Dictionary = {
 		"color": "#4b6875",
 		"habitat": "磯・消波ブロック周り",
 		"behavior": "根へ向かって潜る。糸を出す判断が必要。",
+		"fish_no": "No.002",
+		"preferred_bait": "オキアミ",
+		"visual_scale": 0.96,
+		"line_anchor_x": 0.420,
+		"line_anchor_y": 0.04,
+		"motion": {"wave_amp": 0.018, "wave_freq": 2.6, "dash_shift": 0.038, "turn_shift": 0.040, "dive_shift": 0.050, "jitter": 0.002, "depth_bias": 0.020},
+		"action_profile": {"dash": 0.20, "dive": 0.40, "turn": 0.22, "rest": 0.18},
+		"action_messages": {"dash": "メジナが根へ走った！ 無理に巻かず耐えよう！", "dive": "メジナが深く潜る！ 糸を出して耐えよう！", "turn": "メジナが足元で反転した。テンション注意！", "rest": "メジナの抵抗が弱まった。今が巻き時だ！"},
 	},
 	"kasago":
 	{
@@ -66,6 +82,14 @@ const FISH: Dictionary = {
 		"color": "#b85c42",
 		"habitat": "岩礁・海底付近",
 		"behavior": "底へ張り付く。短く強い突進を行う。",
+		"fish_no": "No.003",
+		"preferred_bait": "イソメ",
+		"visual_scale": 0.78,
+		"line_anchor_x": 0.400,
+		"line_anchor_y": 0.02,
+		"motion": {"wave_amp": 0.010, "wave_freq": 1.7, "dash_shift": 0.030, "turn_shift": 0.026, "dive_shift": 0.065, "jitter": 0.002, "depth_bias": 0.060},
+		"action_profile": {"dash": 0.36, "dive": 0.34, "turn": 0.14, "rest": 0.16},
+		"action_messages": {"dash": "カサゴが岩陰へ突っ込む！ 竿を立てて耐えよう！", "dive": "カサゴが底へ張り付く！ 糸を出して粘ろう！", "turn": "カサゴが短く向きを変えた。", "rest": "カサゴが浮いた。巻き上げるチャンス！"},
 	},
 	"isaki":
 	{
@@ -87,6 +111,14 @@ const FISH: Dictionary = {
 		"color": "#8da39d",
 		"habitat": "沖の岩礁帯",
 		"behavior": "一定間隔で長く走る。体力管理が重要。",
+		"fish_no": "No.004",
+		"preferred_bait": "オキアミ",
+		"visual_scale": 0.94,
+		"line_anchor_x": 0.440,
+		"line_anchor_y": 0.02,
+		"motion": {"wave_amp": 0.020, "wave_freq": 3.0, "dash_shift": 0.055, "turn_shift": 0.040, "dive_shift": 0.034, "jitter": 0.003, "depth_bias": 0.010},
+		"action_profile": {"dash": 0.38, "dive": 0.20, "turn": 0.22, "rest": 0.20},
+		"action_messages": {"dash": "イサキが長く走る！ 巻きすぎず追従しよう！", "dive": "イサキが沖の根へ潜る！", "turn": "イサキが群れのように向きを変えた。", "rest": "イサキの走りが止まった。巻き上げよう！"},
 	},
 	"saba":
 	{
@@ -108,6 +140,14 @@ const FISH: Dictionary = {
 		"color": "#6a91a5",
 		"habitat": "港外・潮通しのよい場所",
 		"behavior": "横方向へ高速で走り続ける。",
+		"fish_no": "No.005",
+		"preferred_bait": "小魚",
+		"visual_scale": 0.98,
+		"line_anchor_x": 0.455,
+		"line_anchor_y": 0.01,
+		"motion": {"wave_amp": 0.030, "wave_freq": 5.2, "dash_shift": 0.080, "turn_shift": 0.045, "dive_shift": 0.022, "jitter": 0.005, "depth_bias": -0.010},
+		"action_profile": {"dash": 0.52, "dive": 0.10, "turn": 0.22, "rest": 0.16},
+		"action_messages": {"dash": "サバが横へ一気に走った！ ラインを出して耐えよう！", "dive": "サバが少し潜る！ 速度に注意！", "turn": "サバが高速で反転した！", "rest": "サバの走りが緩んだ。巻き時だ！"},
 	},
 	"suzuki":
 	{
@@ -129,6 +169,14 @@ const FISH: Dictionary = {
 		"color": "#9fa69a",
 		"habitat": "河口・港外の潮目",
 		"behavior": "水面近くで反転し、長く走る。",
+		"fish_no": "No.006",
+		"preferred_bait": "小魚",
+		"visual_scale": 1.10,
+		"line_anchor_x": 0.445,
+		"line_anchor_y": 0.00,
+		"motion": {"wave_amp": 0.020, "wave_freq": 2.8, "dash_shift": 0.065, "turn_shift": 0.070, "dive_shift": 0.018, "jitter": 0.002, "depth_bias": -0.030},
+		"action_profile": {"dash": 0.38, "dive": 0.12, "turn": 0.36, "rest": 0.14},
+		"action_messages": {"dash": "スズキが水面近くを長く走る！", "dive": "スズキが潮目の下へ潜る！", "turn": "スズキが大きく反転した！ テンションの変化に注意！", "rest": "スズキの動きが止まった。距離を詰めよう！"},
 	},
 	"madai":
 	{
@@ -150,6 +198,14 @@ const FISH: Dictionary = {
 		"color": "#d77b76",
 		"habitat": "沖の岩礁・砂地の境目",
 		"behavior": "重く首を振りながら底へ向かう。",
+		"fish_no": "No.007",
+		"preferred_bait": "オキアミ",
+		"visual_scale": 1.08,
+		"line_anchor_x": 0.420,
+		"line_anchor_y": 0.04,
+		"motion": {"wave_amp": 0.013, "wave_freq": 2.0, "dash_shift": 0.040, "turn_shift": 0.030, "dive_shift": 0.058, "jitter": 0.001, "depth_bias": 0.025},
+		"action_profile": {"dash": 0.24, "dive": 0.38, "turn": 0.18, "rest": 0.20},
+		"action_messages": {"dash": "マダイが重く首を振る！ 無理に巻かず耐えよう！", "dive": "マダイが底へ向かう！ 糸を出して粘ろう！", "turn": "マダイがゆっくり反転した。", "rest": "マダイの重みが抜けた。巻き上げよう！"},
 	},
 	"hirame":
 	{
@@ -171,6 +227,14 @@ const FISH: Dictionary = {
 		"color": "#7b6b42",
 		"habitat": "砂地・かけあがり",
 		"behavior": "底に張り付き、急に横へ走る。",
+		"fish_no": "No.008",
+		"preferred_bait": "小魚",
+		"visual_scale": 1.04,
+		"line_anchor_x": 0.430,
+		"line_anchor_y": 0.05,
+		"motion": {"wave_amp": 0.008, "wave_freq": 1.5, "dash_shift": 0.055, "turn_shift": 0.022, "dive_shift": 0.060, "jitter": 0.001, "depth_bias": 0.070},
+		"action_profile": {"dash": 0.30, "dive": 0.42, "turn": 0.12, "rest": 0.16},
+		"action_messages": {"dash": "ヒラメが底から横へ走った！", "dive": "ヒラメが砂地へ張り付く！ 焦らず耐えよう！", "turn": "ヒラメが低く向きを変えた。", "rest": "ヒラメが浮いた。巻き上げるチャンス！"},
 	},
 	"kawahagi":
 	{
@@ -192,6 +256,14 @@ const FISH: Dictionary = {
 		"color": "#8d7b55",
 		"habitat": "堤防際・砂まじりの岩場",
 		"behavior": "細かく逃げ回り、テンションを揺さぶる。",
+		"fish_no": "No.009",
+		"preferred_bait": "アサリ",
+		"visual_scale": 0.78,
+		"line_anchor_x": 0.380,
+		"line_anchor_y": 0.00,
+		"motion": {"wave_amp": 0.024, "wave_freq": 6.2, "dash_shift": 0.034, "turn_shift": 0.070, "dive_shift": 0.020, "jitter": 0.012, "depth_bias": 0.010},
+		"action_profile": {"dash": 0.18, "dive": 0.12, "turn": 0.50, "rest": 0.20},
+		"action_messages": {"dash": "カワハギが細かく逃げた！ テンションを揺さぶられる！", "dive": "カワハギが足元へ潜る！", "turn": "カワハギが小刻みに方向転換した！", "rest": "カワハギの動きが止まった。巻き上げよう！"},
 	},
 	"boss_kurodai":
 	{
@@ -213,6 +285,14 @@ const FISH: Dictionary = {
 		"color": "#394956",
 		"habitat": "港口の大岩周辺",
 		"behavior": "潜水・反転・連続突進を使う港のぬし。",
+		"fish_no": "No.028",
+		"preferred_bait": "岩ガニ",
+		"visual_scale": 1.18,
+		"line_anchor_x": 0.430,
+		"line_anchor_y": 0.03,
+		"motion": {"wave_amp": 0.016, "wave_freq": 2.2, "dash_shift": 0.060, "turn_shift": 0.045, "dive_shift": 0.070, "jitter": 0.002, "depth_bias": 0.030},
+		"action_profile": {"dash": 0.34, "dive": 0.26, "turn": 0.20, "rest": 0.20},
+		"action_messages": {"dash": "ぬしが激しく突進した！ 巻くのを止めよう！", "dive": "ぬしが海底へ潜る！ 糸を出して耐えよう！", "turn": "ぬしが急反転！ テンションの変化に注意！", "rest": "ぬしの動きが鈍った。今が巻き時だ！"},
 	},
 }
 
