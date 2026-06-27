@@ -729,7 +729,7 @@ func _build_screen() -> void:
 	_dish_card.add_child(dish_row)
 	_dish_image = TextureRect.new()
 	_dish_image.name = "RewardDishFeatureImage"
-	_dish_image.custom_minimum_size = Vector2(286.0, 0.0)
+	_dish_image.custom_minimum_size = Vector2(260.0, 0.0)
 	_dish_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_dish_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	dish_row.add_child(_dish_image)
@@ -740,8 +740,11 @@ func _build_screen() -> void:
 	var dish_tag := make_shadow_label("今回の料理", 18, Palette.GOLD_BRIGHT, 2)
 	dish_tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	dish_text.add_child(dish_tag)
-	_dish_title = make_shadow_label("", 31, Palette.TEXT_BONE, 3)
+	_dish_title = make_shadow_label("", 28, Palette.TEXT_BONE, 3)
+	_dish_title.custom_minimum_size = Vector2(0.0, 58.0)
 	_dish_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_dish_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_dish_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	dish_text.add_child(_dish_title)
 	var dish_note := make_shadow_label("料理を食べて、体に力が湧いてきた。", 16, Palette.TEXT_BONE, 2)
 	dish_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
