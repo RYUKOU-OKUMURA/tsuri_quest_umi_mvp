@@ -339,6 +339,9 @@ var _unlock_ribbon_label: Label
 var _unlock_tag: Label
 var _unlock_title: Label
 var _unlock_body: Label
+var _spot_tag: Label
+var _spot_title: Label
+var _spot_subtitle: Label
 var _confirm_button: Button
 
 
@@ -504,12 +507,18 @@ func show_level_up(
 	var boss_unlocked := (
 		level_from < GameData.BOSS_UNLOCK_LEVEL and level_to >= GameData.BOSS_UNLOCK_LEVEL
 	)
-	_unlock_card.visible = boss_unlocked
-	_unlock_ribbon.visible = boss_unlocked
 	if boss_unlocked:
+		_unlock_ribbon_label.text = "新たな釣り場が解放！"
 		_unlock_tag.text = "挑戦解放"
 		_unlock_title.text = "港のぬしに挑戦できるようになった！"
 		_unlock_body.text = "食事でLv.%d到達。次の目標：港のぬし。港の大岩周辺で、本格ファイトが解放されます。" % GameData.BOSS_UNLOCK_LEVEL
+		_set_spot_copy("新釣り場", "港の大岩", "外洋への挑戦")
+	else:
+		_unlock_ribbon_label.text = "成長が進行！"
+		_unlock_tag.text = "能力上昇"
+		_unlock_title.text = "次の釣行へ向けて力がついた！"
+		_unlock_body.text = "Lv.%d到達。最大体力や技量が伸び、釣行の安定感が上がりました。ステータスで成長結果を確認しましょう。" % level_to
+		_set_spot_copy("成長記録", "次の釣行", "準備へ進む")
 	_present()
 
 
@@ -663,21 +672,30 @@ func _spot_thumbnail_box() -> PanelContainer:
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.add_theme_constant_override("separation", 2)
 	panel.add_child(box)
-	var tag := make_shadow_label("新釣り場", 15, Palette.GOLD_BRIGHT, 2)
-	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(tag)
+	_spot_tag = make_shadow_label("新釣り場", 15, Palette.GOLD_BRIGHT, 2)
+	_spot_tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(_spot_tag)
 	var visual := _level_asset_texture(
 		"LevelUnlockSpotAsset", LevelUpVisual.UNLOCK_SPOT_ASSET, Vector2(0.0, 48.0), true
 	)
 	visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(visual)
-	var title := make_shadow_label("港の大岩", 22, Palette.TEXT_BONE, 3)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(title)
-	var sea := make_shadow_label("外洋への挑戦", 16, Palette.GAUGE_CYAN_HI, 2)
-	sea.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(sea)
+	_spot_title = make_shadow_label("港の大岩", 22, Palette.TEXT_BONE, 3)
+	_spot_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(_spot_title)
+	_spot_subtitle = make_shadow_label("外洋への挑戦", 16, Palette.GAUGE_CYAN_HI, 2)
+	_spot_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(_spot_subtitle)
 	return panel
+
+
+func _set_spot_copy(tag: String, title: String, subtitle: String) -> void:
+	if _spot_tag != null:
+		_spot_tag.text = tag
+	if _spot_title != null:
+		_spot_title.text = title
+	if _spot_subtitle != null:
+		_spot_subtitle.text = subtitle
 
 
 func _level_asset_texture(
@@ -835,25 +853,25 @@ func _draw_confirm_button_cue(button: Button) -> void:
 	var glow := Color("#fff1c7")
 	glow.a = 0.24
 
-	var crown_center := Vector2(30.0, center_y)
+	var crown_center := Vector2(24.0, center_y)
 	var crown := PackedVector2Array(
 		[
-			crown_center + Vector2(-15.0, 4.0),
-			crown_center + Vector2(-10.0, -8.0),
-			crown_center + Vector2(-3.0, 1.0),
-			crown_center + Vector2(0.0, -11.0),
-			crown_center + Vector2(3.0, 1.0),
-			crown_center + Vector2(10.0, -8.0),
-			crown_center + Vector2(15.0, 4.0),
+			crown_center + Vector2(-11.0, 4.0),
+			crown_center + Vector2(-7.0, -6.0),
+			crown_center + Vector2(-2.0, 1.0),
+			crown_center + Vector2(0.0, -8.0),
+			crown_center + Vector2(2.0, 1.0),
+			crown_center + Vector2(7.0, -6.0),
+			crown_center + Vector2(11.0, 4.0),
 		]
 	)
-	button.draw_polyline(crown, ink, 5.0)
+	button.draw_polyline(crown, ink, 4.0)
 	button.draw_polyline(crown, gold, 2.0)
-	button.draw_rect(Rect2(crown_center.x - 13.0, crown_center.y + 4.0, 26.0, 6.0), ink)
-	button.draw_rect(Rect2(crown_center.x - 10.0, crown_center.y + 5.0, 20.0, 3.0), glow)
+	button.draw_rect(Rect2(crown_center.x - 10.0, crown_center.y + 4.0, 20.0, 5.0), ink)
+	button.draw_rect(Rect2(crown_center.x - 8.0, crown_center.y + 5.0, 16.0, 2.0), glow)
 
-	var arrow_from := Vector2(52.0, center_y)
-	var arrow_to := Vector2(78.0, center_y)
+	var arrow_from := Vector2(42.0, center_y)
+	var arrow_to := Vector2(64.0, center_y)
 	button.draw_line(arrow_from, arrow_to, glow, 6.0)
 	button.draw_line(arrow_from, arrow_to, gold, 2.0)
 	button.draw_polygon(
@@ -867,18 +885,16 @@ func _draw_confirm_button_cue(button: Button) -> void:
 		PackedColorArray([gold, gold, gold])
 	)
 
-	for i in range(3):
-		var x := 98.0 + float(i) * 15.0
-		var rect := Rect2(x - 5.0, center_y - 8.0, 11.0, 15.0)
-		button.draw_rect(rect.grow(1.5), ink)
-		button.draw_rect(rect, Color("#f2e4c2"))
-		button.draw_line(rect.position + Vector2(1.0, 3.0), rect.position + Vector2(rect.size.x - 1.0, 3.0), Color("#17324d"), 2.0)
-		if i == 0:
-			button.draw_circle(rect.position + Vector2(5.5, 9.0), 3.0, Color("#f2b889"))
-		elif i == 1:
-			button.draw_arc(rect.position + Vector2(5.5, 10.0), 4.0, 0.0, PI, 8, Color("#9b4f22"), 2.0)
-		else:
-			button.draw_circle(rect.position + Vector2(5.5, 9.0), 3.5, gold)
+	var card := Rect2(82.0, center_y - 8.0, 12.0, 16.0)
+	button.draw_rect(card.grow(1.5), ink)
+	button.draw_rect(card, Color("#f2e4c2"))
+	button.draw_line(
+		card.position + Vector2(1.0, 3.0),
+		card.position + Vector2(card.size.x - 1.0, 3.0),
+		Color("#17324d"),
+		2.0
+	)
+	button.draw_circle(card.position + Vector2(6.0, 10.0), 3.5, gold)
 
 
 func _clear_container(container: Container) -> void:
