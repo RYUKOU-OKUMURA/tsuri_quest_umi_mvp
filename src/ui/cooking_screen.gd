@@ -783,7 +783,7 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	var owned := count > 0
 	var card := PanelContainer.new()
 	card.name = _fish_row_node_name(fish_id)
-	card.custom_minimum_size = Vector2(0, 70)
+	card.custom_minimum_size = Vector2(0, 75)
 	card.mouse_filter = Control.MOUSE_FILTER_STOP if owned else Control.MOUSE_FILTER_IGNORE
 	if owned:
 		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -802,7 +802,7 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	row.add_child(marker)
 	var icon := TextureRect.new()
 	icon.texture = _fish_icon(fish_id)
-	icon.custom_minimum_size = Vector2(78, 50)
+	icon.custom_minimum_size = Vector2(80, 54)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.modulate = Color.WHITE if owned else Color(0.42, 0.40, 0.34, 0.72)
