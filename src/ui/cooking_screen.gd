@@ -22,6 +22,7 @@ const RECIPE_TO_DETAIL_ARROW := "res://assets/showcase/cooking/recipe_to_detail_
 const DISH_DETAIL_FRAME := "res://assets/showcase/cooking/dish_detail_frame.png"
 const COOK_BUTTON_FRAME := "res://assets/showcase/cooking/cook_button_frame.png"
 const FISH_ROW_FRAME := "res://assets/showcase/cooking/fish_row_frame.png"
+const PLAYER_HEADER_PORTRAIT := "res://assets/showcase/cooking/player_status_portrait_pixel.png"
 
 
 class CookingSmallIcon:
@@ -384,7 +385,7 @@ func _build_header(layout: VBoxContainer) -> void:
 	var status_row := HBoxContainer.new()
 	status_row.add_theme_constant_override("separation", 12)
 	status_card.add_child(status_row)
-	var player_icon := _small_icon("player", Palette.GAUGE_CYAN_HI, Vector2(46.0, 0.0))
+	var player_icon := _header_player_icon()
 	status_row.add_child(player_icon)
 	_level_label = make_shadow_label("", 21, Palette.TEXT_BONE, 3)
 	_level_label.custom_minimum_size = Vector2(138, 0)
@@ -1484,6 +1485,17 @@ func _small_icon(mode: String, accent: Color, minimum_size: Vector2) -> CookingS
 	var icon := CookingSmallIcon.new()
 	icon.configure(mode, accent)
 	icon.custom_minimum_size = minimum_size
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return icon
+
+
+func _header_player_icon() -> TextureRect:
+	var icon := TextureRect.new()
+	icon.name = "CookingHeaderPlayerPortrait"
+	icon.texture = load(PLAYER_HEADER_PORTRAIT) as Texture2D
+	icon.custom_minimum_size = Vector2(54.0, 0.0)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return icon
 
