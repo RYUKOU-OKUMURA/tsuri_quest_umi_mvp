@@ -11,7 +11,7 @@ const DISH_FEATURE_SIMMERED := "res://assets/showcase/cooking/dish_feature_simme
 const DISH_FEATURE_SOUP := "res://assets/showcase/cooking/dish_feature_soup.png"
 const DISH_FEATURE_FRY := "res://assets/showcase/cooking/dish_feature_fry.png"
 const DISH_ICON_SHEET := "res://assets/showcase/cooking/dish_icon_sheet.png"
-const PLAYER_EATING_POSE := "res://assets/showcase/cooking/player_eating_pose_pixel.png"
+const PLAYER_EATING_POSE := "res://assets/showcase/cooking/player_eating_pose_pixel_tight.png"
 const PLAYER_EXP_POSE := "res://assets/showcase/cooking/player_exp_message_pose_pixel.png"
 const MEAL_SCENE_BG := "res://assets/showcase/cooking/meal_scene_bg.png"
 const EXP_STAGE_BG := "res://assets/showcase/cooking/exp_stage_bg.png"
@@ -26,7 +26,7 @@ const FLOW_ACTION_BUTTON_FRAME := "res://assets/showcase/cooking/flow_action_but
 class SceneActorVisual:
 	extends Control
 
-	const EATING_POSE := "res://assets/showcase/cooking/player_eating_pose_pixel.png"
+	const EATING_POSE := "res://assets/showcase/cooking/player_eating_pose_pixel_tight.png"
 	const USE_CUTOUT_TEXTURE_ASSETS := false
 
 	var mode := "meal"
@@ -1346,7 +1346,7 @@ func _scene_actor_box() -> PanelContainer:
 	_scene_actor_image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_scene_actor_image.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scene_actor_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_scene_actor_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_scene_actor_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_scene_actor_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(_scene_actor_image)
 	_scene_actor_visual = SceneActorVisual.new()
