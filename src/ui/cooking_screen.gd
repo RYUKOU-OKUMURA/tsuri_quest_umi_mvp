@@ -326,11 +326,11 @@ func configure(payload: Dictionary) -> void:
 
 func _build_screen() -> void:
 	_add_cooking_background()
-	var root := make_root_margin(6)
+	var root := make_root_margin(4)
 	var layout := VBoxContainer.new()
 	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	layout.add_theme_constant_override("separation", 6)
+	layout.add_theme_constant_override("separation", 5)
 	root.add_child(layout)
 
 	_build_header(layout)
@@ -365,7 +365,7 @@ func _add_cooking_background() -> void:
 
 func _build_header(layout: VBoxContainer) -> void:
 	var header := HBoxContainer.new()
-	header.custom_minimum_size = Vector2(0, 66)
+	header.custom_minimum_size = Vector2(0, 64)
 	header.add_theme_constant_override("separation", 8)
 	layout.add_child(header)
 
@@ -433,11 +433,11 @@ func _build_header(layout: VBoxContainer) -> void:
 func _build_cook_select(layout: VBoxContainer) -> void:
 	var body := HBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.add_theme_constant_override("separation", 8)
+	body.add_theme_constant_override("separation", 10)
 	layout.add_child(body)
 
 	var fish_panel := _panel_box(Color("#10283d"), Color("#5e391a"), Color("#e4b461"), 6)
-	fish_panel.custom_minimum_size = Vector2(292, 0)
+	fish_panel.custom_minimum_size = Vector2(306, 0)
 	fish_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(fish_panel)
 	var fish_layout := VBoxContainer.new()
@@ -474,7 +474,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	_recipe_to_detail_arrow = TextureRect.new()
 	_recipe_to_detail_arrow.name = "RecipeToDetailArrow"
 	_recipe_to_detail_arrow.texture = load(RECIPE_TO_DETAIL_ARROW) as Texture2D
-	_recipe_to_detail_arrow.custom_minimum_size = Vector2(34, 0)
+	_recipe_to_detail_arrow.custom_minimum_size = Vector2(30, 0)
 	_recipe_to_detail_arrow.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_recipe_to_detail_arrow.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_recipe_to_detail_arrow.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -492,21 +492,23 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	detail_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(detail_panel)
 	var detail_layout := VBoxContainer.new()
-	detail_layout.add_theme_constant_override("separation", 5)
+	detail_layout.add_theme_constant_override("separation", 6)
 	detail_panel.add_child(detail_layout)
-	_dish_title = make_label("料理を選んでください", 25, Color("#2a2118"), 1, Color("#fff4d4"))
+	_dish_title = make_label("料理を選んでください", 28, Color("#2a2118"), 1, Color("#fff4d4"))
 	_dish_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_dish_title.custom_minimum_size = Vector2(0.0, 34.0)
 	detail_layout.add_child(_dish_title)
 	_dish_subtitle = make_label("", 15, Color("#59422b"))
 	_dish_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_dish_subtitle.custom_minimum_size = Vector2(0.0, 20.0)
 	detail_layout.add_child(_dish_subtitle)
 	var dish_frame := _panel_box(Color("#6a4023"), Color("#3b2515"), Color("#e6b561"), 4)
-	dish_frame.custom_minimum_size = Vector2(0, 120)
+	dish_frame.custom_minimum_size = Vector2(0, 122)
 	dish_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_layout.add_child(dish_frame)
 	_dish_image = TextureRect.new()
 	_dish_image.name = "SelectedDishFeatureImage"
-	_dish_image.custom_minimum_size = Vector2(0, 104)
+	_dish_image.custom_minimum_size = Vector2(0, 106)
 	_dish_image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_dish_image.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_dish_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -514,7 +516,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	dish_frame.add_child(_dish_image)
 	var detail_rows := VBoxContainer.new()
 	detail_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	detail_rows.add_theme_constant_override("separation", 5)
+	detail_rows.add_theme_constant_override("separation", 6)
 	detail_layout.add_child(detail_rows)
 	var material_labels := _add_detail_story_row(
 		detail_rows,
@@ -522,7 +524,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 		"必要な材料",
 		"fish",
 		Palette.GAUGE_CYAN_HI,
-		132.0
+		150.0
 	)
 	_material_value = material_labels[0] as Label
 	_stock_value = material_labels[1] as Label
@@ -532,7 +534,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 		"獲得EXP",
 		"exp",
 		Palette.GOLD_BRIGHT,
-		126.0
+		142.0
 	)
 	_exp_value = exp_labels[0] as Label
 	_bonus_value = exp_labels[1] as Label
@@ -542,7 +544,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 		"次の釣行で得られる効果",
 		"buff",
 		Palette.GAUGE_GREEN_HI,
-		142.0
+		158.0
 	)
 	_buff_value = buff_labels[0] as Label
 	_effect_count_value = buff_labels[1] as Label
@@ -804,9 +806,9 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 					_select_fish(fish_id)
 		)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 5)
+	row.add_theme_constant_override("separation", 7)
 	card.add_child(row)
-	var marker := make_shadow_label("", 18, Palette.GOLD_BRIGHT, 2)
+	var marker := make_shadow_label("", 20, Palette.GOLD_BRIGHT, 2)
 	marker.custom_minimum_size = Vector2(18, 0)
 	marker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	marker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -816,18 +818,19 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	icon.custom_minimum_size = Vector2(96, 50)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.modulate = Color(1.16, 1.10, 1.02, 1.0) if owned else Color(0.36, 0.34, 0.30, 0.76)
+	icon.modulate = Color(1.18, 1.12, 1.04, 1.0) if owned else Color(0.38, 0.36, 0.31, 0.76)
 	row.add_child(icon)
 	var display_name := _fish_row_display_name(fish_id, String(fish.get("name", fish_id)))
-	var name := make_label(display_name, 18, Color("#241b12"), 1, Color("#fff2ca"))
+	var name_font_size := 18 if display_name.length() <= 4 else 17
+	var name := make_label(display_name, name_font_size, Color("#241b12"), 1, Color("#fff2ca"))
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	name.autowrap_mode = TextServer.AUTOWRAP_OFF
 	name.clip_text = true
 	row.add_child(name)
 	var amount_text := "× %d" % count if owned else "未所持"
-	var amount := make_label(amount_text, 17 if owned else 13, Color("#241b12"), 1, Color("#fff2ca"))
-	amount.custom_minimum_size = Vector2(48.0, 0.0)
+	var amount := make_label(amount_text, 18 if owned else 13, Color("#241b12"), 1, Color("#fff2ca"))
+	amount.custom_minimum_size = Vector2(50.0, 0.0)
 	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	amount.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(amount)
@@ -968,14 +971,14 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	card.add_child(box)
 	var title_text := "？？？" if locked else String(recipe.get("name", ""))
 	var title := make_label(title_text, 16, Color("#251c12"), 1, Color("#fff3cf"))
-	title.custom_minimum_size = Vector2(0.0, 18.0)
+	title.custom_minimum_size = Vector2(0.0, 20.0)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.clip_text = true
 	box.add_child(title)
 	var image := TextureRect.new()
 	image.texture = _recipe_icon(recipe_id if not locked else "locked")
-	image.custom_minimum_size = Vector2(0, 62)
+	image.custom_minimum_size = Vector2(0, 70)
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	image.modulate = Color(0.46, 0.42, 0.36, 0.82) if locked or unavailable else Color.WHITE
@@ -987,13 +990,13 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 		2,
 		Color("#4c2b0b")
 	)
-	stars.custom_minimum_size = Vector2(0.0, 15.0)
+	stars.custom_minimum_size = Vector2(0.0, 17.0)
 	stars.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	stars.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	box.add_child(stars)
 	var material_text := _recipe_material_chip(recipe, locked, unavailable)
 	var material := make_label(material_text, 12, Color("#49351f"), 1, Color("#fff4cf"))
-	material.custom_minimum_size = Vector2(0.0, 15.0)
+	material.custom_minimum_size = Vector2(0.0, 16.0)
 	material.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	material.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	material.clip_text = true
@@ -1010,7 +1013,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 		var total_exp := base_exp * 2 if first_time else base_exp
 		footer_text = "%d EXP%s" % [total_exp, " 初回" if first_time else ""]
 	var footer := make_label(footer_text, 13, Color("#49351f"), 1, Color("#fff4cf"))
-	footer.custom_minimum_size = Vector2(0.0, 16.0)
+	footer.custom_minimum_size = Vector2(0.0, 17.0)
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	footer.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	footer.clip_text = true
@@ -1540,11 +1543,11 @@ func _section_ribbon(text: String, icon_mode: String, node_name: String) -> Pane
 func _summary_card(title: String, value: String, accent: Color, icon_mode := "book") -> PanelContainer:
 	var card := _panel_box(Color("#f2e4c2"), Color("#60401f"), Color("#d7a456"), 5)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.custom_minimum_size = Vector2(0, 50)
+	card.custom_minimum_size = Vector2(0, 42)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
 	card.add_child(row)
-	row.add_child(_small_icon(icon_mode, accent, Vector2(34.0, 0.0)))
+	row.add_child(_small_icon(icon_mode, accent, Vector2(30.0, 0.0)))
 	var box := VBoxContainer.new()
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_theme_constant_override("separation", 0)
@@ -1552,7 +1555,7 @@ func _summary_card(title: String, value: String, accent: Color, icon_mode := "bo
 	var title_label := make_label(title, 13, Color("#614525"))
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title_label)
-	var value_label := make_label(value, 16, accent, 1, Color("#1d160f"))
+	var value_label := make_label(value, 14, accent, 1, Color("#1d160f"))
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	value_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1674,9 +1677,6 @@ func _atlas(path: String, index: int, columns: int, rows: int) -> Texture2D:
 
 
 func _fish_icon(fish_id: String) -> Texture2D:
-	var portrait_path := String(FISH_CARD_PORTRAIT_PATHS.get(fish_id, ""))
-	if not portrait_path.is_empty() and ResourceLoader.exists(portrait_path):
-		return load(portrait_path) as Texture2D
 	return _atlas(FISH_ICON_SHEET, int(FISH_ICON_INDEX.get(fish_id, 0)), 1, 6)
 
 
