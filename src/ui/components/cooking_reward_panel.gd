@@ -763,25 +763,25 @@ func _build_screen() -> void:
 			8.0
 		)
 	)
-	_exp_focus_card.custom_minimum_size = Vector2(0.0, 184.0)
+	_exp_focus_card.custom_minimum_size = Vector2(0.0, 198.0)
 	_exp_focus_card.visible = false
 	right.add_child(_exp_focus_card)
 	var exp_focus_box := VBoxContainer.new()
 	exp_focus_box.add_theme_constant_override("separation", 4)
 	_exp_focus_card.add_child(exp_focus_box)
 	_exp_focus_card.draw.connect(_draw_exp_focus_burst)
-	var exp_focus_tag := make_shadow_label("食経験値", 20, Palette.TEXT_BONE, 3)
+	var exp_focus_tag := make_shadow_label("食経験値", 21, Palette.TEXT_BONE, 3)
 	exp_focus_tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	exp_focus_box.add_child(exp_focus_tag)
-	_exp_label = make_shadow_label("+0 EXP", 48, Palette.GOLD_BRIGHT, 5)
+	_exp_label = make_shadow_label("+0 EXP", 56, Palette.GOLD_BRIGHT, 6)
 	_exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	exp_focus_box.add_child(_exp_label)
 	_exp_bar = GaugeBarScript.new()
 	_exp_bar.show_value = false
-	_exp_bar.custom_minimum_size = Vector2(0.0, 34.0)
+	_exp_bar.custom_minimum_size = Vector2(0.0, 38.0)
 	_exp_bar.set_colors(Palette.GAUGE_CYAN, Palette.GAUGE_CYAN_HI)
 	exp_focus_box.add_child(_exp_bar)
-	_exp_progress_label = make_shadow_label("", 21, Palette.GAUGE_CYAN_HI, 2)
+	_exp_progress_label = make_shadow_label("", 20, Palette.GAUGE_CYAN_HI, 2)
 	_exp_progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	exp_focus_box.add_child(_exp_progress_label)
 	var message_row := HBoxContainer.new()
