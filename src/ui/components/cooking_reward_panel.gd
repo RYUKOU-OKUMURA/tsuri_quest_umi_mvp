@@ -551,12 +551,15 @@ var _bridge_label: Label
 var _dish_title: Label
 var _dish_image: TextureRect
 var _dish_card: PanelContainer
+var _scene_card: PanelContainer
 var _scene_title: Label
 var _scene_caption: Label
 var _scene_bonus_label: Label
 var _scene_result_image: TextureRect
+var _scene_visual_stack: Control
 var _scene_table: HBoxContainer
 var _scene_dish_image: MealTableSpreadVisual
+var _scene_actor_panel: PanelContainer
 var _scene_actor_visual: SceneActorVisual
 var _scene_actor_image: TextureRect
 var _exp_trail_visual: ExpTrailVisual
@@ -642,21 +645,21 @@ func _build_screen() -> void:
 	hero.add_theme_constant_override("separation", 12)
 	root.add_child(hero)
 
-	var scene_card := _panel_box(Color(0.10, 0.06, 0.03, 0.72), Color("#5e391a"), Palette.GOLD_BRIGHT, 5)
-	scene_card.custom_minimum_size = Vector2(438.0, 244.0)
-	hero.add_child(scene_card)
+	_scene_card = _panel_box(Color(0.10, 0.06, 0.03, 0.72), Color("#5e391a"), Palette.GOLD_BRIGHT, 5)
+	_scene_card.custom_minimum_size = Vector2(438.0, 244.0)
+	hero.add_child(_scene_card)
 	var scene_box := VBoxContainer.new()
 	scene_box.add_theme_constant_override("separation", 5)
-	scene_card.add_child(scene_box)
+	_scene_card.add_child(scene_box)
 	_scene_title = make_shadow_label("食べる", 27, Palette.GOLD_BRIGHT, 3)
 	_scene_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	scene_box.add_child(_scene_title)
-	var scene_visual_stack := Control.new()
-	scene_visual_stack.name = "MealSceneVisualStack"
-	scene_visual_stack.custom_minimum_size = Vector2(0.0, 164.0)
-	scene_visual_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scene_visual_stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scene_box.add_child(scene_visual_stack)
+	_scene_visual_stack = Control.new()
+	_scene_visual_stack.name = "MealSceneVisualStack"
+	_scene_visual_stack.custom_minimum_size = Vector2(0.0, 164.0)
+	_scene_visual_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_scene_visual_stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scene_box.add_child(_scene_visual_stack)
 	_scene_result_image = TextureRect.new()
 	_scene_result_image.name = "MealResultSceneArt"
 	_scene_result_image.texture = load(MEAL_RESULT_SCENE_ART) as Texture2D
@@ -666,15 +669,15 @@ func _build_screen() -> void:
 	_scene_result_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_scene_result_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	_scene_result_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	scene_visual_stack.add_child(_scene_result_image)
+	_scene_visual_stack.add_child(_scene_result_image)
 	_scene_table = HBoxContainer.new()
 	_scene_table.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_scene_table.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scene_table.add_theme_constant_override("separation", 10)
-	scene_visual_stack.add_child(_scene_table)
-	var eater := _scene_actor_box()
-	eater.custom_minimum_size = Vector2(176.0, 0.0)
-	_scene_table.add_child(eater)
+	_scene_visual_stack.add_child(_scene_table)
+	_scene_actor_panel = _scene_actor_box()
+	_scene_actor_panel.custom_minimum_size = Vector2(176.0, 0.0)
+	_scene_table.add_child(_scene_actor_panel)
 	_scene_dish_image = MealTableSpreadVisual.new()
 	_scene_dish_image.name = "MealTableSpread"
 	_scene_dish_image.custom_minimum_size = Vector2(252.0, 132.0)
@@ -873,6 +876,7 @@ func show_meal_result(result: Dictionary) -> void:
 	_result_banner.name = "MealResultBanner"
 	_header_title.name = "MealResultTitle"
 	_set_stage_background(MEAL_SCENE_BG)
+	_apply_meal_result_composition()
 	var dish_name := String(result.get("dish_name", "料理"))
 	_set_result_banner_height(104.0)
 	_set_header_title_font_size(28)
@@ -927,6 +931,7 @@ func show_reward(
 	_result_banner.name = "ExpGainBanner"
 	_header_title.name = "ExpGainTitle"
 	_set_stage_background(EXP_STAGE_BG)
+	_apply_exp_gain_composition()
 	var dish_name := String(result.get("dish_name", "料理"))
 	_set_result_banner_height(92.0)
 	_set_header_title_font_size(36)
@@ -1429,6 +1434,63 @@ func _set_exp_label_font_size(font_size: int) -> void:
 func _set_result_banner_height(height: float) -> void:
 	if _result_banner != null:
 		_result_banner.custom_minimum_size = Vector2(0.0, height)
+
+
+func _apply_meal_result_composition() -> void:
+	if _scene_card != null:
+		_scene_card.custom_minimum_size = Vector2(454.0, 268.0)
+	if _scene_visual_stack != null:
+		_scene_visual_stack.custom_minimum_size = Vector2(0.0, 184.0)
+	if _scene_actor_panel != null:
+		_scene_actor_panel.visible = true
+		_scene_actor_panel.custom_minimum_size = Vector2(176.0, 0.0)
+	if _scene_table != null:
+		_scene_table.add_theme_constant_override("separation", 10)
+	if _scene_dish_image != null:
+		_scene_dish_image.custom_minimum_size = Vector2(252.0, 132.0)
+	if _dish_card != null:
+		_dish_card.custom_minimum_size = Vector2(0.0, 184.0)
+	if _dish_image != null:
+		_dish_image.custom_minimum_size = Vector2(336.0, 0.0)
+	_set_reward_cards_height(118.0)
+
+
+func _apply_exp_gain_composition() -> void:
+	if _scene_card != null:
+		_scene_card.custom_minimum_size = Vector2(354.0, 258.0)
+	if _scene_visual_stack != null:
+		_scene_visual_stack.custom_minimum_size = Vector2(0.0, 178.0)
+	if _scene_actor_panel != null:
+		_scene_actor_panel.visible = false
+	if _scene_table != null:
+		_scene_table.add_theme_constant_override("separation", 0)
+	if _scene_dish_image != null:
+		_scene_dish_image.custom_minimum_size = Vector2(320.0, 146.0)
+	if _effect_preview_card != null:
+		_effect_preview_card.custom_minimum_size = Vector2(248.0, 222.0)
+	if _dish_image != null:
+		_dish_image.custom_minimum_size = Vector2(304.0, 0.0)
+	_set_reward_cards_height(104.0)
+
+
+func _set_reward_cards_height(height: float) -> void:
+	for label in [_base_label, _bonus_label, _total_label, _buff_label, _growth_label]:
+		var card := _reward_card_from_label(label)
+		if card != null:
+			card.custom_minimum_size = Vector2(0.0, height)
+	if _exp_card != null:
+		_exp_card.custom_minimum_size = Vector2(280.0, height)
+
+
+func _reward_card_from_label(label: Label) -> Control:
+	if label == null:
+		return null
+	var node := label.get_parent()
+	while node != null:
+		if node is PanelContainer:
+			return node as Control
+		node = node.get_parent()
+	return null
 
 
 func _build_effect_preview_card(parent: HBoxContainer) -> void:
