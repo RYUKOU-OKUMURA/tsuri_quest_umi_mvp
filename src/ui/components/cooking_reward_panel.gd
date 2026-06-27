@@ -687,7 +687,7 @@ func _build_screen() -> void:
 	hero.add_child(right)
 
 	_result_banner = PanelContainer.new()
-	_result_banner.custom_minimum_size = Vector2(0.0, 82.0)
+	_result_banner.custom_minimum_size = Vector2(0.0, 84.0)
 	_result_banner.add_theme_stylebox_override(
 		"panel",
 		_texture_style_box(
@@ -722,14 +722,14 @@ func _build_screen() -> void:
 			8.0
 		)
 	)
-	_dish_card.custom_minimum_size = Vector2(0.0, 128.0)
+	_dish_card.custom_minimum_size = Vector2(0.0, 146.0)
 	right.add_child(_dish_card)
 	var dish_row := HBoxContainer.new()
 	dish_row.add_theme_constant_override("separation", 14)
 	_dish_card.add_child(dish_row)
 	_dish_image = TextureRect.new()
 	_dish_image.name = "RewardDishFeatureImage"
-	_dish_image.custom_minimum_size = Vector2(238.0, 0.0)
+	_dish_image.custom_minimum_size = Vector2(286.0, 0.0)
 	_dish_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_dish_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	dish_row.add_child(_dish_image)
@@ -740,10 +740,10 @@ func _build_screen() -> void:
 	var dish_tag := make_shadow_label("今回の料理", 18, Palette.GOLD_BRIGHT, 2)
 	dish_tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	dish_text.add_child(dish_tag)
-	_dish_title = make_shadow_label("", 29, Palette.TEXT_BONE, 3)
+	_dish_title = make_shadow_label("", 31, Palette.TEXT_BONE, 3)
 	_dish_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	dish_text.add_child(_dish_title)
-	var dish_note := make_shadow_label("料理を食べて、体に力が湧いてきた。", 17, Palette.TEXT_BONE, 2)
+	var dish_note := make_shadow_label("料理を食べて、体に力が湧いてきた。", 16, Palette.TEXT_BONE, 2)
 	dish_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	dish_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	dish_text.add_child(dish_note)
@@ -760,7 +760,7 @@ func _build_screen() -> void:
 			8.0
 		)
 	)
-	_exp_focus_card.custom_minimum_size = Vector2(0.0, 164.0)
+	_exp_focus_card.custom_minimum_size = Vector2(0.0, 184.0)
 	_exp_focus_card.visible = false
 	right.add_child(_exp_focus_card)
 	var exp_focus_box := VBoxContainer.new()
@@ -770,15 +770,15 @@ func _build_screen() -> void:
 	var exp_focus_tag := make_shadow_label("食経験値", 20, Palette.TEXT_BONE, 3)
 	exp_focus_tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	exp_focus_box.add_child(exp_focus_tag)
-	_exp_label = make_shadow_label("+0 EXP", 42, Palette.GOLD_BRIGHT, 5)
+	_exp_label = make_shadow_label("+0 EXP", 48, Palette.GOLD_BRIGHT, 5)
 	_exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	exp_focus_box.add_child(_exp_label)
 	_exp_bar = GaugeBarScript.new()
 	_exp_bar.show_value = false
-	_exp_bar.custom_minimum_size = Vector2(0.0, 30.0)
+	_exp_bar.custom_minimum_size = Vector2(0.0, 34.0)
 	_exp_bar.set_colors(Palette.GAUGE_CYAN, Palette.GAUGE_CYAN_HI)
 	exp_focus_box.add_child(_exp_bar)
-	_exp_progress_label = make_shadow_label("", 20, Palette.GAUGE_CYAN_HI, 2)
+	_exp_progress_label = make_shadow_label("", 21, Palette.GAUGE_CYAN_HI, 2)
 	_exp_progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	exp_focus_box.add_child(_exp_progress_label)
 	var message_row := HBoxContainer.new()
@@ -789,13 +789,13 @@ func _build_screen() -> void:
 	var exp_portrait := TextureRect.new()
 	exp_portrait.name = "ExpMessagePortrait"
 	exp_portrait.texture = load(PLAYER_EXP_POSE) as Texture2D
-	exp_portrait.custom_minimum_size = Vector2(100.0, 64.0)
+	exp_portrait.custom_minimum_size = Vector2(96.0, 56.0)
 	exp_portrait.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	exp_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	exp_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	exp_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	message_row.add_child(exp_portrait)
-	_exp_message_label = make_shadow_label("体に力がみなぎってきた！", 17, Palette.TEXT_BONE, 2)
+	_exp_message_label = make_shadow_label("体に力がみなぎってきた！", 16, Palette.TEXT_BONE, 2)
 	_exp_message_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_exp_message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_exp_message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
