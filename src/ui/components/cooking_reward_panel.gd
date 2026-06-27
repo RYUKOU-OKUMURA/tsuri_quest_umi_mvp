@@ -15,6 +15,7 @@ const MEAL_RESULT_SCENE_ART := "res://assets/showcase/cooking/meal_result_scene_
 const PLAYER_EATING_POSE := "res://assets/showcase/cooking/player_eating_pose_pixel_tight.png"
 const PLAYER_EXP_POSE := "res://assets/showcase/cooking/player_exp_message_pose_pixel.png"
 const PLAYER_EXP_SCENE_POSE := "res://assets/showcase/cooking/player_exp_pose_pixel_tight.png"
+const COOKING_ROOM_BG := "res://assets/showcase/cooking/cooking_room_bg.png"
 const MEAL_SCENE_BG := "res://assets/showcase/cooking/meal_scene_bg.png"
 const EXP_STAGE_BG := "res://assets/showcase/cooking/exp_stage_bg.png"
 const MEAL_RESULT_FRAME := "res://assets/showcase/cooking/meal_result_frame.png"
@@ -891,7 +892,7 @@ func show_meal_result(result: Dictionary) -> void:
 	_dish_image.texture = dish_texture
 	_scene_dish_image.set_dish_texture(dish_texture)
 	_scene_dish_image.set_mode("meal")
-	_set_scene_result_art_visible(false)
+	_set_scene_backdrop(COOKING_ROOM_BG, 0.42, true)
 	_scene_caption.text = "湯気の立つ%sを味わった。" % dish_name
 	_scene_bonus_label.text = _meal_bonus_badge_text(result)
 	_scene_title.text = "食べる"
@@ -1414,8 +1415,20 @@ func _set_scene_actor_mode(mode: String) -> void:
 func _set_scene_result_art_visible(visible: bool) -> void:
 	if _scene_result_image != null:
 		_scene_result_image.visible = visible
+		_scene_result_image.modulate = Color.WHITE
 	if _scene_table != null:
 		_scene_table.modulate.a = 0.0 if visible else 1.0
+
+
+func _set_scene_backdrop(path: String, alpha: float, keep_table_visible: bool) -> void:
+	if _scene_result_image != null:
+		var tex := load(path) as Texture2D
+		if tex != null:
+			_scene_result_image.texture = tex
+		_scene_result_image.visible = true
+		_scene_result_image.modulate = Color(1.0, 1.0, 1.0, alpha)
+	if _scene_table != null:
+		_scene_table.modulate.a = 1.0 if keep_table_visible else 0.0
 
 
 func _set_header_title_font_size(font_size: int) -> void:
