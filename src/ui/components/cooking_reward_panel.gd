@@ -1439,39 +1439,41 @@ func _set_result_banner_height(height: float) -> void:
 
 func _apply_meal_result_composition() -> void:
 	if _scene_card != null:
-		_scene_card.custom_minimum_size = Vector2(454.0, 268.0)
+		_scene_card.custom_minimum_size = Vector2(430.0, 320.0)
 	if _scene_visual_stack != null:
-		_scene_visual_stack.custom_minimum_size = Vector2(0.0, 184.0)
+		_scene_visual_stack.custom_minimum_size = Vector2(0.0, 232.0)
 	if _scene_actor_panel != null:
 		_scene_actor_panel.visible = true
-		_scene_actor_panel.custom_minimum_size = Vector2(176.0, 0.0)
+		_scene_actor_panel.custom_minimum_size = Vector2(168.0, 0.0)
 	if _scene_table != null:
 		_scene_table.add_theme_constant_override("separation", 10)
 	if _scene_dish_image != null:
-		_scene_dish_image.custom_minimum_size = Vector2(252.0, 132.0)
+		_scene_dish_image.custom_minimum_size = Vector2(236.0, 168.0)
 	if _dish_card != null:
-		_dish_card.custom_minimum_size = Vector2(0.0, 184.0)
+		_dish_card.custom_minimum_size = Vector2(0.0, 222.0)
 	if _dish_image != null:
-		_dish_image.custom_minimum_size = Vector2(336.0, 0.0)
-	_set_reward_cards_height(118.0)
+		_dish_image.custom_minimum_size = Vector2(378.0, 0.0)
+	_set_reward_cards_height(96.0)
 
 
 func _apply_exp_gain_composition() -> void:
 	if _scene_card != null:
-		_scene_card.custom_minimum_size = Vector2(354.0, 258.0)
+		_scene_card.custom_minimum_size = Vector2(318.0, 320.0)
 	if _scene_visual_stack != null:
-		_scene_visual_stack.custom_minimum_size = Vector2(0.0, 178.0)
+		_scene_visual_stack.custom_minimum_size = Vector2(0.0, 236.0)
 	if _scene_actor_panel != null:
 		_scene_actor_panel.visible = false
 	if _scene_table != null:
 		_scene_table.add_theme_constant_override("separation", 0)
 	if _scene_dish_image != null:
-		_scene_dish_image.custom_minimum_size = Vector2(320.0, 146.0)
+		_scene_dish_image.custom_minimum_size = Vector2(288.0, 188.0)
+	if _exp_focus_card != null:
+		_exp_focus_card.custom_minimum_size = Vector2(0.0, 250.0)
 	if _effect_preview_card != null:
-		_effect_preview_card.custom_minimum_size = Vector2(248.0, 222.0)
+		_effect_preview_card.custom_minimum_size = Vector2(244.0, 312.0)
 	if _dish_image != null:
 		_dish_image.custom_minimum_size = Vector2(304.0, 0.0)
-	_set_reward_cards_height(104.0)
+	_set_reward_cards_height(84.0)
 
 
 func _set_reward_cards_height(height: float) -> void:
