@@ -915,9 +915,9 @@ func _stat_line(title: String, value: String, accent: Color) -> Control:
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(name)
-	var amount := make_label(value, 18, Color("#2a2118"), 1, Color("#fff4d4"))
-	amount.custom_minimum_size = Vector2(54.0, 0.0)
-	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	var amount := make_label(value, 17, Color("#2a2118"), 1, Color("#fff4d4"))
+	amount.custom_minimum_size = Vector2(46.0, 0.0)
+	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	amount.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(amount)
 	return row
