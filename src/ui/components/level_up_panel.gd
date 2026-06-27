@@ -590,11 +590,11 @@ func _stat_row(row: Dictionary) -> PanelContainer:
 	panel.add_child(line)
 
 	var icon := _stat_icon(String(row["icon"]), row["color"])
-	icon.custom_minimum_size = Vector2(54.0, 0.0)
+	icon.custom_minimum_size = Vector2(48.0, 0.0)
 	line.add_child(icon)
 
-	var name := make_label(String(row["name"]), 20, Palette.TEXT_BONE, 2)
-	name.custom_minimum_size = Vector2(112.0, 0.0)
+	var name := make_label(String(row["name"]), 19, Palette.TEXT_BONE, 2)
+	name.custom_minimum_size = Vector2(92.0, 0.0)
 	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	line.add_child(name)
 
@@ -608,10 +608,10 @@ func _stat_row(row: Dictionary) -> PanelContainer:
 	line.add_child(values)
 
 	var gain_text := "%.1f" % delta if fmt == "%.1f" else "%d" % int(round(delta))
-	var gain := make_shadow_label("+%s" % gain_text, 23, Palette.GAUGE_GREEN_HI, 3)
+	var gain := make_shadow_label("+%s" % gain_text, 22, Palette.GAUGE_GREEN_HI, 3)
 	if absf(delta) < 0.01:
 		gain.text = "-"
-	gain.custom_minimum_size = Vector2(76.0, 0.0)
+	gain.custom_minimum_size = Vector2(66.0, 0.0)
 	gain.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	gain.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	line.add_child(gain)

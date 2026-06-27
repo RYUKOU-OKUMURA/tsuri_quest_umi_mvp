@@ -1259,7 +1259,9 @@ func preview_show_reward_result(result: Dictionary, exp_before: int, exp_after: 
 	_refresh_header()
 	_refresh_detail()
 	_show_meal_result(result, leveled)
-	_show_exp_reward_overlay(result, exp_before, exp_after, exp_max, PlayerProgress.level - 1, {}, leveled)
+	var level_before := maxi(1, PlayerProgress.level - 1)
+	var stats_before := _preview_base_stats_for_level(level_before) if leveled else {}
+	_show_exp_reward_overlay(result, exp_before, exp_after, exp_max, level_before, stats_before, leveled)
 
 
 func preview_show_meal_reward_result(result: Dictionary, leveled: bool) -> void:
@@ -1269,6 +1271,14 @@ func preview_show_meal_reward_result(result: Dictionary, leveled: bool) -> void:
 	var panel := CookingRewardPanelScript.new()
 	add_child(panel)
 	panel.show_meal_result(result)
+
+
+func _preview_base_stats_for_level(level_value: int) -> Dictionary:
+	var current_level := PlayerProgress.level
+	PlayerProgress.level = clampi(level_value, 1, GameData.MAX_LEVEL)
+	var stats := PlayerProgress.get_base_stats().duplicate(true)
+	PlayerProgress.level = current_level
+	return stats
 
 
 func preview_accept_reward_overlay() -> bool:
