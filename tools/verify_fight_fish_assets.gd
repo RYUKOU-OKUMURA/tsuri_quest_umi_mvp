@@ -6,7 +6,18 @@ const GameDataScript = preload("res://src/autoload/game_data.gd")
 
 func _initialize() -> void:
 	var game_data := GameDataScript.new()
-	var fish_ids: Array[String] = ["aji", "mejina", "kasago", "isaki", "saba", "boss_kurodai"]
+	var fish_ids: Array[String] = [
+		"aji",
+		"mejina",
+		"kasago",
+		"isaki",
+		"saba",
+		"suzuki",
+		"madai",
+		"hirame",
+		"kawahagi",
+		"boss_kurodai",
+	]
 	var missing: Array[String] = []
 	for fish_id in fish_ids:
 		var fish: Dictionary = game_data.get_fish(fish_id)
