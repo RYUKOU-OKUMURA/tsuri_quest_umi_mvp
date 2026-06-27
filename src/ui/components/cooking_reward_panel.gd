@@ -13,6 +13,7 @@ const DISH_FEATURE_FRY := "res://assets/showcase/cooking/dish_feature_fry.png"
 const DISH_ICON_SHEET := "res://assets/showcase/cooking/dish_icon_sheet.png"
 const PLAYER_EATING_POSE := "res://assets/showcase/cooking/player_eating_pose_pixel_tight.png"
 const PLAYER_EXP_POSE := "res://assets/showcase/cooking/player_exp_message_pose_pixel.png"
+const PLAYER_EXP_SCENE_POSE := "res://assets/showcase/cooking/player_exp_pose_pixel_tight.png"
 const MEAL_SCENE_BG := "res://assets/showcase/cooking/meal_scene_bg.png"
 const EXP_STAGE_BG := "res://assets/showcase/cooking/exp_stage_bg.png"
 const MEAL_RESULT_FRAME := "res://assets/showcase/cooking/meal_result_frame.png"
@@ -1364,7 +1365,7 @@ func _set_scene_actor_mode(mode: String) -> void:
 		_scene_actor_visual.set_mode(mode)
 	if _scene_actor_image == null:
 		return
-	var path := PLAYER_EXP_POSE if mode == "exp" else PLAYER_EATING_POSE
+	var path := PLAYER_EXP_SCENE_POSE if mode == "exp" else PLAYER_EATING_POSE
 	_scene_actor_image.texture = load(path) as Texture2D
 
 
