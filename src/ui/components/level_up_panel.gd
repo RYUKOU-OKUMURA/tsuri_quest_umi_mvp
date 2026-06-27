@@ -364,7 +364,7 @@ func _build_screen() -> void:
 
 	_dialog = PanelContainer.new()
 	_dialog.name = "LevelUpDialog"
-	_dialog.custom_minimum_size = Vector2(1000.0, 0.0)
+	_dialog.custom_minimum_size = Vector2(1040.0, 0.0)
 	_dialog.add_theme_stylebox_override(
 		"panel",
 		_texture_style_box(
@@ -372,7 +372,7 @@ func _build_screen() -> void:
 			36,
 			_style_box(Color("#10233a"), Color("#7b4b20"), Palette.GOLD_BRIGHT, 6, 8),
 			22.0,
-			12.0
+			8.0
 		)
 	)
 	center.add_child(_dialog)
@@ -385,13 +385,13 @@ func _build_screen() -> void:
 	var title_band := HBoxContainer.new()
 	title_band.name = "LevelUpTitleBand"
 	title_band.alignment = BoxContainer.ALIGNMENT_CENTER
-	title_band.add_theme_constant_override("separation", 12)
-	title_band.custom_minimum_size = Vector2(900.0, 120.0)
+	title_band.add_theme_constant_override("separation", 8)
+	title_band.custom_minimum_size = Vector2(930.0, 110.0)
 	title_band.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(title_band)
 
 	var left_laurel := _level_asset_texture(
-		"LevelLaurelLeftAsset", LevelUpVisual.LAUREL_LEFT_ASSET, Vector2(130.0, 108.0)
+		"LevelLaurelLeftAsset", LevelUpVisual.LAUREL_LEFT_ASSET, Vector2(146.0, 116.0)
 	)
 	title_band.add_child(left_laurel)
 
@@ -402,7 +402,7 @@ func _build_screen() -> void:
 	title_band.add_child(title_stack)
 
 	var crown_visual := _level_asset_texture(
-		"LevelCrownAsset", LevelUpVisual.CROWN_ASSET, Vector2(176.0, 42.0)
+		"LevelCrownAsset", LevelUpVisual.CROWN_ASSET, Vector2(210.0, 48.0)
 	)
 	crown_visual.stretch_mode = TextureRect.STRETCH_SCALE
 	crown_visual.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -411,17 +411,17 @@ func _build_screen() -> void:
 	crown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_stack.add_child(crown_label)
 
-	var title := make_shadow_label("LEVEL UP!", 78, Palette.GOLD_BRIGHT, 7)
+	var title := make_shadow_label("LEVEL UP!", 82, Palette.GOLD_BRIGHT, 8)
 	title.name = "LevelUpTitle"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_stack.add_child(title)
 
 	var right_laurel := _level_asset_texture(
-		"LevelLaurelRightAsset", LevelUpVisual.LAUREL_RIGHT_ASSET, Vector2(130.0, 108.0)
+		"LevelLaurelRightAsset", LevelUpVisual.LAUREL_RIGHT_ASSET, Vector2(146.0, 116.0)
 	)
 	title_band.add_child(right_laurel)
 
-	_level_line = make_shadow_label("", 39, Palette.TEXT_BONE, 4)
+	_level_line = make_shadow_label("", 42, Palette.TEXT_BONE, 5)
 	_level_line.name = "LevelUpLevelLine"
 	_level_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_level_line)
@@ -440,7 +440,7 @@ func _build_screen() -> void:
 	box.add_child(_stats_box)
 
 	_unlock_card = _panel_box(Color("#f2e4c2"), Color("#70451f"), Palette.GOLD_BRIGHT, 5)
-	_unlock_card.custom_minimum_size = Vector2(860.0, 146.0)
+	_unlock_card.custom_minimum_size = Vector2(900.0, 146.0)
 	_unlock_card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(_unlock_card)
 	var unlock_root := VBoxContainer.new()
@@ -460,7 +460,7 @@ func _build_screen() -> void:
 	)
 	_unlock_ribbon.custom_minimum_size = Vector2(0.0, 38.0)
 	unlock_root.add_child(_unlock_ribbon)
-	_unlock_ribbon_label = make_shadow_label("新たな釣り場が解放！", 24, Color("#fff4d4"), 3)
+	_unlock_ribbon_label = make_shadow_label("新たな釣り場が解放！", 25, Color("#fff4d4"), 4)
 	_unlock_ribbon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_unlock_ribbon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_unlock_ribbon.add_child(_unlock_ribbon_label)
@@ -469,7 +469,7 @@ func _build_screen() -> void:
 	unlock_layout.add_theme_constant_override("separation", 12)
 	unlock_root.add_child(unlock_layout)
 	var unlock_icon := _medal_box()
-	unlock_icon.custom_minimum_size = Vector2(128.0, 0.0)
+	unlock_icon.custom_minimum_size = Vector2(140.0, 0.0)
 	unlock_layout.add_child(unlock_icon)
 	var unlock_text := VBoxContainer.new()
 	unlock_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -477,7 +477,7 @@ func _build_screen() -> void:
 	unlock_layout.add_child(unlock_text)
 	_unlock_tag = make_shadow_label("", 16, Palette.GAUGE_RED_HI, 2)
 	unlock_text.add_child(_unlock_tag)
-	_unlock_title = make_label("", 24, Color("#2a2118"), 1, Color("#fff4d4"))
+	_unlock_title = make_label("", 28, Color("#8d2430"), 2, Color("#fff4d4"))
 	unlock_text.add_child(_unlock_title)
 	_unlock_body = make_label("", 16, Color("#4d3924"))
 	_unlock_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -488,11 +488,12 @@ func _build_screen() -> void:
 	summary_cue.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	unlock_text.add_child(summary_cue)
 	var spot := _spot_thumbnail_box()
-	spot.custom_minimum_size = Vector2(216.0, 94.0)
+	spot.custom_minimum_size = Vector2(232.0, 100.0)
 	unlock_layout.add_child(spot)
 
 	_confirm_button = make_button("OK  成果確認へ", _close, 286.0, true)
 	_confirm_button.name = "LevelUpConfirmButton"
+	_confirm_button.custom_minimum_size = Vector2(286.0, 42.0)
 	_confirm_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_apply_flow_button_style(_confirm_button)
 	_confirm_button.draw.connect(func() -> void: _draw_confirm_button_cue(_confirm_button))
