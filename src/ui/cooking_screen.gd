@@ -783,7 +783,7 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	var owned := count > 0
 	var card := PanelContainer.new()
 	card.name = _fish_row_node_name(fish_id)
-	card.custom_minimum_size = Vector2(0, 56)
+	card.custom_minimum_size = Vector2(0, 70)
 	card.mouse_filter = Control.MOUSE_FILTER_STOP if owned else Control.MOUSE_FILTER_IGNORE
 	if owned:
 		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -793,22 +793,22 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 					_select_fish(fish_id)
 		)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 6)
+	row.add_theme_constant_override("separation", 7)
 	card.add_child(row)
 	var marker := make_shadow_label("", 18, Palette.GOLD_BRIGHT, 2)
-	marker.custom_minimum_size = Vector2(16, 0)
+	marker.custom_minimum_size = Vector2(18, 0)
 	marker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	marker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(marker)
 	var icon := TextureRect.new()
 	icon.texture = _fish_icon(fish_id)
-	icon.custom_minimum_size = Vector2(64, 40)
+	icon.custom_minimum_size = Vector2(78, 50)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.modulate = Color.WHITE if owned else Color(0.42, 0.40, 0.34, 0.72)
 	row.add_child(icon)
 	var display_name := _fish_row_display_name(fish_id, String(fish.get("name", fish_id)))
-	var name := make_label(display_name, 18, Color("#241b12"), 1, Color("#fff2ca"))
+	var name := make_label(display_name, 19, Color("#241b12"), 1, Color("#fff2ca"))
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	name.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -816,7 +816,7 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	row.add_child(name)
 	var amount_text := "× %d" % count if owned else "未所持"
 	var amount := make_label(amount_text, 18 if owned else 14, Color("#241b12"), 1, Color("#fff2ca"))
-	amount.custom_minimum_size = Vector2(46.0, 0.0)
+	amount.custom_minimum_size = Vector2(50.0, 0.0)
 	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	amount.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(amount)
