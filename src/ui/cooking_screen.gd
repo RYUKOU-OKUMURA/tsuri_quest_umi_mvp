@@ -326,11 +326,11 @@ func configure(payload: Dictionary) -> void:
 
 func _build_screen() -> void:
 	_add_cooking_background()
-	var root := make_root_margin(4)
+	var root := make_root_margin(0)
 	var layout := VBoxContainer.new()
 	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	layout.add_theme_constant_override("separation", 5)
+	layout.add_theme_constant_override("separation", 3)
 	root.add_child(layout)
 
 	_build_header(layout)
@@ -356,7 +356,7 @@ func _add_cooking_background() -> void:
 		add_gradient_background(Color("#2a2418"), Color("#14110b"))
 
 	var glaze := ColorRect.new()
-	glaze.color = Color(0.03, 0.06, 0.10, 0.34)
+	glaze.color = Color(0.03, 0.06, 0.10, 0.24)
 	glaze.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	glaze.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(glaze)
@@ -437,7 +437,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	layout.add_child(body)
 
 	var fish_panel := _panel_box(Color("#10283d"), Color("#5e391a"), Color("#e4b461"), 6)
-	fish_panel.custom_minimum_size = Vector2(306, 0)
+	fish_panel.custom_minimum_size = Vector2(322, 0)
 	fish_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(fish_panel)
 	var fish_layout := VBoxContainer.new()
@@ -456,7 +456,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 		16.0,
 		10.0
 	)
-	recipe_panel.custom_minimum_size = Vector2(452, 0)
+	recipe_panel.custom_minimum_size = Vector2(444, 0)
 	recipe_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(recipe_panel)
 	var recipe_layout := VBoxContainer.new()
@@ -492,7 +492,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	detail_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(detail_panel)
 	var detail_layout := VBoxContainer.new()
-	detail_layout.add_theme_constant_override("separation", 6)
+	detail_layout.add_theme_constant_override("separation", 5)
 	detail_panel.add_child(detail_layout)
 	_dish_title = make_label("料理を選んでください", 28, Color("#2a2118"), 1, Color("#fff4d4"))
 	_dish_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -503,12 +503,12 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	_dish_subtitle.custom_minimum_size = Vector2(0.0, 20.0)
 	detail_layout.add_child(_dish_subtitle)
 	var dish_frame := _panel_box(Color("#6a4023"), Color("#3b2515"), Color("#e6b561"), 4)
-	dish_frame.custom_minimum_size = Vector2(0, 122)
+	dish_frame.custom_minimum_size = Vector2(0, 190)
 	dish_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_layout.add_child(dish_frame)
 	_dish_image = TextureRect.new()
 	_dish_image.name = "SelectedDishFeatureImage"
-	_dish_image.custom_minimum_size = Vector2(0, 106)
+	_dish_image.custom_minimum_size = Vector2(0, 176)
 	_dish_image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_dish_image.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_dish_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -566,7 +566,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	cue_row.add_child(_cook_action_cue)
 	_cook_button = make_button("調理する", _cook_selected, 300, true)
 	_cook_button.name = "CookButton"
-	_cook_button.custom_minimum_size = Vector2(286, 46)
+	_cook_button.custom_minimum_size = Vector2(320, 52)
 	_cook_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_apply_cook_button_style()
 	_cook_button.draw.connect(func() -> void: _draw_cook_button_icon(_cook_button))
@@ -588,11 +588,12 @@ func _build_result_summary(layout: VBoxContainer) -> void:
 	left_spacer.custom_minimum_size = Vector2(92, 0)
 	title_row.add_child(left_spacer)
 	_result_title = make_shadow_label("", 18, Palette.GOLD_BRIGHT, 3)
+	_result_title.custom_minimum_size = Vector2(0.0, 24.0)
 	_result_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_result_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_row.add_child(_result_title)
 	_status_button = make_button("詳細", _show_status_overlay, 100, false)
-	_status_button.custom_minimum_size = Vector2(92, 34)
+	_status_button.custom_minimum_size = Vector2(92, 24)
 	title_row.add_child(_status_button)
 	_result_body = HBoxContainer.new()
 	_result_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -636,7 +637,7 @@ func _add_detail_story_row(
 ) -> Array:
 	var tile := _panel_box(Color("#fff0cf"), Color("#8b5b2c"), Color("#e6b561"), 3)
 	tile.name = node_name
-	tile.custom_minimum_size = Vector2(0, 42)
+	tile.custom_minimum_size = Vector2(0, 30)
 	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(tile)
 
@@ -645,7 +646,7 @@ func _add_detail_story_row(
 	tile.add_child(row)
 
 	var title_band := _panel_box(Color("#5a3a1c"), Color("#3b2515"), Color("#d7a456"), 2)
-	title_band.custom_minimum_size = Vector2(title_width, 28)
+	title_band.custom_minimum_size = Vector2(title_width, 24)
 	row.add_child(title_band)
 	var title_row := HBoxContainer.new()
 	title_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -796,7 +797,7 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	var owned := count > 0
 	var card := PanelContainer.new()
 	card.name = _fish_row_node_name(fish_id)
-	card.custom_minimum_size = Vector2(0, 68)
+	card.custom_minimum_size = Vector2(0, 72)
 	card.mouse_filter = Control.MOUSE_FILTER_STOP if owned else Control.MOUSE_FILTER_IGNORE
 	if owned:
 		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -809,13 +810,13 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	row.add_theme_constant_override("separation", 7)
 	card.add_child(row)
 	var marker := make_shadow_label("", 20, Palette.GOLD_BRIGHT, 2)
-	marker.custom_minimum_size = Vector2(18, 0)
+	marker.custom_minimum_size = Vector2(14, 0)
 	marker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	marker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(marker)
 	var icon := TextureRect.new()
-	icon.texture = _fish_icon(fish_id)
-	icon.custom_minimum_size = Vector2(96, 50)
+	icon.texture = _fish_portrait(fish_id)
+	icon.custom_minimum_size = Vector2(116, 54)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.modulate = Color(1.18, 1.12, 1.04, 1.0) if owned else Color(0.38, 0.36, 0.31, 0.76)
@@ -958,7 +959,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	var recipe_id := String(recipe.get("id", ""))
 	var card := PanelContainer.new()
 	card.name = "RecipeCard_%s" % recipe_id
-	card.custom_minimum_size = Vector2(134, 200)
+	card.custom_minimum_size = Vector2(134, 204)
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
 	var selectable := not locked and not unavailable
 	if selectable:
@@ -980,8 +981,8 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	title.clip_text = true
 	box.add_child(title)
 	var image := TextureRect.new()
-	image.texture = _recipe_icon(recipe_id if not locked else "locked")
-	image.custom_minimum_size = Vector2(0, 104)
+	image.texture = _recipe_icon("locked") if locked else _featured_dish_texture(recipe_id)
+	image.custom_minimum_size = Vector2(0, 118)
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	image.modulate = Color(0.46, 0.42, 0.36, 0.82) if locked or unavailable else Color.WHITE
@@ -1034,7 +1035,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 func _make_recipe_book_card() -> PanelContainer:
 	var card := PanelContainer.new()
 	card.name = "RecipeCard_Book"
-	card.custom_minimum_size = Vector2(134, 200)
+	card.custom_minimum_size = Vector2(134, 204)
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.self_modulate = Color(0.72, 0.66, 0.54, 1.0)
 	card.add_theme_stylebox_override(
@@ -1655,11 +1656,11 @@ func _summary_card(title: String, value: String, accent: Color, icon_mode := "bo
 func _prep_summary_card(title: String, value: String, accent: Color, icon_mode := "book") -> PanelContainer:
 	var card := _panel_box(Color("#0d2338"), Color("#60401f"), Color("#d7a456"), 4)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.custom_minimum_size = Vector2(0, 48)
+	card.custom_minimum_size = Vector2(0, 28)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	card.add_child(row)
-	row.add_child(_small_icon(icon_mode, accent, Vector2(38.0, 0.0)))
+	row.add_child(_small_icon(icon_mode, accent, Vector2(28.0, 0.0)))
 	var title_label := make_shadow_label(title, 12, Palette.TEXT_BONE, 2)
 	title_label.custom_minimum_size = Vector2(104.0, 0.0)
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -1678,7 +1679,7 @@ func _prep_summary_card(title: String, value: String, accent: Color, icon_mode :
 
 func _set_result_summary_compact(compact: bool) -> void:
 	if _result_panel != null:
-		_result_panel.custom_minimum_size = Vector2(0, 58 if compact else 112)
+		_result_panel.custom_minimum_size = Vector2(0, 58 if compact else 70)
 	if _result_body != null:
 		_result_body.visible = not compact
 
@@ -1790,6 +1791,15 @@ func _atlas(path: String, index: int, columns: int, rows: int) -> Texture2D:
 
 func _fish_icon(fish_id: String) -> Texture2D:
 	return _atlas(FISH_ICON_SHEET, int(FISH_ICON_INDEX.get(fish_id, 0)), 1, 6)
+
+
+func _fish_portrait(fish_id: String) -> Texture2D:
+	var path := String(FISH_CARD_PORTRAIT_PATHS.get(fish_id, ""))
+	if not path.is_empty():
+		var tex := load(path) as Texture2D
+		if tex != null:
+			return tex
+	return _fish_icon(fish_id)
 
 
 func _recipe_icon(recipe_id: String) -> Texture2D:
