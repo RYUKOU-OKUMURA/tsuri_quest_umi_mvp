@@ -53,6 +53,7 @@ func _audit_cook_select() -> void:
 	_expect_named_control_size("COOK_SELECT", screen, "CookDetailMaterialRow", Vector2(220.0, 34.0))
 	_expect_named_control_size("COOK_SELECT", screen, "CookDetailExpRow", Vector2(220.0, 34.0))
 	_expect_named_control_size("COOK_SELECT", screen, "CookDetailEffectRow", Vector2(220.0, 34.0))
+	_expect_named_control_size("COOK_SELECT", screen, "CookActionRunway", Vector2(300.0, 68.0))
 	_expect_named_control_size("COOK_SELECT", screen, "FishRowAji", Vector2(230.0, 44.0))
 	_expect_named_control_size("COOK_SELECT", screen, "FishRowSaba", Vector2(230.0, 44.0))
 	_expect_named_control_size("COOK_SELECT", screen, "FishRowKasago", Vector2(230.0, 44.0))

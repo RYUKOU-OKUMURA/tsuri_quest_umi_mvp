@@ -848,6 +848,37 @@ def cook_button_frame() -> None:
     save(img, "cook_button_frame.png")
 
 
+def cook_action_runway_frame() -> None:
+    w, h = 560, 88
+    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    shadow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(shadow, "RGBA")
+    sd.rounded_rectangle((12, 12, w - 10, h - 6), radius=9, fill=(0, 0, 0, 105))
+    img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(4)))
+    paper = reference_paper_texture((w - 22, h - 20), "ead6ad", 131, (1032, 688, 1538, 792), 0.35, 8.0)
+    paste_rounded(img, paper, (8, 7, w - 14, h - 13), 8, 245)
+    draw = ImageDraw.Draw(img, "RGBA")
+
+    # A unified landing strip for the final cook action: note/cue on top,
+    # chunky navy CTA socket on the bottom.
+    draw.rounded_rectangle((7, 7, w - 14, h - 13), radius=8, outline=(72, 43, 19, 245), width=4)
+    draw.rounded_rectangle((20, 16, w - 28, 34), radius=5, fill=(248, 229, 184, 95), outline=(147, 94, 43, 70), width=1)
+    draw.line((36, 26, w - 88, 26), fill=(104, 65, 32, 70), width=2)
+    draw.line((w - 84, 25, w - 38, 25), fill=(255, 205, 72, 118), width=3)
+    draw_colored_arrow = [
+        (w - 42, 25),
+        (w - 58, 18),
+        (w - 58, 33),
+    ]
+    draw.polygon(draw_colored_arrow, fill=(255, 205, 72, 150))
+    draw.rounded_rectangle((116, 38, w - 116, h - 17), radius=8, fill=(7, 25, 43, 150), outline=(255, 210, 86, 96), width=2)
+    for x, y in [(22, 15), (w - 46, 15), (22, h - 39), (w - 46, h - 39)]:
+        draw.rectangle((x, y, x + 13, y + 13), fill=(230, 174, 72, 205), outline=(57, 32, 14, 225), width=2)
+    for x in range(144, w - 148, 44):
+        draw.line((x, 43, x - 22, h - 24), fill=(255, 255, 255, 22), width=2)
+    save(img, "cook_action_runway_frame.png")
+
+
 def flow_action_button_frame() -> None:
     w, h = 380, 88
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
@@ -1850,6 +1881,7 @@ def main() -> None:
     recipe_to_detail_arrow()
     recipe_selected_card_frame()
     cook_button_frame()
+    cook_action_runway_frame()
     flow_action_button_frame()
     player_eating_pose()
     meal_table_spread()

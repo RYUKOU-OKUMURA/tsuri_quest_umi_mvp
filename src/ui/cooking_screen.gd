@@ -21,6 +21,7 @@ const RECIPE_SELECTED_CARD_FRAME := "res://assets/showcase/cooking/recipe_select
 const RECIPE_TO_DETAIL_ARROW := "res://assets/showcase/cooking/recipe_to_detail_arrow.png"
 const DISH_DETAIL_FRAME := "res://assets/showcase/cooking/dish_detail_frame.png"
 const COOK_BUTTON_FRAME := "res://assets/showcase/cooking/cook_button_frame.png"
+const COOK_ACTION_RUNWAY_FRAME := "res://assets/showcase/cooking/cook_action_runway_frame.png"
 const FISH_ROW_FRAME := "res://assets/showcase/cooking/fish_row_frame.png"
 const PLAYER_HEADER_PORTRAIT := "res://assets/showcase/cooking/player_status_portrait_pixel.png"
 const FISH_CARD_PORTRAIT_PATHS := {
@@ -617,29 +618,43 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	)
 	_buff_value = buff_labels[0] as Label
 	_effect_count_value = buff_labels[1] as Label
+	var action_panel := _texture_panel_box(
+		COOK_ACTION_RUNWAY_FRAME,
+		28,
+		_style_box(Color("#ead7ad"), Color("#8b5b2c"), Color("#e6b561"), 3, 5),
+		10.0,
+		2.0
+	)
+	action_panel.name = "CookActionRunway"
+	action_panel.custom_minimum_size = Vector2(0, 72)
+	action_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail_layout.add_child(action_panel)
+	var action_layout := VBoxContainer.new()
+	action_layout.add_theme_constant_override("separation", 1)
+	action_panel.add_child(action_layout)
 	var cue_row := HBoxContainer.new()
-	cue_row.custom_minimum_size = Vector2(0, 20)
+	cue_row.custom_minimum_size = Vector2(0, 18)
 	cue_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	cue_row.add_theme_constant_override("separation", 8)
-	detail_layout.add_child(cue_row)
-	_overwrite_note = make_label("", 13, Color("#624b31"))
+	action_layout.add_child(cue_row)
+	_overwrite_note = make_label("", 12, Color("#624b31"))
 	_overwrite_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_overwrite_note.clip_text = true
-	_overwrite_note.custom_minimum_size = Vector2(0, 20)
+	_overwrite_note.custom_minimum_size = Vector2(0, 18)
 	_overwrite_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_overwrite_note.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	cue_row.add_child(_overwrite_note)
 	_cook_action_cue = CookActionCueVisual.new()
 	_cook_action_cue.name = "CookActionCue"
-	_cook_action_cue.custom_minimum_size = Vector2(112, 20)
+	_cook_action_cue.custom_minimum_size = Vector2(138, 18)
 	cue_row.add_child(_cook_action_cue)
 	_cook_button = make_button("調理する", _cook_selected, 300, true)
 	_cook_button.name = "CookButton"
-	_cook_button.custom_minimum_size = Vector2(320, 52)
+	_cook_button.custom_minimum_size = Vector2(340, 48)
 	_cook_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_apply_cook_button_style()
 	_cook_button.draw.connect(func() -> void: _draw_cook_button_icon(_cook_button))
-	detail_layout.add_child(_cook_button)
+	action_layout.add_child(_cook_button)
 
 
 func _build_result_summary(layout: VBoxContainer) -> void:
