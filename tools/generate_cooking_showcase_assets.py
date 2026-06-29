@@ -821,6 +821,31 @@ def recipe_selected_card_frame() -> None:
     save(img, "recipe_selected_card_frame.png")
 
 
+def recipe_material_strip_frame() -> None:
+    w, h = 240, 54
+    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    shadow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(shadow, "RGBA")
+    sd.rounded_rectangle((8, 9, w - 7, h - 5), radius=7, fill=(0, 0, 0, 96))
+    img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(3)))
+    paper = reference_paper_texture((w - 18, h - 16), "f4dfab", 151, (440, 614, 622, 664), 0.42, 5.0)
+    paste_rounded(img, paper, (6, 6, w - 8, h - 10), 6, 246)
+    draw = ImageDraw.Draw(img, "RGBA")
+
+    # Footer socket for recipe cards: a tiny framed material strip that keeps
+    # fish icon + quantity from reading like loose debug text.
+    draw.rounded_rectangle((6, 6, w - 8, h - 10), radius=6, outline=(74, 43, 18, 248), width=3)
+    draw.rounded_rectangle((16, 13, 132, h - 17), radius=5, fill=(10, 43, 67, 92), outline=(244, 189, 74, 142), width=2)
+    draw.rounded_rectangle((145, 14, w - 24, h - 18), radius=4, fill=(255, 239, 191, 82), outline=(135, 82, 33, 112), width=1)
+    draw.line((32, h - 19, 119, h - 19), fill=(255, 228, 118, 80), width=2)
+    draw.line((154, h - 20, w - 34, h - 20), fill=(112, 67, 26, 72), width=2)
+    for x, y in [(14, 12), (w - 28, 12), (14, h - 30), (w - 28, h - 30)]:
+        draw.rectangle((x, y, x + 9, y + 9), fill=(231, 174, 69, 210), outline=(58, 33, 14, 220), width=1)
+    for x in range(32, w - 38, 34):
+        draw.line((x, 12, x - 20, h - 16), fill=(255, 255, 255, 24), width=1)
+    save(img, "recipe_material_strip_frame.png")
+
+
 def cook_button_frame() -> None:
     w, h = 360, 82
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
@@ -1880,6 +1905,7 @@ def main() -> None:
     cooking_section_ribbon()
     recipe_to_detail_arrow()
     recipe_selected_card_frame()
+    recipe_material_strip_frame()
     cook_button_frame()
     cook_action_runway_frame()
     flow_action_button_frame()

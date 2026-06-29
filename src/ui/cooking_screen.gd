@@ -18,6 +18,7 @@ const DISH_FEATURE_FRY := "res://assets/showcase/cooking/dish_feature_fry.png"
 const RECIPE_GRID_FRAME := "res://assets/showcase/cooking/recipe_grid_frame.png"
 const RECIPE_CARD_FRAME := "res://assets/showcase/cooking/recipe_card_frame.png"
 const RECIPE_SELECTED_CARD_FRAME := "res://assets/showcase/cooking/recipe_selected_card_frame.png"
+const RECIPE_MATERIAL_STRIP_FRAME := "res://assets/showcase/cooking/recipe_material_strip_frame.png"
 const RECIPE_TO_DETAIL_ARROW := "res://assets/showcase/cooking/recipe_to_detail_arrow.png"
 const DISH_DETAIL_FRAME := "res://assets/showcase/cooking/dish_detail_frame.png"
 const COOK_BUTTON_FRAME := "res://assets/showcase/cooking/cook_button_frame.png"
@@ -1083,12 +1084,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	stars.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	stars.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	box.add_child(stars)
-	var material_row := HBoxContainer.new()
-	material_row.name = "RecipeMaterialRow_%s" % recipe_id
-	material_row.custom_minimum_size = Vector2(0.0, 28.0)
-	material_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	material_row.add_theme_constant_override("separation", 2)
-	box.add_child(material_row)
+	var material_row := _add_recipe_material_badge(box, recipe_id)
 	var material_icon := TextureRect.new()
 	material_icon.name = "RecipeMaterialIcon_%s" % recipe_id
 	material_icon.texture = _recipe_material_texture(recipe, locked, unavailable)
@@ -1152,12 +1148,7 @@ func _make_recipe_book_card() -> PanelContainer:
 	stars.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	stars.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	box.add_child(stars)
-	var material_row := HBoxContainer.new()
-	material_row.name = "RecipeMaterialRow_Book"
-	material_row.custom_minimum_size = Vector2(0.0, 28.0)
-	material_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	material_row.add_theme_constant_override("separation", 2)
-	box.add_child(material_row)
+	var material_row := _add_recipe_material_badge(box, "Book")
 	var icon := TextureRect.new()
 	icon.name = "RecipeMaterialIcon_Book"
 	icon.texture = _recipe_icon("locked")
@@ -1173,6 +1164,28 @@ func _make_recipe_book_card() -> PanelContainer:
 	footer.clip_text = true
 	material_row.add_child(footer)
 	return card
+
+
+func _add_recipe_material_badge(parent: Container, recipe_id: String) -> HBoxContainer:
+	var badge := _texture_panel_box(
+		RECIPE_MATERIAL_STRIP_FRAME,
+		14,
+		_style_box(Color("#f4dfab"), Color("#7b5027"), Color("#d7a456"), 3, 5),
+		5.0,
+		1.0
+	)
+	badge.name = "RecipeMaterialBadge_%s" % recipe_id
+	badge.custom_minimum_size = Vector2(0.0, 30.0)
+	badge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	parent.add_child(badge)
+	var material_row := HBoxContainer.new()
+	material_row.name = "RecipeMaterialRow_%s" % recipe_id
+	material_row.custom_minimum_size = Vector2(0.0, 28.0)
+	material_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	material_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	material_row.add_theme_constant_override("separation", 2)
+	badge.add_child(material_row)
+	return material_row
 
 
 func _recipe_star_text(recipe: Dictionary, locked: bool) -> String:
