@@ -1659,19 +1659,7 @@ func _show_status_summary() -> void:
 	_set_result_summary_compact(false)
 	_result_title.text = "現在の準備"
 	_clear_container(_result_body)
-	_result_body.add_child(
-		_prep_summary_card(
-			"プレイヤーLv.",
-			"Lv.%d  %d/%d" % [
-				PlayerProgress.level,
-				PlayerProgress.exp,
-				PlayerProgress.exp_to_next_level(),
-			],
-			Palette.GOLD_BRIGHT,
-			"player_mini",
-			"PrepSummaryCardLevel"
-		)
-	)
+	_result_body.add_child(_prep_level_summary_card("PrepSummaryCardLevel"))
 	_result_body.add_child(
 		_prep_summary_card(
 			"効果中の料理",
@@ -1949,6 +1937,90 @@ func _prep_summary_card(
 	value_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	value_label.clip_text = true
 	text_box.add_child(value_label)
+	return card
+
+
+func _prep_level_summary_card(node_name := "") -> PanelContainer:
+	var card := _texture_panel_box(
+		PREP_SUMMARY_CARD_FRAME,
+		12,
+		_style_box(Color("#f0dfb8"), Color("#8b5b2c"), Color("#d7a456"), 3, 5),
+		16.0,
+		3.0
+	)
+	card.name = node_name
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.custom_minimum_size = Vector2(0, 60)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	card.add_child(row)
+	var icon := _small_icon("player_mini", Palette.GOLD_BRIGHT, Vector2(44.0, 44.0))
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(icon)
+	var text_box := VBoxContainer.new()
+	text_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	text_box.add_theme_constant_override("separation", 1)
+	row.add_child(text_box)
+	var title_label := make_shadow_label("プレイヤーLv.", 13, Color("#2b2117"), 1, Color("#fff2ca"))
+	title_label.custom_minimum_size = Vector2(0.0, 18.0)
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	title_label.clip_text = true
+	text_box.add_child(title_label)
+	var meter_row := HBoxContainer.new()
+	meter_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	meter_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	meter_row.add_theme_constant_override("separation", 6)
+	text_box.add_child(meter_row)
+	var level_label := make_shadow_label(
+		"%d" % PlayerProgress.level,
+		25,
+		Color("#1f160f"),
+		1,
+		Color("#fff5cf")
+	)
+	level_label.custom_minimum_size = Vector2(36.0, 28.0)
+	level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	level_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	meter_row.add_child(level_label)
+	var gauge_box := VBoxContainer.new()
+	gauge_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	gauge_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	gauge_box.add_theme_constant_override("separation", 0)
+	meter_row.add_child(gauge_box)
+	var gauge := ProgressBar.new()
+	gauge.name = "PrepSummaryLevelGauge"
+	gauge.custom_minimum_size = Vector2(0.0, 13.0)
+	gauge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	gauge.min_value = 0
+	gauge.max_value = PlayerProgress.exp_to_next_level()
+	gauge.value = PlayerProgress.exp
+	gauge.show_percentage = false
+	gauge.add_theme_stylebox_override(
+		"background",
+		_style_box(Color("#16283a"), Color("#3b2515"), Color("#6c5530"), 1, 2)
+	)
+	gauge.add_theme_stylebox_override(
+		"fill",
+		_style_box(Palette.GAUGE_CYAN, Color("#12314d"), Palette.GAUGE_CYAN_HI, 1, 2)
+	)
+	gauge_box.add_child(gauge)
+	var exp_label := make_shadow_label(
+		"%d/%d" % [PlayerProgress.exp, PlayerProgress.exp_to_next_level()],
+		11,
+		Color("#2b2117"),
+		1,
+		Color("#fff5cf")
+	)
+	exp_label.name = "PrepSummaryLevelExpText"
+	exp_label.custom_minimum_size = Vector2(0.0, 13.0)
+	exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	exp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	exp_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	exp_label.clip_text = true
+	gauge_box.add_child(exp_label)
 	return card
 
 
