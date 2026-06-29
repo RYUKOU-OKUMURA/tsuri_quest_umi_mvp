@@ -157,15 +157,13 @@ func _audit_cook_select() -> void:
 			"所持している魚",
 			"料理を選ぶ",
 			"アジの塩焼き",
-			"選択中 40EXP",
 			"★★",
 			"★★★",
-			"素材 アジ",
-			"素材 メジナ",
 			"煮付け",
-			"素材違い",
+			"別素材",
 			"？？？",
-			"未解放 Lv.5",
+			"Lv.5",
+			"×1",
 			"必要な材料",
 			"アジ ×1",
 			"4 → 3",
@@ -216,6 +214,10 @@ func _audit_cook_select() -> void:
 	_expect_named_node("COOK_SELECT", screen, "FishSectionRibbon")
 	_expect_named_node("COOK_SELECT", screen, "RecipeSectionRibbon")
 	_expect_named_node("COOK_SELECT", screen, "RecipeCard_salt_grill")
+	_expect_named_node("COOK_SELECT", screen, "RecipeMaterialIcon_salt_grill")
+	_expect_named_node("COOK_SELECT", screen, "RecipeMaterialIcon_sashimi")
+	_expect_named_node("COOK_SELECT", screen, "RecipeMaterialIcon_simmered")
+	_expect_named_node("COOK_SELECT", screen, "RecipeMaterialIcon_Book")
 	_expect_named_node("COOK_SELECT", screen, "RecipeToDetailArrow")
 	_expect_named_node("COOK_SELECT", screen, "CookDetailMaterialRow")
 	_expect_named_node("COOK_SELECT", screen, "CookDetailExpRow")

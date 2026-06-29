@@ -1064,30 +1064,27 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	stars.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	stars.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	box.add_child(stars)
-	var material_text := _recipe_material_chip(recipe, locked, unavailable)
-	var material := make_label(material_text, 11, Color("#49351f"), 1, Color("#fff4cf"))
-	material.custom_minimum_size = Vector2(0.0, 16.0)
-	material.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	material.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	material.clip_text = true
-	box.add_child(material)
-	var footer_text := ""
-	if locked:
-		footer_text = "未解放 Lv.%d" % int(recipe.get("unlock_level", 1))
-	elif unavailable:
-		footer_text = "素材違い"
-	else:
-		var dish_key := "%s:%s" % [_selected_fish_id, recipe_id]
-		var first_time := not PlayerProgress.eaten_recipes.has(dish_key)
-		var base_exp := GameData.recipe_exp(_selected_fish_id, recipe_id)
-		var total_exp := base_exp * 2 if first_time else base_exp
-		footer_text = "%d EXP%s" % [total_exp, " 初回" if first_time else ""]
-	var footer := make_label(footer_text, 11, Color("#49351f"), 1, Color("#fff4cf"))
-	footer.custom_minimum_size = Vector2(0.0, 12.0)
+	var material_row := HBoxContainer.new()
+	material_row.name = "RecipeMaterialRow_%s" % recipe_id
+	material_row.custom_minimum_size = Vector2(0.0, 28.0)
+	material_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	material_row.add_theme_constant_override("separation", 2)
+	box.add_child(material_row)
+	var material_icon := TextureRect.new()
+	material_icon.name = "RecipeMaterialIcon_%s" % recipe_id
+	material_icon.texture = _recipe_material_texture(recipe, locked, unavailable)
+	material_icon.custom_minimum_size = Vector2(64.0, 26.0)
+	material_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	material_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	material_icon.modulate = Color(0.72, 0.66, 0.56, 1.0) if locked or unavailable else Color.WHITE
+	material_row.add_child(material_icon)
+	var footer_text := _recipe_card_status_text(recipe, locked, unavailable)
+	var footer := make_label(footer_text, 10, Color("#49351f"), 1, Color("#fff4cf"))
+	footer.custom_minimum_size = Vector2(34.0, 22.0)
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	footer.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	footer.clip_text = true
-	box.add_child(footer)
+	material_row.add_child(footer)
 	_recipe_cards[recipe_id] = {
 		"card": card,
 		"locked": locked,
@@ -1136,18 +1133,26 @@ func _make_recipe_book_card() -> PanelContainer:
 	stars.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	stars.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	box.add_child(stars)
-	var material := make_label("新しい献立", 11, Color("#49351f"), 1, Color("#fff4cf"))
-	material.custom_minimum_size = Vector2(0.0, 16.0)
-	material.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	material.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	material.clip_text = true
-	box.add_child(material)
-	var footer := make_label("準備中", 11, Color("#49351f"), 1, Color("#fff4cf"))
-	footer.custom_minimum_size = Vector2(0.0, 12.0)
+	var material_row := HBoxContainer.new()
+	material_row.name = "RecipeMaterialRow_Book"
+	material_row.custom_minimum_size = Vector2(0.0, 28.0)
+	material_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	material_row.add_theme_constant_override("separation", 2)
+	box.add_child(material_row)
+	var icon := TextureRect.new()
+	icon.name = "RecipeMaterialIcon_Book"
+	icon.texture = _recipe_icon("locked")
+	icon.custom_minimum_size = Vector2(64.0, 26.0)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.modulate = Color(0.64, 0.58, 0.48, 1.0)
+	material_row.add_child(icon)
+	var footer := make_label("図鑑", 10, Color("#49351f"), 1, Color("#fff4cf"))
+	footer.custom_minimum_size = Vector2(34.0, 22.0)
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	footer.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	footer.clip_text = true
-	box.add_child(footer)
+	material_row.add_child(footer)
 	return card
 
 
@@ -1161,17 +1166,28 @@ func _recipe_star_text(recipe: Dictionary, locked: bool) -> String:
 	return "★★★" if stars >= 3 else "★★"
 
 
-func _recipe_material_chip(recipe: Dictionary, locked: bool, unavailable: bool) -> String:
+func _recipe_material_texture(recipe: Dictionary, locked: bool, unavailable: bool) -> Texture2D:
+	var fish_id := _recipe_material_fish_id(recipe, locked, unavailable)
+	if fish_id.is_empty():
+		return _recipe_icon("locked")
+	return _fish_icon(fish_id)
+
+
+func _recipe_material_fish_id(recipe: Dictionary, locked: bool, unavailable: bool) -> String:
+	if not locked and not unavailable and not _selected_fish_id.is_empty():
+		return _selected_fish_id
+	var allowed = recipe.get("allowed_fish", [])
+	if allowed is Array and not allowed.is_empty():
+		return String(allowed[0])
+	return ""
+
+
+func _recipe_card_status_text(recipe: Dictionary, locked: bool, unavailable: bool) -> String:
 	if locked:
-		return "素材 ？？？"
+		return "Lv.%d" % int(recipe.get("unlock_level", 1))
 	if unavailable:
-		var allowed = recipe.get("allowed_fish", [])
-		if allowed is Array and not allowed.is_empty():
-			var fish := GameData.get_fish(String(allowed[0]))
-			return "素材 %s" % String(fish.get("name", "魚"))
-		return "素材違い"
-	var fish := GameData.get_fish(_selected_fish_id)
-	return "素材 %s" % String(fish.get("name", "魚"))
+		return "別素材"
+	return "×1"
 
 
 func _select_recipe(recipe_id: String) -> void:
@@ -1224,8 +1240,7 @@ func _refresh_recipe_card_styles() -> void:
 		)
 		if footer != null:
 			var base_footer := String(entry.get("footer_text", ""))
-			var selected_footer := "選択中 %s" % base_footer.replace(" EXP", "EXP").replace(" 初回", "")
-			footer.text = selected_footer if selected and not locked and not unavailable else base_footer
+			footer.text = base_footer
 
 
 func _refresh_detail() -> void:
