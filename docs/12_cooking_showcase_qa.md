@@ -212,13 +212,14 @@
 - 実装済み: `recipe_grid_frame.png`、`recipe_card_frame.png`、`recipe_selected_card_frame.png` は参照紙テクスチャを混ぜた素材に更新し、料理カード内の料理絵は `recipe_dish_thumb_frame.png` の濃色マット付き額へ収める。カード下部は `recipe_material_strip_frame.png` を使う `RecipeMaterialBadge_*` に `RecipeMaterialIcon_*` の素材魚アイコンと短い状態表示を収め、EXP情報は右詳細の `CookDetailExpRow` に集約した。追調整では `recipe_selected_card_frame.png` を通常カードの紙面に近い構造へ戻し、内側の斜めハイライトと黄色ベタを削って、選択状態は金縁・角金具・外周グローで出すようにした。
 - 実装済み: 右詳細は `dish_feature_aji_shioyaki.png` を参照01の大判料理カットから生成し、`SelectedDishFeatureImage` をやや大きくした。詳細3行は `cook_detail_row_frame.png` を使う `CookDetailMaterialRow` / `CookDetailExpRow` / `CookDetailEffectRow` へ置き換え、フォーム欄ではなく横長情報リボンとして読ませる。`dish_detail_frame.png`、`cook_button_frame.png`、`cook_action_runway_frame.png` も紙面、青い金縁CTA、下部アクション帯が読める素材に更新した。
 - 追記: 右詳細3行の値領域から強い斜線と入力欄風の囲いを削り、`CookDetailMaterialRow` / `CookDetailExpRow` / `CookDetailEffectRow` の主値を濃いインクで直接載せるようにした。`cook_button_frame.png` と `cook_action_runway_frame.png` も白い斜線を抑え、調理ボタン周辺の装飾より `調理する` の読みやすさを優先する。
+- 追記: `CookActionCue` は鍋から皿への大きな描画をやめ、細い金色キューへ抑えた。`CookButton` は高さと文字サイズを上げ、鍋アイコンを左ポケット内に収め、右詳細の最後に押す青い金縁CTAとして読ませる。
 - 実装済み: 下部の `現在の準備` は `prep_summary_bar_frame.png` と `prep_summary_card_frame.png` を使う `CurrentPrepBar` / `PrepSummaryCard*` へ置き換え、参照01の下部ステータスバーに近い紙カード群へ寄せた。
 - 追記: 下部バーはカード高を上げ、アイコンソケットと値レールを再調整した。`CurrentPrepTitle` は食事結果文言が横クリップしない幅を維持し、通常時の `PrepSummaryCard*` は参照01の下部カードに近い大きめのアイコンと数値を優先する。
 - 追記: `tools/cooking_preview.gd` の `COOK_SELECT` キャプチャは参照01と比較しやすいアジ選択状態に固定した。スクショ用の所持魚合計は容量内の `19 / 20` に収め、下部バーが異常値表示に見えないようにする。実フロー/報酬状態の検証シードは別に維持する。
 - 追記: 魚行は調理専用の `fish_icon_sheet.png` を優先し、参照01由来の魚カットをリスト内で使う。数量欄は右側に確保し、`×12匹` などが折れずに読める状態を維持する。`FishRowIsaki` もcontent/layout audit対象にして、6行密度を維持する。
 - 追記: ロック中レシピは灰色の南京錠だけに戻さず、料理大判画像を暗く表示する。6枚目の空き枠は `RecipeCard_PreviewMeuniere` として料理プレビューカードにし、`RecipeBookButton` をグリッド下へ分離することで、参照01の「6枚の料理カード＋料理図鑑を見る」構成へ寄せた。
 - 追記: `cooking_room_bg.png` は参照01右側の港窓/ランタン/植物の細長いサンプルを中央カードと右詳細の接続帯へ合成し、`RecipeToDetailArrow` 周辺が暗い板だけに見えないようにした。
-- まだ残る差分: 中央カード下部は素材バッジ化済みだが、最終本番アートに比べると素材魚アイコンそのものの描き込みはまだ軽い。ヘッダーのリッチさ、料理カード下部のアイコン描き込み、`CookActionRunway` 内の絵柄密度と余白の最終調整は次パス候補。
+- まだ残る差分: 中央カード下部は素材バッジ化済みだが、最終本番アートに比べると素材魚アイコンそのものの描き込みはまだ軽い。ヘッダーのリッチさ、料理カード下部のアイコン描き込み、右詳細3行を参照の太い一体型情報帯へさらに近づける最終調整は次パス候補。
 - 通過ゲート: `HOME=/private/tmp/tsuri_home tools/cooking_verify.sh`、`HOME=/private/tmp/tsuri_home tools/validate_project.sh`、`HOME=/private/tmp/tsuri_home tools/cooking_visual_qa.sh`、`git diff --check`。
 
 ## 未解決

@@ -271,30 +271,25 @@ class CookActionCueVisual:
 		var w := maxf(size.x, 1.0)
 		var h := maxf(size.y, 1.0)
 		var cy := h * 0.55
-		var left := minf(58.0, w * 0.26)
-		var right := maxf(left + 42.0, w - minf(62.0, w * 0.28))
-		var rail := Color(1.0, 0.78, 0.28, 0.72) if available else Color(0.52, 0.45, 0.36, 0.55)
-		var glow := Color(1.0, 0.95, 0.66, 0.55) if available else Color(0.58, 0.52, 0.42, 0.35)
-		var ink := Color("#3b2515") if available else Color("#6b5a44")
-		var fill := Color("#d68a31") if available else Color("#8d7453")
-		draw_line(Vector2(left, cy), Vector2(right, cy), glow, 7.0)
-		draw_line(Vector2(left, cy), Vector2(right, cy), rail, 2.5)
+		var left := 8.0
+		var right := w - 18.0
+		var rail := Color(1.0, 0.78, 0.28, 0.56) if available else Color(0.52, 0.45, 0.36, 0.42)
+		var glow := Color(1.0, 0.95, 0.66, 0.34) if available else Color(0.58, 0.52, 0.42, 0.24)
+		draw_line(Vector2(left, cy), Vector2(right, cy), glow, 5.0)
+		draw_line(Vector2(left, cy), Vector2(right, cy), rail, 2.0)
 		draw_colored_polygon(
 			PackedVector2Array(
 				[
-					Vector2(right + 14.0, cy),
-					Vector2(right - 3.0, cy - 7.0),
-					Vector2(right - 3.0, cy + 7.0),
+					Vector2(right + 10.0, cy),
+					Vector2(right - 3.0, cy - 5.0),
+					Vector2(right - 3.0, cy + 5.0),
 				]
 			),
 			rail
 		)
-		_draw_pot(Vector2(left - 28.0, cy + 2.0), ink, fill, glow)
-		_draw_plate(Vector2(right + 34.0, cy + 1.0), ink, fill, glow)
-		for i in range(3):
-			var x := lerpf(left + 22.0, right - 20.0, float(i) / 2.0)
-			var y := cy - 8.0 - float(i % 2) * 3.0
-			draw_circle(Vector2(x, y), 2.4, glow)
+		for i in range(2):
+			var x := lerpf(left + 18.0, right - 18.0, float(i))
+			draw_circle(Vector2(x, cy - 5.0), 1.8, glow)
 
 	func _draw_pot(origin: Vector2, ink: Color, fill: Color, glow: Color) -> void:
 		draw_rect(Rect2(origin.x - 15.0, origin.y - 4.0, 30.0, 16.0), ink)
@@ -640,31 +635,31 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 		2.0
 	)
 	action_panel.name = "CookActionRunway"
-	action_panel.custom_minimum_size = Vector2(0, 72)
+	action_panel.custom_minimum_size = Vector2(0, 80)
 	action_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_layout.add_child(action_panel)
 	var action_layout := VBoxContainer.new()
 	action_layout.add_theme_constant_override("separation", 1)
 	action_panel.add_child(action_layout)
 	var cue_row := HBoxContainer.new()
-	cue_row.custom_minimum_size = Vector2(0, 18)
+	cue_row.custom_minimum_size = Vector2(0, 16)
 	cue_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	cue_row.add_theme_constant_override("separation", 8)
 	action_layout.add_child(cue_row)
 	_overwrite_note = make_label("", 12, Color("#624b31"))
 	_overwrite_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_overwrite_note.clip_text = true
-	_overwrite_note.custom_minimum_size = Vector2(0, 18)
+	_overwrite_note.custom_minimum_size = Vector2(0, 16)
 	_overwrite_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_overwrite_note.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	cue_row.add_child(_overwrite_note)
 	_cook_action_cue = CookActionCueVisual.new()
 	_cook_action_cue.name = "CookActionCue"
-	_cook_action_cue.custom_minimum_size = Vector2(138, 18)
+	_cook_action_cue.custom_minimum_size = Vector2(108, 14)
 	cue_row.add_child(_cook_action_cue)
 	_cook_button = make_button("調理する", _cook_selected, 300, true)
 	_cook_button.name = "CookButton"
-	_cook_button.custom_minimum_size = Vector2(340, 48)
+	_cook_button.custom_minimum_size = Vector2(360, 54)
 	_cook_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_apply_cook_button_style()
 	_cook_button.draw.connect(func() -> void: _draw_cook_button_icon(_cook_button))
@@ -756,7 +751,7 @@ func _add_detail_story_row(
 	tile.add_child(row)
 
 	var title_band := MarginContainer.new()
-	title_band.custom_minimum_size = Vector2(maxf(title_width, 176.0), 32)
+	title_band.custom_minimum_size = Vector2(maxf(title_width, 160.0), 32)
 	title_band.add_theme_constant_override("margin_left", 4)
 	title_band.add_theme_constant_override("margin_right", 4)
 	row.add_child(title_band)
@@ -765,11 +760,13 @@ func _add_detail_story_row(
 	title_row.add_theme_constant_override("separation", 4)
 	title_band.add_child(title_row)
 	var compact := title.length() > 6
-	title_row.add_child(_small_icon(icon_mode, accent, Vector2(20.0 if compact else 22.0, 0.0)))
-	var title_size := 11 if compact else 12
+	if node_name == "CookDetailEffectRow":
+		title_row.add_child(_small_icon(icon_mode, accent, Vector2(17.0, 0.0)))
+	var title_size := 12 if compact else 13
 	var title_label := make_shadow_label(title, title_size, Palette.TEXT_BONE, 1)
 	title_label.custom_minimum_size = Vector2(0, 30)
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title_label.clip_text = true
@@ -1374,7 +1371,7 @@ func _refresh_detail() -> void:
 	_bonus_value.text = "初回 +%d EXP" % base_exp if first_time else "初回済"
 	_buff_value.text = String(recipe.get("buff_text", ""))
 	_effect_count_value.text = "1回"
-	_overwrite_note.text = "調理後は食事結果へ / 既存効果を上書き。"
+	_overwrite_note.text = "調理後は食事結果へ"
 	_cook_action_cue.visible = true
 	_cook_action_cue.set_available(count > 0)
 	_cook_button.disabled = count <= 0
@@ -1410,6 +1407,7 @@ func _apply_cook_button_style() -> void:
 	_cook_button.add_theme_color_override("font_hover_color", Color("#fff1ba"))
 	_cook_button.add_theme_color_override("font_pressed_color", Color("#f0c06b"))
 	_cook_button.add_theme_color_override("font_disabled_color", Color("#b6a68d"))
+	_cook_button.add_theme_font_size_override("font_size", 22)
 
 
 func _apply_recipe_book_button_style(button: Button) -> void:
@@ -1440,23 +1438,23 @@ func _apply_recipe_book_button_style(button: Button) -> void:
 
 func _draw_cook_button_icon(button: Button) -> void:
 	var active := not button.disabled
-	var center := Vector2(34.0, button.size.y * 0.5 - 1.0)
+	var center := Vector2(54.0, button.size.y * 0.5 - 1.0)
 	var ink := Color("#3b2515") if active else Color("#665847")
 	var pot := Color("#9b5a29") if active else Color("#7a6954")
 	var flame := Color("#f06a2e") if active else Color("#7a604b")
 	var glow := Color(1.0, 0.86, 0.36, 0.42) if active else Color(0.48, 0.40, 0.32, 0.22)
-	button.draw_circle(center + Vector2(2.0, 5.0), 18.0, glow)
-	button.draw_rect(Rect2(center.x - 15.0, center.y - 4.0, 30.0, 15.0), ink)
-	button.draw_rect(Rect2(center.x - 12.0, center.y - 1.0, 24.0, 11.0), pot)
-	button.draw_line(center + Vector2(-17.0, -6.0), center + Vector2(17.0, -6.0), ink, 4.0)
-	button.draw_arc(center + Vector2(0.0, -11.0), 10.0, PI, TAU, 12, ink, 2.0)
+	button.draw_circle(center + Vector2(1.0, 5.0), 14.0, glow)
+	button.draw_rect(Rect2(center.x - 12.0, center.y - 3.0, 24.0, 12.0), ink)
+	button.draw_rect(Rect2(center.x - 9.0, center.y - 1.0, 18.0, 9.0), pot)
+	button.draw_line(center + Vector2(-13.0, -5.0), center + Vector2(13.0, -5.0), ink, 3.0)
+	button.draw_arc(center + Vector2(0.0, -9.0), 8.0, PI, TAU, 12, ink, 2.0)
 	button.draw_colored_polygon(
 		PackedVector2Array(
 				[
-					center + Vector2(-6.0, 15.0),
-					center + Vector2(0.0, 7.0),
-					center + Vector2(6.0, 15.0),
-					center + Vector2(1.0, 19.0),
+					center + Vector2(-5.0, 12.0),
+					center + Vector2(0.0, 6.0),
+					center + Vector2(5.0, 12.0),
+					center + Vector2(1.0, 16.0),
 				]
 			),
 			flame
@@ -1464,17 +1462,17 @@ func _draw_cook_button_icon(button: Button) -> void:
 	button.draw_colored_polygon(
 		PackedVector2Array(
 				[
-					center + Vector2(2.0, 14.0),
-					center + Vector2(7.0, 7.0),
-					center + Vector2(12.0, 15.0),
-					center + Vector2(7.0, 19.0),
+					center + Vector2(2.0, 12.0),
+					center + Vector2(6.0, 7.0),
+					center + Vector2(10.0, 13.0),
+					center + Vector2(6.0, 16.0),
 				]
 			),
 			Color("#ffe67a") if active else Color("#96805d")
 		)
 	for i in range(2):
-		var x := center.x - 6.0 + float(i) * 12.0
-		button.draw_arc(Vector2(x, center.y - 18.0), 8.0, -1.6, 0.9, 9, glow, 2.0)
+		var x := center.x - 5.0 + float(i) * 10.0
+		button.draw_arc(Vector2(x, center.y - 15.0), 6.0, -1.6, 0.9, 9, glow, 1.5)
 
 
 func _cook_selected() -> void:
