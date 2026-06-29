@@ -364,7 +364,7 @@ func _build_screen() -> void:
 
 	_dialog = PanelContainer.new()
 	_dialog.name = "LevelUpDialog"
-	_dialog.custom_minimum_size = Vector2(1040.0, 0.0)
+	_dialog.custom_minimum_size = Vector2(1010.0, 0.0)
 	_dialog.add_theme_stylebox_override(
 		"panel",
 		_texture_style_box(
@@ -385,66 +385,66 @@ func _build_screen() -> void:
 	var title_band := HBoxContainer.new()
 	title_band.name = "LevelUpTitleBand"
 	title_band.alignment = BoxContainer.ALIGNMENT_CENTER
-	title_band.add_theme_constant_override("separation", 8)
-	title_band.custom_minimum_size = Vector2(930.0, 110.0)
+	title_band.add_theme_constant_override("separation", 6)
+	title_band.custom_minimum_size = Vector2(900.0, 88.0)
 	title_band.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(title_band)
 
 	var left_laurel := _level_asset_texture(
-		"LevelLaurelLeftAsset", LevelUpVisual.LAUREL_LEFT_ASSET, Vector2(146.0, 116.0)
+		"LevelLaurelLeftAsset", LevelUpVisual.LAUREL_LEFT_ASSET, Vector2(118.0, 88.0)
 	)
 	title_band.add_child(left_laurel)
 
 	var title_stack := VBoxContainer.new()
 	title_stack.alignment = BoxContainer.ALIGNMENT_CENTER
 	title_stack.add_theme_constant_override("separation", 0)
-	title_stack.custom_minimum_size = Vector2(620.0, 0.0)
+	title_stack.custom_minimum_size = Vector2(600.0, 0.0)
 	title_band.add_child(title_stack)
 
 	var crown_visual := _level_asset_texture(
-		"LevelCrownAsset", LevelUpVisual.CROWN_ASSET, Vector2(210.0, 48.0)
+		"LevelCrownAsset", LevelUpVisual.CROWN_ASSET, Vector2(190.0, 36.0)
 	)
 	crown_visual.stretch_mode = TextureRect.STRETCH_SCALE
 	crown_visual.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	title_stack.add_child(crown_visual)
-	var crown_label := make_shadow_label("成長の証", 14, Palette.GOLD_BRIGHT, 3)
+	var crown_label := make_shadow_label("成長の証", 12, Palette.GOLD_BRIGHT, 2)
 	crown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_stack.add_child(crown_label)
 
-	var title := make_shadow_label("LEVEL UP!", 82, Palette.GOLD_BRIGHT, 8)
+	var title := make_shadow_label("LEVEL UP!", 64, Palette.GOLD_BRIGHT, 6)
 	title.name = "LevelUpTitle"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_stack.add_child(title)
 
 	var right_laurel := _level_asset_texture(
-		"LevelLaurelRightAsset", LevelUpVisual.LAUREL_RIGHT_ASSET, Vector2(146.0, 116.0)
+		"LevelLaurelRightAsset", LevelUpVisual.LAUREL_RIGHT_ASSET, Vector2(118.0, 88.0)
 	)
 	title_band.add_child(right_laurel)
 
-	_level_line = make_shadow_label("", 42, Palette.TEXT_BONE, 5)
+	_level_line = make_shadow_label("", 34, Palette.TEXT_BONE, 4)
 	_level_line.name = "LevelUpLevelLine"
 	_level_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_level_line)
 
-	var source_line := make_shadow_label("食経験値が成長に変わった", 18, Palette.GAUGE_GREEN_HI, 3)
+	var source_line := make_shadow_label("食経験値が成長に変わった", 16, Palette.GAUGE_GREEN_HI, 2)
 	source_line.name = "LevelUpSourceLine"
 	source_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(source_line)
 
 	_stats_box = GridContainer.new()
 	_stats_box.columns = 2
-	_stats_box.add_theme_constant_override("h_separation", 12)
-	_stats_box.add_theme_constant_override("v_separation", 6)
-	_stats_box.custom_minimum_size = Vector2(860.0, 0.0)
+	_stats_box.add_theme_constant_override("h_separation", 10)
+	_stats_box.add_theme_constant_override("v_separation", 4)
+	_stats_box.custom_minimum_size = Vector2(830.0, 0.0)
 	_stats_box.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(_stats_box)
 
 	_unlock_card = _panel_box(Color("#f2e4c2"), Color("#70451f"), Palette.GOLD_BRIGHT, 5)
-	_unlock_card.custom_minimum_size = Vector2(900.0, 146.0)
+	_unlock_card.custom_minimum_size = Vector2(860.0, 132.0)
 	_unlock_card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(_unlock_card)
 	var unlock_root := VBoxContainer.new()
-	unlock_root.add_theme_constant_override("separation", 6)
+	unlock_root.add_theme_constant_override("separation", 4)
 	_unlock_card.add_child(unlock_root)
 	_unlock_ribbon = PanelContainer.new()
 	_unlock_ribbon.name = "LevelUnlockRibbonAsset"
@@ -458,42 +458,42 @@ func _build_screen() -> void:
 			5.0
 		)
 	)
-	_unlock_ribbon.custom_minimum_size = Vector2(0.0, 38.0)
+	_unlock_ribbon.custom_minimum_size = Vector2(0.0, 32.0)
 	unlock_root.add_child(_unlock_ribbon)
-	_unlock_ribbon_label = make_shadow_label("新たな釣り場が解放！", 25, Color("#fff4d4"), 4)
+	_unlock_ribbon_label = make_shadow_label("新たな釣り場が解放！", 22, Color("#fff4d4"), 3)
 	_unlock_ribbon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_unlock_ribbon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_unlock_ribbon.add_child(_unlock_ribbon_label)
 
 	var unlock_layout := HBoxContainer.new()
-	unlock_layout.add_theme_constant_override("separation", 12)
+	unlock_layout.add_theme_constant_override("separation", 10)
 	unlock_root.add_child(unlock_layout)
 	var unlock_icon := _medal_box()
-	unlock_icon.custom_minimum_size = Vector2(140.0, 0.0)
+	unlock_icon.custom_minimum_size = Vector2(112.0, 0.0)
 	unlock_layout.add_child(unlock_icon)
 	var unlock_text := VBoxContainer.new()
 	unlock_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	unlock_text.add_theme_constant_override("separation", 2)
 	unlock_layout.add_child(unlock_text)
-	_unlock_tag = make_shadow_label("", 16, Palette.GAUGE_RED_HI, 2)
+	_unlock_tag = make_shadow_label("", 14, Palette.GAUGE_RED_HI, 2)
 	unlock_text.add_child(_unlock_tag)
-	_unlock_title = make_label("", 28, Color("#8d2430"), 2, Color("#fff4d4"))
+	_unlock_title = make_label("", 24, Color("#8d2430"), 2, Color("#fff4d4"))
 	unlock_text.add_child(_unlock_title)
-	_unlock_body = make_label("", 16, Color("#4d3924"))
+	_unlock_body = make_label("", 14, Color("#4d3924"))
 	_unlock_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	unlock_text.add_child(_unlock_body)
 	var summary_cue := LevelToSummaryCueVisual.new()
 	summary_cue.name = "LevelToSummaryCue"
-	summary_cue.custom_minimum_size = Vector2(0.0, 24.0)
+	summary_cue.custom_minimum_size = Vector2(0.0, 20.0)
 	summary_cue.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	unlock_text.add_child(summary_cue)
 	var spot := _spot_thumbnail_box()
-	spot.custom_minimum_size = Vector2(232.0, 100.0)
+	spot.custom_minimum_size = Vector2(210.0, 86.0)
 	unlock_layout.add_child(spot)
 
 	_confirm_button = make_button("OK  成果確認へ", _close, 286.0, true)
 	_confirm_button.name = "LevelUpConfirmButton"
-	_confirm_button.custom_minimum_size = Vector2(286.0, 42.0)
+	_confirm_button.custom_minimum_size = Vector2(286.0, 40.0)
 	_confirm_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_apply_flow_button_style(_confirm_button)
 	_confirm_button.draw.connect(func() -> void: _draw_confirm_button_cue(_confirm_button))
@@ -584,35 +584,35 @@ func _stat_row(row: Dictionary) -> PanelContainer:
 			5.0
 		)
 	)
-	panel.custom_minimum_size = Vector2(0.0, 56.0)
+	panel.custom_minimum_size = Vector2(0.0, 46.0)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var line := HBoxContainer.new()
-	line.add_theme_constant_override("separation", 8)
+	line.add_theme_constant_override("separation", 6)
 	panel.add_child(line)
 
 	var icon := _stat_icon(String(row["icon"]), row["color"])
-	icon.custom_minimum_size = Vector2(48.0, 0.0)
+	icon.custom_minimum_size = Vector2(42.0, 0.0)
 	line.add_child(icon)
 
-	var name := make_label(String(row["name"]), 19, Palette.TEXT_BONE, 2)
-	name.custom_minimum_size = Vector2(92.0, 0.0)
+	var name := make_label(String(row["name"]), 17, Palette.TEXT_BONE, 2)
+	name.custom_minimum_size = Vector2(84.0, 0.0)
 	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	line.add_child(name)
 
 	var fmt := String(row["fmt"])
 	var old_text := fmt % old_value
 	var new_text := fmt % new_value
-	var values := make_shadow_label("%s  ->  %s" % [old_text, new_text], 25, Palette.TEXT_BONE, 3)
+	var values := make_shadow_label("%s  ->  %s" % [old_text, new_text], 21, Palette.TEXT_BONE, 2)
 	values.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	values.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	values.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	line.add_child(values)
 
 	var gain_text := "%.1f" % delta if fmt == "%.1f" else "%d" % int(round(delta))
-	var gain := make_shadow_label("+%s" % gain_text, 22, Palette.GAUGE_GREEN_HI, 3)
+	var gain := make_shadow_label("+%s" % gain_text, 19, Palette.GAUGE_GREEN_HI, 2)
 	if absf(delta) < 0.01:
 		gain.text = "-"
-	gain.custom_minimum_size = Vector2(66.0, 0.0)
+	gain.custom_minimum_size = Vector2(58.0, 0.0)
 	gain.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	gain.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	line.add_child(gain)
@@ -636,7 +636,7 @@ func _stat_row_node_name(icon: String) -> String:
 func _stat_icon(mode: String, accent: Color) -> LevelStatIconVisual:
 	var icon := LevelStatIconVisual.new()
 	icon.configure(mode, accent)
-	icon.custom_minimum_size = Vector2(52.0, 44.0)
+	icon.custom_minimum_size = Vector2(42.0, 36.0)
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return icon
 
@@ -659,7 +659,7 @@ func _badge_box(text: String, fill: Color, text_color: Color) -> PanelContainer:
 func _medal_box() -> PanelContainer:
 	var medal := _panel_box(Color("#6a4515"), Color("#2d1a09"), Palette.GOLD_BRIGHT, 4)
 	var visual := _level_asset_texture(
-		"LevelUnlockMedallionAsset", LevelUpVisual.UNLOCK_MEDALLION_ASSET, Vector2(120.0, 96.0)
+		"LevelUnlockMedallionAsset", LevelUpVisual.UNLOCK_MEDALLION_ASSET, Vector2(96.0, 78.0)
 	)
 	visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	visual.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -671,20 +671,20 @@ func _spot_thumbnail_box() -> PanelContainer:
 	var panel := _panel_box(Color("#0b3c62"), Color("#07121e"), Palette.GOLD_BRIGHT, 4)
 	var box := VBoxContainer.new()
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_theme_constant_override("separation", 2)
+	box.add_theme_constant_override("separation", 1)
 	panel.add_child(box)
-	_spot_tag = make_shadow_label("新釣り場", 15, Palette.GOLD_BRIGHT, 2)
+	_spot_tag = make_shadow_label("新釣り場", 13, Palette.GOLD_BRIGHT, 2)
 	_spot_tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_spot_tag)
 	var visual := _level_asset_texture(
-		"LevelUnlockSpotAsset", LevelUpVisual.UNLOCK_SPOT_ASSET, Vector2(0.0, 56.0), true
+		"LevelUnlockSpotAsset", LevelUpVisual.UNLOCK_SPOT_ASSET, Vector2(0.0, 44.0), true
 	)
 	visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(visual)
-	_spot_title = make_shadow_label("港の大岩", 24, Palette.TEXT_BONE, 3)
+	_spot_title = make_shadow_label("港の大岩", 20, Palette.TEXT_BONE, 2)
 	_spot_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_spot_title)
-	_spot_subtitle = make_shadow_label("外洋への挑戦", 15, Palette.GAUGE_CYAN_HI, 2)
+	_spot_subtitle = make_shadow_label("外洋への挑戦", 13, Palette.GAUGE_CYAN_HI, 2)
 	_spot_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_spot_subtitle)
 	return panel

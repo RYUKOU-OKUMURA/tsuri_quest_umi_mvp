@@ -166,20 +166,20 @@
 
 ## 収束フェーズ判定
 
-今回の完成条件は「5状態が揃い、`reference/cooking_flow/` の主要レイアウト、主役パーツ、演出意図、情報階層が反映され、headless検証を通ること」とする。完全なピクセル一致、本番アート品質、通常描画スクリーンショット取得は今回の完了条件に含めない。
+今回の完成条件は「5状態が揃い、`reference/cooking_flow/` の主要レイアウト、主役パーツ、演出意図、情報階層が反映され、headless検証と通常描画スクリーンショット確認を通ること」とする。完全なピクセル一致、本番アート品質は今回の完了条件に含めない。
 
-- 実装状態: `COOK_SELECT`、`MEAL_RESULT`、`EXP_GAIN`、`LEVEL_UP_OVERLAY`、`STATUS_SUMMARY` は実装済み。`EXP_GAIN_LEVELUP` はレベルアップ直前の検証用サブケースとして残す。
+- 実装状態: `COOK_SELECT`、`MEAL_RESULT`、`EXP_GAIN`、`LEVEL_UP_OVERLAY`、`STATUS_SUMMARY` は実装済み。`EXP_GAIN_LEVELUP` はレベルアップ直前の検証用サブケースとして残す。今回、`COOK_SELECT` の下部 `現在の準備` は1行サマリーへ圧縮し、`LEVEL_UP_OVERLAY` と `STATUS_SUMMARY` も1280x720内に主導線が収まるよう再調整した。
 - 参照反映: 5枚のリファレンスに対する主要差分は上記表の状態別契約、名前付きノード契約、専用アセットスロット、content/layout/smoke監査で固定する。
 - 追加調整方針: ここからの見た目調整は、検証失敗、またはリファレンスとの差分がP1として明確に説明できるものだけに限定する。主観的な磨き込みはこのパスでは停止する。
 - 通過済み収束ゲート:
   - `HOME=/private/tmp/tsuri_home tools/cooking_verify.sh`: 成功。
   - `HOME=/private/tmp/tsuri_home tools/validate_project.sh`: 成功。
-  - `python3 tools/cooking_visual_qa_check.py --allow-missing`: 成功。5状態のキャプチャmissingは既知制約として許容し、`/tmp/tsuri_cooking_reference_report.html` を更新する。
+  - `tools/cooking_visual_qa.sh`: 成功。`/tmp/tsuri_cooking_select.png`、`/tmp/tsuri_cooking_result.png`、`/tmp/tsuri_cooking_exp.png`、`/tmp/tsuri_cooking_levelup.png`、`/tmp/tsuri_cooking_status.png`、`/tmp/tsuri_cooking_capture_manifest.json`、`/tmp/tsuri_cooking_reference_report.html` を生成し、厳格な `tools/cooking_visual_qa_check.py` も通過。
   - `git diff --check`: 成功。
-- 後続ゲート: 通常描画環境では `tools/cooking_visual_qa.sh`、または `python3 tools/cooking_visual_qa_check.py` を `--allow-missing` なしで実行し、`/tmp/tsuri_cooking_select.png`、`/tmp/tsuri_cooking_result.png`、`/tmp/tsuri_cooking_exp.png`、`/tmp/tsuri_cooking_levelup.png`、`/tmp/tsuri_cooking_status.png` と `/tmp/tsuri_cooking_capture_manifest.json` を確認する。
+- 後続ゲート: ここから再調整する場合も `tools/cooking_verify.sh`、`tools/cooking_visual_qa.sh`、`git diff --check` を同じ順序で通し、生成された5状態PNGとmanifestを確認する。
 
 ## 未解決
 
-- P1: 現時点で既知のロジック破壊はなし。headless layout audit上の画面外はみ出し/縦クリップは解消済みで、smoke上の主ボタンも1280x720内に完全に収まり、押下可能な状態を確認済み。ただし実スクショ未取得のため、最終的な視覚密度、ピクセル単位の重なり、装飾の見え方は未証明。headless、通常起動、macOS display driver + dummy/opengl3 の各経路で `/tmp/tsuri_cooking_*.png` は生成できていない。`tools/cooking_visual_qa_check.py` の通常モードはこのmissingを検出して失敗する。
-- P2: 生成フレーム/背景アセットの主要接続は進んだが、生成アセットは実装用の差し替えスロットであり、最終本番アートではない。料理・魚・背景は後続で品質差し替え余地あり。魚行とレシピカードは専用フレーム接続済みだが、視覚スクショで選択/ロック状態の見え方を確認する必要がある。
+- P1: 現時点で既知のロジック破壊はなし。headless layout audit上の画面外はみ出し/縦クリップは解消済みで、smoke上の主ボタンも1280x720内に完全に収まり、押下可能な状態を確認済み。通常描画の5状態スクリーンショットも生成済みで、manifest上はすべて1280x720 PNGとして記録されている。
+- P2: 生成フレーム/背景アセットの主要接続は進んだが、生成アセットは実装用の差し替えスロットであり、最終本番アートではない。料理・魚・背景は後続で水中ファイト水準の素材へ差し替える余地がある。次パスはピクセル単位の微調整ではなく、魚行、料理カード、大判料理、詳細枠、調理ボタンの素材密度と質感を優先して比較する。
 - P3: steam/sparkle/粒子などの小演出は、状態別スクショでP1/P2が潰れてから追加する。

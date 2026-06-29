@@ -472,15 +472,15 @@ func _build_screen() -> void:
 	var root := MarginContainer.new()
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.add_theme_constant_override("margin_left", 18)
-	root.add_theme_constant_override("margin_top", 8)
+	root.add_theme_constant_override("margin_top", 6)
 	root.add_theme_constant_override("margin_right", 18)
-	root.add_theme_constant_override("margin_bottom", 8)
+	root.add_theme_constant_override("margin_bottom", 6)
 	add_child(root)
 
 	var layout := VBoxContainer.new()
 	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	layout.add_theme_constant_override("separation", 6)
+	layout.add_theme_constant_override("separation", 4)
 	root.add_child(layout)
 
 	_build_header(layout)
@@ -521,7 +521,7 @@ func _add_status_background() -> void:
 func _build_header(parent: VBoxContainer) -> void:
 	var header := _panel_box(Color("#0a2744"), Color("#06111e"), Palette.GOLD_BRIGHT, 5)
 	_header_panel = header
-	header.custom_minimum_size = Vector2(0.0, 74.0)
+	header.custom_minimum_size = Vector2(0.0, 68.0)
 	header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(header)
 
@@ -531,10 +531,10 @@ func _build_header(parent: VBoxContainer) -> void:
 
 	var wheel := HeaderMarkVisual.new()
 	wheel.configure("wheel")
-	wheel.custom_minimum_size = Vector2(72.0, 0.0)
+	wheel.custom_minimum_size = Vector2(62.0, 0.0)
 	row.add_child(wheel)
 
-	var title := make_shadow_label("ステータス", 38, Palette.TEXT_BONE, 4)
+	var title := make_shadow_label("ステータス", 34, Palette.TEXT_BONE, 4)
 	title.name = "StatusTitle"
 	title.custom_minimum_size = Vector2(220.0, 0.0)
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -547,14 +547,14 @@ func _build_header(parent: VBoxContainer) -> void:
 
 	var exp_box := _panel_box(Color("#10283f"), Color("#07121e"), Palette.GOLD_DEEP, 3)
 	exp_box.name = "StatusHeaderExpBox"
-	exp_box.custom_minimum_size = Vector2(424.0, 0.0)
+	exp_box.custom_minimum_size = Vector2(460.0, 0.0)
 	row.add_child(exp_box)
 	var exp_row := HBoxContainer.new()
 	exp_row.add_theme_constant_override("separation", 10)
 	exp_box.add_child(exp_row)
 	var player_badge := HeaderPlayerBadgeVisual.new()
 	player_badge.name = "StatusHeaderPlayerBadge"
-	player_badge.custom_minimum_size = Vector2(48.0, 0.0)
+	player_badge.custom_minimum_size = Vector2(42.0, 0.0)
 	exp_row.add_child(player_badge)
 	_header_level_label = make_shadow_label("", 22, Palette.TEXT_BONE, 3)
 	_header_level_label.name = "StatusHeaderLevel"
@@ -584,7 +584,7 @@ func _build_header(parent: VBoxContainer) -> void:
 
 	var anchor := HeaderMarkVisual.new()
 	anchor.configure("anchor")
-	anchor.custom_minimum_size = Vector2(72.0, 0.0)
+	anchor.custom_minimum_size = Vector2(62.0, 0.0)
 	row.add_child(anchor)
 
 
@@ -605,7 +605,7 @@ func _build_cards(parent: VBoxContainer) -> void:
 func _build_player_card(parent: HBoxContainer) -> void:
 	var card := _status_card(parent, "プレイヤー")
 	var portrait := _portrait_box("PLAYER", Palette.GAUGE_CYAN_HI)
-	portrait.custom_minimum_size = Vector2(0.0, 138.0)
+	portrait.custom_minimum_size = Vector2(0.0, 126.0)
 	card.add_child(portrait)
 	_level_label = make_shadow_label("", 48, Color("#2a2118"), 2)
 	_level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -631,7 +631,7 @@ func _build_meal_card(parent: HBoxContainer) -> void:
 	card.add_child(_meal_badge)
 	_meal_image = TextureRect.new()
 	_meal_image.name = "StatusMealDishImage"
-	_meal_image.custom_minimum_size = Vector2(0.0, 144.0)
+	_meal_image.custom_minimum_size = Vector2(0.0, 120.0)
 	_meal_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_meal_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	card.add_child(_meal_image)
@@ -648,7 +648,7 @@ func _build_meal_card(parent: HBoxContainer) -> void:
 func _build_cooler_card(parent: HBoxContainer) -> void:
 	var card := _status_card(parent, "クーラーボックス")
 	var visual := _portrait_box("COOLER", Palette.GAUGE_CYAN_HI)
-	visual.custom_minimum_size = Vector2(0.0, 168.0)
+	visual.custom_minimum_size = Vector2(0.0, 130.0)
 	card.add_child(visual)
 	_cooler_count_label = make_shadow_label("", 48, Color("#2a2118"), 2)
 	_cooler_count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -664,7 +664,7 @@ func _build_cooler_card(parent: HBoxContainer) -> void:
 func _build_money_card(parent: HBoxContainer) -> void:
 	var card := _status_card(parent, "所持金")
 	var visual := _portrait_box("GOLD", Palette.GOLD_BRIGHT)
-	visual.custom_minimum_size = Vector2(0.0, 172.0)
+	visual.custom_minimum_size = Vector2(0.0, 130.0)
 	card.add_child(visual)
 	_money_label = make_shadow_label("", 46, Color("#2a2118"), 2)
 	_money_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -675,7 +675,7 @@ func _build_money_card(parent: HBoxContainer) -> void:
 func _build_play_card(parent: HBoxContainer) -> void:
 	var card := _status_card(parent, "プレイ時間")
 	var visual := _portrait_box("TIME", Palette.TEXT_BONE)
-	visual.custom_minimum_size = Vector2(0.0, 172.0)
+	visual.custom_minimum_size = Vector2(0.0, 130.0)
 	card.add_child(visual)
 	_play_label = make_shadow_label("", 40, Color("#2a2118"), 2)
 	_play_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -686,23 +686,23 @@ func _build_play_card(parent: HBoxContainer) -> void:
 func _build_footer(parent: VBoxContainer) -> void:
 	var footer := _panel_box(Color("#08213a"), Color("#06111e"), Palette.GOLD_DEEP, 4)
 	_footer_panel = footer
-	footer.custom_minimum_size = Vector2(0.0, 90.0)
+	footer.custom_minimum_size = Vector2(0.0, 72.0)
 	footer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(footer)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 18)
+	row.add_theme_constant_override("separation", 14)
 	footer.add_child(row)
 	var portrait := _portrait_box("READY", Palette.GAUGE_GREEN_HI)
-	portrait.custom_minimum_size = Vector2(148.0, 0.0)
+	portrait.custom_minimum_size = Vector2(120.0, 0.0)
 	row.add_child(portrait)
-	_footer_message_label = make_shadow_label("", 24, Palette.TEXT_BONE, 3)
+	_footer_message_label = make_shadow_label("", 21, Palette.TEXT_BONE, 2)
 	_footer_message_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_footer_message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_footer_message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row.add_child(_footer_message_label)
 	var back := make_button("港へ戻る", _close, 190.0, true)
 	back.name = "StatusReturnButton"
-	back.custom_minimum_size = Vector2(224.0, 54.0)
+	back.custom_minimum_size = Vector2(206.0, 46.0)
 	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	back.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_apply_flow_button_style(back)
@@ -883,9 +883,9 @@ func _status_visual_name(text: String) -> String:
 func _note_box(parent: VBoxContainer, text: String) -> Label:
 	var panel := _panel_box(Color("#fff1cf"), Color("#b5813a"), Color("#e0b667"), 2)
 	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	panel.custom_minimum_size = Vector2(0.0, 92.0)
+	panel.custom_minimum_size = Vector2(0.0, 76.0)
 	parent.add_child(panel)
-	var label := make_label(text, 17, Color("#3f2d1a"))
+	var label := make_label(text, 15, Color("#3f2d1a"))
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -897,7 +897,7 @@ func _note_box(parent: VBoxContainer, text: String) -> Label:
 func _meal_note_box(parent: VBoxContainer, text: String) -> Label:
 	var panel := _panel_box(Color("#fff1cf"), Color("#b5813a"), Color("#e0b667"), 2)
 	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	panel.custom_minimum_size = Vector2(0.0, 92.0)
+	panel.custom_minimum_size = Vector2(0.0, 78.0)
 	parent.add_child(panel)
 
 	var row := HBoxContainer.new()
@@ -912,7 +912,7 @@ func _meal_note_box(parent: VBoxContainer, text: String) -> Label:
 	cue.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	row.add_child(cue)
 
-	var label := make_label(text, 17, Color("#3f2d1a"))
+	var label := make_label(text, 15, Color("#3f2d1a"))
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1038,11 +1038,11 @@ func _present() -> void:
 	_prepare_entry_part(_header_panel, -12.0)
 	for card in _summary_cards:
 		_prepare_entry_part(card, 18.0)
-	_prepare_entry_part(_footer_panel, 12.0)
+	_prepare_entry_part(_footer_panel, 0.0)
 	_animate_entry_part(_header_panel, 0.02, -12.0)
 	for i in range(_summary_cards.size()):
 		_animate_entry_part(_summary_cards[i], 0.05 + float(i) * 0.025, 18.0)
-	_animate_entry_part(_footer_panel, 0.20, 12.0)
+	_animate_entry_part(_footer_panel, 0.20, 0.0)
 
 
 func _prepare_entry_part(part: Control, offset_y: float) -> void:

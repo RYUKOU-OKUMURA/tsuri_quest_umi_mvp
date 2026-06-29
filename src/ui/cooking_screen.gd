@@ -64,6 +64,14 @@ class CookingSmallIcon:
 				_draw_buff()
 			"fire":
 				_draw_fire()
+			"player_mini":
+				_draw_player_mini()
+			"meal_mini":
+				_draw_meal_mini()
+			"fish_mini":
+				_draw_fish_mini()
+			"coin_mini":
+				_draw_coin_mini()
 			_:
 				_draw_player()
 
@@ -74,6 +82,67 @@ class CookingSmallIcon:
 		draw_rect(Rect2(center.x - 18.0, center.y - 24.0, 36.0, 9.0), Color("#234f7c"))
 		draw_circle(center + Vector2(-6.0, -8.0), 2.0, Color("#1d160f"))
 		draw_circle(center + Vector2(6.0, -8.0), 2.0, Color("#1d160f"))
+
+	func _draw_player_mini() -> void:
+		var center := size * 0.5
+		var scale_value: float = minf(size.x, size.y) / 28.0
+		draw_rect(
+			Rect2(center.x - 10.0 * scale_value, center.y + 3.0 * scale_value, 20.0 * scale_value, 11.0 * scale_value),
+			Color("#17324d")
+		)
+		draw_circle(center + Vector2(0.0, -4.0 * scale_value), 7.2 * scale_value, Color("#f2b889"))
+		draw_rect(
+			Rect2(center.x - 10.0 * scale_value, center.y - 13.0 * scale_value, 20.0 * scale_value, 5.0 * scale_value),
+			Color("#234f7c")
+		)
+		draw_circle(center + Vector2(-3.0 * scale_value, -4.5 * scale_value), 1.2 * scale_value, Color("#1d160f"))
+		draw_circle(center + Vector2(3.0 * scale_value, -4.5 * scale_value), 1.2 * scale_value, Color("#1d160f"))
+
+	func _draw_meal_mini() -> void:
+		var center := size * 0.5
+		var scale_value: float = minf(size.x, size.y) / 28.0
+		draw_arc(center + Vector2(0.0, 5.0 * scale_value), 10.0 * scale_value, 0.0, PI, 18, Color("#fff1cf"), 3.0 * scale_value)
+		draw_arc(center + Vector2(0.0, 3.0 * scale_value), 8.0 * scale_value, 0.0, PI, 16, Color("#b35f25"), 2.5 * scale_value)
+		for i in range(3):
+			var x := center.x - 7.0 * scale_value + float(i) * 7.0 * scale_value
+			draw_arc(Vector2(x, center.y - 7.0 * scale_value), 4.0 * scale_value, -1.6, 0.9, 8, Color(1.0, 0.92, 0.70, 0.36), 1.2 * scale_value)
+
+	func _draw_fish_mini() -> void:
+		var center := size * 0.5
+		var scale_value: float = minf(size.x, size.y) / 28.0
+		var body := PackedVector2Array(
+			[
+				center + Vector2(-11.0, 0.0) * scale_value,
+				center + Vector2(-4.0, -5.5) * scale_value,
+				center + Vector2(9.0, -2.5) * scale_value,
+				center + Vector2(12.0, 0.0) * scale_value,
+				center + Vector2(9.0, 2.5) * scale_value,
+				center + Vector2(-4.0, 5.5) * scale_value,
+			]
+		)
+		draw_colored_polygon(body, Color("#3e86b5"))
+		draw_colored_polygon(
+			PackedVector2Array(
+				[
+					center + Vector2(9.0, -2.5) * scale_value,
+					center + Vector2(14.0, -7.0) * scale_value,
+					center + Vector2(13.0, 0.0) * scale_value,
+					center + Vector2(14.0, 7.0) * scale_value,
+					center + Vector2(9.0, 2.5) * scale_value,
+				]
+			),
+			Color("#24638e")
+		)
+		draw_circle(center + Vector2(-6.0, -1.0) * scale_value, 1.3 * scale_value, Color("#06111e"))
+
+	func _draw_coin_mini() -> void:
+		var center := size * 0.5
+		var scale_value: float = minf(size.x, size.y) / 28.0
+		for i in range(3):
+			var offset := Vector2(float(i) * 4.4 - 4.4, float(i % 2) * 3.0) * scale_value
+			draw_circle(center + offset, 6.5 * scale_value, Color("#9b641e"))
+			draw_circle(center + offset + Vector2(-1.0, -1.0) * scale_value, 4.8 * scale_value, Palette.GOLD_BRIGHT)
+			draw_arc(center + offset, 4.8 * scale_value, 0.0, TAU, 14, Color("#70451f"), 1.2 * scale_value)
 
 	func _draw_coin() -> void:
 		var center := size * 0.5
@@ -578,27 +647,24 @@ func _build_result_summary(layout: VBoxContainer) -> void:
 	_result_panel = result_panel
 	result_panel.custom_minimum_size = Vector2(0, 58)
 	layout.add_child(result_panel)
-	var result_layout := VBoxContainer.new()
-	result_layout.add_theme_constant_override("separation", 4)
+	var result_layout := HBoxContainer.new()
+	result_layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	result_layout.add_theme_constant_override("separation", 8)
 	result_panel.add_child(result_layout)
-	var title_row := HBoxContainer.new()
-	title_row.add_theme_constant_override("separation", 10)
-	result_layout.add_child(title_row)
-	var left_spacer := Control.new()
-	left_spacer.custom_minimum_size = Vector2(92, 0)
-	title_row.add_child(left_spacer)
 	_result_title = make_shadow_label("", 18, Palette.GOLD_BRIGHT, 3)
-	_result_title.custom_minimum_size = Vector2(0.0, 24.0)
-	_result_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_result_title.custom_minimum_size = Vector2(210.0, 0.0)
 	_result_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_row.add_child(_result_title)
-	_status_button = make_button("詳細", _show_status_overlay, 100, false)
-	_status_button.custom_minimum_size = Vector2(92, 24)
-	title_row.add_child(_status_button)
+	_result_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_result_title.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_result_title.clip_text = true
+	result_layout.add_child(_result_title)
 	_result_body = HBoxContainer.new()
 	_result_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_result_body.add_theme_constant_override("separation", 6)
 	result_layout.add_child(_result_body)
+	_status_button = make_button("詳細", _show_status_overlay, 100, false)
+	_status_button.custom_minimum_size = Vector2(92, 40)
+	result_layout.add_child(_status_button)
 
 
 func _add_detail_tile(
@@ -1425,24 +1491,24 @@ func _show_status_summary() -> void:
 	_clear_container(_result_body)
 	_result_body.add_child(
 		_prep_summary_card(
-			"プレイヤーLv.",
+			"Lv.",
 			"Lv.%d  %d/%d" % [
 				PlayerProgress.level,
 				PlayerProgress.exp,
 				PlayerProgress.exp_to_next_level(),
 			],
 			Palette.GOLD_BRIGHT,
-			"player"
+			"player_mini"
 		)
 	)
 	_result_body.add_child(
-		_prep_summary_card("効果中の料理", _current_meal_summary_text(), Palette.GAUGE_GREEN_HI, "meal")
+		_prep_summary_card("料理", _current_meal_summary_text(), Palette.GAUGE_GREEN_HI, "meal_mini")
 	)
 	_result_body.add_child(
-		_prep_summary_card("クーラーボックス", "%d / 20" % _total_fish_count(), Palette.GAUGE_CYAN_HI, "cooler")
+		_prep_summary_card("魚", "%d / 20" % _total_fish_count(), Palette.GAUGE_CYAN_HI, "fish_mini")
 	)
 	_result_body.add_child(
-		_prep_summary_card("所持金", "%d G" % PlayerProgress.money, Palette.GOLD_BRIGHT, "coin")
+		_prep_summary_card("所持金", "%d G" % PlayerProgress.money, Palette.GOLD_BRIGHT, "coin_mini")
 	)
 
 
@@ -1660,14 +1726,16 @@ func _prep_summary_card(title: String, value: String, accent: Color, icon_mode :
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	card.add_child(row)
-	row.add_child(_small_icon(icon_mode, accent, Vector2(28.0, 0.0)))
+	var icon := _small_icon(icon_mode, accent, Vector2(28.0, 28.0))
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(icon)
 	var title_label := make_shadow_label(title, 12, Palette.TEXT_BONE, 2)
-	title_label.custom_minimum_size = Vector2(104.0, 0.0)
+	title_label.custom_minimum_size = Vector2(48.0, 0.0)
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title_label.clip_text = true
 	row.add_child(title_label)
-	var value_label := make_shadow_label(value, 14, accent, 2)
+	var value_label := make_shadow_label(value, 13, accent, 1)
 	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -1679,7 +1747,7 @@ func _prep_summary_card(title: String, value: String, accent: Color, icon_mode :
 
 func _set_result_summary_compact(compact: bool) -> void:
 	if _result_panel != null:
-		_result_panel.custom_minimum_size = Vector2(0, 58 if compact else 70)
+		_result_panel.custom_minimum_size = Vector2(0, 58)
 	if _result_body != null:
 		_result_body.visible = not compact
 
