@@ -529,11 +529,11 @@ def fish_row_frame() -> None:
     draw.rounded_rectangle((5, 4, w - 10, h - 12), radius=5, outline=(49, 27, 13, 255), width=5)
     draw.rounded_rectangle((15, 13, w - 20, h - 22), radius=3, outline=(230, 178, 78, 205), width=2)
     draw.rectangle((19, 17, 34, h - 26), fill=(10, 39, 64, 235), outline=(48, 28, 13, 230), width=2)
-    draw.rectangle((42, 17, 178, h - 26), fill=(238, 222, 185, 92), outline=(122, 77, 35, 86), width=2)
-    draw.rectangle((268, 17, w - 24, h - 26), fill=(245, 226, 181, 64), outline=(122, 77, 35, 68), width=1)
-    draw.line((204, 16, 204, h - 25), fill=(78, 45, 20, 80), width=2)
-    draw.line((262, 16, 262, h - 25), fill=(78, 45, 20, 52), width=1)
-    for x in range(52, 178, 24):
+    draw.rectangle((42, 17, 166, h - 26), fill=(238, 222, 185, 92), outline=(122, 77, 35, 86), width=2)
+    draw.rectangle((250, 17, w - 24, h - 26), fill=(245, 226, 181, 64), outline=(122, 77, 35, 68), width=1)
+    draw.line((194, 16, 194, h - 25), fill=(78, 45, 20, 80), width=2)
+    draw.line((244, 16, 244, h - 25), fill=(78, 45, 20, 52), width=1)
+    for x in range(52, 166, 24):
         draw.line((x, 22, x - 12, h - 30), fill=(255, 255, 255, 35), width=2)
     draw_corner_brackets(draw, (18, 15, w - 22, h - 25), (246, 198, 83, 205), (51, 29, 13, 235), 16, 2)
     save(img, "fish_row_frame.png")
@@ -575,10 +575,16 @@ def dish_icon_sheet() -> None:
             for k in range(3):
                 draw.rounded_rectangle((x + 62 + k * 34, y + 58 + k % 2 * 10, x + 108 + k * 34, y + 98 + k % 2 * 10), radius=14, fill=(205, 128, 38, 255), outline=(104, 58, 24, 255), width=3)
             draw.ellipse((x + 122, y + 82, x + 172, y + 112), fill=(66, 135, 55, 230))
-        else:  # locked/special silhouette
-            draw.rectangle((x + 74, y + 54, x + 150, y + 108), fill=(58, 50, 44, 210))
-            draw.arc((x + 86, y + 38, x + 138, y + 88), 200, -20, fill=(225, 205, 150, 230), width=8)
-            draw.rectangle((x + 94, y + 74, x + 132, y + 104), fill=(225, 205, 150, 230))
+        else:  # recipe book / coming-soon card
+            draw.ellipse((x + 52, y + 104, x + 170, y + 130), fill=(45, 31, 22, 72))
+            draw.rounded_rectangle((x + 56, y + 50, x + 158, y + 112), radius=8, fill=(92, 58, 31, 245), outline=(45, 29, 18, 245), width=4)
+            draw.rounded_rectangle((x + 72, y + 42, x + 174, y + 104), radius=8, fill=(239, 220, 174, 245), outline=(124, 84, 42, 230), width=4)
+            draw.line((x + 119, y + 48, x + 119, y + 100), fill=(126, 85, 42, 150), width=2)
+            draw.arc((x + 84, y + 58, x + 114, y + 92), 205, 335, fill=(72, 65, 46, 190), width=3)
+            draw.ellipse((x + 92, y + 72, x + 126, y + 85), fill=(85, 93, 68, 150), outline=(55, 45, 31, 160), width=2)
+            draw.polygon([(x + 126, y + 78), (x + 146, y + 66), (x + 140, y + 79), (x + 146, y + 91)], fill=(95, 92, 62, 150), outline=(55, 45, 31, 150))
+            for yy in [58, 67, 88]:
+                draw.line((x + 130, y + yy, x + 160, y + yy), fill=(130, 91, 48, 95), width=2)
     save(img, "dish_icon_sheet.png")
 
 

@@ -881,8 +881,8 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	marker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(marker)
 	var icon := TextureRect.new()
-	icon.texture = _fish_portrait(fish_id)
-	icon.custom_minimum_size = Vector2(122, 56)
+	icon.texture = _fish_row_texture(fish_id)
+	icon.custom_minimum_size = Vector2(116, 56)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.modulate = Color(1.18, 1.12, 1.04, 1.0) if owned else Color(0.38, 0.36, 0.31, 0.76)
@@ -895,9 +895,9 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	name.autowrap_mode = TextServer.AUTOWRAP_OFF
 	name.clip_text = true
 	row.add_child(name)
-	var amount_text := "× %d匹" % count if owned else "未所持"
-	var amount := make_label(amount_text, 17 if owned else 13, Color("#241b12"), 1, Color("#fff2ca"))
-	amount.custom_minimum_size = Vector2(58.0, 0.0)
+	var amount_text := "×%d匹" % count if owned else "未所持"
+	var amount := make_label(amount_text, 16 if owned else 13, Color("#241b12"), 1, Color("#fff2ca"))
+	amount.custom_minimum_size = Vector2(72.0, 0.0)
 	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	amount.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(amount)
@@ -1047,7 +1047,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	title.clip_text = true
 	box.add_child(title)
 	var image := TextureRect.new()
-	image.texture = _recipe_icon("locked") if locked else _featured_dish_texture(recipe_id)
+	image.texture = _featured_dish_texture(recipe_id)
 	image.custom_minimum_size = Vector2(0, 124)
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
@@ -1859,6 +1859,12 @@ func _atlas(path: String, index: int, columns: int, rows: int) -> Texture2D:
 
 func _fish_icon(fish_id: String) -> Texture2D:
 	return _atlas(FISH_ICON_SHEET, int(FISH_ICON_INDEX.get(fish_id, 0)), 1, 6)
+
+
+func _fish_row_texture(fish_id: String) -> Texture2D:
+	if FISH_ICON_INDEX.has(fish_id):
+		return _fish_icon(fish_id)
+	return _fish_portrait(fish_id)
 
 
 func _fish_portrait(fish_id: String) -> Texture2D:

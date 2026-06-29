@@ -186,7 +186,10 @@
 - 実装済み: `recipe_grid_frame.png`、`recipe_card_frame.png`、`recipe_selected_card_frame.png` は参照紙テクスチャを混ぜた素材に更新し、料理カード内の料理絵を `STRETCH_KEEP_ASPECT_COVERED` で大きく見せる。カード内のEXP/素材テキストは監査契約維持のため残すが、料理絵を主役にするため小さめに整理した。
 - 実装済み: 右詳細は `dish_feature_aji_shioyaki.png` を参照01の大判料理カットから生成し、`SelectedDishFeatureImage` をやや大きく、詳細3行を少し太くした。`dish_detail_frame.png`、`cook_button_frame.png` も紙面と青い金縁CTAが読める素材に更新した。
 - 実装済み: 下部の `現在の準備` は濃紺カードではなく紙色カードへ寄せ、参照01の下部ステータスバーに近い明度にした。
-- まだ残る差分: 中央カード下部の星/素材帯は監査文言を残す都合で参照よりUI的に見える。背景密度、ヘッダーのリッチさ、魚種が参照01と一致しないQAシード、料理カード下部の素材アイコン化は次パス候補。
+- 追記: `tools/cooking_preview.gd` の `COOK_SELECT` キャプチャは参照01と比較しやすいアジ選択状態に固定した。スクショ用の所持魚合計は容量内の `19 / 20` に収め、下部バーが異常値表示に見えないようにする。実フロー/報酬状態の検証シードは別に維持する。
+- 追記: 魚行は調理専用の `fish_icon_sheet.png` を優先し、参照01由来の魚カットをリスト内で使う。数量欄はフレーム側とラベル側を同時に広げ、`×12匹` などが折れずに読める状態を維持する。
+- 追記: ロック中レシピは灰色の南京錠だけに戻さず、料理大判画像を暗く表示する。`RecipeCard_Book` は `dish_icon_sheet.png` の本/紙面アートを使い、未実装プレースホルダーではなく図鑑導線として見せる。
+- まだ残る差分: 中央カード下部の星/素材帯は監査文言を残す都合で参照よりUI的に見える。背景密度、ヘッダーのリッチさ、料理カード下部の素材アイコン化は次パス候補。
 - 通過ゲート: `HOME=/private/tmp/tsuri_home tools/cooking_verify.sh`、`HOME=/private/tmp/tsuri_home tools/validate_project.sh`、`HOME=/private/tmp/tsuri_home tools/cooking_visual_qa.sh`、`git diff --check`。
 
 ## 未解決

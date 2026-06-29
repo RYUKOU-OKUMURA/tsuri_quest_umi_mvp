@@ -28,7 +28,7 @@ func _ready() -> void:
 	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child(vp)
 
-	_seed_select_state()
+	_seed_reference_select_state()
 	var screen := await _mount_screen(vp)
 	if not _expect_current_prep_summary(screen, "COOK_SELECT capture"):
 		get_tree().quit(1)
@@ -146,6 +146,20 @@ func _seed_select_state() -> void:
 	PlayerProgress.inventory["kasago"] = 2
 	PlayerProgress.inventory["isaki"] = 1
 	PlayerProgress.inventory["saba"] = 1
+	PlayerProgress.eaten_recipes.clear()
+	PlayerProgress.pending_buff = {}
+
+
+func _seed_reference_select_state() -> void:
+	PlayerProgress.level = 4
+	PlayerProgress.exp = 130
+	PlayerProgress.money = 1250
+	PlayerProgress.play_seconds = 12345.0
+	PlayerProgress.inventory.clear()
+	PlayerProgress.inventory["aji"] = 12
+	PlayerProgress.inventory["saba"] = 3
+	PlayerProgress.inventory["kasago"] = 2
+	PlayerProgress.inventory["mejina"] = 2
 	PlayerProgress.eaten_recipes.clear()
 	PlayerProgress.pending_buff = {}
 
