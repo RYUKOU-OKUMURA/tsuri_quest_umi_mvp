@@ -588,7 +588,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	detail_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(detail_panel)
 	var detail_layout := VBoxContainer.new()
-	detail_layout.add_theme_constant_override("separation", 3)
+	detail_layout.add_theme_constant_override("separation", 2)
 	detail_panel.add_child(detail_layout)
 	_dish_title = make_label("料理を選んでください", 27, Color("#2a2118"), 1, Color("#fff4d4"))
 	_dish_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -619,8 +619,8 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 		"CookDetailMaterialRow",
 		"必要な材料",
 		"fish",
-		Palette.GAUGE_CYAN_HI,
-		128.0
+		Color("#2e7f43"),
+		132.0
 	)
 	_material_value = material_labels[0] as Label
 	_stock_value = material_labels[1] as Label
@@ -629,8 +629,8 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 		"CookDetailExpRow",
 		"獲得EXP",
 		"exp",
-		Palette.GOLD_BRIGHT,
-		116.0
+		Color("#8f6422"),
+		118.0
 	)
 	_exp_value = exp_labels[0] as Label
 	_bonus_value = exp_labels[1] as Label
@@ -640,7 +640,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 		"次の釣行で得られる効果",
 		"buff",
 		Palette.GAUGE_GREEN_HI,
-		158.0
+		168.0
 	)
 	_buff_value = buff_labels[0] as Label
 	_effect_count_value = buff_labels[1] as Label
@@ -759,7 +759,7 @@ func _add_detail_story_row(
 		2.0
 	)
 	tile.name = node_name
-	tile.custom_minimum_size = Vector2(0, 50)
+	tile.custom_minimum_size = Vector2(0, 51)
 	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(tile)
 
@@ -768,7 +768,7 @@ func _add_detail_story_row(
 	tile.add_child(row)
 
 	var title_band := MarginContainer.new()
-	title_band.custom_minimum_size = Vector2(title_width, 38)
+	title_band.custom_minimum_size = Vector2(title_width, 40)
 	title_band.add_theme_constant_override("margin_left", 4)
 	title_band.add_theme_constant_override("margin_right", 4)
 	row.add_child(title_band)
@@ -777,9 +777,9 @@ func _add_detail_story_row(
 	title_row.add_theme_constant_override("separation", 4)
 	title_band.add_child(title_row)
 	var compact := title.length() > 6
-	var title_size := 11 if compact else 14
+	var title_size := 12 if compact else 15
 	var title_label := make_shadow_label(title, title_size, Palette.TEXT_BONE, 1)
-	title_label.custom_minimum_size = Vector2(0, 36)
+	title_label.custom_minimum_size = Vector2(0, 38)
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -787,7 +787,7 @@ func _add_detail_story_row(
 	title_label.clip_text = true
 	title_row.add_child(title_label)
 
-	var primary_size := 12 if compact else 16
+	var primary_size := 13 if compact else 17
 	var primary := make_shadow_label("", primary_size, Color("#21170f"), 1, Color("#fff3c8"))
 	primary.custom_minimum_size = Vector2(0, 40)
 	primary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -797,12 +797,16 @@ func _add_detail_story_row(
 	primary.clip_text = true
 	row.add_child(primary)
 
-	var secondary_width := 52.0 if compact else 116.0
+	var secondary_width := 48.0 if compact else 118.0
 	if node_name == "CookDetailEffectRow":
-		secondary_width = 42.0
+		secondary_width = 38.0
 	var secondary := make_shadow_label("", primary_size, accent, 1, Color("#fff2cf"))
 	secondary.custom_minimum_size = Vector2(secondary_width, 40)
-	secondary.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	secondary.horizontal_alignment = (
+		HORIZONTAL_ALIGNMENT_RIGHT
+		if node_name == "CookDetailEffectRow"
+		else HORIZONTAL_ALIGNMENT_CENTER
+	)
 	secondary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	secondary.autowrap_mode = TextServer.AUTOWRAP_OFF
 	secondary.clip_text = true
@@ -952,7 +956,7 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 					_select_fish(fish_id)
 		)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 2)
+	row.add_theme_constant_override("separation", 0)
 	card.add_child(row)
 	var marker := make_shadow_label("", 20, Palette.GOLD_BRIGHT, 2)
 	marker.custom_minimum_size = Vector2(0, 0)
@@ -961,16 +965,16 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	row.add_child(marker)
 	var icon := TextureRect.new()
 	icon.texture = _fish_row_texture(fish_id)
-	icon.custom_minimum_size = Vector2(168, 60)
+	icon.custom_minimum_size = Vector2(156, 60)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	icon.modulate = Color(1.18, 1.12, 1.04, 1.0) if owned else Color(0.38, 0.36, 0.31, 0.76)
 	row.add_child(icon)
 	var display_name := _fish_row_display_name(fish_id, String(fish.get("name", fish_id)))
 	var name_font_size := 20 if display_name.length() <= 3 else 15
 	var name := make_label(display_name, name_font_size, Color("#241b12"), 1, Color("#fff2ca"))
-	name.custom_minimum_size = Vector2(64.0, 0.0)
+	name.custom_minimum_size = Vector2(62.0, 0.0)
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	name.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -979,7 +983,7 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	var amount_text := "× %d 匹" % count if owned else "未所持"
 	var amount_color := Color("#2a2118") if owned else Color("#756a56")
 	var amount := make_label(amount_text, 16 if owned else 12, amount_color, 1, Color("#fff0bd"))
-	amount.custom_minimum_size = Vector2(64.0, 34.0)
+	amount.custom_minimum_size = Vector2(62.0, 34.0)
 	amount.size_flags_horizontal = Control.SIZE_SHRINK_END
 	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	amount.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -1392,16 +1396,23 @@ func _refresh_detail() -> void:
 	_dish_subtitle.text = String(recipe.get("description", ""))
 	_dish_image.texture = _featured_dish_texture(_selected_recipe_id)
 	_material_value.text = "%s ×1" % String(fish["name"])
-	_stock_value.text = "所持 %d → %d" % [count, maxi(0, count - 1)]
+	_stock_value.text = "%d / 1" % count
 	_exp_value.text = "+%d EXP" % total_exp
 	_bonus_value.text = "初回 +%d EXP" % base_exp if first_time else "初回済"
-	_buff_value.text = String(recipe.get("buff_text", ""))
+	_buff_value.text = _detail_buff_value_text(String(recipe.get("buff_text", "")))
 	_effect_count_value.text = "1回"
 	_overwrite_note.text = "調理後は食事結果へ"
 	_cook_action_cue.visible = true
 	_cook_action_cue.set_available(count > 0)
 	_cook_button.disabled = count <= 0
 	_cook_button.queue_redraw()
+
+
+func _detail_buff_value_text(buff_text: String) -> String:
+	var prefix := "次の釣行で"
+	if buff_text.begins_with(prefix):
+		return buff_text.substr(prefix.length())
+	return buff_text
 
 
 func _apply_cook_button_style() -> void:
