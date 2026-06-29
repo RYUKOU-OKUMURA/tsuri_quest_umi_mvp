@@ -36,44 +36,34 @@ func _build_screen() -> void:
 
 
 func _build_logo(root: Control) -> void:
-	var logo_layer := _anchored_control(root, 0.040, 0.075, 0.735, 0.405, 0, 0, 0, 0)
+	var logo_layer := _anchored_control(root, 0.055, 0.090, 0.720, 0.375, 0, 0, 0, 0)
 	logo_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	var logo_frame := _texture_rect(TITLE_LOGO_FRAME_PATH)
 	logo_frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	logo_layer.add_child(logo_frame)
 
-	var margin := MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 64)
-	margin.add_theme_constant_override("margin_top", 34)
-	margin.add_theme_constant_override("margin_right", 64)
-	margin.add_theme_constant_override("margin_bottom", 28)
-	logo_layer.add_child(margin)
-
-	var title_box := VBoxContainer.new()
-	title_box.alignment = BoxContainer.ALIGNMENT_CENTER
-	title_box.add_theme_constant_override("separation", 2)
-	margin.add_child(title_box)
-
-	var title := make_shadow_label("釣りクエスト", 74, Color("#fff0a9"), 7, Color("#2b1308"), Color(0.0, 0.0, 0.0, 0.74))
+	var title := make_shadow_label("釣りクエスト", 66, Color("#fff0a9"), 7, Color("#2b1308"), Color(0.0, 0.0, 0.0, 0.74))
 	_apply_title_font(title, true)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_box.add_child(title)
+	title.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_place_control(logo_layer, title, 0.12, 0.18, 0.88, 0.49)
 
-	var subtitle := make_shadow_label("海釣り編", 34, Color("#9de9ff"), 4, Color("#062a40"), Color(0.0, 0.0, 0.0, 0.58))
+	var subtitle := make_shadow_label("海釣り編", 30, Color("#9de9ff"), 4, Color("#062a40"), Color(0.0, 0.0, 0.0, 0.58))
 	_apply_title_font(subtitle, true)
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	subtitle.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_box.add_child(subtitle)
+	subtitle.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	subtitle.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_place_control(logo_layer, subtitle, 0.18, 0.50, 0.82, 0.67)
 
-	var concept := make_shadow_label("港で支度し、釣って、料理して、強くなる。", 19, Color("#fff7d4"), 2, Color("#061624"), Color(0.0, 0.0, 0.0, 0.46))
+	var concept := make_shadow_label("港で支度し、釣って、料理して、強くなる。", 18, Color("#fff7d4"), 2, Color("#061624"), Color(0.0, 0.0, 0.0, 0.46))
 	_apply_title_font(concept, false)
 	concept.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	concept.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_box.add_child(concept)
+	concept.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	concept.autowrap_mode = TextServer.AUTOWRAP_OFF
+	concept.clip_text = true
+	_place_control(logo_layer, concept, 0.14, 0.70, 0.86, 0.84)
 
 
 func _build_fish_feature(root: Control) -> void:
@@ -108,29 +98,10 @@ func _build_fish_feature(root: Control) -> void:
 
 
 func _build_menu(root: Control) -> void:
-	var menu := _anchored_control(root, 0.585, 0.360, 0.965, 0.950, 0, 0, 0, 0)
+	var menu := _anchored_control(root, 0.550, 0.395, 0.960, 0.925, 0, 0, 0, 0)
 	var menu_frame := _texture_rect(TITLE_MENU_FRAME_PATH)
 	menu_frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	menu.add_child(menu_frame)
-
-	var content := MarginContainer.new()
-	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	content.add_theme_constant_override("margin_left", 42)
-	content.add_theme_constant_override("margin_top", 32)
-	content.add_theme_constant_override("margin_right", 42)
-	content.add_theme_constant_override("margin_bottom", 36)
-	menu.add_child(content)
-
-	var box := VBoxContainer.new()
-	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_theme_constant_override("separation", 12)
-	content.add_child(box)
-
-	var header_row := HBoxContainer.new()
-	header_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	header_row.custom_minimum_size = Vector2(0.0, 44.0)
-	header_row.add_theme_constant_override("separation", 8)
-	box.add_child(header_row)
 
 	var bait_texture := _load_texture_if_exists(TITLE_BAIT_PATH)
 	if bait_texture != null:
@@ -138,51 +109,52 @@ func _build_menu(root: Control) -> void:
 		bait.texture = bait_texture
 		bait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		bait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		bait.custom_minimum_size = Vector2(34.0, 34.0)
-		header_row.add_child(bait)
+		bait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		_place_control(menu, bait, 0.285, 0.075, 0.355, 0.175)
 
 	var header := make_shadow_label("冒険の開始", 24, Palette.TEXT_BONE, 2, Color("#06121c"), Color(0.0, 0.0, 0.0, 0.42))
 	_apply_title_font(header, true)
+	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	header.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	header_row.add_child(header)
+	header.autowrap_mode = TextServer.AUTOWRAP_OFF
+	header.clip_text = true
+	_place_control(menu, header, 0.13, 0.070, 0.91, 0.185)
 
 	var has_save := PlayerProgress.has_save_file()
 	var save_status := make_label("セーブデータ  %s" % ("あり" if has_save else "なし"), 15, Color("#4f361b"))
 	_apply_title_font(save_status, false)
 	save_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	save_status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	box.add_child(save_status)
+	save_status.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	save_status.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_place_control(menu, save_status, 0.14, 0.230, 0.86, 0.290)
 
 	var continue_button := make_button("つづきから", func() -> void: navigate("harbor"), 430)
 	continue_button.disabled = not PlayerProgress.has_save_file()
-	continue_button.custom_minimum_size = Vector2(0.0, 58.0)
-	continue_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	continue_button.custom_minimum_size = Vector2.ZERO
 	_apply_title_button_skin(continue_button, false)
-	box.add_child(continue_button)
+	_place_control(menu, continue_button, 0.105, 0.330, 0.895, 0.470)
 
 	var new_text := "最初から" if PlayerProgress.has_save_file() else "ゲームを始める"
 	var new_button := make_button(new_text, _on_new_game_pressed, 430, true)
-	new_button.custom_minimum_size = Vector2(0.0, 58.0)
-	new_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	new_button.custom_minimum_size = Vector2.ZERO
 	_apply_title_button_skin(new_button, true)
-	box.add_child(new_button)
+	_place_control(menu, new_button, 0.105, 0.535, 0.895, 0.675)
 
-	var readme_button := make_button("仕様書・操作は README.md を参照", func() -> void: pass, 430)
+	var readme_button := make_button("README.md を参照", func() -> void: pass, 430)
 	readme_button.disabled = true
-	readme_button.custom_minimum_size = Vector2(0.0, 58.0)
-	readme_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	readme_button.custom_minimum_size = Vector2.ZERO
 	_apply_title_button_skin(readme_button, false)
-	box.add_child(readme_button)
+	_place_control(menu, readme_button, 0.105, 0.740, 0.895, 0.880)
 
 
 func _build_version(root: Control) -> void:
 	var version_label := make_shadow_label("MVP Prototype v0.1 / Godot 4.7", 14, Color("#d7eef6"), 1, Color("#03101c"), Color(0.0, 0.0, 0.0, 0.42))
 	_apply_title_font(version_label, false)
 	version_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	version_label.anchor_left = 0.585
-	version_label.anchor_top = 0.950
-	version_label.anchor_right = 0.965
-	version_label.anchor_bottom = 0.995
+	version_label.anchor_left = 0.550
+	version_label.anchor_top = 0.925
+	version_label.anchor_right = 0.960
+	version_label.anchor_bottom = 0.980
 	version_label.offset_left = 0.0
 	version_label.offset_top = 0.0
 	version_label.offset_right = 0.0
@@ -222,6 +194,18 @@ func _anchored_control(
 	control.offset_bottom = -margin_bottom
 	parent.add_child(control)
 	return control
+
+
+func _place_control(parent: Control, control: Control, left: float, top: float, right: float, bottom: float) -> void:
+	control.anchor_left = left
+	control.anchor_top = top
+	control.anchor_right = right
+	control.anchor_bottom = bottom
+	control.offset_left = 0.0
+	control.offset_top = 0.0
+	control.offset_right = 0.0
+	control.offset_bottom = 0.0
+	parent.add_child(control)
 
 
 func _texture_rect(path: String) -> TextureRect:

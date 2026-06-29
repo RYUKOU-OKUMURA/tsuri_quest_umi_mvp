@@ -105,12 +105,39 @@ def build_preview() -> Image.Image:
     draw.line((0, 2, VIEWPORT[0], 2), fill=(255, 230, 140, 42), width=2)
 
     logo = Image.open(TITLE_DIR / "title_logo_frame.png").convert("RGBA")
-    logo_box = _rect((0.040, 0.075, 0.735, 0.405))
+    logo_box = _rect((0.055, 0.090, 0.720, 0.375))
     logo = logo.resize((logo_box[2] - logo_box[0], logo_box[3] - logo_box[1]), Image.Resampling.LANCZOS)
     _alpha_composite(bg, logo, (logo_box[0], logo_box[1]))
-    _draw_centered_text(draw, (logo_box[0] + 64, logo_box[1] + 44, logo_box[2] - 64, logo_box[1] + 137), "釣りクエスト", 74, "#fff0a9", stroke=7, stroke_fill="#2b1308")
-    _draw_centered_text(draw, (logo_box[0] + 64, logo_box[1] + 136, logo_box[2] - 64, logo_box[1] + 179), "海釣り編", 34, "#9de9ff", stroke=4, stroke_fill="#062a40")
-    _draw_centered_text(draw, (logo_box[0] + 64, logo_box[1] + 182, logo_box[2] - 64, logo_box[3] - 30), "港で支度し、釣って、料理して、強くなる。", 19, "#fff7d4", bold=False, stroke=2, stroke_fill="#061624")
+    logo_w = logo_box[2] - logo_box[0]
+    logo_h = logo_box[3] - logo_box[1]
+    _draw_centered_text(
+        draw,
+        (logo_box[0] + round(logo_w * 0.12), logo_box[1] + round(logo_h * 0.18), logo_box[0] + round(logo_w * 0.88), logo_box[1] + round(logo_h * 0.49)),
+        "釣りクエスト",
+        66,
+        "#fff0a9",
+        stroke=7,
+        stroke_fill="#2b1308",
+    )
+    _draw_centered_text(
+        draw,
+        (logo_box[0] + round(logo_w * 0.18), logo_box[1] + round(logo_h * 0.50), logo_box[0] + round(logo_w * 0.82), logo_box[1] + round(logo_h * 0.67)),
+        "海釣り編",
+        30,
+        "#9de9ff",
+        stroke=4,
+        stroke_fill="#062a40",
+    )
+    _draw_centered_text(
+        draw,
+        (logo_box[0] + round(logo_w * 0.14), logo_box[1] + round(logo_h * 0.70), logo_box[0] + round(logo_w * 0.86), logo_box[1] + round(logo_h * 0.84)),
+        "港で支度し、釣って、料理して、強くなる。",
+        18,
+        "#fff7d4",
+        bold=False,
+        stroke=2,
+        stroke_fill="#061624",
+    )
 
     fish_box = _rect((0.050, 0.555, 0.430, 0.930))
     fish = Image.open(UNDERWATER_DIR / "fish" / "kurodai_card_portrait.png").convert("RGBA")
@@ -120,35 +147,52 @@ def build_preview() -> Image.Image:
     _draw_centered_text(draw, (fish_box[0] + 10, fish_box[1] + round((fish_box[3] - fish_box[1]) * 0.82), fish_box[2] - 10, fish_box[3]), "次の大物が、海の底で待っている。", 18, "#fff5c5", bold=False, stroke=2, stroke_fill="#071420")
 
     menu = Image.open(TITLE_DIR / "title_menu_frame.png").convert("RGBA")
-    menu_box = _rect((0.585, 0.360, 0.965, 0.950))
+    menu_box = _rect((0.550, 0.395, 0.960, 0.925))
     menu = menu.resize((menu_box[2] - menu_box[0], menu_box[3] - menu_box[1]), Image.Resampling.LANCZOS)
     _alpha_composite(bg, menu, (menu_box[0], menu_box[1]))
 
-    header_y = menu_box[1] + 54
+    menu_w = menu_box[2] - menu_box[0]
+    menu_h = menu_box[3] - menu_box[1]
+    header_y = menu_box[1] + round(menu_h * 0.128)
     bait = Image.open(UNDERWATER_DIR / "hud_bait_icon.png").convert("RGBA").resize((34, 34), Image.Resampling.LANCZOS)
-    _alpha_composite(bg, bait, (menu_box[0] + 177, header_y - 19))
-    _draw_text(draw, (menu_box[0] + 219, header_y), "冒険の開始", 24, "#fff1c7", stroke=2, stroke_fill="#06121c", anchor="lm")
-    _draw_centered_text(draw, (menu_box[0] + 42, menu_box[1] + 86, menu_box[2] - 42, menu_box[1] + 112), "セーブデータ  なし", 15, "#4f361b", bold=False)
+    _alpha_composite(bg, bait, (menu_box[0] + round(menu_w * 0.285), menu_box[1] + round(menu_h * 0.075)))
+    _draw_centered_text(
+        draw,
+        (menu_box[0] + round(menu_w * 0.13), menu_box[1] + round(menu_h * 0.070), menu_box[0] + round(menu_w * 0.91), menu_box[1] + round(menu_h * 0.185)),
+        "冒険の開始",
+        24,
+        "#fff1c7",
+        stroke=2,
+        stroke_fill="#06121c",
+    )
+    _draw_centered_text(
+        draw,
+        (menu_box[0] + round(menu_w * 0.14), menu_box[1] + round(menu_h * 0.230), menu_box[0] + round(menu_w * 0.86), menu_box[1] + round(menu_h * 0.290)),
+        "セーブデータ  なし",
+        15,
+        "#4f361b",
+        bold=False,
+    )
 
     button_specs = [
-        ("title_button_disabled.png", "つづきから", 0),
-        ("title_button_primary.png", "ゲームを始める", 1),
-        ("title_button_disabled.png", "仕様書・操作は README.md を参照", 2),
+        ("title_button_disabled.png", "つづきから", 0.330, 0.470),
+        ("title_button_primary.png", "ゲームを始める", 0.535, 0.675),
+        ("title_button_disabled.png", "README.md を参照", 0.740, 0.880),
     ]
-    for filename, label, index in button_specs:
+    for filename, label, top, bottom in button_specs:
         button = Image.open(TITLE_DIR / filename).convert("RGBA")
         button_box = (
-            menu_box[0] + 55,
-            menu_box[1] + 126 + index * 70,
-            menu_box[2] - 55,
-            menu_box[1] + 184 + index * 70,
+            menu_box[0] + round(menu_w * 0.105),
+            menu_box[1] + round(menu_h * top),
+            menu_box[0] + round(menu_w * 0.895),
+            menu_box[1] + round(menu_h * bottom),
         )
         button = button.resize((button_box[2] - button_box[0], button_box[3] - button_box[1]), Image.Resampling.LANCZOS)
         _alpha_composite(bg, button, (button_box[0], button_box[1]))
-        fill = "#fff4ca" if index == 1 else "#d1c8b6"
+        fill = "#fff4ca" if filename == "title_button_primary.png" else "#d1c8b6"
         _draw_centered_text(draw, button_box, label, 19, fill, stroke=2, stroke_fill="#2a1608")
 
-    _draw_centered_text(draw, _rect((0.585, 0.950, 0.965, 0.995)), "MVP Prototype v0.1 / Godot 4.7", 14, "#d7eef6", bold=False, stroke=1, stroke_fill="#03101c")
+    _draw_centered_text(draw, _rect((0.550, 0.925, 0.960, 0.980)), "MVP Prototype v0.1 / Godot 4.7", 14, "#d7eef6", bold=False, stroke=1, stroke_fill="#03101c")
     return bg.convert("RGB")
 
 
