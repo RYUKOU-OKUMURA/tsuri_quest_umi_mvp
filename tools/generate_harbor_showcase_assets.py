@@ -240,8 +240,9 @@ def _facility_card(path: Path, *, primary: bool = False, hover: bool = False) ->
     draw.rounded_rectangle((8, 11, size[0] - 8, size[1] - 6), radius=10, fill=(0, 0, 0, 75))
     draw.rounded_rectangle((12, 8, size[0] - 12, size[1] - 10), radius=9, fill=fill, outline=(55, 33, 18, 230), width=3)
     draw.rounded_rectangle((22, 18, size[0] - 22, size[1] - 20), radius=7, fill=body, outline=accent, width=2)
-    draw.line((42, 21, size[0] - 42, 21), fill=(255, 239, 169, 120 if primary or hover else 74), width=2)
-    draw.line((48, size[1] - 24, size[0] - 48, size[1] - 24), fill=(36, 23, 14, 72), width=1)
+    line_start = 360
+    draw.line((line_start, 22, size[0] - 54, 22), fill=(255, 239, 169, 110 if primary or hover else 54), width=2)
+    draw.line((line_start, size[1] - 25, size[0] - 54, size[1] - 25), fill=(36, 23, 14, 38), width=1)
     for x in (34, size[0] - 40):
         sign = 1 if x < size[0] / 2 else -1
         draw.polygon(

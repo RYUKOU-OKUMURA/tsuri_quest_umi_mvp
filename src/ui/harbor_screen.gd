@@ -1,7 +1,7 @@
 extends "res://src/ui/screen_base.gd"
 
 const HarborBackdropScript = preload("res://src/ui/components/harbor_backdrop.gd")
-const FightFontsScript = preload("res://src/ui/fight_fonts.gd")
+const HarborFontsScript = preload("res://src/ui/harbor_fonts.gd")
 
 const HARBOR_TOP_FRAME_PATH := "res://assets/showcase/harbor/harbor_top_frame.png"
 const HARBOR_MAIN_FRAME_PATH := "res://assets/showcase/harbor/harbor_main_frame.png"
@@ -125,7 +125,7 @@ func _build_buff_card(main: Control) -> void:
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(card, title, 0.145, 0.100, 0.930, 0.365)
 
-	_buff_name_label = _harbor_label("", 20, Color("#2a2118"), true, 1, Color("#fff6d0"))
+	_buff_name_label = _harbor_label("", 20, Color("#2a2118"), true, 0)
 	_buff_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_buff_name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(card, _buff_name_label, 0.145, 0.345, 0.930, 0.635)
@@ -195,17 +195,17 @@ func _build_facility_button(
 	icon.modulate = Color(1.0, 1.0, 1.0, 0.96)
 	_place_control(button, icon, 0.038, 0.175, 0.155, 0.825)
 
-	var title := _harbor_label(title_text, 20, Color("#fff4c9") if primary else Color("#2b2118"), true, 2 if primary else 0, Color("#1b1209"))
+	var title := _harbor_label(title_text, 20, Color("#fff4c9") if primary else Color("#22180f"), true, 2 if primary else 0, Color("#1b1209"))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(button, title, 0.185, 0.105, 0.930, 0.525)
+	_place_control(button, title, 0.185, 0.070, 0.930, 0.515)
 
-	var body := _harbor_label(body_text, 13, Color("#d9f4ff") if primary else Color("#69491f"), false, 1 if primary else 0, Color("#06131d"))
+	var body := _harbor_label(body_text, 13, Color("#d9f4ff") if primary else Color("#4d3219"), false, 1 if primary else 0, Color("#06131d"))
 	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	body.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	body.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(button, body, 0.185, 0.535, 0.930, 0.880)
+	_place_control(button, body, 0.185, 0.570, 0.930, 0.930)
 
 
 func _build_footer(root: Control) -> void:
@@ -319,9 +319,19 @@ func _harbor_label(
 	outline := 0,
 	outline_color := Color("#07131d")
 ) -> Label:
-	var label := make_shadow_label(text, font_size, color, outline, outline_color, Color(0.0, 0.0, 0.0, 0.42))
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_color_override("font_color", color)
+	if outline > 0:
+		label.add_theme_color_override("font_outline_color", outline_color)
+		label.add_theme_constant_override("outline_size", outline)
+		label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.26))
+		label.add_theme_constant_override("shadow_offset_x", 1)
+		label.add_theme_constant_override("shadow_offset_y", 1)
+		label.add_theme_constant_override("shadow_outline_size", 1)
 	var fallback := get_theme_default_font()
-	label.add_theme_font_override("font", FightFontsScript.bold(fallback) if bold else FightFontsScript.regular(fallback))
+	label.add_theme_font_override("font", HarborFontsScript.bold(fallback) if bold else HarborFontsScript.regular(fallback))
 	label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	label.clip_text = true
 	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -339,7 +349,7 @@ func _apply_facility_button_skin(button: Button, primary: bool) -> void:
 	button.add_theme_stylebox_override("hover", hover)
 	button.add_theme_stylebox_override("focus", hover)
 	button.add_theme_stylebox_override("pressed", hover)
-	button.add_theme_font_override("font", FightFontsScript.bold(get_theme_default_font()))
+	button.add_theme_font_override("font", HarborFontsScript.bold(get_theme_default_font()))
 	button.add_theme_color_override("font_color", Color.TRANSPARENT)
 	button.add_theme_color_override("font_hover_color", Color.TRANSPARENT)
 	button.add_theme_color_override("font_pressed_color", Color.TRANSPARENT)
