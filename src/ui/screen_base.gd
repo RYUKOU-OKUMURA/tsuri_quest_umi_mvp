@@ -137,11 +137,18 @@ func make_shadow_label(
 	outline_color: Color = Palette.TEXT_OUTLINE_DARK,
 	shadow_color: Color = Palette.SHADOW
 ) -> Label:
-	var label := make_label(text, font_size, color, outline, outline_color)
+	var effective_outline := outline
+	if font_size < 16:
+		effective_outline = mini(outline, 1)
+	elif font_size < 20:
+		effective_outline = mini(outline, 2)
+	var label := make_label(text, font_size, color, effective_outline, outline_color)
 	label.add_theme_color_override("font_shadow_color", shadow_color)
-	label.add_theme_constant_override("shadow_offset_x", 2)
-	label.add_theme_constant_override("shadow_offset_y", 2)
-	label.add_theme_constant_override("shadow_outline_size", 3)
+	var shadow_offset := 1 if font_size < 18 else 2
+	var shadow_outline := 1 if font_size < 18 else 2
+	label.add_theme_constant_override("shadow_offset_x", shadow_offset)
+	label.add_theme_constant_override("shadow_offset_y", shadow_offset)
+	label.add_theme_constant_override("shadow_outline_size", shadow_outline)
 	return label
 
 

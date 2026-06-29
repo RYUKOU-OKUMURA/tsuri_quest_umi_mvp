@@ -3,7 +3,7 @@ extends Control
 ## 水中ファイト画面上部の専用ステータスバー。
 # 生成フレーム素材を敷き、時計・天候・所持金・現在地点/水深の文字だけを重ねる。
 
-const FightFontsScript = preload("res://src/ui/fight_fonts.gd")
+const GameFontsScript = preload("res://src/ui/game_fonts.gd")
 const FRAME_PATH := "res://assets/showcase/underwater/top_status_frame.png"
 const TOP_ICON_SHEET_PATH := "res://assets/showcase/underwater/top_status_icon_sheet.png"
 const ICON_SHEET_PATH := "res://assets/showcase/underwater/fight_icon_sheet.png"
@@ -51,8 +51,8 @@ func _draw() -> void:
 	else:
 		_draw_fallback_frame(rect)
 
-	var font := FightFontsScript.bold(get_theme_default_font())
-	var regular_font := FightFontsScript.regular(get_theme_default_font())
+	var font := GameFontsScript.bold(get_theme_default_font())
+	var regular_font := GameFontsScript.regular(get_theme_default_font())
 	var slots := _slot_rects(rect)
 	_draw_status_icon(slots[0], ICON_TIME)
 	_draw_status_icon(slots[1], ICON_WEATHER)

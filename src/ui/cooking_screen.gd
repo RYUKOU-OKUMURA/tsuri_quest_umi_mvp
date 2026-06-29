@@ -654,8 +654,8 @@ func _add_detail_story_row(
 	title_band.add_child(title_row)
 	var compact := title.length() > 6
 	title_row.add_child(_small_icon(icon_mode, accent, Vector2(18.0 if compact else 24.0, 0.0)))
-	var title_size := 8 if compact else 12
-	var title_label := make_shadow_label(title, title_size, Palette.TEXT_BONE, 2)
+	var title_size := 10 if compact else 12
+	var title_label := make_shadow_label(title, title_size, Palette.TEXT_BONE, 1)
 	title_label.custom_minimum_size = Vector2(0, 22)
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -991,7 +991,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 		_recipe_star_text(recipe, locked),
 		13,
 		Palette.GOLD_BRIGHT if not locked else Color("#d0c2a3"),
-		2,
+		1,
 		Color("#4c2b0b")
 	)
 	stars.custom_minimum_size = Vector2(0.0, 17.0)

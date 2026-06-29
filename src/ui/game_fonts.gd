@@ -1,12 +1,14 @@
 extends RefCounted
-## 港メニュー用フォント。
-# 水中ファイト用のドット寄り設定とは分け、港の小さなUI文字を滑らかに描画する。
+## ゲーム全体の標準UIフォント。
+# LINE Seed JP の3ウェイトを共通ローダー経由で返す。
 
-const REGULAR_PATH := "res://assets/fonts/MPLUS1p-Regular.ttf"
-const BOLD_PATH := "res://assets/fonts/MPLUS1p-ExtraBold.ttf"
+const REGULAR_PATH := "res://assets/fonts/line_seed/LINESeedJP_A_TTF_Rg.ttf"
+const BOLD_PATH := "res://assets/fonts/line_seed/LINESeedJP_A_TTF_Bd.ttf"
+const EXTRA_BOLD_PATH := "res://assets/fonts/line_seed/LINESeedJP_A_TTF_Eb.ttf"
 
 static var _regular: FontFile
 static var _bold: FontFile
+static var _extra_bold: FontFile
 
 
 static func regular(fallback: Font) -> Font:
@@ -19,6 +21,12 @@ static func bold(fallback: Font) -> Font:
 	if _bold == null:
 		_bold = _load_font(BOLD_PATH)
 	return _bold if _bold != null else fallback
+
+
+static func extra_bold(fallback: Font) -> Font:
+	if _extra_bold == null:
+		_extra_bold = _load_font(EXTRA_BOLD_PATH)
+	return _extra_bold if _extra_bold != null else fallback
 
 
 static func _load_font(path: String) -> FontFile:

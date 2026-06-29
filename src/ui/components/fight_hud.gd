@@ -8,7 +8,7 @@ signal reel_changed(active: bool)
 signal give_line_changed(active: bool)
 signal harbor_pressed
 
-const FightFontsScript = preload("res://src/ui/fight_fonts.gd")
+const GameFontsScript = preload("res://src/ui/game_fonts.gd")
 const HUD_FRAME_PATH := "res://assets/showcase/underwater/fight_hud_frame.png"
 const ICON_SHEET_PATH := "res://assets/showcase/underwater/fight_icon_sheet.png"
 const HUD_BAIT_ICON_PATH := "res://assets/showcase/underwater/hud_bait_icon.png"
@@ -118,7 +118,7 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _draw() -> void:
-	var font := FightFontsScript.bold(get_theme_default_font())
+	var font := GameFontsScript.bold(get_theme_default_font())
 	var rect := Rect2(Vector2.ZERO, size)
 	if rect.size.x <= 0.0 or rect.size.y <= 0.0:
 		return
@@ -459,7 +459,7 @@ func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String,
 	var note_size := 11 if not is_long_key else 10
 	var label_pos := key_rect.position + Vector2(key_rect.size.x + (5.0 if not is_long_key else 4.0), 17.0)
 	_draw_text(font, label, label_pos, label_size, Color("#21170f"), 0)
-	var note_font := FightFontsScript.regular(get_theme_default_font())
+	var note_font := GameFontsScript.regular(get_theme_default_font())
 	var note_text := _compact_control_note(note)
 	if not is_long_key:
 		note_text = "（%s）" % note_text

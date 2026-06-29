@@ -141,6 +141,6 @@ func _draw() -> void:
 		var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
 		var pos := Vector2(bar_rect.size.x - text_width - 10.0, bar_rect.size.y * 0.5 + font_size * 0.34)
 		draw_string_outline(
-			font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 3, Color(0.0, 0.0, 0.0, 0.65)
+			font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 2, Color(0.0, 0.0, 0.0, 0.55)
 		)
 		draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color.WHITE)

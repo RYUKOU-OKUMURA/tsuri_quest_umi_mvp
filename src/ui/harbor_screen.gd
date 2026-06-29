@@ -1,7 +1,7 @@
 extends "res://src/ui/screen_base.gd"
 
 const HarborBackdropScript = preload("res://src/ui/components/harbor_backdrop.gd")
-const HarborFontsScript = preload("res://src/ui/harbor_fonts.gd")
+const GameFontsScript = preload("res://src/ui/game_fonts.gd")
 
 const HARBOR_TOP_FRAME_PATH := "res://assets/showcase/harbor/harbor_top_frame.png"
 const HARBOR_MAIN_FRAME_PATH := "res://assets/showcase/harbor/harbor_main_frame.png"
@@ -331,7 +331,7 @@ func _harbor_label(
 		label.add_theme_constant_override("shadow_offset_y", 1)
 		label.add_theme_constant_override("shadow_outline_size", 1)
 	var fallback := get_theme_default_font()
-	label.add_theme_font_override("font", HarborFontsScript.bold(fallback) if bold else HarborFontsScript.regular(fallback))
+	label.add_theme_font_override("font", GameFontsScript.bold(fallback) if bold else GameFontsScript.regular(fallback))
 	label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	label.clip_text = true
 	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -349,7 +349,7 @@ func _apply_facility_button_skin(button: Button, primary: bool) -> void:
 	button.add_theme_stylebox_override("hover", hover)
 	button.add_theme_stylebox_override("focus", hover)
 	button.add_theme_stylebox_override("pressed", hover)
-	button.add_theme_font_override("font", HarborFontsScript.bold(get_theme_default_font()))
+	button.add_theme_font_override("font", GameFontsScript.bold(get_theme_default_font()))
 	button.add_theme_color_override("font_color", Color.TRANSPARENT)
 	button.add_theme_color_override("font_hover_color", Color.TRANSPARENT)
 	button.add_theme_color_override("font_pressed_color", Color.TRANSPARENT)

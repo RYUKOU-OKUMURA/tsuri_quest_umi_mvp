@@ -3,7 +3,7 @@ extends Control
 ## 水中ファイト看板画面の右サイドバー。
 # 魚カード、行動カード、タックルカードをまとめて描画し、参照画像の情報密度に寄せる。
 
-const FightFontsScript = preload("res://src/ui/fight_fonts.gd")
+const GameFontsScript = preload("res://src/ui/game_fonts.gd")
 const FightFishAssetsScript = preload("res://src/ui/fight_fish_assets.gd")
 const SIDEBAR_FRAME_PATH := "res://assets/showcase/underwater/sidebar_frame.png"
 const ICON_SHEET_PATH := "res://assets/showcase/underwater/fight_icon_sheet.png"
@@ -75,7 +75,7 @@ func _process(_delta: float) -> void:
 
 
 func _draw() -> void:
-	var font := FightFontsScript.bold(get_theme_default_font())
+	var font := GameFontsScript.bold(get_theme_default_font())
 	var w := size.x
 	var h := size.y
 	if w <= 0.0 or h <= 0.0:
@@ -162,7 +162,7 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	var desc_y := divider_y + (52.0 if compact_card else 44.0)
 	draw_line(Vector2(inner.position.x + 8.0, desc_y - 12.0), Vector2(inner.end.x - 8.0, desc_y - 12.0), Color("#d6c299"), 1.0)
 	var detail_gap := 16.0 if compact_card else 21.0
-	var detail_font := FightFontsScript.regular(get_theme_default_font())
+	var detail_font := GameFontsScript.regular(get_theme_default_font())
 	var behavior := String(fish_data.get("behavior", "ラインを見ながら、テンションを保とう。"))
 	var habitat := String(fish_data.get("habitat", "沿岸"))
 	if compact_card:
@@ -178,7 +178,7 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 func _draw_unknown_fish_card(font: Font, rect: Rect2) -> void:
 	var compact_card := _sidebar_frame != null or rect.size.y <= 300.0
 	var inner := rect.grow(-10.0 if _sidebar_frame == null else -12.0)
-	var regular_font := FightFontsScript.regular(get_theme_default_font())
+	var regular_font := GameFontsScript.regular(get_theme_default_font())
 	var title_plaque := Rect2(inner.position + Vector2(7.0, 8.0), Vector2(inner.size.x - 14.0, 28.0))
 	var state_rect := Rect2(inner.position + Vector2(inner.size.x - 74.0, 11.0), Vector2(64.0, 20.0))
 	var title_rect := Rect2(title_plaque.position + Vector2(62.0, 0.0), Vector2(state_rect.position.x - title_plaque.position.x - 72.0, title_plaque.size.y))
@@ -246,7 +246,7 @@ func _draw_unknown_signal_art(font: Font, rect: Rect2) -> void:
 
 
 func _draw_unknown_reaction_line(font: Font, rect: Rect2) -> void:
-	var regular_font := FightFontsScript.regular(get_theme_default_font())
+	var regular_font := GameFontsScript.regular(get_theme_default_font())
 	var label := "反応"
 	var value := _unknown_reaction_label()
 	var label_size := 16
@@ -343,10 +343,10 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 		]
 	var tackle_font_size := 13 if _sidebar_frame != null else 12
 	var tackle_line_gap := 13.6 if _sidebar_frame != null else 16.0
-	var tackle_font := FightFontsScript.regular(get_theme_default_font()) if _sidebar_frame != null else font
+	var tackle_font := GameFontsScript.regular(get_theme_default_font()) if _sidebar_frame != null else font
 	var tackle_text_color := Color("#1d1209") if _sidebar_frame != null else Palette.TEXT_DARK
 	for i in range(lines.size()):
-		var line_font := FightFontsScript.bold(tackle_font) if _sidebar_frame != null and i == 0 else tackle_font
+		var line_font := GameFontsScript.bold(tackle_font) if _sidebar_frame != null and i == 0 else tackle_font
 		var line_color := Color("#160d07") if _sidebar_frame != null and i == 0 else tackle_text_color
 		_draw_wrapped(line_font, lines[i], body.position + text_offset + Vector2(0.0, float(i) * tackle_line_gap), text_width, tackle_font_size, line_color, 1, tackle_font_size + 2.0)
 	if _tackle_card_icon != null or _icons != null:
@@ -389,7 +389,7 @@ func _draw_centered_baseline_text(font: Font, text: String, rect: Rect2, baselin
 
 
 func _draw_estimate_line(font: Font, value: float, rect: Rect2) -> void:
-	var regular_font := FightFontsScript.regular(get_theme_default_font())
+	var regular_font := GameFontsScript.regular(get_theme_default_font())
 	var label := "推定"
 	var number := "%.1f" % value
 	var unit := " cm"

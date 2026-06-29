@@ -2,12 +2,10 @@ extends RefCounted
 ## JRPG ウィンドウスキン テーマ。
 #  - 通常UIは細い縁の StyleBoxFlat を使い、生成9スライス由来の格子状破綻を避ける。
 #  - 本番ウィンドウ素材が用意できたら、ここを StyleBoxTexture に差し替える。
-#  - フォントは res://assets/fonts/ の FontFile を NEAREST(アンチエイリアスOFF) で読み込み、
-#    なければ macOS システムゴシックにフォールバック。
+#  - フォントは LINE Seed JP を共通ローダー経由で読み込み、
+#    通常UIではアンチエイリアスON・軽いヒンティングで描画する。
 #  - 色は Palette（src/ui/palette.gd）へ一元化。
-const PIXEL_FONT_PATH := "res://assets/fonts/MPLUS1p-Regular.ttf"
-# レトロピクセル風にするためアンチエイリアスOFF。漢字の可読性を優先したい場合は GRAY に変更。
-const PIXEL_FONT_ANTIALIASING := TextServer.FONT_ANTIALIASING_NONE
+const GameFontsScript = preload("res://src/ui/game_fonts.gd")
 
 const _SYSTEM_FONT_NAMES: Array[String] = [
 	"Hiragino Maru Gothic ProN",
@@ -23,6 +21,8 @@ static func build_theme() -> Theme:
 	var theme := Theme.new()
 	theme.default_font = build_font()
 	theme.default_font_size = 18
+	var default_font := theme.default_font
+	var bold_font := GameFontsScript.bold(default_font)
 
 	var panel := _panel_style(Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD, false)
 	var dark := _panel_style(Palette.DARK_PANEL, Color("#06101c"), Color("#cfa763"), true)
@@ -98,6 +98,11 @@ static func build_theme() -> Theme:
 	theme.set_stylebox("panel", "AcceptDialog", dialog)
 
 	# 色・アウトライン・サイズ
+	theme.set_font("font", "Label", default_font)
+	theme.set_font("font", "Button", bold_font)
+	theme.set_font("font", "OptionButton", bold_font)
+	theme.set_font("font", "ItemList", default_font)
+	theme.set_font("font", "ProgressBar", bold_font)
 	theme.set_color("font_color", "Label", Palette.TEXT_DARK)
 	theme.set_color("font_outline_color", "Label", Palette.TEXT_OUTLINE_DARK)
 	theme.set_constant("outline_size", "Label", 0)
@@ -106,17 +111,17 @@ static func build_theme() -> Theme:
 	theme.set_color("font_pressed_color", "Button", Palette.GOLD_BRIGHT)
 	theme.set_color("font_disabled_color", "Button", Color("#d0cbc1"))
 	theme.set_color("font_outline_color", "Button", Palette.TEXT_OUTLINE_LIGHT)
-	theme.set_constant("outline_size", "Button", 3)
+	theme.set_constant("outline_size", "Button", 2)
 	theme.set_color("font_color", "OptionButton", Palette.TEXT_BONE)
 	theme.set_color("font_hover_color", "OptionButton", Color.WHITE)
 	theme.set_color("font_outline_color", "OptionButton", Palette.TEXT_OUTLINE_LIGHT)
-	theme.set_constant("outline_size", "OptionButton", 3)
+	theme.set_constant("outline_size", "OptionButton", 2)
 	theme.set_color("font_color", "ItemList", Palette.TEXT_DARK)
 	theme.set_color("font_outline_color", "ItemList", Palette.TEXT_OUTLINE_DARK)
 	theme.set_constant("outline_size", "ItemList", 0)
 	theme.set_color("font_color", "ProgressBar", Color.WHITE)
 	theme.set_color("font_outline_color", "ProgressBar", Palette.TEXT_OUTLINE_DARK)
-	theme.set_constant("outline_size", "ProgressBar", 3)
+	theme.set_constant("outline_size", "ProgressBar", 2)
 
 	theme.set_font_size("font_size", "Label", 18)
 	theme.set_font_size("font_size", "Button", 18)
@@ -127,16 +132,7 @@ static func build_theme() -> Theme:
 
 
 static func build_font() -> Font:
-	if ResourceLoader.exists(PIXEL_FONT_PATH):
-		var loaded := load(PIXEL_FONT_PATH)
-		var f := loaded as FontFile
-		if f != null:
-			f.antialiasing = PIXEL_FONT_ANTIALIASING
-			f.hinting = TextServer.HINTING_NONE
-			f.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
-			f.generate_mipmaps = true
-			return f
-	return _system_font()
+	return GameFontsScript.regular(_system_font())
 
 
 static func _system_font() -> SystemFont:

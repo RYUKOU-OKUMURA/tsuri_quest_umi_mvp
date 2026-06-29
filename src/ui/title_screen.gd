@@ -1,7 +1,7 @@
 extends "res://src/ui/screen_base.gd"
 
 const TitleBackdropScript = preload("res://src/ui/components/title_backdrop.gd")
-const FightFontsScript = preload("res://src/ui/fight_fonts.gd")
+const GameFontsScript = preload("res://src/ui/game_fonts.gd")
 
 const TITLE_LOGO_FRAME_PATH := "res://assets/showcase/title/title_logo_frame.png"
 const TITLE_MENU_FRAME_PATH := "res://assets/showcase/title/title_menu_frame.png"
@@ -226,7 +226,7 @@ func _load_texture_if_exists(path: String) -> Texture2D:
 
 func _apply_title_font(label: Label, bold: bool) -> void:
 	var fallback := get_theme_default_font()
-	var font := FightFontsScript.bold(fallback) if bold else FightFontsScript.regular(fallback)
+	var font := GameFontsScript.extra_bold(fallback) if bold else GameFontsScript.regular(fallback)
 	label.add_theme_font_override("font", font)
 
 
@@ -245,7 +245,7 @@ func _apply_title_button_skin(button: Button, primary: bool) -> void:
 	button.add_theme_stylebox_override("focus", hover)
 	button.add_theme_stylebox_override("pressed", pressed)
 	button.add_theme_stylebox_override("disabled", disabled)
-	button.add_theme_font_override("font", FightFontsScript.bold(get_theme_default_font()))
+	button.add_theme_font_override("font", GameFontsScript.bold(get_theme_default_font()))
 	button.add_theme_color_override("font_color", Color("#fff4ca"))
 	button.add_theme_color_override("font_hover_color", Color.WHITE)
 	button.add_theme_color_override("font_pressed_color", Palette.GOLD_BRIGHT)
