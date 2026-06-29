@@ -789,36 +789,40 @@ def recipe_to_detail_arrow() -> None:
 def recipe_selected_card_frame() -> None:
     w, h = 280, 220
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    shadow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(shadow, "RGBA")
+    sd.rounded_rectangle((12, 14, w - 10, h - 8), radius=11, fill=(0, 0, 0, 124))
+    img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(4)))
+
     glow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     gd = ImageDraw.Draw(glow, "RGBA")
-    for offset, alpha in [(0, 82), (5, 62), (10, 42), (16, 24)]:
+    for offset, alpha, width in [(0, 56, 5), (5, 34, 4), (10, 18, 3)]:
         gd.rounded_rectangle(
-            (8 - offset, 8 - offset, w - 16 + offset, h - 18 + offset),
-            radius=12 + offset,
+            (10 - offset, 10 - offset, w - 17 + offset, h - 20 + offset),
+            radius=10 + offset,
             outline=(255, 190, 45, alpha),
-            width=8,
+            width=width,
         )
-    glow = glow.filter(ImageFilter.GaussianBlur(5))
+    glow = glow.filter(ImageFilter.GaussianBlur(3))
     img.alpha_composite(glow)
+
+    paper = reference_paper_texture((w - 24, h - 28), "f2deaa", 72, (496, 204, 650, 438), 0.44, 6.0)
+    paste_rounded(img, paper, (8, 8, w - 16, h - 20), 8, 252)
     draw = ImageDraw.Draw(img, "RGBA")
 
-    draw.rounded_rectangle((6, 6, w - 14, h - 16), radius=12, fill=(246, 224, 169, 252), outline=(82, 42, 10, 255), width=6)
-    draw.rounded_rectangle((18, 18, w - 26, h - 30), radius=8, fill=(255, 239, 192, 242), outline=(255, 202, 67, 245), width=4)
-    draw.rounded_rectangle((30, 30, w - 38, h - 42), radius=4, outline=(255, 250, 199, 170), width=2)
-    for x in range(34, w - 42, 32):
-        draw.line((x, 36, x - 28, h - 48), fill=(255, 255, 255, 24), width=2)
-    paper = reference_paper_texture((w - 54, h - 58), "f7e4ad", 72, (496, 204, 650, 438), 0.46, 6.0)
-    paste_rounded(img, paper, (27, 27, w - 35, h - 35), 5, 210)
-    # Strong corner ornaments make the selected card read as the active recipe.
-    for x, y, sx, sy in [(18, 18, 1, 1), (w - 42, 18, -1, 1), (18, h - 52, 1, -1), (w - 42, h - 52, -1, -1)]:
-        draw.rectangle((x, y, x + 18, y + 18), fill=(255, 213, 75, 255), outline=(83, 43, 10, 255), width=2)
-        draw.line((x + 9, y - 9 * sy, x + 9, y + 27 * sy), fill=(255, 246, 174, 190), width=3)
-        draw.line((x - 9 * sx, y + 9, x + 27 * sx, y + 9), fill=(255, 246, 174, 190), width=3)
-    draw.rounded_rectangle((30, 50, w - 38, 154), radius=5, fill=(255, 243, 203, 18), outline=(93, 55, 25, 42), width=1)
-    draw.rounded_rectangle((44, h - 56, w - 52, h - 32), radius=4, fill=(246, 224, 176, 8), outline=(228, 174, 77, 24), width=1)
-    for x, y in [(48, 50), (232, 56), (50, 172), (226, 166)]:
-        draw.line((x - 5, y, x + 5, y), fill=(255, 247, 186, 175), width=2)
-        draw.line((x, y - 5, x, y + 5), fill=(255, 247, 186, 175), width=2)
+    # Keep the parchment clean; selection should come from the gold frame,
+    # not a yellow wash over the food art and text.
+    draw.rounded_rectangle((7, 7, w - 16, h - 20), radius=8, outline=(62, 35, 15, 255), width=5)
+    draw.rounded_rectangle((13, 13, w - 22, h - 26), radius=7, outline=(255, 207, 78, 235), width=3)
+    draw.rounded_rectangle((21, 21, w - 29, h - 35), radius=5, outline=(143, 88, 32, 140), width=1)
+    draw.rounded_rectangle((30, 50, w - 38, 154), radius=5, fill=(255, 243, 203, 12), outline=(92, 55, 28, 40), width=1)
+    draw.rounded_rectangle((46, h - 56, w - 54, h - 32), radius=4, fill=(246, 224, 176, 7), outline=(201, 143, 58, 28), width=1)
+    draw_corner_brackets(draw, (18, 18, w - 30, h - 36), (255, 210, 82, 230), (60, 34, 14, 240), 19, 3)
+    for x, y in [(34, 34), (w - 52, 34), (34, h - 52), (w - 52, h - 52)]:
+        draw.rectangle((x - 5, y - 5, x + 5, y + 5), fill=(255, 223, 103, 235), outline=(77, 43, 15, 230), width=1)
+    for x, y in [(52, 54), (224, 58), (54, 169), (222, 165)]:
+        draw.line((x - 4, y, x + 4, y), fill=(255, 244, 172, 112), width=1)
+        draw.line((x, y - 4, x, y + 4), fill=(255, 244, 172, 112), width=1)
     save(img, "recipe_selected_card_frame.png")
 
 

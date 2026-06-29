@@ -1288,9 +1288,7 @@ func _refresh_recipe_card_styles() -> void:
 		var border := Color("#f2c86d") if selected else Color("#7b5027")
 		var inner := Color("#fff6d4") if selected else Color("#c59a59")
 		var tint := Color.WHITE
-		if selected:
-			tint = Color("#fff1ba")
-		elif locked or unavailable:
+		if locked or unavailable:
 			tint = Color(0.55, 0.50, 0.42, 1.0)
 		card.self_modulate = tint
 		card.add_theme_stylebox_override(
