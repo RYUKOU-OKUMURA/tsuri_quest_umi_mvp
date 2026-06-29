@@ -672,13 +672,13 @@ func _build_result_summary(layout: VBoxContainer) -> void:
 	)
 	result_panel.name = "CurrentPrepBar"
 	_result_panel = result_panel
-	result_panel.custom_minimum_size = Vector2(0, 62)
+	result_panel.custom_minimum_size = Vector2(0, 70)
 	layout.add_child(result_panel)
 	var result_layout := HBoxContainer.new()
 	result_layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	result_layout.add_theme_constant_override("separation", 8)
 	result_panel.add_child(result_layout)
-	_result_title = make_shadow_label("", 18, Color("#2b2117"), 1, Color("#fff2c8"))
+	_result_title = make_shadow_label("", 18, Palette.TEXT_BONE, 2, Color("#2b2117"))
 	_result_title.name = "CurrentPrepTitle"
 	_result_title.custom_minimum_size = Vector2(210.0, 0.0)
 	_result_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -692,7 +692,7 @@ func _build_result_summary(layout: VBoxContainer) -> void:
 	result_layout.add_child(_result_body)
 	_status_button = make_button("詳細", _show_status_overlay, 100, false)
 	_status_button.name = "CurrentPrepDetailButton"
-	_status_button.custom_minimum_size = Vector2(92, 40)
+	_status_button.custom_minimum_size = Vector2(96, 44)
 	result_layout.add_child(_status_button)
 
 
@@ -1818,16 +1818,16 @@ func _prep_summary_card(
 		PREP_SUMMARY_CARD_FRAME,
 		12,
 		_style_box(Color("#f0dfb8"), Color("#8b5b2c"), Color("#d7a456"), 3, 5),
-		8.0,
-		2.0
+		16.0,
+		3.0
 	)
 	card.name = node_name
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.custom_minimum_size = Vector2(0, 34)
+	card.custom_minimum_size = Vector2(0, 38)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
+	row.add_theme_constant_override("separation", 6)
 	card.add_child(row)
-	var icon := _small_icon(icon_mode, accent, Vector2(32.0, 32.0))
+	var icon := _small_icon(icon_mode, accent, Vector2(28.0, 28.0))
 	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(icon)
 	var title_label := make_shadow_label(title, 12, Color("#2b2117"), 1, Color("#fff2ca"))
@@ -1848,7 +1848,7 @@ func _prep_summary_card(
 
 func _set_result_summary_compact(compact: bool) -> void:
 	if _result_panel != null:
-		_result_panel.custom_minimum_size = Vector2(0, 62)
+		_result_panel.custom_minimum_size = Vector2(0, 70)
 	if _result_body != null:
 		_result_body.visible = not compact
 
