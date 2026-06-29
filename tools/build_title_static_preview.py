@@ -12,8 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSET_DIR = ROOT / "assets" / "showcase"
 TITLE_DIR = ASSET_DIR / "title"
 UNDERWATER_DIR = ASSET_DIR / "underwater"
-FONT_BOLD = ROOT / "assets" / "fonts" / "MPLUS1p-ExtraBold.ttf"
-FONT_REGULAR = ROOT / "assets" / "fonts" / "MPLUS1p-Regular.ttf"
+FONT_BOLD = ROOT / "assets" / "fonts" / "line_seed" / "LINESeedJP_A_TTF_Eb.ttf"
+FONT_REGULAR = ROOT / "assets" / "fonts" / "line_seed" / "LINESeedJP_A_TTF_Rg.ttf"
 OUT = Path("/tmp/tsuri_title_static_preview.png")
 
 VIEWPORT = (1280, 720)

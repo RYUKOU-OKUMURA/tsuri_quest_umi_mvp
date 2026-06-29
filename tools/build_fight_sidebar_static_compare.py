@@ -16,8 +16,8 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = Path(__file__).resolve().parents[1]
 REFERENCE = ROOT / "reference" / "02_underwater_fight_mockup.png"
 ASSET_DIR = ROOT / "assets" / "showcase" / "underwater"
-FONT_BOLD = ROOT / "assets" / "fonts" / "MPLUS1p-ExtraBold.ttf"
-FONT_REGULAR = ROOT / "assets" / "fonts" / "MPLUS1p-Regular.ttf"
+FONT_BOLD = ROOT / "assets" / "fonts" / "line_seed" / "LINESeedJP_A_TTF_Bd.ttf"
+FONT_REGULAR = ROOT / "assets" / "fonts" / "line_seed" / "LINESeedJP_A_TTF_Rg.ttf"
 OUT = Path("/tmp/tsuri_sidebar_static_compare.png")
 
 SIDEBAR_SIZE = (326, 708)
