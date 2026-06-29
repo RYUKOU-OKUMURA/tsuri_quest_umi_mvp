@@ -46,13 +46,13 @@ const FISH_CARD_PORTRAIT_PATHS := {
 const COOKING_FISH_DISPLAY_ORDER := [
 	"aji",
 	"saba",
+	"madai",
 	"kasago",
+	"hirame",
+	"kawahagi",
 	"mejina",
 	"isaki",
-	"hirame",
 	"suzuki",
-	"madai",
-	"kawahagi",
 	"boss_kurodai",
 ]
 const COOKING_FISH_ROW_LIMIT := 6
@@ -1217,7 +1217,7 @@ func _make_recipe_preview_card() -> PanelContainer:
 	var material_row := _add_recipe_material_badge(box, "PreviewMeuniere")
 	var icon := TextureRect.new()
 	icon.name = "RecipeMaterialIcon_PreviewMeuniere"
-	icon.texture = _fish_icon("hirame")
+	icon.texture = _fish_material_texture("hirame")
 	icon.custom_minimum_size = Vector2(64.0, 20.0)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -1295,7 +1295,7 @@ func _recipe_material_texture(recipe: Dictionary, locked: bool, unavailable: boo
 	var fish_id := _recipe_material_fish_id(recipe, locked, unavailable)
 	if fish_id.is_empty():
 		return _recipe_icon("locked")
-	return _fish_icon(fish_id)
+	return _fish_material_texture(fish_id)
 
 
 func _recipe_material_fish_id(recipe: Dictionary, locked: bool, unavailable: bool) -> String:
@@ -2039,6 +2039,12 @@ func _atlas(path: String, index: int, columns: int, rows: int) -> Texture2D:
 
 func _fish_icon(fish_id: String) -> Texture2D:
 	return _atlas(FISH_ICON_SHEET, int(FISH_ICON_INDEX.get(fish_id, 0)), 1, 6)
+
+
+func _fish_material_texture(fish_id: String) -> Texture2D:
+	if FISH_ICON_INDEX.has(fish_id):
+		return _fish_icon(fish_id)
+	return _fish_portrait(fish_id)
 
 
 func _fish_row_texture(fish_id: String) -> Texture2D:

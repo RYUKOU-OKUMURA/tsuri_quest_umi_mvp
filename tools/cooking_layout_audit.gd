@@ -62,9 +62,10 @@ func _audit_cook_select() -> void:
 	_expect_named_control_size("COOK_SELECT", screen, "CookActionRunway", Vector2(300.0, 80.0))
 	_expect_named_control_size("COOK_SELECT", screen, "FishRowAji", Vector2(230.0, 60.0))
 	_expect_named_control_size("COOK_SELECT", screen, "FishRowSaba", Vector2(230.0, 60.0))
+	_expect_named_control_size("COOK_SELECT", screen, "FishRowMadai", Vector2(230.0, 60.0))
 	_expect_named_control_size("COOK_SELECT", screen, "FishRowKasago", Vector2(230.0, 60.0))
-	_expect_named_control_size("COOK_SELECT", screen, "FishRowMejina", Vector2(230.0, 60.0))
-	_expect_named_control_size("COOK_SELECT", screen, "FishRowIsaki", Vector2(230.0, 60.0))
+	_expect_named_control_size("COOK_SELECT", screen, "FishRowHirame", Vector2(230.0, 60.0))
+	_expect_named_control_size("COOK_SELECT", screen, "FishRowKawahagi", Vector2(230.0, 60.0))
 	_expect_named_control_size("COOK_SELECT", screen, "CookActionCue", Vector2(70.0, 14.0))
 	_expect_named_control_size("COOK_SELECT", screen, "CookButton", Vector2(250.0, 48.0))
 	_expect_named_control_size("COOK_SELECT", screen, "CurrentPrepBar", Vector2(1100.0, 54.0))
@@ -436,10 +437,12 @@ func _seed_select_state() -> void:
 	PlayerProgress.money = 1250
 	PlayerProgress.play_seconds = 12345.0
 	PlayerProgress.inventory.clear()
-	PlayerProgress.inventory["aji"] = 4
-	PlayerProgress.inventory["saba"] = 3
+	PlayerProgress.inventory["aji"] = 12
+	PlayerProgress.inventory["saba"] = 2
+	PlayerProgress.inventory["madai"] = 1
 	PlayerProgress.inventory["kasago"] = 2
-	PlayerProgress.inventory["mejina"] = 2
+	PlayerProgress.inventory["hirame"] = 1
+	PlayerProgress.inventory["kawahagi"] = 1
 	PlayerProgress.eaten_recipes.clear()
 	PlayerProgress.pending_buff = {
 		"recipe_id": "simmered",

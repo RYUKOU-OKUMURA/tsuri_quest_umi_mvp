@@ -142,10 +142,12 @@ func _seed_select_state() -> void:
 	PlayerProgress.money = 10170
 	PlayerProgress.play_seconds = 10028.0
 	PlayerProgress.inventory.clear()
-	PlayerProgress.inventory["mejina"] = 2
+	PlayerProgress.inventory["aji"] = 12
+	PlayerProgress.inventory["saba"] = 2
+	PlayerProgress.inventory["madai"] = 1
 	PlayerProgress.inventory["kasago"] = 2
-	PlayerProgress.inventory["isaki"] = 1
-	PlayerProgress.inventory["saba"] = 1
+	PlayerProgress.inventory["hirame"] = 1
+	PlayerProgress.inventory["kawahagi"] = 1
 	PlayerProgress.eaten_recipes.clear()
 	PlayerProgress.pending_buff = {}
 
@@ -158,10 +160,10 @@ func _seed_reference_select_state() -> void:
 	PlayerProgress.inventory.clear()
 	PlayerProgress.inventory["aji"] = 12
 	PlayerProgress.inventory["saba"] = 2
-	PlayerProgress.inventory["kasago"] = 1
-	PlayerProgress.inventory["mejina"] = 1
-	PlayerProgress.inventory["isaki"] = 1
-	PlayerProgress.inventory["hirame"] = 2
+	PlayerProgress.inventory["madai"] = 1
+	PlayerProgress.inventory["kasago"] = 2
+	PlayerProgress.inventory["hirame"] = 1
+	PlayerProgress.inventory["kawahagi"] = 1
 	PlayerProgress.eaten_recipes.clear()
 	PlayerProgress.pending_buff = {
 		"recipe_id": "simmered",
@@ -212,7 +214,7 @@ func _seed_after_boss_unlock_meal_state() -> void:
 	PlayerProgress.inventory["aji"] = 12
 	PlayerProgress.inventory["saba"] = 8
 	PlayerProgress.inventory["iwashi"] = 15
-	PlayerProgress.inventory["tai"] = 6
+	PlayerProgress.inventory["madai"] = 6
 	PlayerProgress.inventory["buri"] = 4
 	PlayerProgress.pending_buff = {
 		"recipe_id": "salt_grill",

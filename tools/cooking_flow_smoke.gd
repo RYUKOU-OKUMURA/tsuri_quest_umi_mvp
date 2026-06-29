@@ -132,6 +132,7 @@ func _ready() -> void:
 
 func _run_real_cooking_level_flow() -> bool:
 	_seed_select_state()
+	var starting_aji_count := PlayerProgress.fish_count("aji")
 	var screen := await _mount_cooking_screen(false)
 	var real_flow_routes: Array[String] = []
 	screen.navigate_requested.connect(
@@ -146,7 +147,11 @@ func _run_real_cooking_level_flow() -> bool:
 	if not _expect_overlay_count(screen, CookingRewardPanelScript, 1, "real cook-select transition"):
 		return false
 
-	if not _expect_eq(PlayerProgress.fish_count("aji"), 3, "Real cooking flow should consume one selected fish."):
+	if not _expect_eq(
+		PlayerProgress.fish_count("aji"),
+		starting_aji_count - 1,
+		"Real cooking flow should consume one selected fish."
+	):
 		return false
 	if not _expect_eq(PlayerProgress.level, 5, "Real cooking flow should level the player to Lv.5."):
 		return false
@@ -340,10 +345,12 @@ func _seed_select_state() -> void:
 	PlayerProgress.money = 1250
 	PlayerProgress.play_seconds = 12345.0
 	PlayerProgress.inventory.clear()
-	PlayerProgress.inventory["aji"] = 4
-	PlayerProgress.inventory["saba"] = 3
+	PlayerProgress.inventory["aji"] = 12
+	PlayerProgress.inventory["saba"] = 2
+	PlayerProgress.inventory["madai"] = 1
 	PlayerProgress.inventory["kasago"] = 2
-	PlayerProgress.inventory["mejina"] = 2
+	PlayerProgress.inventory["hirame"] = 1
+	PlayerProgress.inventory["kawahagi"] = 1
 	PlayerProgress.eaten_recipes.clear()
 	PlayerProgress.pending_buff = {}
 

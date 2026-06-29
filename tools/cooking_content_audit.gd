@@ -181,7 +181,7 @@ func _audit_cook_select() -> void:
 			"×1",
 			"必要な材料",
 			"アジ ×1",
-			"4 / 1",
+			"12 / 1",
 			"獲得EXP",
 			"+40 EXP",
 			"初回",
@@ -286,9 +286,10 @@ func _audit_cook_select() -> void:
 	)
 	_expect_named_node("COOK_SELECT", screen, "FishRowAji")
 	_expect_named_node("COOK_SELECT", screen, "FishRowSaba")
+	_expect_named_node("COOK_SELECT", screen, "FishRowMadai")
 	_expect_named_node("COOK_SELECT", screen, "FishRowKasago")
-	_expect_named_node("COOK_SELECT", screen, "FishRowMejina")
-	_expect_named_node("COOK_SELECT", screen, "FishRowIsaki")
+	_expect_named_node("COOK_SELECT", screen, "FishRowHirame")
+	_expect_named_node("COOK_SELECT", screen, "FishRowKawahagi")
 	screen.queue_free()
 	await _tick()
 
@@ -963,10 +964,12 @@ func _seed_select_state() -> void:
 	PlayerProgress.money = 1250
 	PlayerProgress.play_seconds = 12345.0
 	PlayerProgress.inventory.clear()
-	PlayerProgress.inventory["aji"] = 4
-	PlayerProgress.inventory["saba"] = 3
+	PlayerProgress.inventory["aji"] = 12
+	PlayerProgress.inventory["saba"] = 2
+	PlayerProgress.inventory["madai"] = 1
 	PlayerProgress.inventory["kasago"] = 2
-	PlayerProgress.inventory["mejina"] = 2
+	PlayerProgress.inventory["hirame"] = 1
+	PlayerProgress.inventory["kawahagi"] = 1
 	PlayerProgress.eaten_recipes.clear()
 	PlayerProgress.pending_buff = {
 		"recipe_id": "simmered",
