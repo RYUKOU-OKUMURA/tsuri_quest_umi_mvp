@@ -1114,11 +1114,30 @@ func _recipe_entries_for_fish(fish_id: String) -> Array[Dictionary]:
 	return entries
 
 
+func _recipe_card_title_text(recipe: Dictionary, locked: bool, unavailable: bool) -> String:
+	var recipe_id := String(recipe.get("id", ""))
+	var recipe_name := String(recipe.get("name", ""))
+	var fish_id := _recipe_material_fish_id(recipe, locked, unavailable)
+	if fish_id.is_empty():
+		return recipe_name
+	var fish := GameData.get_fish(fish_id)
+	var fish_name := String(fish.get("name", fish_id))
+	return _dish_display_name(fish_name, recipe_id, recipe_name)
+
+
+func _dish_display_name(fish_name: String, recipe_id: String, recipe_name: String) -> String:
+	if fish_name.is_empty():
+		return recipe_name
+	if recipe_id == "fry":
+		return "%sフライ" % fish_name
+	return "%sの%s" % [fish_name, recipe_name]
+
+
 func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> PanelContainer:
 	var recipe_id := String(recipe.get("id", ""))
 	var card := PanelContainer.new()
 	card.name = "RecipeCard_%s" % recipe_id
-	card.custom_minimum_size = Vector2(132, 204)
+	card.custom_minimum_size = Vector2(132, 190)
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
 	var selectable := not locked and not unavailable
 	if selectable:
@@ -1129,12 +1148,16 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 					_select_recipe(recipe_id)
 		)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 1)
+	box.add_theme_constant_override("separation", 2)
 	card.add_child(box)
-	var title_text := String(recipe.get("name", ""))
-	var title_font_size := 13 if title_text.length() >= 5 else 15
+	var title_text := _recipe_card_title_text(recipe, locked, unavailable)
+	var title_font_size := 14
+	if title_text.length() >= 7:
+		title_font_size = 12
+	elif title_text.length() >= 5:
+		title_font_size = 13
 	var title := make_shadow_label(title_text, title_font_size, Color("#251c12"), 1, Color("#fff3cf"))
-	title.custom_minimum_size = Vector2(0.0, 22.0)
+	title.custom_minimum_size = Vector2(0.0, 24.0)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -1144,12 +1167,12 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	box.add_child(image)
 	var stars := make_shadow_label(
 		_recipe_star_text(recipe, locked),
-		12,
+		13,
 		Palette.GOLD_BRIGHT if not locked else Color("#d9bd72"),
 		1,
 		Color("#4c2b0b")
 	)
-	stars.custom_minimum_size = Vector2(0.0, 14.0)
+	stars.custom_minimum_size = Vector2(0.0, 17.0)
 	stars.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	stars.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	box.add_child(stars)
@@ -1184,7 +1207,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 func _make_recipe_preview_card() -> PanelContainer:
 	var card := PanelContainer.new()
 	card.name = "RecipeCard_PreviewMeuniere"
-	card.custom_minimum_size = Vector2(132, 204)
+	card.custom_minimum_size = Vector2(132, 190)
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.self_modulate = Color(0.92, 0.86, 0.74, 1.0)
 	card.add_theme_stylebox_override(
@@ -1198,10 +1221,10 @@ func _make_recipe_preview_card() -> PanelContainer:
 		)
 	)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 1)
+	box.add_theme_constant_override("separation", 2)
 	card.add_child(box)
 	var title := make_shadow_label("ヒラメのムニエル", 12, Color("#251c12"), 1, Color("#fff3cf"))
-	title.custom_minimum_size = Vector2(0.0, 22.0)
+	title.custom_minimum_size = Vector2(0.0, 24.0)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -1209,8 +1232,8 @@ func _make_recipe_preview_card() -> PanelContainer:
 	box.add_child(title)
 	var image := _recipe_card_dish_image("PreviewMeuniere", true, _featured_dish_texture("fry"))
 	box.add_child(image)
-	var stars := make_shadow_label("★★", 12, Color("#d9bd72"), 2, Color("#4c2b0b"))
-	stars.custom_minimum_size = Vector2(0.0, 14.0)
+	var stars := make_shadow_label("★★", 13, Color("#d9bd72"), 2, Color("#4c2b0b"))
+	stars.custom_minimum_size = Vector2(0.0, 17.0)
 	stars.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	stars.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	box.add_child(stars)
@@ -1243,12 +1266,12 @@ func _recipe_card_dish_image(
 		3.0
 	)
 	thumb.name = "RecipeDishThumb_%s" % recipe_id
-	thumb.custom_minimum_size = Vector2(0.0, 118.0)
+	thumb.custom_minimum_size = Vector2(0.0, 94.0)
 	thumb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var image := TextureRect.new()
 	image.name = "RecipeDishImage_%s" % recipe_id
 	image.texture = texture_override if texture_override != null else _featured_dish_texture(recipe_id)
-	image.custom_minimum_size = Vector2(0.0, 112.0)
+	image.custom_minimum_size = Vector2(0.0, 88.0)
 	image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	image.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -1392,7 +1415,11 @@ func _refresh_detail() -> void:
 	var first_time := not PlayerProgress.eaten_recipes.has(dish_key)
 	var total_exp := base_exp * 2 if first_time else base_exp
 	var count := PlayerProgress.fish_count(_selected_fish_id)
-	_dish_title.text = "%sの%s" % [String(fish["name"]), String(recipe["name"])]
+	_dish_title.text = _dish_display_name(
+		String(fish["name"]),
+		_selected_recipe_id,
+		String(recipe["name"])
+	)
 	_dish_subtitle.text = String(recipe.get("description", ""))
 	_dish_image.texture = _featured_dish_texture(_selected_recipe_id)
 	_material_value.text = "%s ×1" % String(fish["name"])
