@@ -13,5 +13,8 @@ else
   exit 1
 fi
 
-"$GODOT" --headless --editor --path "$ROOT" --quit
-"$GODOT" --headless --path "$ROOT" --quit-after 2
+GODOT_HOME="${TSURI_GODOT_HOME:-${TMPDIR:-/tmp}/tsuri-godot-home}"
+mkdir -p "$GODOT_HOME"
+
+HOME="$GODOT_HOME" "$GODOT" --headless --editor --path "$ROOT" --quit
+HOME="$GODOT_HOME" "$GODOT" --headless --path "$ROOT" --quit-after 2
