@@ -23,6 +23,8 @@ const RECIPE_TO_DETAIL_ARROW := "res://assets/showcase/cooking/recipe_to_detail_
 const DISH_DETAIL_FRAME := "res://assets/showcase/cooking/dish_detail_frame.png"
 const COOK_BUTTON_FRAME := "res://assets/showcase/cooking/cook_button_frame.png"
 const COOK_ACTION_RUNWAY_FRAME := "res://assets/showcase/cooking/cook_action_runway_frame.png"
+const PREP_SUMMARY_BAR_FRAME := "res://assets/showcase/cooking/prep_summary_bar_frame.png"
+const PREP_SUMMARY_CARD_FRAME := "res://assets/showcase/cooking/prep_summary_card_frame.png"
 const FISH_ROW_FRAME := "res://assets/showcase/cooking/fish_row_frame.png"
 const PLAYER_HEADER_PORTRAIT := "res://assets/showcase/cooking/player_status_portrait_pixel.png"
 const FISH_CARD_PORTRAIT_PATHS := {
@@ -659,15 +661,23 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 
 
 func _build_result_summary(layout: VBoxContainer) -> void:
-	var result_panel := _panel_box(Color("#e6d2a5"), Color("#5e391a"), Color("#e3b15e"), 6)
+	var result_panel := _texture_panel_box(
+		PREP_SUMMARY_BAR_FRAME,
+		18,
+		_style_box(Color("#e6d2a5"), Color("#5e391a"), Color("#e3b15e"), 6, 5),
+		12.0,
+		6.0
+	)
+	result_panel.name = "CurrentPrepBar"
 	_result_panel = result_panel
-	result_panel.custom_minimum_size = Vector2(0, 58)
+	result_panel.custom_minimum_size = Vector2(0, 62)
 	layout.add_child(result_panel)
 	var result_layout := HBoxContainer.new()
 	result_layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	result_layout.add_theme_constant_override("separation", 8)
 	result_panel.add_child(result_layout)
 	_result_title = make_shadow_label("", 18, Color("#2b2117"), 1, Color("#fff2c8"))
+	_result_title.name = "CurrentPrepTitle"
 	_result_title.custom_minimum_size = Vector2(210.0, 0.0)
 	_result_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_result_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -679,7 +689,8 @@ func _build_result_summary(layout: VBoxContainer) -> void:
 	_result_body.add_theme_constant_override("separation", 6)
 	result_layout.add_child(_result_body)
 	_status_button = make_button("詳細", _show_status_overlay, 100, false)
-	_status_button.custom_minimum_size = Vector2(92, 36)
+	_status_button.name = "CurrentPrepDetailButton"
+	_status_button.custom_minimum_size = Vector2(92, 40)
 	result_layout.add_child(_status_button)
 
 
@@ -1545,17 +1556,36 @@ func _show_status_summary() -> void:
 				PlayerProgress.exp_to_next_level(),
 			],
 			Palette.GOLD_BRIGHT,
-			"player_mini"
+			"player_mini",
+			"PrepSummaryCardLevel"
 		)
 	)
 	_result_body.add_child(
-		_prep_summary_card("料理", _current_meal_summary_text(), Palette.GAUGE_GREEN_HI, "meal_mini")
+		_prep_summary_card(
+			"料理",
+			_current_meal_summary_text(),
+			Palette.GAUGE_GREEN_HI,
+			"meal_mini",
+			"PrepSummaryCardMeal"
+		)
 	)
 	_result_body.add_child(
-		_prep_summary_card("魚", "%d / 20" % _total_fish_count(), Palette.GAUGE_CYAN_HI, "fish_mini")
+		_prep_summary_card(
+			"魚",
+			"%d / 20" % _total_fish_count(),
+			Palette.GAUGE_CYAN_HI,
+			"fish_mini",
+			"PrepSummaryCardFish"
+		)
 	)
 	_result_body.add_child(
-		_prep_summary_card("所持金", "%d G" % PlayerProgress.money, Palette.GOLD_BRIGHT, "coin_mini")
+		_prep_summary_card(
+			"所持金",
+			"%d G" % PlayerProgress.money,
+			Palette.GOLD_BRIGHT,
+			"coin_mini",
+			"PrepSummaryCardMoney"
+		)
 	)
 
 
@@ -1766,14 +1796,23 @@ func _summary_card(title: String, value: String, accent: Color, icon_mode := "bo
 	return card
 
 
-func _prep_summary_card(title: String, value: String, accent: Color, icon_mode := "book") -> PanelContainer:
-	var card := _panel_box(Color("#f0dfb8"), Color("#8b5b2c"), Color("#d7a456"), 3)
+func _prep_summary_card(
+	title: String, value: String, accent: Color, icon_mode := "book", node_name := ""
+) -> PanelContainer:
+	var card := _texture_panel_box(
+		PREP_SUMMARY_CARD_FRAME,
+		12,
+		_style_box(Color("#f0dfb8"), Color("#8b5b2c"), Color("#d7a456"), 3, 5),
+		8.0,
+		2.0
+	)
+	card.name = node_name
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.custom_minimum_size = Vector2(0, 28)
+	card.custom_minimum_size = Vector2(0, 34)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	card.add_child(row)
-	var icon := _small_icon(icon_mode, accent, Vector2(28.0, 28.0))
+	var icon := _small_icon(icon_mode, accent, Vector2(32.0, 32.0))
 	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(icon)
 	var title_label := make_shadow_label(title, 12, Color("#2b2117"), 1, Color("#fff2ca"))
@@ -1794,7 +1833,7 @@ func _prep_summary_card(title: String, value: String, accent: Color, icon_mode :
 
 func _set_result_summary_compact(compact: bool) -> void:
 	if _result_panel != null:
-		_result_panel.custom_minimum_size = Vector2(0, 58)
+		_result_panel.custom_minimum_size = Vector2(0, 62)
 	if _result_body != null:
 		_result_body.visible = not compact
 

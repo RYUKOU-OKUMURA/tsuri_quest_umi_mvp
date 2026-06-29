@@ -904,6 +904,52 @@ def cook_action_runway_frame() -> None:
     save(img, "cook_action_runway_frame.png")
 
 
+def prep_summary_bar_frame() -> None:
+    w, h = 1280, 92
+    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img, "RGBA")
+    draw.rectangle((0, 0, w, h), fill=(42, 24, 12, 244))
+    paper = reference_paper_texture((w - 18, h - 18), "ead6ad", 187, (74, 670, 1168, 720), 0.36, 6.0)
+    paste_rounded(img, paper, (4, 7, w - 6, h - 8), 6, 246)
+    draw = ImageDraw.Draw(img, "RGBA")
+
+    # Full-width current-prep tray. It should read as the bottom anchor of the
+    # cook-select scene, not as a generic status table.
+    draw.rounded_rectangle((3, 6, w - 7, h - 8), radius=6, outline=(67, 38, 16, 255), width=5)
+    draw.line((18, 18, w - 20, 18), fill=(255, 210, 89, 132), width=2)
+    draw.line((18, h - 20, w - 20, h - 20), fill=(109, 67, 27, 120), width=3)
+    draw.rounded_rectangle((54, 22, 222, h - 24), radius=5, fill=(255, 237, 187, 76), outline=(120, 73, 29, 86), width=1)
+    draw.rounded_rectangle((w - 118, 19, w - 20, h - 18), radius=4, fill=(117, 73, 31, 96), outline=(250, 197, 72, 96), width=2)
+    for x in range(248, w - 148, 236):
+        draw.line((x, 20, x, h - 21), fill=(83, 49, 20, 92), width=2)
+        draw.line((x + 5, 24, x + 5, h - 25), fill=(255, 236, 160, 52), width=1)
+    for x, y in [(16, 16), (w - 30, 16), (16, h - 32), (w - 30, h - 32)]:
+        draw.rectangle((x, y, x + 11, y + 11), fill=(232, 174, 68, 218), outline=(58, 32, 13, 240), width=2)
+    save(img, "prep_summary_bar_frame.png")
+
+
+def prep_summary_card_frame() -> None:
+    w, h = 340, 62
+    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    shadow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(shadow, "RGBA")
+    sd.rounded_rectangle((8, 10, w - 6, h - 5), radius=7, fill=(0, 0, 0, 86))
+    img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(3)))
+    paper = reference_paper_texture((w - 18, h - 16), "f2e0b8", 207, (226, 680, 492, 720), 0.38, 5.0)
+    paste_rounded(img, paper, (6, 6, w - 8, h - 8), 6, 246)
+    draw = ImageDraw.Draw(img, "RGBA")
+
+    # Small prep-state card with a fixed icon socket and a darker text rail.
+    draw.rounded_rectangle((6, 6, w - 8, h - 8), radius=6, outline=(82, 47, 20, 248), width=3)
+    draw.rounded_rectangle((17, 13, 66, h - 15), radius=4, fill=(8, 38, 61, 150), outline=(255, 211, 88, 132), width=2)
+    draw.line((82, 14, 82, h - 16), fill=(94, 57, 24, 112), width=2)
+    draw.rounded_rectangle((93, 14, w - 22, h - 16), radius=4, fill=(255, 240, 194, 64), outline=(142, 86, 35, 76), width=1)
+    draw.line((104, h - 20, w - 34, h - 20), fill=(122, 76, 34, 72), width=2)
+    for x, y in [(14, 12), (w - 28, 12), (14, h - 28), (w - 28, h - 28)]:
+        draw.rectangle((x, y, x + 9, y + 9), fill=(232, 174, 68, 214), outline=(58, 32, 13, 228), width=1)
+    save(img, "prep_summary_card_frame.png")
+
+
 def flow_action_button_frame() -> None:
     w, h = 380, 88
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
@@ -1908,6 +1954,8 @@ def main() -> None:
     recipe_material_strip_frame()
     cook_button_frame()
     cook_action_runway_frame()
+    prep_summary_bar_frame()
+    prep_summary_card_frame()
     flow_action_button_frame()
     player_eating_pose()
     meal_table_spread()

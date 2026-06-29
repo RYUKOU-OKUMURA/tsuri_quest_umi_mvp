@@ -70,6 +70,8 @@ func _audit_required_assets() -> void:
 		"res://assets/showcase/cooking/dish_detail_frame.png",
 		"res://assets/showcase/cooking/cook_button_frame.png",
 		"res://assets/showcase/cooking/cook_action_runway_frame.png",
+		"res://assets/showcase/cooking/prep_summary_bar_frame.png",
+		"res://assets/showcase/cooking/prep_summary_card_frame.png",
 		"res://assets/showcase/cooking/flow_action_button_frame.png",
 		"res://assets/showcase/cooking/meal_result_frame.png",
 		"res://assets/showcase/cooking/meal_banner_frame.png",
@@ -116,6 +118,8 @@ func _audit_required_assets() -> void:
 		"res://assets/showcase/cooking/dish_detail_frame.png": Vector2i(620, 560),
 		"res://assets/showcase/cooking/cook_button_frame.png": Vector2i(360, 82),
 		"res://assets/showcase/cooking/cook_action_runway_frame.png": Vector2i(560, 88),
+		"res://assets/showcase/cooking/prep_summary_bar_frame.png": Vector2i(1280, 92),
+		"res://assets/showcase/cooking/prep_summary_card_frame.png": Vector2i(340, 62),
 		"res://assets/showcase/cooking/flow_action_button_frame.png": Vector2i(380, 88),
 		"res://assets/showcase/cooking/meal_result_frame.png": Vector2i(760, 240),
 		"res://assets/showcase/cooking/meal_banner_frame.png": Vector2i(760, 128),
@@ -231,6 +235,13 @@ func _audit_cook_select() -> void:
 	_expect_named_node("COOK_SELECT", screen, "CookDetailExpRow")
 	_expect_named_node("COOK_SELECT", screen, "CookDetailEffectRow")
 	_expect_named_node("COOK_SELECT", screen, "CookActionRunway")
+	_expect_named_node("COOK_SELECT", screen, "CurrentPrepBar")
+	_expect_named_node("COOK_SELECT", screen, "CurrentPrepTitle")
+	_expect_named_node("COOK_SELECT", screen, "PrepSummaryCardLevel")
+	_expect_named_node("COOK_SELECT", screen, "PrepSummaryCardMeal")
+	_expect_named_node("COOK_SELECT", screen, "PrepSummaryCardFish")
+	_expect_named_node("COOK_SELECT", screen, "PrepSummaryCardMoney")
+	_expect_named_node("COOK_SELECT", screen, "CurrentPrepDetailButton")
 	_expect_texture_rect_path(
 		"COOK_SELECT",
 		screen,
