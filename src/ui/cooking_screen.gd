@@ -22,6 +22,7 @@ const RECIPE_DISH_THUMB_FRAME := "res://assets/showcase/cooking/recipe_dish_thum
 const RECIPE_MATERIAL_STRIP_FRAME := "res://assets/showcase/cooking/recipe_material_strip_frame.png"
 const RECIPE_TO_DETAIL_ARROW := "res://assets/showcase/cooking/recipe_to_detail_arrow.png"
 const DISH_DETAIL_FRAME := "res://assets/showcase/cooking/dish_detail_frame.png"
+const COOK_DETAIL_ROW_FRAME := "res://assets/showcase/cooking/cook_detail_row_frame.png"
 const COOK_BUTTON_FRAME := "res://assets/showcase/cooking/cook_button_frame.png"
 const COOK_ACTION_RUNWAY_FRAME := "res://assets/showcase/cooking/cook_action_runway_frame.png"
 const PREP_SUMMARY_BAR_FRAME := "res://assets/showcase/cooking/prep_summary_bar_frame.png"
@@ -729,28 +730,36 @@ func _add_detail_story_row(
 	accent: Color,
 	title_width: float
 ) -> Array:
-	var tile := _panel_box(Color("#fff0cf"), Color("#8b5b2c"), Color("#e6b561"), 3)
+	var tile := _texture_panel_box(
+		COOK_DETAIL_ROW_FRAME,
+		16,
+		_style_box(Color("#fff0cf"), Color("#8b5b2c"), Color("#e6b561"), 3, 5),
+		8.0,
+		2.0
+	)
 	tile.name = node_name
-	tile.custom_minimum_size = Vector2(0, 32)
+	tile.custom_minimum_size = Vector2(0, 42)
 	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(tile)
 
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
+	row.add_theme_constant_override("separation", 10)
 	tile.add_child(row)
 
-	var title_band := _panel_box(Color("#5a3a1c"), Color("#3b2515"), Color("#d7a456"), 2)
-	title_band.custom_minimum_size = Vector2(title_width, 26)
+	var title_band := MarginContainer.new()
+	title_band.custom_minimum_size = Vector2(maxf(title_width, 176.0), 30)
+	title_band.add_theme_constant_override("margin_left", 6)
+	title_band.add_theme_constant_override("margin_right", 6)
 	row.add_child(title_band)
 	var title_row := HBoxContainer.new()
 	title_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	title_row.add_theme_constant_override("separation", 5)
 	title_band.add_child(title_row)
 	var compact := title.length() > 6
-	title_row.add_child(_small_icon(icon_mode, accent, Vector2(18.0 if compact else 24.0, 0.0)))
+	title_row.add_child(_small_icon(icon_mode, accent, Vector2(20.0 if compact else 24.0, 0.0)))
 	var title_size := 10 if compact else 12
 	var title_label := make_shadow_label(title, title_size, Palette.TEXT_BONE, 1)
-	title_label.custom_minimum_size = Vector2(0, 24)
+	title_label.custom_minimum_size = Vector2(0, 28)
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -759,7 +768,7 @@ func _add_detail_story_row(
 
 	var primary_size := 12 if compact else 14
 	var primary := make_label("", primary_size, Color("#2a2118"), 1, Color("#fff2cf"))
-	primary.custom_minimum_size = Vector2(0, 26)
+	primary.custom_minimum_size = Vector2(0, 32)
 	primary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	primary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	primary.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -767,7 +776,7 @@ func _add_detail_story_row(
 	row.add_child(primary)
 
 	var secondary := make_label("", primary_size, accent, 1, Color("#fff2cf"))
-	secondary.custom_minimum_size = Vector2(62 if compact else 108, 26)
+	secondary.custom_minimum_size = Vector2(44 if compact else 108, 32)
 	secondary.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	secondary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	secondary.autowrap_mode = TextServer.AUTOWRAP_OFF

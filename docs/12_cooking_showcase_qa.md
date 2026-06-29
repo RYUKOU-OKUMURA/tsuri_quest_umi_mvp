@@ -66,6 +66,10 @@
 
 `reference/cooking_flow/01_cook_select_concept.png` の `調理する` は、右詳細カード内で最後に押す青い金縁ボタンとして明確に主役化されている。途中実装では `GoldButton` のテーマに鍋アイコンを描画していたため、周辺の木/金ボタンと同じ素材言語に見えやすかった。今回 `cook_button_frame.png` を追加し、`CookButton` の normal/hover/pressed/disabled/focus に接続する。濃紺面、金縁、左の鍋アイコン置き場を素材側へ持たせ、料理写真、材料/EXP/効果、食事結果予告、調理ボタンへ落ちる右詳細の縦ストーリーを固定する。content/layout auditでは `cook_button_frame.png` の寸法と `CookButton` の表示サイズを検出する。
 
+### 今回の追記: COOK_SELECT 右詳細情報リボン
+
+`reference/cooking_flow/01_cook_select_concept.png` の右詳細は、料理写真の下に `必要な材料`、`獲得EXP`、`次の釣行で得られる効果` が横長リボンとして積まれている。途中実装では `StyleBoxFlat` の行に左ラベルパネルを重ねていたため、設定フォームや入力欄のように見えやすかった。今回 `cook_detail_row_frame.png` を追加し、`CookDetailMaterialRow`、`CookDetailExpRow`、`CookDetailEffectRow` をこの素材へ接続する。左に濃色ラベルソケット、右に値が紙面へ直接乗る領域を持たせ、料理写真から材料、EXP、効果へ流れる読みを固定する。content auditでは3行が `cook_detail_row_frame.png` の `StyleBoxTexture` を使っていることまで検出する。
+
 ### 今回の追記: COOK_SELECT 調理アクション帯
 
 右詳細下部の注記、`CookActionCue`、`CookButton` が別々の部品に見えると、参照01の「最後に押す青い金縁CTA」へ視線が集まりにくい。今回 `cook_action_runway_frame.png` を追加し、`CookActionRunway` として右詳細下部へ接続する。上段に食事結果へ進む小キュー、下段に `CookButton` の着地点を持つ低背素材フレームにまとめ、材料/EXP/効果から調理ボタンへ落ちる縦ストーリーを固定する。content/layout auditでは `cook_action_runway_frame.png` の寸法、`CookActionRunway` の表示サイズ、`CookActionCue` と `CookButton` の存在を検出する。
@@ -104,6 +108,7 @@
   - 追記: `recipe_selected_card_frame.png` をCOOK_SELECTの選択中料理カード用素材として追加。寸法は280x220で、金色発光、強い外枠、角飾り、星アクセントを1枚絵として持つ。`RecipeCard_salt_grill` の選択状態に接続し、content/layout auditで素材と表示サイズを固定する。
   - 追記: `recipe_dish_thumb_frame.png` をCOOK_SELECT料理カード内のサムネイル額として追加。寸法は260x170で、濃色マット、金縁、角飾りを1枚絵として持つ。`RecipeDishThumb_*` / `RecipeDishImage_*` として接続し、カード内の料理写真が大きく切れた状態へ戻らないようcontent/layout auditで固定する。
   - 追記: `recipe_material_strip_frame.png` をCOOK_SELECTの料理カード下部素材バッジとして追加。寸法は240x54で、左の濃紺魚アイコンスロット、右の数量/状態スロット、紙面/金具を1枚絵として持つ。`RecipeMaterialBadge_*` として接続し、content/layout auditで代表カードの存在と表示サイズを固定する。
+  - 追記: `cook_detail_row_frame.png` をCOOK_SELECT右詳細の材料/EXP/効果行用素材として追加。寸法は560x46で、左ラベルソケット、右の紙面値領域、金具、紙テクスチャを1枚絵として持つ。`CookDetailMaterialRow`、`CookDetailExpRow`、`CookDetailEffectRow` として接続し、content auditでStyleBoxTexture接続まで固定する。
   - 追記: `cook_button_frame.png` をCOOK_SELECT右詳細の主ボタン用素材として追加。寸法は360x82で、濃紺面、金縁、左アイコン置き場、ハイライトを1枚絵として持つ。`CookButton` の normal/hover/pressed/disabled/focus へ接続し、content/layout auditで必須素材と表示サイズを固定する。
   - 追記: `cook_action_runway_frame.png` をCOOK_SELECT右詳細下部の調理アクション帯として追加。寸法は560x88で、上段の食事結果キュー、下段の濃紺CTAソケット、紙面/金具を1枚絵として持つ。`CookActionRunway` として接続し、content/layout auditで必須素材と表示サイズを固定する。
   - 追記: `prep_summary_bar_frame.png` と `prep_summary_card_frame.png` をCOOK_SELECT下部の現在準備バー用素材として追加。寸法は1280x92と340x62で、全体の紙/金具トレイと左アイコンポケット付き小カードを1枚絵として持つ。`CurrentPrepBar` と `PrepSummaryCard*` として接続し、content/layout auditで必須素材と表示サイズを固定する。
@@ -204,7 +209,7 @@
 
 - 実装済み: `fish_icon_sheet.png` は参照01内の魚カットを優先して使い、左魚リストの魚絵を大きめに表示する。`fish_row_frame.png` は紙質感、濃紺ガター、金具、数量エリアを持つ素材に更新し、魚名と `× n匹` が横クリップしない幅にした。今回、数量セルの表感を弱めて紙タグ化し、魚絵の表示幅を広げて、魚リストを在庫表ではなく素材カードとして読ませる。
 - 実装済み: `recipe_grid_frame.png`、`recipe_card_frame.png`、`recipe_selected_card_frame.png` は参照紙テクスチャを混ぜた素材に更新し、料理カード内の料理絵は `recipe_dish_thumb_frame.png` の濃色マット付き額へ収める。カード下部は `recipe_material_strip_frame.png` を使う `RecipeMaterialBadge_*` に `RecipeMaterialIcon_*` の素材魚アイコンと短い状態表示を収め、EXP情報は右詳細の `CookDetailExpRow` に集約した。
-- 実装済み: 右詳細は `dish_feature_aji_shioyaki.png` を参照01の大判料理カットから生成し、`SelectedDishFeatureImage` をやや大きく、詳細3行を少し太くした。`dish_detail_frame.png`、`cook_button_frame.png`、`cook_action_runway_frame.png` も紙面、青い金縁CTA、下部アクション帯が読める素材に更新した。
+- 実装済み: 右詳細は `dish_feature_aji_shioyaki.png` を参照01の大判料理カットから生成し、`SelectedDishFeatureImage` をやや大きくした。詳細3行は `cook_detail_row_frame.png` を使う `CookDetailMaterialRow` / `CookDetailExpRow` / `CookDetailEffectRow` へ置き換え、フォーム欄ではなく横長情報リボンとして読ませる。`dish_detail_frame.png`、`cook_button_frame.png`、`cook_action_runway_frame.png` も紙面、青い金縁CTA、下部アクション帯が読める素材に更新した。
 - 実装済み: 下部の `現在の準備` は `prep_summary_bar_frame.png` と `prep_summary_card_frame.png` を使う `CurrentPrepBar` / `PrepSummaryCard*` へ置き換え、参照01の下部ステータスバーに近い紙カード群へ寄せた。
 - 追記: `tools/cooking_preview.gd` の `COOK_SELECT` キャプチャは参照01と比較しやすいアジ選択状態に固定した。スクショ用の所持魚合計は容量内の `19 / 20` に収め、下部バーが異常値表示に見えないようにする。実フロー/報酬状態の検証シードは別に維持する。
 - 追記: 魚行は調理専用の `fish_icon_sheet.png` を優先し、参照01由来の魚カットをリスト内で使う。数量欄は右側に確保し、`×12匹` などが折れずに読める状態を維持する。`FishRowIsaki` もcontent/layout audit対象にして、6行密度を維持する。

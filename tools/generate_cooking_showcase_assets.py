@@ -847,6 +847,32 @@ def recipe_material_strip_frame() -> None:
     save(img, "recipe_material_strip_frame.png")
 
 
+def cook_detail_row_frame() -> None:
+    w, h = 560, 46
+    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    shadow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(shadow, "RGBA")
+    sd.rounded_rectangle((8, 10, w - 8, h - 5), radius=7, fill=(0, 0, 0, 92))
+    img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(3)))
+    paper = reference_paper_texture((w - 18, h - 14), "f5dfad", 149, (1042, 558, 1534, 728), 0.42, 4.0)
+    paste_rounded(img, paper, (6, 6, w - 8, h - 8), 6, 248)
+    draw = ImageDraw.Draw(img, "RGBA")
+
+    # Detail rows are story ribbons: left label socket, right value field,
+    # subtle studs and paper grain, not stacked generic form panels.
+    draw.rounded_rectangle((6, 6, w - 8, h - 8), radius=6, outline=(82, 48, 22, 248), width=3)
+    draw.rounded_rectangle((17, 11, 190, h - 12), radius=5, fill=(82, 50, 25, 238), outline=(47, 28, 14, 230), width=2)
+    draw.line((204, 12, 204, h - 13), fill=(98, 61, 29, 82), width=2)
+    draw.line((226, h - 16, w - 42, h - 16), fill=(127, 80, 37, 64), width=2)
+    draw.line((226, 16, w - 42, 16), fill=(255, 248, 211, 46), width=1)
+    for x in range(226, w - 52, 38):
+        draw.line((x, 17, x - 18, h - 17), fill=(126, 80, 38, 18), width=1)
+    for x, y in [(14, 11), (w - 30, 11), (14, h - 23), (w - 30, h - 23)]:
+        draw.rectangle((x, y, x + 8, y + 8), fill=(232, 174, 68, 204), outline=(58, 32, 13, 218), width=1)
+    draw_corner_brackets(draw, (13, 11, w - 26, h - 18), (234, 181, 80, 128), (59, 34, 16, 182), 12, 1)
+    save(img, "cook_detail_row_frame.png")
+
+
 def cook_button_frame() -> None:
     w, h = 360, 82
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
@@ -1975,6 +2001,7 @@ def main() -> None:
     recipe_to_detail_arrow()
     recipe_selected_card_frame()
     recipe_material_strip_frame()
+    cook_detail_row_frame()
     cook_button_frame()
     cook_action_runway_frame()
     prep_summary_bar_frame()

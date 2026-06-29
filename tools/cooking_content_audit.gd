@@ -69,6 +69,7 @@ func _audit_required_assets() -> void:
 		"res://assets/showcase/cooking/recipe_material_strip_frame.png",
 		"res://assets/showcase/cooking/recipe_to_detail_arrow.png",
 		"res://assets/showcase/cooking/dish_detail_frame.png",
+		"res://assets/showcase/cooking/cook_detail_row_frame.png",
 		"res://assets/showcase/cooking/cook_button_frame.png",
 		"res://assets/showcase/cooking/cook_action_runway_frame.png",
 		"res://assets/showcase/cooking/prep_summary_bar_frame.png",
@@ -118,6 +119,7 @@ func _audit_required_assets() -> void:
 		"res://assets/showcase/cooking/recipe_material_strip_frame.png": Vector2i(240, 54),
 		"res://assets/showcase/cooking/recipe_to_detail_arrow.png": Vector2i(96, 220),
 		"res://assets/showcase/cooking/dish_detail_frame.png": Vector2i(620, 560),
+		"res://assets/showcase/cooking/cook_detail_row_frame.png": Vector2i(560, 46),
 		"res://assets/showcase/cooking/cook_button_frame.png": Vector2i(360, 82),
 		"res://assets/showcase/cooking/cook_action_runway_frame.png": Vector2i(560, 88),
 		"res://assets/showcase/cooking/prep_summary_bar_frame.png": Vector2i(1280, 92),
@@ -244,6 +246,24 @@ func _audit_cook_select() -> void:
 	_expect_named_node("COOK_SELECT", screen, "CookDetailMaterialRow")
 	_expect_named_node("COOK_SELECT", screen, "CookDetailExpRow")
 	_expect_named_node("COOK_SELECT", screen, "CookDetailEffectRow")
+	_expect_panel_texture_style(
+		"COOK_SELECT",
+		screen,
+		"CookDetailMaterialRow",
+		"res://assets/showcase/cooking/cook_detail_row_frame.png"
+	)
+	_expect_panel_texture_style(
+		"COOK_SELECT",
+		screen,
+		"CookDetailExpRow",
+		"res://assets/showcase/cooking/cook_detail_row_frame.png"
+	)
+	_expect_panel_texture_style(
+		"COOK_SELECT",
+		screen,
+		"CookDetailEffectRow",
+		"res://assets/showcase/cooking/cook_detail_row_frame.png"
+	)
 	_expect_named_node("COOK_SELECT", screen, "CookActionRunway")
 	_expect_named_node("COOK_SELECT", screen, "CurrentPrepBar")
 	_expect_named_node("COOK_SELECT", screen, "CurrentPrepTitle")
@@ -852,6 +872,35 @@ func _expect_button_texture_style(
 	if texture.resource_path != expected_texture_path:
 		_failures.append(
 			"%s: button '%s' should use '%s', got '%s'."
+			% [state, node_name, expected_texture_path, texture.resource_path]
+			)
+
+
+func _expect_panel_texture_style(
+	state: String, root: Node, node_name: String, expected_texture_path: String
+) -> void:
+	var node := _find_named(root, node_name)
+	if node == null:
+		_failures.append("%s: missing styled panel '%s'." % [state, node_name])
+		return
+	if not (node is PanelContainer):
+		_failures.append("%s: node '%s' should be a PanelContainer." % [state, node_name])
+		return
+	var panel := node as PanelContainer
+	var style := panel.get_theme_stylebox("panel")
+	if not (style is StyleBoxTexture):
+		_failures.append(
+			"%s: panel '%s' should use a StyleBoxTexture panel style." % [state, node_name]
+		)
+		return
+	var texture_style := style as StyleBoxTexture
+	var texture := texture_style.texture
+	if texture == null:
+		_failures.append("%s: panel '%s' has no panel style texture." % [state, node_name])
+		return
+	if texture.resource_path != expected_texture_path:
+		_failures.append(
+			"%s: panel '%s' should use '%s', got '%s'."
 			% [state, node_name, expected_texture_path, texture.resource_path]
 		)
 
