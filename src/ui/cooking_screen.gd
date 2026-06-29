@@ -1693,7 +1693,7 @@ func _current_meal_summary_text() -> String:
 	if buff.is_empty():
 		return "なし"
 	var name := String(buff.get("name", "料理効果"))
-	return "%s  あと1回" % name
+	return "%s / あと1回" % name
 
 
 func _show_meal_result(result: Dictionary, leveled: bool) -> void:
@@ -1920,7 +1920,7 @@ func _prep_summary_card(
 	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title_label.clip_text = true
 	text_box.add_child(title_label)
-	var value_size := 16 if value.length() >= 9 else 18
+	var value_size := 15 if title == "効果中の料理" else 16 if value.length() >= 9 else 18
 	var value_label := make_shadow_label(value, value_size, Color("#1f160f"), 1, Color("#fff5cf"))
 	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value_label.size_flags_vertical = Control.SIZE_EXPAND_FILL

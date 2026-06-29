@@ -163,7 +163,13 @@ func _seed_reference_select_state() -> void:
 	PlayerProgress.inventory["isaki"] = 1
 	PlayerProgress.inventory["hirame"] = 2
 	PlayerProgress.eaten_recipes.clear()
-	PlayerProgress.pending_buff = {}
+	PlayerProgress.pending_buff = {
+		"recipe_id": "simmered",
+		"name": "サバの味噌煮",
+		"stat": "safe_range",
+		"value": 0.05,
+		"text": "次の釣行で安全テンション域 +5%",
+	}
 
 
 func _seed_after_meal_state() -> void:

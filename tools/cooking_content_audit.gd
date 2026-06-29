@@ -192,6 +192,8 @@ func _audit_cook_select() -> void:
 			"調理後は食事結果へ",
 			"調理する",
 			"現在の準備",
+			"効果中の料理",
+			"サバの味噌煮 / あと1回",
 		]
 	)
 	await _expect_absent_texts(
@@ -966,7 +968,13 @@ func _seed_select_state() -> void:
 	PlayerProgress.inventory["kasago"] = 2
 	PlayerProgress.inventory["mejina"] = 2
 	PlayerProgress.eaten_recipes.clear()
-	PlayerProgress.pending_buff = {}
+	PlayerProgress.pending_buff = {
+		"recipe_id": "simmered",
+		"name": "サバの味噌煮",
+		"stat": "safe_range",
+		"value": 0.05,
+		"text": "次の釣行で安全テンション域 +5%",
+	}
 
 
 func _seed_after_meal_state() -> void:
