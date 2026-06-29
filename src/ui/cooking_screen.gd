@@ -33,12 +33,29 @@ const FISH_CARD_PORTRAIT_PATHS := {
 	"aji": "res://assets/showcase/underwater/fish/aji_card_portrait.png",
 	"saba": "res://assets/showcase/underwater/fish/saba_card_portrait.png",
 	"tai": "res://assets/showcase/underwater/fish/madai_card_portrait.png",
+	"madai": "res://assets/showcase/underwater/fish/madai_card_portrait.png",
 	"kasago": "res://assets/showcase/underwater/fish/kasago_card_portrait.png",
+	"suzuki": "res://assets/showcase/underwater/fish/suzuki_card_portrait.png",
+	"kawahagi": "res://assets/showcase/underwater/fish/kawahagi_card_portrait.png",
 	"hirame": "res://assets/showcase/underwater/fish/hirame_card_portrait.png",
 	"mejina": "res://assets/showcase/underwater/fish/mejina_card_portrait.png",
 	"isaki": "res://assets/showcase/underwater/fish/isaki_card_portrait.png",
 	"boss_kurodai": "res://assets/showcase/underwater/fish/kurodai_card_portrait.png",
 }
+
+const COOKING_FISH_DISPLAY_ORDER := [
+	"aji",
+	"saba",
+	"kasago",
+	"mejina",
+	"isaki",
+	"hirame",
+	"suzuki",
+	"madai",
+	"kawahagi",
+	"boss_kurodai",
+]
+const COOKING_FISH_ROW_LIMIT := 6
 
 
 class CookingSmallIcon:
@@ -888,22 +905,37 @@ func _rebuild_fish_cards() -> void:
 
 func _fish_display_ids() -> Array[String]:
 	var ids: Array[String] = []
-	for fish_id in GameData.get_all_fish_ids():
-		var fish_key := String(fish_id)
-		if fish_key == "boss_kurodai":
-			continue
-		if PlayerProgress.fish_count(fish_key) > 0:
-			ids.append(fish_key)
-	for fish_id in GameData.get_all_fish_ids():
-		var fish_key := String(fish_id)
-		if fish_key == "boss_kurodai" or ids.has(fish_key):
-			continue
-		if ids.size() < 5:
-			ids.append(fish_key)
-		if ids.size() >= 5:
+	var ordered_ids := _ordered_cooking_fish_ids()
+	for fish_id in ordered_ids:
+		if ids.size() >= COOKING_FISH_ROW_LIMIT:
 			break
-	if not ids.has("boss_kurodai"):
+		if PlayerProgress.fish_count(fish_id) > 0:
+			ids.append(fish_id)
+	for fish_id in ordered_ids:
+		if ids.size() >= COOKING_FISH_ROW_LIMIT:
+			break
+		if ids.has(fish_id):
+			continue
+		if fish_id == "boss_kurodai":
+			continue
+		ids.append(fish_id)
+	if ids.size() < COOKING_FISH_ROW_LIMIT and not ids.has("boss_kurodai"):
 		ids.append("boss_kurodai")
+	return ids
+
+
+func _ordered_cooking_fish_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for fish_id_variant in COOKING_FISH_DISPLAY_ORDER:
+		var fish_id := String(fish_id_variant)
+		if GameData.get_fish(fish_id).is_empty():
+			continue
+		if not ids.has(fish_id):
+			ids.append(fish_id)
+	for fish_id_variant in GameData.get_all_fish_ids():
+		var fish_id := String(fish_id_variant)
+		if not ids.has(fish_id):
+			ids.append(fish_id)
 	return ids
 
 
@@ -931,10 +963,10 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	row.add_child(marker)
 	var icon := TextureRect.new()
 	icon.texture = _fish_row_texture(fish_id)
-	icon.custom_minimum_size = Vector2(146, 60)
+	icon.custom_minimum_size = Vector2(154, 60)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	icon.modulate = Color(1.18, 1.12, 1.04, 1.0) if owned else Color(0.38, 0.36, 0.31, 0.76)
 	row.add_child(icon)
 	var display_name := _fish_row_display_name(fish_id, String(fish.get("name", fish_id)))
@@ -946,29 +978,14 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	name.autowrap_mode = TextServer.AUTOWRAP_OFF
 	name.clip_text = true
 	row.add_child(name)
-	var amount_text := "×%d匹" % count if owned else "未所持"
+	var amount_text := "× %d 匹" % count if owned else "未所持"
 	var amount_color := Color("#2a2118") if owned else Color("#756a56")
-	var amount := make_label(amount_text, 13 if owned else 12, amount_color, 1, Color("#fff0bd"))
-	amount.custom_minimum_size = Vector2(0.0, 28.0)
-	amount.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var amount := make_label(amount_text, 16 if owned else 12, amount_color, 1, Color("#fff0bd"))
+	amount.custom_minimum_size = Vector2(68.0, 34.0)
+	amount.size_flags_horizontal = Control.SIZE_SHRINK_END
 	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	amount.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	var amount_badge := PanelContainer.new()
-	amount_badge.custom_minimum_size = Vector2(52.0, 34.0)
-	amount_badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	var amount_style := StyleBoxFlat.new()
-	amount_style.bg_color = Color(0.96, 0.85, 0.62, 0.82) if owned else Color(0.42, 0.37, 0.29, 0.76)
-	amount_style.border_color = Color(0.45, 0.28, 0.12, 0.30)
-	amount_style.set_border_width_all(1)
-	amount_style.set_corner_radius_all(3)
-	amount_style.content_margin_left = 4.0
-	amount_style.content_margin_right = 4.0
-	amount_style.content_margin_top = 1.0
-	amount_style.content_margin_bottom = 1.0
-	amount_style.anti_aliasing = false
-	amount_badge.add_theme_stylebox_override("panel", amount_style)
-	amount_badge.add_child(amount)
-	row.add_child(amount_badge)
+	row.add_child(amount)
 	_fish_cards[fish_id] = {"card": card, "marker": marker, "owned": owned}
 	return card
 
@@ -987,10 +1004,16 @@ func _fish_row_node_name(fish_id: String) -> String:
 			return "FishRowSaba"
 		"tai":
 			return "FishRowTai"
+		"madai":
+			return "FishRowMadai"
 		"kasago":
 			return "FishRowKasago"
 		"ika":
 			return "FishRowIka"
+		"suzuki":
+			return "FishRowSuzuki"
+		"kawahagi":
+			return "FishRowKawahagi"
 		"hirame":
 			return "FishRowHirame"
 		"mejina":
@@ -2014,8 +2037,6 @@ func _fish_icon(fish_id: String) -> Texture2D:
 
 
 func _fish_row_texture(fish_id: String) -> Texture2D:
-	if FISH_ICON_INDEX.has(fish_id):
-		return _fish_icon(fish_id)
 	return _fish_portrait(fish_id)
 
 
