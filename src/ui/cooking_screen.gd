@@ -1476,40 +1476,22 @@ func _apply_recipe_book_button_style(button: Button) -> void:
 func _draw_cook_button_icon(button: Button) -> void:
 	var active := not button.disabled
 	var center := Vector2(54.0, button.size.y * 0.5 - 1.0)
-	var ink := Color("#3b2515") if active else Color("#665847")
-	var pot := Color("#9b5a29") if active else Color("#7a6954")
-	var flame := Color("#f06a2e") if active else Color("#7a604b")
-	var glow := Color(1.0, 0.86, 0.36, 0.42) if active else Color(0.48, 0.40, 0.32, 0.22)
-	button.draw_circle(center + Vector2(1.0, 5.0), 14.0, glow)
-	button.draw_rect(Rect2(center.x - 12.0, center.y - 3.0, 24.0, 12.0), ink)
-	button.draw_rect(Rect2(center.x - 9.0, center.y - 1.0, 18.0, 9.0), pot)
-	button.draw_line(center + Vector2(-13.0, -5.0), center + Vector2(13.0, -5.0), ink, 3.0)
-	button.draw_arc(center + Vector2(0.0, -9.0), 8.0, PI, TAU, 12, ink, 2.0)
-	button.draw_colored_polygon(
-		PackedVector2Array(
-				[
-					center + Vector2(-5.0, 12.0),
-					center + Vector2(0.0, 6.0),
-					center + Vector2(5.0, 12.0),
-					center + Vector2(1.0, 16.0),
-				]
-			),
-			flame
-	)
-	button.draw_colored_polygon(
-		PackedVector2Array(
-				[
-					center + Vector2(2.0, 12.0),
-					center + Vector2(6.0, 7.0),
-					center + Vector2(10.0, 13.0),
-					center + Vector2(6.0, 16.0),
-				]
-			),
-			Color("#ffe67a") if active else Color("#96805d")
-		)
+	var ink := Color("#2b1a0c") if active else Color("#665847")
+	var pot := Color("#c8873a") if active else Color("#7a6954")
+	var lid := Color("#ffe08a") if active else Color("#a79370")
+	var steam := Color(1.0, 0.88, 0.45, 0.64) if active else Color(0.58, 0.52, 0.42, 0.32)
+	button.draw_rect(Rect2(center.x - 14.0, center.y - 1.0, 28.0, 12.0), ink)
+	button.draw_rect(Rect2(center.x - 11.0, center.y + 1.0, 22.0, 9.0), pot)
+	button.draw_line(center + Vector2(-16.0, -3.0), center + Vector2(16.0, -3.0), ink, 3.0)
+	button.draw_line(center + Vector2(-12.0, -6.0), center + Vector2(12.0, -6.0), lid, 2.0)
+	button.draw_arc(center + Vector2(0.0, -10.0), 7.5, PI, TAU, 12, ink, 2.0)
+	button.draw_line(center + Vector2(-15.0, 4.0), center + Vector2(-20.0, 7.0), ink, 2.0)
+	button.draw_line(center + Vector2(15.0, 4.0), center + Vector2(20.0, 7.0), ink, 2.0)
+	button.draw_line(center + Vector2(-8.0, 12.0), center + Vector2(-13.0, 16.0), ink, 2.0)
+	button.draw_line(center + Vector2(8.0, 12.0), center + Vector2(13.0, 16.0), ink, 2.0)
 	for i in range(2):
 		var x := center.x - 5.0 + float(i) * 10.0
-		button.draw_arc(Vector2(x, center.y - 15.0), 6.0, -1.6, 0.9, 9, glow, 1.5)
+		button.draw_arc(Vector2(x, center.y - 17.0), 5.5, -1.8, 0.8, 8, steam, 1.7)
 
 
 func _cook_selected() -> void:
@@ -1923,19 +1905,19 @@ func _prep_summary_card(
 	text_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	text_box.add_theme_constant_override("separation", 0)
 	row.add_child(text_box)
-	var title_size := 12 if title.length() >= 7 else 13
+	var title_size := 13 if title.length() >= 7 else 14
 	var title_label := make_shadow_label(title, title_size, Color("#2b2117"), 1, Color("#fff2ca"))
-	title_label.custom_minimum_size = Vector2(0.0, 20.0)
+	title_label.custom_minimum_size = Vector2(0.0, 21.0)
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title_label.clip_text = true
 	text_box.add_child(title_label)
-	var value_size := 15 if title == "効果中の料理" else 16 if value.length() >= 9 else 18
+	var value_size := 15 if title == "効果中の料理" else 17 if value.length() >= 9 else 20
 	var value_label := make_shadow_label(value, value_size, Color("#1f160f"), 1, Color("#fff5cf"))
 	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	value_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	value_label.clip_text = true

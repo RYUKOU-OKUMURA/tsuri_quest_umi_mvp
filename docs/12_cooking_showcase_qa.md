@@ -216,12 +216,13 @@
 - 追記: 料理カード写真は `STRETCH_SCALE` の引き伸ばしをやめ、`STRETCH_KEEP_ASPECT_COVERED` で皿写真の比率を保つ。星と素材バッジはさらに薄くして、カード内で料理写真が縦に潰れたUI画像ではなく料理素材として読める配分を固定する。
 - 実装済み: 右詳細は `dish_feature_aji_shioyaki.png` を参照01の大判料理カットから生成し、`SelectedDishFeatureImage` をやや大きくした。詳細3行は `cook_detail_row_frame.png` を使う `CookDetailMaterialRow` / `CookDetailExpRow` / `CookDetailEffectRow` へ置き換え、フォーム欄ではなく横長情報リボンとして読ませる。`dish_detail_frame.png`、`cook_button_frame.png`、`cook_action_runway_frame.png` も紙面、青い金縁CTA、下部アクション帯が読める素材に更新した。
 - 追記: 右詳細3行の値領域から強い斜線と入力欄風の囲いを削り、`CookDetailMaterialRow` / `CookDetailExpRow` / `CookDetailEffectRow` の主値を濃いインクで直接載せるようにした。`cook_button_frame.png` と `cook_action_runway_frame.png` も白い斜線を抑え、調理ボタン周辺の装飾より `調理する` の読みやすさを優先する。
-- 追記: `CookActionCue` は鍋から皿への大きな描画をやめ、細い金色キューへ抑えた。`CookButton` は高さと文字サイズを上げ、鍋アイコンを左ポケット内に収め、右詳細の最後に押す青い金縁CTAとして読ませる。
+- 追記: `CookActionCue` は鍋から皿への大きな描画をやめ、細い金色キューへ抑えた。`CookButton` は高さと文字サイズを上げ、左ポケット内の描画も赤い炎や強い発光ではなく、参照01に近いシンプルな鍋アイコンへ整理して、右詳細の最後に押す青い金縁CTAとして読ませる。
 - 追記: 右詳細3行の表示高さと文字サイズを上げ、効果行のタイトル幅を詰めて主値が潰れないようにした。料理写真の高さを少しだけ抑えて、その分 `CookActionRunway` と `CookButton` を太くし、参照01の「材料→EXP→次回効果→調理する」へ視線が落ちる縦ストーリーを優先する。
 - 追記: 右詳細3行をさらに太い情報帯へ寄せ、材料の所持数は `12 / 1` 形式にして参照01の `所持 / 必要` に近づける。効果行は見出し側に `次の釣行で得られる効果` を残し、値側は `最大体力 +5%` のように短くして、細い入力欄風ではなく読みやすい結果リボンとして扱う。
 - 実装済み: 下部の `現在の準備` は `prep_summary_bar_frame.png` と `prep_summary_card_frame.png` を使う `CurrentPrepBar` / `PrepSummaryCard*` へ置き換え、参照01の下部ステータスバーに近い紙カード群へ寄せた。
 - 追記: 下部バーは `PrepSummaryCard*` を横一列の小ラベル/小値テーブルから、大きめのアイコン、上段見出し、下段主要値の2段カードへ組み替えた。`CurrentPrepTitle` は食事結果文言が横クリップしない幅を維持しつつ、通常時のプレイヤーLv. / 効果中の料理 / クーラーボックス / 所持金が参照01の下部カードに近い紙カード群として読めることを優先する。
 - 追記: `CurrentPrepTitle` と `CurrentPrepDetailButton` の幅を詰め、4枚の `PrepSummaryCard*` 側へ横幅を戻した。各カードはアイコンを少し大きくし、見出し/主値の文字サイズとカード高さを上げて、下部バーが小さな表ではなく現在準備HUDとして読めるようにした。
+- 追記: 下部バーの `PrepSummaryCard*` は見出し/値を一段太くし、主値をカード中央へ寄せて、参照01の下部紙カード群のように現在状態が一目で読める比重へ寄せた。長い料理名だけは横クリップ防止のため小さめを維持する。
 - 追記: COOK_SELECTの比較/監査シードは参照01に合わせ、効果中料理ありの `サバの味噌煮 / あと1回` を表示する。下部バーが空の `なし` 状態に戻ると、参照01の「現在の準備」HUDとしての密度が落ちるため、content auditでもこの表示を固定する。
 - 追記: `tools/cooking_preview.gd` の `COOK_SELECT` キャプチャは参照01と比較しやすいアジ選択状態に固定した。スクショ用の所持魚合計は容量内の `19 / 20` に収めつつ、6行すべてを所持魚として並べ、左カラムが暗い未所持リストに見えない状態で比較する。実フロー/報酬状態の検証シードは別に維持する。
 - 追記: 魚行は調理専用の小アイコンではなく、`assets/showcase/underwater/fish/*_card_portrait.png` を優先し、水中ファイト基準の魚アート密度をリスト内でも使う。数量欄は右側に確保し、`× 12 匹` などが折れずに読める状態を維持する。表示順は調理画面用に `アジ → サバ → カサゴ → メジナ → イサキ → ヒラメ` を優先し、`FishRowIsaki` もcontent/layout audit対象にして、6行密度を維持する。
