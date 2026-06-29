@@ -1378,54 +1378,41 @@ func _apply_cook_button_style() -> void:
 
 func _draw_cook_button_icon(button: Button) -> void:
 	var active := not button.disabled
-	var center := Vector2(34.0, button.size.y * 0.5 + 1.0)
+	var center := Vector2(34.0, button.size.y * 0.5 - 1.0)
 	var ink := Color("#3b2515") if active else Color("#665847")
 	var pot := Color("#9b5a29") if active else Color("#7a6954")
 	var flame := Color("#f06a2e") if active else Color("#7a604b")
 	var glow := Color(1.0, 0.86, 0.36, 0.42) if active else Color(0.48, 0.40, 0.32, 0.22)
-	button.draw_circle(center + Vector2(4.0, 5.0), 24.0, glow)
+	button.draw_circle(center + Vector2(2.0, 5.0), 18.0, glow)
 	button.draw_rect(Rect2(center.x - 15.0, center.y - 4.0, 30.0, 15.0), ink)
 	button.draw_rect(Rect2(center.x - 12.0, center.y - 1.0, 24.0, 11.0), pot)
 	button.draw_line(center + Vector2(-17.0, -6.0), center + Vector2(17.0, -6.0), ink, 4.0)
 	button.draw_arc(center + Vector2(0.0, -11.0), 10.0, PI, TAU, 12, ink, 2.0)
 	button.draw_colored_polygon(
 		PackedVector2Array(
-			[
-				center + Vector2(-6.0, 18.0),
-				center + Vector2(0.0, 7.0),
-				center + Vector2(6.0, 18.0),
-				center + Vector2(1.0, 23.0),
-			]
-		),
-		flame
+				[
+					center + Vector2(-6.0, 15.0),
+					center + Vector2(0.0, 7.0),
+					center + Vector2(6.0, 15.0),
+					center + Vector2(1.0, 19.0),
+				]
+			),
+			flame
 	)
 	button.draw_colored_polygon(
 		PackedVector2Array(
-			[
-				center + Vector2(2.0, 16.0),
-				center + Vector2(7.0, 7.0),
-				center + Vector2(12.0, 17.0),
-				center + Vector2(7.0, 22.0),
-			]
-		),
-		Color("#ffe67a") if active else Color("#96805d")
-	)
+				[
+					center + Vector2(2.0, 14.0),
+					center + Vector2(7.0, 7.0),
+					center + Vector2(12.0, 15.0),
+					center + Vector2(7.0, 19.0),
+				]
+			),
+			Color("#ffe67a") if active else Color("#96805d")
+		)
 	for i in range(2):
 		var x := center.x - 6.0 + float(i) * 12.0
 		button.draw_arc(Vector2(x, center.y - 18.0), 8.0, -1.6, 0.9, 9, glow, 2.0)
-	var arrow_x := center.x + 36.0
-	var arrow_color := Color("#ffe67a") if active else Color("#8b7654")
-	button.draw_line(Vector2(arrow_x, center.y), Vector2(arrow_x + 22.0, center.y), arrow_color, 3.0)
-	button.draw_colored_polygon(
-		PackedVector2Array(
-			[
-				Vector2(arrow_x + 28.0, center.y),
-				Vector2(arrow_x + 16.0, center.y - 7.0),
-				Vector2(arrow_x + 16.0, center.y + 7.0),
-			]
-		),
-		arrow_color
-	)
 
 
 func _cook_selected() -> void:
