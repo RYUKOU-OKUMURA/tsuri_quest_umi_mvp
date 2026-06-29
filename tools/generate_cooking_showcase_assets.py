@@ -565,16 +565,17 @@ def fish_row_frame() -> None:
     paste_rounded(img, paper, (6, 5, w - 10, h - 12), 5)
     draw = ImageDraw.Draw(img, "RGBA")
 
-    # Ingredient rows should read as heavy paper slips mounted in a dark wood frame.
+    # Ingredient rows should read as mounted material slips, not inventory table rows.
     draw.rounded_rectangle((5, 4, w - 10, h - 12), radius=5, outline=(49, 27, 13, 255), width=5)
     draw.rounded_rectangle((15, 13, w - 20, h - 22), radius=3, outline=(230, 178, 78, 205), width=2)
-    draw.rectangle((19, 17, 34, h - 26), fill=(10, 39, 64, 235), outline=(48, 28, 13, 230), width=2)
-    draw.rectangle((42, 17, 166, h - 26), fill=(238, 222, 185, 92), outline=(122, 77, 35, 86), width=2)
-    draw.rectangle((250, 17, w - 24, h - 26), fill=(245, 226, 181, 64), outline=(122, 77, 35, 68), width=1)
-    draw.line((194, 16, 194, h - 25), fill=(78, 45, 20, 80), width=2)
-    draw.line((244, 16, 244, h - 25), fill=(78, 45, 20, 52), width=1)
-    for x in range(52, 166, 24):
-        draw.line((x, 22, x - 12, h - 30), fill=(255, 255, 255, 35), width=2)
+    draw.rounded_rectangle((19, 17, 35, h - 26), radius=2, fill=(10, 39, 64, 235), outline=(48, 28, 13, 230), width=2)
+    draw.rounded_rectangle((43, 16, 188, h - 25), radius=4, fill=(245, 231, 190, 72), outline=(122, 77, 35, 58), width=1)
+    draw.rounded_rectangle((247, 21, w - 27, h - 30), radius=4, fill=(247, 226, 177, 238), outline=(123, 77, 35, 42), width=1)
+    draw.line((244, h - 29, w - 30, h - 29), fill=(132, 86, 42, 58), width=2)
+    for x in range(54, 188, 24):
+        draw.line((x, 22, x - 13, h - 31), fill=(255, 255, 255, 30), width=2)
+    for x in [250, w - 40]:
+        draw.ellipse((x, 23, x + 6, 29), fill=(226, 170, 72, 120), outline=(70, 43, 20, 120), width=1)
     draw_corner_brackets(draw, (18, 15, w - 22, h - 25), (246, 198, 83, 205), (51, 29, 13, 235), 16, 2)
     save(img, "fish_row_frame.png")
 

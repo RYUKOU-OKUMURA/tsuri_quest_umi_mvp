@@ -906,13 +906,13 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	row.add_theme_constant_override("separation", 4)
 	card.add_child(row)
 	var marker := make_shadow_label("", 20, Palette.GOLD_BRIGHT, 2)
-	marker.custom_minimum_size = Vector2(6, 0)
+	marker.custom_minimum_size = Vector2(8, 0)
 	marker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	marker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(marker)
 	var icon := TextureRect.new()
 	icon.texture = _fish_row_texture(fish_id)
-	icon.custom_minimum_size = Vector2(140, 60)
+	icon.custom_minimum_size = Vector2(142, 60)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -921,15 +921,16 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	var display_name := _fish_row_display_name(fish_id, String(fish.get("name", fish_id)))
 	var name_font_size := 20 if display_name.length() <= 3 else 15
 	var name := make_label(display_name, name_font_size, Color("#241b12"), 1, Color("#fff2ca"))
+	name.custom_minimum_size = Vector2(62.0, 0.0)
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	name.autowrap_mode = TextServer.AUTOWRAP_OFF
 	name.clip_text = true
 	row.add_child(name)
 	var amount_text := "×%d匹" % count if owned else "未所持"
-	var amount_color := Color("#fff0bd") if owned else Color("#d9c7a2")
-	var amount := make_label(amount_text, 14 if owned else 12, amount_color, 1, Color("#241b12"))
-	amount.custom_minimum_size = Vector2(58.0, 0.0)
+	var amount_color := Color("#2a2118") if owned else Color("#756a56")
+	var amount := make_label(amount_text, 14 if owned else 12, amount_color, 1, Color("#fff0bd"))
+	amount.custom_minimum_size = Vector2(54.0, 0.0)
 	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	amount.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(amount)
