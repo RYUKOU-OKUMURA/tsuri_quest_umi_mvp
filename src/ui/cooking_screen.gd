@@ -738,7 +738,7 @@ func _add_detail_story_row(
 		2.0
 	)
 	tile.name = node_name
-	tile.custom_minimum_size = Vector2(0, 42)
+	tile.custom_minimum_size = Vector2(0, 44)
 	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(tile)
 
@@ -747,7 +747,7 @@ func _add_detail_story_row(
 	tile.add_child(row)
 
 	var title_band := MarginContainer.new()
-	title_band.custom_minimum_size = Vector2(maxf(title_width, 176.0), 30)
+	title_band.custom_minimum_size = Vector2(maxf(title_width, 176.0), 32)
 	title_band.add_theme_constant_override("margin_left", 6)
 	title_band.add_theme_constant_override("margin_right", 6)
 	row.add_child(title_band)
@@ -757,18 +757,18 @@ func _add_detail_story_row(
 	title_band.add_child(title_row)
 	var compact := title.length() > 6
 	title_row.add_child(_small_icon(icon_mode, accent, Vector2(20.0 if compact else 24.0, 0.0)))
-	var title_size := 10 if compact else 12
+	var title_size := 11 if compact else 12
 	var title_label := make_shadow_label(title, title_size, Palette.TEXT_BONE, 1)
-	title_label.custom_minimum_size = Vector2(0, 28)
+	title_label.custom_minimum_size = Vector2(0, 30)
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title_label.clip_text = true
 	title_row.add_child(title_label)
 
-	var primary_size := 12 if compact else 14
-	var primary := make_label("", primary_size, Color("#2a2118"), 1, Color("#fff2cf"))
-	primary.custom_minimum_size = Vector2(0, 32)
+	var primary_size := 12 if compact else 15
+	var primary := make_label("", primary_size, Color("#21170f"))
+	primary.custom_minimum_size = Vector2(0, 34)
 	primary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	primary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	primary.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -776,7 +776,7 @@ func _add_detail_story_row(
 	row.add_child(primary)
 
 	var secondary := make_label("", primary_size, accent, 1, Color("#fff2cf"))
-	secondary.custom_minimum_size = Vector2(44 if compact else 108, 32)
+	secondary.custom_minimum_size = Vector2(52 if compact else 110, 34)
 	secondary.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	secondary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	secondary.autowrap_mode = TextServer.AUTOWRAP_OFF
