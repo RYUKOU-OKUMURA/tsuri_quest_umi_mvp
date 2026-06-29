@@ -276,6 +276,8 @@ func _audit_cook_select() -> void:
 	)
 	_expect_named_node("COOK_SELECT", screen, "CookActionRunway")
 	_expect_named_node("COOK_SELECT", screen, "CurrentPrepBar")
+	_expect_named_node("COOK_SELECT", screen, "CurrentPrepTitleSlot")
+	_expect_named_node("COOK_SELECT", screen, "CurrentPrepTitleIcon")
 	_expect_named_node("COOK_SELECT", screen, "CurrentPrepTitle")
 	_expect_named_node("COOK_SELECT", screen, "PrepSummaryCardLevel")
 	_expect_named_node("COOK_SELECT", screen, "PrepSummaryLevelGauge")

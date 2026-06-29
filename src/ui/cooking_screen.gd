@@ -398,6 +398,8 @@ var _cook_action_cue: CookActionCueVisual
 var _cook_button: Button
 var _result_panel: PanelContainer
 var _result_title: Label
+var _result_title_lead: Control
+var _result_title_icon: Control
 var _result_body: HBoxContainer
 var _status_button: Button
 
@@ -712,14 +714,30 @@ func _build_result_summary(layout: VBoxContainer) -> void:
 	result_layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	result_layout.add_theme_constant_override("separation", 6)
 	result_panel.add_child(result_layout)
+	var title_slot := HBoxContainer.new()
+	title_slot.name = "CurrentPrepTitleSlot"
+	title_slot.custom_minimum_size = Vector2(184.0, 0.0)
+	title_slot.add_theme_constant_override("separation", 4)
+	result_layout.add_child(title_slot)
+	var title_lead := Control.new()
+	title_lead.name = "CurrentPrepTitleLead"
+	title_lead.custom_minimum_size = Vector2(14.0, 0.0)
+	title_slot.add_child(title_lead)
+	_result_title_lead = title_lead
+	var title_icon := _small_icon("player_mini", Palette.GOLD_BRIGHT, Vector2(28.0, 28.0))
+	title_icon.name = "CurrentPrepTitleIcon"
+	title_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	title_slot.add_child(title_icon)
+	_result_title_icon = title_icon
 	_result_title = make_shadow_label("", 15, Palette.TEXT_BONE, 2, Color("#2b2117"))
 	_result_title.name = "CurrentPrepTitle"
-	_result_title.custom_minimum_size = Vector2(170.0, 0.0)
-	_result_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_result_title.custom_minimum_size = Vector2(0.0, 0.0)
+	_result_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_result_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_result_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_result_title.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_result_title.clip_text = true
-	result_layout.add_child(_result_title)
+	title_slot.add_child(_result_title)
 	_result_body = HBoxContainer.new()
 	_result_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_result_body.add_theme_constant_override("separation", 6)
@@ -1659,6 +1677,10 @@ func preview_show_status_overlay() -> void:
 func _show_error_result(message: String) -> void:
 	_flow_state = FlowState.MEAL_RESULT
 	_set_result_summary_compact(false)
+	if _result_title_icon != null:
+		_result_title_icon.visible = false
+	if _result_title_lead != null:
+		_result_title_lead.visible = false
 	_result_title.text = "調理できませんでした"
 	_clear_container(_result_body)
 	_result_body.add_child(_summary_card("確認", message, Palette.GAUGE_RED_HI))
@@ -1668,6 +1690,10 @@ func _show_status_summary() -> void:
 	if _flow_state != FlowState.COOK_SELECT:
 		_flow_state = FlowState.COOK_SELECT
 	_set_result_summary_compact(false)
+	if _result_title_icon != null:
+		_result_title_icon.visible = true
+	if _result_title_lead != null:
+		_result_title_lead.visible = true
 	_result_title.text = "現在の準備"
 	_clear_container(_result_body)
 	_result_body.add_child(_prep_level_summary_card("PrepSummaryCardLevel"))
@@ -1718,6 +1744,10 @@ func _current_meal_summary_text() -> String:
 func _show_meal_result(result: Dictionary, leveled: bool) -> void:
 	_flow_state = FlowState.MEAL_RESULT if not leveled else FlowState.EXP_GAIN
 	_set_result_summary_compact(false)
+	if _result_title_icon != null:
+		_result_title_icon.visible = false
+	if _result_title_lead != null:
+		_result_title_lead.visible = false
 	_result_title.text = "%sを食べた！" % String(result.get("dish_name", "料理"))
 	_clear_container(_result_body)
 	_result_body.add_child(
