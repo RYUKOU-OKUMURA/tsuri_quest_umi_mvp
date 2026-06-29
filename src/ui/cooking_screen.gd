@@ -1248,7 +1248,7 @@ func _recipe_card_dish_image(
 	image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	image.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	image.stretch_mode = TextureRect.STRETCH_SCALE
 	image.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	image.modulate = Color(0.82, 0.76, 0.64, 0.94) if muted else Color.WHITE
 	thumb.add_child(image)

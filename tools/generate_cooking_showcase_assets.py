@@ -793,7 +793,7 @@ def recipe_selected_card_frame() -> None:
 
     glow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     gd = ImageDraw.Draw(glow, "RGBA")
-    for offset, alpha, width in [(0, 56, 5), (5, 34, 4), (10, 18, 3)]:
+    for offset, alpha, width in [(0, 120, 7), (5, 76, 6), (11, 38, 4), (18, 18, 3)]:
         gd.rounded_rectangle(
             (10 - offset, 10 - offset, w - 17 + offset, h - 20 + offset),
             radius=10 + offset,
@@ -809,17 +809,20 @@ def recipe_selected_card_frame() -> None:
 
     # Keep the parchment clean; selection should come from the gold frame,
     # not a yellow wash over the food art and text.
-    draw.rounded_rectangle((7, 7, w - 16, h - 20), radius=8, outline=(62, 35, 15, 255), width=5)
-    draw.rounded_rectangle((13, 13, w - 22, h - 26), radius=7, outline=(255, 207, 78, 235), width=3)
-    draw.rounded_rectangle((21, 21, w - 29, h - 35), radius=5, outline=(143, 88, 32, 140), width=1)
+    draw.rounded_rectangle((7, 7, w - 16, h - 20), radius=8, outline=(62, 35, 15, 255), width=6)
+    draw.rounded_rectangle((13, 13, w - 22, h - 26), radius=7, outline=(255, 222, 99, 255), width=4)
+    draw.rounded_rectangle((20, 20, w - 29, h - 35), radius=5, outline=(144, 86, 27, 170), width=2)
+    draw.line((19, 32, 19, h - 48), fill=(255, 231, 98, 134), width=3)
+    draw.line((w - 28, 32, w - 28, h - 48), fill=(255, 231, 98, 124), width=3)
+    draw.line((32, 19, w - 43, 19), fill=(255, 240, 144, 116), width=2)
     draw.rounded_rectangle((30, 50, w - 38, 154), radius=5, fill=(255, 243, 203, 12), outline=(92, 55, 28, 40), width=1)
     draw.rounded_rectangle((46, h - 56, w - 54, h - 32), radius=4, fill=(246, 224, 176, 7), outline=(201, 143, 58, 28), width=1)
-    draw_corner_brackets(draw, (18, 18, w - 30, h - 36), (255, 210, 82, 230), (60, 34, 14, 240), 19, 3)
+    draw_corner_brackets(draw, (18, 18, w - 30, h - 36), (255, 222, 96, 255), (60, 34, 14, 248), 22, 4)
     for x, y in [(34, 34), (w - 52, 34), (34, h - 52), (w - 52, h - 52)]:
-        draw.rectangle((x - 5, y - 5, x + 5, y + 5), fill=(255, 223, 103, 235), outline=(77, 43, 15, 230), width=1)
-    for x, y in [(52, 54), (224, 58), (54, 169), (222, 165)]:
-        draw.line((x - 4, y, x + 4, y), fill=(255, 244, 172, 112), width=1)
-        draw.line((x, y - 4, x, y + 4), fill=(255, 244, 172, 112), width=1)
+        draw.rectangle((x - 6, y - 6, x + 6, y + 6), fill=(255, 227, 98, 255), outline=(77, 43, 15, 238), width=1)
+    for x, y in [(52, 54), (224, 58), (54, 169), (222, 165), (140, 26), (140, 180)]:
+        draw.line((x - 5, y, x + 5, y), fill=(255, 247, 178, 158), width=2)
+        draw.line((x, y - 5, x, y + 5), fill=(255, 247, 178, 158), width=2)
     save(img, "recipe_selected_card_frame.png")
 
 

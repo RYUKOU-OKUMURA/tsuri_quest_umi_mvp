@@ -210,6 +210,7 @@
 
 - 実装済み: 左魚リストは水中ファイト側と同じ高密度の魚ポートレートを使い、`fish_row_frame.png` は紙質感、濃紺ガター、金具だけを持つ1枚スリップへ簡略化した。魚名と `× n 匹` が横クリップしない幅を確保し、数量セルや写真枠を別パーツに見せないことで、魚リストを在庫表ではなく素材カードとして読ませる。
 - 実装済み: `recipe_grid_frame.png`、`recipe_card_frame.png`、`recipe_selected_card_frame.png` は参照紙テクスチャを混ぜた素材に更新し、料理カード内の料理絵は `recipe_dish_thumb_frame.png` の淡い紙マット付き額へ収める。カード下部は `recipe_material_strip_frame.png` を使う `RecipeMaterialBadge_*` に `RecipeMaterialIcon_*` の素材魚アイコンと短い状態表示を収め、EXP情報は右詳細の `CookDetailExpRow` に集約した。追調整では `recipe_selected_card_frame.png` を通常カードの紙面に近い構造へ戻し、内側の斜めハイライトと黄色ベタを削って、選択状態は金縁・角金具・外周グローで出すようにした。さらに選択可能カードの `×1` をカード下部から外し、ロック/素材違いカードも料理写真を読める明るさにして、6枚の料理写真が並ぶ参照01の密度に近づけた。
+- 追記: 選択中料理カードは外周グロー、金縁、角金具を再強化し、通常カードとの差がスクショ上でも一目で読めるようにした。料理サムネイルはカード内で料理写真が小さく沈まないよう、カード面を満たす表示へ変更し、アジの塩焼きが主役カード内で料理として読める占有率を維持する。
 - 実装済み: 右詳細は `dish_feature_aji_shioyaki.png` を参照01の大判料理カットから生成し、`SelectedDishFeatureImage` をやや大きくした。詳細3行は `cook_detail_row_frame.png` を使う `CookDetailMaterialRow` / `CookDetailExpRow` / `CookDetailEffectRow` へ置き換え、フォーム欄ではなく横長情報リボンとして読ませる。`dish_detail_frame.png`、`cook_button_frame.png`、`cook_action_runway_frame.png` も紙面、青い金縁CTA、下部アクション帯が読める素材に更新した。
 - 追記: 右詳細3行の値領域から強い斜線と入力欄風の囲いを削り、`CookDetailMaterialRow` / `CookDetailExpRow` / `CookDetailEffectRow` の主値を濃いインクで直接載せるようにした。`cook_button_frame.png` と `cook_action_runway_frame.png` も白い斜線を抑え、調理ボタン周辺の装飾より `調理する` の読みやすさを優先する。
 - 追記: `CookActionCue` は鍋から皿への大きな描画をやめ、細い金色キューへ抑えた。`CookButton` は高さと文字サイズを上げ、鍋アイコンを左ポケット内に収め、右詳細の最後に押す青い金縁CTAとして読ませる。
