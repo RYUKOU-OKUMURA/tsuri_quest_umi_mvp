@@ -215,8 +215,10 @@
 - 実装済み: 右詳細は `dish_feature_aji_shioyaki.png` を参照01の大判料理カットから生成し、`SelectedDishFeatureImage` をやや大きくした。詳細3行は `cook_detail_row_frame.png` を使う `CookDetailMaterialRow` / `CookDetailExpRow` / `CookDetailEffectRow` へ置き換え、フォーム欄ではなく横長情報リボンとして読ませる。`dish_detail_frame.png`、`cook_button_frame.png`、`cook_action_runway_frame.png` も紙面、青い金縁CTA、下部アクション帯が読める素材に更新した。
 - 追記: 右詳細3行の値領域から強い斜線と入力欄風の囲いを削り、`CookDetailMaterialRow` / `CookDetailExpRow` / `CookDetailEffectRow` の主値を濃いインクで直接載せるようにした。`cook_button_frame.png` と `cook_action_runway_frame.png` も白い斜線を抑え、調理ボタン周辺の装飾より `調理する` の読みやすさを優先する。
 - 追記: `CookActionCue` は鍋から皿への大きな描画をやめ、細い金色キューへ抑えた。`CookButton` は高さと文字サイズを上げ、鍋アイコンを左ポケット内に収め、右詳細の最後に押す青い金縁CTAとして読ませる。
+- 追記: 右詳細3行の表示高さと文字サイズを上げ、効果行のタイトル幅を詰めて主値が潰れないようにした。料理写真の高さを少しだけ抑えて、その分 `CookActionRunway` と `CookButton` を太くし、参照01の「材料→EXP→次回効果→調理する」へ視線が落ちる縦ストーリーを優先する。
 - 実装済み: 下部の `現在の準備` は `prep_summary_bar_frame.png` と `prep_summary_card_frame.png` を使う `CurrentPrepBar` / `PrepSummaryCard*` へ置き換え、参照01の下部ステータスバーに近い紙カード群へ寄せた。
 - 追記: 下部バーは `PrepSummaryCard*` を横一列の小ラベル/小値テーブルから、大きめのアイコン、上段見出し、下段主要値の2段カードへ組み替えた。`CurrentPrepTitle` は食事結果文言が横クリップしない幅を維持しつつ、通常時のプレイヤーLv. / 効果中の料理 / クーラーボックス / 所持金が参照01の下部カードに近い紙カード群として読めることを優先する。
+- 追記: `CurrentPrepTitle` と `CurrentPrepDetailButton` の幅を詰め、4枚の `PrepSummaryCard*` 側へ横幅を戻した。各カードはアイコンを少し大きくし、見出し/主値の文字サイズとカード高さを上げて、下部バーが小さな表ではなく現在準備HUDとして読めるようにした。
 - 追記: `tools/cooking_preview.gd` の `COOK_SELECT` キャプチャは参照01と比較しやすいアジ選択状態に固定した。スクショ用の所持魚合計は容量内の `19 / 20` に収めつつ、6行すべてを所持魚として並べ、左カラムが暗い未所持リストに見えない状態で比較する。実フロー/報酬状態の検証シードは別に維持する。
 - 追記: 魚行は調理専用の小アイコンではなく、`assets/showcase/underwater/fish/*_card_portrait.png` を優先し、水中ファイト基準の魚アート密度をリスト内でも使う。数量欄は右側に確保し、`× 12 匹` などが折れずに読める状態を維持する。表示順は調理画面用に `アジ → サバ → カサゴ → メジナ → イサキ → ヒラメ` を優先し、`FishRowIsaki` もcontent/layout audit対象にして、6行密度を維持する。
 - 追記: ロック中レシピは灰色の南京錠だけに戻さず、料理名と料理写真を出しつつ `Lv.5` の小バッジで状態を示す。6枚目の空き枠は `RecipeCard_PreviewMeuniere` として料理プレビューカードにし、`RecipeBookButton` をグリッド下へ分離することで、参照01の「6枚の料理カード＋料理図鑑を見る」構成へ寄せた。

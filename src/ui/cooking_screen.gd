@@ -588,23 +588,23 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	detail_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(detail_panel)
 	var detail_layout := VBoxContainer.new()
-	detail_layout.add_theme_constant_override("separation", 4)
+	detail_layout.add_theme_constant_override("separation", 3)
 	detail_panel.add_child(detail_layout)
-	_dish_title = make_label("料理を選んでください", 28, Color("#2a2118"), 1, Color("#fff4d4"))
+	_dish_title = make_label("料理を選んでください", 27, Color("#2a2118"), 1, Color("#fff4d4"))
 	_dish_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_dish_title.custom_minimum_size = Vector2(0.0, 34.0)
+	_dish_title.custom_minimum_size = Vector2(0.0, 32.0)
 	detail_layout.add_child(_dish_title)
-	_dish_subtitle = make_label("", 14, Color("#59422b"))
+	_dish_subtitle = make_label("", 13, Color("#59422b"))
 	_dish_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_dish_subtitle.custom_minimum_size = Vector2(0.0, 18.0)
+	_dish_subtitle.custom_minimum_size = Vector2(0.0, 16.0)
 	detail_layout.add_child(_dish_subtitle)
 	var dish_frame := _panel_box(Color("#6a4023"), Color("#3b2515"), Color("#e6b561"), 4)
-	dish_frame.custom_minimum_size = Vector2(0, 198)
+	dish_frame.custom_minimum_size = Vector2(0, 190)
 	dish_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_layout.add_child(dish_frame)
 	_dish_image = TextureRect.new()
 	_dish_image.name = "SelectedDishFeatureImage"
-	_dish_image.custom_minimum_size = Vector2(0, 188)
+	_dish_image.custom_minimum_size = Vector2(0, 180)
 	_dish_image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_dish_image.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_dish_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -612,7 +612,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	dish_frame.add_child(_dish_image)
 	var detail_rows := VBoxContainer.new()
 	detail_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	detail_rows.add_theme_constant_override("separation", 5)
+	detail_rows.add_theme_constant_override("separation", 4)
 	detail_layout.add_child(detail_rows)
 	var material_labels := _add_detail_story_row(
 		detail_rows,
@@ -620,7 +620,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 		"必要な材料",
 		"fish",
 		Palette.GAUGE_CYAN_HI,
-		132.0
+		128.0
 	)
 	_material_value = material_labels[0] as Label
 	_stock_value = material_labels[1] as Label
@@ -640,7 +640,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 		"次の釣行で得られる効果",
 		"buff",
 		Palette.GAUGE_GREEN_HI,
-		176.0
+		158.0
 	)
 	_buff_value = buff_labels[0] as Label
 	_effect_count_value = buff_labels[1] as Label
@@ -652,31 +652,31 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 		2.0
 	)
 	action_panel.name = "CookActionRunway"
-	action_panel.custom_minimum_size = Vector2(0, 78)
+	action_panel.custom_minimum_size = Vector2(0, 86)
 	action_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_layout.add_child(action_panel)
 	var action_layout := VBoxContainer.new()
-	action_layout.add_theme_constant_override("separation", 1)
+	action_layout.add_theme_constant_override("separation", 2)
 	action_panel.add_child(action_layout)
 	var cue_row := HBoxContainer.new()
-	cue_row.custom_minimum_size = Vector2(0, 16)
+	cue_row.custom_minimum_size = Vector2(0, 18)
 	cue_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	cue_row.add_theme_constant_override("separation", 8)
 	action_layout.add_child(cue_row)
 	_overwrite_note = make_label("", 12, Color("#624b31"))
 	_overwrite_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_overwrite_note.clip_text = true
-	_overwrite_note.custom_minimum_size = Vector2(0, 16)
+	_overwrite_note.custom_minimum_size = Vector2(0, 18)
 	_overwrite_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_overwrite_note.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	cue_row.add_child(_overwrite_note)
 	_cook_action_cue = CookActionCueVisual.new()
 	_cook_action_cue.name = "CookActionCue"
-	_cook_action_cue.custom_minimum_size = Vector2(76, 14)
+	_cook_action_cue.custom_minimum_size = Vector2(80, 16)
 	cue_row.add_child(_cook_action_cue)
 	_cook_button = make_button("調理する", _cook_selected, 300, true)
 	_cook_button.name = "CookButton"
-	_cook_button.custom_minimum_size = Vector2(326, 52)
+	_cook_button.custom_minimum_size = Vector2(348, 58)
 	_cook_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_apply_cook_button_style()
 	_cook_button.draw.connect(func() -> void: _draw_cook_button_icon(_cook_button))
@@ -697,11 +697,11 @@ func _build_result_summary(layout: VBoxContainer) -> void:
 	layout.add_child(result_panel)
 	var result_layout := HBoxContainer.new()
 	result_layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	result_layout.add_theme_constant_override("separation", 8)
+	result_layout.add_theme_constant_override("separation", 6)
 	result_panel.add_child(result_layout)
 	_result_title = make_shadow_label("", 15, Palette.TEXT_BONE, 2, Color("#2b2117"))
 	_result_title.name = "CurrentPrepTitle"
-	_result_title.custom_minimum_size = Vector2(172.0, 0.0)
+	_result_title.custom_minimum_size = Vector2(170.0, 0.0)
 	_result_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_result_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_result_title.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -709,11 +709,11 @@ func _build_result_summary(layout: VBoxContainer) -> void:
 	result_layout.add_child(_result_title)
 	_result_body = HBoxContainer.new()
 	_result_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_result_body.add_theme_constant_override("separation", 8)
+	_result_body.add_theme_constant_override("separation", 6)
 	result_layout.add_child(_result_body)
 	_status_button = make_button("詳細", _show_status_overlay, 100, false)
 	_status_button.name = "CurrentPrepDetailButton"
-	_status_button.custom_minimum_size = Vector2(78, 52)
+	_status_button.custom_minimum_size = Vector2(72, 52)
 	result_layout.add_child(_status_button)
 
 
@@ -759,16 +759,16 @@ func _add_detail_story_row(
 		2.0
 	)
 	tile.name = node_name
-	tile.custom_minimum_size = Vector2(0, 44)
+	tile.custom_minimum_size = Vector2(0, 50)
 	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(tile)
 
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 4)
+	row.add_theme_constant_override("separation", 6)
 	tile.add_child(row)
 
 	var title_band := MarginContainer.new()
-	title_band.custom_minimum_size = Vector2(title_width, 32)
+	title_band.custom_minimum_size = Vector2(title_width, 38)
 	title_band.add_theme_constant_override("margin_left", 4)
 	title_band.add_theme_constant_override("margin_right", 4)
 	row.add_child(title_band)
@@ -777,9 +777,9 @@ func _add_detail_story_row(
 	title_row.add_theme_constant_override("separation", 4)
 	title_band.add_child(title_row)
 	var compact := title.length() > 6
-	var title_size := 10 if compact else 13
+	var title_size := 11 if compact else 14
 	var title_label := make_shadow_label(title, title_size, Palette.TEXT_BONE, 1)
-	title_label.custom_minimum_size = Vector2(0, 30)
+	title_label.custom_minimum_size = Vector2(0, 36)
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -787,9 +787,9 @@ func _add_detail_story_row(
 	title_label.clip_text = true
 	title_row.add_child(title_label)
 
-	var primary_size := 11 if compact else 15
+	var primary_size := 12 if compact else 16
 	var primary := make_shadow_label("", primary_size, Color("#21170f"), 1, Color("#fff3c8"))
-	primary.custom_minimum_size = Vector2(0, 34)
+	primary.custom_minimum_size = Vector2(0, 40)
 	primary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	primary.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if node_name == "CookDetailEffectRow" else HORIZONTAL_ALIGNMENT_CENTER
 	primary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -797,11 +797,11 @@ func _add_detail_story_row(
 	primary.clip_text = true
 	row.add_child(primary)
 
-	var secondary_width := 52.0 if compact else 106.0
+	var secondary_width := 52.0 if compact else 116.0
 	if node_name == "CookDetailEffectRow":
 		secondary_width = 42.0
 	var secondary := make_shadow_label("", primary_size, accent, 1, Color("#fff2cf"))
-	secondary.custom_minimum_size = Vector2(secondary_width, 34)
+	secondary.custom_minimum_size = Vector2(secondary_width, 40)
 	secondary.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	secondary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	secondary.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -1433,7 +1433,7 @@ func _apply_cook_button_style() -> void:
 	_cook_button.add_theme_color_override("font_hover_color", Color("#fff1ba"))
 	_cook_button.add_theme_color_override("font_pressed_color", Color("#f0c06b"))
 	_cook_button.add_theme_color_override("font_disabled_color", Color("#b6a68d"))
-	_cook_button.add_theme_font_size_override("font_size", 22)
+	_cook_button.add_theme_font_size_override("font_size", 24)
 
 
 func _apply_recipe_book_button_style(button: Button) -> void:
@@ -1900,11 +1900,11 @@ func _prep_summary_card(
 	)
 	card.name = node_name
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.custom_minimum_size = Vector2(0, 56)
+	card.custom_minimum_size = Vector2(0, 60)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	card.add_child(row)
-	var icon := _small_icon(icon_mode, accent, Vector2(40.0, 40.0))
+	var icon := _small_icon(icon_mode, accent, Vector2(44.0, 44.0))
 	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(icon)
 	var text_box := VBoxContainer.new()
@@ -1912,15 +1912,15 @@ func _prep_summary_card(
 	text_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	text_box.add_theme_constant_override("separation", 0)
 	row.add_child(text_box)
-	var title_size := 11 if title.length() >= 7 else 12
+	var title_size := 12 if title.length() >= 7 else 13
 	var title_label := make_shadow_label(title, title_size, Color("#2b2117"), 1, Color("#fff2ca"))
-	title_label.custom_minimum_size = Vector2(0.0, 18.0)
+	title_label.custom_minimum_size = Vector2(0.0, 20.0)
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title_label.clip_text = true
 	text_box.add_child(title_label)
-	var value_size := 14 if value.length() >= 9 else 17
+	var value_size := 16 if value.length() >= 9 else 18
 	var value_label := make_shadow_label(value, value_size, Color("#1f160f"), 1, Color("#fff5cf"))
 	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
