@@ -178,6 +178,17 @@
   - `git diff --check`: 成功。
 - 後続ゲート: ここから再調整する場合も `tools/cooking_verify.sh`、`tools/cooking_visual_qa.sh`、`git diff --check` を同じ順序で通し、生成された5状態PNGとmanifestを確認する。
 
+## 2026-06-29 COOK_SELECT 画面1品質パス
+
+今回の明確な実装ゴールは、`reference/cooking_flow/01_cook_select_concept.png` と `/tmp/tsuri_cooking_select.png` を横並びで見たときに、魚リスト、料理カード、右詳細、調理ボタン、下部バーが「仮UIの枠に文字と小画像を置いた状態」ではなく、「完成素材が載った調理選択画面」として読めるところまで引き上げること。完成基準は水中ファイト画面と同じく、コード描画だけに見える要素を減らし、参照画像由来または専用生成PNGの紙・木・金具・料理/魚素材を画面上の主役として使うこと。
+
+- 実装済み: `fish_icon_sheet.png` は参照01内の魚カットを優先して使い、左魚リストの魚絵を大きめに表示する。`fish_row_frame.png` は紙質感、濃紺ガター、金具、数量エリアを持つ素材に更新し、魚名と `× n匹` が横クリップしない幅にした。
+- 実装済み: `recipe_grid_frame.png`、`recipe_card_frame.png`、`recipe_selected_card_frame.png` は参照紙テクスチャを混ぜた素材に更新し、料理カード内の料理絵を `STRETCH_KEEP_ASPECT_COVERED` で大きく見せる。カード内のEXP/素材テキストは監査契約維持のため残すが、料理絵を主役にするため小さめに整理した。
+- 実装済み: 右詳細は `dish_feature_aji_shioyaki.png` を参照01の大判料理カットから生成し、`SelectedDishFeatureImage` をやや大きく、詳細3行を少し太くした。`dish_detail_frame.png`、`cook_button_frame.png` も紙面と青い金縁CTAが読める素材に更新した。
+- 実装済み: 下部の `現在の準備` は濃紺カードではなく紙色カードへ寄せ、参照01の下部ステータスバーに近い明度にした。
+- まだ残る差分: 中央カード下部の星/素材帯は監査文言を残す都合で参照よりUI的に見える。背景密度、ヘッダーのリッチさ、魚種が参照01と一致しないQAシード、料理カード下部の素材アイコン化は次パス候補。
+- 通過ゲート: `HOME=/private/tmp/tsuri_home tools/cooking_verify.sh`、`HOME=/private/tmp/tsuri_home tools/validate_project.sh`、`HOME=/private/tmp/tsuri_home tools/cooking_visual_qa.sh`、`git diff --check`。
+
 ## 未解決
 
 - P1: 現時点で既知のロジック破壊はなし。headless layout audit上の画面外はみ出し/縦クリップは解消済みで、smoke上の主ボタンも1280x720内に完全に収まり、押下可能な状態を確認済み。通常描画の5状態スクリーンショットも生成済みで、manifest上はすべて1280x720 PNGとして記録されている。

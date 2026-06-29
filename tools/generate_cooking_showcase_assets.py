@@ -9,13 +9,15 @@ project-owned and deterministic.
 from __future__ import annotations
 
 import math
+import random
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "assets" / "showcase" / "cooking"
+COOK_SELECT_REFERENCE = ROOT / "reference" / "cooking_flow" / "01_cook_select_concept.png"
 
 
 def rgba(hex_color: str, alpha: int = 255) -> tuple[int, int, int, int]:
@@ -51,6 +53,97 @@ def draw_panel(
             outline=inner,
             width=max(1, width // 2),
         )
+
+
+def texture(size: tuple[int, int], base: str, seed: int, strength: int = 9) -> Image.Image:
+    rng = random.Random(seed)
+    w, h = size
+    r, g, b, a = rgba(base)
+    pixels = bytearray()
+    for y in range(h):
+        warm = int((y / max(1, h - 1) - 0.5) * strength)
+        for x in range(w):
+            grain = rng.randint(-strength, strength)
+            fleck = rng.randint(-7, 5) if (x * 19 + y * 31 + seed) % 47 == 0 else 0
+            pixels.extend(
+                (
+                    max(0, min(255, r + grain + warm + fleck)),
+                    max(0, min(255, g + grain + warm + fleck // 2)),
+                    max(0, min(255, b + grain // 2)),
+                    a,
+                )
+            )
+    return Image.frombytes("RGBA", size, bytes(pixels))
+
+
+def reference_paper_texture(
+    size: tuple[int, int],
+    base: str,
+    seed: int,
+    crop_box: tuple[int, int, int, int] | None = None,
+    blend: float = 0.42,
+    blur: float = 8.0,
+) -> Image.Image:
+    base_texture = texture(size, base, seed, 8)
+    if not COOK_SELECT_REFERENCE.exists():
+        return base_texture
+
+    source = Image.open(COOK_SELECT_REFERENCE).convert("RGB")
+    paper_crops = [
+        (76, 204, 458, 302),
+        (496, 204, 650, 438),
+        (1030, 190, 1540, 790),
+        (106, 846, 1532, 944),
+        (706, 470, 1000, 752),
+    ]
+    rng = random.Random(seed + 421)
+    crop = source.crop(crop_box if crop_box is not None else paper_crops[seed % len(paper_crops)])
+    scale = max(size[0] / crop.width, size[1] / crop.height)
+    resized = crop.resize((round(crop.width * scale), round(crop.height * scale)), Image.Resampling.BICUBIC)
+    if resized.width > size[0] or resized.height > size[1]:
+        x = rng.randint(0, max(0, resized.width - size[0]))
+        y = rng.randint(0, max(0, resized.height - size[1]))
+        resized = resized.crop((x, y, x + size[0], y + size[1]))
+    resized = resized.resize(size, Image.Resampling.BICUBIC).filter(ImageFilter.GaussianBlur(blur))
+
+    br, bg, bb, _ = rgba(base)
+    pixels = bytearray()
+    for r, g, b in resized.getdata():
+        luminance = r * 0.30 + g * 0.59 + b * 0.11
+        warm = (r - b) * 0.024
+        delta = (luminance - 205.0) * 0.19
+        pixels.extend(
+            (
+                max(0, min(255, int(br + delta + warm))),
+                max(0, min(255, int(bg + delta * 0.92 + warm * 0.40))),
+                max(0, min(255, int(bb + delta * 0.70))),
+                255,
+            )
+        )
+    reference_variation = Image.frombytes("RGBA", size, bytes(pixels))
+    return Image.blend(base_texture, reference_variation, blend)
+
+
+def rounded_mask(size: tuple[int, int], radius: int, alpha: int = 255) -> Image.Image:
+    mask = Image.new("L", size, 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, size[0] - 1, size[1] - 1), radius=radius, fill=alpha)
+    return mask
+
+
+def paste_rounded(dst: Image.Image, patch: Image.Image, box: tuple[int, int, int, int], radius: int, alpha: int = 255) -> None:
+    x0, y0, x1, y1 = box
+    resized = patch.resize((x1 - x0, y1 - y0), Image.Resampling.BICUBIC)
+    mask = rounded_mask(resized.size, radius, alpha).filter(ImageFilter.GaussianBlur(0.35))
+    dst.alpha_composite(Image.composite(resized, Image.new("RGBA", resized.size, (0, 0, 0, 0)), mask), (x0, y0))
+
+
+def draw_corner_brackets(draw: ImageDraw.ImageDraw, box: tuple[int, int, int, int], color: tuple[int, int, int, int], dark: tuple[int, int, int, int], length: int = 22, width: int = 3) -> None:
+    x0, y0, x1, y1 = box
+    for sx, sy, ox, oy in [(1, 1, x0, y0), (-1, 1, x1, y0), (1, -1, x0, y1), (-1, -1, x1, y1)]:
+        draw.line((ox, oy, ox + sx * length, oy), fill=dark, width=width + 2)
+        draw.line((ox, oy, ox, oy + sy * length), fill=dark, width=width + 2)
+        draw.line((ox, oy, ox + sx * length, oy), fill=color, width=width)
+        draw.line((ox, oy, ox, oy + sy * length), fill=color, width=width)
 
 
 def cooking_room_bg() -> None:
@@ -307,6 +400,37 @@ def fish_icon_sheet() -> None:
     ]
     cell_w, cell_h = 192, 88
     img = Image.new("RGBA", (cell_w, cell_h * len(species)), (0, 0, 0, 0))
+
+    if COOK_SELECT_REFERENCE.exists():
+        source = Image.open(COOK_SELECT_REFERENCE).convert("RGBA")
+        reference_specs = [
+            ((80, 220, 250, 274), 1.05, 1.04, 1.08),
+            ((78, 676, 252, 733), 0.72, 0.76, 1.12),
+            ((75, 492, 254, 550), 1.05, 1.03, 1.08),
+            ((80, 312, 250, 366), 0.82, 1.06, 1.10),
+            ((80, 312, 250, 366), 1.05, 1.05, 1.08),
+            ((77, 402, 252, 458), 0.46, 0.62, 1.24),
+        ]
+        for i, (box, color, brightness, contrast) in enumerate(reference_specs):
+            fish = source.crop(box)
+            fish = ImageEnhance.Color(fish).enhance(color)
+            fish = ImageEnhance.Brightness(fish).enhance(brightness)
+            fish = ImageEnhance.Contrast(fish).enhance(contrast)
+            fish.thumbnail((166, 62), Image.Resampling.LANCZOS)
+            ox = 13 + (166 - fish.width) // 2
+            oy = i * cell_h + 13 + (62 - fish.height) // 2
+
+            shadow = Image.new("RGBA", fish.size, (0, 0, 0, 0))
+            sd = ImageDraw.Draw(shadow, "RGBA")
+            sd.rounded_rectangle((3, fish.height - 13, fish.width - 4, fish.height - 3), radius=6, fill=(0, 0, 0, 82))
+            shadow = shadow.filter(ImageFilter.GaussianBlur(4))
+            img.alpha_composite(shadow, (ox + 3, oy + 7))
+
+            mask = rounded_mask(fish.size, 4, 246).filter(ImageFilter.GaussianBlur(0.25))
+            img.alpha_composite(Image.composite(fish, Image.new("RGBA", fish.size, (0, 0, 0, 0)), mask), (ox, oy))
+        save(img, "fish_icon_sheet.png")
+        return
+
     draw = ImageDraw.Draw(img, "RGBA")
     for i, (_name, body, belly, accent, pattern) in enumerate(species):
         ox, oy = 10, i * cell_h + 6
@@ -394,24 +518,24 @@ def fish_row_frame() -> None:
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     shadow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow, "RGBA")
-    sd.rounded_rectangle((8, 14, w - 8, h - 8), radius=5, fill=(0, 0, 0, 112))
-    shadow = shadow.filter(ImageFilter.GaussianBlur(4))
+    sd.rounded_rectangle((8, 12, w - 8, h - 7), radius=4, fill=(0, 0, 0, 150))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(5))
     img.alpha_composite(shadow)
+    paper = reference_paper_texture((w - 16, h - 18), "f2dfad", 44, (76, 204, 458, 302), 0.52, 7.0)
+    paste_rounded(img, paper, (6, 5, w - 10, h - 12), 5)
     draw = ImageDraw.Draw(img, "RGBA")
 
-    # Fish rows in reference 01 read as substantial ingredient cards: a dark
-    # selected gutter, a large fish art bed, and a count area at the right.
-    draw.rounded_rectangle((4, 4, w - 6, h - 10), radius=6, fill=(241, 225, 187, 252), outline=(67, 36, 14, 255), width=4)
-    draw.rounded_rectangle((12, 12, w - 14, h - 20), radius=3, fill=(248, 235, 202, 238), outline=(222, 168, 75, 160), width=2)
-    draw.rectangle((20, 18, 36, h - 26), fill=(14, 46, 68, 220), outline=(216, 158, 69, 130), width=2)
-    draw.rectangle((44, 18, 158, h - 26), fill=(236, 219, 181, 185), outline=(151, 93, 38, 90), width=2)
-    draw.line((184, 18, 184, h - 26), fill=(78, 45, 20, 72), width=2)
-    draw.rectangle((262, 18, w - 24, h - 26), fill=(234, 215, 174, 126), outline=(151, 93, 38, 80), width=2)
-    for x in range(52, 152, 22):
-        draw.line((x, 22, x - 12, h - 30), fill=(255, 255, 255, 28), width=2)
-    for x in [30, w - 30]:
-        draw.line((x - 7, 14, x + 7, 14), fill=(255, 238, 172, 150), width=3)
-        draw.line((x, 8, x, 20), fill=(255, 238, 172, 150), width=3)
+    # Ingredient rows should read as heavy paper slips mounted in a dark wood frame.
+    draw.rounded_rectangle((5, 4, w - 10, h - 12), radius=5, outline=(49, 27, 13, 255), width=5)
+    draw.rounded_rectangle((15, 13, w - 20, h - 22), radius=3, outline=(230, 178, 78, 205), width=2)
+    draw.rectangle((19, 17, 34, h - 26), fill=(10, 39, 64, 235), outline=(48, 28, 13, 230), width=2)
+    draw.rectangle((42, 17, 178, h - 26), fill=(238, 222, 185, 92), outline=(122, 77, 35, 86), width=2)
+    draw.rectangle((268, 17, w - 24, h - 26), fill=(245, 226, 181, 64), outline=(122, 77, 35, 68), width=1)
+    draw.line((204, 16, 204, h - 25), fill=(78, 45, 20, 80), width=2)
+    draw.line((262, 16, 262, h - 25), fill=(78, 45, 20, 52), width=1)
+    for x in range(52, 178, 24):
+        draw.line((x, 22, x - 12, h - 30), fill=(255, 255, 255, 35), width=2)
+    draw_corner_brackets(draw, (18, 15, w - 22, h - 25), (246, 198, 83, 205), (51, 29, 13, 235), 16, 2)
     save(img, "fish_row_frame.png")
 
 
@@ -460,6 +584,21 @@ def dish_icon_sheet() -> None:
 
 def dish_feature() -> None:
     w, h = 620, 330
+    if COOK_SELECT_REFERENCE.exists():
+        source = Image.open(COOK_SELECT_REFERENCE).convert("RGBA")
+        crop = source.crop((1038, 222, 1512, 504))
+        crop = ImageEnhance.Color(crop).enhance(1.06)
+        crop = ImageEnhance.Contrast(crop).enhance(1.08)
+        crop = ImageEnhance.Sharpness(crop).enhance(1.08)
+        img = crop.resize((w, h), Image.Resampling.LANCZOS)
+        glaze = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+        gd = ImageDraw.Draw(glaze, "RGBA")
+        gd.rectangle((0, 0, w, 18), fill=(255, 244, 214, 38))
+        gd.rectangle((0, h - 22, w, h), fill=(48, 25, 12, 42))
+        img.alpha_composite(glaze)
+        save(img, "dish_feature_aji_shioyaki.png")
+        return
+
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img, "RGBA")
     draw.rounded_rectangle((18, 22, w - 18, h - 22), radius=16, fill=(104, 65, 34, 245), outline=(225, 176, 96, 230), width=5)
@@ -621,11 +760,15 @@ def recipe_selected_card_frame() -> None:
     draw.rounded_rectangle((30, 30, w - 38, h - 42), radius=4, outline=(255, 250, 199, 170), width=2)
     for x in range(34, w - 42, 32):
         draw.line((x, 36, x - 28, h - 48), fill=(255, 255, 255, 24), width=2)
+    paper = reference_paper_texture((w - 54, h - 58), "f7e4ad", 72, (496, 204, 650, 438), 0.46, 6.0)
+    paste_rounded(img, paper, (27, 27, w - 35, h - 35), 5, 210)
     # Strong corner ornaments make the selected card read as the active recipe.
     for x, y, sx, sy in [(18, 18, 1, 1), (w - 42, 18, -1, 1), (18, h - 52, 1, -1), (w - 42, h - 52, -1, -1)]:
         draw.rectangle((x, y, x + 18, y + 18), fill=(255, 213, 75, 255), outline=(83, 43, 10, 255), width=2)
         draw.line((x + 9, y - 9 * sy, x + 9, y + 27 * sy), fill=(255, 246, 174, 190), width=3)
         draw.line((x - 9 * sx, y + 9, x + 27 * sx, y + 9), fill=(255, 246, 174, 190), width=3)
+    draw.rounded_rectangle((30, 50, w - 38, 154), radius=5, fill=(255, 243, 203, 18), outline=(93, 55, 25, 42), width=1)
+    draw.rounded_rectangle((44, h - 56, w - 52, h - 32), radius=4, fill=(246, 224, 176, 8), outline=(228, 174, 77, 24), width=1)
     for x, y in [(48, 50), (232, 56), (50, 172), (226, 166)]:
         draw.line((x - 5, y, x + 5, y), fill=(255, 247, 186, 175), width=2)
         draw.line((x, y - 5, x, y + 5), fill=(255, 247, 186, 175), width=2)
@@ -642,14 +785,13 @@ def cook_button_frame() -> None:
     img.alpha_composite(shadow)
     draw = ImageDraw.Draw(img, "RGBA")
 
-    # Primary COOK_SELECT action button: navy enamel, gold trim, and a left
-    # icon well for the pot/fire drawing done by Godot.
-    draw.rounded_rectangle((8, 8, w - 14, h - 16), radius=9, fill=(7, 32, 58, 255), outline=(57, 32, 14, 255), width=5)
-    draw.rounded_rectangle((20, 18, w - 26, h - 26), radius=6, fill=(12, 58, 96, 246), outline=(255, 198, 75, 230), width=3)
-    draw.rectangle((28, 24, w - 36, 38), fill=(34, 105, 151, 110))
-    draw.line((30, h - 31, w - 38, h - 31), fill=(2, 15, 30, 145), width=3)
-    draw.rounded_rectangle((34, 22, 92, h - 30), radius=8, fill=(5, 22, 38, 142), outline=(255, 213, 87, 150), width=2)
-    draw.line((108, 22, 108, h - 30), fill=(255, 213, 87, 72), width=2)
+    # Primary COOK_SELECT action button: a chunky navy plank like the reference CTA.
+    draw.rounded_rectangle((7, 7, w - 13, h - 15), radius=8, fill=(50, 29, 12, 255), outline=(28, 17, 8, 255), width=5)
+    draw.rounded_rectangle((18, 17, w - 24, h - 25), radius=5, fill=(9, 38, 67, 255), outline=(255, 207, 83, 245), width=4)
+    draw.rectangle((28, 24, w - 34, 40), fill=(37, 113, 163, 126))
+    draw.line((30, h - 31, w - 38, h - 31), fill=(1, 10, 24, 170), width=3)
+    draw.rounded_rectangle((32, 20, 96, h - 28), radius=7, fill=(6, 24, 41, 185), outline=(255, 224, 105, 190), width=2)
+    draw.line((112, 21, 112, h - 30), fill=(255, 213, 87, 104), width=2)
     for x in range(122, w - 60, 42):
         draw.line((x, 24, x - 26, h - 32), fill=(255, 255, 255, 22), width=2)
     for x, y in [(20, 18), (w - 42, 18), (20, h - 48), (w - 42, h - 48)]:
@@ -1463,10 +1605,66 @@ def meal_dish_card_frame() -> None:
 
 
 def frame_assets() -> None:
+    def save_recipe_grid_frame() -> None:
+        size = (460, 560)
+        img = Image.new("RGBA", size, (0, 0, 0, 0))
+        shadow = Image.new("RGBA", size, (0, 0, 0, 0))
+        sd = ImageDraw.Draw(shadow, "RGBA")
+        sd.rounded_rectangle((14, 16, size[0] - 8, size[1] - 6), radius=13, fill=(0, 0, 0, 130))
+        img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(5)))
+        draw = ImageDraw.Draw(img, "RGBA")
+        draw.rounded_rectangle((8, 8, size[0] - 16, size[1] - 18), radius=10, fill=(42, 25, 13, 255), outline=(21, 13, 8, 255), width=5)
+        draw.rounded_rectangle((20, 20, size[0] - 28, size[1] - 30), radius=7, fill=(15, 43, 66, 248), outline=(229, 170, 75, 210), width=3)
+        paper = reference_paper_texture((size[0] - 64, size[1] - 84), "ead8ad", 93, (496, 204, 1002, 752), 0.38, 9.0)
+        paste_rounded(img, paper, (32, 54, size[0] - 32, size[1] - 34), 6, 236)
+        draw.rounded_rectangle((32, 54, size[0] - 32, size[1] - 34), radius=6, outline=(95, 57, 26, 130), width=2)
+        for x in [154, 306]:
+            draw.line((x, 64, x, size[1] - 46), fill=(93, 55, 24, 44), width=2)
+        draw.line((44, 302, size[0] - 44, 302), fill=(93, 55, 24, 45), width=2)
+        draw_corner_brackets(draw, (22, 22, size[0] - 30, size[1] - 32), (234, 182, 82, 215), (32, 19, 9, 245), 24, 3)
+        save(img, "recipe_grid_frame.png")
+
+    def save_recipe_card_frame() -> None:
+        size = (280, 220)
+        img = Image.new("RGBA", size, (0, 0, 0, 0))
+        shadow = Image.new("RGBA", size, (0, 0, 0, 0))
+        sd = ImageDraw.Draw(shadow, "RGBA")
+        sd.rounded_rectangle((14, 16, size[0] - 10, size[1] - 8), radius=10, fill=(0, 0, 0, 108))
+        img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(4)))
+        paper = reference_paper_texture((size[0] - 24, size[1] - 28), "f0dcaa", 95, (496, 204, 650, 438), 0.48, 6.0)
+        paste_rounded(img, paper, (8, 8, size[0] - 16, size[1] - 20), 8)
+        draw = ImageDraw.Draw(img, "RGBA")
+        draw.rounded_rectangle((7, 7, size[0] - 16, size[1] - 20), radius=8, outline=(70, 40, 18, 255), width=5)
+        draw.rounded_rectangle((20, 20, size[0] - 28, size[1] - 34), radius=5, outline=(219, 166, 74, 165), width=2)
+        draw.rounded_rectangle((30, 50, size[0] - 38, 154), radius=5, fill=(255, 243, 203, 16), outline=(92, 55, 28, 42), width=1)
+        draw.rounded_rectangle((46, size[1] - 56, size[0] - 54, size[1] - 32), radius=4, fill=(246, 224, 176, 8), outline=(160, 114, 52, 22), width=1)
+        draw_corner_brackets(draw, (18, 18, size[0] - 30, size[1] - 36), (223, 170, 75, 170), (58, 34, 16, 225), 15, 2)
+        save(img, "recipe_card_frame.png")
+
+    def save_dish_detail_frame() -> None:
+        size = (620, 560)
+        img = Image.new("RGBA", size, (0, 0, 0, 0))
+        shadow = Image.new("RGBA", size, (0, 0, 0, 0))
+        sd = ImageDraw.Draw(shadow, "RGBA")
+        sd.rounded_rectangle((14, 16, size[0] - 8, size[1] - 6), radius=14, fill=(0, 0, 0, 135))
+        img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(5)))
+        paper = reference_paper_texture((size[0] - 22, size[1] - 28), "f3e3bd", 96, (1032, 524, 1538, 792), 0.36, 12.0)
+        paste_rounded(img, paper, (8, 8, size[0] - 14, size[1] - 20), 11)
+        draw = ImageDraw.Draw(img, "RGBA")
+        draw.rounded_rectangle((7, 7, size[0] - 14, size[1] - 20), radius=11, outline=(66, 38, 18, 255), width=6)
+        draw.rounded_rectangle((22, 24, size[0] - 30, size[1] - 38), radius=7, outline=(224, 171, 79, 170), width=2)
+        draw.line((58, 86, size[0] - 58, 86), fill=(104, 66, 35, 78), width=3)
+        draw.rounded_rectangle((42, 108, size[0] - 44, 316), radius=6, fill=(92, 55, 28, 82), outline=(92, 55, 28, 116), width=2)
+        for y in [356, 414, 472]:
+            draw.rounded_rectangle((40, y, size[0] - 42, y + 42), radius=5, fill=(245, 224, 178, 112), outline=(116, 75, 40, 105), width=1)
+        draw_corner_brackets(draw, (23, 24, size[0] - 30, size[1] - 38), (231, 177, 82, 210), (52, 30, 14, 240), 24, 3)
+        save(img, "dish_detail_frame.png")
+
+    save_recipe_grid_frame()
+    save_recipe_card_frame()
+    save_dish_detail_frame()
+
     specs = [
-        ("recipe_grid_frame.png", (460, 560), rgba("ead9b2"), rgba("59371c"), rgba("f4c56b")),
-        ("recipe_card_frame.png", (280, 220), rgba("f4e5bf"), rgba("59371c"), rgba("f4c56b")),
-        ("dish_detail_frame.png", (620, 560), rgba("f5e8c8"), rgba("59371c"), rgba("f4c56b")),
         ("meal_result_frame.png", (760, 240), rgba("102840", 238), rgba("59371c"), rgba("f4c56b")),
         ("level_up_frame.png", (680, 460), rgba("102840", 248), rgba("b47a2e"), rgba("ffe0a0")),
         ("status_card_frame.png", (320, 120), rgba("f4e7c9"), rgba("59371c"), rgba("d8a452")),
