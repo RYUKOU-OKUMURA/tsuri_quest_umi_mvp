@@ -18,6 +18,7 @@ const DISH_FEATURE_FRY := "res://assets/showcase/cooking/dish_feature_fry.png"
 const RECIPE_GRID_FRAME := "res://assets/showcase/cooking/recipe_grid_frame.png"
 const RECIPE_CARD_FRAME := "res://assets/showcase/cooking/recipe_card_frame.png"
 const RECIPE_SELECTED_CARD_FRAME := "res://assets/showcase/cooking/recipe_selected_card_frame.png"
+const RECIPE_DISH_THUMB_FRAME := "res://assets/showcase/cooking/recipe_dish_thumb_frame.png"
 const RECIPE_MATERIAL_STRIP_FRAME := "res://assets/showcase/cooking/recipe_material_strip_frame.png"
 const RECIPE_TO_DETAIL_ARROW := "res://assets/showcase/cooking/recipe_to_detail_arrow.png"
 const DISH_DETAIL_FRAME := "res://assets/showcase/cooking/dish_detail_frame.png"
@@ -1077,12 +1078,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title.clip_text = true
 	box.add_child(title)
-	var image := TextureRect.new()
-	image.texture = _featured_dish_texture(recipe_id)
-	image.custom_minimum_size = Vector2(0, 124)
-	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	image.modulate = Color(0.46, 0.42, 0.36, 0.82) if locked or unavailable else Color.WHITE
+	var image := _recipe_card_dish_image(recipe_id, locked or unavailable)
 	box.add_child(image)
 	var stars := make_shadow_label(
 		_recipe_star_text(recipe, locked),
@@ -1147,12 +1143,7 @@ func _make_recipe_book_card() -> PanelContainer:
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title.clip_text = true
 	box.add_child(title)
-	var image := TextureRect.new()
-	image.texture = _recipe_icon("locked")
-	image.custom_minimum_size = Vector2(0, 124)
-	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	image.modulate = Color(0.62, 0.58, 0.50, 0.88)
+	var image := _recipe_card_dish_image("Book", true, _recipe_icon("locked"))
 	box.add_child(image)
 	var stars := make_shadow_label("☆☆☆", 13, Color("#d0c2a3"), 2, Color("#4c2b0b"))
 	stars.custom_minimum_size = Vector2(0.0, 18.0)
@@ -1175,6 +1166,33 @@ func _make_recipe_book_card() -> PanelContainer:
 	footer.clip_text = true
 	material_row.add_child(footer)
 	return card
+
+
+func _recipe_card_dish_image(
+	recipe_id: String, muted: bool, texture_override: Texture2D = null
+) -> PanelContainer:
+	var thumb := _texture_panel_box(
+		RECIPE_DISH_THUMB_FRAME,
+		18,
+		_style_box(Color("#78502b"), Color("#4d2d15"), Color("#d9a45a"), 2, 4),
+		5.0,
+		3.0
+	)
+	thumb.name = "RecipeDishThumb_%s" % recipe_id
+	thumb.custom_minimum_size = Vector2(0.0, 104.0)
+	thumb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var image := TextureRect.new()
+	image.name = "RecipeDishImage_%s" % recipe_id
+	image.texture = texture_override if texture_override != null else _featured_dish_texture(recipe_id)
+	image.custom_minimum_size = Vector2(0.0, 98.0)
+	image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	image.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	image.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	image.modulate = Color(0.54, 0.49, 0.40, 0.86) if muted else Color.WHITE
+	thumb.add_child(image)
+	return thumb
 
 
 func _add_recipe_material_badge(parent: Container, recipe_id: String) -> HBoxContainer:

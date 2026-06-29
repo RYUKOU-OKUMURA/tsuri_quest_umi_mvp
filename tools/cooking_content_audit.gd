@@ -65,6 +65,7 @@ func _audit_required_assets() -> void:
 		"res://assets/showcase/cooking/recipe_grid_frame.png",
 		"res://assets/showcase/cooking/recipe_card_frame.png",
 		"res://assets/showcase/cooking/recipe_selected_card_frame.png",
+		"res://assets/showcase/cooking/recipe_dish_thumb_frame.png",
 		"res://assets/showcase/cooking/recipe_material_strip_frame.png",
 		"res://assets/showcase/cooking/recipe_to_detail_arrow.png",
 		"res://assets/showcase/cooking/dish_detail_frame.png",
@@ -113,6 +114,7 @@ func _audit_required_assets() -> void:
 		"res://assets/showcase/cooking/recipe_grid_frame.png": Vector2i(460, 560),
 		"res://assets/showcase/cooking/recipe_card_frame.png": Vector2i(280, 220),
 		"res://assets/showcase/cooking/recipe_selected_card_frame.png": Vector2i(280, 220),
+		"res://assets/showcase/cooking/recipe_dish_thumb_frame.png": Vector2i(260, 170),
 		"res://assets/showcase/cooking/recipe_material_strip_frame.png": Vector2i(240, 54),
 		"res://assets/showcase/cooking/recipe_to_detail_arrow.png": Vector2i(96, 220),
 		"res://assets/showcase/cooking/dish_detail_frame.png": Vector2i(620, 560),
@@ -222,6 +224,14 @@ func _audit_cook_select() -> void:
 	_expect_named_node("COOK_SELECT", screen, "FishSectionRibbon")
 	_expect_named_node("COOK_SELECT", screen, "RecipeSectionRibbon")
 	_expect_named_node("COOK_SELECT", screen, "RecipeCard_salt_grill")
+	_expect_named_node("COOK_SELECT", screen, "RecipeDishThumb_salt_grill")
+	_expect_named_node("COOK_SELECT", screen, "RecipeDishImage_salt_grill")
+	_expect_texture_rect_path(
+		"COOK_SELECT",
+		screen,
+		"RecipeDishImage_salt_grill",
+		"res://assets/showcase/cooking/dish_feature_aji_shioyaki.png"
+	)
 	_expect_named_node("COOK_SELECT", screen, "RecipeMaterialBadge_salt_grill")
 	_expect_named_node("COOK_SELECT", screen, "RecipeMaterialBadge_sashimi")
 	_expect_named_node("COOK_SELECT", screen, "RecipeMaterialBadge_simmered")

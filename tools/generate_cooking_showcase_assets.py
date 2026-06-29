@@ -1789,6 +1789,27 @@ def frame_assets() -> None:
         draw_corner_brackets(draw, (18, 18, size[0] - 30, size[1] - 36), (223, 170, 75, 170), (58, 34, 16, 225), 15, 2)
         save(img, "recipe_card_frame.png")
 
+    def save_recipe_dish_thumb_frame() -> None:
+        size = (260, 170)
+        img = Image.new("RGBA", size, (0, 0, 0, 0))
+        shadow = Image.new("RGBA", size, (0, 0, 0, 0))
+        sd = ImageDraw.Draw(shadow, "RGBA")
+        sd.rounded_rectangle((10, 12, size[0] - 8, size[1] - 7), radius=8, fill=(0, 0, 0, 118))
+        img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(4)))
+        draw = ImageDraw.Draw(img, "RGBA")
+
+        # Dish thumbnail mat used inside recipe cards. It separates the food art
+        # from the parchment so card images read like finished inset assets.
+        draw.rounded_rectangle((7, 7, size[0] - 12, size[1] - 14), radius=7, fill=(87, 50, 25, 244), outline=(48, 27, 13, 255), width=4)
+        draw.rounded_rectangle((18, 18, size[0] - 24, size[1] - 28), radius=5, fill=(245, 227, 184, 38), outline=(224, 171, 79, 142), width=2)
+        draw.rounded_rectangle((28, 28, size[0] - 34, size[1] - 38), radius=4, fill=(59, 34, 18, 160), outline=(255, 231, 150, 58), width=1)
+        for x in range(36, size[0] - 34, 24):
+            draw.line((x, 30, x - 24, size[1] - 40), fill=(32, 19, 10, 45), width=2)
+            draw.line((x + 4, 31, x - 20, size[1] - 41), fill=(132, 82, 40, 36), width=1)
+        draw.line((24, size[1] - 32, size[0] - 30, size[1] - 32), fill=(255, 218, 106, 82), width=2)
+        draw_corner_brackets(draw, (16, 16, size[0] - 24, size[1] - 28), (238, 181, 77, 190), (53, 31, 15, 235), 14, 2)
+        save(img, "recipe_dish_thumb_frame.png")
+
     def save_dish_detail_frame() -> None:
         size = (620, 560)
         img = Image.new("RGBA", size, (0, 0, 0, 0))
@@ -1810,6 +1831,7 @@ def frame_assets() -> None:
 
     save_recipe_grid_frame()
     save_recipe_card_frame()
+    save_recipe_dish_thumb_frame()
     save_dish_detail_frame()
 
     specs = [

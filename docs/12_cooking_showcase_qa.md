@@ -54,6 +54,10 @@
 
 `reference/cooking_flow/01_cook_select_concept.png` の選択中料理カードは、通常カードの色違いではなく外周の強い金色発光でアクティブ状態を示している。途中実装では `recipe_card_frame.png` の同一素材を色替えしていたため、今回 `recipe_selected_card_frame.png` を追加し、選択中かつ利用可能な `RecipeCard_salt_grill` へ適用する。これにより、中央グリッド内の主役カード、`RecipeToDetailArrow`、右詳細の大きな料理写真が一続きの視線導線として読める。content/layout auditでは `recipe_selected_card_frame.png` の寸法と `RecipeCard_salt_grill` の表示サイズを検出する。
 
+### 今回の追記: COOK_SELECT 料理カードサムネイル額
+
+`reference/cooking_flow/01_cook_select_concept.png` の料理カードは、カード内の料理写真が小さくても皿全体とカード額が読める。途中実装では右詳細用の横長料理画像をカード内へ直接 `STRETCH_KEEP_ASPECT_COVERED` で入れていたため、狭い縦カード内で魚や皿が大きく切れて仮配置に見えやすかった。今回 `recipe_dish_thumb_frame.png` を追加し、`RecipeDishThumb_*` / `RecipeDishImage_*` としてカード内へ接続する。横長料理写真は専用の濃色マット付き額に収め、カード写真、星、素材バッジの読み順を維持する。content/layout auditでは `recipe_dish_thumb_frame.png` の寸法、`RecipeDishThumb_salt_grill`、`RecipeDishImage_salt_grill`、接続テクスチャを検出する。
+
 ### 今回の追記: COOK_SELECT 料理カード素材バッジ
 
 `reference/cooking_flow/01_cook_select_concept.png` の料理カード下部は、星評価と素材魚が小さいながらカード内の部品としてまとまっている。途中実装では素材魚アイコンと `×1` / `別素材` / `Lv.5` が紙面に直置きされ、仮UIの情報行に見えやすかった。今回 `recipe_material_strip_frame.png` を追加し、`RecipeMaterialBadge_*` として各料理カードの素材行をフレーム化する。左に濃紺の魚アイコンスロット、右に数量/状態スロットを持たせ、料理写真、星、素材条件の読み順をカード内で固定する。content/layout auditでは `recipe_material_strip_frame.png` の寸法、代表カードの `RecipeMaterialBadge_*` の存在と表示サイズを検出する。
@@ -98,6 +102,7 @@
   - 追記: `level_stat_row_frame.png` をLEVEL_UP_OVERLAYの能力上昇行用素材として追加。寸法は420x76で、アイコン枠、値の区切り、矢印、増加値側の強調を1枚絵として持つ。`LevelStatRowEnergy` / `LevelStatRowReel` / `LevelStatRowTechnique` / `LevelStatRowFocus` として接続し、content/layout auditで存在と最小サイズを固定する。
   - 追記: `recipe_to_detail_arrow.png` をCOOK_SELECTの選択料理から右詳細へ向かう矢印素材として追加。寸法は96x220で、金色矢印、外縁、発光、星アクセントを1枚絵として持つ。`RecipeToDetailArrow` として接続し、content/layout auditで存在と最小サイズを固定する。
   - 追記: `recipe_selected_card_frame.png` をCOOK_SELECTの選択中料理カード用素材として追加。寸法は280x220で、金色発光、強い外枠、角飾り、星アクセントを1枚絵として持つ。`RecipeCard_salt_grill` の選択状態に接続し、content/layout auditで素材と表示サイズを固定する。
+  - 追記: `recipe_dish_thumb_frame.png` をCOOK_SELECT料理カード内のサムネイル額として追加。寸法は260x170で、濃色マット、金縁、角飾りを1枚絵として持つ。`RecipeDishThumb_*` / `RecipeDishImage_*` として接続し、カード内の料理写真が大きく切れた状態へ戻らないようcontent/layout auditで固定する。
   - 追記: `recipe_material_strip_frame.png` をCOOK_SELECTの料理カード下部素材バッジとして追加。寸法は240x54で、左の濃紺魚アイコンスロット、右の数量/状態スロット、紙面/金具を1枚絵として持つ。`RecipeMaterialBadge_*` として接続し、content/layout auditで代表カードの存在と表示サイズを固定する。
   - 追記: `cook_button_frame.png` をCOOK_SELECT右詳細の主ボタン用素材として追加。寸法は360x82で、濃紺面、金縁、左アイコン置き場、ハイライトを1枚絵として持つ。`CookButton` の normal/hover/pressed/disabled/focus へ接続し、content/layout auditで必須素材と表示サイズを固定する。
   - 追記: `cook_action_runway_frame.png` をCOOK_SELECT右詳細下部の調理アクション帯として追加。寸法は560x88で、上段の食事結果キュー、下段の濃紺CTAソケット、紙面/金具を1枚絵として持つ。`CookActionRunway` として接続し、content/layout auditで必須素材と表示サイズを固定する。
@@ -198,7 +203,7 @@
 今回の明確な実装ゴールは、`reference/cooking_flow/01_cook_select_concept.png` と `/tmp/tsuri_cooking_select.png` を横並びで見たときに、魚リスト、料理カード、右詳細、調理ボタン、下部バーが「仮UIの枠に文字と小画像を置いた状態」ではなく、「完成素材が載った調理選択画面」として読めるところまで引き上げること。完成基準は水中ファイト画面と同じく、コード描画だけに見える要素を減らし、参照画像由来または専用生成PNGの紙・木・金具・料理/魚素材を画面上の主役として使うこと。
 
 - 実装済み: `fish_icon_sheet.png` は参照01内の魚カットを優先して使い、左魚リストの魚絵を大きめに表示する。`fish_row_frame.png` は紙質感、濃紺ガター、金具、数量エリアを持つ素材に更新し、魚名と `× n匹` が横クリップしない幅にした。今回、魚リストを6行表示へ寄せ、魚絵の表示幅を広げて在庫表ではなく素材カードとして読ませる。
-- 実装済み: `recipe_grid_frame.png`、`recipe_card_frame.png`、`recipe_selected_card_frame.png` は参照紙テクスチャを混ぜた素材に更新し、料理カード内の料理絵を `STRETCH_KEEP_ASPECT_COVERED` で大きく見せる。カード下部は `recipe_material_strip_frame.png` を使う `RecipeMaterialBadge_*` に `RecipeMaterialIcon_*` の素材魚アイコンと短い状態表示を収め、EXP情報は右詳細の `CookDetailExpRow` に集約した。
+- 実装済み: `recipe_grid_frame.png`、`recipe_card_frame.png`、`recipe_selected_card_frame.png` は参照紙テクスチャを混ぜた素材に更新し、料理カード内の料理絵は `recipe_dish_thumb_frame.png` の濃色マット付き額へ収める。カード下部は `recipe_material_strip_frame.png` を使う `RecipeMaterialBadge_*` に `RecipeMaterialIcon_*` の素材魚アイコンと短い状態表示を収め、EXP情報は右詳細の `CookDetailExpRow` に集約した。
 - 実装済み: 右詳細は `dish_feature_aji_shioyaki.png` を参照01の大判料理カットから生成し、`SelectedDishFeatureImage` をやや大きく、詳細3行を少し太くした。`dish_detail_frame.png`、`cook_button_frame.png`、`cook_action_runway_frame.png` も紙面、青い金縁CTA、下部アクション帯が読める素材に更新した。
 - 実装済み: 下部の `現在の準備` は `prep_summary_bar_frame.png` と `prep_summary_card_frame.png` を使う `CurrentPrepBar` / `PrepSummaryCard*` へ置き換え、参照01の下部ステータスバーに近い紙カード群へ寄せた。
 - 追記: `tools/cooking_preview.gd` の `COOK_SELECT` キャプチャは参照01と比較しやすいアジ選択状態に固定した。スクショ用の所持魚合計は容量内の `19 / 20` に収め、下部バーが異常値表示に見えないようにする。実フロー/報酬状態の検証シードは別に維持する。
