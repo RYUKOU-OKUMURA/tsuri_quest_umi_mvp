@@ -52,7 +52,8 @@ func _audit_cook_select() -> void:
 	_expect_named_control_size("COOK_SELECT", screen, "RecipeDishImage_salt_grill", Vector2(70.0, 54.0))
 	_expect_named_control_size("COOK_SELECT", screen, "RecipeMaterialBadge_salt_grill", Vector2(70.0, 22.0))
 	_expect_named_control_size("COOK_SELECT", screen, "RecipeMaterialBadge_sashimi", Vector2(70.0, 22.0))
-	_expect_named_control_size("COOK_SELECT", screen, "RecipeMaterialBadge_Book", Vector2(70.0, 22.0))
+	_expect_named_control_size("COOK_SELECT", screen, "RecipeMaterialBadge_PreviewMeuniere", Vector2(70.0, 22.0))
+	_expect_named_control_size("COOK_SELECT", screen, "RecipeBookButton", Vector2(240.0, 34.0))
 	_expect_named_control_size("COOK_SELECT", screen, "RecipeToDetailArrow", Vector2(28.0, 160.0))
 	_expect_named_control_size("COOK_SELECT", screen, "SelectedDishFeatureImage", Vector2(260.0, 90.0))
 	_expect_named_control_size("COOK_SELECT", screen, "CookDetailMaterialRow", Vector2(220.0, 34.0))
@@ -353,8 +354,8 @@ func _audit_recipe_grid_shape(state: String, root: Node) -> void:
 	for child in grid.get_children():
 		if child is Control and String((child as Control).name).begins_with("RecipeCard_"):
 			card_count += 1
-	if card_count < 5:
-		_failures.append("%s: RecipeGrid should expose at least 5 recipe cards, got %d." % [state, card_count])
+	if card_count < 6:
+		_failures.append("%s: RecipeGrid should expose at least 6 recipe cards, got %d." % [state, card_count])
 
 
 func _expect_named_control_size(

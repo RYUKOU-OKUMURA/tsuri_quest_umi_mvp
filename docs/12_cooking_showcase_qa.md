@@ -216,7 +216,7 @@
 - 追記: 下部バーはカード高を上げ、アイコンソケットと値レールを再調整した。`CurrentPrepTitle` は食事結果文言が横クリップしない幅を維持し、通常時の `PrepSummaryCard*` は参照01の下部カードに近い大きめのアイコンと数値を優先する。
 - 追記: `tools/cooking_preview.gd` の `COOK_SELECT` キャプチャは参照01と比較しやすいアジ選択状態に固定した。スクショ用の所持魚合計は容量内の `19 / 20` に収め、下部バーが異常値表示に見えないようにする。実フロー/報酬状態の検証シードは別に維持する。
 - 追記: 魚行は調理専用の `fish_icon_sheet.png` を優先し、参照01由来の魚カットをリスト内で使う。数量欄は右側に確保し、`×12匹` などが折れずに読める状態を維持する。`FishRowIsaki` もcontent/layout audit対象にして、6行密度を維持する。
-- 追記: ロック中レシピは灰色の南京錠だけに戻さず、料理大判画像を暗く表示する。`RecipeCard_Book` は `dish_icon_sheet.png` の本/紙面アートを使い、未実装プレースホルダーではなく図鑑導線として見せる。
+- 追記: ロック中レシピは灰色の南京錠だけに戻さず、料理大判画像を暗く表示する。6枚目の空き枠は `RecipeCard_PreviewMeuniere` として料理プレビューカードにし、`RecipeBookButton` をグリッド下へ分離することで、参照01の「6枚の料理カード＋料理図鑑を見る」構成へ寄せた。
 - 追記: `cooking_room_bg.png` は参照01右側の港窓/ランタン/植物の細長いサンプルを中央カードと右詳細の接続帯へ合成し、`RecipeToDetailArrow` 周辺が暗い板だけに見えないようにした。
 - まだ残る差分: 中央カード下部は素材バッジ化済みだが、最終本番アートに比べると素材魚アイコンそのものの描き込みはまだ軽い。ヘッダーのリッチさ、料理カード下部のアイコン描き込み、`CookActionRunway` 内の絵柄密度と余白の最終調整は次パス候補。
 - 通過ゲート: `HOME=/private/tmp/tsuri_home tools/cooking_verify.sh`、`HOME=/private/tmp/tsuri_home tools/validate_project.sh`、`HOME=/private/tmp/tsuri_home tools/cooking_visual_qa.sh`、`git diff --check`。

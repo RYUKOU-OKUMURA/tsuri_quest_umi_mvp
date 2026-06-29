@@ -175,6 +175,9 @@ func _audit_cook_select() -> void:
 			"別素材",
 			"？？？",
 			"Lv.5",
+			"ヒラメのムニエル",
+			"Lv.6",
+			"料理図鑑を見る",
 			"×1",
 			"必要な材料",
 			"アジ ×1",
@@ -237,11 +240,13 @@ func _audit_cook_select() -> void:
 	_expect_named_node("COOK_SELECT", screen, "RecipeMaterialBadge_salt_grill")
 	_expect_named_node("COOK_SELECT", screen, "RecipeMaterialBadge_sashimi")
 	_expect_named_node("COOK_SELECT", screen, "RecipeMaterialBadge_simmered")
-	_expect_named_node("COOK_SELECT", screen, "RecipeMaterialBadge_Book")
+	_expect_named_node("COOK_SELECT", screen, "RecipeMaterialBadge_PreviewMeuniere")
 	_expect_named_node("COOK_SELECT", screen, "RecipeMaterialIcon_salt_grill")
 	_expect_named_node("COOK_SELECT", screen, "RecipeMaterialIcon_sashimi")
 	_expect_named_node("COOK_SELECT", screen, "RecipeMaterialIcon_simmered")
-	_expect_named_node("COOK_SELECT", screen, "RecipeMaterialIcon_Book")
+	_expect_named_node("COOK_SELECT", screen, "RecipeMaterialIcon_PreviewMeuniere")
+	_expect_named_node("COOK_SELECT", screen, "RecipeCard_PreviewMeuniere")
+	_expect_named_node("COOK_SELECT", screen, "RecipeBookButton")
 	_expect_named_node("COOK_SELECT", screen, "RecipeToDetailArrow")
 	_expect_named_node("COOK_SELECT", screen, "CookDetailMaterialRow")
 	_expect_named_node("COOK_SELECT", screen, "CookDetailExpRow")

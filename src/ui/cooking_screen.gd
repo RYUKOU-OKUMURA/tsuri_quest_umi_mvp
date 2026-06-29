@@ -545,6 +545,15 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	_recipe_grid.add_theme_constant_override("h_separation", 7)
 	_recipe_grid.add_theme_constant_override("v_separation", 9)
 	recipe_layout.add_child(_recipe_grid)
+	var recipe_book_button := make_button("料理図鑑を見る", _show_status_overlay, 280, false)
+	recipe_book_button.name = "RecipeBookButton"
+	recipe_book_button.custom_minimum_size = Vector2(286.0, 40.0)
+	recipe_book_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	recipe_book_button.icon = _recipe_icon("locked")
+	recipe_book_button.expand_icon = true
+	recipe_book_button.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_apply_recipe_book_button_style(recipe_book_button)
+	recipe_layout.add_child(recipe_book_button)
 
 	_recipe_to_detail_arrow = TextureRect.new()
 	_recipe_to_detail_arrow.name = "RecipeToDetailArrow"
@@ -1056,7 +1065,7 @@ func _rebuild_recipe_cards() -> void:
 			selected_available = true
 		_recipe_grid.add_child(_make_recipe_card(recipe, locked, unavailable))
 	for _i in range(maxi(0, 6 - entries.size())):
-		_recipe_grid.add_child(_make_recipe_book_card())
+		_recipe_grid.add_child(_make_recipe_preview_card())
 	if _selected_recipe_id.is_empty() or not selected_available:
 		_selected_recipe_id = first_available
 	_refresh_recipe_card_styles()
@@ -1147,12 +1156,12 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	return card
 
 
-func _make_recipe_book_card() -> PanelContainer:
+func _make_recipe_preview_card() -> PanelContainer:
 	var card := PanelContainer.new()
-	card.name = "RecipeCard_Book"
+	card.name = "RecipeCard_PreviewMeuniere"
 	card.custom_minimum_size = Vector2(136, 204)
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	card.self_modulate = Color(0.72, 0.66, 0.54, 1.0)
+	card.self_modulate = Color(0.78, 0.72, 0.62, 1.0)
 	card.add_theme_stylebox_override(
 		"panel",
 		_texture_style_box(
@@ -1166,30 +1175,30 @@ func _make_recipe_book_card() -> PanelContainer:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
 	card.add_child(box)
-	var title := make_shadow_label("料理図鑑", 15, Color("#251c12"), 1, Color("#fff3cf"))
+	var title := make_shadow_label("ヒラメのムニエル", 12, Color("#251c12"), 1, Color("#fff3cf"))
 	title.custom_minimum_size = Vector2(0.0, 25.0)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title.clip_text = true
 	box.add_child(title)
-	var image := _recipe_card_dish_image("Book", true, _recipe_icon("locked"))
+	var image := _recipe_card_dish_image("PreviewMeuniere", true, _featured_dish_texture("fry"))
 	box.add_child(image)
-	var stars := make_shadow_label("☆☆☆", 13, Color("#d0c2a3"), 2, Color("#4c2b0b"))
+	var stars := make_shadow_label("★★", 13, Color("#d0c2a3"), 2, Color("#4c2b0b"))
 	stars.custom_minimum_size = Vector2(0.0, 18.0)
 	stars.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	stars.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	box.add_child(stars)
-	var material_row := _add_recipe_material_badge(box, "Book")
+	var material_row := _add_recipe_material_badge(box, "PreviewMeuniere")
 	var icon := TextureRect.new()
-	icon.name = "RecipeMaterialIcon_Book"
-	icon.texture = _recipe_icon("locked")
+	icon.name = "RecipeMaterialIcon_PreviewMeuniere"
+	icon.texture = _fish_icon("hirame")
 	icon.custom_minimum_size = Vector2(64.0, 26.0)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.modulate = Color(0.64, 0.58, 0.48, 1.0)
+	icon.modulate = Color(0.72, 0.66, 0.56, 1.0)
 	material_row.add_child(icon)
-	var footer := make_label("図鑑", 10, Color("#49351f"), 1, Color("#fff4cf"))
+	var footer := make_label("Lv.6", 10, Color("#49351f"), 1, Color("#fff4cf"))
 	footer.custom_minimum_size = Vector2(34.0, 22.0)
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	footer.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -1401,6 +1410,32 @@ func _apply_cook_button_style() -> void:
 	_cook_button.add_theme_color_override("font_hover_color", Color("#fff1ba"))
 	_cook_button.add_theme_color_override("font_pressed_color", Color("#f0c06b"))
 	_cook_button.add_theme_color_override("font_disabled_color", Color("#b6a68d"))
+
+
+func _apply_recipe_book_button_style(button: Button) -> void:
+	var normal_fallback := _style_box(Color("#123553"), Color("#3b2515"), Palette.GOLD_BRIGHT, 4, 6)
+	var hover_fallback := _style_box(Color("#1b496e"), Color("#3b2515"), Color("#ffe67a"), 4, 6)
+	var pressed_fallback := _style_box(Color("#0d2942"), Color("#2a1a10"), Palette.GOLD_DEEP, 4, 6)
+	button.add_theme_stylebox_override(
+		"normal",
+		_texture_style_box(COOK_BUTTON_FRAME, 22, normal_fallback, 52.0, 6.0)
+	)
+	button.add_theme_stylebox_override(
+		"hover",
+		_texture_style_box(COOK_BUTTON_FRAME, 22, hover_fallback, 52.0, 6.0)
+	)
+	button.add_theme_stylebox_override(
+		"pressed",
+		_texture_style_box(COOK_BUTTON_FRAME, 22, pressed_fallback, 52.0, 6.0)
+	)
+	button.add_theme_stylebox_override(
+		"focus",
+		_texture_style_box(COOK_BUTTON_FRAME, 22, hover_fallback, 52.0, 6.0)
+	)
+	button.add_theme_color_override("font_color", Palette.GOLD_BRIGHT)
+	button.add_theme_color_override("font_hover_color", Color("#fff1ba"))
+	button.add_theme_color_override("font_pressed_color", Color("#f0c06b"))
+	button.add_theme_font_size_override("font_size", 18)
 
 
 func _draw_cook_button_icon(button: Button) -> void:
