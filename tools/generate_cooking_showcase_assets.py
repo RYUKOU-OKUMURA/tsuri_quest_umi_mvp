@@ -863,10 +863,10 @@ def cook_detail_row_frame() -> None:
     # subtle studs and paper grain, not stacked generic form panels.
     draw.rounded_rectangle((6, 6, w - 8, h - 8), radius=6, outline=(82, 48, 22, 248), width=3)
     draw.rounded_rectangle((17, 11, 190, h - 12), radius=5, fill=(83, 50, 25, 242), outline=(47, 28, 14, 235), width=2)
-    draw.rounded_rectangle((205, 11, w - 22, h - 12), radius=4, fill=(255, 245, 215, 20), outline=(133, 82, 37, 24), width=1)
-    draw.line((202, 12, 202, h - 13), fill=(80, 47, 20, 112), width=2)
-    draw.line((220, 17, w - 42, 17), fill=(255, 250, 220, 34), width=1)
-    draw.line((220, h - 17, w - 42, h - 17), fill=(117, 73, 34, 40), width=2)
+    draw.rounded_rectangle((205, 11, w - 22, h - 12), radius=4, fill=(255, 245, 215, 6), outline=(133, 82, 37, 14), width=1)
+    draw.line((202, 12, 202, h - 13), fill=(80, 47, 20, 96), width=2)
+    draw.line((220, 17, w - 42, 17), fill=(255, 250, 220, 24), width=1)
+    draw.line((220, h - 17, w - 42, h - 17), fill=(117, 73, 34, 26), width=2)
     draw.line((210, 23, 218, 15), fill=(255, 232, 143, 88), width=1)
     draw.line((w - 38, 16, w - 48, h - 16), fill=(105, 65, 30, 46), width=1)
     for x, y in [(14, 11), (w - 30, 11), (14, h - 23), (w - 30, h - 23)]:
@@ -946,8 +946,8 @@ def prep_summary_bar_frame() -> None:
     draw.rounded_rectangle((3, 6, w - 7, h - 8), radius=6, outline=(67, 38, 16, 255), width=5)
     draw.line((18, 18, w - 20, 18), fill=(255, 210, 89, 132), width=2)
     draw.line((18, h - 20, w - 20, h - 20), fill=(109, 67, 27, 120), width=3)
-    draw.rounded_rectangle((54, 22, 222, h - 24), radius=5, fill=(255, 237, 187, 76), outline=(120, 73, 29, 86), width=1)
-    draw.rounded_rectangle((w - 118, 19, w - 20, h - 18), radius=4, fill=(117, 73, 31, 96), outline=(250, 197, 72, 96), width=2)
+    draw.rounded_rectangle((46, 20, 196, h - 22), radius=5, fill=(111, 76, 43, 118), outline=(75, 46, 22, 120), width=1)
+    draw.rounded_rectangle((w - 114, 18, w - 20, h - 18), radius=4, fill=(117, 73, 31, 120), outline=(250, 197, 72, 118), width=2)
     for x in range(248, w - 148, 236):
         draw.line((x, 20, x, h - 21), fill=(83, 49, 20, 92), width=2)
         draw.line((x + 5, 24, x + 5, h - 25), fill=(255, 236, 160, 52), width=1)
@@ -967,12 +967,13 @@ def prep_summary_card_frame() -> None:
     paste_rounded(img, paper, (6, 6, w - 8, h - 8), 6, 246)
     draw = ImageDraw.Draw(img, "RGBA")
 
-    # Small prep-state card with a fixed icon socket and a darker text rail.
+    # Small prep-state card with a fixed icon socket and clear paper value rail.
     draw.rounded_rectangle((6, 6, w - 8, h - 8), radius=6, outline=(82, 47, 20, 248), width=3)
-    draw.rounded_rectangle((17, 13, 66, h - 15), radius=4, fill=(8, 38, 61, 150), outline=(255, 211, 88, 132), width=2)
+    draw.rounded_rectangle((17, 12, 66, h - 14), radius=4, fill=(8, 38, 61, 118), outline=(255, 211, 88, 152), width=2)
     draw.line((82, 14, 82, h - 16), fill=(94, 57, 24, 112), width=2)
-    draw.rounded_rectangle((93, 14, w - 22, h - 16), radius=4, fill=(255, 240, 194, 64), outline=(142, 86, 35, 76), width=1)
-    draw.line((104, h - 20, w - 34, h - 20), fill=(122, 76, 34, 72), width=2)
+    draw.rounded_rectangle((93, 13, w - 22, h - 15), radius=4, fill=(255, 244, 210, 92), outline=(142, 86, 35, 52), width=1)
+    draw.line((104, h - 19, w - 34, h - 19), fill=(122, 76, 34, 58), width=2)
+    draw.line((104, 20, w - 34, 20), fill=(255, 252, 223, 42), width=1)
     for x, y in [(14, 12), (w - 28, 12), (14, h - 28), (w - 28, h - 28)]:
         draw.rectangle((x, y, x + 9, y + 9), fill=(232, 174, 68, 214), outline=(58, 32, 13, 228), width=1)
     save(img, "prep_summary_card_frame.png")

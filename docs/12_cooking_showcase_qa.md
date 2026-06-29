@@ -213,6 +213,7 @@
 - 実装済み: 右詳細は `dish_feature_aji_shioyaki.png` を参照01の大判料理カットから生成し、`SelectedDishFeatureImage` をやや大きくした。詳細3行は `cook_detail_row_frame.png` を使う `CookDetailMaterialRow` / `CookDetailExpRow` / `CookDetailEffectRow` へ置き換え、フォーム欄ではなく横長情報リボンとして読ませる。`dish_detail_frame.png`、`cook_button_frame.png`、`cook_action_runway_frame.png` も紙面、青い金縁CTA、下部アクション帯が読める素材に更新した。
 - 追記: 右詳細3行の値領域から強い斜線と入力欄風の囲いを削り、`CookDetailMaterialRow` / `CookDetailExpRow` / `CookDetailEffectRow` の主値を濃いインクで直接載せるようにした。`cook_button_frame.png` と `cook_action_runway_frame.png` も白い斜線を抑え、調理ボタン周辺の装飾より `調理する` の読みやすさを優先する。
 - 実装済み: 下部の `現在の準備` は `prep_summary_bar_frame.png` と `prep_summary_card_frame.png` を使う `CurrentPrepBar` / `PrepSummaryCard*` へ置き換え、参照01の下部ステータスバーに近い紙カード群へ寄せた。
+- 追記: 下部バーはカード高を上げ、アイコンソケットと値レールを再調整した。`CurrentPrepTitle` は食事結果文言が横クリップしない幅を維持し、通常時の `PrepSummaryCard*` は参照01の下部カードに近い大きめのアイコンと数値を優先する。
 - 追記: `tools/cooking_preview.gd` の `COOK_SELECT` キャプチャは参照01と比較しやすいアジ選択状態に固定した。スクショ用の所持魚合計は容量内の `19 / 20` に収め、下部バーが異常値表示に見えないようにする。実フロー/報酬状態の検証シードは別に維持する。
 - 追記: 魚行は調理専用の `fish_icon_sheet.png` を優先し、参照01由来の魚カットをリスト内で使う。数量欄は右側に確保し、`×12匹` などが折れずに読める状態を維持する。`FishRowIsaki` もcontent/layout audit対象にして、6行密度を維持する。
 - 追記: ロック中レシピは灰色の南京錠だけに戻さず、料理大判画像を暗く表示する。`RecipeCard_Book` は `dish_icon_sheet.png` の本/紙面アートを使い、未実装プレースホルダーではなく図鑑導線として見せる。

@@ -672,15 +672,15 @@ func _build_result_summary(layout: VBoxContainer) -> void:
 	)
 	result_panel.name = "CurrentPrepBar"
 	_result_panel = result_panel
-	result_panel.custom_minimum_size = Vector2(0, 70)
+	result_panel.custom_minimum_size = Vector2(0, 78)
 	layout.add_child(result_panel)
 	var result_layout := HBoxContainer.new()
 	result_layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	result_layout.add_theme_constant_override("separation", 8)
+	result_layout.add_theme_constant_override("separation", 6)
 	result_panel.add_child(result_layout)
-	_result_title = make_shadow_label("", 18, Palette.TEXT_BONE, 2, Color("#2b2117"))
+	_result_title = make_shadow_label("", 17, Palette.TEXT_BONE, 2, Color("#2b2117"))
 	_result_title.name = "CurrentPrepTitle"
-	_result_title.custom_minimum_size = Vector2(210.0, 0.0)
+	_result_title.custom_minimum_size = Vector2(198.0, 0.0)
 	_result_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_result_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_result_title.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -688,7 +688,7 @@ func _build_result_summary(layout: VBoxContainer) -> void:
 	result_layout.add_child(_result_title)
 	_result_body = HBoxContainer.new()
 	_result_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_result_body.add_theme_constant_override("separation", 6)
+	_result_body.add_theme_constant_override("separation", 7)
 	result_layout.add_child(_result_body)
 	_status_button = make_button("詳細", _show_status_overlay, 100, false)
 	_status_button.name = "CurrentPrepDetailButton"
@@ -743,20 +743,20 @@ func _add_detail_story_row(
 	parent.add_child(tile)
 
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
+	row.add_theme_constant_override("separation", 4)
 	tile.add_child(row)
 
 	var title_band := MarginContainer.new()
 	title_band.custom_minimum_size = Vector2(maxf(title_width, 176.0), 32)
-	title_band.add_theme_constant_override("margin_left", 6)
-	title_band.add_theme_constant_override("margin_right", 6)
+	title_band.add_theme_constant_override("margin_left", 4)
+	title_band.add_theme_constant_override("margin_right", 4)
 	row.add_child(title_band)
 	var title_row := HBoxContainer.new()
 	title_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	title_row.add_theme_constant_override("separation", 5)
+	title_row.add_theme_constant_override("separation", 4)
 	title_band.add_child(title_row)
 	var compact := title.length() > 6
-	title_row.add_child(_small_icon(icon_mode, accent, Vector2(20.0 if compact else 24.0, 0.0)))
+	title_row.add_child(_small_icon(icon_mode, accent, Vector2(20.0 if compact else 22.0, 0.0)))
 	var title_size := 11 if compact else 12
 	var title_label := make_shadow_label(title, title_size, Palette.TEXT_BONE, 1)
 	title_label.custom_minimum_size = Vector2(0, 30)
@@ -767,16 +767,20 @@ func _add_detail_story_row(
 	title_row.add_child(title_label)
 
 	var primary_size := 12 if compact else 15
-	var primary := make_label("", primary_size, Color("#21170f"))
+	var primary := make_shadow_label("", primary_size, Color("#21170f"), 1, Color("#fff3c8"))
 	primary.custom_minimum_size = Vector2(0, 34)
 	primary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	primary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	primary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	primary.autowrap_mode = TextServer.AUTOWRAP_OFF
 	primary.clip_text = true
 	row.add_child(primary)
 
-	var secondary := make_label("", primary_size, accent, 1, Color("#fff2cf"))
-	secondary.custom_minimum_size = Vector2(52 if compact else 110, 34)
+	var secondary_width := 52.0 if compact else 106.0
+	if node_name == "CookDetailEffectRow":
+		secondary_width = 42.0
+	var secondary := make_shadow_label("", primary_size, accent, 1, Color("#fff2cf"))
+	secondary.custom_minimum_size = Vector2(secondary_width, 34)
 	secondary.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	secondary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	secondary.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -1837,20 +1841,20 @@ func _prep_summary_card(
 	)
 	card.name = node_name
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.custom_minimum_size = Vector2(0, 38)
+	card.custom_minimum_size = Vector2(0, 48)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 6)
+	row.add_theme_constant_override("separation", 7)
 	card.add_child(row)
-	var icon := _small_icon(icon_mode, accent, Vector2(28.0, 28.0))
+	var icon := _small_icon(icon_mode, accent, Vector2(32.0, 32.0))
 	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(icon)
-	var title_label := make_shadow_label(title, 12, Color("#2b2117"), 1, Color("#fff2ca"))
-	title_label.custom_minimum_size = Vector2(48.0, 0.0)
+	var title_label := make_shadow_label(title, 13, Color("#2b2117"), 1, Color("#fff2ca"))
+	title_label.custom_minimum_size = Vector2(46.0, 0.0)
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title_label.clip_text = true
 	row.add_child(title_label)
-	var value_label := make_shadow_label(value, 13, Color("#17324d"), 1, Color("#fff5cf"))
+	var value_label := make_shadow_label(value, 15, Color("#17324d"), 1, Color("#fff5cf"))
 	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -1862,7 +1866,7 @@ func _prep_summary_card(
 
 func _set_result_summary_compact(compact: bool) -> void:
 	if _result_panel != null:
-		_result_panel.custom_minimum_size = Vector2(0, 70)
+		_result_panel.custom_minimum_size = Vector2(0, 78)
 	if _result_body != null:
 		_result_body.visible = not compact
 
