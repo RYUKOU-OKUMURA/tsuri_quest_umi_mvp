@@ -124,6 +124,29 @@ def reference_paper_texture(
     return Image.blend(base_texture, reference_variation, blend)
 
 
+def reference_background_patch(
+    size: tuple[int, int],
+    crop_box: tuple[int, int, int, int],
+    brightness: float = 0.76,
+    contrast: float = 1.08,
+    blur: float = 0.4,
+) -> Image.Image | None:
+    if not COOK_SELECT_REFERENCE.exists():
+        return None
+    source = Image.open(COOK_SELECT_REFERENCE).convert("RGBA")
+    crop = source.crop(crop_box)
+    scale = max(size[0] / crop.width, size[1] / crop.height)
+    resized = crop.resize((round(crop.width * scale), round(crop.height * scale)), Image.Resampling.BICUBIC)
+    left = max(0, (resized.width - size[0]) // 2)
+    top = max(0, (resized.height - size[1]) // 2)
+    patch = resized.crop((left, top, left + size[0], top + size[1]))
+    patch = ImageEnhance.Brightness(patch).enhance(brightness)
+    patch = ImageEnhance.Contrast(patch).enhance(contrast)
+    if blur > 0:
+        patch = patch.filter(ImageFilter.GaussianBlur(blur))
+    return patch
+
+
 def rounded_mask(size: tuple[int, int], radius: int, alpha: int = 255) -> Image.Image:
     mask = Image.new("L", size, 0)
     ImageDraw.Draw(mask).rounded_rectangle((0, 0, size[0] - 1, size[1] - 1), radius=radius, fill=alpha)
@@ -198,6 +221,23 @@ def cooking_room_bg() -> None:
         draw.line((956, y, 1155, y + int(math.sin(i) * 2)), fill=(199, 239, 238, 90), width=1)
     draw.line((1054, 118, 1054, 294), fill=(76, 45, 22, 220), width=6)
     draw.line((940, 208, 1170, 208), fill=(76, 45, 22, 220), width=6)
+
+    # The COOK_SELECT layout leaves a narrow vertical strip visible between the
+    # recipe grid and detail card. Fill that exposed strip with the reference
+    # harbor-window density instead of letting it read as plain dark planks.
+    strip = reference_background_patch((94, 560), (1530, 120, 1670, 760), 0.88, 1.12, 0.15)
+    if strip is not None:
+        mask = Image.new("L", strip.size, 0)
+        md = ImageDraw.Draw(mask)
+        for x in range(strip.width):
+            edge = min(x, strip.width - 1 - x)
+            alpha = max(0, min(226, int(edge / 8 * 226)))
+            md.line((x, 0, x, strip.height), fill=alpha)
+        mask = mask.filter(ImageFilter.GaussianBlur(0.65))
+        img.alpha_composite(Image.composite(strip, Image.new("RGBA", strip.size, (0, 0, 0, 0)), mask), (760, 96))
+        draw = ImageDraw.Draw(img, "RGBA")
+        draw.line((766, 102, 766, 640), fill=(42, 25, 14, 176), width=3)
+        draw.line((848, 102, 848, 640), fill=(42, 25, 14, 165), width=3)
 
     # Counter/floor.
     draw.rounded_rectangle((418, 332, 852, 430), radius=14, fill=(74, 43, 24, 210), outline=(158, 105, 48, 120), width=3)

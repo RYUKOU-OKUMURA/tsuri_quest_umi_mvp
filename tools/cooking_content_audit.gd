@@ -232,6 +232,7 @@ func _audit_cook_select() -> void:
 	_expect_named_node("COOK_SELECT", screen, "FishRowSaba")
 	_expect_named_node("COOK_SELECT", screen, "FishRowKasago")
 	_expect_named_node("COOK_SELECT", screen, "FishRowMejina")
+	_expect_named_node("COOK_SELECT", screen, "FishRowIsaki")
 	screen.queue_free()
 	await _tick()
 

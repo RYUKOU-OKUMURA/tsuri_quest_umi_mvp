@@ -843,18 +843,20 @@ func _fish_display_ids() -> Array[String]:
 	var ids: Array[String] = []
 	for fish_id in GameData.get_all_fish_ids():
 		var fish_key := String(fish_id)
+		if fish_key == "boss_kurodai":
+			continue
 		if PlayerProgress.fish_count(fish_key) > 0:
 			ids.append(fish_key)
-	if not ids.has("boss_kurodai"):
-		ids.append("boss_kurodai")
 	for fish_id in GameData.get_all_fish_ids():
 		var fish_key := String(fish_id)
-		if ids.has(fish_key):
+		if fish_key == "boss_kurodai" or ids.has(fish_key):
 			continue
 		if ids.size() < 5:
 			ids.append(fish_key)
 		if ids.size() >= 5:
 			break
+	if not ids.has("boss_kurodai"):
+		ids.append("boss_kurodai")
 	return ids
 
 
@@ -873,18 +875,19 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 					_select_fish(fish_id)
 		)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 6)
+	row.add_theme_constant_override("separation", 4)
 	card.add_child(row)
 	var marker := make_shadow_label("", 20, Palette.GOLD_BRIGHT, 2)
-	marker.custom_minimum_size = Vector2(8, 0)
+	marker.custom_minimum_size = Vector2(6, 0)
 	marker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	marker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(marker)
 	var icon := TextureRect.new()
 	icon.texture = _fish_row_texture(fish_id)
-	icon.custom_minimum_size = Vector2(116, 56)
+	icon.custom_minimum_size = Vector2(140, 60)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	icon.modulate = Color(1.18, 1.12, 1.04, 1.0) if owned else Color(0.38, 0.36, 0.31, 0.76)
 	row.add_child(icon)
 	var display_name := _fish_row_display_name(fish_id, String(fish.get("name", fish_id)))
@@ -896,8 +899,9 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	name.clip_text = true
 	row.add_child(name)
 	var amount_text := "×%d匹" % count if owned else "未所持"
-	var amount := make_label(amount_text, 16 if owned else 13, Color("#241b12"), 1, Color("#fff2ca"))
-	amount.custom_minimum_size = Vector2(72.0, 0.0)
+	var amount_color := Color("#fff0bd") if owned else Color("#d9c7a2")
+	var amount := make_label(amount_text, 14 if owned else 12, amount_color, 1, Color("#241b12"))
+	amount.custom_minimum_size = Vector2(58.0, 0.0)
 	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	amount.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(amount)
