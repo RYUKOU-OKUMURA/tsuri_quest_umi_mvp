@@ -1125,12 +1125,12 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 					_select_recipe(recipe_id)
 		)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 2)
+	box.add_theme_constant_override("separation", 1)
 	card.add_child(box)
 	var title_text := String(recipe.get("name", ""))
 	var title_font_size := 14 if title_text.length() >= 5 else 15
 	var title := make_shadow_label(title_text, title_font_size, Color("#251c12"), 1, Color("#fff3cf"))
-	title.custom_minimum_size = Vector2(0.0, 25.0)
+	title.custom_minimum_size = Vector2(0.0, 23.0)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -1145,7 +1145,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 		1,
 		Color("#4c2b0b")
 	)
-	stars.custom_minimum_size = Vector2(0.0, 18.0)
+	stars.custom_minimum_size = Vector2(0.0, 16.0)
 	stars.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	stars.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	box.add_child(stars)
@@ -1153,7 +1153,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	var material_icon := TextureRect.new()
 	material_icon.name = "RecipeMaterialIcon_%s" % recipe_id
 	material_icon.texture = _recipe_material_texture(recipe, locked, unavailable)
-	material_icon.custom_minimum_size = Vector2(72.0, 26.0)
+	material_icon.custom_minimum_size = Vector2(68.0, 22.0)
 	material_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	material_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	material_icon.modulate = Color(0.88, 0.80, 0.66, 0.96) if locked or unavailable else Color.WHITE
@@ -1161,8 +1161,8 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	var footer_text := _recipe_card_status_text(recipe, locked, unavailable)
 	var footer: Label = null
 	if not footer_text.is_empty():
-		footer = make_label(footer_text, 10, Color("#49351f"), 1, Color("#fff4cf"))
-		footer.custom_minimum_size = Vector2(34.0, 22.0)
+		footer = make_label(footer_text, 9, Color("#49351f"), 1, Color("#fff4cf"))
+		footer.custom_minimum_size = Vector2(30.0, 20.0)
 		footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		footer.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		footer.clip_text = true
@@ -1194,10 +1194,10 @@ func _make_recipe_preview_card() -> PanelContainer:
 		)
 	)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 2)
+	box.add_theme_constant_override("separation", 1)
 	card.add_child(box)
 	var title := make_shadow_label("ヒラメのムニエル", 12, Color("#251c12"), 1, Color("#fff3cf"))
-	title.custom_minimum_size = Vector2(0.0, 25.0)
+	title.custom_minimum_size = Vector2(0.0, 23.0)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -1206,7 +1206,7 @@ func _make_recipe_preview_card() -> PanelContainer:
 	var image := _recipe_card_dish_image("PreviewMeuniere", true, _featured_dish_texture("fry"))
 	box.add_child(image)
 	var stars := make_shadow_label("★★", 13, Color("#d9bd72"), 2, Color("#4c2b0b"))
-	stars.custom_minimum_size = Vector2(0.0, 18.0)
+	stars.custom_minimum_size = Vector2(0.0, 16.0)
 	stars.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	stars.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	box.add_child(stars)
@@ -1214,13 +1214,13 @@ func _make_recipe_preview_card() -> PanelContainer:
 	var icon := TextureRect.new()
 	icon.name = "RecipeMaterialIcon_PreviewMeuniere"
 	icon.texture = _fish_icon("hirame")
-	icon.custom_minimum_size = Vector2(72.0, 26.0)
+	icon.custom_minimum_size = Vector2(68.0, 22.0)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.modulate = Color(0.88, 0.80, 0.66, 0.96)
 	material_row.add_child(icon)
-	var footer := make_label("Lv.6", 10, Color("#49351f"), 1, Color("#fff4cf"))
-	footer.custom_minimum_size = Vector2(34.0, 22.0)
+	var footer := make_label("Lv.6", 9, Color("#49351f"), 1, Color("#fff4cf"))
+	footer.custom_minimum_size = Vector2(30.0, 20.0)
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	footer.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	footer.clip_text = true
@@ -1239,12 +1239,12 @@ func _recipe_card_dish_image(
 		3.0
 	)
 	thumb.name = "RecipeDishThumb_%s" % recipe_id
-	thumb.custom_minimum_size = Vector2(0.0, 104.0)
+	thumb.custom_minimum_size = Vector2(0.0, 112.0)
 	thumb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var image := TextureRect.new()
 	image.name = "RecipeDishImage_%s" % recipe_id
 	image.texture = texture_override if texture_override != null else _featured_dish_texture(recipe_id)
-	image.custom_minimum_size = Vector2(0.0, 98.0)
+	image.custom_minimum_size = Vector2(0.0, 106.0)
 	image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	image.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -1264,12 +1264,12 @@ func _add_recipe_material_badge(parent: Container, recipe_id: String) -> HBoxCon
 		1.0
 	)
 	badge.name = "RecipeMaterialBadge_%s" % recipe_id
-	badge.custom_minimum_size = Vector2(0.0, 30.0)
+	badge.custom_minimum_size = Vector2(0.0, 26.0)
 	badge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(badge)
 	var material_row := HBoxContainer.new()
 	material_row.name = "RecipeMaterialRow_%s" % recipe_id
-	material_row.custom_minimum_size = Vector2(0.0, 28.0)
+	material_row.custom_minimum_size = Vector2(0.0, 24.0)
 	material_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	material_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	material_row.add_theme_constant_override("separation", 2)
