@@ -569,10 +569,9 @@ def fish_row_frame() -> None:
     # image/quantity widgets.
     draw.rounded_rectangle((5, 4, w - 10, h - 12), radius=5, outline=(49, 27, 13, 255), width=5)
     draw.rounded_rectangle((15, 13, w - 20, h - 22), radius=3, outline=(230, 178, 78, 205), width=2)
-    draw.rounded_rectangle((13, 17, 23, h - 26), radius=2, fill=(10, 39, 64, 222), outline=(48, 28, 13, 220), width=2)
-    draw.line((40, h - 27, w - 34, h - 27), fill=(136, 91, 44, 38), width=2)
-    draw.line((202, 20, 202, h - 30), fill=(136, 91, 44, 28), width=1)
-    draw.line((268, 22, 268, h - 32), fill=(136, 91, 44, 24), width=1)
+    draw.rounded_rectangle((13, 17, 22, h - 26), radius=2, fill=(10, 39, 64, 190), outline=(48, 28, 13, 180), width=1)
+    draw.line((38, h - 27, w - 34, h - 27), fill=(136, 91, 44, 28), width=2)
+    draw.line((224, h - 30, w - 44, h - 30), fill=(136, 91, 44, 16), width=1)
     draw_corner_brackets(draw, (18, 15, w - 22, h - 25), (246, 198, 83, 205), (51, 29, 13, 235), 16, 2)
     save(img, "fish_row_frame.png")
 
