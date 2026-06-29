@@ -599,12 +599,12 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	_dish_subtitle.custom_minimum_size = Vector2(0.0, 16.0)
 	detail_layout.add_child(_dish_subtitle)
 	var dish_frame := _panel_box(Color("#6a4023"), Color("#3b2515"), Color("#e6b561"), 4)
-	dish_frame.custom_minimum_size = Vector2(0, 160)
+	dish_frame.custom_minimum_size = Vector2(0, 154)
 	dish_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_layout.add_child(dish_frame)
 	_dish_image = TextureRect.new()
 	_dish_image.name = "SelectedDishFeatureImage"
-	_dish_image.custom_minimum_size = Vector2(0, 150)
+	_dish_image.custom_minimum_size = Vector2(0, 144)
 	_dish_image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_dish_image.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_dish_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -649,27 +649,40 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 		28,
 		_style_box(Color("#ead7ad"), Color("#8b5b2c"), Color("#e6b561"), 3, 5),
 		10.0,
-		2.0
+		5.0
 	)
 	action_panel.name = "CookActionRunway"
-	action_panel.custom_minimum_size = Vector2(0, 94)
+	action_panel.custom_minimum_size = Vector2(0, 100)
 	action_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_layout.add_child(action_panel)
 	var action_layout := VBoxContainer.new()
 	action_layout.add_theme_constant_override("separation", 4)
 	action_panel.add_child(action_layout)
 	var cue_row := HBoxContainer.new()
-	cue_row.custom_minimum_size = Vector2(0, 20)
+	cue_row.custom_minimum_size = Vector2(0, 22)
 	cue_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	cue_row.add_theme_constant_override("separation", 8)
 	action_layout.add_child(cue_row)
-	_overwrite_note = make_label("", 12, Color("#624b31"))
-	_overwrite_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var note_badge := PanelContainer.new()
+	var note_style := _style_box(Color("#5a321d"), Color("#2a1a10"), Color("#d9a65b"), 2, 4)
+	note_style.content_margin_left = 8.0
+	note_style.content_margin_top = 1.0
+	note_style.content_margin_right = 8.0
+	note_style.content_margin_bottom = 1.0
+	note_badge.add_theme_stylebox_override("panel", note_style)
+	note_badge.custom_minimum_size = Vector2(186, 22)
+	cue_row.add_child(note_badge)
+	_overwrite_note = make_label("", 12, Palette.TEXT_BONE, 1, Color("#2b1a0c"))
+	_overwrite_note.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_overwrite_note.clip_text = true
-	_overwrite_note.custom_minimum_size = Vector2(0, 20)
+	_overwrite_note.custom_minimum_size = Vector2(0, 18)
 	_overwrite_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_overwrite_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_overwrite_note.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	cue_row.add_child(_overwrite_note)
+	note_badge.add_child(_overwrite_note)
+	var cue_spacer := Control.new()
+	cue_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cue_row.add_child(cue_spacer)
 	_cook_action_cue = CookActionCueVisual.new()
 	_cook_action_cue.name = "CookActionCue"
 	_cook_action_cue.custom_minimum_size = Vector2(82, 18)
