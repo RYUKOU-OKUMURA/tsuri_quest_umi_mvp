@@ -231,6 +231,9 @@ func _audit_cook_select() -> void:
 	_expect_named_node("COOK_SELECT", screen, "FishSectionRibbon")
 	_expect_named_node("COOK_SELECT", screen, "RecipeSectionRibbon")
 	_expect_named_node("COOK_SELECT", screen, "RecipeCard_salt_grill")
+	_expect_named_node("COOK_SELECT", screen, "RecipeTitle_salt_grill")
+	_expect_named_node("COOK_SELECT", screen, "RecipeTitle_sashimi")
+	_expect_named_node("COOK_SELECT", screen, "RecipeTitle_PreviewMeuniere")
 	_expect_named_node("COOK_SELECT", screen, "RecipeDishThumb_salt_grill")
 	_expect_named_node("COOK_SELECT", screen, "RecipeDishImage_salt_grill")
 	_expect_texture_rect_path(

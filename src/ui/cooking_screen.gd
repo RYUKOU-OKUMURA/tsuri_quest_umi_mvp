@@ -1164,13 +1164,10 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	box.add_theme_constant_override("separation", 2)
 	card.add_child(box)
 	var title_text := _recipe_card_title_text(recipe, locked, unavailable)
-	var title_font_size := 14
-	if title_text.length() >= 7:
-		title_font_size = 12
-	elif title_text.length() >= 5:
-		title_font_size = 13
+	var title_font_size := 14 if title_text.length() <= 7 else 13
 	var title := make_shadow_label(title_text, title_font_size, Color("#251c12"), 1, Color("#fff3cf"))
-	title.custom_minimum_size = Vector2(0.0, 24.0)
+	title.name = "RecipeTitle_%s" % recipe_id
+	title.custom_minimum_size = Vector2(0.0, 26.0)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -1236,8 +1233,9 @@ func _make_recipe_preview_card() -> PanelContainer:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
 	card.add_child(box)
-	var title := make_shadow_label("ヒラメのムニエル", 12, Color("#251c12"), 1, Color("#fff3cf"))
-	title.custom_minimum_size = Vector2(0.0, 24.0)
+	var title := make_shadow_label("ヒラメのムニエル", 13, Color("#251c12"), 1, Color("#fff3cf"))
+	title.name = "RecipeTitle_PreviewMeuniere"
+	title.custom_minimum_size = Vector2(0.0, 26.0)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -1279,12 +1277,12 @@ func _recipe_card_dish_image(
 		3.0
 	)
 	thumb.name = "RecipeDishThumb_%s" % recipe_id
-	thumb.custom_minimum_size = Vector2(0.0, 94.0)
+	thumb.custom_minimum_size = Vector2(0.0, 90.0)
 	thumb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var image := TextureRect.new()
 	image.name = "RecipeDishImage_%s" % recipe_id
 	image.texture = texture_override if texture_override != null else _featured_dish_texture(recipe_id)
-	image.custom_minimum_size = Vector2(0.0, 88.0)
+	image.custom_minimum_size = Vector2(0.0, 84.0)
 	image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	image.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE

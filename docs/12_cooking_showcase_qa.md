@@ -216,6 +216,7 @@
 - 追記: 料理カード写真は `STRETCH_SCALE` の引き伸ばしをやめ、`STRETCH_KEEP_ASPECT_COVERED` で皿写真の比率を保つ。星と素材バッジはさらに薄くして、カード内で料理写真が縦に潰れたUI画像ではなく料理素材として読める配分を固定する。
 - 追記: 料理カードタイトルは `塩焼き` / `刺身` の汎用レシピ名ではなく、選択中/代表素材込みの `アジの塩焼き`、`アジの刺身`、`メジナの煮付け`、`アジフライ` のような完成料理名にする。右詳細だけ完成料理名で中央カードが汎用名へ戻ると参照01の完成カード感が落ちるため、content auditでも代表タイトルを固定する。
 - 追記: 料理カードサムネイルは右詳細ほど縦に大きくせず、カード内で料理名、皿全体、星、素材魚が一体に読める比率へ戻す。`RecipeDishThumb_*` / `RecipeDishImage_*` の高さを抑え、横長料理素材の過剰な縦クロップで料理カードが情報パネル化しないことを優先する。
+- 追記: 料理カードタイトルは長い料理名でも12pxまで落とさず、`RecipeTitle_*` として見出し帯を持たせる。`メジナの煮付け` や `ヒラメのムニエル` が写真の添え字ではなく、カード上部の完成料理名として読めることをcontent/layout auditで固定する。
 - 実装済み: 右詳細は `dish_feature_aji_shioyaki.png` を参照01の大判料理カットから生成し、`SelectedDishFeatureImage` をやや大きくした。詳細3行は `cook_detail_row_frame.png` を使う `CookDetailMaterialRow` / `CookDetailExpRow` / `CookDetailEffectRow` へ置き換え、フォーム欄ではなく横長情報リボンとして読ませる。`dish_detail_frame.png`、`cook_button_frame.png`、`cook_action_runway_frame.png` も紙面、青い金縁CTA、下部アクション帯が読める素材に更新した。
 - 追記: 右詳細3行の値領域から強い斜線と入力欄風の囲いを削り、`CookDetailMaterialRow` / `CookDetailExpRow` / `CookDetailEffectRow` の主値を濃いインクで直接載せるようにした。`cook_button_frame.png` と `cook_action_runway_frame.png` も白い斜線を抑え、調理ボタン周辺の装飾より `調理する` の読みやすさを優先する。
 - 追記: `CookActionCue` は鍋から皿への大きな描画をやめ、細い金色キューへ抑えた。`CookButton` は高さと文字サイズを上げ、左ポケット内の描画も赤い炎や強い発光ではなく、参照01に近いシンプルな鍋アイコンへ整理して、右詳細の最後に押す青い金縁CTAとして読ませる。
