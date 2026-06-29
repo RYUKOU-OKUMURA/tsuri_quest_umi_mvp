@@ -834,17 +834,13 @@ def recipe_material_strip_frame() -> None:
     paste_rounded(img, paper, (6, 6, w - 8, h - 10), 6, 246)
     draw = ImageDraw.Draw(img, "RGBA")
 
-    # Footer socket for recipe cards: a tiny framed material strip that keeps
-    # fish icon + quantity from reading like loose debug text.
+    # Footer socket for recipe cards: keep this as a quiet parchment slip so
+    # the dish photo remains the hero and state text stays secondary.
     draw.rounded_rectangle((6, 6, w - 8, h - 10), radius=6, outline=(74, 43, 18, 248), width=3)
-    draw.rounded_rectangle((16, 13, 132, h - 17), radius=5, fill=(10, 43, 67, 92), outline=(244, 189, 74, 142), width=2)
-    draw.rounded_rectangle((145, 14, w - 24, h - 18), radius=4, fill=(255, 239, 191, 82), outline=(135, 82, 33, 112), width=1)
-    draw.line((32, h - 19, 119, h - 19), fill=(255, 228, 118, 80), width=2)
-    draw.line((154, h - 20, w - 34, h - 20), fill=(112, 67, 26, 72), width=2)
+    draw.rounded_rectangle((17, 13, w - 20, h - 17), radius=5, fill=(255, 241, 199, 42), outline=(135, 82, 33, 74), width=1)
+    draw.line((38, h - 19, w - 44, h - 19), fill=(112, 67, 26, 46), width=2)
     for x, y in [(14, 12), (w - 28, 12), (14, h - 30), (w - 28, h - 30)]:
         draw.rectangle((x, y, x + 9, y + 9), fill=(231, 174, 69, 210), outline=(58, 33, 14, 220), width=1)
-    for x in range(32, w - 38, 34):
-        draw.line((x, 12, x - 20, h - 16), fill=(255, 255, 255, 24), width=1)
     save(img, "recipe_material_strip_frame.png")
 
 
@@ -1822,15 +1818,12 @@ def frame_assets() -> None:
         img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(4)))
         draw = ImageDraw.Draw(img, "RGBA")
 
-        # Dish thumbnail mat used inside recipe cards. It separates the food art
-        # from the parchment so card images read like finished inset assets.
-        draw.rounded_rectangle((7, 7, size[0] - 12, size[1] - 14), radius=7, fill=(87, 50, 25, 244), outline=(48, 27, 13, 255), width=4)
-        draw.rounded_rectangle((18, 18, size[0] - 24, size[1] - 28), radius=5, fill=(245, 227, 184, 38), outline=(224, 171, 79, 142), width=2)
-        draw.rounded_rectangle((28, 28, size[0] - 34, size[1] - 38), radius=4, fill=(59, 34, 18, 160), outline=(255, 231, 150, 58), width=1)
-        for x in range(36, size[0] - 34, 24):
-            draw.line((x, 30, x - 24, size[1] - 40), fill=(32, 19, 10, 45), width=2)
-            draw.line((x + 4, 31, x - 20, size[1] - 41), fill=(132, 82, 40, 36), width=1)
-        draw.line((24, size[1] - 32, size[0] - 30, size[1] - 32), fill=(255, 218, 106, 82), width=2)
+        # Dish thumbnail mat used inside recipe cards. Keep the frame visible,
+        # but avoid a dark shutter look that fights the finished dish art.
+        draw.rounded_rectangle((7, 7, size[0] - 12, size[1] - 14), radius=7, fill=(92, 55, 28, 132), outline=(48, 27, 13, 245), width=4)
+        draw.rounded_rectangle((18, 18, size[0] - 24, size[1] - 28), radius=5, fill=(245, 227, 184, 54), outline=(224, 171, 79, 150), width=2)
+        draw.rounded_rectangle((28, 28, size[0] - 34, size[1] - 38), radius=4, fill=(255, 241, 205, 18), outline=(255, 231, 150, 52), width=1)
+        draw.line((24, size[1] - 32, size[0] - 30, size[1] - 32), fill=(255, 218, 106, 78), width=2)
         draw_corner_brackets(draw, (16, 16, size[0] - 24, size[1] - 28), (238, 181, 77, 190), (53, 31, 15, 235), 14, 2)
         save(img, "recipe_dish_thumb_frame.png")
 

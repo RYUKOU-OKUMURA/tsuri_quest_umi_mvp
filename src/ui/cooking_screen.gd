@@ -520,7 +520,7 @@ func _build_header(layout: VBoxContainer) -> void:
 func _build_cook_select(layout: VBoxContainer) -> void:
 	var body := HBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.add_theme_constant_override("separation", 10)
+	body.add_theme_constant_override("separation", 7)
 	layout.add_child(body)
 
 	var fish_panel := _panel_box(Color("#10283d"), Color("#5e391a"), Color("#e4b461"), 6)
@@ -1116,7 +1116,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	var recipe_id := String(recipe.get("id", ""))
 	var card := PanelContainer.new()
 	card.name = "RecipeCard_%s" % recipe_id
-	card.custom_minimum_size = Vector2(136, 204)
+	card.custom_minimum_size = Vector2(132, 204)
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
 	var selectable := not locked and not unavailable
 	if selectable:
@@ -1129,8 +1129,9 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
 	card.add_child(box)
-	var title_text := "？？？" if locked else String(recipe.get("name", ""))
-	var title := make_shadow_label(title_text, 15, Color("#251c12"), 1, Color("#fff3cf"))
+	var title_text := String(recipe.get("name", ""))
+	var title_font_size := 14 if title_text.length() >= 5 else 15
+	var title := make_shadow_label(title_text, title_font_size, Color("#251c12"), 1, Color("#fff3cf"))
 	title.custom_minimum_size = Vector2(0.0, 25.0)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -1142,7 +1143,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	var stars := make_shadow_label(
 		_recipe_star_text(recipe, locked),
 		13,
-		Palette.GOLD_BRIGHT if not locked else Color("#d0c2a3"),
+		Palette.GOLD_BRIGHT if not locked else Color("#d9bd72"),
 		1,
 		Color("#4c2b0b")
 	)
@@ -1154,18 +1155,20 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	var material_icon := TextureRect.new()
 	material_icon.name = "RecipeMaterialIcon_%s" % recipe_id
 	material_icon.texture = _recipe_material_texture(recipe, locked, unavailable)
-	material_icon.custom_minimum_size = Vector2(64.0, 26.0)
+	material_icon.custom_minimum_size = Vector2(72.0, 26.0)
 	material_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	material_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	material_icon.modulate = Color(0.72, 0.66, 0.56, 1.0) if locked or unavailable else Color.WHITE
+	material_icon.modulate = Color(0.88, 0.80, 0.66, 0.96) if locked or unavailable else Color.WHITE
 	material_row.add_child(material_icon)
 	var footer_text := _recipe_card_status_text(recipe, locked, unavailable)
-	var footer := make_label(footer_text, 10, Color("#49351f"), 1, Color("#fff4cf"))
-	footer.custom_minimum_size = Vector2(34.0, 22.0)
-	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	footer.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	footer.clip_text = true
-	material_row.add_child(footer)
+	var footer: Label = null
+	if not footer_text.is_empty():
+		footer = make_label(footer_text, 10, Color("#49351f"), 1, Color("#fff4cf"))
+		footer.custom_minimum_size = Vector2(34.0, 22.0)
+		footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		footer.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		footer.clip_text = true
+		material_row.add_child(footer)
 	_recipe_cards[recipe_id] = {
 		"card": card,
 		"locked": locked,
@@ -1179,15 +1182,15 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 func _make_recipe_preview_card() -> PanelContainer:
 	var card := PanelContainer.new()
 	card.name = "RecipeCard_PreviewMeuniere"
-	card.custom_minimum_size = Vector2(136, 204)
+	card.custom_minimum_size = Vector2(132, 204)
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	card.self_modulate = Color(0.78, 0.72, 0.62, 1.0)
+	card.self_modulate = Color(0.92, 0.86, 0.74, 1.0)
 	card.add_theme_stylebox_override(
 		"panel",
 		_texture_style_box(
 			RECIPE_CARD_FRAME,
 			28,
-			_style_box(Color("#b7a884"), Color("#7b5027"), Color("#c59a59"), 4, 6),
+			_style_box(Color("#ddc99f"), Color("#7b5027"), Color("#c59a59"), 4, 6),
 			12.0,
 			8.0
 		)
@@ -1204,7 +1207,7 @@ func _make_recipe_preview_card() -> PanelContainer:
 	box.add_child(title)
 	var image := _recipe_card_dish_image("PreviewMeuniere", true, _featured_dish_texture("fry"))
 	box.add_child(image)
-	var stars := make_shadow_label("★★", 13, Color("#d0c2a3"), 2, Color("#4c2b0b"))
+	var stars := make_shadow_label("★★", 13, Color("#d9bd72"), 2, Color("#4c2b0b"))
 	stars.custom_minimum_size = Vector2(0.0, 18.0)
 	stars.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	stars.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -1213,10 +1216,10 @@ func _make_recipe_preview_card() -> PanelContainer:
 	var icon := TextureRect.new()
 	icon.name = "RecipeMaterialIcon_PreviewMeuniere"
 	icon.texture = _fish_icon("hirame")
-	icon.custom_minimum_size = Vector2(64.0, 26.0)
+	icon.custom_minimum_size = Vector2(72.0, 26.0)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.modulate = Color(0.72, 0.66, 0.56, 1.0)
+	icon.modulate = Color(0.88, 0.80, 0.66, 0.96)
 	material_row.add_child(icon)
 	var footer := make_label("Lv.6", 10, Color("#49351f"), 1, Color("#fff4cf"))
 	footer.custom_minimum_size = Vector2(34.0, 22.0)
@@ -1249,7 +1252,7 @@ func _recipe_card_dish_image(
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	image.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-	image.modulate = Color(0.54, 0.49, 0.40, 0.86) if muted else Color.WHITE
+	image.modulate = Color(0.82, 0.76, 0.64, 0.94) if muted else Color.WHITE
 	thumb.add_child(image)
 	return thumb
 
@@ -1307,7 +1310,7 @@ func _recipe_card_status_text(recipe: Dictionary, locked: bool, unavailable: boo
 		return "Lv.%d" % int(recipe.get("unlock_level", 1))
 	if unavailable:
 		return "別素材"
-	return "×1"
+	return ""
 
 
 func _select_recipe(recipe_id: String) -> void:
@@ -1331,14 +1334,16 @@ func _refresh_recipe_card_styles() -> void:
 			continue
 		var fill := Color("#ffedbb") if selected else Color("#ead7ad")
 		if locked:
-			fill = Color("#8c8069")
+			fill = Color("#dcc69b")
 		elif unavailable:
-			fill = Color("#b7a884")
+			fill = Color("#ddc99f")
 		var border := Color("#f2c86d") if selected else Color("#7b5027")
 		var inner := Color("#fff6d4") if selected else Color("#c59a59")
 		var tint := Color.WHITE
-		if locked or unavailable:
-			tint = Color(0.55, 0.50, 0.42, 1.0)
+		if locked:
+			tint = Color(0.86, 0.80, 0.68, 1.0)
+		elif unavailable:
+			tint = Color(0.90, 0.84, 0.72, 1.0)
 		card.self_modulate = tint
 		card.add_theme_stylebox_override(
 			"panel",
