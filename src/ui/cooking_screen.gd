@@ -549,7 +549,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	var recipe_layout := VBoxContainer.new()
 	recipe_layout.add_theme_constant_override("separation", 6)
 	recipe_panel.add_child(recipe_layout)
-	recipe_layout.add_child(_section_ribbon("料理を選ぶ", "fire", "RecipeSectionRibbon"))
+	recipe_layout.add_child(_section_ribbon("料理を選ぶ", "meal_mini", "RecipeSectionRibbon"))
 	_recipe_grid = GridContainer.new()
 	_recipe_grid.name = "RecipeGrid"
 	_recipe_grid.columns = 3
@@ -559,7 +559,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	recipe_layout.add_child(_recipe_grid)
 	var recipe_book_button := make_button("料理図鑑を見る", _show_status_overlay, 280, false)
 	recipe_book_button.name = "RecipeBookButton"
-	recipe_book_button.custom_minimum_size = Vector2(286.0, 40.0)
+	recipe_book_button.custom_minimum_size = Vector2(330.0, 44.0)
 	recipe_book_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	recipe_book_button.icon = _recipe_icon("locked")
 	recipe_book_button.expand_icon = true

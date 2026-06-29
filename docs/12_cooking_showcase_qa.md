@@ -224,6 +224,7 @@
 - 追記: `tools/cooking_preview.gd` の `COOK_SELECT` キャプチャは参照01と比較しやすいアジ選択状態に固定した。スクショ用の所持魚合計は容量内の `19 / 20` に収めつつ、6行すべてを所持魚として並べ、左カラムが暗い未所持リストに見えない状態で比較する。実フロー/報酬状態の検証シードは別に維持する。
 - 追記: 魚行は調理専用の小アイコンではなく、`assets/showcase/underwater/fish/*_card_portrait.png` を優先し、水中ファイト基準の魚アート密度をリスト内でも使う。数量欄は右側に確保し、`× 12 匹` などが折れずに読める状態を維持する。表示順は調理画面用に `アジ → サバ → カサゴ → メジナ → イサキ → ヒラメ` を優先し、`FishRowIsaki` もcontent/layout audit対象にして、6行密度を維持する。
 - 追記: ロック中レシピは灰色の南京錠だけに戻さず、料理名と料理写真を出しつつ `Lv.5` の小バッジで状態を示す。6枚目の空き枠は `RecipeCard_PreviewMeuniere` として料理プレビューカードにし、`RecipeBookButton` をグリッド下へ分離することで、参照01の「6枚の料理カード＋料理図鑑を見る」構成へ寄せた。
+- 追記: `RecipeSectionRibbon` は大きな炎アイコンがカード上に強く出すぎないよう、小さな料理アイコンへ変更した。`RecipeBookButton` は横幅と高さを上げ、参照01下部の青い横長「料理図鑑を見る」CTAとして読めるようにする。
 - 追記: `cooking_room_bg.png` は参照01右側の港窓/ランタン/植物の細長いサンプルを中央カードと右詳細の接続帯へ合成し、`RecipeToDetailArrow` 周辺が暗い板だけに見えないようにした。
 - まだ残る差分: 中央カード下部は素材バッジ化済みだが、最終本番アートに比べると素材魚アイコンそのものの描き込みはまだ軽い。ヘッダーのリッチさ、料理カード下部のアイコン描き込み、右詳細3行を参照の太い一体型情報帯へさらに近づける最終調整は次パス候補。
 - 通過ゲート: `HOME=/private/tmp/tsuri_home tools/cooking_verify.sh`、`HOME=/private/tmp/tsuri_home tools/validate_project.sh`、`HOME=/private/tmp/tsuri_home tools/cooking_visual_qa.sh`、`git diff --check`。
