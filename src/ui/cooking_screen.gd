@@ -693,15 +693,15 @@ func _build_result_summary(layout: VBoxContainer) -> void:
 	)
 	result_panel.name = "CurrentPrepBar"
 	_result_panel = result_panel
-	result_panel.custom_minimum_size = Vector2(0, 78)
+	result_panel.custom_minimum_size = Vector2(0, 84)
 	layout.add_child(result_panel)
 	var result_layout := HBoxContainer.new()
 	result_layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	result_layout.add_theme_constant_override("separation", 6)
+	result_layout.add_theme_constant_override("separation", 8)
 	result_panel.add_child(result_layout)
-	_result_title = make_shadow_label("", 17, Palette.TEXT_BONE, 2, Color("#2b2117"))
+	_result_title = make_shadow_label("", 15, Palette.TEXT_BONE, 2, Color("#2b2117"))
 	_result_title.name = "CurrentPrepTitle"
-	_result_title.custom_minimum_size = Vector2(198.0, 0.0)
+	_result_title.custom_minimum_size = Vector2(172.0, 0.0)
 	_result_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_result_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_result_title.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -709,11 +709,11 @@ func _build_result_summary(layout: VBoxContainer) -> void:
 	result_layout.add_child(_result_title)
 	_result_body = HBoxContainer.new()
 	_result_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_result_body.add_theme_constant_override("separation", 7)
+	_result_body.add_theme_constant_override("separation", 8)
 	result_layout.add_child(_result_body)
 	_status_button = make_button("詳細", _show_status_overlay, 100, false)
 	_status_button.name = "CurrentPrepDetailButton"
-	_status_button.custom_minimum_size = Vector2(96, 44)
+	_status_button.custom_minimum_size = Vector2(78, 52)
 	result_layout.add_child(_status_button)
 
 
@@ -1641,7 +1641,7 @@ func _show_status_summary() -> void:
 	_clear_container(_result_body)
 	_result_body.add_child(
 		_prep_summary_card(
-			"Lv.",
+			"プレイヤーLv.",
 			"Lv.%d  %d/%d" % [
 				PlayerProgress.level,
 				PlayerProgress.exp,
@@ -1654,7 +1654,7 @@ func _show_status_summary() -> void:
 	)
 	_result_body.add_child(
 		_prep_summary_card(
-			"料理",
+			"効果中の料理",
 			_current_meal_summary_text(),
 			Palette.GAUGE_GREEN_HI,
 			"meal_mini",
@@ -1663,7 +1663,7 @@ func _show_status_summary() -> void:
 	)
 	_result_body.add_child(
 		_prep_summary_card(
-			"魚",
+			"クーラーボックス",
 			"%d / 20" % _total_fish_count(),
 			Palette.GAUGE_CYAN_HI,
 			"fish_mini",
@@ -1693,7 +1693,7 @@ func _current_meal_summary_text() -> String:
 	if buff.is_empty():
 		return "なし"
 	var name := String(buff.get("name", "料理効果"))
-	return "%s/1回" % name.replace("の", "")
+	return "%s  あと1回" % name
 
 
 func _show_meal_result(result: Dictionary, leveled: bool) -> void:
@@ -1900,32 +1900,41 @@ func _prep_summary_card(
 	)
 	card.name = node_name
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.custom_minimum_size = Vector2(0, 48)
+	card.custom_minimum_size = Vector2(0, 56)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 7)
+	row.add_theme_constant_override("separation", 8)
 	card.add_child(row)
-	var icon := _small_icon(icon_mode, accent, Vector2(32.0, 32.0))
+	var icon := _small_icon(icon_mode, accent, Vector2(40.0, 40.0))
 	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(icon)
-	var title_label := make_shadow_label(title, 13, Color("#2b2117"), 1, Color("#fff2ca"))
-	title_label.custom_minimum_size = Vector2(46.0, 0.0)
+	var text_box := VBoxContainer.new()
+	text_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	text_box.add_theme_constant_override("separation", 0)
+	row.add_child(text_box)
+	var title_size := 11 if title.length() >= 7 else 12
+	var title_label := make_shadow_label(title, title_size, Color("#2b2117"), 1, Color("#fff2ca"))
+	title_label.custom_minimum_size = Vector2(0.0, 18.0)
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title_label.clip_text = true
-	row.add_child(title_label)
-	var value_label := make_shadow_label(value, 15, Color("#17324d"), 1, Color("#fff5cf"))
+	text_box.add_child(title_label)
+	var value_size := 14 if value.length() >= 9 else 17
+	var value_label := make_shadow_label(value, value_size, Color("#1f160f"), 1, Color("#fff5cf"))
 	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	value_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	value_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	value_label.clip_text = true
-	row.add_child(value_label)
+	text_box.add_child(value_label)
 	return card
 
 
 func _set_result_summary_compact(compact: bool) -> void:
 	if _result_panel != null:
-		_result_panel.custom_minimum_size = Vector2(0, 78)
+		_result_panel.custom_minimum_size = Vector2(0, 84)
 	if _result_body != null:
 		_result_body.visible = not compact
 

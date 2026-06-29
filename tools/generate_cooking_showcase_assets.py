@@ -923,13 +923,13 @@ def prep_summary_bar_frame() -> None:
     # Full-width current-prep tray. It should read as the bottom anchor of the
     # cook-select scene, not as a generic status table.
     draw.rounded_rectangle((3, 6, w - 7, h - 8), radius=6, outline=(67, 38, 16, 255), width=5)
-    draw.line((18, 18, w - 20, 18), fill=(255, 210, 89, 132), width=2)
-    draw.line((18, h - 20, w - 20, h - 20), fill=(109, 67, 27, 120), width=3)
-    draw.rounded_rectangle((46, 20, 196, h - 22), radius=5, fill=(111, 76, 43, 118), outline=(75, 46, 22, 120), width=1)
-    draw.rounded_rectangle((w - 114, 18, w - 20, h - 18), radius=4, fill=(117, 73, 31, 120), outline=(250, 197, 72, 118), width=2)
-    for x in range(248, w - 148, 236):
-        draw.line((x, 20, x, h - 21), fill=(83, 49, 20, 92), width=2)
-        draw.line((x + 5, 24, x + 5, h - 25), fill=(255, 236, 160, 52), width=1)
+    draw.line((22, 17, w - 22, 17), fill=(255, 210, 89, 96), width=2)
+    draw.line((22, h - 19, w - 22, h - 19), fill=(109, 67, 27, 92), width=3)
+    draw.rounded_rectangle((34, 19, 176, h - 22), radius=5, fill=(111, 76, 43, 104), outline=(75, 46, 22, 96), width=1)
+    draw.rounded_rectangle((w - 100, 18, w - 18, h - 18), radius=4, fill=(117, 73, 31, 112), outline=(250, 197, 72, 108), width=2)
+    for x in [340, 594, 848, 1092]:
+        draw.line((x, 20, x, h - 22), fill=(83, 49, 20, 50), width=2)
+        draw.line((x + 5, 25, x + 5, h - 27), fill=(255, 236, 160, 36), width=1)
     for x, y in [(16, 16), (w - 30, 16), (16, h - 32), (w - 30, h - 32)]:
         draw.rectangle((x, y, x + 11, y + 11), fill=(232, 174, 68, 218), outline=(58, 32, 13, 240), width=2)
     save(img, "prep_summary_bar_frame.png")
@@ -946,13 +946,13 @@ def prep_summary_card_frame() -> None:
     paste_rounded(img, paper, (6, 6, w - 8, h - 8), 6, 246)
     draw = ImageDraw.Draw(img, "RGBA")
 
-    # Small prep-state card with a fixed icon socket and clear paper value rail.
+    # Prep-state cards should read like the reference's bottom parchment cards:
+    # a large emblem at left, label above, value below, no form-field chrome.
     draw.rounded_rectangle((6, 6, w - 8, h - 8), radius=6, outline=(82, 47, 20, 248), width=3)
-    draw.rounded_rectangle((17, 12, 66, h - 14), radius=4, fill=(8, 38, 61, 118), outline=(255, 211, 88, 152), width=2)
-    draw.line((82, 14, 82, h - 16), fill=(94, 57, 24, 112), width=2)
-    draw.rounded_rectangle((93, 13, w - 22, h - 15), radius=4, fill=(255, 244, 210, 92), outline=(142, 86, 35, 52), width=1)
-    draw.line((104, h - 19, w - 34, h - 19), fill=(122, 76, 34, 58), width=2)
-    draw.line((104, 20, w - 34, 20), fill=(255, 252, 223, 42), width=1)
+    draw.rounded_rectangle((18, 12, 76, h - 13), radius=5, fill=(250, 226, 179, 70), outline=(126, 79, 35, 58), width=1)
+    draw.line((88, 15, 88, h - 17), fill=(94, 57, 24, 66), width=2)
+    draw.line((104, 28, w - 36, 28), fill=(120, 75, 34, 46), width=1)
+    draw.line((104, h - 17, w - 34, h - 17), fill=(122, 76, 34, 42), width=2)
     for x, y in [(14, 12), (w - 28, 12), (14, h - 28), (w - 28, h - 28)]:
         draw.rectangle((x, y, x + 9, y + 9), fill=(232, 174, 68, 214), outline=(58, 32, 13, 228), width=1)
     save(img, "prep_summary_card_frame.png")
