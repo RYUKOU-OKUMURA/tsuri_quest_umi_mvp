@@ -90,7 +90,7 @@ func _build_main_panel(root: Control) -> void:
 
 	var scene_text := _harbor_label(
 		"沖では魚影が濃くなっている。\n釣った魚は市場で売るか、調理場で食べて成長できる。\n準備ができたら海へ出よう。",
-		18,
+		17,
 		Color("#f2fbff"),
 		false,
 		2,
@@ -99,7 +99,7 @@ func _build_main_panel(root: Control) -> void:
 	scene_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	scene_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	scene_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_place_control(main, scene_text, 0.130, 0.225, 0.870, 0.395)
+	_place_control(main, scene_text, 0.130, 0.215, 0.870, 0.415)
 
 	_build_parchment_card(
 		main,
