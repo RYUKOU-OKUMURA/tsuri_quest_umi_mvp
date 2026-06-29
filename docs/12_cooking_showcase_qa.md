@@ -208,7 +208,7 @@
 
 今回の明確な実装ゴールは、`reference/cooking_flow/01_cook_select_concept.png` と `/tmp/tsuri_cooking_select.png` を横並びで見たときに、魚リスト、料理カード、右詳細、調理ボタン、下部バーが「仮UIの枠に文字と小画像を置いた状態」ではなく、「完成素材が載った調理選択画面」として読めるところまで引き上げること。完成基準は水中ファイト画面と同じく、コード描画だけに見える要素を減らし、参照画像由来または専用生成PNGの紙・木・金具・料理/魚素材を画面上の主役として使うこと。
 
-- 実装済み: `fish_icon_sheet.png` は参照01内の魚カットを優先して使い、左魚リストの魚絵を大きめに表示する。`fish_row_frame.png` は紙質感、濃紺ガター、金具、数量エリアを持つ素材に更新し、魚名と `× n匹` が横クリップしない幅にした。今回、数量セルの表感を弱めて紙タグ化し、魚絵の表示幅を広げて、魚リストを在庫表ではなく素材カードとして読ませる。
+- 実装済み: `fish_icon_sheet.png` は参照01内の魚カットを優先して使い、左魚リストの魚絵を大きめに表示する。`fish_row_frame.png` は紙質感、濃紺ガター、金具、数量エリアを持つ素材に更新し、魚名と `× n匹` が横クリップしない幅にした。今回、魚背面の暗いマットを薄い紙面へ寄せ、数量セルは小さな紙タグとして上に載せることで、魚リストを在庫表ではなく素材カードとして読ませる。
 - 実装済み: `recipe_grid_frame.png`、`recipe_card_frame.png`、`recipe_selected_card_frame.png` は参照紙テクスチャを混ぜた素材に更新し、料理カード内の料理絵は `recipe_dish_thumb_frame.png` の濃色マット付き額へ収める。カード下部は `recipe_material_strip_frame.png` を使う `RecipeMaterialBadge_*` に `RecipeMaterialIcon_*` の素材魚アイコンと短い状態表示を収め、EXP情報は右詳細の `CookDetailExpRow` に集約した。追調整では `recipe_selected_card_frame.png` を通常カードの紙面に近い構造へ戻し、内側の斜めハイライトと黄色ベタを削って、選択状態は金縁・角金具・外周グローで出すようにした。
 - 実装済み: 右詳細は `dish_feature_aji_shioyaki.png` を参照01の大判料理カットから生成し、`SelectedDishFeatureImage` をやや大きくした。詳細3行は `cook_detail_row_frame.png` を使う `CookDetailMaterialRow` / `CookDetailExpRow` / `CookDetailEffectRow` へ置き換え、フォーム欄ではなく横長情報リボンとして読ませる。`dish_detail_frame.png`、`cook_button_frame.png`、`cook_action_runway_frame.png` も紙面、青い金縁CTA、下部アクション帯が読める素材に更新した。
 - 追記: 右詳細3行の値領域から強い斜線と入力欄風の囲いを削り、`CookDetailMaterialRow` / `CookDetailExpRow` / `CookDetailEffectRow` の主値を濃いインクで直接載せるようにした。`cook_button_frame.png` と `cook_action_runway_frame.png` も白い斜線を抑え、調理ボタン周辺の装飾より `調理する` の読みやすさを優先する。

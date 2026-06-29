@@ -921,7 +921,7 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	row.add_child(marker)
 	var icon := TextureRect.new()
 	icon.texture = _fish_row_texture(fish_id)
-	icon.custom_minimum_size = Vector2(142, 60)
+	icon.custom_minimum_size = Vector2(146, 60)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -930,7 +930,7 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	var display_name := _fish_row_display_name(fish_id, String(fish.get("name", fish_id)))
 	var name_font_size := 20 if display_name.length() <= 3 else 15
 	var name := make_label(display_name, name_font_size, Color("#241b12"), 1, Color("#fff2ca"))
-	name.custom_minimum_size = Vector2(62.0, 0.0)
+	name.custom_minimum_size = Vector2(64.0, 0.0)
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	name.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -938,11 +938,27 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	row.add_child(name)
 	var amount_text := "×%d匹" % count if owned else "未所持"
 	var amount_color := Color("#2a2118") if owned else Color("#756a56")
-	var amount := make_label(amount_text, 14 if owned else 12, amount_color, 1, Color("#fff0bd"))
-	amount.custom_minimum_size = Vector2(54.0, 0.0)
+	var amount := make_label(amount_text, 13 if owned else 12, amount_color, 1, Color("#fff0bd"))
+	amount.custom_minimum_size = Vector2(0.0, 28.0)
+	amount.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	amount.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	row.add_child(amount)
+	var amount_badge := PanelContainer.new()
+	amount_badge.custom_minimum_size = Vector2(52.0, 34.0)
+	amount_badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var amount_style := StyleBoxFlat.new()
+	amount_style.bg_color = Color(0.96, 0.85, 0.62, 0.82) if owned else Color(0.42, 0.37, 0.29, 0.76)
+	amount_style.border_color = Color(0.45, 0.28, 0.12, 0.30)
+	amount_style.set_border_width_all(1)
+	amount_style.set_corner_radius_all(3)
+	amount_style.content_margin_left = 4.0
+	amount_style.content_margin_right = 4.0
+	amount_style.content_margin_top = 1.0
+	amount_style.content_margin_bottom = 1.0
+	amount_style.anti_aliasing = false
+	amount_badge.add_theme_stylebox_override("panel", amount_style)
+	amount_badge.add_child(amount)
+	row.add_child(amount_badge)
 	_fish_cards[fish_id] = {"card": card, "marker": marker, "owned": owned}
 	return card
 
@@ -996,12 +1012,12 @@ func _refresh_fish_card_styles() -> void:
 		var owned := bool(entry.get("owned", true))
 		if card == null:
 			continue
-		card.self_modulate = Color("#fff1bc") if selected else Color("#f3dfb9" if owned else "#8f846c")
+		card.self_modulate = Color.WHITE if selected else Color("#f5e6c8" if owned else "#8f846c")
 		card.add_theme_stylebox_override(
 			"panel",
 			_texture_style_box(
 				FISH_ROW_FRAME,
-				24,
+				36,
 				_style_box(
 					Color("#ffefbd") if selected else Color("#ead9b4" if owned else "#9a8f76"),
 					Color("#f4c96e") if selected else Color("#6a421f" if owned else "#4d3e2c"),
