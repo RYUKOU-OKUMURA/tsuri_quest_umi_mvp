@@ -588,7 +588,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	detail_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(detail_panel)
 	var detail_layout := VBoxContainer.new()
-	detail_layout.add_theme_constant_override("separation", 3)
+	detail_layout.add_theme_constant_override("separation", 4)
 	detail_panel.add_child(detail_layout)
 	_dish_title = make_label("料理を選んでください", 28, Color("#2a2118"), 1, Color("#fff4d4"))
 	_dish_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -612,7 +612,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	dish_frame.add_child(_dish_image)
 	var detail_rows := VBoxContainer.new()
 	detail_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	detail_rows.add_theme_constant_override("separation", 6)
+	detail_rows.add_theme_constant_override("separation", 5)
 	detail_layout.add_child(detail_rows)
 	var material_labels := _add_detail_story_row(
 		detail_rows,
@@ -620,7 +620,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 		"必要な材料",
 		"fish",
 		Palette.GAUGE_CYAN_HI,
-		150.0
+		132.0
 	)
 	_material_value = material_labels[0] as Label
 	_stock_value = material_labels[1] as Label
@@ -630,7 +630,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 		"獲得EXP",
 		"exp",
 		Palette.GOLD_BRIGHT,
-		142.0
+		116.0
 	)
 	_exp_value = exp_labels[0] as Label
 	_bonus_value = exp_labels[1] as Label
@@ -640,7 +640,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 		"次の釣行で得られる効果",
 		"buff",
 		Palette.GAUGE_GREEN_HI,
-		158.0
+		176.0
 	)
 	_buff_value = buff_labels[0] as Label
 	_effect_count_value = buff_labels[1] as Label
@@ -652,7 +652,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 		2.0
 	)
 	action_panel.name = "CookActionRunway"
-	action_panel.custom_minimum_size = Vector2(0, 80)
+	action_panel.custom_minimum_size = Vector2(0, 78)
 	action_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_layout.add_child(action_panel)
 	var action_layout := VBoxContainer.new()
@@ -672,11 +672,11 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	cue_row.add_child(_overwrite_note)
 	_cook_action_cue = CookActionCueVisual.new()
 	_cook_action_cue.name = "CookActionCue"
-	_cook_action_cue.custom_minimum_size = Vector2(108, 14)
+	_cook_action_cue.custom_minimum_size = Vector2(76, 14)
 	cue_row.add_child(_cook_action_cue)
 	_cook_button = make_button("調理する", _cook_selected, 300, true)
 	_cook_button.name = "CookButton"
-	_cook_button.custom_minimum_size = Vector2(360, 54)
+	_cook_button.custom_minimum_size = Vector2(326, 52)
 	_cook_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_apply_cook_button_style()
 	_cook_button.draw.connect(func() -> void: _draw_cook_button_icon(_cook_button))
@@ -747,7 +747,7 @@ func _add_detail_story_row(
 	parent: Container,
 	node_name: String,
 	title: String,
-	icon_mode: String,
+	_icon_mode: String,
 	accent: Color,
 	title_width: float
 ) -> Array:
@@ -768,7 +768,7 @@ func _add_detail_story_row(
 	tile.add_child(row)
 
 	var title_band := MarginContainer.new()
-	title_band.custom_minimum_size = Vector2(maxf(title_width, 160.0), 32)
+	title_band.custom_minimum_size = Vector2(title_width, 32)
 	title_band.add_theme_constant_override("margin_left", 4)
 	title_band.add_theme_constant_override("margin_right", 4)
 	row.add_child(title_band)
@@ -777,9 +777,7 @@ func _add_detail_story_row(
 	title_row.add_theme_constant_override("separation", 4)
 	title_band.add_child(title_row)
 	var compact := title.length() > 6
-	if node_name == "CookDetailEffectRow":
-		title_row.add_child(_small_icon(icon_mode, accent, Vector2(17.0, 0.0)))
-	var title_size := 12 if compact else 13
+	var title_size := 10 if compact else 13
 	var title_label := make_shadow_label(title, title_size, Palette.TEXT_BONE, 1)
 	title_label.custom_minimum_size = Vector2(0, 30)
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -789,11 +787,11 @@ func _add_detail_story_row(
 	title_label.clip_text = true
 	title_row.add_child(title_label)
 
-	var primary_size := 12 if compact else 15
+	var primary_size := 11 if compact else 15
 	var primary := make_shadow_label("", primary_size, Color("#21170f"), 1, Color("#fff3c8"))
 	primary.custom_minimum_size = Vector2(0, 34)
 	primary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	primary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	primary.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if node_name == "CookDetailEffectRow" else HORIZONTAL_ALIGNMENT_CENTER
 	primary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	primary.autowrap_mode = TextServer.AUTOWRAP_OFF
 	primary.clip_text = true

@@ -855,16 +855,12 @@ def cook_detail_row_frame() -> None:
     paste_rounded(img, paper, (6, 6, w - 8, h - 8), 6, 248)
     draw = ImageDraw.Draw(img, "RGBA")
 
-    # Detail rows are story ribbons: left label socket, right value field,
-    # subtle studs and paper grain, not stacked generic form panels.
+    # Detail rows are story ribbons: the label gets a dark socket, while
+    # values sit directly on parchment so they do not read as input fields.
     draw.rounded_rectangle((6, 6, w - 8, h - 8), radius=6, outline=(82, 48, 22, 248), width=3)
-    draw.rounded_rectangle((17, 11, 190, h - 12), radius=5, fill=(83, 50, 25, 242), outline=(47, 28, 14, 235), width=2)
-    draw.rounded_rectangle((205, 11, w - 22, h - 12), radius=4, fill=(255, 245, 215, 6), outline=(133, 82, 37, 14), width=1)
-    draw.line((202, 12, 202, h - 13), fill=(80, 47, 20, 96), width=2)
-    draw.line((220, 17, w - 42, 17), fill=(255, 250, 220, 24), width=1)
-    draw.line((220, h - 17, w - 42, h - 17), fill=(117, 73, 34, 26), width=2)
-    draw.line((210, 23, 218, 15), fill=(255, 232, 143, 88), width=1)
-    draw.line((w - 38, 16, w - 48, h - 16), fill=(105, 65, 30, 46), width=1)
+    draw.rounded_rectangle((17, 11, 184, h - 12), radius=5, fill=(83, 50, 25, 228), outline=(47, 28, 14, 225), width=2)
+    draw.line((195, 12, 195, h - 13), fill=(80, 47, 20, 54), width=1)
+    draw.line((210, h - 16, w - 42, h - 16), fill=(117, 73, 34, 30), width=2)
     for x, y in [(14, 11), (w - 30, 11), (14, h - 23), (w - 30, h - 23)]:
         draw.rectangle((x, y, x + 8, y + 8), fill=(232, 174, 68, 204), outline=(58, 32, 13, 218), width=1)
     draw_corner_brackets(draw, (13, 11, w - 26, h - 18), (234, 181, 80, 128), (59, 34, 16, 182), 12, 1)
@@ -884,17 +880,12 @@ def cook_button_frame() -> None:
     # Primary COOK_SELECT action button: a chunky navy plank like the reference CTA.
     draw.rounded_rectangle((7, 7, w - 13, h - 15), radius=8, fill=(50, 29, 12, 255), outline=(28, 17, 8, 255), width=5)
     draw.rounded_rectangle((18, 17, w - 24, h - 25), radius=5, fill=(9, 38, 67, 255), outline=(255, 207, 83, 245), width=4)
-    draw.rectangle((28, 24, w - 34, 42), fill=(37, 113, 163, 102))
-    draw.line((30, h - 31, w - 38, h - 31), fill=(1, 10, 24, 130), width=3)
-    draw.rounded_rectangle((32, 20, 96, h - 28), radius=7, fill=(6, 24, 41, 150), outline=(255, 224, 105, 166), width=2)
-    draw.line((112, 21, 112, h - 30), fill=(255, 213, 87, 82), width=2)
-    for x in range(144, w - 70, 78):
-        draw.line((x, 25, x - 18, h - 33), fill=(255, 255, 255, 7), width=2)
+    draw.rectangle((30, 24, w - 36, 38), fill=(39, 112, 162, 52))
+    draw.line((32, h - 31, w - 38, h - 31), fill=(1, 10, 24, 120), width=3)
+    draw.rounded_rectangle((32, 20, 92, h - 28), radius=7, fill=(6, 24, 41, 124), outline=(255, 224, 105, 150), width=2)
+    draw.line((108, 22, 108, h - 31), fill=(255, 213, 87, 48), width=1)
     for x, y in [(20, 18), (w - 42, 18), (20, h - 48), (w - 42, h - 48)]:
         draw.rectangle((x, y, x + 14, y + 14), fill=(255, 206, 73, 235), outline=(57, 32, 14, 255), width=2)
-    for x, y in [(116, 20), (316, 22), (312, 58)]:
-        draw.line((x - 5, y, x + 5, y), fill=(255, 246, 174, 150), width=2)
-        draw.line((x, y - 5, x, y + 5), fill=(255, 246, 174, 150), width=2)
     save(img, "cook_button_frame.png")
 
 
@@ -909,17 +900,14 @@ def cook_action_runway_frame() -> None:
     paste_rounded(img, paper, (8, 7, w - 14, h - 13), 8, 245)
     draw = ImageDraw.Draw(img, "RGBA")
 
-    # A unified landing strip for the final cook action: short note on top,
-    # chunky navy CTA socket on the bottom. Keep it quieter than the CTA.
+    # A unified landing strip for the final cook action. The CTA supplies its
+    # own navy plank, so this frame stays quiet and parchment-led.
     draw.rounded_rectangle((7, 7, w - 14, h - 13), radius=8, outline=(72, 43, 19, 245), width=4)
-    draw.rounded_rectangle((22, 15, w - 30, 32), radius=5, fill=(248, 229, 184, 34), outline=(147, 94, 43, 30), width=1)
-    draw.line((40, 25, w - 74, 25), fill=(104, 65, 32, 34), width=2)
-    draw.line((w - 66, 24, w - 36, 24), fill=(255, 205, 72, 54), width=2)
-    draw.polygon([(w - 36, 24), (w - 48, 19), (w - 48, 29)], fill=(255, 205, 72, 82))
-    draw.rounded_rectangle((94, 34, w - 94, h - 17), radius=8, fill=(7, 25, 43, 68), outline=(255, 210, 86, 58), width=2)
+    draw.rounded_rectangle((22, 15, w - 30, 32), radius=5, fill=(248, 229, 184, 28), outline=(147, 94, 43, 24), width=1)
+    draw.line((42, 25, w - 44, 25), fill=(104, 65, 32, 24), width=2)
     for x, y in [(22, 15), (w - 46, 15), (22, h - 39), (w - 46, h - 39)]:
         draw.rectangle((x, y, x + 13, y + 13), fill=(230, 174, 72, 205), outline=(57, 32, 14, 225), width=2)
-    draw.line((118, h - 23, w - 118, h - 23), fill=(255, 226, 113, 40), width=2)
+    draw.line((82, h - 20, w - 82, h - 20), fill=(255, 226, 113, 30), width=2)
     save(img, "cook_action_runway_frame.png")
 
 
@@ -1839,7 +1827,6 @@ def frame_assets() -> None:
         draw = ImageDraw.Draw(img, "RGBA")
         draw.rounded_rectangle((7, 7, size[0] - 14, size[1] - 20), radius=11, outline=(66, 38, 18, 255), width=6)
         draw.rounded_rectangle((22, 24, size[0] - 30, size[1] - 38), radius=7, outline=(224, 171, 79, 170), width=2)
-        draw.line((58, 86, size[0] - 58, 86), fill=(104, 66, 35, 78), width=3)
         draw.rounded_rectangle((42, 108, size[0] - 44, 316), radius=6, fill=(92, 55, 28, 82), outline=(92, 55, 28, 116), width=2)
         for y in [356, 414, 472]:
             draw.rounded_rectangle((40, y, size[0] - 42, y + 42), radius=5, fill=(245, 224, 178, 112), outline=(116, 75, 40, 105), width=1)
