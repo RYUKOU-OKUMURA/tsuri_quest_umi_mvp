@@ -123,7 +123,7 @@
   - 追記: `MEAL_RESULT` と `EXP_GAIN` は同じ `CookingRewardPanel` 内の切り替えだが、参照02/03を混ぜないことをcontent auditで固定した。`MEAL_RESULT` では `ExpBurstFrame`、`NextEffectArt`、`RewardCardGrowth` が可視にならないこと、`EXP_GAIN` / `EXP_GAIN_LEVELUP` では `MealDishCard` と `RewardDishFeatureImage` が可視にならないことを検出する。これにより、食事結果の料理カードとEXPゲージ演出が同時に出る退行を防ぐ。
   - 追記: `MEAL_RESULT` / `EXP_GAIN` / `EXP_GAIN_LEVELUP` の主見出しを、`MealResultBanner` / `MealResultTitle` と `ExpGainBanner` / `ExpGainTitle` として状態別に名前付き契約にした。content/layout auditで存在とサイズを確認し、参照02の「食べた！」バナーと参照03の「食経験値を獲得！」タイトルが汎用見出しや別状態の見出しへ戻る退行を防ぐ。
   - 追記: `LEVEL_UP_OVERLAY` は参照04の報酬ピークとして、暗転、中央ダイアログ、巨大タイトル、レベル遷移を名前付き契約にした。`LevelUpDimmer`、`LevelUpDialog`、`LevelUpTitleBand`、`LevelUpTitle`、`LevelUpLevelLine`、`LevelUpSourceLine` を追加し、content/layout auditで存在と最小サイズを検出する。これにより、レベルアップ演出が通常パネル相当に弱くなる退行を防ぐ。
-  - 追記: `MEAL_RESULT` / `EXP_GAIN` / `EXP_GAIN_LEVELUP` 下部の現在準備帯を、`RewardStatusStrip`、`RewardStatusLevelCard`、`RewardStatusMealCard`、`RewardStatusCoolerCard`、`RewardStatusMoneyCard` として名前付き契約にした。content/layout auditで存在と最小サイズを検出し、食事結果やEXP加算がプレイヤーLv、効果中料理、クーラー、所持金へ反映されている文脈を保つ。
+  - 追記: `MEAL_RESULT` / `EXP_GAIN` / `EXP_GAIN_LEVELUP` 下部の現在準備帯を、`RewardStatusStrip`、`RewardStatusLevelCard`、`RewardStatusMealCard`、`RewardStatusCoolerCard`、`RewardStatusMoneyCard` として名前付き契約にした。content/layout auditで存在と最小サイズを検出し、食事結果やEXP加算がプレイヤーLv、効果中料理、クーラー、所持金へ反映されている文脈を保つ。さらに `RewardStatusLevelIcon`、`RewardStatusMealIcon`、`RewardStatusCoolerIcon`、`RewardStatusMoneyIcon`、`RewardStatusLevelExpBar`、`RewardStatusLevelExpText` を監査対象にし、下部がテキストだけの青い情報帯へ戻る退行を防ぐ。
 - `tools/cooking_verify.sh`
   - 目的: 調理ショーケースのheadlessゲートを一括実行する。内容監査、1280x720レイアウト監査、実フローsmokeを順に走らせる。
   - コマンド: `tools/cooking_verify.sh`
@@ -255,8 +255,9 @@
 - 追記: 上部の `MealResultBanner` は補足文を消し、`アジの塩焼きを食べた！` の1行見出しを主役にする。`meal_banner_frame.png` の左タブはEXP風の `+` 記号から食事用のフォーク/スプーン記号へ更新し、MEAL_RESULTの3ステップ導線は短い `食事 完了 / EXPへ / 成長` 表示、低めの高さ、薄い表示へ落として、結果バナーを邪魔しない比重へ調整した。
 - 追記: `meal_table_spread.png` を白い角丸トレイから、透明背景の楕円皿、大きい焼きアジ、レモン/大根おろし、椀/湯気/小物を含む食卓前景へ再生成した。MEAL_RESULTの `salt_grill` ではこの専用食卓前景を優先表示し、import済みTexture2Dで白面化する環境ではソースPNGからキャッシュした `ImageTexture` として描く。`/tmp/tsuri_cooking_result.png` で白い板に戻らず、左の食事シーンが人物と食卓の一枚絵に近づいたことを確認した。
 - 追記: MEAL_RESULT/EXP_GAIN共通の報酬カードは、カード面の裏側に報酬種別ごとの大きい薄絵を描く。基本EXPは米椀と上昇矢印、初回ボーナスは旗とコック帽、合計獲得は放射バーストと星、次の釣行は魚バッジと上昇矢印をカード内に置き、参照02の下段報酬カードのように獲得物が文字だけでなく絵としても読める密度へ寄せた。`/tmp/tsuri_cooking_result.png` で主要値の可読性を維持していることを確認した。
+- 追記: 下部ステータス帯は `RewardStatusLevelIcon`、`RewardStatusMealIcon`、`RewardStatusCoolerIcon`、`RewardStatusMoneyIcon` を持つ濃紺の小型カードへ更新した。プレイヤーLvカードには顔アイコン、`Lv.*`、ミニEXPバー、EXP値を分けて表示し、料理/クーラー/所持金カードにも料理皿、クーラー、金袋素材を入れる。所持金は `10,170 G` のように桁区切りへ変更し、参照02の下部ステータスカードに近い「現在状態が絵で読める」密度へ寄せた。明るい `status_card_frame.png` は報酬画面下部では白い情報欄に見えたため、実スクショ確認後に濃紺の `reward_card_frame.png` へ差し替えた。
 - 通過ゲート: `HOME=/private/tmp/tsuri_home tools/cooking_verify.sh`、`HOME=/private/tmp/tsuri_home tools/cooking_visual_qa.sh`、`git diff --check`。更新後の確認スクショは `/tmp/tsuri_cooking_result.png`、比較レポートは `/tmp/tsuri_cooking_reference_report.html`。
-- 残る差分: 左食事シーンは白い板/カード感を脱し、報酬カードも文字だけの密度から脱してきた。参照02のような高密度の人物・料理・窓辺まで一体化した一枚絵にはまだ届かないため、次パスで触るなら左背景と人物の接続光、または下部ステータス帯の小アイコン/質感を比較する。
+- 残る差分: 左食事シーンは白い板/カード感を脱し、報酬カードと下部ステータス帯も文字だけの密度から脱してきた。参照02のような高密度の人物・料理・窓辺まで一体化した一枚絵にはまだ届かないため、次パスで触るなら左背景と人物の接続光、または結果バナー/料理カード/報酬カード間の視線誘導を比較する。
 
 ## 未解決
 

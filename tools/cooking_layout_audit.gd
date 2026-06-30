@@ -405,11 +405,16 @@ func _expect_named_controls_hidden(state: String, root: Node, node_names: Array)
 
 
 func _expect_reward_status_strip(state: String, root: Node) -> void:
-	_expect_named_control_size(state, root, "RewardStatusStrip", Vector2(700.0, 30.0))
-	_expect_named_control_size(state, root, "RewardStatusLevelCard", Vector2(130.0, 26.0))
-	_expect_named_control_size(state, root, "RewardStatusMealCard", Vector2(130.0, 26.0))
-	_expect_named_control_size(state, root, "RewardStatusCoolerCard", Vector2(130.0, 26.0))
-	_expect_named_control_size(state, root, "RewardStatusMoneyCard", Vector2(130.0, 26.0))
+	_expect_named_control_size(state, root, "RewardStatusStrip", Vector2(700.0, 46.0))
+	_expect_named_control_size(state, root, "RewardStatusLevelCard", Vector2(190.0, 44.0))
+	_expect_named_control_size(state, root, "RewardStatusMealCard", Vector2(240.0, 44.0))
+	_expect_named_control_size(state, root, "RewardStatusCoolerCard", Vector2(180.0, 44.0))
+	_expect_named_control_size(state, root, "RewardStatusMoneyCard", Vector2(170.0, 44.0))
+	_expect_named_control_size(state, root, "RewardStatusLevelIcon", Vector2(30.0, 30.0))
+	_expect_named_control_size(state, root, "RewardStatusMealIcon", Vector2(30.0, 30.0))
+	_expect_named_control_size(state, root, "RewardStatusCoolerIcon", Vector2(30.0, 30.0))
+	_expect_named_control_size(state, root, "RewardStatusMoneyIcon", Vector2(30.0, 30.0))
+	_expect_named_control_size(state, root, "RewardStatusLevelExpBar", Vector2(55.0, 6.0))
 
 
 func _find_named(node: Node, node_name: String) -> Node:

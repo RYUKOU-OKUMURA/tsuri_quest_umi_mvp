@@ -324,13 +324,14 @@ func _audit_exp_gain() -> void:
 			"次の釣行で最大体力 +5%",
 			"1回の釣行で発動",
 			"プレイヤーLv.",
-			"Lv.4  120/150 EXP",
+			"Lv.4",
+			"120/150",
 			"効果中の料理",
 			"アジの塩焼き / あと1回",
 			"クーラーボックス",
 			"11 / 20",
 			"所持金",
-			"1250 G",
+			"1,250 G",
 			"準備へ戻る",
 		]
 	)
@@ -408,13 +409,14 @@ func _audit_exp_gain_level_up() -> void:
 			"初回ボーナス +20 EXP",
 			"1回の釣行で発動",
 			"プレイヤーLv.",
-			"Lv.5  20/190 EXP",
+			"Lv.5",
+			"20/190",
 			"効果中の料理",
 			"アジの塩焼き / あと1回",
 			"クーラーボックス",
 			"10 / 20",
 			"所持金",
-			"1250 G",
+			"1,250 G",
 			"解放を見る",
 		]
 	)
@@ -485,13 +487,14 @@ func _audit_meal_result() -> void:
 			"最大体力 +5%",
 			"1回の釣行で発動",
 			"プレイヤーLv.",
-			"Lv.4  130/150 EXP",
+			"Lv.4",
+			"130/150",
 			"効果中の料理",
 			"アジの塩焼き / あと1回",
 			"クーラーボックス",
 			"10 / 20",
 			"所持金",
-			"1250 G",
+			"1,250 G",
 			"食経験値へ進む",
 		]
 	)
@@ -765,6 +768,32 @@ func _expect_reward_status_strip(state: String, root: Node) -> void:
 	_expect_named_node(state, root, "RewardStatusMealCard")
 	_expect_named_node(state, root, "RewardStatusCoolerCard")
 	_expect_named_node(state, root, "RewardStatusMoneyCard")
+	_expect_named_node(state, root, "RewardStatusLevelExpBar")
+	_expect_named_node(state, root, "RewardStatusLevelExpText")
+	_expect_texture_rect_path(
+		state,
+		root,
+		"RewardStatusLevelIcon",
+		"res://assets/showcase/cooking/player_status_portrait_pixel.png"
+	)
+	_expect_texture_rect_path(
+		state,
+		root,
+		"RewardStatusMealIcon",
+		"res://assets/showcase/cooking/dish_feature_aji_shioyaki.png"
+	)
+	_expect_texture_rect_path(
+		state,
+		root,
+		"RewardStatusCoolerIcon",
+		"res://assets/showcase/cooking/status_cooler_art.png"
+	)
+	_expect_texture_rect_path(
+		state,
+		root,
+		"RewardStatusMoneyIcon",
+		"res://assets/showcase/cooking/status_money_art.png"
+	)
 
 
 func _expect_absent_named_nodes(state: String, root: Node, node_names: Array) -> void:

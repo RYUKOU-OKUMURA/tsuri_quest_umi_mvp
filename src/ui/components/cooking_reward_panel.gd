@@ -24,6 +24,9 @@ const MEAL_DISH_CARD_FRAME := "res://assets/showcase/cooking/meal_dish_card_fram
 const EXP_BURST_FRAME := "res://assets/showcase/cooking/exp_burst_frame.png"
 const REWARD_CARD_FRAME := "res://assets/showcase/cooking/reward_card_frame.png"
 const FLOW_ACTION_BUTTON_FRAME := "res://assets/showcase/cooking/flow_action_button_frame.png"
+const PLAYER_STATUS_PORTRAIT := "res://assets/showcase/cooking/player_status_portrait_pixel.png"
+const STATUS_COOLER_ART := "res://assets/showcase/cooking/status_cooler_art.png"
+const STATUS_MONEY_ART := "res://assets/showcase/cooking/status_money_art.png"
 
 
 class SceneActorVisual:
@@ -737,7 +740,10 @@ var _total_label: Label
 var _buff_label: Label
 var _growth_label: Label
 var _status_level_label: Label
+var _status_level_exp_label: Label
+var _status_level_bar: GaugeBar
 var _status_meal_label: Label
+var _status_meal_icon: TextureRect
 var _status_cooler_label: Label
 var _status_money_label: Label
 var _confirm_button: Button
@@ -1385,56 +1391,205 @@ func _draw_exp_focus_burst() -> void:
 func _build_status_strip(parent: VBoxContainer) -> void:
 	var strip := HBoxContainer.new()
 	strip.name = "RewardStatusStrip"
-	strip.custom_minimum_size = Vector2(0.0, 46.0)
+	strip.custom_minimum_size = Vector2(0.0, 54.0)
 	strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	strip.add_theme_constant_override("separation", 8)
+	strip.add_theme_constant_override("separation", 7)
 	parent.add_child(strip)
 
-	_status_level_label = _status_strip_card(strip, "RewardStatusLevelCard", "プレイヤーLv.", Palette.GOLD_BRIGHT)
-	_status_meal_label = _status_strip_card(strip, "RewardStatusMealCard", "効果中の料理", Palette.GAUGE_GREEN_HI)
-	_status_cooler_label = _status_strip_card(strip, "RewardStatusCoolerCard", "クーラーボックス", Palette.GAUGE_CYAN_HI)
-	_status_money_label = _status_strip_card(strip, "RewardStatusMoneyCard", "所持金", Palette.GOLD_BRIGHT)
+	_status_level_label = _status_strip_card(strip, "RewardStatusLevelCard", "プレイヤーLv.", Palette.GOLD_BRIGHT, "level")
+	_status_meal_label = _status_strip_card(strip, "RewardStatusMealCard", "効果中の料理", Palette.GAUGE_GREEN_HI, "meal")
+	_status_cooler_label = _status_strip_card(strip, "RewardStatusCoolerCard", "クーラーボックス", Palette.GAUGE_CYAN_HI, "cooler")
+	_status_money_label = _status_strip_card(strip, "RewardStatusMoneyCard", "所持金", Palette.GOLD_BRIGHT, "money")
 	var meal_card := _reward_card_from_label(_status_meal_label)
 	if meal_card != null:
-		meal_card.custom_minimum_size = Vector2(340.0, 38.0)
+		meal_card.custom_minimum_size = Vector2(340.0, 50.0)
 
 
-func _status_strip_card(parent: HBoxContainer, card_name: String, title: String, accent: Color) -> Label:
-	var card := _compact_panel_box(Color("#0d2338"), Color("#07121e"), Palette.GOLD_DEEP, 3)
+func _status_strip_card(
+	parent: HBoxContainer, card_name: String, title: String, accent: Color, icon_mode: String
+) -> Label:
+	var card := PanelContainer.new()
 	card.name = card_name
-	card.custom_minimum_size = Vector2(0.0, 38.0)
+	card.add_theme_stylebox_override(
+		"panel",
+		_texture_style_box(
+			REWARD_CARD_FRAME,
+			24,
+			_compact_style_box(Color("#0d2338"), Color("#07121e"), Palette.GOLD_DEEP, 3, 4),
+			8.0,
+			5.0
+		)
+	)
+	card.custom_minimum_size = Vector2(_status_card_min_width(icon_mode), 50.0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.draw.connect(func() -> void: _draw_status_card_backdrop(card, icon_mode, accent))
 	parent.add_child(card)
+
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", 6)
 	card.add_child(row)
-	var title_label := make_shadow_label(title, 13, Palette.TEXT_BONE, 2)
-	title_label.custom_minimum_size = Vector2(_status_title_width(title), 0.0)
+
+	var icon_shell := _status_icon_shell(icon_mode, accent)
+	row.add_child(icon_shell)
+
+	var text_box := VBoxContainer.new()
+	text_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	text_box.add_theme_constant_override("separation", 1)
+	row.add_child(text_box)
+
+	var title_label := make_shadow_label(title, 11, Palette.TEXT_BONE, 1)
+	title_label.custom_minimum_size = Vector2(0.0, 12.0)
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title_label.clip_text = true
-	row.add_child(title_label)
-	var value := make_shadow_label("", 15, accent, 2)
+	text_box.add_child(title_label)
+
+	var value := make_shadow_label("", _status_value_font_size(icon_mode), accent, 2)
+	value.custom_minimum_size = Vector2(0.0, _status_value_height(icon_mode))
 	value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	value.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	row.add_child(value)
+	value.autowrap_mode = TextServer.AUTOWRAP_OFF
+	value.clip_text = true
+	text_box.add_child(value)
+
+	if icon_mode == "level":
+		var exp_row := HBoxContainer.new()
+		exp_row.name = "RewardStatusLevelExpRow"
+		exp_row.add_theme_constant_override("separation", 5)
+		exp_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		text_box.add_child(exp_row)
+		_status_level_bar = GaugeBarScript.new()
+		_status_level_bar.name = "RewardStatusLevelExpBar"
+		_status_level_bar.show_value = false
+		_status_level_bar.critical_threshold = 0.0
+		_status_level_bar.custom_minimum_size = Vector2(72.0, 8.0)
+		_status_level_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_status_level_bar.set_colors(Palette.GAUGE_CYAN, Palette.GAUGE_CYAN_HI)
+		exp_row.add_child(_status_level_bar)
+		_status_level_exp_label = make_shadow_label("", 10, Palette.TEXT_BONE, 1)
+		_status_level_exp_label.name = "RewardStatusLevelExpText"
+		_status_level_exp_label.custom_minimum_size = Vector2(66.0, 0.0)
+		_status_level_exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		_status_level_exp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_status_level_exp_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+		_status_level_exp_label.clip_text = true
+		exp_row.add_child(_status_level_exp_label)
+
 	return value
 
 
-func _status_title_width(title: String) -> float:
-	match title:
-		"クーラーボックス":
-			return 104.0
-		"効果中の料理":
-			return 92.0
-		"プレイヤーLv.":
-			return 86.0
-		"所持金":
-			return 58.0
+func _status_icon_shell(icon_mode: String, accent: Color) -> PanelContainer:
+	var shell := _compact_panel_box(Color("#071a2b"), Color("#06111e"), accent, 2)
+	shell.custom_minimum_size = Vector2(48.0, 0.0)
+	shell.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var icon := TextureRect.new()
+	icon.name = _status_icon_node_name(icon_mode)
+	icon.texture = _status_icon_texture(icon_mode)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	icon.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	shell.add_child(icon)
+	if icon_mode == "meal":
+		_status_meal_icon = icon
+	return shell
+
+
+func _status_card_min_width(icon_mode: String) -> float:
+	match icon_mode:
+		"level":
+			return 250.0
+		"meal":
+			return 340.0
+		"cooler":
+			return 252.0
+		"money":
+			return 236.0
 		_:
-			return 84.0
+			return 220.0
+
+
+func _status_value_font_size(icon_mode: String) -> int:
+	match icon_mode:
+		"level":
+			return 20
+		"meal":
+			return 15
+		"cooler":
+			return 19
+		"money":
+			return 18
+		_:
+			return 17
+
+
+func _status_value_height(icon_mode: String) -> float:
+	match icon_mode:
+		"level":
+			return 20.0
+		"meal":
+			return 18.0
+		_:
+			return 22.0
+
+
+func _status_icon_node_name(icon_mode: String) -> String:
+	match icon_mode:
+		"level":
+			return "RewardStatusLevelIcon"
+		"meal":
+			return "RewardStatusMealIcon"
+		"cooler":
+			return "RewardStatusCoolerIcon"
+		"money":
+			return "RewardStatusMoneyIcon"
+		_:
+			return "RewardStatusIcon"
+
+
+func _status_icon_texture(icon_mode: String) -> Texture2D:
+	match icon_mode:
+		"level":
+			return load(PLAYER_STATUS_PORTRAIT) as Texture2D
+		"meal":
+			return load(DISH_FEATURE_AJI) as Texture2D
+		"cooler":
+			return load(STATUS_COOLER_ART) as Texture2D
+		"money":
+			return load(STATUS_MONEY_ART) as Texture2D
+		_:
+			return null
+
+
+func _draw_status_card_backdrop(card: Control, icon_mode: String, accent: Color) -> void:
+	var rect := Rect2(Vector2.ZERO, card.size)
+	var glow := accent
+	glow.a = 0.10
+	card.draw_rect(Rect2(Vector2(10.0, rect.size.y - 15.0), Vector2(rect.size.x - 20.0, 5.0)), glow)
+	var shine := Color("#fff4c9", 0.11)
+	card.draw_line(Vector2(14.0, 12.0), Vector2(rect.size.x - 18.0, 8.0), shine, 2.0)
+	for i in range(3):
+		var p := Vector2(rect.size.x * (0.55 + float(i) * 0.14), 13.0 + float(i % 2) * 21.0)
+		var sparkle := accent
+		sparkle.a = 0.30
+		card.draw_line(p + Vector2(-3.0, 0.0), p + Vector2(3.0, 0.0), sparkle, 1.4)
+		card.draw_line(p + Vector2(0.0, -3.0), p + Vector2(0.0, 3.0), sparkle, 1.4)
+	if icon_mode == "money":
+		for i in range(3):
+			var x := rect.size.x - 34.0 + float(i) * 7.0
+			card.draw_circle(Vector2(x, rect.size.y - 15.0), 5.0, Color("#d9a33a", 0.28))
+	elif icon_mode == "cooler":
+		card.draw_rect(Rect2(rect.size.x - 50.0, rect.size.y - 18.0, 34.0, 5.0), Color("#6bf1ff", 0.18))
+	elif icon_mode == "meal":
+		card.draw_arc(Vector2(rect.size.x - 32.0, rect.size.y - 13.0), 13.0, 0.0, PI, 16, Color("#fff1c7", 0.28), 3.0)
+	else:
+		card.draw_circle(Vector2(rect.size.x - 30.0, rect.size.y - 15.0), 8.0, Color("#6bf1ff", 0.16))
 
 
 func _refresh_status_strip(result: Dictionary) -> void:
@@ -1446,15 +1601,21 @@ func _refresh_status_strip(result: Dictionary) -> void:
 	var next_exp := int(snapshot.get("exp_max", PlayerProgress.exp_to_next_level()))
 	var fish_total := int(snapshot.get("fish_total", _total_fish_count()))
 	var money := int(snapshot.get("money", PlayerProgress.money))
-	_status_level_label.text = "Lv.%d  %d/%d EXP" % [
-		level,
-		exp,
-		next_exp,
-	]
+	_status_level_label.text = "Lv.%d" % level
+	if _status_level_exp_label != null:
+		_status_level_exp_label.text = "%d/%d" % [
+			exp,
+			next_exp,
+		]
+	if _status_level_bar != null:
+		_status_level_bar.max_value = maxf(1.0, float(next_exp))
+		_status_level_bar.set_value(clampf(float(exp), 0.0, _status_level_bar.max_value))
 	var buff := Dictionary(result.get("buff", {}))
+	if _status_meal_icon != null:
+		_status_meal_icon.texture = _featured_dish_texture(String(buff.get("recipe_id", "salt_grill")))
 	_status_meal_label.text = "%s / あと1回" % String(buff.get("name", result.get("dish_name", "料理")))
 	_status_cooler_label.text = "%d / 20" % fish_total
-	_status_money_label.text = "%d G" % money
+	_status_money_label.text = "%s G" % _format_number(money)
 
 
 func _total_fish_count() -> int:
@@ -1462,6 +1623,18 @@ func _total_fish_count() -> int:
 	for fish_id in GameData.get_all_fish_ids():
 		total += PlayerProgress.fish_count(fish_id)
 	return total
+
+
+func _format_number(value: int) -> String:
+	var raw := str(value)
+	var result := ""
+	var count := 0
+	for index in range(raw.length() - 1, -1, -1):
+		if count > 0 and count % 3 == 0:
+			result = "," + result
+		result = raw[index] + result
+		count += 1
+	return result
 
 
 func _add_meal_scene_background() -> void:
