@@ -1479,19 +1479,21 @@ def meal_banner_frame() -> None:
     for x, y in [(15, 38), (16, 77), (w - 23, 49), (w - 24, 86)]:
         draw.rectangle((x, y, x + 3, y + 15), fill=(84, 50, 25, 84))
 
+    mark_layer = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    md = ImageDraw.Draw(mark_layer, "RGBA")
     rng = random.Random(902)
-    for i in range(105):
+    for i in range(78):
         x = rng.randint(34, w - 52)
         y = rng.randint(27, h - 43)
         clear = 232 < x < 546 and 35 < y < 98
-        if clear and i % 4:
+        if clear and i % 3:
             continue
-        alpha = rng.randint(8, 22) if clear else rng.randint(12, 32)
+        alpha = rng.randint(5, 14) if clear else rng.randint(8, 24)
         r = 1 if rng.random() < 0.86 else 2
-        draw.ellipse((x, y, x + r, y + r), fill=(100, 59, 27, alpha))
-    for x0, y0, x1, y1, alpha in [(58, 30, 34, 92, 13), (126, 23, 98, 91, 10), (568, 24, 618, 91, 9), (658, 22, 713, 88, 12)]:
-        draw.line((x0, y0, x1, y1), fill=(115, 72, 34, alpha), width=2)
-        draw.line((x0 + 3, y0, x1 + 3, y1), fill=(255, 246, 218, max(8, alpha // 2)), width=1)
+        md.ellipse((x, y, x + r, y + r), fill=(100, 59, 27, alpha))
+    for x0, y0, x1, y1, alpha in [(58, 30, 34, 92, 5), (126, 23, 98, 91, 4), (568, 24, 618, 91, 3), (658, 22, 713, 88, 4)]:
+        md.line((x0, y0, x1, y1), fill=(115, 72, 34, alpha), width=1)
+        md.line((x0 + 3, y0, x1 + 3, y1), fill=(255, 246, 218, max(4, alpha // 2)), width=1)
 
     # Irregular parchment chips and edge shadows read as material without crossing the headline.
     chips = [
@@ -1504,29 +1506,33 @@ def meal_banner_frame() -> None:
         (620, h - 34, 692, h - 28, 11),
     ]
     for x0, y0, x1, y1, alpha in chips:
-        draw.rectangle((x0, y0, x1, y1), fill=(73, 43, 22, alpha))
-        draw.line((x0 + 3, y0, x1 - 5, y0), fill=(255, 246, 218, max(5, alpha - 3)), width=1)
+        md.rectangle((x0, y0, x1, y1), fill=(73, 43, 22, alpha))
+        md.line((x0 + 3, y0, x1 - 5, y0), fill=(255, 246, 218, max(5, alpha - 3)), width=1)
     for x in range(34, w - 42, 57):
         y = 19 + (x * 7) % 6
-        draw.rectangle((x, y, x + 18, y + 2), fill=(255, 248, 225, 26))
+        md.rectangle((x, y, x + 18, y + 2), fill=(255, 248, 225, 26))
         by = h - 35 - (x * 5) % 5
-        draw.rectangle((x + 16, by, x + 38, by + 2), fill=(71, 42, 22, 18))
+        md.rectangle((x + 16, by, x + 38, by + 2), fill=(71, 42, 22, 18))
 
     # Folded corner and fish stamp echo the reference without baking text.
-    draw.polygon([(w - 103, 10), (w - 18, 10), (w - 18, 78)], fill=(255, 244, 219, 218), outline=(166, 112, 58, 125))
-    draw.line((w - 97, 17, w - 29, 72), fill=(135, 85, 44, 78), width=2)
+    md.polygon([(w - 103, 10), (w - 18, 10), (w - 18, 78)], fill=(255, 244, 219, 218), outline=(166, 112, 58, 125))
+    md.line((w - 97, 17, w - 29, 72), fill=(135, 85, 44, 78), width=2)
     fish_cx, fish_cy = w - 118, 67
-    fish = (84, 73, 60, 58)
-    draw.ellipse((fish_cx - 52, fish_cy - 15, fish_cx + 32, fish_cy + 17), fill=fish)
-    draw.polygon(
-        [(fish_cx + 26, fish_cy), (fish_cx + 70, fish_cy - 25), (fish_cx + 57, fish_cy), (fish_cx + 70, fish_cy + 24)],
-        fill=fish,
-    )
-    draw.polygon([(fish_cx - 18, fish_cy - 13), (fish_cx + 3, fish_cy - 33), (fish_cx + 1, fish_cy - 12)], fill=(84, 73, 60, 38))
-    draw.ellipse((fish_cx - 40, fish_cy - 6, fish_cx - 32, fish_cy + 2), fill=(40, 34, 28, 76))
+    fish_fill = (92, 76, 55, 12)
+    fish_line = (84, 68, 48, 34)
+    md.ellipse((fish_cx - 52, fish_cy - 15, fish_cx + 32, fish_cy + 17), fill=fish_fill, outline=fish_line, width=2)
+    tail = [(fish_cx + 26, fish_cy), (fish_cx + 70, fish_cy - 25), (fish_cx + 57, fish_cy), (fish_cx + 70, fish_cy + 24)]
+    md.polygon(tail, fill=(92, 76, 55, 10))
+    md.line(tail + [tail[0]], fill=fish_line, width=1)
+    fin = [(fish_cx - 18, fish_cy - 13), (fish_cx + 3, fish_cy - 33), (fish_cx + 1, fish_cy - 12)]
+    md.polygon(fin, fill=(92, 76, 55, 8))
+    md.line(fin + [fin[0]], fill=(84, 68, 48, 25), width=1)
+    md.ellipse((fish_cx - 40, fish_cy - 6, fish_cx - 32, fish_cy + 2), fill=(40, 34, 28, 34))
     for s in range(5):
         x = fish_cx - 22 + s * 13
-        draw.arc((x, fish_cy - 14, x + 20, fish_cy + 16), 98, 260, fill=(255, 246, 220, 52), width=2)
+        md.arc((x, fish_cy - 14, x + 20, fish_cy + 16), 98, 260, fill=(84, 68, 48, 24), width=1)
+    img.alpha_composite(mark_layer)
+    draw = ImageDraw.Draw(img, "RGBA")
 
     # Navy command tab at upper left, with a small utensil mark for the eating state.
     gold = (229, 173, 81, 255)
