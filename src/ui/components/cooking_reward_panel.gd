@@ -2684,7 +2684,7 @@ func _apply_meal_result_composition() -> void:
 	if _scene_bonus_label != null:
 		_scene_bonus_label.visible = false
 	if _dish_card != null:
-		_dish_card.custom_minimum_size = Vector2(0.0, 198.0)
+		_dish_card.custom_minimum_size = Vector2(0.0, 188.0)
 	if _dish_card_bridge != null:
 		_dish_card_bridge.visible = true
 		_dish_card_bridge.queue_redraw()
@@ -2709,7 +2709,7 @@ func _apply_meal_result_composition() -> void:
 	if _reward_grid != null:
 		_reward_grid.queue_redraw()
 	_set_status_strip_emphasis(false)
-	_set_reward_cards_height(126.0)
+	_set_reward_cards_height(142.0)
 
 
 func _apply_exp_gain_composition() -> void:
@@ -2814,9 +2814,9 @@ func _draw_reward_grid_backdrop() -> void:
 
 
 func _apply_meal_reward_hierarchy() -> void:
-	_set_reward_label_style(_base_label, 30, Palette.GAUGE_CYAN_HI, 4)
-	_set_reward_label_style(_bonus_label, 30, Palette.GOLD_BRIGHT, 4)
-	_set_reward_label_style(_total_label, 43, Palette.GOLD_BRIGHT, 6)
+	_set_reward_label_style(_base_label, 34, Palette.GAUGE_CYAN_HI, 4)
+	_set_reward_label_style(_bonus_label, 34, Palette.GOLD_BRIGHT, 4)
+	_set_reward_label_style(_total_label, 48, Palette.GOLD_BRIGHT, 6)
 	_set_reward_label_style(_buff_label, 18, Palette.GAUGE_GREEN_HI, 3)
 	_set_reward_card_modulate(_base_label, Color(0.92, 0.96, 1.0, 0.92))
 	_set_reward_card_modulate(_bonus_label, Color(1.0, 0.96, 0.86, 0.94))
@@ -2850,11 +2850,13 @@ func _set_reward_cards_height(height: float) -> void:
 func _set_status_strip_emphasis(is_primary: bool) -> void:
 	var tint := Color.WHITE if is_primary else Color(0.82, 0.90, 1.0, 0.86)
 	if _status_strip != null:
+		_status_strip.custom_minimum_size = Vector2(0.0, 62.0 if is_primary else 56.0)
 		_status_strip.queue_redraw()
 	for label in [_status_level_label, _status_meal_label, _status_cooler_label, _status_money_label]:
 		var card := _reward_card_from_label(label)
 		if card == null:
 			continue
+		card.custom_minimum_size = Vector2(card.custom_minimum_size.x, 58.0 if is_primary else 52.0)
 		card.modulate = tint
 		card.queue_redraw()
 
@@ -3017,6 +3019,8 @@ func _draw_reward_card_backdrop(card: Control, icon_mode: String) -> void:
 	if s.x <= 0.0 or s.y <= 0.0:
 		return
 	var center := Vector2(s.x * 0.50, s.y * 0.67)
+	if _preview_state == "MEAL_RESULT":
+		_draw_reward_award_well(card, icon_mode)
 	_draw_reward_header_ribbon(card, icon_mode)
 	match icon_mode:
 		"exp":
@@ -3029,6 +3033,27 @@ func _draw_reward_card_backdrop(card: Control, icon_mode: String) -> void:
 			_draw_reward_buff_backdrop(card, center)
 		"growth":
 			_draw_reward_growth_backdrop(card, center)
+
+
+func _draw_reward_award_well(card: Control, icon_mode: String) -> void:
+	var s := card.size
+	var accent := _reward_card_draw_accent(icon_mode)
+	var well := Rect2(Vector2(13.0, 45.0), Vector2(maxf(12.0, s.x - 26.0), maxf(24.0, s.y - 58.0)))
+	card.draw_rect(well, Color("#03111d", 0.28))
+	var fill := accent
+	fill.a = 0.10 if icon_mode == "total" else 0.07
+	card.draw_rect(Rect2(well.position + Vector2(4.0, 4.0), well.size - Vector2(8.0, 8.0)), fill)
+	var rim := accent
+	rim.a = 0.32 if icon_mode == "total" else 0.20
+	card.draw_line(well.position + Vector2(6.0, 1.0), well.position + Vector2(well.size.x - 6.0, 1.0), rim, 2.0)
+	card.draw_line(
+		well.position + Vector2(6.0, well.size.y - 1.0),
+		well.position + Vector2(well.size.x - 6.0, well.size.y - 1.0),
+		Color("#07121e", 0.68),
+		2.0
+	)
+	if icon_mode == "total":
+		card.draw_ellipse(well.get_center(), well.size.x * 0.34, well.size.y * 0.40, Color("#ffb83d", 0.12))
 
 
 func _draw_reward_header_ribbon(card: Control, icon_mode: String) -> void:
