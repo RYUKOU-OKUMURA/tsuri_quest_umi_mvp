@@ -427,6 +427,49 @@ class MealResultRewardCueVisual:
 		draw_polygon(points, colors)
 
 
+class MealResultBannerSparkVisual:
+	extends Control
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		if size.x <= 0.0 or size.y <= 0.0:
+			return
+		var gold := Color("#ffe081")
+		var glow := Color("#fff1c7")
+		var ember := Color("#d7a456")
+		_draw_corner_burst(Vector2(size.x * 0.15, size.y * 0.30), gold, 0.88)
+		_draw_corner_burst(Vector2(size.x * 0.72, size.y * 0.25), glow, 0.58)
+		_draw_corner_burst(Vector2(size.x * 0.88, size.y * 0.66), ember, 0.54)
+		var arc_radius := minf(size.x, size.y) * 0.48
+		glow.a = 0.20
+		draw_arc(Vector2(size.x * 0.46, size.y * 0.56), arc_radius, -2.72, -0.35, 28, glow, 4.0)
+		gold.a = 0.34
+		draw_arc(Vector2(size.x * 0.51, size.y * 0.56), arc_radius * 0.78, -2.55, -0.50, 24, gold, 2.0)
+		for i in range(10):
+			var p := Vector2(
+				size.x * (0.20 + float((i * 13) % 64) / 100.0),
+				size.y * (0.20 + float((i * 19) % 56) / 100.0)
+			)
+			var sparkle := gold if i % 2 == 0 else glow
+			sparkle.a = 0.34 if i % 3 == 0 else 0.48
+			var arm := 2.5 + float(i % 3)
+			draw_line(p + Vector2(-arm, 0.0), p + Vector2(arm, 0.0), sparkle, 1.5)
+			draw_line(p + Vector2(0.0, -arm), p + Vector2(0.0, arm), sparkle, 1.5)
+
+	func _draw_corner_burst(center: Vector2, color: Color, alpha: float) -> void:
+		var burst := color
+		burst.a = alpha
+		for i in range(8):
+			var angle := TAU * float(i) / 8.0
+			var from := center + Vector2(cos(angle), sin(angle)) * 4.0
+			var to := center + Vector2(cos(angle), sin(angle)) * (12.0 if i % 2 == 0 else 8.0)
+			draw_line(from, to, burst, 2.0)
+		burst.a = minf(1.0, alpha + 0.10)
+		draw_circle(center, 2.8, burst)
+
+
 class FlowConnectorVisual:
 	extends Control
 
@@ -746,6 +789,7 @@ class EffectPreviewVisual:
 var _dialog: PanelContainer
 var _stage_background: TextureRect
 var _result_banner: PanelContainer
+var _meal_banner_spark: MealResultBannerSparkVisual
 var _header_title: Label
 var _bridge_label: Label
 var _dish_title: Label
@@ -933,6 +977,11 @@ func _build_screen() -> void:
 		)
 	)
 	right.add_child(_result_banner)
+	_meal_banner_spark = MealResultBannerSparkVisual.new()
+	_meal_banner_spark.name = "MealResultBannerSpark"
+	_meal_banner_spark.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_meal_banner_spark.visible = false
+	_result_banner.add_child(_meal_banner_spark)
 	var banner_box := VBoxContainer.new()
 	banner_box.alignment = BoxContainer.ALIGNMENT_CENTER
 	banner_box.add_theme_constant_override("separation", 2)
@@ -1105,6 +1154,9 @@ func show_meal_result(result: Dictionary) -> void:
 	_header_title.text = "%sを食べた！" % dish_name
 	_bridge_label.text = ""
 	_bridge_label.visible = false
+	if _meal_banner_spark != null:
+		_meal_banner_spark.visible = true
+		_meal_banner_spark.queue_redraw()
 	_dish_title.text = dish_name
 	if _dish_note_label != null:
 		_dish_note_label.text = "次の釣行へ力がつながる。"
@@ -1166,6 +1218,8 @@ func show_reward(
 	_header_title.name = "ExpGainTitle"
 	_set_stage_background(EXP_STAGE_BG)
 	_apply_exp_gain_composition()
+	if _meal_banner_spark != null:
+		_meal_banner_spark.visible = false
 	var dish_name := String(result.get("dish_name", "料理"))
 	_set_result_banner_height(92.0)
 	_set_header_title_font_size(36)
@@ -1945,6 +1999,9 @@ func _apply_meal_result_composition() -> void:
 	if _meal_reward_cue != null:
 		_meal_reward_cue.visible = true
 		_meal_reward_cue.custom_minimum_size = Vector2(0.0, 16.0)
+	if _meal_banner_spark != null:
+		_meal_banner_spark.visible = true
+		_meal_banner_spark.queue_redraw()
 	_set_status_strip_emphasis(false)
 	_set_reward_cards_height(108.0)
 
@@ -1973,6 +2030,8 @@ func _apply_exp_gain_composition() -> void:
 	if _meal_reward_cue != null:
 		_meal_reward_cue.visible = false
 		_meal_reward_cue.custom_minimum_size = Vector2(0.0, 0.0)
+	if _meal_banner_spark != null:
+		_meal_banner_spark.visible = false
 	if _dish_image != null:
 		_dish_image.custom_minimum_size = Vector2(304.0, 0.0)
 	if _flow_row != null:

@@ -368,6 +368,7 @@ func _audit_exp_gain() -> void:
 		screen,
 		[
 			"MealDishCard",
+			"MealResultBannerSpark",
 			"MealResultRewardCue",
 			"RewardDishFeatureImage",
 			"RewardCardBaseExp",
@@ -444,6 +445,7 @@ func _audit_exp_gain_level_up() -> void:
 		screen,
 		[
 			"MealDishCard",
+			"MealResultBannerSpark",
 			"MealResultRewardCue",
 			"RewardDishFeatureImage",
 			"RewardCardBaseExp",
@@ -521,6 +523,7 @@ func _audit_meal_result() -> void:
 	)
 	_expect_flow_connector_modes("MEAL_RESULT", screen, ["meal_to_exp", "idle"])
 	_expect_named_node("MEAL_RESULT", screen, "MealResultBanner")
+	_expect_named_node("MEAL_RESULT", screen, "MealResultBannerSpark")
 	_expect_named_node("MEAL_RESULT", screen, "MealResultTitle")
 	_expect_named_controls_not_visible(
 		"MEAL_RESULT",
