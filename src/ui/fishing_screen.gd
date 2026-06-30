@@ -412,7 +412,13 @@ func _set_message_text(message: String) -> void:
 		var show_message := not message.strip_edges().is_empty()
 		if _simulator != null:
 			show_message = show_message and _simulator.state != FishingSimulator.State.READY
-			if _simulator.state == FishingSimulator.State.FIGHT:
+			if (
+				_simulator.state == FishingSimulator.State.CASTING
+				or _simulator.state == FishingSimulator.State.WAITING
+				or _simulator.state == FishingSimulator.State.APPROACH
+				or _simulator.state == FishingSimulator.State.BITE
+				or _simulator.state == FishingSimulator.State.FIGHT
+			):
 				show_message = false
 		_message_panel.visible = show_message
 
