@@ -10,9 +10,13 @@ var _simulator: FishingSimulator
 var _trip_stats: Dictionary = {}
 var _current_fish: Dictionary = {}
 var _result_recorded: bool = false
+var _spot_id: String = GameData.DEFAULT_FISHING_SPOT_ID
+var _spot: Dictionary = {}
 
-var _target_option: OptionButton
 var _info_title_label: Label
+var _spot_panel: PanelContainer
+var _spot_summary_label: Label
+var _spot_detail_label: Label
 var _message_panel: PanelContainer
 var _message_label: Label
 var _state_label: Label
@@ -38,7 +42,9 @@ var _quit_details: Label
 
 func _build_screen() -> void:
 	add_gradient_background(Color("#0c243a"), Color("#04101e"))
+	_resolve_selected_spot()
 	_trip_stats = PlayerProgress.begin_fishing_trip()
+	_apply_spot_to_trip_stats()
 	_simulator = FishingSimulatorScript.new()
 	_simulator.state_changed.connect(_on_state_changed)
 	_simulator.message_changed.connect(_on_message_changed)
@@ -65,7 +71,7 @@ func _build_screen() -> void:
 
 	_fight_status_bar = FightStatusBarScript.new()
 	_fight_status_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_fight_status_bar.bind(_simulator)
+	_fight_status_bar.bind(_simulator, _trip_stats)
 	left_column.add_child(_fight_status_bar)
 
 	var water_panel := make_panel(true)
@@ -128,19 +134,24 @@ func _build_screen() -> void:
 	info_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	info_box.add_theme_constant_override("separation", 6)
 	info_panel.add_child(info_box)
-	_info_title_label = make_label("狙う魚", 24, Color("#22354a"))
+	_info_title_label = make_label("釣り場", 24, Color("#22354a"))
 	_info_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	info_box.add_child(_info_title_label)
 
-	_target_option = OptionButton.new()
-	_target_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_target_option.custom_minimum_size = Vector2(0, 46)
-	_target_option.add_item("通常魚を狙う", 0)
-	_target_option.add_item("港のぬしを狙う（Lv.5〜）", 1)
-	if PlayerProgress.level < GameData.BOSS_UNLOCK_LEVEL:
-		_target_option.get_popup().set_item_disabled(1, true)
-	_target_option.item_selected.connect(_on_target_mode_changed)
-	info_box.add_child(_target_option)
+	_spot_panel = make_panel()
+	_spot_panel.custom_minimum_size = Vector2(0, 96)
+	info_box.add_child(_spot_panel)
+	var spot_box := VBoxContainer.new()
+	spot_box.add_theme_constant_override("separation", 3)
+	_spot_panel.add_child(spot_box)
+	_spot_summary_label = make_label(_spot_summary_text(), 17, Palette.TEXT_DARK)
+	_spot_summary_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_spot_summary_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	spot_box.add_child(_spot_summary_label)
+	_spot_detail_label = make_label(_spot_detail_text(), 13, Palette.TEXT_BODY)
+	_spot_detail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_spot_detail_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	spot_box.add_child(_spot_detail_label)
 
 	_fight_sidebar = FightSidebarScript.new()
 	_fight_sidebar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -151,6 +162,67 @@ func _build_screen() -> void:
 	_create_quit_overlay()
 	_prepare_new_attempt()
 	_update_ui()
+
+
+func _resolve_selected_spot() -> void:
+	var requested_id := String(route_payload.get("spot_id", GameData.DEFAULT_FISHING_SPOT_ID))
+	if not GameData.is_fishing_spot_unlocked(requested_id, PlayerProgress.level):
+		requested_id = GameData.DEFAULT_FISHING_SPOT_ID
+	_spot = GameData.get_fishing_spot(requested_id)
+	_spot_id = String(_spot.get("id", GameData.DEFAULT_FISHING_SPOT_ID))
+
+
+func _apply_spot_to_trip_stats() -> void:
+	_trip_stats["spot_id"] = _spot_id
+	_trip_stats["spot_name"] = String(_spot.get("name", "港内・堤防"))
+	_trip_stats["spot_short_name"] = String(_spot.get("short_name", _trip_stats["spot_name"]))
+	_trip_stats["spot_depth_range"] = _spot.get("depth_range", [0.0, 0.0])
+	_trip_stats["spot_featured_fish"] = _spot.get("featured_fish", [])
+	_trip_stats["spot_recommended_baits"] = _spot.get("recommended_baits", [])
+	_trip_stats["spot_boss"] = bool(_spot.get("boss_spot", false))
+
+
+func _spot_summary_text() -> String:
+	var name := String(_spot.get("name", "港内・堤防"))
+	var role := "ぬし専用" if bool(_spot.get("boss_spot", false)) else "通常ポイント"
+	return "%s　%s" % [name, role]
+
+
+func _spot_detail_text() -> String:
+	return (
+		"水深 %s\n狙い：%s\nエサ：%s"
+		% [
+			_depth_range_text(_spot),
+			_featured_fish_text(_spot),
+			_bait_text(_spot),
+		]
+	)
+
+
+func _depth_range_text(spot: Dictionary) -> String:
+	var range: Array = spot.get("depth_range", [0.0, 0.0])
+	if range.size() < 2:
+		return "--.-m"
+	return "%.1f〜%.1fm" % [float(range[0]), float(range[1])]
+
+
+func _featured_fish_text(spot: Dictionary) -> String:
+	var names: Array[String] = []
+	for fish_id_variant in Array(spot.get("featured_fish", [])):
+		var fish := GameData.get_fish(String(fish_id_variant))
+		if fish.is_empty():
+			continue
+		names.append(String(fish.get("name", fish_id_variant)))
+		if names.size() >= 4:
+			break
+	return "、".join(PackedStringArray(names))
+
+
+func _bait_text(spot: Dictionary) -> String:
+	var baits: Array[String] = []
+	for bait_variant in Array(spot.get("recommended_baits", [])):
+		baits.append(String(bait_variant))
+	return "、".join(PackedStringArray(baits))
 
 
 func _create_result_overlay() -> void:
@@ -285,19 +357,15 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
-func _on_target_mode_changed(_index: int) -> void:
-	_prepare_new_attempt()
-
-
 func _prepare_new_attempt() -> void:
 	_result_recorded = false
 	_result_overlay.visible = false
 	if _quit_overlay != null:
 		_quit_overlay.visible = false
-	if _target_option.selected == 1 and PlayerProgress.level >= GameData.BOSS_UNLOCK_LEVEL:
+	if bool(_spot.get("boss_spot", false)):
 		_current_fish = GameData.get_fish("boss_kurodai")
 	else:
-		_current_fish = GameData.roll_normal_fish(PlayerProgress.level)
+		_current_fish = GameData.roll_normal_fish(PlayerProgress.level, _spot_id)
 	_simulator.prepare(_current_fish, _trip_stats)
 	_view.bind_simulator(_simulator)
 	_surface_view.bind_simulator(_simulator)
@@ -398,10 +466,11 @@ func _update_ui() -> void:
 		return
 	_set_message_text(_simulator.action_message)
 
-	_target_option.disabled = _simulator.state != FishingSimulator.State.READY
-	_target_option.visible = _simulator.state == FishingSimulator.State.READY
+	var show_spot_panel := _simulator.state == FishingSimulator.State.READY
 	if _info_title_label != null:
-		_info_title_label.visible = _simulator.state == FishingSimulator.State.READY
+		_info_title_label.visible = show_spot_panel
+	if _spot_panel != null:
+		_spot_panel.visible = show_spot_panel
 
 
 func _set_message_text(message: String) -> void:

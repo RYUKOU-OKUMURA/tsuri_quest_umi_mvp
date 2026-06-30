@@ -167,7 +167,7 @@ func _build_facility_menu(root: Control) -> void:
 	header.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(menu, header, 0.100, 0.030, 0.900, 0.120)
 
-	_build_facility_button(menu, 0.160, "釣り場へ向かう", "海へ出て釣りをする", ICON_FISHING_PATH, func() -> void: navigate("fishing"), true)
+	_build_facility_button(menu, 0.160, "釣り場へ向かう", "狙う魚に合わせてポイントを選ぶ", ICON_FISHING_PATH, func() -> void: navigate("fishing_spots"), true)
 	_build_facility_button(menu, 0.285, "調理場", "魚を料理して食事にする", ICON_COOKING_PATH, func() -> void: navigate("cooking"))
 	_build_facility_button(menu, 0.410, "魚市場", "釣果を売って資金にする", ICON_MARKET_PATH, func() -> void: navigate("market"))
 	_build_facility_button(menu, 0.535, "釣具店", "竿を購入・装備する", ICON_SHOP_PATH, func() -> void: navigate("shop"))

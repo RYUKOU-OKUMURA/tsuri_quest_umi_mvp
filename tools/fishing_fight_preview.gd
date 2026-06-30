@@ -26,7 +26,7 @@ func _ready() -> void:
 
 	var s := FishingScreen.new()
 	s.theme = ThemeFactory.build_theme()
-	s.configure({})
+	s.configure({"spot_id": GameData.BOSS_FISHING_SPOT_ID})
 	s.size = Vector2(VW)
 	vp.add_child(s)
 
@@ -34,8 +34,6 @@ func _ready() -> void:
 	await get_tree().process_frame
 
 	# ファイト画面を直接確認するため、通常の待ち時間を飛ばして状態を作る。
-	s._target_option.select(1)
-	s._prepare_new_attempt()
 	var requested_fish_id := OS.get_environment("TSURI_FIGHT_FISH_ID")
 	var showcase_fish := GameData.get_fish(requested_fish_id).duplicate(true) if not requested_fish_id.is_empty() else {}
 	if showcase_fish.is_empty():

@@ -13,14 +13,16 @@ const ICON_WIND := 2
 const ICON_COIN := 3
 
 var simulator: FishingSimulator
+var trip_stats: Dictionary = {}
 
 var _frame: Texture2D
 var _top_icons: Texture2D
 var _icons: Texture2D
 
 
-func bind(value: FishingSimulator) -> void:
+func bind(value: FishingSimulator, stats: Dictionary = {}) -> void:
 	simulator = value
+	trip_stats = stats.duplicate(true)
 	queue_redraw()
 
 
@@ -63,7 +65,7 @@ func _draw() -> void:
 	var depth := 0.0
 	if simulator != null:
 		depth = simulator.depth
-	_draw_status_slot(font, regular_font, slots[3], "南の島・沖", "水深 %.1fm" % depth, true)
+	_draw_status_slot(font, regular_font, slots[3], _spot_title(), "水深 %.1fm" % depth, true)
 
 
 func _slot_rects(rect: Rect2) -> Array[Rect2]:
@@ -223,6 +225,13 @@ func _format_money(value: int) -> String:
 		result = raw[index] + result
 		count += 1
 	return result
+
+
+func _spot_title() -> String:
+	var name := String(trip_stats.get("spot_name", "南の島・沖"))
+	if name.strip_edges().is_empty():
+		return "南の島・沖"
+	return name
 
 
 func _draw_fallback_frame(rect: Rect2) -> void:

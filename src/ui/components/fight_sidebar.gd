@@ -201,8 +201,8 @@ func _draw_unknown_fish_card(font: Font, rect: Rect2) -> void:
 	var desc_y := divider_y + (37.0 if compact_card else 36.0)
 	draw_line(Vector2(inner.position.x + 8.0, desc_y - 12.0), Vector2(inner.end.x - 8.0, desc_y - 12.0), Color("#d6c299"), 1.0)
 	_draw_wrapped(regular_font, _unknown_description(), Vector2(inner.position.x + 15.0, desc_y), inner.size.x - 26.0, 13, Color("#1b1109"), 1, 15.0)
-	_draw_detail_line(regular_font, "狙い：%s" % _target_mode_text(), Vector2(inner.position.x + 15.0, desc_y + 22.0), inner.size.x - 26.0)
-	_draw_detail_line(regular_font, "タナ：%s / エサ：オキアミ" % _current_depth_text(), Vector2(inner.position.x + 15.0, desc_y + 38.0), inner.size.x - 26.0)
+	_draw_detail_line(regular_font, "釣り場：%s" % _target_mode_text(), Vector2(inner.position.x + 15.0, desc_y + 22.0), inner.size.x - 26.0)
+	_draw_detail_line(regular_font, "タナ：%s / エサ：%s" % [_current_depth_text(), _bait_text()], Vector2(inner.position.x + 15.0, desc_y + 38.0), inner.size.x - 26.0)
 
 
 func _draw_unknown_signal_art(font: Font, rect: Rect2) -> void:
@@ -596,9 +596,19 @@ func _unknown_action_message() -> String:
 
 
 func _target_mode_text() -> String:
-	if bool(fish_data.get("boss", false)):
-		return "港のぬし狙い"
-	return "通常魚狙い"
+	var spot_name := String(trip_stats.get("spot_name", ""))
+	if spot_name.strip_edges().is_empty():
+		spot_name = "通常ポイント"
+	if bool(fish_data.get("boss", false)) or bool(trip_stats.get("spot_boss", false)):
+		return "%s・ぬし" % spot_name
+	return spot_name
+
+
+func _bait_text() -> String:
+	var baits: Array = trip_stats.get("spot_recommended_baits", [])
+	if not baits.is_empty():
+		return String(baits[0])
+	return String(fish_data.get("preferred_bait", "オキアミ"))
 
 
 func _current_depth_text() -> String:

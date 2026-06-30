@@ -3,6 +3,7 @@ extends Control
 const ThemeFactory = preload("res://src/ui/ui_theme.gd")
 const TitleScreen = preload("res://src/ui/title_screen.gd")
 const HarborScreen = preload("res://src/ui/harbor_screen.gd")
+const FishingSpotSelectScreen = preload("res://src/ui/fishing_spot_select_screen.gd")
 const FishingScreen = preload("res://src/ui/fishing_screen.gd")
 const CookingScreen = preload("res://src/ui/cooking_screen.gd")
 const MarketScreen = preload("res://src/ui/market_screen.gd")
@@ -46,6 +47,8 @@ func _swap(screen_id: String, payload: Dictionary) -> void:
 			screen_script = TitleScreen
 		"harbor":
 			screen_script = HarborScreen
+		"fishing_spots":
+			screen_script = FishingSpotSelectScreen
 		"fishing":
 			screen_script = FishingScreen
 		"cooking":
