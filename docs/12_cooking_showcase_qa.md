@@ -257,6 +257,7 @@
 - 追記: MEAL_RESULT/EXP_GAIN共通の報酬カードは、カード面の裏側に報酬種別ごとの大きい薄絵を描く。基本EXPは米椀と上昇矢印、初回ボーナスは旗とコック帽、合計獲得は放射バーストと星、次の釣行は魚バッジと上昇矢印をカード内に置き、参照02の下段報酬カードのように獲得物が文字だけでなく絵としても読める密度へ寄せた。`/tmp/tsuri_cooking_result.png` で主要値の可読性を維持していることを確認した。
 - 追記: 下部ステータス帯は `RewardStatusLevelIcon`、`RewardStatusMealIcon`、`RewardStatusCoolerIcon`、`RewardStatusMoneyIcon` を持つ濃紺の小型カードへ更新した。プレイヤーLvカードには顔アイコン、`Lv.*`、ミニEXPバー、EXP値を分けて表示し、料理/クーラー/所持金カードにも料理皿、クーラー、金袋素材を入れる。所持金は `10,170 G` のように桁区切りへ変更し、参照02の下部ステータスカードに近い「現在状態が絵で読める」密度へ寄せた。明るい `status_card_frame.png` は報酬画面下部では白い情報欄に見えたため、実スクショ確認後に濃紺の `reward_card_frame.png` へ差し替えた。
 - 追記: 右の `MealDishCard` 説明文は `食後の力が次の釣行へつながる。` だと1280x720の実スクショで末尾だけが折れたため、`次の釣行へ力がつながる。` へ短縮した。content auditでもこの文言を検出し、料理カードのリアクション文が長文化して読みづらく戻る退行を防ぐ。
+- 追記: 右端の `RewardCardNextEffect` は3行説明の12px表示だと報酬カードの中で効果が拾いにくかったため、`最大体力 +5%` と `次回1回で発動` の2行へ圧縮し、MEAL_RESULT時のバフ値を16pxへ上げた。カード内の魚/上昇ビジュアルと合わせて、次回釣行効果が文字だけの説明ではなく主報酬として読めるようにする。
 - 通過ゲート: `HOME=/private/tmp/tsuri_home tools/cooking_verify.sh`、`HOME=/private/tmp/tsuri_home tools/cooking_visual_qa.sh`、`git diff --check`。更新後の確認スクショは `/tmp/tsuri_cooking_result.png`、比較レポートは `/tmp/tsuri_cooking_reference_report.html`。
 - 残る差分: 左食事シーンは白い板/カード感を脱し、報酬カードと下部ステータス帯も文字だけの密度から脱してきた。参照02のような高密度の人物・料理・窓辺まで一体化した一枚絵にはまだ届かないため、次パスで触るなら左背景と人物の接続光、または結果バナー/料理カード/報酬カード間の視線誘導を比較する。
 

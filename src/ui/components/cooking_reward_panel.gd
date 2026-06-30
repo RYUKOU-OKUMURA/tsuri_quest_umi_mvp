@@ -1217,7 +1217,7 @@ func _meal_buff_reward_text(buff: Dictionary) -> String:
 	if text.begins_with("次の釣行で"):
 		text = text.trim_prefix("次の釣行で")
 	text = text.replace("安全テンション域", "安全域")
-	return "次回の釣行で効果を発揮！\n%s\n1回の釣行で発動" % text
+	return "%s\n次回1回で発動" % text
 
 
 func _meal_bonus_badge_text(result: Dictionary) -> String:
@@ -1894,7 +1894,7 @@ func _apply_meal_reward_hierarchy() -> void:
 	_set_reward_label_style(_base_label, 18, Palette.GAUGE_CYAN_HI, 2)
 	_set_reward_label_style(_bonus_label, 18, Palette.GOLD_BRIGHT, 2)
 	_set_reward_label_style(_total_label, 27, Palette.GOLD_BRIGHT, 4)
-	_set_reward_label_style(_buff_label, 12, Palette.GAUGE_GREEN_HI, 1)
+	_set_reward_label_style(_buff_label, 16, Palette.GAUGE_GREEN_HI, 2)
 	_set_reward_card_modulate(_base_label, Color(0.92, 0.96, 1.0, 0.92))
 	_set_reward_card_modulate(_bonus_label, Color(1.0, 0.96, 0.86, 0.94))
 	_set_reward_card_modulate(_total_label, Color(1.0, 0.98, 0.86, 1.0))
