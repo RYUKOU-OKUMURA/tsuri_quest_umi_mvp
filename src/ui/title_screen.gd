@@ -13,11 +13,8 @@ const TITLE_BUTTON_SECONDARY_HOVER_PATH := "res://assets/showcase/title/title_bu
 const TITLE_BUTTON_DISABLED_PATH := "res://assets/showcase/title/title_button_disabled.png"
 const TITLE_FISH_PATH := "res://assets/showcase/underwater/fish/kurodai_card_portrait.png"
 const TITLE_BAIT_PATH := "res://assets/showcase/underwater/hud_bait_icon.png"
-const OPENING_BGM_PATH := "res://assets/audio/opening_bgm.mp3"
-const OPENING_BGM_VOLUME_DB := -10.0
 
 var _confirm_reset: ConfirmationDialog
-var _bgm_player: AudioStreamPlayer
 
 
 func _build_screen() -> void:
@@ -36,11 +33,6 @@ func _build_screen() -> void:
 	_build_menu(root)
 	_build_version(root)
 	_build_reset_dialog()
-	_start_opening_bgm()
-
-
-func _exit_tree() -> void:
-	_stop_opening_bgm()
 
 
 func _build_logo(root: Control) -> void:
@@ -293,38 +285,3 @@ func _on_new_game_pressed() -> void:
 func _start_new_game() -> void:
 	PlayerProgress.reset_game()
 	navigate("harbor")
-
-
-func _start_opening_bgm() -> void:
-	if _bgm_player != null:
-		return
-	if not ResourceLoader.exists(OPENING_BGM_PATH) and not FileAccess.file_exists(OPENING_BGM_PATH):
-		push_warning("オープニングBGMが見つかりません: %s" % OPENING_BGM_PATH)
-		return
-	var stream := load(OPENING_BGM_PATH) as AudioStream
-	if stream == null:
-		push_warning("オープニングBGMを読み込めません: %s" % OPENING_BGM_PATH)
-		return
-	var mp3_stream := stream as AudioStreamMP3
-	if mp3_stream != null:
-		mp3_stream.loop = true
-	_bgm_player = AudioStreamPlayer.new()
-	_bgm_player.name = "OpeningBGMPlayer"
-	_bgm_player.stream = stream
-	_bgm_player.volume_db = OPENING_BGM_VOLUME_DB
-	_bgm_player.finished.connect(_on_opening_bgm_finished)
-	add_child(_bgm_player)
-	_bgm_player.play()
-
-
-func _stop_opening_bgm() -> void:
-	if _bgm_player == null:
-		return
-	if is_instance_valid(_bgm_player):
-		_bgm_player.stop()
-	_bgm_player = null
-
-
-func _on_opening_bgm_finished() -> void:
-	if _bgm_player != null and is_instance_valid(_bgm_player) and is_inside_tree():
-		_bgm_player.play()
