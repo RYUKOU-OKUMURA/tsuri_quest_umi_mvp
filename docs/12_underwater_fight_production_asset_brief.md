@@ -2,6 +2,8 @@
 
 このブリーフは、水中ファイト画面を v1 看板画面から理想品質へ進めるための素材差し替え仕様である。背景、魚位置、魚サイズ、接地影、右パネル比率、HUDキーサイズ、上部AM/時刻間隔、右下タックル行数は固定済みとして扱い、ここでは動かさない。
 
+クロダイ単体で確立した品質基準は、魚30種すべての基準として扱う。追加魚でも、簡易SVG、単色図形、チープな記号魚へ品質を落とさない。魚種拡張と釣り場出現設計の正は `docs/15_fishing_spot_encounter_spec.md`、現行30種の数値表は `docs/09_パラメータ調整表.md` を参照する。
+
 ## 判断基準
 
 比較対象は `reference/02_underwater_fight_mockup.png`。毎回 `./tools/fight_visual_qa.sh` を実行し、少なくとも `/tmp/tsuri_fight_compare.png`、`/tmp/tsuri_full_static_compare.png`、`/tmp/tsuri_sidebar_static_compare.png` を横並びで見る。
