@@ -368,6 +368,7 @@ func _audit_exp_gain() -> void:
 		screen,
 		[
 			"MealDishCard",
+			"MealDishCardBridge",
 			"MealResultBannerSpark",
 			"MealResultRewardCue",
 			"MealSceneTableBridge",
@@ -447,6 +448,7 @@ func _audit_exp_gain_level_up() -> void:
 		screen,
 		[
 			"MealDishCard",
+			"MealDishCardBridge",
 			"MealResultBannerSpark",
 			"MealResultRewardCue",
 			"MealSceneTableBridge",
@@ -546,6 +548,7 @@ func _audit_meal_result() -> void:
 	_expect_named_node("MEAL_RESULT", screen, "MealSceneTableBridge")
 	_expect_named_node("MEAL_RESULT", screen, "MealTableSpread")
 	_expect_named_node("MEAL_RESULT", screen, "MealDishCard")
+	_expect_named_node("MEAL_RESULT", screen, "MealDishCardBridge")
 	_expect_named_node("MEAL_RESULT", screen, "MealResultRewardCue")
 	_expect_texture_rect_path(
 		"MEAL_RESULT",

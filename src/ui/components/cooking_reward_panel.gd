@@ -524,6 +524,44 @@ class MealResultBannerSparkVisual:
 		draw_circle(center, 2.8, burst)
 
 
+class MealDishCardBridgeVisual:
+	extends Control
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		if size.x <= 0.0 or size.y <= 0.0:
+			return
+		var gold := Color("#ffe081")
+		var warm := Color("#ffb83d")
+		var cyan := Color("#6bf1ff")
+		var dish_center := Vector2(size.x * 0.33, size.y * 0.55)
+		var text_center := Vector2(size.x * 0.73, size.y * 0.50)
+		draw_ellipse(dish_center, size.x * 0.22, size.y * 0.36, Color("#ffd36a", 0.050))
+		draw_ellipse(text_center, size.x * 0.18, size.y * 0.30, Color("#6bf1ff", 0.030))
+		draw_line(Vector2(size.x * 0.51, 12.0), Vector2(size.x * 0.51, size.y - 12.0), Color("#d7a456", 0.22), 2.0)
+		for i in range(3):
+			var y := size.y * (0.34 + float(i) * 0.16)
+			var alpha := 0.26 - float(i) * 0.05
+			var from := Vector2(size.x * 0.42, y + float(i) * 4.0)
+			var mid := Vector2(size.x * 0.56, y + 2.0)
+			var to := Vector2(size.x * 0.69, y - float(i) * 5.0)
+			var line_color := gold
+			line_color.a = alpha
+			draw_line(from, mid, line_color, 3.0)
+			draw_line(mid, to, line_color, 2.0)
+		for i in range(5):
+			var p := Vector2(
+				size.x * (0.48 + float((i * 17) % 36) / 100.0),
+				size.y * (0.22 + float((i * 19) % 58) / 100.0)
+			)
+			var sparkle := warm if i % 2 == 0 else cyan
+			sparkle.a = 0.32 if i % 2 == 0 else 0.22
+			draw_line(p + Vector2(-3.0, 0.0), p + Vector2(3.0, 0.0), sparkle, 1.4)
+			draw_line(p + Vector2(0.0, -3.0), p + Vector2(0.0, 3.0), sparkle, 1.4)
+
+
 class FlowConnectorVisual:
 	extends Control
 
@@ -895,6 +933,7 @@ var _dish_title: Label
 var _dish_note_label: Label
 var _dish_image: TextureRect
 var _dish_card: PanelContainer
+var _dish_card_bridge: MealDishCardBridgeVisual
 var _scene_card: PanelContainer
 var _scene_title: Label
 var _scene_caption: Label
@@ -1115,6 +1154,11 @@ func _build_screen() -> void:
 	)
 	_dish_card.custom_minimum_size = Vector2(0.0, 166.0)
 	right.add_child(_dish_card)
+	_dish_card_bridge = MealDishCardBridgeVisual.new()
+	_dish_card_bridge.name = "MealDishCardBridge"
+	_dish_card_bridge.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_dish_card_bridge.visible = false
+	_dish_card.add_child(_dish_card_bridge)
 	var dish_row := HBoxContainer.new()
 	dish_row.add_theme_constant_override("separation", 14)
 	_dish_card.add_child(dish_row)
@@ -1283,6 +1327,9 @@ func show_meal_result(result: Dictionary) -> void:
 	_meal_reward_cue.visible = true
 	_meal_reward_cue.queue_redraw()
 	_dish_card.visible = true
+	if _dish_card_bridge != null:
+		_dish_card_bridge.visible = true
+		_dish_card_bridge.queue_redraw()
 	_exp_focus_card.visible = false
 	_effect_preview_card.visible = false
 
@@ -1325,6 +1372,8 @@ func show_reward(
 	_apply_exp_gain_composition()
 	if _meal_banner_spark != null:
 		_meal_banner_spark.visible = false
+	if _dish_card_bridge != null:
+		_dish_card_bridge.visible = false
 	var dish_name := String(result.get("dish_name", "料理"))
 	_set_result_banner_height(92.0)
 	_set_header_title_font_size(36)
@@ -2099,6 +2148,9 @@ func _apply_meal_result_composition() -> void:
 		_scene_bonus_label.visible = false
 	if _dish_card != null:
 		_dish_card.custom_minimum_size = Vector2(0.0, 210.0)
+	if _dish_card_bridge != null:
+		_dish_card_bridge.visible = true
+		_dish_card_bridge.queue_redraw()
 	if _dish_image != null:
 		_dish_image.custom_minimum_size = Vector2(394.0, 0.0)
 	if _flow_row != null:
@@ -2145,6 +2197,8 @@ func _apply_exp_gain_composition() -> void:
 		_meal_banner_spark.visible = false
 	if _scene_table_bridge != null:
 		_scene_table_bridge.visible = false
+	if _dish_card_bridge != null:
+		_dish_card_bridge.visible = false
 	if _dish_image != null:
 		_dish_image.custom_minimum_size = Vector2(304.0, 0.0)
 	if _flow_row != null:
