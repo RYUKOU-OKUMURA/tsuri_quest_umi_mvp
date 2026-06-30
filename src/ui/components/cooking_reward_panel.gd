@@ -105,11 +105,11 @@ class SceneActorVisual:
 class MealTableSpreadVisual:
 	extends Control
 
-	const TABLE_SPREAD := "res://assets/showcase/cooking/meal_table_spread.png"
-	const USE_CUTOUT_TEXTURE_ASSETS := false
+	const DISH_ICONS := "res://assets/showcase/cooking/dish_icon_sheet.png"
 
 	var mode := "meal"
 	var dish_texture: Texture2D
+	var recipe_id := ""
 
 	func set_mode(next_mode: String) -> void:
 		mode = next_mode
@@ -119,10 +119,120 @@ class MealTableSpreadVisual:
 		dish_texture = texture
 		queue_redraw()
 
+	func set_recipe_id(next_recipe_id: String) -> void:
+		recipe_id = next_recipe_id
+		queue_redraw()
+
 	func _draw() -> void:
-		if USE_CUTOUT_TEXTURE_ASSETS and mode == "meal" and _draw_texture_asset(TABLE_SPREAD):
+		if mode == "meal":
+			_draw_meal_table_scene()
 			return
 		_draw_dish_source()
+
+	func _draw_meal_table_scene() -> void:
+		var table_rect := Rect2(
+			Vector2(size.x * 0.00, size.y * 0.55),
+			Vector2(size.x, size.y * 0.38)
+		)
+		draw_rect(table_rect, Color(0.26, 0.12, 0.04, 0.58))
+		draw_line(
+			table_rect.position + Vector2(0.0, 4.0),
+			table_rect.position + Vector2(table_rect.size.x, 4.0),
+			Color(0.96, 0.70, 0.34, 0.34),
+			2.0
+		)
+		for i in range(3):
+			var y := table_rect.position.y + 18.0 + float(i) * 28.0
+			draw_line(
+				Vector2(table_rect.position.x + 10.0, y),
+				Vector2(table_rect.end.x - 10.0, y + sin(float(i)) * 4.0),
+				Color(0.68, 0.36, 0.14, 0.18),
+				2.0
+		)
+		draw_ellipse(Vector2(size.x * 0.54, size.y * 0.77), size.x * 0.46, 18.0, Color(0.0, 0.0, 0.0, 0.28))
+		if not _draw_dish_icon_spread():
+			_draw_feature_dish_on_table()
+		_draw_side_dishes()
+		_draw_meal_sparkles()
+
+	func _draw_dish_icon_spread() -> bool:
+		var tex := load(DISH_ICONS) as Texture2D
+		if tex == null:
+			return false
+		var tex_size := Vector2(float(tex.get_width()), float(tex.get_height()))
+		if tex_size.x <= 0.0 or tex_size.y <= 0.0 or size.x <= 0.0 or size.y <= 0.0:
+			return false
+		var cell_size := Vector2(tex_size.x / 3.0, tex_size.y / 2.0)
+		var icon_index := _dish_icon_index()
+		var src := Rect2(Vector2(float(icon_index % 3) * cell_size.x, float(int(icon_index / 3)) * cell_size.y), cell_size)
+		var scale := minf(size.x * 0.88 / cell_size.x, size.y * 0.62 / cell_size.y)
+		var draw_size := cell_size * scale
+		var rect := Rect2(
+			Vector2((size.x - draw_size.x) * 0.50, size.y - draw_size.y - size.y * 0.04),
+			draw_size
+		)
+		draw_texture_rect_region(tex, rect, src)
+		if icon_index == 0:
+			_draw_grilled_fish_overlay(rect)
+		return true
+
+	func _dish_icon_index() -> int:
+		match recipe_id:
+			"sashimi":
+				return 1
+			"simmered":
+				return 2
+			"soup":
+				return 3
+			"fry":
+				return 4
+			_:
+				return 0
+
+	func _draw_grilled_fish_overlay(rect: Rect2) -> void:
+		var body_center := rect.position + Vector2(rect.size.x * 0.46, rect.size.y * 0.42)
+		var body_rx := rect.size.x * 0.28
+		var body_ry := rect.size.y * 0.105
+		draw_ellipse(body_center + Vector2(0.0, 1.0), body_rx, body_ry, Color("#8f4b20"))
+		draw_ellipse(body_center + Vector2(-4.0, -1.0), body_rx * 0.82, body_ry * 0.62, Color("#c16a2b", 0.74))
+		for i in range(4):
+			var x := body_center.x - body_rx * 0.40 + float(i) * body_rx * 0.25
+			draw_line(
+				Vector2(x, body_center.y - body_ry * 0.86),
+				Vector2(x + body_rx * 0.12, body_center.y + body_ry * 0.80),
+				Color("#3b1c11", 0.78),
+				2.0
+			)
+		draw_circle(body_center + Vector2(-body_rx * 0.66, -body_ry * 0.12), 3.0, Color("#17110c"))
+		draw_circle(body_center + Vector2(-body_rx * 0.66, -body_ry * 0.12), 1.0, Color("#fff4d4"))
+		var tail_root := body_center + Vector2(body_rx * 0.95, 0.0)
+		draw_polygon(
+			PackedVector2Array(
+				[
+					tail_root,
+					tail_root + Vector2(rect.size.x * 0.18, -rect.size.y * 0.18),
+					tail_root + Vector2(rect.size.x * 0.12, 0.0),
+					tail_root + Vector2(rect.size.x * 0.18, rect.size.y * 0.18),
+				]
+			),
+			PackedColorArray([Color("#d7a13a"), Color("#d7a13a"), Color("#c38325"), Color("#c38325")])
+		)
+
+	func _draw_feature_dish_on_table() -> void:
+		if dish_texture != null:
+			var tex_size := Vector2(float(dish_texture.get_width()), float(dish_texture.get_height()))
+			if tex_size.x > 0.0 and tex_size.y > 0.0:
+				var src := Rect2(
+					Vector2(tex_size.x * 0.06, tex_size.y * 0.28),
+					Vector2(tex_size.x * 0.88, tex_size.y * 0.50)
+				)
+				var scale := minf(size.x * 0.90 / src.size.x, size.y * 0.46 / src.size.y)
+				var draw_size := src.size * scale
+				var rect := Rect2(
+					Vector2((size.x - draw_size.x) * 0.56, size.y - draw_size.y - size.y * 0.14),
+					draw_size
+				)
+				draw_texture_rect_region(dish_texture, rect, src)
 
 	func _draw_dish_source() -> void:
 		var center := size * 0.5
@@ -148,18 +258,36 @@ class MealTableSpreadVisual:
 			draw_line(p + Vector2(-4.0, 0.0), p + Vector2(4.0, 0.0), gold, 2.0)
 			draw_line(p + Vector2(0.0, -4.0), p + Vector2(0.0, 4.0), gold, 2.0)
 
-	func _draw_texture_asset(path: String) -> bool:
-		var tex := load(path) as Texture2D
-		if tex == null:
-			return false
-		var tex_size := Vector2(float(tex.get_width()), float(tex.get_height()))
-		if tex_size.x <= 0.0 or tex_size.y <= 0.0 or size.x <= 0.0 or size.y <= 0.0:
-			return false
-		var scale := minf(size.x / tex_size.x, size.y / tex_size.y)
-		var draw_size := tex_size * scale
-		var rect := Rect2((size - draw_size) * 0.5, draw_size)
-		draw_texture_rect(tex, rect, false)
-		return true
+	func _draw_side_dishes() -> void:
+		var bowl_center := Vector2(size.x * 0.78, size.y * 0.72)
+		draw_ellipse(bowl_center + Vector2(0.0, 12.0), 30.0, 8.0, Color(0.0, 0.0, 0.0, 0.24))
+		draw_arc(bowl_center, 25.0, 0.0, PI, 24, Color("#f5e6c5"), 6.0)
+		draw_arc(bowl_center + Vector2(0.0, -3.0), 21.0, 0.0, PI, 24, Color("#8a3f18"), 6.0)
+		for i in range(3):
+			var steam_x := bowl_center.x - 14.0 + float(i) * 12.0
+			draw_arc(
+				Vector2(steam_x, bowl_center.y - 24.0),
+				10.0,
+				-1.55,
+				0.9,
+				12,
+				Color(1.0, 0.88, 0.58, 0.34),
+				2.0
+			)
+		var cup_rect := Rect2(Vector2(size.x * 0.02, size.y * 0.61), Vector2(26.0, 42.0))
+		draw_rect(cup_rect, Color("#5d331a"))
+		draw_rect(Rect2(cup_rect.position, Vector2(cup_rect.size.x, 7.0)), Color("#8d5527"))
+
+	func _draw_meal_sparkles() -> void:
+		var gold := Color("#ffe081")
+		for i in range(5):
+			var p := Vector2(
+				size.x * (0.10 + float((i * 19) % 72) / 100.0),
+				size.y * (0.12 + float((i * 29) % 62) / 100.0)
+			)
+			gold.a = 0.54 if i % 2 == 0 else 0.34
+			draw_line(p + Vector2(-4.0, 0.0), p + Vector2(4.0, 0.0), gold, 2.0)
+			draw_line(p + Vector2(0.0, -4.0), p + Vector2(0.0, 4.0), gold, 2.0)
 
 
 class ExpMessagePortraitVisual:
@@ -891,9 +1019,11 @@ func show_meal_result(result: Dictionary) -> void:
 	_dish_title.text = dish_name
 	if _dish_note_label != null:
 		_dish_note_label.text = "食後の力が次の釣行へつながる。"
-	var dish_texture := _featured_dish_texture(String(Dictionary(result.get("buff", {})).get("recipe_id", "")))
+	var result_recipe_id := String(Dictionary(result.get("buff", {})).get("recipe_id", ""))
+	var dish_texture := _featured_dish_texture(result_recipe_id)
 	_dish_image.texture = dish_texture
 	_scene_dish_image.set_dish_texture(dish_texture)
+	_scene_dish_image.set_recipe_id(result_recipe_id)
 	_scene_dish_image.set_mode("meal")
 	_set_scene_backdrop(MEAL_RESULT_SCENE_ART, 0.58, true)
 	_scene_caption.text = "湯気の立つ%sを味わった。" % dish_name
@@ -948,9 +1078,11 @@ func show_reward(
 	_header_title.text = "食経験値が成長へ！" if leveled else "食経験値を獲得！"
 	_bridge_label.text = _growth_bridge_text(dish_name, leveled, level_before, level_after)
 	_dish_title.text = "%sを食べた！" % dish_name
-	var dish_texture := _featured_dish_texture(String(Dictionary(result.get("buff", {})).get("recipe_id", "")))
+	var result_recipe_id := String(Dictionary(result.get("buff", {})).get("recipe_id", ""))
+	var dish_texture := _featured_dish_texture(result_recipe_id)
 	_dish_image.texture = dish_texture
 	_scene_dish_image.set_dish_texture(dish_texture)
+	_scene_dish_image.set_recipe_id(result_recipe_id)
 	_scene_dish_image.set_mode("exp")
 	_set_scene_result_art_visible(false)
 	_scene_title.text = "食べた料理"
