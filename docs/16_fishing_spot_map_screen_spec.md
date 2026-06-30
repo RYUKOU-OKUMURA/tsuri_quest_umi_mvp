@@ -1,0 +1,85 @@
+# 釣り場マップ画面・本番寄り実装仕様
+
+この文書は `docs/15_fishing_spot_encounter_spec.md` の後続タスクである「釣り場マップ画面」と「釣り中の釣り場変更導線」の実装基準を定める。
+
+## 目的
+
+既存のカード式 `FishingSpotSelectScreen` を、島・港・砂浜・岩礁・外海の位置関係が分かる本番寄りのマップ画面に置き換える。水中ファイト画面と同じく、画面品質はラスタ素材を主軸にし、GDScript の図形描画だけに依存しない。
+
+## 品質基準
+
+- 背景は `assets/showcase/fishing_spots/map_bg.png` を敷く。
+- ラベル、解放Lv、ロック、選択中表示、釣り場データは Godot 側で描画する。
+- 生成画像に日本語テキストを焼き込まない。
+- マーカーや情報枠は `assets/showcase/fishing_spots/` の PNG 素材を使う。
+- 未解放ポイントは押せず、必要Lvを画面上で読める。
+- 選択中ポイントは地図上の金色ハイライトと右詳細パネルの両方で分かる。
+
+## 画面構成
+
+1. 上部ヘッダー
+   - `釣り場を選ぶ`
+   - プレイヤーLv、装備竿、所持金
+   - 釣り中から戻ってきた場合は「釣行継続中」と分かる短い注記
+2. 左〜中央のマップ
+   - `harbor_pier`: 港内・堤防
+   - `shallow_sand`: 砂浜・かけあがり
+   - `rock_breakwater`: 岩礁・消波ブロック
+   - `outer_tide`: 港外・潮目
+   - `south_reef`: 南の岩礁
+   - `bluewater_route`: 外海・回遊ルート
+   - `deep_ocean`: 外洋の深場
+   - `harbor_boulder`: 港の大岩
+3. 右詳細パネル
+   - 釣り場名
+   - 解放Lvまたは未解放理由
+   - 水深
+   - 狙いやすい魚
+   - おすすめエサ
+   - 説明文
+   - `ここで釣る` / `港へ戻る`
+4. 下部カード列
+   - 釣り場カードを補助情報として残す。
+   - 地図マーカーと同じ選択状態・ロック状態に同期する。
+
+## 釣り場変更導線
+
+水上キャスト画面の READY 状態では、`港へ戻る` と別に `釣り場を変える` を表示する。
+
+- `港へ戻る`: 釣行終了・施設移動。
+- `釣り場を変える`: 釣行を継続したままポイントだけ変更。
+
+READY 中に `釣り場を変える` を押した場合は、確認なしで `fishing_spots` へ遷移する。WAITING/BITE/FIGHT 中は既存の港戻り確認と同等の中断確認を出し、承認後に `fishing_spots` へ遷移する。
+
+## Payload
+
+釣り画面からマップへ戻る場合:
+
+```gdscript
+navigate("fishing_spots", {
+	"from_fishing": true,
+	"current_spot_id": _spot_id,
+	"trip_stats": _trip_stats,
+})
+```
+
+マップから釣り画面へ入る場合:
+
+```gdscript
+navigate("fishing", {
+	"spot_id": spot_id,
+	"continue_trip": true,
+	"trip_stats": route_payload.get("trip_stats", {}),
+})
+```
+
+港から初回遷移する場合は `continue_trip` を付けない。このとき `FishingScreen` が `PlayerProgress.begin_fishing_trip()` を呼び、食事バフを1回だけ適用する。
+
+## 検証
+
+- 港から釣り場マップ画面へ行ける。
+- 解放済み/未解放が地図とカードで一致する。
+- 解放済み釣り場を選ぶと、その `spot_id` が釣り画面へ渡る。
+- 釣り中の釣り場変更では `trip_stats` が引き継がれる。
+- 釣り場変更だけで `PlayerProgress.pending_buff` が再消費されない。
+- 既存の釣り場別出現監査、魚名非表示、港戻り smoke、Godot headless validate が通る。
