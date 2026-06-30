@@ -12,7 +12,7 @@ const DISH_FEATURE_SOUP := "res://assets/showcase/cooking/dish_feature_soup.png"
 const DISH_FEATURE_FRY := "res://assets/showcase/cooking/dish_feature_fry.png"
 const DISH_ICON_SHEET := "res://assets/showcase/cooking/dish_icon_sheet.png"
 const MEAL_RESULT_SCENE_ART := "res://assets/showcase/cooking/meal_result_scene_art_v2.png"
-const PLAYER_EATING_POSE := "res://assets/showcase/cooking/player_eating_upper_scene.png"
+const PLAYER_EATING_POSE := "res://assets/showcase/cooking/player_eating_pose_pixel_tight.png"
 const PLAYER_EXP_POSE := "res://assets/showcase/cooking/player_exp_message_pose_pixel.png"
 const PLAYER_EXP_SCENE_POSE := "res://assets/showcase/cooking/player_exp_pose_pixel_tight.png"
 const COOKING_ROOM_BG := "res://assets/showcase/cooking/cooking_room_bg.png"
@@ -550,6 +550,7 @@ var _result_banner: PanelContainer
 var _header_title: Label
 var _bridge_label: Label
 var _dish_title: Label
+var _dish_note_label: Label
 var _dish_image: TextureRect
 var _dish_card: PanelContainer
 var _scene_card: PanelContainer
@@ -774,10 +775,10 @@ func _build_screen() -> void:
 	_dish_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_dish_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	dish_text.add_child(_dish_title)
-	var dish_note := make_shadow_label("料理を食べて、体に力が湧いてきた。", 17, Palette.TEXT_BONE, 2)
-	dish_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	dish_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	dish_text.add_child(dish_note)
+	_dish_note_label = make_shadow_label("料理を食べて、体に力が湧いてきた。", 17, Palette.TEXT_BONE, 2)
+	_dish_note_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_dish_note_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	dish_text.add_child(_dish_note_label)
 
 	_exp_focus_card = PanelContainer.new()
 	_exp_focus_card.name = "ExpBurstFrame"
@@ -881,18 +882,20 @@ func show_meal_result(result: Dictionary) -> void:
 	_set_stage_background(MEAL_SCENE_BG)
 	_apply_meal_result_composition()
 	var dish_name := String(result.get("dish_name", "料理"))
-	_set_result_banner_height(104.0)
-	_set_header_title_font_size(28)
-	_set_bridge_font_size(16)
+	_set_result_banner_height(112.0)
+	_set_header_title_font_size(31)
+	_set_bridge_font_size(15)
 	_set_exp_label_font_size(56)
 	_header_title.text = "%sを\n食べた！" % dish_name
-	_bridge_label.text = "%sで次の釣行効果を予約。食経験値は次に加算される。" % dish_name
-	_dish_title.text = "%sを食べた！" % dish_name
+	_bridge_label.text = "食経験値は次に加算される"
+	_dish_title.text = dish_name
+	if _dish_note_label != null:
+		_dish_note_label.text = "食後の力が次の釣行へつながる。"
 	var dish_texture := _featured_dish_texture(String(Dictionary(result.get("buff", {})).get("recipe_id", "")))
 	_dish_image.texture = dish_texture
 	_scene_dish_image.set_dish_texture(dish_texture)
 	_scene_dish_image.set_mode("meal")
-	_set_scene_backdrop(COOKING_ROOM_BG, 0.42, true)
+	_set_scene_backdrop(MEAL_RESULT_SCENE_ART, 0.58, true)
 	_scene_caption.text = "湯気の立つ%sを味わった。" % dish_name
 	_scene_bonus_label.text = _meal_bonus_badge_text(result)
 	_scene_title.text = "食べる"
@@ -909,13 +912,14 @@ func show_meal_result(result: Dictionary) -> void:
 	if bool(result.get("first_time", false)):
 		_bonus_label.text = "はじめて作った料理！\n+%d EXP" % int(result.get("first_bonus", 0))
 	else:
-		_bonus_label.text = "記録済み。\n今回は基本EXPのみ。"
+		_bonus_label.text = "記録済み"
 	_total_label.text = "合計獲得食経験値\n+%d EXP" % int(result.get("total_exp", 0))
 
 	var buff := Dictionary(result.get("buff", {}))
-	_buff_label.text = "次回の釣行で効果を発揮！\n%s" % _buff_effect_text(buff)
+	_buff_label.text = _meal_buff_reward_text(buff)
 	_refresh_status_strip(result)
 	_set_reward_line_visible(_growth_label, false)
+	_apply_meal_reward_hierarchy()
 	_confirm_button.text = "食経験値へ進む"
 	_confirm_button.queue_redraw()
 	_refresh_meal_steps()
@@ -1038,6 +1042,14 @@ func _buff_effect_text(buff: Dictionary) -> String:
 	if text.begins_with("次の釣行で"):
 		text = text.trim_prefix("次の釣行で")
 	return "%s / 1回の釣行で発動" % text
+
+
+func _meal_buff_reward_text(buff: Dictionary) -> String:
+	var text := String(buff.get("text", "次の釣行で効果を得る"))
+	if text.begins_with("次の釣行で"):
+		text = text.trim_prefix("次の釣行で")
+	text = text.replace("安全テンション域", "安全域")
+	return "次回の釣行で効果を発揮！\n%s\n1回の釣行で発動" % text
 
 
 func _meal_bonus_badge_text(result: Dictionary) -> String:
@@ -1221,6 +1233,9 @@ func _build_status_strip(parent: VBoxContainer) -> void:
 	_status_meal_label = _status_strip_card(strip, "RewardStatusMealCard", "効果中の料理", Palette.GAUGE_GREEN_HI)
 	_status_cooler_label = _status_strip_card(strip, "RewardStatusCoolerCard", "クーラーボックス", Palette.GAUGE_CYAN_HI)
 	_status_money_label = _status_strip_card(strip, "RewardStatusMoneyCard", "所持金", Palette.GOLD_BRIGHT)
+	var meal_card := _reward_card_from_label(_status_meal_label)
+	if meal_card != null:
+		meal_card.custom_minimum_size = Vector2(340.0, 38.0)
 
 
 func _status_strip_card(parent: HBoxContainer, card_name: String, title: String, accent: Color) -> Label:
@@ -1233,16 +1248,32 @@ func _status_strip_card(parent: HBoxContainer, card_name: String, title: String,
 	row.add_theme_constant_override("separation", 8)
 	card.add_child(row)
 	var title_label := make_shadow_label(title, 13, Palette.TEXT_BONE, 2)
-	title_label.custom_minimum_size = Vector2(84.0, 0.0)
+	title_label.custom_minimum_size = Vector2(_status_title_width(title), 0.0)
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	title_label.clip_text = true
 	row.add_child(title_label)
-	var value := make_shadow_label("", 16, accent, 2)
+	var value := make_shadow_label("", 15, accent, 2)
 	value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	value.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row.add_child(value)
 	return value
+
+
+func _status_title_width(title: String) -> float:
+	match title:
+		"クーラーボックス":
+			return 104.0
+		"効果中の料理":
+			return 92.0
+		"プレイヤーLv.":
+			return 86.0
+		"所持金":
+			return 58.0
+		_:
+			return 84.0
 
 
 func _refresh_status_strip(result: Dictionary) -> void:
@@ -1384,7 +1415,15 @@ func _set_flow_connector(index: int, mode: String) -> void:
 
 
 func _scene_actor_box() -> PanelContainer:
-	var panel := _panel_box(Color("#10283f"), Color("#07121e"), Palette.GOLD_DEEP, 3)
+	var panel := PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.0, 0.0, 0.0, 0.0)
+	sb.set_border_width_all(0)
+	sb.content_margin_left = 0.0
+	sb.content_margin_top = 0.0
+	sb.content_margin_right = 0.0
+	sb.content_margin_bottom = 0.0
+	panel.add_theme_stylebox_override("panel", sb)
 	_scene_actor_image = TextureRect.new()
 	_scene_actor_image.name = "MealSceneActor"
 	_scene_actor_image.texture = load(PLAYER_EATING_POSE) as Texture2D
@@ -1455,21 +1494,25 @@ func _set_result_banner_height(height: float) -> void:
 
 func _apply_meal_result_composition() -> void:
 	if _scene_card != null:
-		_scene_card.custom_minimum_size = Vector2(430.0, 320.0)
+		_scene_card.custom_minimum_size = Vector2(446.0, 328.0)
 	if _scene_visual_stack != null:
-		_scene_visual_stack.custom_minimum_size = Vector2(0.0, 232.0)
+		_scene_visual_stack.custom_minimum_size = Vector2(0.0, 238.0)
 	if _scene_actor_panel != null:
 		_scene_actor_panel.visible = true
-		_scene_actor_panel.custom_minimum_size = Vector2(170.0, 0.0)
+		_scene_actor_panel.custom_minimum_size = Vector2(158.0, 0.0)
 	if _scene_table != null:
-		_scene_table.add_theme_constant_override("separation", 6)
+		_scene_table.add_theme_constant_override("separation", 0)
 	if _scene_dish_image != null:
-		_scene_dish_image.custom_minimum_size = Vector2(246.0, 188.0)
+		_scene_dish_image.custom_minimum_size = Vector2(286.0, 190.0)
 	if _dish_card != null:
-		_dish_card.custom_minimum_size = Vector2(0.0, 222.0)
+		_dish_card.custom_minimum_size = Vector2(0.0, 210.0)
 	if _dish_image != null:
-		_dish_image.custom_minimum_size = Vector2(378.0, 0.0)
-	_set_reward_cards_height(96.0)
+		_dish_image.custom_minimum_size = Vector2(394.0, 0.0)
+	if _flow_row != null:
+		_flow_row.modulate.a = 0.82
+	if _confirm_button != null:
+		_confirm_button.custom_minimum_size = Vector2(382.0, 54.0)
+	_set_reward_cards_height(108.0)
 
 
 func _apply_exp_gain_composition() -> void:
@@ -1489,7 +1532,36 @@ func _apply_exp_gain_composition() -> void:
 		_effect_preview_card.custom_minimum_size = Vector2(254.0, 360.0)
 	if _dish_image != null:
 		_dish_image.custom_minimum_size = Vector2(304.0, 0.0)
+	if _flow_row != null:
+		_flow_row.modulate.a = 1.0
+	if _confirm_button != null:
+		_confirm_button.custom_minimum_size = Vector2(318.0, 40.0)
 	_set_reward_cards_height(84.0)
+
+
+func _apply_meal_reward_hierarchy() -> void:
+	_set_reward_label_style(_base_label, 18, Palette.GAUGE_CYAN_HI, 2)
+	_set_reward_label_style(_bonus_label, 18, Palette.GOLD_BRIGHT, 2)
+	_set_reward_label_style(_total_label, 27, Palette.GOLD_BRIGHT, 4)
+	_set_reward_label_style(_buff_label, 12, Palette.GAUGE_GREEN_HI, 1)
+	_set_reward_card_modulate(_base_label, Color(0.92, 0.96, 1.0, 0.92))
+	_set_reward_card_modulate(_bonus_label, Color(1.0, 0.96, 0.86, 0.94))
+	_set_reward_card_modulate(_total_label, Color(1.0, 0.98, 0.86, 1.0))
+	_set_reward_card_modulate(_buff_label, Color(0.90, 1.0, 0.88, 1.0))
+
+
+func _set_reward_label_style(label: Label, font_size: int, color: Color, outline: int) -> void:
+	if label == null:
+		return
+	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_color_override("font_color", color)
+	label.add_theme_constant_override("outline_size", outline)
+
+
+func _set_reward_card_modulate(label: Label, color: Color) -> void:
+	var card := _reward_card_from_label(label)
+	if card != null:
+		card.modulate = color
 
 
 func _set_reward_cards_height(height: float) -> void:

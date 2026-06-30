@@ -240,6 +240,20 @@
 - まだ残る差分: 中央カード下部は素材バッジ化済みだが、最終本番アートに比べると素材魚アイコンそのものの描き込みはまだ軽い。ヘッダーのリッチさ、料理カード下部のアイコン描き込み、右詳細3行を参照の太い一体型情報帯へさらに近づける最終調整は次パス候補。
 - 通過ゲート: `HOME=/private/tmp/tsuri_home tools/cooking_verify.sh`、`HOME=/private/tmp/tsuri_home tools/validate_project.sh`、`HOME=/private/tmp/tsuri_home tools/cooking_visual_qa.sh`、`git diff --check`。
 
+## 2026-06-30 MEAL_RESULT 画面2品質パス
+
+今回の明確な実装ゴールは、`reference/cooking_flow/02_meal_result_concept.png` と `/tmp/tsuri_cooking_result.png` を横並びで見たときに、画面2が「枠の集合」ではなく「食事完了の報酬シーン」として読めるところまで引き上げること。水中ファイトで固定した基準と同じく、情報量の多さではなく、専用素材、一枚絵の主役感、強い視線誘導、1280x720での文字可読性を合格条件にする。
+
+- P1: 現行スクショでは左の食事カード、右上バナー、今回の料理カード、4報酬カード、下部ステータス帯がほぼ同じ強さで並び、参照02の「食べた！ -> 料理 -> 合計EXP/効果 -> EXPへ進む」という読み順が弱い。今回パスではMEAL_RESULTだけ、左食事シーンと右の結果ブロックを大きな上下ストーリーに整理し、上部ステップと下部ステータスは主役を圧迫しない密度へ落とす。
+- P1: 報酬カード4枚が均等な情報表に見えるため、`合計獲得` と `次の釣行` を主報酬として強くし、`基本EXP` と `初回ボーナス` は原因カードとして一段控えめにする。本文を短縮し、`+126 EXP` のような主要値がカードの中で最初に読める状態を固定する。
+- P1: 長い料理名・効果文・下部ステータス文が詰まりやすい。`MEAL_RESULT` では結果バナーと料理カードの文言を短くし、効果カードは「体力回復 +18% / 次回1回」のような短い表現へ寄せる。1280x720でクリップ、極端な折り返し、縦詰まりがないことをlayout auditと実スクショで確認する。
+- P2: 左食事シーンは人物/料理/背景が分離した小パネルに見えるため、人物と料理の背景面を暗いフォームではなく暖色の食卓ステージとしてまとめる。既存の料理・人物アセットを使い、追加の小さなコード描画より、専用PNGが主役に見える構図を優先する。
+- P2: `RewardConfirmButton` は画面下端の小さい操作に見えるため、MEAL_RESULTでは幅と高さを上げ、報酬カードからEXPへ進む締めのCTAとして読ませる。ボタン内の椀 -> EXP玉キューは維持するが、文字の読みやすさを優先する。
+- フリーズ条件: `MEAL_RESULT` にEXPゲージ/レベルアップ表示を混ぜない。`RewardStageBackground`、`MealDishCard`、`RewardDishFeatureImage`、`RewardBuffSignal`、`RewardStatusStrip`、`RewardConfirmButton` の名前付き契約は維持する。変更後は `HOME=/private/tmp/tsuri_home tools/cooking_verify.sh`、`HOME=/private/tmp/tsuri_home tools/cooking_visual_qa.sh`、`git diff --check` を通し、`/tmp/tsuri_cooking_result.png` を参照02と比較する。
+- 実装結果: MEAL_RESULTの比較シードを参照02/提示スクショに合わせて `アジの塩焼き` へ戻した。左食事シーンは透明背景の食事キャラと `meal_result_scene_art_v2.png` の食卓密度を使い、青い人物パネル感を弱めた。右上バナーは少し大きくし、料理カードは料理名と短い食後メッセージへ整理した。報酬カードは `合計獲得` と `次の釣行` を文字サイズ/色で強め、基本EXP/初回ボーナスは原因カードとして控えめにした。下部ステータス帯は効果中料理カードの幅と各タイトル幅を調整し、1280x720で主要値が読めるようにした。
+- 通過ゲート: `HOME=/private/tmp/tsuri_home tools/cooking_verify.sh`、`HOME=/private/tmp/tsuri_home tools/cooking_visual_qa.sh`、`git diff --check`。更新後の確認スクショは `/tmp/tsuri_cooking_result.png`、比較レポートは `/tmp/tsuri_cooking_reference_report.html`。
+- 残る差分: 左食事シーンは一枚絵らしさが増したが、動的料理画像の額装はまだ参照02よりカード感が残る。次パスで触るなら、新規アート生成より先に `MealTableSpread` の料理配置と前景テーブル統合を詰め、食卓全体を一枚の主役絵としてさらに読ませる。
+
 ## 未解決
 
 - P1: 現時点で既知のロジック破壊はなし。headless layout audit上の画面外はみ出し/縦クリップは解消済みで、smoke上の主ボタンも1280x720内に完全に収まり、押下可能な状態を確認済み。通常描画の5状態スクリーンショットも生成済みで、manifest上はすべて1280x720 PNGとして記録されている。

@@ -175,18 +175,19 @@ func _seed_reference_select_state() -> void:
 
 
 func _seed_after_meal_state() -> void:
-	PlayerProgress.level = 8
-	PlayerProgress.exp = 6
+	PlayerProgress.level = 5
+	PlayerProgress.exp = 20
 	PlayerProgress.inventory.clear()
-	PlayerProgress.inventory["mejina"] = 2
+	PlayerProgress.inventory["aji"] = 3
+	PlayerProgress.inventory["saba"] = 3
 	PlayerProgress.inventory["kasago"] = 2
-	PlayerProgress.inventory["saba"] = 1
+	PlayerProgress.inventory["mejina"] = 2
 	PlayerProgress.pending_buff = {
-		"recipe_id": "soup",
-		"name": "イサキのつみれ汁",
-		"stat": "energy_regen",
-		"value": 0.18,
-		"text": "次の釣行で体力回復 +18%",
+		"recipe_id": "salt_grill",
+		"name": "アジの塩焼き",
+		"stat": "max_energy",
+		"value": 0.05,
+		"text": "次の釣行で最大体力 +5%",
 	}
 
 
@@ -238,18 +239,18 @@ func _meal_status_snapshot(level_before: int, exp_before: int, exp_max_before: i
 func _fake_meal_result() -> Dictionary:
 	return {
 		"ok": true,
-		"dish_name": "イサキのつみれ汁",
-		"base_exp": 63,
+		"dish_name": "アジの塩焼き",
+		"base_exp": 20,
 		"first_time": true,
-		"first_bonus": 63,
-		"total_exp": 126,
-		"leveled_to": [8],
+		"first_bonus": 20,
+		"total_exp": 40,
+		"leveled_to": [5],
 		"buff": {
-			"recipe_id": "soup",
-			"name": "イサキのつみれ汁",
-			"stat": "energy_regen",
-			"value": 0.18,
-			"text": "次の釣行で体力回復 +18%",
+			"recipe_id": "salt_grill",
+			"name": "アジの塩焼き",
+			"stat": "max_energy",
+			"value": 0.05,
+			"text": "次の釣行で最大体力 +5%",
 		},
 	}
 
