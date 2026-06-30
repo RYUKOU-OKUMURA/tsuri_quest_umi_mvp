@@ -319,6 +319,60 @@ class MealTableSpreadVisual:
 			draw_line(p + Vector2(0.0, -4.0), p + Vector2(0.0, 4.0), gold, 2.0)
 
 
+class MealSceneTableBridgeVisual:
+	extends Control
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		if size.x <= 0.0 or size.y <= 0.0:
+			return
+		var table_y := size.y * 0.57
+		var table_rect := Rect2(Vector2(0.0, table_y), Vector2(size.x, size.y - table_y))
+		draw_rect(table_rect, Color("#3a1a09", 0.34))
+		draw_rect(Rect2(Vector2(0.0, table_y), Vector2(size.x, size.y * 0.08)), Color("#d68633", 0.16))
+		draw_line(Vector2(0.0, table_y + 4.0), Vector2(size.x, table_y + 4.0), Color("#ffd18a", 0.38), 2.0)
+		for i in range(4):
+			var y := table_y + 24.0 + float(i) * 22.0
+			draw_line(
+				Vector2(14.0, y),
+				Vector2(size.x - 14.0, y + sin(float(i) * 1.7) * 4.0),
+				Color("#8f4b20", 0.20),
+				2.0
+			)
+		var runner := PackedVector2Array(
+			[
+				Vector2(size.x * 0.18, size.y * 0.68),
+				Vector2(size.x * 0.98, size.y * 0.63),
+				Vector2(size.x * 0.94, size.y * 0.93),
+				Vector2(size.x * 0.05, size.y * 0.96),
+			]
+		)
+		draw_polygon(
+			runner,
+			PackedColorArray(
+				[
+					Color("#f0c07a", 0.13),
+					Color("#f0c07a", 0.10),
+					Color("#5c2f14", 0.13),
+					Color("#5c2f14", 0.16),
+				]
+			)
+		)
+		draw_ellipse(Vector2(size.x * 0.23, size.y * 0.83), size.x * 0.18, 13.0, Color(0.0, 0.0, 0.0, 0.24))
+		draw_ellipse(Vector2(size.x * 0.66, size.y * 0.78), size.x * 0.28, 18.0, Color(0.0, 0.0, 0.0, 0.22))
+		draw_circle(Vector2(size.x * 0.48, size.y * 0.55), size.x * 0.34, Color("#ffd18a", 0.06))
+		for i in range(5):
+			var p := Vector2(
+				size.x * (0.26 + float((i * 17) % 58) / 100.0),
+				size.y * (0.40 + float((i * 11) % 34) / 100.0)
+			)
+			var gold := Color("#ffe081", 0.40 if i % 2 == 0 else 0.26)
+			draw_line(p + Vector2(-3.0, 0.0), p + Vector2(3.0, 0.0), gold, 1.5)
+			draw_line(p + Vector2(0.0, -3.0), p + Vector2(0.0, 3.0), gold, 1.5)
+
+
 class ExpMessagePortraitVisual:
 	extends Control
 
@@ -801,6 +855,7 @@ var _scene_title: Label
 var _scene_caption: Label
 var _scene_bonus_label: Label
 var _scene_result_image: TextureRect
+var _scene_table_bridge: MealSceneTableBridgeVisual
 var _scene_visual_stack: Control
 var _scene_table: HBoxContainer
 var _scene_dish_image: MealTableSpreadVisual
@@ -923,6 +978,11 @@ func _build_screen() -> void:
 	_scene_result_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	_scene_result_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_scene_visual_stack.add_child(_scene_result_image)
+	_scene_table_bridge = MealSceneTableBridgeVisual.new()
+	_scene_table_bridge.name = "MealSceneTableBridge"
+	_scene_table_bridge.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_scene_table_bridge.visible = false
+	_scene_visual_stack.add_child(_scene_table_bridge)
 	_scene_table = HBoxContainer.new()
 	_scene_table.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_scene_table.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -1946,6 +2006,9 @@ func _set_scene_backdrop(path: String, alpha: float, keep_table_visible: bool) -
 		_scene_result_image.modulate = Color(1.0, 1.0, 1.0, alpha)
 	if _scene_table != null:
 		_scene_table.modulate.a = 1.0 if keep_table_visible else 0.0
+	if _scene_table_bridge != null:
+		_scene_table_bridge.visible = keep_table_visible
+		_scene_table_bridge.queue_redraw()
 
 
 func _set_header_title_font_size(font_size: int) -> void:
@@ -1982,6 +2045,9 @@ func _apply_meal_result_composition() -> void:
 		_scene_table.add_theme_constant_override("separation", 0)
 	if _scene_dish_image != null:
 		_scene_dish_image.custom_minimum_size = Vector2(310.0, 248.0)
+	if _scene_table_bridge != null:
+		_scene_table_bridge.visible = true
+		_scene_table_bridge.queue_redraw()
 	if _scene_caption != null:
 		_scene_caption.visible = false
 	if _scene_bonus_label != null:
@@ -2032,6 +2098,8 @@ func _apply_exp_gain_composition() -> void:
 		_meal_reward_cue.custom_minimum_size = Vector2(0.0, 0.0)
 	if _meal_banner_spark != null:
 		_meal_banner_spark.visible = false
+	if _scene_table_bridge != null:
+		_scene_table_bridge.visible = false
 	if _dish_image != null:
 		_dish_image.custom_minimum_size = Vector2(304.0, 0.0)
 	if _flow_row != null:

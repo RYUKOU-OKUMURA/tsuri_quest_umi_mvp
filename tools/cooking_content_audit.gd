@@ -370,6 +370,7 @@ func _audit_exp_gain() -> void:
 			"MealDishCard",
 			"MealResultBannerSpark",
 			"MealResultRewardCue",
+			"MealSceneTableBridge",
 			"RewardDishFeatureImage",
 			"RewardCardBaseExp",
 			"RewardCardFirstBonus",
@@ -447,6 +448,7 @@ func _audit_exp_gain_level_up() -> void:
 			"MealDishCard",
 			"MealResultBannerSpark",
 			"MealResultRewardCue",
+			"MealSceneTableBridge",
 			"RewardDishFeatureImage",
 			"RewardCardBaseExp",
 			"RewardCardFirstBonus",
@@ -539,6 +541,7 @@ func _audit_meal_result() -> void:
 		]
 	)
 	_expect_named_node("MEAL_RESULT", screen, "MealSceneActor")
+	_expect_named_node("MEAL_RESULT", screen, "MealSceneTableBridge")
 	_expect_named_node("MEAL_RESULT", screen, "MealTableSpread")
 	_expect_named_node("MEAL_RESULT", screen, "MealDishCard")
 	_expect_named_node("MEAL_RESULT", screen, "MealResultRewardCue")
