@@ -2412,6 +2412,16 @@ func _set_scene_actor_mode(mode: String) -> void:
 		return
 	var path := PLAYER_EXP_SCENE_POSE if mode == "exp" else PLAYER_EATING_POSE
 	_scene_actor_image.texture = load(path) as Texture2D
+	if mode == "meal":
+		if _scene_actor_panel != null:
+			_scene_actor_panel.custom_minimum_size = Vector2(194.0, 0.0)
+		_scene_actor_image.custom_minimum_size = Vector2(190.0, 0.0)
+		_scene_actor_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	else:
+		if _scene_actor_panel != null:
+			_scene_actor_panel.custom_minimum_size = Vector2(176.0, 0.0)
+		_scene_actor_image.custom_minimum_size = Vector2(148.0, 0.0)
+		_scene_actor_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 
 
 func _set_scene_result_art_visible(visible: bool) -> void:
@@ -2465,11 +2475,11 @@ func _apply_meal_result_composition() -> void:
 		_scene_title.visible = false
 	if _scene_actor_panel != null:
 		_scene_actor_panel.visible = true
-		_scene_actor_panel.custom_minimum_size = Vector2(176.0, 0.0)
+		_scene_actor_panel.custom_minimum_size = Vector2(194.0, 0.0)
 	if _scene_table != null:
 		_scene_table.add_theme_constant_override("separation", 0)
 	if _scene_dish_image != null:
-		_scene_dish_image.custom_minimum_size = Vector2(310.0, 248.0)
+		_scene_dish_image.custom_minimum_size = Vector2(292.0, 248.0)
 	if _scene_table_bridge != null:
 		_scene_table_bridge.visible = true
 		_scene_table_bridge.queue_redraw()
