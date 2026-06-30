@@ -1451,46 +1451,75 @@ def meal_banner_frame() -> None:
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     shadow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow, "RGBA")
-    sd.rounded_rectangle((22, 22, w - 18, h - 12), radius=10, fill=(0, 0, 0, 105))
-    shadow = shadow.filter(ImageFilter.GaussianBlur(5))
+    sd.rounded_rectangle((17, 21, w - 14, h - 12), radius=13, fill=(0, 0, 0, 138))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(6))
     img.alpha_composite(shadow)
     draw = ImageDraw.Draw(img, "RGBA")
 
-    paper = (244, 226, 190, 255)
-    edge = (92, 55, 26, 255)
-    gold = (226, 172, 82, 245)
-    draw.rounded_rectangle((12, 10, w - 18, h - 22), radius=9, fill=paper, outline=edge, width=5)
-    draw.rounded_rectangle((24, 22, w - 30, h - 34), radius=5, outline=gold, width=2)
-    for x in range(30, w - 38, 54):
-        draw.line((x, 22, x - 38, h - 36), fill=(138, 91, 43, 26), width=2)
-    for i in range(80):
-        x = 34 + (i * 97) % (w - 80)
-        y = 26 + (i * 41) % (h - 62)
-        a = 18 + (i % 4) * 6
-        draw.ellipse((x, y, x + 2, y + 2), fill=(96, 56, 24, a))
+    draw.rounded_rectangle((12, 10, w - 18, h - 20), radius=10, fill=(237, 214, 172, 255), outline=(82, 50, 25, 255), width=5)
+    draw.rounded_rectangle((21, 18, w - 28, h - 29), radius=7, fill=(246, 228, 188, 250), outline=(129, 79, 38, 150), width=2)
+
+    # Keep the headline area quieter than the old diagonal stripe texture.
+    wash = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    wd = ImageDraw.Draw(wash, "RGBA")
+    for y in range(20, h - 28):
+        t = (y - 20) / float(h - 48)
+        top = (255, 246, 216)
+        bot = (228, 193, 133)
+        col = tuple(int(top[i] * (1.0 - t) + bot[i] * t) for i in range(3))
+        wd.line((24, y, w - 32, y), fill=(*col, 30), width=1)
+    img.alpha_composite(wash)
+    draw = ImageDraw.Draw(img, "RGBA")
+
+    draw.rounded_rectangle((27, 25, w - 36, h - 38), radius=5, outline=(225, 170, 82, 220), width=3)
+    draw.line((35, 29, w - 58, 29), fill=(255, 249, 223, 118), width=2)
+    draw.line((35, h - 39, w - 64, h - 39), fill=(104, 62, 31, 82), width=2)
+    for x, y in [(56, 11), (128, 10), (277, 10), (470, 11), (639, 10), (32, 103), (194, 107), (518, 106), (703, 105)]:
+        draw.rectangle((x, y, x + 18, y + 3), fill=(84, 50, 25, 74))
+    for x, y in [(15, 38), (16, 77), (w - 23, 49), (w - 24, 86)]:
+        draw.rectangle((x, y, x + 3, y + 15), fill=(84, 50, 25, 84))
+
+    rng = random.Random(902)
+    for i in range(105):
+        x = rng.randint(34, w - 52)
+        y = rng.randint(27, h - 43)
+        clear = 232 < x < 546 and 35 < y < 98
+        if clear and i % 4:
+            continue
+        alpha = rng.randint(8, 22) if clear else rng.randint(12, 32)
+        r = 1 if rng.random() < 0.86 else 2
+        draw.ellipse((x, y, x + r, y + r), fill=(100, 59, 27, alpha))
+    for x0, y0, x1, y1, alpha in [(58, 30, 34, 92, 34), (126, 23, 98, 91, 26), (568, 24, 618, 91, 26), (658, 22, 713, 88, 32)]:
+        draw.line((x0, y0, x1, y1), fill=(115, 72, 34, alpha), width=2)
+        draw.line((x0 + 3, y0, x1 + 3, y1), fill=(255, 246, 218, max(8, alpha // 2)), width=1)
 
     # Folded corner and fish stamp echo the reference without baking text.
-    draw.polygon([(w - 104, 10), (w - 18, 10), (w - 18, 78)], fill=(255, 244, 219, 230), outline=(180, 128, 73, 145))
-    draw.line((w - 99, 17, w - 28, 72), fill=(155, 104, 54, 90), width=2)
+    draw.polygon([(w - 103, 10), (w - 18, 10), (w - 18, 78)], fill=(255, 244, 219, 218), outline=(166, 112, 58, 125))
+    draw.line((w - 97, 17, w - 29, 72), fill=(135, 85, 44, 78), width=2)
     fish_cx, fish_cy = w - 118, 67
-    draw.ellipse((fish_cx - 48, fish_cy - 14, fish_cx + 34, fish_cy + 16), fill=(96, 83, 66, 88))
+    fish = (84, 73, 60, 58)
+    draw.ellipse((fish_cx - 52, fish_cy - 15, fish_cx + 32, fish_cy + 17), fill=fish)
     draw.polygon(
-        [(fish_cx + 28, fish_cy), (fish_cx + 68, fish_cy - 22), (fish_cx + 56, fish_cy), (fish_cx + 68, fish_cy + 22)],
-        fill=(96, 83, 66, 88),
+        [(fish_cx + 26, fish_cy), (fish_cx + 70, fish_cy - 25), (fish_cx + 57, fish_cy), (fish_cx + 70, fish_cy + 24)],
+        fill=fish,
     )
-    draw.ellipse((fish_cx - 38, fish_cy - 6, fish_cx - 30, fish_cy + 2), fill=(45, 38, 30, 110))
-    for s in range(4):
-        x = fish_cx - 16 + s * 13
-        draw.arc((x, fish_cy - 13, x + 20, fish_cy + 15), 98, 260, fill=(255, 246, 220, 70), width=2)
+    draw.polygon([(fish_cx - 18, fish_cy - 13), (fish_cx + 3, fish_cy - 33), (fish_cx + 1, fish_cy - 12)], fill=(84, 73, 60, 38))
+    draw.ellipse((fish_cx - 40, fish_cy - 6, fish_cx - 32, fish_cy + 2), fill=(40, 34, 28, 76))
+    for s in range(5):
+        x = fish_cx - 22 + s * 13
+        draw.arc((x, fish_cy - 14, x + 20, fish_cy + 16), 98, 260, fill=(255, 246, 220, 52), width=2)
 
     # Navy command tab at upper left, with a small utensil mark for the eating state.
-    draw.rounded_rectangle((44, 0, 214, 36), radius=6, fill=(13, 35, 60, 248), outline=gold, width=3)
+    gold = (229, 173, 81, 255)
+    draw.rounded_rectangle((42, 0, 218, 38), radius=7, fill=(10, 31, 55, 255), outline=gold, width=3)
+    draw.rectangle((49, 4, 211, 11), fill=(29, 61, 94, 178))
+    draw.line((55, 36, 204, 36), fill=(3, 16, 30, 165), width=2)
     utensil = (255, 232, 160, 230)
     draw.line((66, 29, 94, 8), fill=utensil, width=4)
     for tine_x in (88, 94, 100):
         draw.line((tine_x, 7, tine_x - 5, 18), fill=utensil, width=2)
-    draw.ellipse((114, 7, 134, 25), outline=utensil, width=4)
-    draw.line((125, 24, 154, 30), fill=utensil, width=4)
+    draw.ellipse((116, 7, 136, 25), outline=utensil, width=4)
+    draw.line((127, 24, 156, 30), fill=utensil, width=4)
 
     save(img, "meal_banner_frame.png")
 
