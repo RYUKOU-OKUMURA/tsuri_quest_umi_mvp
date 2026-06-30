@@ -2975,6 +2975,7 @@ func _draw_reward_card_backdrop(card: Control, icon_mode: String) -> void:
 	if s.x <= 0.0 or s.y <= 0.0:
 		return
 	var center := Vector2(s.x * 0.50, s.y * 0.67)
+	_draw_reward_header_ribbon(card, icon_mode)
 	match icon_mode:
 		"exp":
 			_draw_reward_exp_backdrop(card, center)
@@ -2986,6 +2987,59 @@ func _draw_reward_card_backdrop(card: Control, icon_mode: String) -> void:
 			_draw_reward_buff_backdrop(card, center)
 		"growth":
 			_draw_reward_growth_backdrop(card, center)
+
+
+func _draw_reward_header_ribbon(card: Control, icon_mode: String) -> void:
+	var s := card.size
+	var accent := _reward_card_draw_accent(icon_mode)
+	var ribbon := Rect2(Vector2(13.0, 8.0), Vector2(maxf(12.0, s.x - 26.0), 30.0))
+	card.draw_rect(ribbon, Color("#03111d", 0.78))
+	card.draw_rect(Rect2(ribbon.position + Vector2(3.0, 3.0), ribbon.size - Vector2(6.0, 6.0)), Color("#0d2338", 0.54))
+	var top_line := accent
+	top_line.a = 0.62 if icon_mode == "total" else 0.46
+	card.draw_line(ribbon.position + Vector2(5.0, 2.0), ribbon.position + Vector2(ribbon.size.x - 5.0, 2.0), top_line, 2.0)
+	card.draw_line(
+		ribbon.position + Vector2(5.0, ribbon.size.y - 2.0),
+		ribbon.position + Vector2(ribbon.size.x - 5.0, ribbon.size.y - 2.0),
+		Color("#07121e", 0.82),
+		2.0
+	)
+	for side in [-1.0, 1.0]:
+		var x := ribbon.position.x if side < 0.0 else ribbon.end.x
+		var notch := PackedVector2Array(
+			[
+				Vector2(x, ribbon.position.y + 5.0),
+				Vector2(x + side * 10.0, ribbon.position.y + 14.0),
+				Vector2(x, ribbon.position.y + ribbon.size.y - 5.0),
+			]
+		)
+		var notch_color := accent
+		notch_color.a = 0.42
+		card.draw_colored_polygon(notch, notch_color)
+	for i in range(3):
+		var x := ribbon.position.x + 18.0 + float(i) * 12.0
+		var slash := accent
+		slash.a = 0.28
+		card.draw_line(Vector2(x, ribbon.position.y + 6.0), Vector2(x - 8.0, ribbon.end.y - 6.0), slash, 1.4)
+	if icon_mode == "total":
+		var glow := Color("#ffb83d", 0.16)
+		card.draw_ellipse(ribbon.get_center() + Vector2(0.0, 2.0), ribbon.size.x * 0.28, 10.0, glow)
+
+
+func _reward_card_draw_accent(icon_mode: String) -> Color:
+	match icon_mode:
+		"exp":
+			return Color("#6bf1ff")
+		"bonus":
+			return Color("#ffe081")
+		"total":
+			return Color("#ffb83d")
+		"buff":
+			return Color("#8ee65a")
+		"growth":
+			return Color("#ff6f78")
+		_:
+			return Color("#d7a456")
 
 
 func _draw_reward_exp_backdrop(card: Control, center: Vector2) -> void:
