@@ -470,6 +470,18 @@ class MealResultRewardCueVisual:
 		var amber := Color("#d7a456")
 		var glow := Color("#fff1c7")
 		var y := size.y * 0.48
+		var row_left := size.x * 0.03
+		var row_right := size.x * 0.97
+		glow.a = 0.11
+		draw_line(Vector2(row_left, y + 1.0), Vector2(row_right, y + 1.0), glow, 6.0)
+		amber.a = 0.34
+		draw_line(Vector2(row_left + 8.0, y + 1.0), Vector2(row_right - 8.0, y + 1.0), amber, 1.4)
+		for i in range(4):
+			var card_x := lerpf(row_left + 66.0, row_right - 66.0, float(i) / 3.0)
+			var card_glow := glow
+			card_glow.a = 0.30
+			draw_line(Vector2(card_x, y - 5.0), Vector2(card_x, y + 7.0), card_glow, 2.0)
+			_draw_down_chevron(Vector2(card_x, y + 3.0), gold if i == 2 else amber)
 		var left := size.x * 0.46
 		var right := size.x * 0.96
 		glow.a = 0.18
