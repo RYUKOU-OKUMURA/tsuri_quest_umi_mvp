@@ -560,6 +560,7 @@ func _audit_meal_result() -> void:
 		"res://assets/showcase/cooking/dish_feature_aji_shioyaki.png"
 	)
 	_expect_named_node("MEAL_RESULT", screen, "RewardBuffSignal")
+	_expect_named_node("MEAL_RESULT", screen, "RewardBuffEffectPlate")
 	_expect_named_node("MEAL_RESULT", screen, "RewardCardBaseExp")
 	_expect_named_node("MEAL_RESULT", screen, "RewardCardFirstBonus")
 	_expect_named_node("MEAL_RESULT", screen, "RewardCardTotalExp")

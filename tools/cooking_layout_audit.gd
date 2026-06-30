@@ -182,6 +182,7 @@ func _audit_meal_result() -> void:
 	_expect_named_control_size("MEAL_RESULT", screen, "MealResultRewardCue", Vector2(520.0, 12.0))
 	_expect_named_control_size("MEAL_RESULT", screen, "RewardDishFeatureImage", Vector2(200.0, 70.0))
 	_expect_named_control_size("MEAL_RESULT", screen, "RewardBuffSignal", Vector2(48.0, 40.0))
+	_expect_named_control_size("MEAL_RESULT", screen, "RewardBuffEffectPlate", Vector2(200.0, 50.0))
 	_expect_named_control_size("MEAL_RESULT", screen, "RewardCardBaseExp", Vector2(230.0, 96.0))
 	_expect_named_control_size("MEAL_RESULT", screen, "RewardCardFirstBonus", Vector2(230.0, 96.0))
 	_expect_named_control_size("MEAL_RESULT", screen, "RewardCardTotalExp", Vector2(230.0, 96.0))

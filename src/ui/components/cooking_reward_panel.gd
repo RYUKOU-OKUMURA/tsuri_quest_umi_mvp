@@ -910,6 +910,9 @@ class RewardValuePlateVisual:
 		if size.x <= 0.0 or size.y <= 0.0:
 			return
 		var rect := Rect2(Vector2(8.0, 5.0), Vector2(size.x - 16.0, size.y - 10.0))
+		if mode == "buff":
+			_draw_buff_plate(rect)
+			return
 		var glow := accent
 		glow.a = 0.22 if mode == "total" else 0.14
 		var rim := accent
@@ -931,6 +934,39 @@ class RewardValuePlateVisual:
 				var to := center + Vector2(cos(a), sin(a)) * 82.0
 				var ray := Color("#ffb83d", 0.13)
 				draw_line(from, to, ray, 2.0)
+
+	func _draw_buff_plate(rect: Rect2) -> void:
+		var green := accent
+		var gold := Color("#ffe081")
+		var cyan := Color("#6bf1ff")
+		draw_rect(rect, Color("#03111d", 0.74))
+		draw_rect(Rect2(rect.position + Vector2(3.0, 3.0), rect.size - Vector2(6.0, 6.0)), Color("#0d2c26", 0.70))
+		green.a = 0.52
+		draw_line(rect.position + Vector2(2.0, 0.0), rect.position + Vector2(rect.size.x - 2.0, 0.0), green, 2.4)
+		draw_line(
+			rect.position + Vector2(2.0, rect.size.y),
+			rect.position + Vector2(rect.size.x - 2.0, rect.size.y),
+			Color("#07121e", 0.78),
+			2.0
+		)
+		var medal_center := rect.position + Vector2(37.0, rect.size.y * 0.50)
+		draw_circle(medal_center, 27.0, Color("#07121e", 0.84))
+		draw_circle(medal_center, 23.0, Color("#173b28", 0.86))
+		gold.a = 0.32
+		draw_arc(medal_center, 24.0, 0.0, TAU, 36, gold, 2.0)
+		green.a = 0.18
+		draw_circle(medal_center, 17.0, green)
+		var lane := Rect2(rect.position + Vector2(74.0, 10.0), Vector2(maxf(16.0, rect.size.x - 86.0), rect.size.y - 20.0))
+		draw_rect(lane, Color("#09201f", 0.58))
+		cyan.a = 0.16
+		draw_line(lane.position, lane.position + Vector2(lane.size.x, lane.size.y * 0.38), cyan, 2.0)
+		draw_line(lane.position + Vector2(0.0, lane.size.y), lane.position + Vector2(lane.size.x, lane.size.y * 0.66), Color("#8ee65a", 0.14), 2.0)
+		for i in range(4):
+			var p := lane.position + Vector2(lane.size.x * (0.18 + float(i) * 0.20), lane.size.y * (0.28 + float(i % 2) * 0.36))
+			var spark := gold if i % 2 == 0 else green
+			spark.a = 0.48
+			draw_line(p + Vector2(-3.2, 0.0), p + Vector2(3.2, 0.0), spark, 1.5)
+			draw_line(p + Vector2(0.0, -3.2), p + Vector2(0.0, 3.2), spark, 1.5)
 
 
 class RewardBuffSignalVisual:
@@ -2386,7 +2422,7 @@ func _apply_meal_reward_hierarchy() -> void:
 	_set_reward_label_style(_base_label, 30, Palette.GAUGE_CYAN_HI, 4)
 	_set_reward_label_style(_bonus_label, 30, Palette.GOLD_BRIGHT, 4)
 	_set_reward_label_style(_total_label, 43, Palette.GOLD_BRIGHT, 6)
-	_set_reward_label_style(_buff_label, 17, Palette.GAUGE_GREEN_HI, 3)
+	_set_reward_label_style(_buff_label, 18, Palette.GAUGE_GREEN_HI, 3)
 	_set_reward_card_modulate(_base_label, Color(0.92, 0.96, 1.0, 0.92))
 	_set_reward_card_modulate(_bonus_label, Color(1.0, 0.96, 0.86, 0.94))
 	_set_reward_card_modulate(_total_label, Color(1.0, 0.98, 0.86, 1.0))
@@ -2530,20 +2566,21 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 		value_stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		box.add_child(value_stack)
 		var plate := RewardValuePlateVisual.new()
+		plate.name = "RewardBuffEffectPlate"
 		plate.configure(icon_mode, accent)
 		plate.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		value_stack.add_child(plate)
 		var value_row := HBoxContainer.new()
-		value_row.add_theme_constant_override("separation", 5)
+		value_row.add_theme_constant_override("separation", 7)
 		value_row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		value_row.offset_left = 10.0
-		value_row.offset_top = 6.0
+		value_row.offset_left = 8.0
+		value_row.offset_top = 5.0
 		value_row.offset_right = -10.0
-		value_row.offset_bottom = -6.0
+		value_row.offset_bottom = -5.0
 		value_stack.add_child(value_row)
 		var signal_visual := RewardBuffSignalVisual.new()
 		signal_visual.name = "RewardBuffSignal"
-		signal_visual.custom_minimum_size = Vector2(58.0, 52.0)
+		signal_visual.custom_minimum_size = Vector2(66.0, 56.0)
 		value_row.add_child(signal_visual)
 		var buff_value := make_shadow_label("", 14, accent, 2)
 		buff_value.custom_minimum_size = Vector2(0.0, 52.0)
