@@ -839,6 +839,47 @@ class RewardTotalPeakGlowVisual:
 		draw_ellipse(center, rx, ry, color)
 
 
+class RewardValuePlateVisual:
+	extends Control
+
+	var mode := "exp"
+	var accent := Color("#6bf1ff")
+
+	func configure(next_mode: String, next_accent: Color) -> void:
+		mode = next_mode
+		accent = next_accent
+		queue_redraw()
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		if size.x <= 0.0 or size.y <= 0.0:
+			return
+		var rect := Rect2(Vector2(8.0, 5.0), Vector2(size.x - 16.0, size.y - 10.0))
+		var glow := accent
+		glow.a = 0.22 if mode == "total" else 0.14
+		var rim := accent
+		rim.a = 0.55 if mode == "total" else 0.36
+		draw_rect(rect, Color("#03111d", 0.72))
+		draw_rect(Rect2(rect.position + Vector2(3.0, 3.0), rect.size - Vector2(6.0, 6.0)), glow)
+		draw_line(rect.position, rect.position + Vector2(rect.size.x, 0.0), rim, 2.0)
+		draw_line(
+			rect.position + Vector2(0.0, rect.size.y),
+			rect.position + rect.size,
+			Color("#07121e", 0.70),
+			2.0
+		)
+		if mode == "total":
+			var center := rect.get_center()
+			for i in range(10):
+				var a := TAU * float(i) / 10.0
+				var from := center + Vector2(cos(a), sin(a)) * 14.0
+				var to := center + Vector2(cos(a), sin(a)) * 82.0
+				var ray := Color("#ffb83d", 0.13)
+				draw_line(from, to, ray, 2.0)
+
+
 class RewardBuffSignalVisual:
 	extends Control
 
@@ -2218,7 +2259,7 @@ func _apply_meal_result_composition() -> void:
 	if _reward_grid != null:
 		_reward_grid.queue_redraw()
 	_set_status_strip_emphasis(false)
-	_set_reward_cards_height(108.0)
+	_set_reward_cards_height(126.0)
 
 
 func _apply_exp_gain_composition() -> void:
@@ -2289,10 +2330,10 @@ func _draw_reward_grid_backdrop() -> void:
 
 
 func _apply_meal_reward_hierarchy() -> void:
-	_set_reward_label_style(_base_label, 24, Palette.GAUGE_CYAN_HI, 3)
-	_set_reward_label_style(_bonus_label, 24, Palette.GOLD_BRIGHT, 3)
-	_set_reward_label_style(_total_label, 34, Palette.GOLD_BRIGHT, 5)
-	_set_reward_label_style(_buff_label, 16, Palette.GAUGE_GREEN_HI, 2)
+	_set_reward_label_style(_base_label, 30, Palette.GAUGE_CYAN_HI, 4)
+	_set_reward_label_style(_bonus_label, 30, Palette.GOLD_BRIGHT, 4)
+	_set_reward_label_style(_total_label, 43, Palette.GOLD_BRIGHT, 6)
+	_set_reward_label_style(_buff_label, 17, Palette.GAUGE_GREEN_HI, 3)
 	_set_reward_card_modulate(_base_label, Color(0.92, 0.96, 1.0, 0.92))
 	_set_reward_card_modulate(_bonus_label, Color(1.0, 0.96, 0.86, 0.94))
 	_set_reward_card_modulate(_total_label, Color(1.0, 0.98, 0.86, 1.0))
@@ -2400,7 +2441,7 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 			5.0
 		)
 	)
-	card.custom_minimum_size = Vector2(0.0, 104.0)
+	card.custom_minimum_size = Vector2(0.0, 112.0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.draw.connect(func() -> void: _draw_reward_card_backdrop(card, icon_mode))
 	parent.add_child(card)
@@ -2411,7 +2452,7 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 		card.add_child(peak_glow)
 	var box := VBoxContainer.new()
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_theme_constant_override("separation", 4)
+	box.add_theme_constant_override("separation", 5)
 	card.add_child(box)
 	var title_row := HBoxContainer.new()
 	title_row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -2420,26 +2461,39 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 	box.add_child(title_row)
 	var icon := RewardIconVisual.new()
 	icon.configure(icon_mode, accent)
-	icon.custom_minimum_size = Vector2(34.0, 30.0)
+	icon.custom_minimum_size = Vector2(38.0, 32.0)
 	title_row.add_child(icon)
 	var title_label := make_shadow_label(title, 16, Palette.TEXT_BONE, 2)
-	title_label.custom_minimum_size = Vector2(0.0, 24.0)
+	title_label.custom_minimum_size = Vector2(0.0, 26.0)
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title_label.clip_text = true
 	title_row.add_child(title_label)
 	if icon_mode == "buff":
+		var value_stack := Control.new()
+		value_stack.custom_minimum_size = Vector2(0.0, 66.0)
+		value_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		value_stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		box.add_child(value_stack)
+		var plate := RewardValuePlateVisual.new()
+		plate.configure(icon_mode, accent)
+		plate.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		value_stack.add_child(plate)
 		var value_row := HBoxContainer.new()
 		value_row.add_theme_constant_override("separation", 5)
-		value_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		box.add_child(value_row)
+		value_row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		value_row.offset_left = 10.0
+		value_row.offset_top = 6.0
+		value_row.offset_right = -10.0
+		value_row.offset_bottom = -6.0
+		value_stack.add_child(value_row)
 		var signal_visual := RewardBuffSignalVisual.new()
 		signal_visual.name = "RewardBuffSignal"
-		signal_visual.custom_minimum_size = Vector2(54.0, 48.0)
+		signal_visual.custom_minimum_size = Vector2(58.0, 52.0)
 		value_row.add_child(signal_visual)
 		var buff_value := make_shadow_label("", 14, accent, 2)
-		buff_value.custom_minimum_size = Vector2(0.0, 50.0)
+		buff_value.custom_minimum_size = Vector2(0.0, 52.0)
 		buff_value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		buff_value.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		buff_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -2448,15 +2502,26 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 		buff_value.clip_text = false
 		value_row.add_child(buff_value)
 		return buff_value
+	var value_stack := Control.new()
+	value_stack.custom_minimum_size = Vector2(0.0, 66.0)
+	value_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	value_stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(value_stack)
+	var plate := RewardValuePlateVisual.new()
+	plate.configure(icon_mode, accent)
+	plate.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	value_stack.add_child(plate)
 	var value_label := make_shadow_label("", 16, accent, 3)
-	value_label.custom_minimum_size = Vector2(0.0, 50.0)
+	value_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	value_label.offset_left = 8.0
+	value_label.offset_right = -8.0
 	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	value_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	value_label.clip_text = true
-	box.add_child(value_label)
+	value_stack.add_child(value_label)
 	return value_label
 
 
@@ -2618,10 +2683,7 @@ func _reward_card_node_name(icon_mode: String) -> String:
 
 
 func _set_reward_line_visible(label: Label, visible: bool) -> void:
-	var row := label.get_parent() as Control
-	if row == null:
-		return
-	var card := row.get_parent() as Control
+	var card := _reward_card_from_label(label)
 	if card == null:
 		return
 	card.visible = visible
