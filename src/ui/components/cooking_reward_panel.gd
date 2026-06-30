@@ -444,6 +444,68 @@ class MealSceneTableBridgeVisual:
 			draw_arc(Vector2(x, y), radius, -1.75, 0.75, 18, steam, 2.0)
 
 
+class MealSceneForegroundGlowVisual:
+	extends Control
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		if size.x <= 0.0 or size.y <= 0.0:
+			return
+		_draw_lantern_wash()
+		_draw_actor_dish_rim_light()
+		_draw_front_steam()
+		_draw_meal_glints()
+
+	func _draw_lantern_wash() -> void:
+		var lantern_center := Vector2(size.x * 0.13, size.y * 0.20)
+		draw_circle(lantern_center, size.x * 0.24, Color("#ffb83d", 0.060))
+		draw_circle(lantern_center + Vector2(size.x * 0.10, size.y * 0.06), size.x * 0.18, Color("#fff1c7", 0.040))
+		for i in range(3):
+			var from := lantern_center + Vector2(float(i) * 18.0, 18.0)
+			var to := Vector2(size.x * (0.38 + float(i) * 0.12), size.y * 0.78)
+			draw_line(from, to, Color("#ffd18a", 0.060 - float(i) * 0.010), 8.0 - float(i) * 1.6)
+
+	func _draw_actor_dish_rim_light() -> void:
+		var warm := Color("#ffd18a", 0.20)
+		draw_line(
+			Vector2(size.x * 0.16, size.y * 0.70),
+			Vector2(size.x * 0.80, size.y * 0.66),
+			warm,
+			4.0
+		)
+		draw_line(
+			Vector2(size.x * 0.22, size.y * 0.78),
+			Vector2(size.x * 0.86, size.y * 0.75),
+			Color("#fff1c7", 0.12),
+			2.0
+		)
+		draw_ellipse(Vector2(size.x * 0.24, size.y * 0.51), size.x * 0.16, 24.0, Color("#ffb83d", 0.055))
+		draw_ellipse(Vector2(size.x * 0.62, size.y * 0.62), size.x * 0.23, 18.0, Color("#ffe081", 0.052))
+
+	func _draw_front_steam() -> void:
+		var steam := Color("#fff1c7", 0.16)
+		for i in range(4):
+			var x := size.x * (0.48 + float(i) * 0.08)
+			var y := size.y * (0.42 - float(i % 2) * 0.04)
+			var radius := 20.0 + float(i) * 4.0
+			steam.a = 0.18 - float(i) * 0.025
+			draw_arc(Vector2(x, y), radius, -1.62, 0.92, 18, steam, 2.0)
+		draw_arc(Vector2(size.x * 0.31, size.y * 0.48), 19.0, -1.8, 0.7, 16, Color("#fff1c7", 0.12), 1.8)
+
+	func _draw_meal_glints() -> void:
+		for i in range(7):
+			var p := Vector2(
+				size.x * (0.20 + float((i * 23) % 65) / 100.0),
+				size.y * (0.20 + float((i * 17) % 58) / 100.0)
+			)
+			var color := Color("#ffe081", 0.36 if i % 2 == 0 else 0.22)
+			var arm := 2.5 + float(i % 3)
+			draw_line(p + Vector2(-arm, 0.0), p + Vector2(arm, 0.0), color, 1.4)
+			draw_line(p + Vector2(0.0, -arm), p + Vector2(0.0, arm), color, 1.4)
+
+
 class ExpMessagePortraitVisual:
 	extends Control
 
@@ -1253,6 +1315,7 @@ var _scene_caption: Label
 var _scene_bonus_label: Label
 var _scene_result_image: TextureRect
 var _scene_table_bridge: MealSceneTableBridgeVisual
+var _scene_foreground_glow: MealSceneForegroundGlowVisual
 var _scene_visual_stack: Control
 var _scene_table: HBoxContainer
 var _scene_dish_image: MealTableSpreadVisual
@@ -1395,6 +1458,11 @@ func _build_screen() -> void:
 	_scene_dish_image.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scene_dish_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_scene_table.add_child(_scene_dish_image)
+	_scene_foreground_glow = MealSceneForegroundGlowVisual.new()
+	_scene_foreground_glow.name = "MealSceneForegroundGlow"
+	_scene_foreground_glow.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_scene_foreground_glow.visible = false
+	_scene_visual_stack.add_child(_scene_foreground_glow)
 	_scene_caption = make_shadow_label("湯気の立つ料理を味わった。", 18, Palette.TEXT_BONE, 2)
 	_scene_caption.name = "MealSceneCaption"
 	_scene_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -2531,6 +2599,9 @@ func _apply_meal_result_composition() -> void:
 	if _scene_table_bridge != null:
 		_scene_table_bridge.visible = true
 		_scene_table_bridge.queue_redraw()
+	if _scene_foreground_glow != null:
+		_scene_foreground_glow.visible = true
+		_scene_foreground_glow.queue_redraw()
 	if _scene_caption != null:
 		_scene_caption.visible = false
 	if _scene_bonus_label != null:
@@ -2594,6 +2665,8 @@ func _apply_exp_gain_composition() -> void:
 		_meal_result_mode_label.visible = false
 	if _scene_table_bridge != null:
 		_scene_table_bridge.visible = false
+	if _scene_foreground_glow != null:
+		_scene_foreground_glow.visible = false
 	if _dish_card_bridge != null:
 		_dish_card_bridge.visible = false
 	if _dish_image != null:
