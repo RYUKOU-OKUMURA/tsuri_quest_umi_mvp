@@ -175,10 +175,10 @@ class MealTableSpreadVisual:
 		var tex_size := Vector2(float(tex.get_width()), float(tex.get_height()))
 		if tex_size.x <= 0.0 or tex_size.y <= 0.0 or size.x <= 0.0 or size.y <= 0.0:
 			return false
-		var scale := minf(size.x * 1.06 / tex_size.x, size.y * 0.76 / tex_size.y)
+		var scale := minf(size.x * 0.98 / tex_size.x, size.y * 0.72 / tex_size.y)
 		var draw_size := tex_size * scale
 		var rect := Rect2(
-			Vector2((size.x - draw_size.x) * 0.52, size.y - draw_size.y - size.y * 0.04),
+			Vector2((size.x - draw_size.x) * 0.48, size.y - draw_size.y - size.y * 0.055),
 			draw_size
 		)
 		draw_texture_rect_region(tex, rect, Rect2(Vector2.ZERO, tex_size))
@@ -363,6 +363,19 @@ class MealSceneTableBridgeVisual:
 		draw_ellipse(Vector2(size.x * 0.23, size.y * 0.83), size.x * 0.18, 13.0, Color(0.0, 0.0, 0.0, 0.24))
 		draw_ellipse(Vector2(size.x * 0.66, size.y * 0.78), size.x * 0.28, 18.0, Color(0.0, 0.0, 0.0, 0.22))
 		draw_circle(Vector2(size.x * 0.48, size.y * 0.55), size.x * 0.34, Color("#ffd18a", 0.06))
+		draw_ellipse(Vector2(size.x * 0.45, size.y * 0.77), size.x * 0.42, 30.0, Color("#ffb83d", 0.055))
+		draw_line(
+			Vector2(size.x * 0.05, size.y * 0.88),
+			Vector2(size.x * 0.93, size.y * 0.82),
+			Color("#ffd18a", 0.24),
+			3.0
+		)
+		draw_line(
+			Vector2(size.x * 0.04, size.y * 0.91),
+			Vector2(size.x * 0.95, size.y * 0.86),
+			Color("#2a1208", 0.24),
+			5.0
+		)
 		_draw_shared_steam()
 		for i in range(5):
 			var p := Vector2(
