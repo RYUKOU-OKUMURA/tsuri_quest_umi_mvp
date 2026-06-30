@@ -1142,6 +1142,7 @@ func show_meal_result(result: Dictionary) -> void:
 	var buff := Dictionary(result.get("buff", {}))
 	_buff_label.text = _meal_buff_reward_text(buff)
 	_refresh_status_strip(result)
+	_set_status_strip_emphasis(false)
 	_set_reward_line_visible(_growth_label, false)
 	_apply_meal_reward_hierarchy()
 	_confirm_button.text = "食経験値へ進む"
@@ -1194,6 +1195,7 @@ func show_reward(
 	_dish_card.visible = false
 	_exp_focus_card.visible = true
 	_effect_preview_card.visible = true
+	_set_status_strip_emphasis(true)
 	_meal_reward_cue.visible = false
 	_exp_card.visible = false
 	_reward_grid.visible = false
@@ -1943,6 +1945,7 @@ func _apply_meal_result_composition() -> void:
 	if _meal_reward_cue != null:
 		_meal_reward_cue.visible = true
 		_meal_reward_cue.custom_minimum_size = Vector2(0.0, 16.0)
+	_set_status_strip_emphasis(false)
 	_set_reward_cards_height(108.0)
 
 
@@ -1979,6 +1982,7 @@ func _apply_exp_gain_composition() -> void:
 	if _confirm_button != null:
 		_confirm_button.custom_minimum_size = Vector2(318.0, 40.0)
 	_set_confirm_button_emphasis(false)
+	_set_status_strip_emphasis(true)
 	_set_reward_cards_height(84.0)
 
 
@@ -2014,6 +2018,16 @@ func _set_reward_cards_height(height: float) -> void:
 			card.custom_minimum_size = Vector2(0.0, height)
 	if _exp_card != null:
 		_exp_card.custom_minimum_size = Vector2(280.0, height)
+
+
+func _set_status_strip_emphasis(is_primary: bool) -> void:
+	var tint := Color.WHITE if is_primary else Color(0.82, 0.90, 1.0, 0.86)
+	for label in [_status_level_label, _status_meal_label, _status_cooler_label, _status_money_label]:
+		var card := _reward_card_from_label(label)
+		if card == null:
+			continue
+		card.modulate = tint
+		card.queue_redraw()
 
 
 func _reward_card_from_label(label: Label) -> Control:
