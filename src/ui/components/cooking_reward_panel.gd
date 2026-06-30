@@ -1818,6 +1818,7 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 	)
 	card.custom_minimum_size = Vector2(0.0, 104.0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.draw.connect(func() -> void: _draw_reward_card_backdrop(card, icon_mode))
 	parent.add_child(card)
 	var box := VBoxContainer.new()
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -1868,6 +1869,147 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 	value_label.clip_text = true
 	box.add_child(value_label)
 	return value_label
+
+
+func _draw_reward_card_backdrop(card: Control, icon_mode: String) -> void:
+	var s := card.size
+	if s.x <= 0.0 or s.y <= 0.0:
+		return
+	var center := Vector2(s.x * 0.50, s.y * 0.67)
+	match icon_mode:
+		"exp":
+			_draw_reward_exp_backdrop(card, center)
+		"bonus":
+			_draw_reward_bonus_backdrop(card, center)
+		"total":
+			_draw_reward_total_backdrop(card, center)
+		"buff":
+			_draw_reward_buff_backdrop(card, center)
+		"growth":
+			_draw_reward_growth_backdrop(card, center)
+
+
+func _draw_reward_exp_backdrop(card: Control, center: Vector2) -> void:
+	var cyan := Color("#6bf1ff", 0.18)
+	var green := Color("#9cff6f", 0.20)
+	card.draw_ellipse(center + Vector2(0.0, 22.0), 66.0, 12.0, Color(0.0, 0.0, 0.0, 0.16))
+	card.draw_arc(center + Vector2(0.0, 8.0), 30.0, 0.0, PI, 28, Color("#fff1c7", 0.72), 7.0)
+	card.draw_arc(center + Vector2(0.0, 5.0), 24.0, 0.0, PI, 24, Color("#b35f25", 0.74), 7.0)
+	for x in [-35.0, 35.0]:
+		card.draw_line(center + Vector2(x, 14.0), center + Vector2(x, -22.0), green, 5.0)
+		card.draw_polygon(
+			PackedVector2Array(
+				[
+					center + Vector2(x, -30.0),
+					center + Vector2(x - 9.0, -14.0),
+					center + Vector2(x + 9.0, -14.0),
+				]
+			),
+			PackedColorArray([green, green, green])
+		)
+	for i in range(6):
+		var p := center + Vector2(-55.0 + float(i) * 22.0, -22.0 + float(i % 2) * 42.0)
+		card.draw_line(p + Vector2(-4.0, 0.0), p + Vector2(4.0, 0.0), cyan, 2.0)
+		card.draw_line(p + Vector2(0.0, -4.0), p + Vector2(0.0, 4.0), cyan, 2.0)
+
+
+func _draw_reward_bonus_backdrop(card: Control, center: Vector2) -> void:
+	var gold := Color("#ffe081", 0.22)
+	var red := Color("#9b2f17", 0.48)
+	card.draw_ellipse(center + Vector2(0.0, 23.0), 64.0, 11.0, Color(0.0, 0.0, 0.0, 0.15))
+	card.draw_rect(Rect2(center.x - 44.0, center.y + 4.0, 88.0, 18.0), Color("#8a4a20", 0.42))
+	card.draw_rect(Rect2(center.x - 5.0, center.y - 30.0, 10.0, 40.0), red)
+	card.draw_polygon(
+		PackedVector2Array(
+			[
+				center + Vector2(5.0, -28.0),
+				center + Vector2(54.0, -16.0),
+				center + Vector2(5.0, -2.0),
+			]
+		),
+		PackedColorArray([gold, gold, gold])
+	)
+	for x in [-30.0, 0.0, 30.0]:
+		card.draw_arc(center + Vector2(x, 7.0), 18.0, PI, TAU, 18, Color("#fff1c7", 0.72), 7.0)
+
+
+func _draw_reward_total_backdrop(card: Control, center: Vector2) -> void:
+	var gold := Color("#ffe081", 0.28)
+	var hot := Color("#ffb83d", 0.22)
+	for i in range(16):
+		var a := TAU * float(i) / 16.0
+		var inner := center + Vector2(cos(a), sin(a)) * 18.0
+		var outer := center + Vector2(cos(a), sin(a)) * (70.0 if i % 2 == 0 else 52.0)
+		card.draw_line(inner, outer, hot, 4.0 if i % 2 == 0 else 2.0)
+	var points := PackedVector2Array()
+	for i in range(10):
+		var radius := 34.0 if i % 2 == 0 else 15.0
+		var a := -PI * 0.5 + TAU * float(i) / 10.0
+		points.append(center + Vector2(cos(a), sin(a)) * radius)
+	var colors := PackedColorArray()
+	for _i in range(points.size()):
+		colors.append(gold)
+	card.draw_polygon(points, colors)
+	card.draw_circle(center, 13.0, Color("#fff1c7", 0.22))
+
+
+func _draw_reward_buff_backdrop(card: Control, center: Vector2) -> void:
+	var green := Color("#8ee65a", 0.23)
+	var cyan := Color("#6bf1ff", 0.22)
+	card.draw_circle(center + Vector2(-20.0, 4.0), 32.0, Color("#173b28", 0.46))
+	card.draw_circle(center + Vector2(-20.0, 4.0), 24.0, Color("#2f7a45", 0.44))
+	var fish := PackedVector2Array(
+		[
+			center + Vector2(-45.0, 1.0),
+			center + Vector2(-30.0, -13.0),
+			center + Vector2(-4.0, -7.0),
+			center + Vector2(8.0, 0.0),
+			center + Vector2(-4.0, 8.0),
+			center + Vector2(-30.0, 14.0),
+		]
+	)
+	card.draw_colored_polygon(fish, cyan)
+	card.draw_colored_polygon(
+		PackedVector2Array(
+			[
+				center + Vector2(5.0, -7.0),
+				center + Vector2(28.0, -22.0),
+				center + Vector2(21.0, 0.0),
+				center + Vector2(28.0, 22.0),
+				center + Vector2(5.0, 8.0),
+			]
+		),
+		Color("#4fb2dc", 0.22)
+	)
+	for x in [34.0, 54.0]:
+		card.draw_line(center + Vector2(x, 24.0), center + Vector2(x, -24.0), green, 5.0)
+		card.draw_polygon(
+			PackedVector2Array(
+				[
+					center + Vector2(x, -31.0),
+					center + Vector2(x - 9.0, -15.0),
+					center + Vector2(x + 9.0, -15.0),
+				]
+			),
+			PackedColorArray([green, green, green])
+		)
+
+
+func _draw_reward_growth_backdrop(card: Control, center: Vector2) -> void:
+	var red := Color("#ff6f78", 0.24)
+	var gold := Color("#ffe081", 0.22)
+	card.draw_line(center + Vector2(0.0, 34.0), center + Vector2(0.0, -34.0), red, 9.0)
+	card.draw_polygon(
+		PackedVector2Array(
+			[
+				center + Vector2(0.0, -45.0),
+				center + Vector2(-26.0, -12.0),
+				center + Vector2(26.0, -12.0),
+			]
+		),
+		PackedColorArray([gold, gold, gold])
+	)
+	card.draw_arc(center + Vector2(0.0, 12.0), 30.0, 0.0, TAU, 30, gold, 4.0)
 
 
 func _reward_card_node_name(icon_mode: String) -> String:
