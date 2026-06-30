@@ -341,6 +341,7 @@ class MealSceneTableBridgeVisual:
 				Color("#8f4b20", 0.20),
 				2.0
 			)
+		_draw_window_to_table_light()
 		var runner := PackedVector2Array(
 			[
 				Vector2(size.x * 0.18, size.y * 0.68),
@@ -364,6 +365,7 @@ class MealSceneTableBridgeVisual:
 		draw_ellipse(Vector2(size.x * 0.66, size.y * 0.78), size.x * 0.28, 18.0, Color(0.0, 0.0, 0.0, 0.22))
 		draw_circle(Vector2(size.x * 0.48, size.y * 0.55), size.x * 0.34, Color("#ffd18a", 0.06))
 		draw_ellipse(Vector2(size.x * 0.45, size.y * 0.77), size.x * 0.42, 30.0, Color("#ffb83d", 0.055))
+		_draw_table_unity_glow()
 		draw_line(
 			Vector2(size.x * 0.05, size.y * 0.88),
 			Vector2(size.x * 0.93, size.y * 0.82),
@@ -385,6 +387,52 @@ class MealSceneTableBridgeVisual:
 			var gold := Color("#ffe081", 0.40 if i % 2 == 0 else 0.26)
 			draw_line(p + Vector2(-3.0, 0.0), p + Vector2(3.0, 0.0), gold, 1.5)
 			draw_line(p + Vector2(0.0, -3.0), p + Vector2(0.0, 3.0), gold, 1.5)
+
+	func _draw_window_to_table_light() -> void:
+		var beam := PackedVector2Array(
+			[
+				Vector2(size.x * 0.37, size.y * 0.18),
+				Vector2(size.x * 0.92, size.y * 0.25),
+				Vector2(size.x * 0.86, size.y * 0.72),
+				Vector2(size.x * 0.24, size.y * 0.92),
+			]
+		)
+		draw_polygon(
+			beam,
+			PackedColorArray(
+				[
+					Color("#fff1c7", 0.12),
+					Color("#fff1c7", 0.05),
+					Color("#ffb83d", 0.08),
+					Color("#ffb83d", 0.13),
+				]
+			)
+		)
+		draw_circle(Vector2(size.x * 0.42, size.y * 0.34), size.x * 0.30, Color("#ffe081", 0.040))
+		for i in range(3):
+			var x := size.x * (0.43 + float(i) * 0.12)
+			draw_line(
+				Vector2(x, size.y * 0.26),
+				Vector2(x - size.x * 0.16, size.y * 0.86),
+				Color("#fff1c7", 0.10 - float(i) * 0.018),
+				2.0
+			)
+
+	func _draw_table_unity_glow() -> void:
+		var gold := Color("#ffd18a", 0.18)
+		draw_line(
+			Vector2(size.x * 0.18, size.y * 0.72),
+			Vector2(size.x * 0.78, size.y * 0.69),
+			gold,
+			5.0
+		)
+		draw_line(
+			Vector2(size.x * 0.27, size.y * 0.62),
+			Vector2(size.x * 0.72, size.y * 0.70),
+			Color("#fff1c7", 0.12),
+			3.0
+		)
+		draw_ellipse(Vector2(size.x * 0.54, size.y * 0.73), size.x * 0.35, 22.0, Color("#ffe081", 0.065))
 
 	func _draw_shared_steam() -> void:
 		var steam := Color("#fff1c7", 0.20)
