@@ -607,6 +607,55 @@ class MealResultBannerSparkVisual:
 		draw_circle(center, 2.8, burst)
 
 
+class MealResultSplitTitleVisual:
+	extends Control
+
+	var dish_name := "料理"
+
+	func configure(next_dish_name: String) -> void:
+		dish_name = next_dish_name
+		queue_redraw()
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		if size.x <= 0.0 or size.y <= 0.0:
+			return
+		var font := get_theme_default_font()
+		if font == null:
+			return
+		var text_rect := Rect2(Vector2(size.x * 0.21, size.y * 0.18), Vector2(size.x * 0.66, size.y * 0.70))
+		var top := "%sを" % dish_name
+		var top_size := 32
+		if top.length() >= 10:
+			top_size = 29
+		var top_baseline := Vector2(text_rect.position.x, text_rect.position.y + 29.0)
+		var bottom_baseline := Vector2(text_rect.position.x, text_rect.position.y + 68.0)
+		draw_string_outline(
+			font,
+			top_baseline,
+			top,
+			HORIZONTAL_ALIGNMENT_CENTER,
+			text_rect.size.x,
+			top_size,
+			4,
+			Color("#fff3d6", 0.76)
+		)
+		draw_string(font, top_baseline, top, HORIZONTAL_ALIGNMENT_CENTER, text_rect.size.x, top_size, Color("#2a160c"))
+		draw_string_outline(
+			font,
+			bottom_baseline,
+			"食べた！",
+			HORIZONTAL_ALIGNMENT_CENTER,
+			text_rect.size.x,
+			37,
+			5,
+			Color("#fff3d6", 0.82)
+		)
+		draw_string(font, bottom_baseline, "食べた！", HORIZONTAL_ALIGNMENT_CENTER, text_rect.size.x, 37, Color("#9b2f17"))
+
+
 class MealResultModeTabVisual:
 	extends Control
 
@@ -1142,6 +1191,7 @@ var _stage_background: TextureRect
 var _result_banner: PanelContainer
 var _meal_banner_spark: MealResultBannerSparkVisual
 var _meal_result_mode_label: MealResultModeTabVisual
+var _meal_result_split_title: MealResultSplitTitleVisual
 var _header_title: Label
 var _bridge_label: Label
 var _dish_title: Label
@@ -1354,6 +1404,11 @@ func _build_screen() -> void:
 	_bridge_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_bridge_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	banner_box.add_child(_bridge_label)
+	_meal_result_split_title = MealResultSplitTitleVisual.new()
+	_meal_result_split_title.name = "MealResultSplitTitle"
+	_meal_result_split_title.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_meal_result_split_title.visible = false
+	_result_banner.add_child(_meal_result_split_title)
 	_meal_result_mode_label = MealResultModeTabVisual.new()
 	_meal_result_mode_label.name = "MealResultModeTab"
 	_meal_result_mode_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -1522,11 +1577,15 @@ func show_meal_result(result: Dictionary) -> void:
 	_set_bridge_font_size(12)
 	_set_exp_label_font_size(56)
 	_header_title.text = "%sを食べた！" % dish_name
+	_header_title.modulate = Color(1.0, 1.0, 1.0, 0.0)
 	_bridge_label.text = ""
 	_bridge_label.visible = false
 	if _meal_banner_spark != null:
 		_meal_banner_spark.visible = true
 		_meal_banner_spark.queue_redraw()
+	if _meal_result_split_title != null:
+		_meal_result_split_title.configure(dish_name)
+		_meal_result_split_title.visible = true
 	if _meal_result_mode_label != null:
 		_meal_result_mode_label.visible = true
 	_dish_title.text = dish_name
@@ -1592,12 +1651,15 @@ func show_reward(
 	_preview_state = "EXP_GAIN_LEVELUP" if leveled else "EXP_GAIN"
 	_result_banner.name = "ExpGainBanner"
 	_header_title.name = "ExpGainTitle"
+	_header_title.modulate = Color.WHITE
 	_set_stage_background(EXP_STAGE_BG)
 	_apply_exp_gain_composition()
 	if _meal_banner_spark != null:
 		_meal_banner_spark.visible = false
 	if _meal_result_mode_label != null:
 		_meal_result_mode_label.visible = false
+	if _meal_result_split_title != null:
+		_meal_result_split_title.visible = false
 	if _dish_card_bridge != null:
 		_dish_card_bridge.visible = false
 	var dish_name := String(result.get("dish_name", "料理"))
