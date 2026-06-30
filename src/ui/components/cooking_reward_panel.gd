@@ -781,9 +781,10 @@ class MealDishCardBridgeVisual:
 		var cyan := Color("#6bf1ff")
 		var dish_center := Vector2(size.x * 0.33, size.y * 0.55)
 		var text_center := Vector2(size.x * 0.73, size.y * 0.50)
+		_draw_dish_showcase_frame()
 		draw_ellipse(dish_center, size.x * 0.22, size.y * 0.36, Color("#ffd36a", 0.050))
 		draw_ellipse(text_center, size.x * 0.18, size.y * 0.30, Color("#6bf1ff", 0.030))
-		draw_line(Vector2(size.x * 0.51, 12.0), Vector2(size.x * 0.51, size.y - 12.0), Color("#d7a456", 0.22), 2.0)
+		draw_line(Vector2(size.x * 0.55, 12.0), Vector2(size.x * 0.55, size.y - 12.0), Color("#d7a456", 0.18), 2.0)
 		_draw_dish_name_plate()
 		draw_line(
 			Vector2(size.x * 0.40, size.y * 0.45),
@@ -818,15 +819,43 @@ class MealDishCardBridgeVisual:
 			draw_line(p + Vector2(0.0, -3.0), p + Vector2(0.0, 3.0), sparkle, 1.4)
 		_draw_card_glint(Vector2(size.x * 0.86, size.y * 0.18), gold)
 
+	func _draw_dish_showcase_frame() -> void:
+		var frame := Rect2(
+			Vector2(size.x * 0.030, size.y * 0.080),
+			Vector2(size.x * 0.520, size.y * 0.830)
+		)
+		draw_rect(Rect2(frame.position + Vector2(0.0, 5.0), frame.size), Color("#020a12", 0.28))
+		draw_rect(frame, Color("#07121e", 0.16))
+		draw_line(frame.position + Vector2(12.0, 5.0), frame.position + Vector2(frame.size.x - 12.0, 5.0), Color("#ffe081", 0.24), 2.0)
+		draw_line(
+			frame.position + Vector2(12.0, frame.size.y - 6.0),
+			frame.position + Vector2(frame.size.x - 12.0, frame.size.y - 6.0),
+			Color("#07121e", 0.50),
+			3.0
+		)
+		draw_ellipse(frame.get_center() + Vector2(4.0, frame.size.y * 0.20), frame.size.x * 0.38, frame.size.y * 0.16, Color("#ffb83d", 0.08))
+		for corner in [
+			frame.position + Vector2(10.0, 10.0),
+			frame.position + Vector2(frame.size.x - 10.0, 10.0),
+			frame.position + Vector2(10.0, frame.size.y - 10.0),
+			frame.position + frame.size - Vector2(10.0, 10.0),
+		]:
+			var x_dir := -1.0 if corner.x > frame.get_center().x else 1.0
+			var y_dir := -1.0 if corner.y > frame.get_center().y else 1.0
+			var gold := Color("#ffe081", 0.42)
+			draw_line(corner, corner + Vector2(18.0 * x_dir, 0.0), gold, 1.5)
+			draw_line(corner, corner + Vector2(0.0, 14.0 * y_dir), gold, 1.5)
+
 	func _draw_dish_name_plate() -> void:
 		var plate := Rect2(
-			Vector2(size.x * 0.585, size.y * 0.38),
-			Vector2(size.x * 0.355, size.y * 0.30)
+			Vector2(size.x * 0.585, size.y * 0.31),
+			Vector2(size.x * 0.355, size.y * 0.44)
 		)
 		var shadow := Color("#020a12", 0.42)
 		draw_rect(Rect2(plate.position + Vector2(0.0, 5.0), plate.size), shadow)
 		draw_rect(plate, Color("#071726", 0.72))
 		draw_rect(Rect2(plate.position + Vector2(3.0, 3.0), plate.size - Vector2(6.0, 6.0)), Color("#12334f", 0.34))
+		draw_ellipse(plate.get_center() + Vector2(0.0, -2.0), plate.size.x * 0.44, plate.size.y * 0.25, Color("#fff1c7", 0.06))
 		draw_line(plate.position + Vector2(8.0, 3.0), plate.position + Vector2(plate.size.x - 8.0, 3.0), Color("#ffe081", 0.42), 2.0)
 		draw_line(
 			plate.position + Vector2(9.0, plate.size.y - 4.0),
