@@ -2,6 +2,8 @@ extends Node
 
 const MAX_LEVEL: int = 10
 const BOSS_UNLOCK_LEVEL: int = 5
+const DEFAULT_FISHING_SPOT_ID := "harbor_pier"
+const BOSS_FISHING_SPOT_ID := "harbor_boulder"
 
 const FISH: Dictionary = {
 	"aji":
@@ -876,6 +878,140 @@ const FISH: Dictionary = {
 	},
 }
 
+const FISHING_SPOT_ORDER: Array[String] = [
+	"harbor_pier",
+	"shallow_sand",
+	"rock_breakwater",
+	"outer_tide",
+	"south_reef",
+	"bluewater_route",
+	"deep_ocean",
+	"harbor_boulder",
+]
+
+const FISHING_SPOTS: Dictionary = {
+	"harbor_pier":
+	{
+		"id": "harbor_pier",
+		"name": "港内・堤防",
+		"short_name": "港内",
+		"unlock_level": 1,
+		"depth_range": [5.0, 10.0],
+		"description": "足場が良く、小魚が集まる入門ポイント。",
+		"common_modifier": 0.85,
+		"featured_fish": ["aji", "iwashi", "shirogisu", "mejina", "bora"],
+		"recommended_baits": ["アミエビ", "イソメ"],
+		"boss_spot": false,
+		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora"],
+		"fish_weight_modifiers": {"aji": 1.7, "iwashi": 1.8, "shirogisu": 1.2, "mejina": 1.1, "bora": 1.5},
+	},
+	"shallow_sand":
+	{
+		"id": "shallow_sand",
+		"name": "砂浜・かけあがり",
+		"short_name": "砂浜",
+		"unlock_level": 2,
+		"depth_range": [7.0, 15.0],
+		"description": "砂地を探る。白身魚や底物を狙いやすい。",
+		"common_modifier": 0.75,
+		"featured_fish": ["shirogisu", "kawahagi", "kochi", "hirame"],
+		"recommended_baits": ["イソメ", "小魚"],
+		"boss_spot": false,
+		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "kochi", "hirame"],
+		"fish_weight_modifiers": {"shirogisu": 2.0, "kawahagi": 1.8, "kochi": 2.2, "hirame": 1.8},
+	},
+	"rock_breakwater":
+	{
+		"id": "rock_breakwater",
+		"name": "岩礁・消波ブロック",
+		"short_name": "岩礁",
+		"unlock_level": 2,
+		"depth_range": [9.0, 17.0],
+		"description": "根周りを攻める。潜る魚が多く、糸を出す判断が重要。",
+		"common_modifier": 0.75,
+		"featured_fish": ["kasago", "mebaru", "ainame", "ishidai"],
+		"recommended_baits": ["イソメ", "貝"],
+		"boss_spot": false,
+		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "ishidai", "akahata", "kue"],
+		"fish_weight_modifiers": {"mejina": 1.4, "kasago": 1.7, "mebaru": 2.0, "ainame": 1.8, "ishidai": 2.1, "akahata": 1.2, "kue": 0.8},
+	},
+	"outer_tide":
+	{
+		"id": "outer_tide",
+		"name": "港外・潮目",
+		"short_name": "潮目",
+		"unlock_level": 3,
+		"depth_range": [8.0, 16.0],
+		"description": "潮通しのよい外側。横走りする魚の反応が多い。",
+		"common_modifier": 0.65,
+		"featured_fish": ["saba", "suzuki", "kamasu", "tachiuo"],
+		"recommended_baits": ["小魚", "オキアミ"],
+		"boss_spot": false,
+		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "saba", "suzuki", "kamasu", "tachiuo", "kanpachi", "katsuo"],
+		"fish_weight_modifiers": {"saba": 2.1, "suzuki": 2.0, "kamasu": 2.4, "tachiuo": 2.0, "kanpachi": 0.8, "katsuo": 0.7},
+	},
+	"south_reef":
+	{
+		"id": "south_reef",
+		"name": "南の岩礁",
+		"short_name": "南岩礁",
+		"unlock_level": 5,
+		"depth_range": [12.0, 21.0],
+		"description": "南側の根とサンゴ帯。色鮮やかな岩礁魚と大物の気配がある。",
+		"common_modifier": 0.55,
+		"featured_fish": ["akahata", "fuefukidai", "aobudai", "kue"],
+		"recommended_baits": ["オキアミ", "小魚", "貝"],
+		"boss_spot": false,
+		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "madai", "ishidai", "akahata", "fuefukidai", "aobudai", "kue", "hiramasa"],
+		"fish_weight_modifiers": {"madai": 1.4, "ishidai": 1.4, "akahata": 2.2, "fuefukidai": 2.2, "aobudai": 2.2, "kue": 1.8, "hiramasa": 0.8},
+	},
+	"bluewater_route":
+	{
+		"id": "bluewater_route",
+		"name": "外海・回遊ルート",
+		"short_name": "外海",
+		"unlock_level": 6,
+		"depth_range": [10.0, 20.0],
+		"description": "外海へ続く潮筋。青物や表層を走る魚を狙う。",
+		"common_modifier": 0.50,
+		"featured_fish": ["kanpachi", "buri", "katsuo", "shiira", "hiramasa"],
+		"recommended_baits": ["小魚", "大型ルアー"],
+		"boss_spot": false,
+		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "saba", "suzuki", "kamasu", "tachiuo", "kanpachi", "buri", "katsuo", "shiira", "hiramasa", "rouninaji"],
+		"fish_weight_modifiers": {"saba": 0.9, "suzuki": 0.8, "kamasu": 0.8, "tachiuo": 0.9, "kanpachi": 3.0, "buri": 3.0, "katsuo": 3.0, "shiira": 3.0, "hiramasa": 2.2, "rouninaji": 0.9},
+	},
+	"deep_ocean":
+	{
+		"id": "deep_ocean",
+		"name": "外洋の深場",
+		"short_name": "外洋",
+		"unlock_level": 9,
+		"depth_range": [15.0, 25.0],
+		"description": "外洋の深い潮目。終盤の大物を低確率で狙う。",
+		"common_modifier": 0.45,
+		"featured_fish": ["rouninaji", "kajiki", "kue", "hiramasa"],
+		"recommended_baits": ["小魚", "大型ルアー"],
+		"boss_spot": false,
+		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "madai", "tachiuo", "kanpachi", "buri", "kue", "hiramasa", "rouninaji", "kajiki"],
+		"fish_weight_modifiers": {"madai": 0.9, "tachiuo": 0.8, "kanpachi": 1.0, "buri": 1.0, "kue": 1.8, "hiramasa": 1.8, "rouninaji": 2.8, "kajiki": 3.5},
+	},
+	"harbor_boulder":
+	{
+		"id": "harbor_boulder",
+		"name": "港の大岩",
+		"short_name": "大岩",
+		"unlock_level": BOSS_UNLOCK_LEVEL,
+		"depth_range": [16.0, 22.0],
+		"description": "港口の大岩周辺。港のぬしに挑む専用ポイント。",
+		"common_modifier": 0.0,
+		"featured_fish": ["boss_kurodai"],
+		"recommended_baits": ["岩ガニ"],
+		"boss_spot": true,
+		"allowed_fish": ["boss_kurodai"],
+		"fish_weight_modifiers": {},
+	},
+}
+
 const RECIPES: Dictionary = {
 	"salt_grill":
 	{
@@ -985,6 +1121,11 @@ func get_fish(fish_id: String) -> Dictionary:
 	return FISH[fish_id].duplicate(true)
 
 
+func get_fishing_spot(spot_id: String) -> Dictionary:
+	var resolved_id := _resolved_spot_id(spot_id)
+	return FISHING_SPOTS[resolved_id].duplicate(true)
+
+
 func get_recipe(recipe_id: String) -> Dictionary:
 	if not RECIPES.has(recipe_id):
 		return {}
@@ -1002,6 +1143,27 @@ func get_all_fish_ids() -> Array[String]:
 	for fish_id in FISH.keys():
 		ids.append(String(fish_id))
 	return ids
+
+
+func get_all_fishing_spot_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for spot_id in FISHING_SPOT_ORDER:
+		ids.append(spot_id)
+	return ids
+
+
+func get_unlocked_fishing_spot_ids(player_level: int) -> Array[String]:
+	var ids: Array[String] = []
+	for spot_id in FISHING_SPOT_ORDER:
+		var spot: Dictionary = FISHING_SPOTS[spot_id]
+		if int(spot.get("unlock_level", 1)) <= player_level:
+			ids.append(spot_id)
+	return ids
+
+
+func is_fishing_spot_unlocked(spot_id: String, player_level: int) -> bool:
+	var spot := get_fishing_spot(spot_id)
+	return int(spot.get("unlock_level", 1)) <= player_level
 
 
 func get_all_rod_ids() -> Array[String]:
@@ -1027,26 +1189,48 @@ func get_recipes_for_fish(fish_id: String, player_level: int) -> Array[Dictionar
 	return results
 
 
-func roll_normal_fish(player_level: int) -> Dictionary:
-	var candidate_ids: Array[String] = []
-	var total_weight := 0.0
+func encounter_weights(player_level: int, spot_id: String = DEFAULT_FISHING_SPOT_ID) -> Dictionary:
+	var resolved_id := _normal_spot_id_for_roll(spot_id, player_level)
+	var spot: Dictionary = FISHING_SPOTS[resolved_id]
+	var weights: Dictionary = {}
+	var allowed_fish: Array = spot.get("allowed_fish", [])
+	var modifiers: Dictionary = spot.get("fish_weight_modifiers", {})
+	var common_modifier := float(spot.get("common_modifier", 1.0))
 	for fish_id_variant in FISH.keys():
 		var fish_id := String(fish_id_variant)
 		var fish: Dictionary = FISH[fish_id]
-		if bool(fish["boss"]):
+		if bool(fish.get("boss", false)):
 			continue
-		if int(fish["min_level"]) > player_level:
+		if int(fish.get("min_level", 1)) > player_level:
 			continue
-		candidate_ids.append(fish_id)
-		total_weight += float(fish["weight"])
+		if not allowed_fish.has(fish_id):
+			continue
+		var modifier := common_modifier
+		if modifiers.has(fish_id):
+			modifier = float(modifiers[fish_id])
+		var weight := float(fish.get("weight", 0.0)) * maxf(0.0, modifier)
+		if weight <= 0.0:
+			continue
+		weights[fish_id] = weight
+	return weights
 
-	if candidate_ids.is_empty():
+
+func roll_normal_fish(player_level: int, spot_id: String = DEFAULT_FISHING_SPOT_ID) -> Dictionary:
+	var weights := encounter_weights(player_level, spot_id)
+	var candidate_ids: Array[String] = []
+	var total_weight := 0.0
+	for fish_id_variant in weights.keys():
+		var fish_id := String(fish_id_variant)
+		candidate_ids.append(fish_id)
+		total_weight += float(weights[fish_id])
+
+	if candidate_ids.is_empty() or total_weight <= 0.0:
 		return get_fish("aji")
 
 	var pick := _rng.randf_range(0.0, total_weight)
 	var running := 0.0
 	for fish_id in candidate_ids:
-		running += float(FISH[fish_id]["weight"])
+		running += float(weights[fish_id])
 		if pick <= running:
 			return get_fish(fish_id)
 	return get_fish(candidate_ids.back())
@@ -1062,3 +1246,19 @@ func recipe_exp(fish_id: String, recipe_id: String) -> int:
 	if fish.is_empty() or recipe.is_empty():
 		return 0
 	return int(round(float(fish["food_exp"]) * float(recipe["exp_multiplier"])))
+
+
+func _resolved_spot_id(spot_id: String) -> String:
+	if FISHING_SPOTS.has(spot_id):
+		return spot_id
+	return DEFAULT_FISHING_SPOT_ID
+
+
+func _normal_spot_id_for_roll(spot_id: String, player_level: int) -> String:
+	var resolved_id := _resolved_spot_id(spot_id)
+	var spot: Dictionary = FISHING_SPOTS[resolved_id]
+	if bool(spot.get("boss_spot", false)):
+		return DEFAULT_FISHING_SPOT_ID
+	if int(spot.get("unlock_level", 1)) > player_level:
+		return DEFAULT_FISHING_SPOT_ID
+	return resolved_id
