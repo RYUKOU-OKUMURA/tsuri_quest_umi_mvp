@@ -109,6 +109,7 @@ func _audit_exp_gain() -> void:
 			"RewardCardNextEffect",
 			"RewardCardGrowth",
 			"MealDishCardBridge",
+			"MealResultModeTab",
 			"MealResultRewardCue",
 			"MealResultBannerSpark",
 			"MealSceneTableBridge",
@@ -148,6 +149,7 @@ func _audit_exp_gain_level_up() -> void:
 			"RewardCardNextEffect",
 			"RewardCardGrowth",
 			"MealDishCardBridge",
+			"MealResultModeTab",
 			"MealResultRewardCue",
 			"MealResultBannerSpark",
 			"MealSceneTableBridge",
@@ -169,6 +171,7 @@ func _audit_meal_result() -> void:
 	await _audit_tree("MEAL_RESULT", screen)
 	_expect_named_control_size("MEAL_RESULT", screen, "MealResultBanner", Vector2(520.0, 44.0))
 	_expect_named_control_size("MEAL_RESULT", screen, "MealResultBannerSpark", Vector2(520.0, 44.0))
+	_expect_named_control_size("MEAL_RESULT", screen, "MealResultModeTab", Vector2(70.0, 20.0))
 	_expect_named_control_size("MEAL_RESULT", screen, "MealResultTitle", Vector2(240.0, 30.0))
 	_expect_named_control_size("MEAL_RESULT", screen, "MealSceneVisualStack", Vector2(380.0, 280.0))
 	_expect_named_control_size("MEAL_RESULT", screen, "MealSceneActor", Vector2(90.0, 70.0))
