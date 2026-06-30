@@ -1262,6 +1262,7 @@ func _build_screen() -> void:
 	_reward_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_reward_grid.add_theme_constant_override("h_separation", 8)
 	_reward_grid.add_theme_constant_override("v_separation", 8)
+	_reward_grid.draw.connect(_draw_reward_grid_backdrop)
 	root.add_child(_reward_grid)
 
 	_exp_card = _panel_box(Color("#0f2238"), Color("#07121e"), Palette.GOLD_DEEP, 5)
@@ -1346,6 +1347,7 @@ func show_meal_result(result: Dictionary) -> void:
 	_exp_card.visible = false
 	_reward_grid.visible = true
 	_reward_grid.columns = 4
+	_reward_grid.queue_redraw()
 	_base_label.text = "+%d EXP" % int(result.get("base_exp", 0))
 	if bool(result.get("first_time", false)):
 		_bonus_label.text = "+%d EXP" % int(result.get("first_bonus", 0))
@@ -2175,6 +2177,8 @@ func _apply_meal_result_composition() -> void:
 	if _meal_banner_spark != null:
 		_meal_banner_spark.visible = true
 		_meal_banner_spark.queue_redraw()
+	if _reward_grid != null:
+		_reward_grid.queue_redraw()
 	_set_status_strip_emphasis(false)
 	_set_reward_cards_height(108.0)
 
@@ -2220,6 +2224,28 @@ func _apply_exp_gain_composition() -> void:
 	_set_confirm_button_emphasis(false)
 	_set_status_strip_emphasis(true)
 	_set_reward_cards_height(84.0)
+
+
+func _draw_reward_grid_backdrop() -> void:
+	if _preview_state != "MEAL_RESULT" or _reward_grid == null:
+		return
+	var s := _reward_grid.size
+	if s.x <= 0.0 or s.y <= 0.0:
+		return
+	var top := 4.0
+	var bottom := s.y - 4.0
+	var band := Rect2(Vector2(4.0, top), Vector2(s.x - 8.0, maxf(0.0, bottom - top)))
+	_reward_grid.draw_rect(band, Color("#061726", 0.16))
+	_reward_grid.draw_line(Vector2(16.0, top + 4.0), Vector2(s.x - 16.0, top + 4.0), Color("#ffe081", 0.22), 2.0)
+	_reward_grid.draw_line(Vector2(16.0, bottom - 2.0), Vector2(s.x - 16.0, bottom - 2.0), Color("#d7a456", 0.16), 2.0)
+	for i in range(6):
+		var p := Vector2(
+			s.x * (0.08 + float(i) * 0.17),
+			top + 10.0 + float(i % 2) * 12.0
+		)
+		var sparkle := Color("#ffe081", 0.25 if i % 2 == 0 else 0.14)
+		_reward_grid.draw_line(p + Vector2(-3.0, 0.0), p + Vector2(3.0, 0.0), sparkle, 1.3)
+		_reward_grid.draw_line(p + Vector2(0.0, -3.0), p + Vector2(0.0, 3.0), sparkle, 1.3)
 
 
 func _apply_meal_reward_hierarchy() -> void:
