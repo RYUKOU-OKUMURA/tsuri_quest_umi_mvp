@@ -138,7 +138,7 @@ func _draw_asset_scene() -> void:
 	_draw_cover_texture(_surface_bg, rect, Color.WHITE, Vector2(0.5, 0.50))
 	_draw_asset_fish_shadow(horizon)
 	if _surface_dock_foreground != null:
-		_draw_cover_texture(_surface_dock_foreground, rect, Color(1.0, 1.0, 1.0, 0.92), Vector2(0.5, 0.50))
+		_draw_cover_texture(_surface_dock_foreground, rect, Color.WHITE, Vector2(0.5, 0.50))
 	if _surface_ambience != null:
 		_draw_cover_texture(_surface_ambience, rect, Color(1.0, 1.0, 1.0, 0.62), Vector2(0.5, 0.50))
 	_draw_asset_angler()
@@ -252,7 +252,7 @@ func _angler_rect() -> Rect2:
 	var rect_w := size.x * 0.255
 	var rect_h := rect_w * 160.0 / 260.0
 	var rect_size := Vector2(rect_w, rect_h)
-	var rect_pos := Vector2(size.x * 0.530, size.y * 0.376)
+	var rect_pos := Vector2(size.x * 0.585, size.y * 0.390)
 	return Rect2(rect_pos, rect_size)
 
 

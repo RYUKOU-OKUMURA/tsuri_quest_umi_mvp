@@ -259,6 +259,19 @@ def create_background() -> None:
 
 
 def create_dock_foreground() -> None:
+    bg_path = OUT_DIR / "surface_cast_bg.png"
+    if bg_path.exists():
+        bg = Image.open(bg_path).convert("RGBA")
+        mask = Image.new("L", bg.size, 0)
+        draw = ImageDraw.Draw(mask)
+        draw.polygon([(584, 276), (960, 264), (960, 405), (622, 405), (590, 335)], fill=255)
+        draw.rectangle((690, 220, 960, 405), fill=255)
+        mask = mask.filter(ImageFilter.GaussianBlur(0.8))
+        dock = bg.copy()
+        dock.putalpha(mask)
+        save_image(dock, OUT_DIR / "surface_dock_foreground.png")
+        return
+
     canvas = HiCanvas(CANVAS_W, CANVAS_H, 3)
     top = 278
     deck = [(593, top - 3), (960, top - 3), (960, 405), (648, 405), (604, 337)]
