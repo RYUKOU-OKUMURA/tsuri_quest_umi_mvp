@@ -273,6 +273,7 @@
 - 追記: 左食事シーン上部の `食べる` タイトル帯も、参照02の一枚絵感に対してカード見出しとして強く見えたため、MEAL_RESULTでは `MealSceneTitle` を非表示にし、その高さを `MealSceneVisualStack` と `MealTableSpread` へ戻した。状態名は右上の `アジの塩焼きを食べた！` バナーで十分に伝わるため、左側は人物/料理/窓辺の絵だけで食事シーンを読ませる。EXP_GAINでは `MealSceneTitle` を再表示し、左カードが「食べた料理」として機能する状態分離を維持する。
 - 追記: `RewardConfirmButton` は下部ステータス帯に埋もれやすかったため、MEAL_RESULT時だけ横幅を448px、高さを58pxへ上げ、文字サイズ/アウトラインも強めた。EXP_GAIN/LEVELUP側は従来のコンパクトな導線へ戻し、画面2では下段報酬カードから `食経験値へ進む` へ到達する締めのCTAとして読ませる。layout auditではMEAL_RESULTのボタン最小サイズを420x46へ引き上げて退行を防ぐ。
 - 追記: 下部ステータス帯は必要な現在状態を伝える一方、報酬カードと同じフレーム/装飾強度だと画面2の主役を奪いやすかったため、MEAL_RESULT時だけ `RewardStatus*Card` を薄くティントして一段控えめにした。EXP_GAINでは通常強度へ戻し、食経験値加算状態ではステータス確認の読みやすさを維持する。`/tmp/tsuri_cooking_result.png` では報酬カードとCTAが前に出つつ、Lv/料理/クーラー/所持金は読める状態を確認した。
+- 追記: 参照02の下部ステータス帯は補助情報だが、値とアイコンは十分大きく、食事結果が現在準備に反映されたことを支えている。現行では `Lv.`、クーラー、所持金、EXP小数値が下段の装飾線に埋もれやすかったため、`RewardStatusStrip` と各カードの高さ、アイコン幅、主要値フォント、EXPバー/数値幅を少し引き上げた。MEAL_RESULTでは報酬カードとCTAを主役に保ちつつ、ステータス帯が読める現在状態として残ることをlayout auditで固定する。
 - 通過ゲート: `HOME=/private/tmp/tsuri_home tools/cooking_verify.sh`、`HOME=/private/tmp/tsuri_home tools/cooking_visual_qa.sh`、`git diff --check`。更新後の確認スクショは `/tmp/tsuri_cooking_result.png`、比較レポートは `/tmp/tsuri_cooking_reference_report.html`。
 - 残る差分: 左食事シーンは白い板/カード感を脱し、報酬カードと下部ステータス帯も文字だけの密度から脱してきた。参照02のような高密度の人物・料理・窓辺まで一体化した一枚絵にはまだ届かないため、次パスで触るなら左背景と人物の接続光、または結果バナー/料理カード/報酬カード間の視線誘導を比較する。
 

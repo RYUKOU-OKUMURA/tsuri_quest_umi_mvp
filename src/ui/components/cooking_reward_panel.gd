@@ -1770,7 +1770,7 @@ func _draw_exp_focus_burst() -> void:
 func _build_status_strip(parent: VBoxContainer) -> void:
 	var strip := HBoxContainer.new()
 	strip.name = "RewardStatusStrip"
-	strip.custom_minimum_size = Vector2(0.0, 54.0)
+	strip.custom_minimum_size = Vector2(0.0, 62.0)
 	strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	strip.add_theme_constant_override("separation", 7)
 	parent.add_child(strip)
@@ -1799,7 +1799,7 @@ func _status_strip_card(
 			5.0
 		)
 	)
-	card.custom_minimum_size = Vector2(_status_card_min_width(icon_mode), 50.0)
+	card.custom_minimum_size = Vector2(_status_card_min_width(icon_mode), 58.0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.draw.connect(func() -> void: _draw_status_card_backdrop(card, icon_mode, accent))
 	parent.add_child(card)
@@ -1816,11 +1816,11 @@ func _status_strip_card(
 	var text_box := VBoxContainer.new()
 	text_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	text_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	text_box.add_theme_constant_override("separation", 1)
+	text_box.add_theme_constant_override("separation", 2)
 	row.add_child(text_box)
 
-	var title_label := make_shadow_label(title, 11, Palette.TEXT_BONE, 1)
-	title_label.custom_minimum_size = Vector2(0.0, 12.0)
+	var title_label := make_shadow_label(title, 12, Palette.TEXT_BONE, 1)
+	title_label.custom_minimum_size = Vector2(0.0, 14.0)
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -1846,13 +1846,13 @@ func _status_strip_card(
 		_status_level_bar.name = "RewardStatusLevelExpBar"
 		_status_level_bar.show_value = false
 		_status_level_bar.critical_threshold = 0.0
-		_status_level_bar.custom_minimum_size = Vector2(72.0, 8.0)
+		_status_level_bar.custom_minimum_size = Vector2(84.0, 9.0)
 		_status_level_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_status_level_bar.set_colors(Palette.GAUGE_CYAN, Palette.GAUGE_CYAN_HI)
 		exp_row.add_child(_status_level_bar)
-		_status_level_exp_label = make_shadow_label("", 10, Palette.TEXT_BONE, 1)
+		_status_level_exp_label = make_shadow_label("", 11, Palette.TEXT_BONE, 1)
 		_status_level_exp_label.name = "RewardStatusLevelExpText"
-		_status_level_exp_label.custom_minimum_size = Vector2(66.0, 0.0)
+		_status_level_exp_label.custom_minimum_size = Vector2(76.0, 0.0)
 		_status_level_exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		_status_level_exp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		_status_level_exp_label.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -1864,7 +1864,7 @@ func _status_strip_card(
 
 func _status_icon_shell(icon_mode: String, accent: Color) -> PanelContainer:
 	var shell := _compact_panel_box(Color("#071a2b"), Color("#06111e"), accent, 2)
-	shell.custom_minimum_size = Vector2(48.0, 0.0)
+	shell.custom_minimum_size = Vector2(54.0, 0.0)
 	shell.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var icon := TextureRect.new()
 	icon.name = _status_icon_node_name(icon_mode)
@@ -1897,25 +1897,25 @@ func _status_card_min_width(icon_mode: String) -> float:
 func _status_value_font_size(icon_mode: String) -> int:
 	match icon_mode:
 		"level":
-			return 20
+			return 24
 		"meal":
-			return 15
+			return 16
 		"cooler":
-			return 19
+			return 22
 		"money":
-			return 18
+			return 22
 		_:
-			return 17
+			return 19
 
 
 func _status_value_height(icon_mode: String) -> float:
 	match icon_mode:
 		"level":
-			return 20.0
+			return 24.0
 		"meal":
-			return 18.0
+			return 20.0
 		_:
-			return 22.0
+			return 25.0
 
 
 func _status_icon_node_name(icon_mode: String) -> String:
