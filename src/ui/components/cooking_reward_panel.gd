@@ -1348,6 +1348,7 @@ var _status_meal_label: Label
 var _status_meal_icon: TextureRect
 var _status_cooler_label: Label
 var _status_money_label: Label
+var _status_strip: HBoxContainer
 var _confirm_button: Button
 var _flow_row: HBoxContainer
 var _flow_step_cards: Array[PanelContainer] = []
@@ -2120,17 +2121,18 @@ func _draw_exp_focus_burst() -> void:
 
 
 func _build_status_strip(parent: VBoxContainer) -> void:
-	var strip := HBoxContainer.new()
-	strip.name = "RewardStatusStrip"
-	strip.custom_minimum_size = Vector2(0.0, 62.0)
-	strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	strip.add_theme_constant_override("separation", 7)
-	parent.add_child(strip)
+	_status_strip = HBoxContainer.new()
+	_status_strip.name = "RewardStatusStrip"
+	_status_strip.custom_minimum_size = Vector2(0.0, 62.0)
+	_status_strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_status_strip.add_theme_constant_override("separation", 7)
+	_status_strip.draw.connect(func() -> void: _draw_status_strip_backdrop(_status_strip))
+	parent.add_child(_status_strip)
 
-	_status_level_label = _status_strip_card(strip, "RewardStatusLevelCard", "プレイヤーLv.", Palette.GOLD_BRIGHT, "level")
-	_status_meal_label = _status_strip_card(strip, "RewardStatusMealCard", "効果中の料理", Palette.GAUGE_GREEN_HI, "meal")
-	_status_cooler_label = _status_strip_card(strip, "RewardStatusCoolerCard", "クーラーボックス", Palette.GAUGE_CYAN_HI, "cooler")
-	_status_money_label = _status_strip_card(strip, "RewardStatusMoneyCard", "所持金", Palette.GOLD_BRIGHT, "money")
+	_status_level_label = _status_strip_card(_status_strip, "RewardStatusLevelCard", "プレイヤーLv.", Palette.GOLD_BRIGHT, "level")
+	_status_meal_label = _status_strip_card(_status_strip, "RewardStatusMealCard", "効果中の料理", Palette.GAUGE_GREEN_HI, "meal")
+	_status_cooler_label = _status_strip_card(_status_strip, "RewardStatusCoolerCard", "クーラーボックス", Palette.GAUGE_CYAN_HI, "cooler")
+	_status_money_label = _status_strip_card(_status_strip, "RewardStatusMoneyCard", "所持金", Palette.GOLD_BRIGHT, "money")
 	var meal_card := _reward_card_from_label(_status_meal_label)
 	if meal_card != null:
 		meal_card.custom_minimum_size = Vector2(340.0, 50.0)
@@ -2300,27 +2302,43 @@ func _status_icon_texture(icon_mode: String) -> Texture2D:
 
 func _draw_status_card_backdrop(card: Control, icon_mode: String, accent: Color) -> void:
 	var rect := Rect2(Vector2.ZERO, card.size)
+	var is_secondary := _preview_state == "MEAL_RESULT"
+	var alpha_scale := 0.52 if is_secondary else 1.0
 	var glow := accent
-	glow.a = 0.10
+	glow.a = 0.10 * alpha_scale
 	card.draw_rect(Rect2(Vector2(10.0, rect.size.y - 15.0), Vector2(rect.size.x - 20.0, 5.0)), glow)
-	var shine := Color("#fff4c9", 0.11)
+	var shine := Color("#fff4c9", 0.11 * alpha_scale)
 	card.draw_line(Vector2(14.0, 12.0), Vector2(rect.size.x - 18.0, 8.0), shine, 2.0)
-	for i in range(3):
-		var p := Vector2(rect.size.x * (0.55 + float(i) * 0.14), 13.0 + float(i % 2) * 21.0)
-		var sparkle := accent
-		sparkle.a = 0.30
-		card.draw_line(p + Vector2(-3.0, 0.0), p + Vector2(3.0, 0.0), sparkle, 1.4)
-		card.draw_line(p + Vector2(0.0, -3.0), p + Vector2(0.0, 3.0), sparkle, 1.4)
+	if not is_secondary:
+		for i in range(3):
+			var p := Vector2(rect.size.x * (0.55 + float(i) * 0.14), 13.0 + float(i % 2) * 21.0)
+			var sparkle := accent
+			sparkle.a = 0.30
+			card.draw_line(p + Vector2(-3.0, 0.0), p + Vector2(3.0, 0.0), sparkle, 1.4)
+			card.draw_line(p + Vector2(0.0, -3.0), p + Vector2(0.0, 3.0), sparkle, 1.4)
 	if icon_mode == "money":
 		for i in range(3):
 			var x := rect.size.x - 34.0 + float(i) * 7.0
-			card.draw_circle(Vector2(x, rect.size.y - 15.0), 5.0, Color("#d9a33a", 0.28))
+			card.draw_circle(Vector2(x, rect.size.y - 15.0), 5.0, Color("#d9a33a", 0.28 * alpha_scale))
 	elif icon_mode == "cooler":
-		card.draw_rect(Rect2(rect.size.x - 50.0, rect.size.y - 18.0, 34.0, 5.0), Color("#6bf1ff", 0.18))
+		card.draw_rect(Rect2(rect.size.x - 50.0, rect.size.y - 18.0, 34.0, 5.0), Color("#6bf1ff", 0.18 * alpha_scale))
 	elif icon_mode == "meal":
-		card.draw_arc(Vector2(rect.size.x - 32.0, rect.size.y - 13.0), 13.0, 0.0, PI, 16, Color("#fff1c7", 0.28), 3.0)
+		card.draw_arc(Vector2(rect.size.x - 32.0, rect.size.y - 13.0), 13.0, 0.0, PI, 16, Color("#fff1c7", 0.28 * alpha_scale), 3.0)
 	else:
-		card.draw_circle(Vector2(rect.size.x - 30.0, rect.size.y - 15.0), 8.0, Color("#6bf1ff", 0.16))
+		card.draw_circle(Vector2(rect.size.x - 30.0, rect.size.y - 15.0), 8.0, Color("#6bf1ff", 0.16 * alpha_scale))
+
+
+func _draw_status_strip_backdrop(strip: Control) -> void:
+	if strip == null or strip.size.x <= 0.0 or strip.size.y <= 0.0:
+		return
+	var rect := Rect2(Vector2(0.0, 2.0), Vector2(strip.size.x, strip.size.y - 4.0))
+	var is_secondary := _preview_state == "MEAL_RESULT"
+	var base_alpha := 0.15 if is_secondary else 0.09
+	strip.draw_rect(rect, Color("#061522", base_alpha))
+	var top_alpha := 0.13 if is_secondary else 0.18
+	strip.draw_line(Vector2(20.0, 5.0), Vector2(strip.size.x - 20.0, 5.0), Color("#ffe081", top_alpha), 2.0)
+	if is_secondary:
+		strip.draw_line(Vector2(34.0, strip.size.y - 5.0), Vector2(strip.size.x - 34.0, strip.size.y - 5.0), Color("#07121e", 0.30), 2.0)
 
 
 func _refresh_status_strip(result: Dictionary) -> void:
@@ -2742,6 +2760,8 @@ func _set_reward_cards_height(height: float) -> void:
 
 func _set_status_strip_emphasis(is_primary: bool) -> void:
 	var tint := Color.WHITE if is_primary else Color(0.82, 0.90, 1.0, 0.86)
+	if _status_strip != null:
+		_status_strip.queue_redraw()
 	for label in [_status_level_label, _status_meal_label, _status_cooler_label, _status_money_label]:
 		var card := _reward_card_from_label(label)
 		if card == null:
