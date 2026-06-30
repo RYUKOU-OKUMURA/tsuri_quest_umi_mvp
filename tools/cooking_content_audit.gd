@@ -480,8 +480,8 @@ func _audit_meal_result() -> void:
 			"今回の料理",
 			"次の釣行へ力がつながる。",
 			"食経験値を獲得した！",
+			"初回ボーナス",
 			"はじめて作った料理！",
-			"初回ボーナス +20 EXP",
 			"合計獲得食経験値",
 			"+40 EXP",
 			"最大体力 +5%",
@@ -527,6 +527,8 @@ func _audit_meal_result() -> void:
 			"FlowStep_0",
 			"FlowStep_1",
 			"FlowStep_2",
+			"MealSceneCaption",
+			"MealSceneBonusBadge",
 		]
 	)
 	_expect_named_node("MEAL_RESULT", screen, "MealSceneActor")

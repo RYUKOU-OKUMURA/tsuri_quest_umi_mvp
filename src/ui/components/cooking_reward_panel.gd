@@ -894,10 +894,12 @@ func _build_screen() -> void:
 	_scene_dish_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_scene_table.add_child(_scene_dish_image)
 	_scene_caption = make_shadow_label("湯気の立つ料理を味わった。", 18, Palette.TEXT_BONE, 2)
+	_scene_caption.name = "MealSceneCaption"
 	_scene_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_scene_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	scene_box.add_child(_scene_caption)
 	_scene_bonus_label = make_shadow_label("初回ボーナス", 16, Palette.GOLD_BRIGHT, 2)
+	_scene_bonus_label.name = "MealSceneBonusBadge"
 	_scene_bonus_label.custom_minimum_size = Vector2(0.0, 18.0)
 	_scene_bonus_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_scene_bonus_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -1112,7 +1114,9 @@ func show_meal_result(result: Dictionary) -> void:
 	_scene_dish_image.set_mode("meal")
 	_set_scene_backdrop(MEAL_RESULT_SCENE_ART, 0.58, true)
 	_scene_caption.text = "湯気の立つ%sを味わった。" % dish_name
+	_scene_caption.visible = false
 	_scene_bonus_label.text = _meal_bonus_badge_text(result)
+	_scene_bonus_label.visible = false
 	_scene_title.text = "食べる"
 	_set_scene_actor_mode("meal")
 	_exp_trail_visual.visible = false
@@ -1178,7 +1182,9 @@ func show_reward(
 	_exp_trail_visual.visible = true
 	_exp_trail_visual.queue_redraw()
 	_scene_caption.text = "%sから食経験値が流れ込む。" % dish_name
+	_scene_caption.visible = true
 	_scene_bonus_label.text = _meal_bonus_badge_text(result)
+	_scene_bonus_label.visible = true
 	_dish_card.visible = false
 	_exp_focus_card.visible = true
 	_effect_preview_card.visible = true
@@ -1896,14 +1902,18 @@ func _apply_meal_result_composition() -> void:
 	if _scene_card != null:
 		_scene_card.custom_minimum_size = Vector2(446.0, 328.0)
 	if _scene_visual_stack != null:
-		_scene_visual_stack.custom_minimum_size = Vector2(0.0, 238.0)
+		_scene_visual_stack.custom_minimum_size = Vector2(0.0, 282.0)
 	if _scene_actor_panel != null:
 		_scene_actor_panel.visible = true
-		_scene_actor_panel.custom_minimum_size = Vector2(158.0, 0.0)
+		_scene_actor_panel.custom_minimum_size = Vector2(170.0, 0.0)
 	if _scene_table != null:
 		_scene_table.add_theme_constant_override("separation", 0)
 	if _scene_dish_image != null:
-		_scene_dish_image.custom_minimum_size = Vector2(286.0, 190.0)
+		_scene_dish_image.custom_minimum_size = Vector2(300.0, 228.0)
+	if _scene_caption != null:
+		_scene_caption.visible = false
+	if _scene_bonus_label != null:
+		_scene_bonus_label.visible = false
 	if _dish_card != null:
 		_dish_card.custom_minimum_size = Vector2(0.0, 210.0)
 	if _dish_image != null:
@@ -1931,6 +1941,10 @@ func _apply_exp_gain_composition() -> void:
 		_scene_table.add_theme_constant_override("separation", 0)
 	if _scene_dish_image != null:
 		_scene_dish_image.custom_minimum_size = Vector2(306.0, 210.0)
+	if _scene_caption != null:
+		_scene_caption.visible = true
+	if _scene_bonus_label != null:
+		_scene_bonus_label.visible = true
 	if _exp_focus_card != null:
 		_exp_focus_card.custom_minimum_size = Vector2(0.0, 306.0)
 	if _effect_preview_card != null:
