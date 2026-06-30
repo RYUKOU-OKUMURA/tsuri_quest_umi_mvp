@@ -173,7 +173,7 @@ func _audit_meal_result() -> void:
 	_expect_named_control_size("MEAL_RESULT", screen, "RewardCardTotalExp", Vector2(230.0, 48.0))
 	_expect_named_control_size("MEAL_RESULT", screen, "RewardCardNextEffect", Vector2(230.0, 48.0))
 	_expect_reward_status_strip("MEAL_RESULT", screen)
-	_expect_named_control_size("MEAL_RESULT", screen, "RewardConfirmButton", Vector2(280.0, 34.0))
+	_expect_named_control_size("MEAL_RESULT", screen, "RewardConfirmButton", Vector2(420.0, 46.0))
 	_expect_named_controls_hidden(
 		"MEAL_RESULT",
 		screen,

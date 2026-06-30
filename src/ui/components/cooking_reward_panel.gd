@@ -1086,6 +1086,7 @@ func _build_screen() -> void:
 	_confirm_button.custom_minimum_size = Vector2(318.0, 40.0)
 	_confirm_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_apply_flow_button_style(_confirm_button)
+	_set_confirm_button_emphasis(false)
 	_confirm_button.draw.connect(func() -> void: _draw_confirm_button_cue(_confirm_button))
 	root.add_child(_confirm_button)
 
@@ -1144,6 +1145,7 @@ func show_meal_result(result: Dictionary) -> void:
 	_set_reward_line_visible(_growth_label, false)
 	_apply_meal_reward_hierarchy()
 	_confirm_button.text = "食経験値へ進む"
+	_set_confirm_button_emphasis(true)
 	_confirm_button.queue_redraw()
 	_refresh_meal_steps()
 	_present()
@@ -1184,6 +1186,7 @@ func show_reward(
 	_set_scene_actor_mode("exp")
 	_exp_trail_visual.visible = true
 	_exp_trail_visual.queue_redraw()
+	_set_confirm_button_emphasis(false)
 	_scene_caption.text = "%sから食経験値が流れ込む。" % dish_name
 	_scene_caption.visible = true
 	_scene_bonus_label.text = _meal_bonus_badge_text(result)
@@ -1335,6 +1338,14 @@ func _apply_flow_button_style(button: Button) -> void:
 	button.add_theme_color_override("font_hover_color", Color("#fff1ba"))
 	button.add_theme_color_override("font_pressed_color", Color("#f0c06b"))
 	button.add_theme_color_override("font_disabled_color", Color("#b6a68d"))
+
+
+func _set_confirm_button_emphasis(is_meal_result: bool) -> void:
+	if _confirm_button == null:
+		return
+	_confirm_button.add_theme_font_size_override("font_size", 18 if is_meal_result else 15)
+	_confirm_button.add_theme_constant_override("outline_size", 3 if is_meal_result else 2)
+	_confirm_button.add_theme_color_override("font_outline_color", Color("#07121e"))
 
 
 func _draw_button_meal_to_exp(
@@ -1928,7 +1939,7 @@ func _apply_meal_result_composition() -> void:
 		_flow_row.modulate.a = 0.58
 	_set_flow_row_compact(true)
 	if _confirm_button != null:
-		_confirm_button.custom_minimum_size = Vector2(382.0, 54.0)
+		_confirm_button.custom_minimum_size = Vector2(448.0, 58.0)
 	if _meal_reward_cue != null:
 		_meal_reward_cue.visible = true
 		_meal_reward_cue.custom_minimum_size = Vector2(0.0, 16.0)
@@ -1967,6 +1978,7 @@ func _apply_exp_gain_composition() -> void:
 	_set_flow_row_compact(false)
 	if _confirm_button != null:
 		_confirm_button.custom_minimum_size = Vector2(318.0, 40.0)
+	_set_confirm_button_emphasis(false)
 	_set_reward_cards_height(84.0)
 
 
