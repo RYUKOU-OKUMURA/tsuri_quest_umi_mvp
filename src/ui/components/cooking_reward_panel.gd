@@ -546,18 +546,24 @@ class MealResultModeTabVisual:
 		var font := get_theme_default_font()
 		if font == null:
 			return
-		var baseline := Vector2(108.0, 26.0)
+		var plate := Rect2(Vector2(94.0, 6.0), Vector2(76.0, 28.0))
+		draw_rect(plate, Color("#082642", 0.92))
+		draw_rect(Rect2(plate.position + Vector2(2.0, 2.0), plate.size - Vector2(4.0, 4.0)), Color("#103a5e", 0.46))
+		draw_line(plate.position + Vector2(0.0, 1.0), plate.position + Vector2(plate.size.x, 1.0), Color("#ffe081", 0.44), 1.5)
+		draw_line(plate.position + Vector2(0.0, plate.size.y - 1.0), plate.position + plate.size - Vector2(0.0, 1.0), Color("#07121e", 0.65), 1.5)
+		draw_line(Vector2(88.0, 8.0), Vector2(88.0, 31.0), Color("#ffe081", 0.50), 1.5)
+		var baseline := Vector2(99.0, 27.0)
 		draw_string_outline(
 			font,
 			baseline,
 			"食べる",
 			HORIZONTAL_ALIGNMENT_CENTER,
-			64.0,
-			15,
+			66.0,
+			19,
 			3,
 			Color(0.02, 0.04, 0.07, 0.78)
 		)
-		draw_string(font, baseline, "食べる", HORIZONTAL_ALIGNMENT_CENTER, 64.0, 15, Color("#fff1c7"))
+		draw_string(font, baseline, "食べる", HORIZONTAL_ALIGNMENT_CENTER, 66.0, 19, Color("#fff1c7"))
 
 
 class MealDishCardBridgeVisual:
