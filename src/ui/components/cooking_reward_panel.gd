@@ -105,11 +105,13 @@ class SceneActorVisual:
 class MealTableSpreadVisual:
 	extends Control
 
+	const TABLE_SPREAD := "res://assets/showcase/cooking/meal_table_spread.png"
 	const DISH_ICONS := "res://assets/showcase/cooking/dish_icon_sheet.png"
 
 	var mode := "meal"
 	var dish_texture: Texture2D
 	var recipe_id := ""
+	var _table_spread_texture: Texture2D
 
 	func set_mode(next_mode: String) -> void:
 		mode = next_mode
@@ -150,10 +152,34 @@ class MealTableSpreadVisual:
 				2.0
 		)
 		draw_ellipse(Vector2(size.x * 0.54, size.y * 0.77), size.x * 0.46, 18.0, Color(0.0, 0.0, 0.0, 0.28))
-		if not _draw_dish_icon_spread():
-			_draw_feature_dish_on_table()
-		_draw_side_dishes()
+		if not _draw_table_spread_asset():
+			if not _draw_dish_icon_spread():
+				_draw_feature_dish_on_table()
+			_draw_side_dishes()
 		_draw_meal_sparkles()
+
+	func _draw_table_spread_asset() -> bool:
+		if recipe_id != "salt_grill":
+			return false
+		var tex := _table_spread_texture
+		if tex == null:
+			var image := Image.load_from_file(ProjectSettings.globalize_path(TABLE_SPREAD))
+			if image != null and not image.is_empty():
+				_table_spread_texture = ImageTexture.create_from_image(image)
+				tex = _table_spread_texture
+		if tex == null:
+			return false
+		var tex_size := Vector2(float(tex.get_width()), float(tex.get_height()))
+		if tex_size.x <= 0.0 or tex_size.y <= 0.0 or size.x <= 0.0 or size.y <= 0.0:
+			return false
+		var scale := minf(size.x * 1.06 / tex_size.x, size.y * 0.76 / tex_size.y)
+		var draw_size := tex_size * scale
+		var rect := Rect2(
+			Vector2((size.x - draw_size.x) * 0.52, size.y - draw_size.y - size.y * 0.04),
+			draw_size
+		)
+		draw_texture_rect_region(tex, rect, Rect2(Vector2.ZERO, tex_size))
+		return true
 
 	func _draw_dish_icon_spread() -> bool:
 		var tex := load(DISH_ICONS) as Texture2D

@@ -1037,54 +1037,60 @@ def meal_table_spread() -> None:
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img, "RGBA")
 
-    # Wide table foreground for the MEAL_RESULT scene.
-    draw.ellipse((30, 146, 390, 184), fill=(0, 0, 0, 62))
-    draw.rounded_rectangle((16, 104, 404, 178), radius=22, fill=(119, 66, 31, 250), outline=(58, 35, 20, 230), width=5)
-    draw.rectangle((20, 112, 400, 130), fill=(151, 89, 43, 210))
-    for x in range(42, 392, 36):
-        draw.line((x, 108, x - 24, 176), fill=(63, 38, 23, 92), width=2)
-    draw.rounded_rectangle((90, 124, 314, 166), radius=14, fill=(26, 40, 50, 70))
+    # Wide table foreground for the MEAL_RESULT scene. Keep the silhouette oval
+    # so it reads as tableware instead of a pasted rectangular card.
+    draw.ellipse((20, 142, 402, 184), fill=(0, 0, 0, 70))
+    draw.rounded_rectangle((18, 126, 402, 178), radius=20, fill=(116, 63, 29, 230), outline=(55, 33, 20, 210), width=4)
+    draw.rectangle((28, 133, 392, 145), fill=(154, 90, 43, 130))
+    for x in range(44, 392, 42):
+        draw.line((x, 130, x - 22, 176), fill=(57, 34, 22, 70), width=2)
 
-    # Tray and grilled fish.
-    draw.ellipse((82, 58, 324, 148), fill=(42, 30, 23, 88))
-    draw.rounded_rectangle((76, 46, 330, 136), radius=18, fill=(230, 221, 198, 255), outline=(94, 70, 52, 245), width=5)
-    draw.rounded_rectangle((94, 62, 306, 124), radius=12, fill=(204, 193, 168, 255))
-    draw.rectangle((118, 68, 236, 88), fill=(43, 93, 53, 210))
-    draw.ellipse((114, 74, 248, 116), fill=(160, 94, 42, 255), outline=(31, 22, 17, 230), width=4)
-    draw.polygon([(244, 94), (300, 66), (288, 95), (300, 124)], fill=(146, 90, 42, 255), outline=(31, 22, 17, 220))
-    draw.polygon([(170, 74), (208, 44), (198, 85)], fill=(112, 80, 48, 255), outline=(31, 22, 17, 210))
-    draw.ellipse((128, 88, 142, 102), fill=(248, 239, 210, 255), outline=(18, 15, 12, 255), width=2)
-    draw.ellipse((133, 92, 138, 97), fill=(10, 9, 8, 255))
+    # Oval platter and grilled horse mackerel. The plate is warm ivory, not a
+    # white block, and the fish is large enough to survive the in-game scale.
+    draw.ellipse((72, 54, 338, 152), fill=(38, 26, 18, 92))
+    draw.ellipse((62, 38, 344, 142), fill=(219, 205, 175, 255), outline=(84, 63, 46, 245), width=5)
+    draw.ellipse((82, 54, 324, 128), fill=(177, 161, 132, 235))
+    draw.polygon([(94, 78), (222, 50), (316, 98), (158, 118)], fill=(42, 92, 52, 235))
+    draw.line((104, 84, 306, 101), fill=(30, 62, 38, 110), width=3)
+    draw.ellipse((98, 72, 262, 116), fill=(155, 86, 35, 255), outline=(28, 20, 14, 235), width=4)
+    draw.ellipse((104, 75, 232, 105), fill=(207, 117, 42, 235))
+    draw.polygon([(254, 94), (330, 58), (312, 94), (330, 130)], fill=(207, 139, 45, 255), outline=(55, 35, 20, 220))
+    draw.polygon([(164, 76), (220, 42), (202, 88)], fill=(112, 80, 48, 255), outline=(31, 22, 17, 210))
+    draw.ellipse((112, 84, 130, 102), fill=(247, 238, 210, 255), outline=(18, 15, 12, 255), width=2)
+    draw.ellipse((118, 90, 124, 96), fill=(10, 9, 8, 255))
     for s in range(6):
-        x = 162 + s * 17
-        draw.arc((x, 76, x + 28, 114), 96, 262, fill=(250, 236, 202, 82), width=2)
-    for dx, dy in [(254, 104), (274, 96)]:
+        x = 144 + s * 20
+        draw.line((x, 75, x + 12, 112), fill=(64, 31, 17, 190), width=3)
+        draw.line((x + 2, 75, x + 14, 112), fill=(255, 222, 161, 70), width=1)
+    for x, y in [(122, 111), (151, 116), (184, 112), (218, 118)]:
+        draw.ellipse((x, y, x + 6, y + 4), fill=(255, 244, 209, 190))
+    for dx, dy in [(250, 112), (274, 101)]:
         draw.pieslice((dx, dy, dx + 38, dy + 38), 305, 85, fill=(251, 221, 101, 255), outline=(124, 93, 32, 225), width=2)
         draw.line((dx + 7, dy + 30, dx + 31, dy + 8), fill=(255, 248, 185, 185), width=2)
-    for dx, dy in [(226, 100), (238, 92), (248, 106)]:
+    for dx, dy in [(224, 108), (238, 100), (248, 113)]:
         draw.ellipse((dx, dy, dx + 20, dy + 18), fill=(255, 249, 224, 245))
 
     # Side dishes and cup, matching the reference table density.
-    draw.ellipse((18, 112, 78, 154), fill=(42, 24, 16, 90))
-    draw.rounded_rectangle((26, 84, 66, 140), radius=10, fill=(83, 51, 26, 255), outline=(44, 27, 16, 230), width=3)
-    draw.arc((20, 92, 44, 122), 95, 265, fill=(185, 117, 58, 220), width=5)
-    draw.rectangle((30, 90, 62, 102), fill=(122, 75, 34, 235))
+    draw.ellipse((18, 122, 78, 160), fill=(42, 24, 16, 90))
+    draw.rounded_rectangle((28, 90, 66, 144), radius=10, fill=(83, 51, 26, 255), outline=(44, 27, 16, 230), width=3)
+    draw.arc((22, 98, 46, 128), 95, 265, fill=(185, 117, 58, 220), width=5)
+    draw.rectangle((32, 96, 62, 106), fill=(122, 75, 34, 235))
 
-    draw.ellipse((328, 102, 392, 148), fill=(42, 24, 16, 85))
-    draw.arc((330, 80, 390, 148), 0, 180, fill=(255, 244, 218, 255), width=8)
-    draw.arc((338, 70, 382, 134), 0, 180, fill=(176, 88, 37, 255), width=8)
-    for cx, cy in [(348, 77), (364, 72), (374, 82)]:
+    draw.ellipse((330, 112, 394, 156), fill=(42, 24, 16, 85))
+    draw.arc((332, 90, 392, 156), 0, 180, fill=(255, 244, 218, 255), width=8)
+    draw.arc((340, 80, 384, 142), 0, 180, fill=(176, 88, 37, 255), width=8)
+    for cx, cy in [(350, 87), (366, 82), (376, 92)]:
         draw.ellipse((cx, cy, cx + 14, cy + 12), fill=(255, 249, 224, 245))
 
-    draw.ellipse((318, 142, 382, 174), fill=(36, 22, 15, 85))
-    draw.ellipse((320, 122, 382, 166), fill=(112, 70, 38, 255), outline=(55, 33, 22, 255), width=4)
-    draw.ellipse((332, 132, 370, 154), fill=(221, 184, 114, 255))
-    for x, y in [(336, 136), (350, 142), (360, 134)]:
+    draw.ellipse((318, 146, 386, 178), fill=(36, 22, 15, 85))
+    draw.ellipse((320, 126, 384, 170), fill=(112, 70, 38, 255), outline=(55, 33, 22, 255), width=4)
+    draw.ellipse((332, 136, 372, 158), fill=(221, 184, 114, 255))
+    for x, y in [(336, 140), (350, 146), (360, 138)]:
         draw.rectangle((x, y, x + 12, y + 7), fill=(74, 130, 60, 220))
 
-    for i, sx in enumerate([132, 176, 232, 344]):
+    for i, sx in enumerate([116, 172, 232, 346]):
         draw.arc((sx, 8 + (i % 2) * 8, sx + 34, 86 + (i % 2) * 9), 105, 250, fill=(255, 235, 197, 88), width=4)
-    for i, (sx, sy) in enumerate([(92, 38), (304, 34), (364, 58), (72, 72)]):
+    for i, (sx, sy) in enumerate([(84, 42), (304, 34), (366, 62), (70, 80)]):
         col = (255, 224, 129, 220) if i % 2 == 0 else (255, 246, 199, 190)
         draw.line((sx - 6, sy, sx + 6, sy), fill=col, width=3)
         draw.line((sx, sy - 6, sx, sy + 6), fill=col, width=3)
