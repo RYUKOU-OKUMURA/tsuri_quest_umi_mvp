@@ -1053,7 +1053,7 @@ func show_meal_result(result: Dictionary) -> void:
 	_bridge_label.visible = false
 	_dish_title.text = dish_name
 	if _dish_note_label != null:
-		_dish_note_label.text = "食後の力が次の釣行へつながる。"
+		_dish_note_label.text = "次の釣行へ力がつながる。"
 	var result_recipe_id := String(Dictionary(result.get("buff", {})).get("recipe_id", ""))
 	var dish_texture := _featured_dish_texture(result_recipe_id)
 	_dish_image.texture = dish_texture
