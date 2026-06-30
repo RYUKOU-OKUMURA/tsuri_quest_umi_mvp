@@ -25,6 +25,7 @@ run_scene() {
 
 run_scene "res://tools/cooking_content_audit.tscn"
 run_scene "res://tools/cooking_layout_audit.tscn"
+run_scene "res://tools/cooking_input_audit.tscn"
 run_scene "res://tools/cooking_flow_smoke.tscn"
 
 echo "Cooking showcase verification passed."

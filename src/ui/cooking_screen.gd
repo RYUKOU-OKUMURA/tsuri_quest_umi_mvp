@@ -1019,6 +1019,7 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	amount.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(amount)
+	_make_card_contents_click_through(card)
 	_fish_cards[fish_id] = {"card": card, "marker": marker, "owned": owned}
 	return card
 
@@ -1229,6 +1230,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 		"footer": footer,
 		"footer_text": footer_text,
 	}
+	_make_card_contents_click_through(card)
 	return card
 
 
@@ -1281,6 +1283,7 @@ func _make_recipe_preview_card() -> PanelContainer:
 	footer.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	footer.clip_text = true
 	material_row.add_child(footer)
+	_make_card_contents_click_through(card)
 	return card
 
 
@@ -2099,6 +2102,15 @@ func _clear_container(container: Container) -> void:
 	for child in container.get_children():
 		container.remove_child(child)
 		child.queue_free()
+
+
+func _make_card_contents_click_through(root: Control) -> void:
+	for child in root.get_children():
+		if not (child is Control):
+			continue
+		var control := child as Control
+		control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_make_card_contents_click_through(control)
 
 
 func _panel_box(fill: Color, border: Color, inner: Color, border_width: int) -> PanelContainer:
