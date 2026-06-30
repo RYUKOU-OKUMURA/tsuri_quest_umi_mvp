@@ -2766,15 +2766,19 @@ func _set_scene_card_meal_result_style() -> void:
 	if _scene_card == null:
 		return
 	var sb := _style_box(
-		Color(0.08, 0.045, 0.025, 0.24),
-		Color("#5e391a", 0.44),
-		Color("#ffe081", 0.36),
+		Color(0.08, 0.045, 0.025, 0.14),
+		Color("#5e391a", 0.26),
+		Color("#ffe081", 0.24),
 		2,
 		5
 	)
-	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.18)
-	sb.shadow_size = 2
-	sb.shadow_offset = Vector2(0.0, 2.0)
+	sb.content_margin_left = 5.0
+	sb.content_margin_top = 5.0
+	sb.content_margin_right = 5.0
+	sb.content_margin_bottom = 5.0
+	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.12)
+	sb.shadow_size = 1
+	sb.shadow_offset = Vector2(0.0, 1.0)
 	_scene_card.add_theme_stylebox_override("panel", sb)
 
 
