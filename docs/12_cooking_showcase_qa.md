@@ -252,6 +252,7 @@
 - フリーズ条件: `MEAL_RESULT` にEXPゲージ/レベルアップ表示を混ぜない。`RewardStageBackground`、`MealDishCard`、`RewardDishFeatureImage`、`RewardBuffSignal`、`RewardStatusStrip`、`RewardConfirmButton` の名前付き契約は維持する。変更後は `HOME=/private/tmp/tsuri_home tools/cooking_verify.sh`、`HOME=/private/tmp/tsuri_home tools/cooking_visual_qa.sh`、`git diff --check` を通し、`/tmp/tsuri_cooking_result.png` を参照02と比較する。
 - 実装結果: MEAL_RESULTの比較シードを参照02/提示スクショに合わせて `アジの塩焼き` へ戻した。左食事シーンは透明背景の食事キャラと `meal_result_scene_art_v2.png` の食卓密度を使い、青い人物パネル感を弱めた。右上バナーは少し大きくし、料理カードは料理名と短い食後メッセージへ整理した。報酬カードは `合計獲得` と `次の釣行` を文字サイズ/色で強め、基本EXP/初回ボーナスは原因カードとして控えめにした。下部ステータス帯は効果中料理カードの幅と各タイトル幅を調整し、1280x720で主要値が読めるようにした。
 - 追記: 左食事シーンの `MealTableSpread` は、額装済みの大判料理画像をそのまま出すのをやめ、暖色テーブル面、料理IDに応じた `dish_icon_sheet.png` の皿、アジ用の焼き目/目/尾の上描き、小鉢/湯気/食卓小物、食事スパークルで構成する。これにより `/tmp/tsuri_cooking_result.png` では左の料理が長方形カードではなく食卓上の前景として読める。`meal_table_spread.png` の直置き/region描画は現在の実行表示で白い面に化けるため、このパスでは使用しない。
+- 追記: 上部の `MealResultBanner` は補足文を消し、`アジの塩焼きを食べた！` の1行見出しを主役にする。`meal_banner_frame.png` の左タブはEXP風の `+` 記号から食事用のフォーク/スプーン記号へ更新し、MEAL_RESULTの3ステップ導線は短い `食事 完了 / EXPへ / 成長` 表示、低めの高さ、薄い表示へ落として、結果バナーを邪魔しない比重へ調整した。
 - 通過ゲート: `HOME=/private/tmp/tsuri_home tools/cooking_verify.sh`、`HOME=/private/tmp/tsuri_home tools/cooking_visual_qa.sh`、`git diff --check`。更新後の確認スクショは `/tmp/tsuri_cooking_result.png`、比較レポートは `/tmp/tsuri_cooking_reference_report.html`。
 - 残る差分: 左食事シーンのカード感は今回のパスで解消したが、参照02のような高密度の大皿料理専用アートにはまだ届かない。次パスで触るなら、白面化しない本番用の透明食卓アセットを再生成/再importし、コード上描きではなく素材そのものの描き込みで水中ファイト基準へ近づける。
 

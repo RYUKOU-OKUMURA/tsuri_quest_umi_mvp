@@ -1439,11 +1439,14 @@ def meal_banner_frame() -> None:
         x = fish_cx - 16 + s * 13
         draw.arc((x, fish_cy - 13, x + 20, fish_cy + 15), 98, 260, fill=(255, 246, 220, 70), width=2)
 
-    # Navy command tab at upper left, used behind the small state label area.
+    # Navy command tab at upper left, with a small utensil mark for the eating state.
     draw.rounded_rectangle((44, 0, 214, 36), radius=6, fill=(13, 35, 60, 248), outline=gold, width=3)
-    draw.line((58, 18, 84, 18), fill=(255, 232, 160, 230), width=4)
-    draw.line((71, 7, 71, 30), fill=(255, 232, 160, 230), width=4)
-    draw.ellipse((92, 10, 111, 29), fill=(255, 232, 160, 230))
+    utensil = (255, 232, 160, 230)
+    draw.line((66, 29, 94, 8), fill=utensil, width=4)
+    for tine_x in (88, 94, 100):
+        draw.line((tine_x, 7, tine_x - 5, 18), fill=utensil, width=2)
+    draw.ellipse((114, 7, 134, 25), outline=utensil, width=4)
+    draw.line((125, 24, 154, 30), fill=utensil, width=4)
 
     save(img, "meal_banner_frame.png")
 

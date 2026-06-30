@@ -855,6 +855,7 @@ func _build_screen() -> void:
 	)
 	right.add_child(_result_banner)
 	var banner_box := VBoxContainer.new()
+	banner_box.alignment = BoxContainer.ALIGNMENT_CENTER
 	banner_box.add_theme_constant_override("separation", 2)
 	_result_banner.add_child(banner_box)
 	_header_title = make_shadow_label("いただきます！", 32, Color("#9b2f17"), 3)
@@ -1011,11 +1012,12 @@ func show_meal_result(result: Dictionary) -> void:
 	_apply_meal_result_composition()
 	var dish_name := String(result.get("dish_name", "料理"))
 	_set_result_banner_height(112.0)
-	_set_header_title_font_size(31)
-	_set_bridge_font_size(15)
+	_set_header_title_font_size(35)
+	_set_bridge_font_size(12)
 	_set_exp_label_font_size(56)
-	_header_title.text = "%sを\n食べた！" % dish_name
-	_bridge_label.text = "食経験値は次に加算される"
+	_header_title.text = "%sを食べた！" % dish_name
+	_bridge_label.text = ""
+	_bridge_label.visible = false
 	_dish_title.text = dish_name
 	if _dish_note_label != null:
 		_dish_note_label.text = "食後の力が次の釣行へつながる。"
@@ -1075,6 +1077,7 @@ func show_reward(
 	_set_header_title_font_size(36)
 	_set_bridge_font_size(14)
 	_set_exp_label_font_size(72)
+	_bridge_label.visible = true
 	_header_title.text = "食経験値が成長へ！" if leveled else "食経験値を獲得！"
 	_bridge_label.text = _growth_bridge_text(dish_name, leveled, level_before, level_after)
 	_dish_title.text = "%sを食べた！" % dish_name
@@ -1510,6 +1513,18 @@ func _add_flow_connector(parent: HBoxContainer) -> void:
 	_flow_connectors.append(connector)
 
 
+func _set_flow_row_compact(compact: bool) -> void:
+	if _flow_row != null:
+		_flow_row.add_theme_constant_override("separation", 2 if compact else 4)
+	for label in _flow_step_labels:
+		label.add_theme_font_size_override("font_size", 11 if compact else 12)
+	for card in _flow_step_cards:
+		card.custom_minimum_size = Vector2(112.0, 18.0) if compact else Vector2(138.0, 22.0)
+	for connector in _flow_connectors:
+		connector.custom_minimum_size = Vector2(34.0, 18.0) if compact else Vector2(48.0, 22.0)
+		connector.queue_redraw()
+
+
 func _refresh_flow_steps(leveled: bool) -> void:
 	_set_flow_step(0, "1 食事 完了", Color("#f2e4c2"), Palette.GOLD_BRIGHT, Color("#2a2118"))
 	_set_flow_step(1, "2 EXP 加算中", Color("#14385a"), Palette.GAUGE_CYAN_HI, Palette.TEXT_BONE)
@@ -1523,9 +1538,9 @@ func _refresh_flow_steps(leveled: bool) -> void:
 
 
 func _refresh_meal_steps() -> void:
-	_set_flow_step(0, "1 食事 完了", Color("#f2e4c2"), Palette.GOLD_BRIGHT, Color("#2a2118"))
-	_set_flow_step(1, "2 EXP 次へ", Color("#17324d"), Palette.GOLD_DEEP, Palette.TEXT_BONE)
-	_set_flow_step(2, "3 成長 待機", Color("#17324d"), Palette.GOLD_DEEP, Palette.TEXT_BONE)
+	_set_flow_step(0, "食事 完了", Color("#f2e4c2"), Palette.GOLD_BRIGHT, Color("#2a2118"))
+	_set_flow_step(1, "EXPへ", Color("#17324d"), Palette.GOLD_DEEP, Palette.TEXT_BONE)
+	_set_flow_step(2, "成長", Color("#17324d"), Palette.GOLD_DEEP, Palette.TEXT_BONE)
 	_set_flow_connector(0, "meal_to_exp")
 	_set_flow_connector(1, "idle")
 
@@ -1641,7 +1656,8 @@ func _apply_meal_result_composition() -> void:
 	if _dish_image != null:
 		_dish_image.custom_minimum_size = Vector2(394.0, 0.0)
 	if _flow_row != null:
-		_flow_row.modulate.a = 0.82
+		_flow_row.modulate.a = 0.58
+	_set_flow_row_compact(true)
 	if _confirm_button != null:
 		_confirm_button.custom_minimum_size = Vector2(382.0, 54.0)
 	_set_reward_cards_height(108.0)
@@ -1666,6 +1682,7 @@ func _apply_exp_gain_composition() -> void:
 		_dish_image.custom_minimum_size = Vector2(304.0, 0.0)
 	if _flow_row != null:
 		_flow_row.modulate.a = 1.0
+	_set_flow_row_compact(false)
 	if _confirm_button != null:
 		_confirm_button.custom_minimum_size = Vector2(318.0, 40.0)
 	_set_reward_cards_height(84.0)
