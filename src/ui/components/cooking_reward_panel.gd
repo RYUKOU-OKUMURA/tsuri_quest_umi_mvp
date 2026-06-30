@@ -779,23 +779,23 @@ class MealDishCardBridgeVisual:
 		var gold := Color("#ffe081")
 		var warm := Color("#ffb83d")
 		var cyan := Color("#6bf1ff")
-		var dish_center := Vector2(size.x * 0.33, size.y * 0.55)
-		var text_center := Vector2(size.x * 0.73, size.y * 0.50)
+		var dish_center := Vector2(size.x * 0.37, size.y * 0.55)
+		var text_center := Vector2(size.x * 0.79, size.y * 0.50)
 		_draw_dish_showcase_frame()
 		draw_ellipse(dish_center, size.x * 0.22, size.y * 0.36, Color("#ffd36a", 0.050))
-		draw_ellipse(text_center, size.x * 0.18, size.y * 0.30, Color("#6bf1ff", 0.030))
-		draw_line(Vector2(size.x * 0.55, 12.0), Vector2(size.x * 0.55, size.y - 12.0), Color("#d7a456", 0.18), 2.0)
+		draw_ellipse(text_center, size.x * 0.15, size.y * 0.30, Color("#6bf1ff", 0.026))
+		draw_line(Vector2(size.x * 0.64, 12.0), Vector2(size.x * 0.64, size.y - 12.0), Color("#d7a456", 0.12), 1.5)
 		_draw_dish_name_plate()
 		draw_line(
-			Vector2(size.x * 0.40, size.y * 0.45),
-			Vector2(size.x * 0.80, size.y * 0.33),
-			Color("#ffb83d", 0.13),
+			Vector2(size.x * 0.46, size.y * 0.45),
+			Vector2(size.x * 0.84, size.y * 0.34),
+			Color("#ffb83d", 0.10),
 			7.0
 		)
 		draw_line(
-			Vector2(size.x * 0.43, size.y * 0.48),
-			Vector2(size.x * 0.78, size.y * 0.39),
-			Color("#ffe081", 0.34),
+			Vector2(size.x * 0.47, size.y * 0.48),
+			Vector2(size.x * 0.82, size.y * 0.39),
+			Color("#ffe081", 0.26),
 			2.0
 		)
 		for i in range(3):
@@ -822,7 +822,7 @@ class MealDishCardBridgeVisual:
 	func _draw_dish_showcase_frame() -> void:
 		var frame := Rect2(
 			Vector2(size.x * 0.030, size.y * 0.080),
-			Vector2(size.x * 0.520, size.y * 0.830)
+			Vector2(size.x * 0.610, size.y * 0.830)
 		)
 		draw_rect(Rect2(frame.position + Vector2(0.0, 5.0), frame.size), Color("#020a12", 0.28))
 		draw_rect(frame, Color("#07121e", 0.16))
@@ -848,8 +848,8 @@ class MealDishCardBridgeVisual:
 
 	func _draw_dish_name_plate() -> void:
 		var plate := Rect2(
-			Vector2(size.x * 0.585, size.y * 0.31),
-			Vector2(size.x * 0.355, size.y * 0.44)
+			Vector2(size.x * 0.665, size.y * 0.31),
+			Vector2(size.x * 0.285, size.y * 0.44)
 		)
 		var shadow := Color("#020a12", 0.42)
 		draw_rect(Rect2(plate.position + Vector2(0.0, 5.0), plate.size), shadow)
@@ -1737,6 +1737,7 @@ func show_meal_result(result: Dictionary) -> void:
 	_dish_title.text = dish_name
 	if _dish_note_label != null:
 		_dish_note_label.text = "次の釣行へ力がつながる。"
+		_dish_note_label.visible = false
 	var result_recipe_id := String(Dictionary(result.get("buff", {})).get("recipe_id", ""))
 	var dish_texture := _featured_dish_texture(result_recipe_id)
 	_dish_image.texture = dish_texture
@@ -2689,9 +2690,11 @@ func _apply_meal_result_composition() -> void:
 		_dish_card_bridge.visible = true
 		_dish_card_bridge.queue_redraw()
 	if _dish_image != null:
-		_dish_image.custom_minimum_size = Vector2(394.0, 0.0)
+		_dish_image.custom_minimum_size = Vector2(430.0, 0.0)
 	if _dish_title != null:
 		_dish_title.add_theme_font_size_override("font_size", 32)
+	if _dish_note_label != null:
+		_dish_note_label.visible = false
 	if _flow_row != null:
 		_flow_row.visible = false
 		_flow_row.modulate.a = 0.58
@@ -2751,6 +2754,8 @@ func _apply_exp_gain_composition() -> void:
 		_dish_image.custom_minimum_size = Vector2(304.0, 0.0)
 	if _dish_title != null:
 		_dish_title.add_theme_font_size_override("font_size", 30)
+	if _dish_note_label != null:
+		_dish_note_label.visible = true
 	if _flow_row != null:
 		_flow_row.visible = true
 		_flow_row.modulate.a = 1.0
