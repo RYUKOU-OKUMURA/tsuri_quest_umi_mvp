@@ -2603,6 +2603,7 @@ func _set_result_banner_height(height: float) -> void:
 func _apply_meal_result_composition() -> void:
 	if _scene_card != null:
 		_scene_card.custom_minimum_size = Vector2(446.0, 328.0)
+		_set_scene_card_meal_result_style()
 	if _scene_visual_stack != null:
 		_scene_visual_stack.custom_minimum_size = Vector2(0.0, 306.0)
 	if _scene_title != null:
@@ -2656,6 +2657,7 @@ func _apply_meal_result_composition() -> void:
 func _apply_exp_gain_composition() -> void:
 	if _scene_card != null:
 		_scene_card.custom_minimum_size = Vector2(340.0, 360.0)
+		_set_scene_card_exp_gain_style()
 	if _scene_title != null:
 		_scene_title.visible = true
 	if _scene_visual_stack != null:
@@ -2700,6 +2702,31 @@ func _apply_exp_gain_composition() -> void:
 	_set_confirm_button_emphasis(false)
 	_set_status_strip_emphasis(true)
 	_set_reward_cards_height(84.0)
+
+
+func _set_scene_card_meal_result_style() -> void:
+	if _scene_card == null:
+		return
+	var sb := _style_box(
+		Color(0.08, 0.045, 0.025, 0.38),
+		Color("#5e391a", 0.58),
+		Color("#ffe081", 0.46),
+		2,
+		5
+	)
+	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.24)
+	sb.shadow_size = 3
+	sb.shadow_offset = Vector2(0.0, 2.0)
+	_scene_card.add_theme_stylebox_override("panel", sb)
+
+
+func _set_scene_card_exp_gain_style() -> void:
+	if _scene_card == null:
+		return
+	_scene_card.add_theme_stylebox_override(
+		"panel",
+		_style_box(Color(0.10, 0.06, 0.03, 0.72), Color("#5e391a"), Palette.GOLD_BRIGHT, 5, 5)
+	)
 
 
 func _draw_reward_grid_backdrop() -> void:
