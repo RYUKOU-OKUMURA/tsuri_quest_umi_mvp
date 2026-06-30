@@ -1714,7 +1714,7 @@ func show_meal_result(result: Dictionary) -> void:
 	_scene_dish_image.set_dish_texture(dish_texture)
 	_scene_dish_image.set_recipe_id(result_recipe_id)
 	_scene_dish_image.set_mode("meal")
-	_set_scene_backdrop(MEAL_RESULT_SCENE_ART, 0.58, true)
+	_set_scene_backdrop(MEAL_RESULT_SCENE_ART, 0.92, true)
 	_scene_caption.text = "湯気の立つ%sを味わった。" % dish_name
 	_scene_caption.visible = false
 	_scene_bonus_label.text = _meal_bonus_badge_text(result)
@@ -2594,10 +2594,19 @@ func _set_scene_backdrop(path: String, alpha: float, keep_table_visible: bool) -
 		_scene_result_image.visible = true
 		_scene_result_image.modulate = Color(1.0, 1.0, 1.0, alpha)
 	if _scene_table != null:
-		_scene_table.modulate.a = 1.0 if keep_table_visible else 0.0
+		_scene_table.modulate.a = _meal_scene_foreground_alpha() if keep_table_visible else 0.0
 	if _scene_table_bridge != null:
 		_scene_table_bridge.visible = keep_table_visible
+		_scene_table_bridge.modulate.a = _meal_scene_bridge_alpha() if keep_table_visible else 1.0
 		_scene_table_bridge.queue_redraw()
+
+
+func _meal_scene_foreground_alpha() -> float:
+	return 0.06 if _preview_state == "MEAL_RESULT" else 1.0
+
+
+func _meal_scene_bridge_alpha() -> float:
+	return 0.22 if _preview_state == "MEAL_RESULT" else 1.0
 
 
 func _set_header_title_font_size(font_size: int) -> void:
@@ -2728,14 +2737,14 @@ func _set_scene_card_meal_result_style() -> void:
 	if _scene_card == null:
 		return
 	var sb := _style_box(
-		Color(0.08, 0.045, 0.025, 0.38),
-		Color("#5e391a", 0.58),
-		Color("#ffe081", 0.46),
+		Color(0.08, 0.045, 0.025, 0.24),
+		Color("#5e391a", 0.44),
+		Color("#ffe081", 0.36),
 		2,
 		5
 	)
-	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.24)
-	sb.shadow_size = 3
+	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.18)
+	sb.shadow_size = 2
 	sb.shadow_offset = Vector2(0.0, 2.0)
 	_scene_card.add_theme_stylebox_override("panel", sb)
 
