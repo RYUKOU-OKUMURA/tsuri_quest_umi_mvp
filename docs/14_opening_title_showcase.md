@@ -16,10 +16,12 @@
   - セーブ状態、開始ボタン、README ボタン用のカード枠。
 - `assets/showcase/title/title_button_*.png`
   - 通常/ホバー/押下/無効のボタン状態を画像枠として持つ。
+- `assets/audio/opening_bgm.mp3`
+  - タイトル画面専用BGM。タイトル滞在中はループ再生し、港など他画面へ遷移したら停止する。
 - `src/ui/components/title_backdrop.gd`
   - 背景、色調、泡、光、遠景魚のタイトル専用レイヤー。
 - `src/ui/title_screen.gd`
-  - ロゴ、メニュー、セーブ初期化フローだけを組み立てる。
+  - ロゴ、メニュー、セーブ初期化フロー、オープニングBGM再生だけを組み立てる。
 
 ## 生成元
 
@@ -31,6 +33,7 @@
 - 出力: `/tmp/tsuri_title_static_preview.png`
 - プロジェクト検証: `./tools/validate_project.sh`
 - 水中ファイト回帰確認: `./tools/fight_visual_qa.sh`
+- 音声確認: 通常起動でタイトル表示中にBGMが流れ、開始/続きからで港へ遷移すると停止することを確認する。
 
 ## 現在の合格ライン
 
