@@ -530,6 +530,7 @@ func _audit_meal_result() -> void:
 			"FlowStep_0",
 			"FlowStep_1",
 			"FlowStep_2",
+			"MealSceneTitle",
 			"MealSceneCaption",
 			"MealSceneBonusBadge",
 		]

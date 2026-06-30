@@ -161,9 +161,9 @@ func _audit_meal_result() -> void:
 	await _audit_tree("MEAL_RESULT", screen)
 	_expect_named_control_size("MEAL_RESULT", screen, "MealResultBanner", Vector2(520.0, 44.0))
 	_expect_named_control_size("MEAL_RESULT", screen, "MealResultTitle", Vector2(240.0, 30.0))
-	_expect_named_control_size("MEAL_RESULT", screen, "MealSceneVisualStack", Vector2(380.0, 250.0))
+	_expect_named_control_size("MEAL_RESULT", screen, "MealSceneVisualStack", Vector2(380.0, 280.0))
 	_expect_named_control_size("MEAL_RESULT", screen, "MealSceneActor", Vector2(90.0, 70.0))
-	_expect_named_control_size("MEAL_RESULT", screen, "MealTableSpread", Vector2(240.0, 110.0))
+	_expect_named_control_size("MEAL_RESULT", screen, "MealTableSpread", Vector2(250.0, 130.0))
 	_expect_named_control_size("MEAL_RESULT", screen, "MealDishCard", Vector2(420.0, 90.0))
 	_expect_named_control_size("MEAL_RESULT", screen, "MealResultRewardCue", Vector2(520.0, 12.0))
 	_expect_named_control_size("MEAL_RESULT", screen, "RewardDishFeatureImage", Vector2(200.0, 70.0))
@@ -182,6 +182,7 @@ func _audit_meal_result() -> void:
 			"FlowStep_0",
 			"FlowStep_1",
 			"FlowStep_2",
+			"MealSceneTitle",
 			"MealSceneCaption",
 			"MealSceneBonusBadge",
 		]

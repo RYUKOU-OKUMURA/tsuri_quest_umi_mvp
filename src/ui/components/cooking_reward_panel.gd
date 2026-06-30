@@ -859,6 +859,7 @@ func _build_screen() -> void:
 	scene_box.add_theme_constant_override("separation", 5)
 	_scene_card.add_child(scene_box)
 	_scene_title = make_shadow_label("食べる", 27, Palette.GOLD_BRIGHT, 3)
+	_scene_title.name = "MealSceneTitle"
 	_scene_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	scene_box.add_child(_scene_title)
 	_scene_visual_stack = Control.new()
@@ -1118,6 +1119,7 @@ func show_meal_result(result: Dictionary) -> void:
 	_scene_bonus_label.text = _meal_bonus_badge_text(result)
 	_scene_bonus_label.visible = false
 	_scene_title.text = "食べる"
+	_scene_title.visible = false
 	_set_scene_actor_mode("meal")
 	_exp_trail_visual.visible = false
 	_meal_reward_cue.visible = true
@@ -1178,6 +1180,7 @@ func show_reward(
 	_scene_dish_image.set_mode("exp")
 	_set_scene_result_art_visible(false)
 	_scene_title.text = "食べた料理"
+	_scene_title.visible = true
 	_set_scene_actor_mode("exp")
 	_exp_trail_visual.visible = true
 	_exp_trail_visual.queue_redraw()
@@ -1902,14 +1905,16 @@ func _apply_meal_result_composition() -> void:
 	if _scene_card != null:
 		_scene_card.custom_minimum_size = Vector2(446.0, 328.0)
 	if _scene_visual_stack != null:
-		_scene_visual_stack.custom_minimum_size = Vector2(0.0, 282.0)
+		_scene_visual_stack.custom_minimum_size = Vector2(0.0, 306.0)
+	if _scene_title != null:
+		_scene_title.visible = false
 	if _scene_actor_panel != null:
 		_scene_actor_panel.visible = true
-		_scene_actor_panel.custom_minimum_size = Vector2(170.0, 0.0)
+		_scene_actor_panel.custom_minimum_size = Vector2(176.0, 0.0)
 	if _scene_table != null:
 		_scene_table.add_theme_constant_override("separation", 0)
 	if _scene_dish_image != null:
-		_scene_dish_image.custom_minimum_size = Vector2(300.0, 228.0)
+		_scene_dish_image.custom_minimum_size = Vector2(310.0, 248.0)
 	if _scene_caption != null:
 		_scene_caption.visible = false
 	if _scene_bonus_label != null:
@@ -1933,6 +1938,8 @@ func _apply_meal_result_composition() -> void:
 func _apply_exp_gain_composition() -> void:
 	if _scene_card != null:
 		_scene_card.custom_minimum_size = Vector2(340.0, 360.0)
+	if _scene_title != null:
+		_scene_title.visible = true
 	if _scene_visual_stack != null:
 		_scene_visual_stack.custom_minimum_size = Vector2(0.0, 258.0)
 	if _scene_actor_panel != null:
