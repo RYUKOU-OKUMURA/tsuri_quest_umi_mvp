@@ -1972,12 +1972,32 @@ func _draw_meal_confirm_runway(button: Button, gold: Color, cyan: Color) -> void
 	var mid_y := h * 0.50
 	var left := 76.0
 	var right := w - 44.0
+	button.draw_rect(
+		Rect2(Vector2(left - 5.0, h * 0.23), Vector2(maxf(0.0, right - left + 6.0), h * 0.54)),
+		Color("#061522", 0.22)
+	)
+	button.draw_line(Vector2(left + 18.0, mid_y - 14.0), Vector2(right - 40.0, mid_y - 14.0), Color("#ffe081", 0.18), 2.0)
+	button.draw_line(Vector2(left + 18.0, mid_y + 14.0), Vector2(right - 40.0, mid_y + 14.0), Color("#6bf1ff", 0.12), 2.0)
 	var rail := gold
-	rail.a = 0.32
+	rail.a = 0.42
 	button.draw_line(Vector2(left, 8.0), Vector2(right, 8.0), rail, 1.6)
 	button.draw_line(Vector2(left, h - 8.0), Vector2(right, h - 8.0), Color("#d7a456", 0.24), 1.6)
-	button.draw_line(Vector2(left + 6.0, mid_y), Vector2(right - 24.0, mid_y), Color("#ffe081", 0.18), 5.0)
-	button.draw_line(Vector2(left + 6.0, mid_y), Vector2(right - 24.0, mid_y), Color("#6bf1ff", 0.18), 1.4)
+	button.draw_line(Vector2(left + 6.0, mid_y), Vector2(right - 24.0, mid_y), Color("#ffe081", 0.26), 6.0)
+	button.draw_line(Vector2(left + 6.0, mid_y), Vector2(right - 24.0, mid_y), Color("#6bf1ff", 0.24), 1.8)
+	for i in range(4):
+		var x := left + 42.0 + float(i) * ((right - left - 110.0) / 3.0)
+		var drop := gold if i % 2 == 0 else cyan
+		drop.a = 0.34
+		button.draw_colored_polygon(
+			PackedVector2Array(
+				[
+					Vector2(x - 7.0, mid_y - 16.0),
+					Vector2(x + 7.0, mid_y - 16.0),
+					Vector2(x, mid_y - 7.0),
+				]
+			),
+			drop
+		)
 	for i in range(3):
 		var x := right - 86.0 + float(i) * 18.0
 		var arrow := gold
