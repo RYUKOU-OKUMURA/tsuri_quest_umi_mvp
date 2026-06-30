@@ -1743,7 +1743,7 @@ func show_meal_result(result: Dictionary) -> void:
 	_scene_dish_image.set_dish_texture(dish_texture)
 	_scene_dish_image.set_recipe_id(result_recipe_id)
 	_scene_dish_image.set_mode("meal")
-	_set_scene_backdrop(MEAL_RESULT_SCENE_ART, 0.92, true)
+	_set_scene_backdrop(MEAL_RESULT_SCENE_ART, 0.98, true)
 	_scene_caption.text = "湯気の立つ%sを味わった。" % dish_name
 	_scene_caption.visible = false
 	_scene_bonus_label.text = _meal_bonus_badge_text(result)
@@ -2631,11 +2631,11 @@ func _set_scene_backdrop(path: String, alpha: float, keep_table_visible: bool) -
 
 
 func _meal_scene_foreground_alpha() -> float:
-	return 0.06 if _preview_state == "MEAL_RESULT" else 1.0
+	return 0.035 if _preview_state == "MEAL_RESULT" else 1.0
 
 
 func _meal_scene_bridge_alpha() -> float:
-	return 0.22 if _preview_state == "MEAL_RESULT" else 1.0
+	return 0.14 if _preview_state == "MEAL_RESULT" else 1.0
 
 
 func _set_header_title_font_size(font_size: int) -> void:
@@ -2765,20 +2765,19 @@ func _apply_exp_gain_composition() -> void:
 func _set_scene_card_meal_result_style() -> void:
 	if _scene_card == null:
 		return
-	var sb := _style_box(
-		Color(0.08, 0.045, 0.025, 0.14),
-		Color("#5e391a", 0.26),
-		Color("#ffe081", 0.24),
-		2,
-		5
-	)
-	sb.content_margin_left = 5.0
-	sb.content_margin_top = 5.0
-	sb.content_margin_right = 5.0
-	sb.content_margin_bottom = 5.0
-	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.12)
-	sb.shadow_size = 1
-	sb.shadow_offset = Vector2(0.0, 1.0)
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.0, 0.0, 0.0, 0.0)
+	sb.border_color = Color("#ffe081", 0.06)
+	sb.set_border_width_all(1)
+	sb.set_corner_radius_all(3)
+	sb.content_margin_left = 1.0
+	sb.content_margin_top = 1.0
+	sb.content_margin_right = 1.0
+	sb.content_margin_bottom = 1.0
+	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.0)
+	sb.shadow_size = 0
+	sb.shadow_offset = Vector2.ZERO
+	sb.anti_aliasing = false
 	_scene_card.add_theme_stylebox_override("panel", sb)
 
 
