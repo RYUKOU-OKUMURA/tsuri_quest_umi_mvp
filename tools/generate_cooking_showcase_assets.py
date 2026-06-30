@@ -1489,9 +1489,28 @@ def meal_banner_frame() -> None:
         alpha = rng.randint(8, 22) if clear else rng.randint(12, 32)
         r = 1 if rng.random() < 0.86 else 2
         draw.ellipse((x, y, x + r, y + r), fill=(100, 59, 27, alpha))
-    for x0, y0, x1, y1, alpha in [(58, 30, 34, 92, 34), (126, 23, 98, 91, 26), (568, 24, 618, 91, 26), (658, 22, 713, 88, 32)]:
+    for x0, y0, x1, y1, alpha in [(58, 30, 34, 92, 13), (126, 23, 98, 91, 10), (568, 24, 618, 91, 9), (658, 22, 713, 88, 12)]:
         draw.line((x0, y0, x1, y1), fill=(115, 72, 34, alpha), width=2)
         draw.line((x0 + 3, y0, x1 + 3, y1), fill=(255, 246, 218, max(8, alpha // 2)), width=1)
+
+    # Irregular parchment chips and edge shadows read as material without crossing the headline.
+    chips = [
+        (74, 18, 121, 23, 10),
+        (244, 18, 302, 22, 8),
+        (382, 18, 426, 23, 9),
+        (84, h - 34, 146, h - 29, 10),
+        (226, h - 33, 286, h - 28, 8),
+        (474, h - 34, 548, h - 29, 9),
+        (620, h - 34, 692, h - 28, 11),
+    ]
+    for x0, y0, x1, y1, alpha in chips:
+        draw.rectangle((x0, y0, x1, y1), fill=(73, 43, 22, alpha))
+        draw.line((x0 + 3, y0, x1 - 5, y0), fill=(255, 246, 218, max(5, alpha - 3)), width=1)
+    for x in range(34, w - 42, 57):
+        y = 19 + (x * 7) % 6
+        draw.rectangle((x, y, x + 18, y + 2), fill=(255, 248, 225, 26))
+        by = h - 35 - (x * 5) % 5
+        draw.rectangle((x + 16, by, x + 38, by + 2), fill=(71, 42, 22, 18))
 
     # Folded corner and fish stamp echo the reference without baking text.
     draw.polygon([(w - 103, 10), (w - 18, 10), (w - 18, 78)], fill=(255, 244, 219, 218), outline=(166, 112, 58, 125))
