@@ -2197,6 +2197,12 @@ func _fish_portrait(fish_id: String) -> Texture2D:
 		var tex := load(path) as Texture2D
 		if tex != null:
 			return tex
+	var asset_id := "kurodai" if fish_id == "boss_kurodai" else fish_id
+	path = "res://assets/showcase/underwater/fish/%s_card_portrait.png" % asset_id
+	if ResourceLoader.exists(path) or FileAccess.file_exists(path):
+		var generated_tex := load(path) as Texture2D
+		if generated_tex != null:
+			return generated_tex
 	return _fish_icon(fish_id)
 
 

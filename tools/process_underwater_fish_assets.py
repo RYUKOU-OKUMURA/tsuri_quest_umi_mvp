@@ -16,6 +16,8 @@ REFERENCE = ROOT / "reference" / "02_underwater_fight_mockup.png"
 FISH_SOURCE = OUT_DIR / "kurodai_chroma_source.png"
 FINAL_FISH_SOURCE = SOURCE_ASSET_DIR / "kurodai_final_art_source.png"
 FISH_CONTACT_SOURCE = FISH_SOURCE_ASSET_DIR / "fish_final_art_contact_sheet.png"
+FISH_EXPANSION_CONTACT_SOURCE_1 = FISH_SOURCE_ASSET_DIR / "fish_expansion_contact_sheet_1.png"
+FISH_EXPANSION_CONTACT_SOURCE_2 = FISH_SOURCE_ASSET_DIR / "fish_expansion_contact_sheet_2.png"
 FISH_SHEET = OUT_DIR / "kurodai_showcase_sheet.png"
 FISH_CARD_PORTRAIT = OUT_DIR / "kurodai_card_portrait.png"
 HIT_BURST = OUT_DIR / "hit_burst.png"
@@ -61,6 +63,92 @@ FISH_ART_SOURCES = {
     "kawahagi": {
         "contact_crop": (710, 845, 1345, 1020),
     },
+    "iwashi": {
+        "source": "expansion_1",
+        "contact_crop": (20, 80, 500, 270),
+    },
+    "shirogisu": {
+        "source": "expansion_1",
+        "contact_crop": (520, 80, 1010, 260),
+    },
+    "mebaru": {
+        "source": "expansion_1",
+        "contact_crop": (20, 360, 500, 610),
+    },
+    "ainame": {
+        "source": "expansion_1",
+        "contact_crop": (520, 385, 1010, 570),
+    },
+    "bora": {
+        "source": "expansion_1",
+        "contact_crop": (20, 675, 500, 860),
+    },
+    "kamasu": {
+        "source": "expansion_1",
+        "contact_crop": (520, 675, 1010, 850),
+    },
+    "kochi": {
+        "source": "expansion_1",
+        "contact_crop": (20, 975, 500, 1165),
+    },
+    "tachiuo": {
+        "source": "expansion_1",
+        "contact_crop": (520, 965, 1015, 1140),
+    },
+    "ishidai": {
+        "source": "expansion_1",
+        "contact_crop": (20, 1260, 500, 1505),
+    },
+    "akahata": {
+        "source": "expansion_1",
+        "contact_crop": (520, 1280, 1010, 1495),
+    },
+    "fuefukidai": {
+        "source": "expansion_2",
+        "contact_crop": (20, 75, 500, 270),
+    },
+    "aobudai": {
+        "source": "expansion_2",
+        "contact_crop": (520, 65, 1010, 285),
+    },
+    "kanpachi": {
+        "source": "expansion_2",
+        "contact_crop": (20, 365, 500, 585),
+    },
+    "buri": {
+        "source": "expansion_2",
+        "contact_crop": (520, 360, 1010, 575),
+    },
+    "katsuo": {
+        "source": "expansion_2",
+        "contact_crop": (20, 680, 500, 875),
+    },
+    "shiira": {
+        "source": "expansion_2",
+        "contact_crop": (520, 650, 1015, 890),
+    },
+    "kue": {
+        "source": "expansion_2",
+        "contact_crop": (20, 960, 500, 1185),
+    },
+    "hiramasa": {
+        "source": "expansion_2",
+        "contact_crop": (520, 970, 1010, 1165),
+    },
+    "rouninaji": {
+        "source": "expansion_2",
+        "contact_crop": (20, 1260, 500, 1505),
+    },
+    "kajiki": {
+        "source": "expansion_2",
+        "contact_crop": (520, 1240, 1015, 1515),
+    },
+}
+
+FISH_CONTACT_SOURCES = {
+    "base": FISH_CONTACT_SOURCE,
+    "expansion_1": FISH_EXPANSION_CONTACT_SOURCE_1,
+    "expansion_2": FISH_EXPANSION_CONTACT_SOURCE_2,
 }
 
 
@@ -101,8 +189,8 @@ def _magenta_removed(image: Image.Image) -> Image.Image:
             alpha = a
             if dist < 155:
                 alpha = int(a * (dist - 42) / 113)
-            # Despill magenta from the antialiased edge. The fish itself is
-            # gray/silver, so purple edge pixels should become cool dark linework.
+            # Despill magenta from the antialiased edge without recoloring the
+            # fish body. Red/orange species must stay red, not become muddy.
             if r > 125 and b > 125 and g < 115:
                 gray = max(18, min(112, int(g * 1.55) + 18))
                 r = gray
@@ -110,9 +198,6 @@ def _magenta_removed(image: Image.Image) -> Image.Image:
                 b = min(142, gray + 28)
                 if dist < 190:
                     alpha = int(alpha * 0.78)
-            else:
-                r = min(r, int((g + b) * 0.72))
-                b = min(b, int((r + g) * 0.95))
             if r > 105 and b > 105 and g < 105:
                 gray = max(24, min(100, g + 24))
                 r = gray
@@ -470,14 +555,15 @@ def _fish_source_image(fish_id: str, spec: dict[str, object], current_kurodai_sh
     individual_source = FISH_SOURCE_ASSET_DIR / f"{fish_id}_final_art_source.png"
     if individual_source.exists():
         return Image.open(individual_source).convert("RGBA")
-    if not FISH_CONTACT_SOURCE.exists():
+    contact_source = FISH_CONTACT_SOURCES.get(str(spec.get("source", "base")), FISH_CONTACT_SOURCE)
+    if not contact_source.exists():
         raise FileNotFoundError(
-            f"Missing {FISH_CONTACT_SOURCE}; high-quality fish assets must not fall back to procedural art."
+            f"Missing {contact_source}; high-quality fish assets must not fall back to procedural art."
         )
     crop_box = spec.get("contact_crop")
     if crop_box is None:
         raise RuntimeError(f"Missing contact_crop for fish asset {fish_id}")
-    return Image.open(FISH_CONTACT_SOURCE).convert("RGBA").crop(tuple(crop_box))
+    return Image.open(contact_source).convert("RGBA").crop(tuple(crop_box))
 
 
 def create_fish_variant_assets(current_kurodai_sheet: Image.Image, fish_id: str, spec: dict[str, object]) -> None:

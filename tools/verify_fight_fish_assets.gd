@@ -16,9 +16,31 @@ func _initialize() -> void:
 		"madai",
 		"hirame",
 		"kawahagi",
+		"iwashi",
+		"shirogisu",
+		"mebaru",
+		"ainame",
+		"bora",
+		"kamasu",
+		"kochi",
+		"tachiuo",
+		"ishidai",
+		"akahata",
+		"fuefukidai",
+		"aobudai",
+		"kanpachi",
+		"buri",
+		"katsuo",
+		"shiira",
+		"kue",
+		"hiramasa",
+		"rouninaji",
+		"kajiki",
 		"boss_kurodai",
 	]
 	var missing: Array[String] = []
+	if fish_ids.size() != 30:
+		missing.append("expected 30 fight fish ids, got %d" % fish_ids.size())
 	var required_keys: Array[String] = [
 		"fish_no",
 		"preferred_bait",
