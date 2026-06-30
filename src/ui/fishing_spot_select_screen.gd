@@ -2,10 +2,15 @@ extends "res://src/ui/screen_base.gd"
 
 const FishingSpotMapViewScript = preload("res://src/ui/components/fishing_spot_map_view.gd")
 
+const HEADER_FRAME_PATH := "res://assets/showcase/fishing_spots/map_header_frame.png"
 const DETAIL_FRAME_PATH := "res://assets/showcase/fishing_spots/map_detail_frame.png"
+const DETAIL_ICON_SHEET_PATH := "res://assets/showcase/fishing_spots/map_detail_icon_sheet.png"
 const FOOTER_FRAME_PATH := "res://assets/showcase/fishing_spots/map_footer_frame.png"
 const CARD_FRAME_PATH := "res://assets/showcase/fishing_spots/map_spot_card_frame.png"
 const CARD_FRAME_LOCKED_PATH := "res://assets/showcase/fishing_spots/map_spot_card_frame_locked.png"
+const THUMB_BASE_PATH := "res://assets/showcase/fishing_spots/thumbs"
+const DETAIL_ICON_SIZE := 96.0
+const SPOT_CARD_SIZE := Vector2(260.0, 86.0)
 
 var _selected_spot_id: String = GameData.DEFAULT_FISHING_SPOT_ID
 var _continue_trip := false
@@ -16,11 +21,17 @@ var _message_label: Label
 var _detail_title_label: Label
 var _detail_unlock_label: Label
 var _detail_description_label: Label
-var _detail_info_label: Label
+var _detail_thumbnail: TextureRect
+var _detail_depth_value_label: Label
+var _detail_fish_value_label: Label
+var _detail_bait_value_label: Label
+var _detail_hint_value_label: Label
 var _action_button: Button
 var _cards_box: HBoxContainer
 
+var _header_frame: Texture2D
 var _detail_frame: Texture2D
+var _detail_icon_sheet: Texture2D
 var _footer_frame: Texture2D
 var _card_frame: Texture2D
 var _card_frame_locked: Texture2D
@@ -38,7 +49,7 @@ func _build_screen() -> void:
 	layout.add_theme_constant_override("separation", 8)
 	root.add_child(layout)
 
-	layout.add_child(make_header("釣り場を選ぶ", _header_subtitle()))
+	_build_header(layout)
 
 	var body := HBoxContainer.new()
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -76,7 +87,9 @@ func _resolve_route_state() -> void:
 
 
 func _load_assets() -> void:
+	_header_frame = _load_texture_if_exists(HEADER_FRAME_PATH)
 	_detail_frame = _load_texture_if_exists(DETAIL_FRAME_PATH)
+	_detail_icon_sheet = _load_texture_if_exists(DETAIL_ICON_SHEET_PATH)
 	_footer_frame = _load_texture_if_exists(FOOTER_FRAME_PATH)
 	_card_frame = _load_texture_if_exists(CARD_FRAME_PATH)
 	_card_frame_locked = _load_texture_if_exists(CARD_FRAME_LOCKED_PATH)
@@ -90,6 +103,91 @@ func _header_subtitle() -> String:
 		PlayerProgress.money,
 		trip_text,
 	]
+
+
+func _build_header(parent: Control) -> void:
+	var panel := Control.new()
+	panel.custom_minimum_size = Vector2(0.0, 84.0)
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.clip_contents = true
+	parent.add_child(panel)
+
+	if _header_frame != null:
+		var frame := TextureRect.new()
+		frame.texture = _header_frame
+		frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		frame.stretch_mode = TextureRect.STRETCH_SCALE
+		frame.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		panel.add_child(frame)
+	else:
+		var fallback := make_panel(true)
+		fallback.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		fallback.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		panel.add_child(fallback)
+
+	var margin := MarginContainer.new()
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 28)
+	margin.add_theme_constant_override("margin_top", 10)
+	margin.add_theme_constant_override("margin_right", 24)
+	margin.add_theme_constant_override("margin_bottom", 10)
+	panel.add_child(margin)
+
+	var row := HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", 28)
+	margin.add_child(row)
+
+	var title_box := VBoxContainer.new()
+	title_box.custom_minimum_size = Vector2(390.0, 0.0)
+	title_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	title_box.add_theme_constant_override("separation", 0)
+	row.add_child(title_box)
+
+	var title := make_label("釣り場を選ぶ", 28, Palette.TEXT_BONE, 3, Palette.TEXT_OUTLINE_DARK)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	title.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	title_box.add_child(title)
+
+	var subtitle_text := "航路図から出航先を指定"
+	if _continue_trip:
+		subtitle_text = "釣行継続中：ポイント変更"
+	var subtitle := make_label(subtitle_text, 14, Color("#15304a"))
+	subtitle.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_box.add_child(subtitle)
+
+	var status_row := HBoxContainer.new()
+	status_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	status_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	status_row.add_theme_constant_override("separation", 10)
+	row.add_child(status_row)
+	status_row.add_child(_make_header_status_cell("Lv.", "%d" % PlayerProgress.level))
+	status_row.add_child(_make_header_status_cell("装備", String(GameData.get_rod(PlayerProgress.equipped_rod_id).get("name", "入門竿"))))
+	status_row.add_child(_make_header_status_cell("所持金", "%d G" % PlayerProgress.money))
+
+
+func _make_header_status_cell(title: String, value: String) -> VBoxContainer:
+	var box := VBoxContainer.new()
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_theme_constant_override("separation", 0)
+	var title_label := make_label(title, 12, Color("#96cde8"), 1, Palette.TEXT_OUTLINE_DARK)
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.add_child(title_label)
+	var value_label := make_label(value, 16, Palette.TEXT_BONE, 2, Palette.TEXT_OUTLINE_DARK)
+	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	value_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	value_label.clip_text = true
+	value_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	box.add_child(value_label)
+	return box
 
 
 func _build_map_panel(parent: Control) -> void:
@@ -133,58 +231,114 @@ func _build_detail_panel(parent: Control) -> void:
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 28)
-	margin.add_theme_constant_override("margin_top", 27)
-	margin.add_theme_constant_override("margin_right", 28)
-	margin.add_theme_constant_override("margin_bottom", 27)
+	margin.add_theme_constant_override("margin_left", 24)
+	margin.add_theme_constant_override("margin_top", 18)
+	margin.add_theme_constant_override("margin_right", 24)
+	margin.add_theme_constant_override("margin_bottom", 18)
 	panel.add_child(margin)
 
 	var box := VBoxContainer.new()
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	box.add_theme_constant_override("separation", 12)
+	box.add_theme_constant_override("separation", 4)
 	margin.add_child(box)
 
-	_detail_title_label = make_label("", 28, Palette.TEXT_BONE, 2, Palette.TEXT_OUTLINE_DARK)
-	_detail_title_label.custom_minimum_size = Vector2(0.0, 70.0)
+	_detail_title_label = make_label("", 24, Palette.TEXT_BONE, 2, Palette.TEXT_OUTLINE_DARK)
+	_detail_title_label.custom_minimum_size = Vector2(0.0, 42.0)
 	_detail_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_detail_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_detail_title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_detail_title_label.clip_text = true
+	_detail_title_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	box.add_child(_detail_title_label)
 
-	_detail_unlock_label = make_label("", 16, Palette.GOLD_DEEP)
+	_detail_unlock_label = make_label("", 13, Palette.TEXT_BONE, 1, Palette.TEXT_OUTLINE_DARK)
+	_detail_unlock_label.custom_minimum_size = Vector2(0.0, 18.0)
 	_detail_unlock_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_detail_unlock_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(_detail_unlock_label)
 
-	_detail_description_label = make_label("", 16, Color("#2f2114"))
-	_detail_description_label.custom_minimum_size = Vector2(0.0, 84.0)
+	var thumb_clip := Control.new()
+	thumb_clip.custom_minimum_size = Vector2(0.0, 78.0)
+	thumb_clip.clip_contents = true
+	thumb_clip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.add_child(thumb_clip)
+
+	_detail_thumbnail = TextureRect.new()
+	_detail_thumbnail.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_detail_thumbnail.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_detail_thumbnail.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_detail_thumbnail.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_detail_thumbnail.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	thumb_clip.add_child(_detail_thumbnail)
+
+	_detail_description_label = make_label("", 12, Color("#2f2114"))
+	_detail_description_label.custom_minimum_size = Vector2(0.0, 36.0)
 	_detail_description_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_detail_description_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	box.add_child(_detail_description_label)
 
-	_detail_info_label = make_label("", 18, Color("#1d1209"))
-	_detail_info_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_detail_info_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_detail_info_label.add_theme_constant_override("line_spacing", 8)
-	box.add_child(_detail_info_label)
+	var rows := VBoxContainer.new()
+	rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rows.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	rows.add_theme_constant_override("separation", 2)
+	box.add_child(rows)
+	_detail_depth_value_label = _make_detail_row(rows, 0, "水深")
+	_detail_fish_value_label = _make_detail_row(rows, 1, "狙い")
+	_detail_bait_value_label = _make_detail_row(rows, 2, "エサ")
+	_detail_hint_value_label = _make_detail_row(rows, 3, "気配")
 
 	var button_box := VBoxContainer.new()
 	button_box.size_flags_vertical = Control.SIZE_SHRINK_END
-	button_box.add_theme_constant_override("separation", 10)
+	button_box.add_theme_constant_override("separation", 4)
 	box.add_child(button_box)
 
 	_action_button = make_button("ここで釣る", func() -> void: _select_spot(_selected_spot_id), 0, true)
+	_action_button.custom_minimum_size.y = 34.0
 	_action_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button_box.add_child(_action_button)
 
 	var back := make_button("港へ戻る", func() -> void: navigate("harbor"), 0)
+	back.custom_minimum_size.y = 32.0
 	back.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button_box.add_child(back)
 
 
+func _make_detail_row(parent: Control, icon_index: int, title: String) -> Label:
+	var row := HBoxContainer.new()
+	row.custom_minimum_size = Vector2(0.0, 30.0)
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", 6)
+	parent.add_child(row)
+
+	var icon := TextureRect.new()
+	icon.custom_minimum_size = Vector2(24.0, 24.0)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture = _detail_icon(icon_index)
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(icon)
+
+	var title_label := make_label(title, 12, Color("#775126"))
+	title_label.custom_minimum_size = Vector2(34.0, 0.0)
+	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(title_label)
+
+	var value_label := make_label("", 13, Color("#1d1209"))
+	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	value_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	value_label.clip_text = true
+	value_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	value_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(value_label)
+	return value_label
+
+
 func _build_footer(parent: Control) -> void:
 	var panel := Control.new()
-	panel.custom_minimum_size = Vector2(0.0, 142.0)
+	panel.custom_minimum_size = Vector2(0.0, 118.0)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(panel)
 
@@ -205,16 +359,16 @@ func _build_footer(parent: Control) -> void:
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 24)
-	margin.add_theme_constant_override("margin_top", 14)
-	margin.add_theme_constant_override("margin_right", 24)
-	margin.add_theme_constant_override("margin_bottom", 14)
+	margin.add_theme_constant_override("margin_left", 22)
+	margin.add_theme_constant_override("margin_top", 12)
+	margin.add_theme_constant_override("margin_right", 22)
+	margin.add_theme_constant_override("margin_bottom", 12)
 	panel.add_child(margin)
 
 	var row := HBoxContainer.new()
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	row.add_theme_constant_override("separation", 14)
+	row.add_theme_constant_override("separation", 12)
 	margin.add_child(row)
 
 	var scroll := ScrollContainer.new()
@@ -223,21 +377,22 @@ func _build_footer(parent: Control) -> void:
 	row.add_child(scroll)
 
 	_cards_box = HBoxContainer.new()
-	_cards_box.add_theme_constant_override("separation", 10)
+	_cards_box.add_theme_constant_override("separation", 8)
 	scroll.add_child(_cards_box)
 
 	var message_box := VBoxContainer.new()
-	message_box.custom_minimum_size = Vector2(300.0, 0.0)
+	message_box.custom_minimum_size = Vector2(288.0, 0.0)
 	message_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	message_box.add_theme_constant_override("separation", 6)
+	message_box.add_theme_constant_override("separation", 4)
 	row.add_child(message_box)
 
-	var guide := make_label("航路メモ", 17, Palette.TEXT_BONE, 1, Palette.TEXT_OUTLINE_DARK)
+	var guide := make_label("航路メモ", 14, Palette.TEXT_BONE, 1, Palette.TEXT_OUTLINE_DARK)
 	guide.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	message_box.add_child(guide)
 
-	_message_label = make_label("", 15, Color("#eaf6ff"), 1, Palette.TEXT_OUTLINE_DARK)
+	_message_label = make_label("", 12, Color("#eaf6ff"), 1, Palette.TEXT_OUTLINE_DARK)
 	_message_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_message_label.clip_text = true
 	message_box.add_child(_message_label)
 
 
@@ -258,7 +413,8 @@ func _make_spot_card(spot: Dictionary) -> Button:
 	button.text = ""
 	button.disabled = not unlocked
 	button.clip_contents = true
-	button.custom_minimum_size = Vector2(238.0, 104.0)
+	button.custom_minimum_size = SPOT_CARD_SIZE
+	button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	button.set_meta("spot_card", true)
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if unlocked else Control.CURSOR_ARROW
 	_apply_card_button_style(button, selected, unlocked)
@@ -273,42 +429,47 @@ func _make_spot_card(spot: Dictionary) -> Button:
 	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	button.add_child(frame)
 
-	var margin := MarginContainer.new()
-	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 13)
-	margin.add_theme_constant_override("margin_top", 9)
-	margin.add_theme_constant_override("margin_right", 13)
-	margin.add_theme_constant_override("margin_bottom", 8)
-	button.add_child(margin)
-
-	var box := VBoxContainer.new()
-	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_theme_constant_override("separation", 4)
-	margin.add_child(box)
-
-	var title := make_label(String(spot.get("name", spot_id)), 15, Color("#fff2d2") if unlocked else Color("#d5cec1"), 1, Palette.TEXT_OUTLINE_DARK)
+	var title := _card_label(String(spot.get("name", spot_id)), 14, Color("#fff2d2") if unlocked else Color("#d5cec1"), 1)
+	title.position = Vector2(14.0, 5.0)
+	title.size = Vector2(SPOT_CARD_SIZE.x - 80.0, 22.0)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	title.clip_text = true
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	box.add_child(title)
-
-	var body_color := Color("#23170d") if unlocked else Color("#4f4941")
-	var depth := make_label("水深 %s" % _depth_range_text(spot), 13, body_color)
-	depth.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(depth)
-
-	var featured := make_label("狙い %s" % _featured_fish_text(spot, 3), 13, body_color)
-	featured.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	featured.clip_text = true
-	box.add_child(featured)
+	button.add_child(title)
 
 	var badge_text := "選択中" if selected else _unlock_badge_text(spot, unlocked)
-	var badge := make_label(badge_text, 12, Palette.GOLD_DEEP if unlocked else Color("#6b5740"))
-	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var badge := _card_label(badge_text, 12, Palette.GOLD_BRIGHT if selected else (Palette.GOLD_DEEP if unlocked else Color("#6b5740")), 1 if selected else 0)
+	badge.position = Vector2(SPOT_CARD_SIZE.x - 68.0, 7.0)
+	badge.size = Vector2(54.0, 18.0)
 	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	box.add_child(badge)
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.add_child(badge)
+
+	var body_color := Color("#23170d") if unlocked else Color("#4f4941")
+	var depth := _card_label("水深 %s" % _depth_range_text(spot), 11, body_color)
+	depth.position = Vector2(17.0, 34.0)
+	depth.size = Vector2(SPOT_CARD_SIZE.x - 34.0, 15.0)
+	depth.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.add_child(depth)
+
+	var featured := _card_label("狙い %s" % _featured_fish_text(spot, 3), 11, body_color)
+	featured.position = Vector2(17.0, 50.0)
+	featured.size = Vector2(SPOT_CARD_SIZE.x - 34.0, 15.0)
+	featured.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.add_child(featured)
+
+	var bait := _card_label("エサ %s" % _bait_text(spot), 11, body_color)
+	bait.position = Vector2(17.0, 66.0)
+	bait.size = Vector2(SPOT_CARD_SIZE.x - 34.0, 15.0)
+	bait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.add_child(bait)
 	return button
+
+
+func _card_label(text: String, font_size: int, color: Color, outline: int = 0) -> Label:
+	var label := make_label(text, font_size, color, outline, Palette.TEXT_OUTLINE_DARK)
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	label.clip_text = true
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	return label
 
 
 func _focus_spot(spot_id: String, update_message: bool = true) -> void:
@@ -319,7 +480,7 @@ func _focus_spot(spot_id: String, update_message: bool = true) -> void:
 		_map_view.set_selected_spot(spot_id)
 	_refresh_detail()
 	_rebuild_spot_cards()
-	if update_message:
+	if update_message or (_message_label != null and _message_label.text.is_empty()):
 		var spot := GameData.get_fishing_spot(spot_id)
 		if GameData.is_fishing_spot_unlocked(spot_id, PlayerProgress.level):
 			_message_label.text = "%s を選択中。右の「ここで釣る」から出航できます。" % String(spot.get("name", spot_id))
@@ -334,19 +495,20 @@ func _refresh_detail() -> void:
 	var unlocked := GameData.is_fishing_spot_unlocked(_selected_spot_id, PlayerProgress.level)
 	var boss_spot := bool(spot.get("boss_spot", false))
 	_detail_title_label.text = String(spot.get("name", _selected_spot_id))
+	_detail_title_label.add_theme_font_size_override("font_size", 22 if _detail_title_label.text.length() >= 9 else 24)
 	if unlocked:
 		_detail_unlock_label.text = "解放済み　%s" % ("ぬし専用" if boss_spot else "通常ポイント")
-		_detail_unlock_label.add_theme_color_override("font_color", Color("#6e3f13") if not boss_spot else Color("#8c2d23"))
+		_detail_unlock_label.add_theme_color_override("font_color", Color("#f2cf7d") if not boss_spot else Color("#ffb58d"))
 	else:
 		_detail_unlock_label.text = "未解放　Lv.%dで出航可能" % int(spot.get("unlock_level", 1))
-		_detail_unlock_label.add_theme_color_override("font_color", Color("#8c2d23"))
+		_detail_unlock_label.add_theme_color_override("font_color", Color("#ffb0a0"))
+	if _detail_thumbnail != null:
+		_detail_thumbnail.texture = _thumbnail_for_spot(_selected_spot_id)
 	_detail_description_label.text = String(spot.get("description", ""))
-	_detail_info_label.text = "水深　%s\n狙い　%s\nエサ　%s\n気配　%s" % [
-		_depth_range_text(spot),
-		_featured_fish_text(spot, 5),
-		_bait_text(spot),
-		"ぬしの気配" if boss_spot else _rare_hint_text(spot),
-	]
+	_detail_depth_value_label.text = _depth_range_text(spot)
+	_detail_fish_value_label.text = _featured_fish_text(spot, 4)
+	_detail_bait_value_label.text = _bait_text(spot)
+	_detail_hint_value_label.text = "ぬしの気配" if boss_spot else _rare_hint_text(spot)
 	if _action_button != null:
 		_action_button.disabled = not unlocked
 		_action_button.text = "ここで釣る" if unlocked else "Lv.%dで解放" % int(spot.get("unlock_level", 1))
@@ -431,6 +593,20 @@ func _rare_hint_text(spot: Dictionary) -> String:
 	if unlock_level >= 4:
 		return "レア魚の気配"
 	return "安定した反応"
+
+
+func _detail_icon(icon_index: int) -> Texture2D:
+	if _detail_icon_sheet == null:
+		return null
+	var atlas := AtlasTexture.new()
+	atlas.atlas = _detail_icon_sheet
+	atlas.region = Rect2(Vector2(DETAIL_ICON_SIZE * float(icon_index), 0.0), Vector2(DETAIL_ICON_SIZE, DETAIL_ICON_SIZE))
+	return atlas
+
+
+func _thumbnail_for_spot(spot_id: String) -> Texture2D:
+	var path := "%s/%s.png" % [THUMB_BASE_PATH, spot_id]
+	return _load_texture_if_exists(path)
 
 
 func _load_texture_if_exists(path: String) -> Texture2D:

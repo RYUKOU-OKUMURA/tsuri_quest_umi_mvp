@@ -10,12 +10,24 @@ const GameFontsScript = preload("res://src/ui/game_fonts.gd")
 const MAP_BG_PATH := "res://assets/showcase/fishing_spots/map_bg.png"
 const MAP_GRADE_PATH := "res://assets/showcase/fishing_spots/map_color_grade.png"
 const MARKER_SHEET_PATH := "res://assets/showcase/fishing_spots/map_marker_sheet.png"
+const SPOT_MARKER_SHEET_PATH := "res://assets/showcase/fishing_spots/map_spot_marker_sheet.png"
 const MARKER_CELL_SIZE := 128.0
 
 const MARKER_NORMAL := 0
 const MARKER_SELECTED := 1
 const MARKER_LOCKED := 2
 const MARKER_BOSS := 3
+
+const SPOT_MARKER_ORDER := [
+	"harbor_pier",
+	"shallow_sand",
+	"rock_breakwater",
+	"outer_tide",
+	"south_reef",
+	"bluewater_route",
+	"deep_ocean",
+	"harbor_boulder",
+]
 
 const SPOT_POINTS := {
 	"harbor_pier": Vector2(0.255, 0.505),
@@ -55,6 +67,7 @@ var selected_spot_id := GameData.DEFAULT_FISHING_SPOT_ID
 var _map_bg: Texture2D
 var _map_grade: Texture2D
 var _marker_sheet: Texture2D
+var _spot_marker_sheet: Texture2D
 var _hovered_spot_id := ""
 
 
@@ -80,6 +93,7 @@ func _ready() -> void:
 	_map_bg = _load_texture_if_exists(MAP_BG_PATH)
 	_map_grade = _load_texture_if_exists(MAP_GRADE_PATH)
 	_marker_sheet = _load_texture_if_exists(MARKER_SHEET_PATH)
+	_spot_marker_sheet = _load_texture_if_exists(SPOT_MARKER_SHEET_PATH)
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -133,8 +147,16 @@ func _draw_routes(map_rect: Rect2) -> void:
 		var from_point := _map_point(map_rect, from_id)
 		var to_point := _map_point(map_rect, to_id)
 		var selected_route := from_id == selected_spot_id or to_id == selected_spot_id
-		var color := Color("#ffe070", 0.86) if selected_route else Color("#f6e5b0", 0.42)
-		var width := 3.2 if selected_route else 2.0
+		var both_unlocked := (
+			GameData.is_fishing_spot_unlocked(from_id, player_level)
+			and GameData.is_fishing_spot_unlocked(to_id, player_level)
+		)
+		var color := Color("#ffe070", 0.88) if selected_route else Color("#f6e5b0", 0.48)
+		if not both_unlocked and not selected_route:
+			color = Color("#a99c87", 0.36)
+		var width := 3.4 if selected_route else 2.0
+		if selected_route:
+			draw_line(from_point, to_point, Color("#ffe070", 0.18), width + 8.0)
 		_draw_dotted_line(from_point, to_point, color, width, 14.0, 10.0)
 
 
@@ -149,17 +171,36 @@ func _draw_markers(map_rect: Rect2) -> void:
 		var boss_spot := bool(spot.get("boss_spot", false))
 		var selected := spot_id == selected_spot_id
 		var marker_index := MARKER_NORMAL
+		var marker_row := 0
 		if not unlocked:
 			marker_index = MARKER_LOCKED
+			marker_row = 2
 		elif boss_spot:
 			marker_index = MARKER_BOSS
 		if selected and unlocked:
 			marker_index = MARKER_SELECTED
+			marker_row = 1
 		var marker_size := clampf(map_rect.size.x * (0.072 if selected else 0.061), 52.0, 82.0)
 		if _hovered_spot_id == spot_id:
 			marker_size *= 1.07
-		_draw_marker(marker_index, Rect2(center - Vector2(marker_size, marker_size) * 0.5, Vector2(marker_size, marker_size)))
+		var target := Rect2(center - Vector2(marker_size, marker_size) * 0.5, Vector2(marker_size, marker_size))
+		_draw_spot_marker(spot_id, marker_row, marker_index, target)
 		_draw_spot_chip(font, map_rect, spot, center, unlocked, selected, boss_spot)
+
+
+func _draw_spot_marker(spot_id: String, marker_row: int, fallback_marker_index: int, target: Rect2) -> void:
+	if _spot_marker_sheet == null:
+		_draw_marker(fallback_marker_index, target)
+		return
+	var marker_col := SPOT_MARKER_ORDER.find(spot_id)
+	if marker_col < 0:
+		_draw_marker(fallback_marker_index, target)
+		return
+	var src := Rect2(
+		Vector2(MARKER_CELL_SIZE * float(marker_col), MARKER_CELL_SIZE * float(marker_row)),
+		Vector2(MARKER_CELL_SIZE, MARKER_CELL_SIZE)
+	)
+	draw_texture_rect_region(_spot_marker_sheet, target, src, Color.WHITE)
 
 
 func _draw_marker(marker_index: int, target: Rect2) -> void:
