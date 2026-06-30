@@ -1037,38 +1037,82 @@ def meal_table_spread() -> None:
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img, "RGBA")
 
-    # Wide table foreground for the MEAL_RESULT scene. Keep the silhouette oval
-    # so it reads as tableware instead of a pasted rectangular card.
-    draw.ellipse((20, 142, 402, 184), fill=(0, 0, 0, 70))
-    draw.rounded_rectangle((18, 126, 402, 178), radius=20, fill=(116, 63, 29, 230), outline=(55, 33, 20, 210), width=4)
-    draw.rectangle((28, 133, 392, 145), fill=(154, 90, 43, 130))
-    for x in range(44, 392, 42):
-        draw.line((x, 130, x - 22, 176), fill=(57, 34, 22, 70), width=2)
+    # Wide table foreground for the MEAL_RESULT scene. The dish itself is
+    # rebuilt from the high-density featured-dish slot, then clipped to a
+    # platter silhouette so the table scene never becomes a rectangular card.
+    shadow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    shadow_draw = ImageDraw.Draw(shadow, "RGBA")
+    shadow_draw.ellipse((14, 142, 406, 186), fill=(0, 0, 0, 84))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(3))
+    img.alpha_composite(shadow)
 
-    # Oval platter and grilled horse mackerel. The plate is warm ivory, not a
-    # white block, and the fish is large enough to survive the in-game scale.
-    draw.ellipse((72, 54, 338, 152), fill=(38, 26, 18, 92))
-    draw.ellipse((62, 38, 344, 142), fill=(219, 205, 175, 255), outline=(84, 63, 46, 245), width=5)
-    draw.ellipse((82, 54, 324, 128), fill=(177, 161, 132, 235))
-    draw.polygon([(94, 78), (222, 50), (316, 98), (158, 118)], fill=(42, 92, 52, 235))
-    draw.line((104, 84, 306, 101), fill=(30, 62, 38, 110), width=3)
-    draw.ellipse((98, 72, 262, 116), fill=(155, 86, 35, 255), outline=(28, 20, 14, 235), width=4)
-    draw.ellipse((104, 75, 232, 105), fill=(207, 117, 42, 235))
-    draw.polygon([(254, 94), (330, 58), (312, 94), (330, 130)], fill=(207, 139, 45, 255), outline=(55, 35, 20, 220))
-    draw.polygon([(164, 76), (220, 42), (202, 88)], fill=(112, 80, 48, 255), outline=(31, 22, 17, 210))
-    draw.ellipse((112, 84, 130, 102), fill=(247, 238, 210, 255), outline=(18, 15, 12, 255), width=2)
-    draw.ellipse((118, 90, 124, 96), fill=(10, 9, 8, 255))
-    for s in range(6):
-        x = 144 + s * 20
-        draw.line((x, 75, x + 12, 112), fill=(64, 31, 17, 190), width=3)
-        draw.line((x + 2, 75, x + 14, 112), fill=(255, 222, 161, 70), width=1)
-    for x, y in [(122, 111), (151, 116), (184, 112), (218, 118)]:
-        draw.ellipse((x, y, x + 6, y + 4), fill=(255, 244, 209, 190))
-    for dx, dy in [(250, 112), (274, 101)]:
-        draw.pieslice((dx, dy, dx + 38, dy + 38), 305, 85, fill=(251, 221, 101, 255), outline=(124, 93, 32, 225), width=2)
-        draw.line((dx + 7, dy + 30, dx + 31, dy + 8), fill=(255, 248, 185, 185), width=2)
-    for dx, dy in [(224, 108), (238, 100), (248, 113)]:
-        draw.ellipse((dx, dy, dx + 20, dy + 18), fill=(255, 249, 224, 245))
+    draw.rounded_rectangle((14, 126, 406, 178), radius=20, fill=(108, 57, 26, 238), outline=(46, 28, 17, 220), width=4)
+    draw.rectangle((24, 132, 396, 146), fill=(171, 99, 45, 130))
+    draw.line((20, 126, 400, 126), fill=(244, 177, 82, 118), width=2)
+    for x in range(36, 398, 38):
+        draw.line((x, 129, x - 26, 178), fill=(42, 24, 16, 84), width=2)
+        draw.line((x + 14, 132, x - 4, 174), fill=(217, 137, 61, 40), width=1)
+
+    draw.polygon([(65, 119), (350, 112), (386, 157), (42, 164)], fill=(42, 72, 57, 95))
+    draw.line((58, 122, 358, 115), fill=(238, 206, 132, 75), width=2)
+
+    feature_path = OUT / "dish_feature_aji_shioyaki.png"
+    if feature_path.exists():
+        source = Image.open(feature_path).convert("RGBA")
+        crop = source.crop((40, 54, 594, 294))
+        crop = ImageEnhance.Color(crop).enhance(1.10)
+        crop = ImageEnhance.Contrast(crop).enhance(1.10)
+        crop = ImageEnhance.Sharpness(crop).enhance(1.22)
+        plate_size = (336, 146)
+        crop = crop.resize(plate_size, Image.Resampling.LANCZOS)
+
+        mask = Image.new("L", plate_size, 0)
+        mask_draw = ImageDraw.Draw(mask)
+        mask_draw.ellipse((7, 9, 329, 132), fill=255)
+        mask_draw.polygon(
+            [
+                (12, 67),
+                (54, 41),
+                (96, 22),
+                (139, 8),
+                (192, 20),
+                (252, 36),
+                (314, 59),
+                (326, 94),
+                (255, 125),
+                (70, 120),
+            ],
+            fill=255,
+        )
+        mask = mask.filter(ImageFilter.GaussianBlur(0.35))
+
+        plate = Image.new("RGBA", plate_size, (0, 0, 0, 0))
+        plate.alpha_composite(crop)
+        plate.putalpha(Image.composite(plate.getchannel("A"), Image.new("L", plate_size, 0), mask))
+
+        rim = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+        rim_draw = ImageDraw.Draw(rim, "RGBA")
+        rim_draw.ellipse((51, 45, 392, 151), fill=(0, 0, 0, 70))
+        rim_draw.ellipse((51, 35, 390, 144), outline=(250, 235, 199, 190), width=5)
+        rim_draw.ellipse((67, 48, 374, 132), outline=(83, 65, 48, 150), width=3)
+        img.alpha_composite(rim)
+        img.alpha_composite(plate, (43, 23))
+        draw = ImageDraw.Draw(img, "RGBA")
+
+        for x, y in [(150, 119), (166, 123), (183, 117), (209, 122), (226, 118), (242, 123), (262, 113), (286, 106), (300, 118)]:
+            draw.ellipse((x, y, x + 4, y + 3), fill=(255, 246, 216, 205))
+        for x, y in [(179, 67), (206, 72), (232, 76), (258, 82)]:
+            draw.line((x, y, x + 14, y + 28), fill=(45, 25, 14, 150), width=2)
+            draw.line((x + 2, y, x + 16, y + 27), fill=(255, 223, 163, 68), width=1)
+    else:
+        draw.ellipse((62, 38, 344, 142), fill=(219, 205, 175, 255), outline=(84, 63, 46, 245), width=5)
+        draw.polygon([(94, 78), (222, 50), (316, 98), (158, 118)], fill=(42, 92, 52, 235))
+        draw.ellipse((98, 72, 262, 116), fill=(155, 86, 35, 255), outline=(28, 20, 14, 235), width=4)
+        draw.polygon([(254, 94), (330, 58), (312, 94), (330, 130)], fill=(207, 139, 45, 255), outline=(55, 35, 20, 220))
+        draw.ellipse((112, 84, 130, 102), fill=(247, 238, 210, 255), outline=(18, 15, 12, 255), width=2)
+        for s in range(6):
+            x = 144 + s * 20
+            draw.line((x, 75, x + 12, 112), fill=(64, 31, 17, 190), width=3)
 
     # Side dishes and cup, matching the reference table density.
     draw.ellipse((18, 122, 78, 160), fill=(42, 24, 16, 90))
@@ -1076,17 +1120,11 @@ def meal_table_spread() -> None:
     draw.arc((22, 98, 46, 128), 95, 265, fill=(185, 117, 58, 220), width=5)
     draw.rectangle((32, 96, 62, 106), fill=(122, 75, 34, 235))
 
-    draw.ellipse((330, 112, 394, 156), fill=(42, 24, 16, 85))
-    draw.arc((332, 90, 392, 156), 0, 180, fill=(255, 244, 218, 255), width=8)
-    draw.arc((340, 80, 384, 142), 0, 180, fill=(176, 88, 37, 255), width=8)
-    for cx, cy in [(350, 87), (366, 82), (376, 92)]:
-        draw.ellipse((cx, cy, cx + 14, cy + 12), fill=(255, 249, 224, 245))
-
-    draw.ellipse((318, 146, 386, 178), fill=(36, 22, 15, 85))
-    draw.ellipse((320, 126, 384, 170), fill=(112, 70, 38, 255), outline=(55, 33, 22, 255), width=4)
-    draw.ellipse((332, 136, 372, 158), fill=(221, 184, 114, 255))
-    for x, y in [(336, 140), (350, 146), (360, 138)]:
-        draw.rectangle((x, y, x + 12, y + 7), fill=(74, 130, 60, 220))
+    draw.ellipse((292, 146, 380, 184), fill=(0, 0, 0, 72))
+    draw.arc((300, 119, 374, 182), 0, 180, fill=(255, 244, 218, 255), width=8)
+    draw.arc((309, 111, 365, 169), 0, 180, fill=(175, 89, 39, 255), width=8)
+    for cx, cy in [(318, 117), (334, 111), (350, 116), (340, 126), (358, 126)]:
+        draw.ellipse((cx, cy, cx + 15, cy + 13), fill=(255, 250, 228, 246))
 
     for i, sx in enumerate([116, 172, 232, 346]):
         draw.arc((sx, 8 + (i % 2) * 8, sx + 34, 86 + (i % 2) * 9), 105, 250, fill=(255, 235, 197, 88), width=4)
