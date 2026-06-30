@@ -705,6 +705,7 @@ class MealDishCardBridgeVisual:
 		draw_ellipse(dish_center, size.x * 0.22, size.y * 0.36, Color("#ffd36a", 0.050))
 		draw_ellipse(text_center, size.x * 0.18, size.y * 0.30, Color("#6bf1ff", 0.030))
 		draw_line(Vector2(size.x * 0.51, 12.0), Vector2(size.x * 0.51, size.y - 12.0), Color("#d7a456", 0.22), 2.0)
+		_draw_dish_name_plate()
 		draw_line(
 			Vector2(size.x * 0.40, size.y * 0.45),
 			Vector2(size.x * 0.80, size.y * 0.33),
@@ -737,6 +738,36 @@ class MealDishCardBridgeVisual:
 			draw_line(p + Vector2(-3.0, 0.0), p + Vector2(3.0, 0.0), sparkle, 1.4)
 			draw_line(p + Vector2(0.0, -3.0), p + Vector2(0.0, 3.0), sparkle, 1.4)
 		_draw_card_glint(Vector2(size.x * 0.86, size.y * 0.18), gold)
+
+	func _draw_dish_name_plate() -> void:
+		var plate := Rect2(
+			Vector2(size.x * 0.585, size.y * 0.38),
+			Vector2(size.x * 0.355, size.y * 0.30)
+		)
+		var shadow := Color("#020a12", 0.42)
+		draw_rect(Rect2(plate.position + Vector2(0.0, 5.0), plate.size), shadow)
+		draw_rect(plate, Color("#071726", 0.72))
+		draw_rect(Rect2(plate.position + Vector2(3.0, 3.0), plate.size - Vector2(6.0, 6.0)), Color("#12334f", 0.34))
+		draw_line(plate.position + Vector2(8.0, 3.0), plate.position + Vector2(plate.size.x - 8.0, 3.0), Color("#ffe081", 0.42), 2.0)
+		draw_line(
+			plate.position + Vector2(9.0, plate.size.y - 4.0),
+			plate.position + Vector2(plate.size.x - 9.0, plate.size.y - 4.0),
+			Color("#07121e", 0.60),
+			2.0
+		)
+		var accent := Color("#ffb83d", 0.20)
+		draw_line(
+			Vector2(plate.position.x - size.x * 0.06, plate.position.y + plate.size.y * 0.54),
+			Vector2(plate.position.x + plate.size.x * 0.42, plate.position.y + plate.size.y * 0.32),
+			accent,
+			6.0
+		)
+		var gold := Color("#ffe081", 0.54)
+		var corner_offsets: Array[float] = [0.0, plate.size.x - 16.0]
+		for offset: float in corner_offsets:
+			var x: float = plate.position.x + offset
+			draw_line(Vector2(x, plate.position.y + 7.0), Vector2(x + 16.0, plate.position.y + 7.0), gold, 1.5)
+			draw_line(Vector2(x, plate.end.y - 7.0), Vector2(x + 16.0, plate.end.y - 7.0), gold, 1.5)
 
 	func _draw_card_glint(center: Vector2, color: Color) -> void:
 		var glow := color
@@ -2494,6 +2525,8 @@ func _apply_meal_result_composition() -> void:
 		_dish_card_bridge.queue_redraw()
 	if _dish_image != null:
 		_dish_image.custom_minimum_size = Vector2(394.0, 0.0)
+	if _dish_title != null:
+		_dish_title.add_theme_font_size_override("font_size", 32)
 	if _flow_row != null:
 		_flow_row.visible = false
 		_flow_row.modulate.a = 0.58
@@ -2548,6 +2581,8 @@ func _apply_exp_gain_composition() -> void:
 		_dish_card_bridge.visible = false
 	if _dish_image != null:
 		_dish_image.custom_minimum_size = Vector2(304.0, 0.0)
+	if _dish_title != null:
+		_dish_title.add_theme_font_size_override("font_size", 30)
 	if _flow_row != null:
 		_flow_row.visible = true
 		_flow_row.modulate.a = 1.0
