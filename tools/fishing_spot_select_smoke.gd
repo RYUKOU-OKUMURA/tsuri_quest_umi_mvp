@@ -13,6 +13,7 @@ func _ready() -> void:
 	PlayerProgress.level = 1
 	_screen = _make_screen()
 	await get_tree().process_frame
+	_expect(_screen._map_view != null, "map view should be present")
 	_verify_card_locks(8, 7)
 	_screen._select_spot("deep_ocean")
 	_expect(_navigated_to.is_empty(), "locked spot must not navigate")
@@ -33,16 +34,35 @@ func _ready() -> void:
 	_expect(_navigated_to == "fishing", "boss spot should navigate when unlocked")
 	_expect(String(_payload.get("spot_id", "")) == GameData.BOSS_FISHING_SPOT_ID, "boss spot payload mismatch")
 
+	_screen.queue_free()
+	await get_tree().process_frame
+
+	_navigated_to = ""
+	_payload = {}
+	PlayerProgress.level = 3
+	_screen = _make_screen({
+		"from_fishing": true,
+		"current_spot_id": "outer_tide",
+		"trip_stats": {"sentinel": "carried", "max_energy": 123.0},
+	})
+	await get_tree().process_frame
+	_expect(_screen._selected_spot_id == "outer_tide", "current fishing spot should be selected")
+	_screen._select_spot("outer_tide")
+	_expect(_navigated_to == "fishing", "continued spot selection should navigate to fishing")
+	_expect(bool(_payload.get("continue_trip", false)), "continued spot selection should keep continue_trip")
+	var stats: Dictionary = _payload.get("trip_stats", {})
+	_expect(String(stats.get("sentinel", "")) == "carried", "continued spot selection should carry trip_stats")
+
 	if _failed:
 		return
 	print("fishing_spot_select_smoke: ok")
 	get_tree().quit(0)
 
 
-func _make_screen() -> Control:
+func _make_screen(payload: Dictionary = {}) -> Control:
 	var screen := FishingSpotSelectScreenScript.new()
 	screen.theme = ThemeFactory.build_theme()
-	screen.configure({})
+	screen.configure(payload)
 	screen.size = Vector2(1280.0, 720.0)
 	screen.navigate_requested.connect(
 		func(screen_id: String, payload: Dictionary) -> void:
@@ -73,7 +93,7 @@ func _collect_spot_buttons(node: Node, buttons: Array[Button]) -> void:
 	for child in node.get_children():
 		if child is Button:
 			var button := child as Button
-			if is_equal_approx(button.custom_minimum_size.y, 174.0):
+			if bool(button.get_meta("spot_card", false)):
 				buttons.append(button)
 		_collect_spot_buttons(child, buttons)
 

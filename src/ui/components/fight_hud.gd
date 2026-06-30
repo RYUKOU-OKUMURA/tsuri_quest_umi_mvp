@@ -7,6 +7,7 @@ signal main_action_pressed
 signal reel_changed(active: bool)
 signal give_line_changed(active: bool)
 signal harbor_pressed
+signal change_spot_pressed
 
 const GameFontsScript = preload("res://src/ui/game_fonts.gd")
 const HUD_FRAME_PATH := "res://assets/showcase/underwater/fight_hud_frame.png"
@@ -42,6 +43,7 @@ var _main_rect := Rect2()
 var _reel_rect := Rect2()
 var _give_rect := Rect2()
 var _harbor_rect := Rect2()
+var _change_spot_rect := Rect2()
 var _reeling := false
 var _giving := false
 
@@ -102,6 +104,9 @@ func _gui_input(event: InputEvent) -> void:
 			accept_event()
 		elif _main_rect.has_point(pos):
 			main_action_pressed.emit()
+			accept_event()
+		elif _change_spot_rect.has_point(pos):
+			change_spot_pressed.emit()
 			accept_event()
 		elif _harbor_rect.has_point(pos):
 			harbor_pressed.emit()
@@ -227,8 +232,8 @@ func _draw_stamina(font: Font, rect: Rect2) -> void:
 
 func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 	var gap := 10.0
-	var bait_w := rect.size.x * (0.28 if _hud_frame == null else 0.265)
-	var menu_w := rect.size.x * (0.20 if _hud_frame == null else 0.175)
+	var bait_w := rect.size.x * (0.27 if _hud_frame == null else 0.245)
+	var menu_w := rect.size.x * (0.24 if _hud_frame == null else 0.245)
 	var hint_w := rect.size.x - bait_w - menu_w - gap * 2.0
 	var bait := Rect2(rect.position, Vector2(bait_w, rect.size.y))
 	var hint := Rect2(Vector2(bait.end.x + gap, rect.position.y), Vector2(hint_w, rect.size.y))
@@ -237,9 +242,12 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 	var key_slots := _hint_key_slots(hint)
 	_reel_rect = key_slots[0]
 	_give_rect = key_slots[1]
+	var menu_button_gap := 6.0
+	var menu_button_h := (menu.size.y - 20.0 - menu_button_gap) * 0.5
+	_change_spot_rect = Rect2(menu.position + Vector2(9.0, 10.0), Vector2(menu.size.x - 18.0, menu_button_h))
 	_harbor_rect = Rect2(
-		menu.position + Vector2(9.0, menu.size.y * 0.24),
-		Vector2(menu.size.x - 18.0, menu.size.y * 0.56)
+		menu.position + Vector2(9.0, 10.0 + menu_button_h + menu_button_gap),
+		Vector2(menu.size.x - 18.0, menu_button_h)
 	)
 
 	_draw_panel(bait, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
@@ -281,11 +289,14 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 		_draw_key_hint(font, key_slots[2], "L/R", "調整")
 
 	_draw_panel(menu, Color("#0b355f"), Color("#08213c"), Palette.GOLD)
+	_draw_menu_button(_change_spot_rect)
 	_draw_menu_button(_harbor_rect)
 	if _hud_frame != null:
-		_draw_menu_row(font, _harbor_rect.position + Vector2(25.0, _harbor_rect.size.y * 0.57), "-", "港へ戻る")
+		_draw_menu_row(font, _change_spot_rect.position + Vector2(25.0, _change_spot_rect.size.y * 0.62), "+", "釣り場変更")
+		_draw_menu_row(font, _harbor_rect.position + Vector2(25.0, _harbor_rect.size.y * 0.62), "-", "港へ戻る")
 	else:
-		_draw_key_row(font, _harbor_rect.position + Vector2(12.0, _harbor_rect.size.y * 0.57), "-", "港へ戻る")
+		_draw_key_row(font, _change_spot_rect.position + Vector2(12.0, _change_spot_rect.size.y * 0.62), "+", "釣り場変更")
+		_draw_key_row(font, _harbor_rect.position + Vector2(12.0, _harbor_rect.size.y * 0.62), "-", "港へ戻る")
 
 
 func _draw_segment_gauge(rect: Rect2, ratio: float, safe_min: float, safe_max: float, warm: bool) -> void:

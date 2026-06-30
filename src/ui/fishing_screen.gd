@@ -38,12 +38,14 @@ var _retry_button: Button
 var _quit_overlay: ColorRect
 var _quit_title: Label
 var _quit_details: Label
+var _quit_confirm_button: Button
+var _quit_target := "harbor"
 
 
 func _build_screen() -> void:
 	add_gradient_background(Color("#0c243a"), Color("#04101e"))
 	_resolve_selected_spot()
-	_trip_stats = PlayerProgress.begin_fishing_trip()
+	_resolve_trip_stats()
 	_apply_spot_to_trip_stats()
 	_simulator = FishingSimulatorScript.new()
 	_simulator.state_changed.connect(_on_state_changed)
@@ -117,6 +119,7 @@ func _build_screen() -> void:
 	_fight_hud.reel_changed.connect(func(active: bool) -> void: _simulator.set_reeling(active))
 	_fight_hud.give_line_changed.connect(func(active: bool) -> void: _simulator.set_giving_line(active))
 	_fight_hud.harbor_pressed.connect(_request_harbor_return)
+	_fight_hud.change_spot_pressed.connect(_request_spot_change)
 	left_column.add_child(_fight_hud)
 
 	var info_panel := MarginContainer.new()
@@ -170,6 +173,16 @@ func _resolve_selected_spot() -> void:
 		requested_id = GameData.DEFAULT_FISHING_SPOT_ID
 	_spot = GameData.get_fishing_spot(requested_id)
 	_spot_id = String(_spot.get("id", GameData.DEFAULT_FISHING_SPOT_ID))
+
+
+func _resolve_trip_stats() -> void:
+	var incoming_stats = route_payload.get("trip_stats", {})
+	if bool(route_payload.get("continue_trip", false)) and typeof(incoming_stats) == TYPE_DICTIONARY:
+		var stats_dict: Dictionary = incoming_stats
+		if not stats_dict.is_empty():
+			_trip_stats = stats_dict.duplicate(true)
+			return
+	_trip_stats = PlayerProgress.begin_fishing_trip()
 
 
 func _apply_spot_to_trip_stats() -> void:
@@ -302,8 +315,8 @@ func _create_quit_overlay() -> void:
 	box.add_child(row)
 	var cancel_button := make_button("続ける", _hide_harbor_confirm, 180)
 	row.add_child(cancel_button)
-	var confirm_button := make_button("港へ戻る", _confirm_harbor_return, 180, true)
-	row.add_child(confirm_button)
+	_quit_confirm_button = make_button("港へ戻る", _confirm_quit_action, 180, true)
+	row.add_child(_quit_confirm_button)
 
 
 func _process(delta: float) -> void:
@@ -323,7 +336,7 @@ func _input(event: InputEvent) -> void:
 	if _quit_overlay != null and _quit_overlay.visible:
 		if key_event.pressed and not key_event.echo:
 			if key_event.keycode == KEY_ENTER or key_event.keycode == KEY_KP_ENTER:
-				_confirm_harbor_return()
+				_confirm_quit_action()
 				get_viewport().set_input_as_handled()
 			elif key_event.keycode == KEY_ESCAPE:
 				_hide_harbor_confirm()
@@ -354,6 +367,16 @@ func _input(event: InputEvent) -> void:
 		)
 	):
 		_request_harbor_return()
+		get_viewport().set_input_as_handled()
+	elif (
+		key_event.pressed
+		and not key_event.echo
+		and (
+			key_event.keycode == KEY_PLUS
+			or key_event.keycode == KEY_KP_ADD
+		)
+	):
+		_request_spot_change()
 		get_viewport().set_input_as_handled()
 
 
@@ -403,10 +426,37 @@ func _request_harbor_return() -> void:
 	if _simulator.state == FishingSimulator.State.READY:
 		navigate("harbor")
 		return
+	_quit_target = "harbor"
+	if _quit_title != null:
+		_quit_title.text = "港へ戻る"
+	if _quit_confirm_button != null:
+		_quit_confirm_button.text = "港へ戻る"
 	_simulator.set_reeling(false)
 	_simulator.set_giving_line(false)
 	if _quit_details != null:
 		_quit_details.text = _harbor_return_message()
+	if _quit_overlay != null:
+		_quit_overlay.visible = true
+
+
+func _request_spot_change() -> void:
+	if _simulator == null:
+		_navigate_to_spot_select()
+		return
+	if _result_overlay != null and _result_overlay.visible:
+		return
+	if _simulator.state == FishingSimulator.State.READY:
+		_navigate_to_spot_select()
+		return
+	_quit_target = "fishing_spots"
+	if _quit_title != null:
+		_quit_title.text = "釣り場を変える"
+	if _quit_confirm_button != null:
+		_quit_confirm_button.text = "釣り場選択へ"
+	_simulator.set_reeling(false)
+	_simulator.set_giving_line(false)
+	if _quit_details != null:
+		_quit_details.text = _spot_change_message()
 	if _quit_overlay != null:
 		_quit_overlay.visible = true
 
@@ -417,15 +467,37 @@ func _harbor_return_message() -> String:
 	return "釣りを中断して港へ戻りますか？"
 
 
+func _spot_change_message() -> String:
+	if _simulator != null and _simulator.state == FishingSimulator.State.FIGHT:
+		return "ファイトを中断すると魚は逃げます。釣り場を変えますか？"
+	return "釣りを中断して釣り場を変えますか？"
+
+
 func _hide_harbor_confirm() -> void:
 	if _quit_overlay != null:
 		_quit_overlay.visible = false
 
 
 func _confirm_harbor_return() -> void:
+	_quit_target = "harbor"
+	_confirm_quit_action()
+
+
+func _confirm_quit_action() -> void:
 	if _quit_overlay != null:
 		_quit_overlay.visible = false
+	if _quit_target == "fishing_spots":
+		_navigate_to_spot_select()
+		return
 	navigate("harbor")
+
+
+func _navigate_to_spot_select() -> void:
+	navigate("fishing_spots", {
+		"from_fishing": true,
+		"current_spot_id": _spot_id,
+		"trip_stats": _trip_stats.duplicate(true),
+	})
 
 
 func _on_state_changed(_new_state: int) -> void:
