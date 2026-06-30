@@ -170,6 +170,16 @@ func _audit_meal_result() -> void:
 	_expect_named_control_size("MEAL_RESULT", screen, "RewardCardNextEffect", Vector2(230.0, 48.0))
 	_expect_reward_status_strip("MEAL_RESULT", screen)
 	_expect_named_control_size("MEAL_RESULT", screen, "RewardConfirmButton", Vector2(280.0, 34.0))
+	_expect_named_controls_hidden(
+		"MEAL_RESULT",
+		screen,
+		[
+			"RewardFlowRow",
+			"FlowStep_0",
+			"FlowStep_1",
+			"FlowStep_2",
+		]
+	)
 	screen.queue_free()
 	await _tick()
 

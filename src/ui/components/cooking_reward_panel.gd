@@ -794,6 +794,7 @@ func _build_screen() -> void:
 	_dialog.add_child(root)
 
 	_flow_row = HBoxContainer.new()
+	_flow_row.name = "RewardFlowRow"
 	_flow_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_flow_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	_flow_row.add_theme_constant_override("separation", 4)
@@ -1855,6 +1856,7 @@ func _apply_meal_result_composition() -> void:
 	if _dish_image != null:
 		_dish_image.custom_minimum_size = Vector2(394.0, 0.0)
 	if _flow_row != null:
+		_flow_row.visible = false
 		_flow_row.modulate.a = 0.58
 	_set_flow_row_compact(true)
 	if _confirm_button != null:
@@ -1880,6 +1882,7 @@ func _apply_exp_gain_composition() -> void:
 	if _dish_image != null:
 		_dish_image.custom_minimum_size = Vector2(304.0, 0.0)
 	if _flow_row != null:
+		_flow_row.visible = true
 		_flow_row.modulate.a = 1.0
 	_set_flow_row_compact(false)
 	if _confirm_button != null:

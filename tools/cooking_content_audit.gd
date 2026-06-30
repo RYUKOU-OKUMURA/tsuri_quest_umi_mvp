@@ -474,8 +474,6 @@ func _audit_meal_result() -> void:
 		screen,
 		[
 			"食べた！",
-			"EXPへ",
-			"成長",
 			"アジの塩焼きを食べた！",
 			"今回の料理",
 			"食経験値を獲得した！",
@@ -503,6 +501,9 @@ func _audit_meal_result() -> void:
 		screen,
 		[
 			"食経験値が成長へ！",
+			"食事 完了",
+			"EXPへ",
+			"成長",
 			"次の釣行で効果！",
 			"EXP 130 / 150",
 			"Lv.4 -> Lv.5 / ぬし解放",
@@ -516,6 +517,16 @@ func _audit_meal_result() -> void:
 	_expect_flow_connector_modes("MEAL_RESULT", screen, ["meal_to_exp", "idle"])
 	_expect_named_node("MEAL_RESULT", screen, "MealResultBanner")
 	_expect_named_node("MEAL_RESULT", screen, "MealResultTitle")
+	_expect_named_controls_not_visible(
+		"MEAL_RESULT",
+		screen,
+		[
+			"RewardFlowRow",
+			"FlowStep_0",
+			"FlowStep_1",
+			"FlowStep_2",
+		]
+	)
 	_expect_named_node("MEAL_RESULT", screen, "MealSceneActor")
 	_expect_named_node("MEAL_RESULT", screen, "MealTableSpread")
 	_expect_named_node("MEAL_RESULT", screen, "MealDishCard")
