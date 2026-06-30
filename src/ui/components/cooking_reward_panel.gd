@@ -608,6 +608,18 @@ class MealDishCardBridgeVisual:
 		draw_ellipse(dish_center, size.x * 0.22, size.y * 0.36, Color("#ffd36a", 0.050))
 		draw_ellipse(text_center, size.x * 0.18, size.y * 0.30, Color("#6bf1ff", 0.030))
 		draw_line(Vector2(size.x * 0.51, 12.0), Vector2(size.x * 0.51, size.y - 12.0), Color("#d7a456", 0.22), 2.0)
+		draw_line(
+			Vector2(size.x * 0.40, size.y * 0.45),
+			Vector2(size.x * 0.80, size.y * 0.33),
+			Color("#ffb83d", 0.13),
+			7.0
+		)
+		draw_line(
+			Vector2(size.x * 0.43, size.y * 0.48),
+			Vector2(size.x * 0.78, size.y * 0.39),
+			Color("#ffe081", 0.34),
+			2.0
+		)
 		for i in range(3):
 			var y := size.y * (0.34 + float(i) * 0.16)
 			var alpha := 0.26 - float(i) * 0.05
@@ -627,6 +639,16 @@ class MealDishCardBridgeVisual:
 			sparkle.a = 0.32 if i % 2 == 0 else 0.22
 			draw_line(p + Vector2(-3.0, 0.0), p + Vector2(3.0, 0.0), sparkle, 1.4)
 			draw_line(p + Vector2(0.0, -3.0), p + Vector2(0.0, 3.0), sparkle, 1.4)
+		_draw_card_glint(Vector2(size.x * 0.86, size.y * 0.18), gold)
+
+	func _draw_card_glint(center: Vector2, color: Color) -> void:
+		var glow := color
+		glow.a = 0.72
+		draw_line(center + Vector2(-18.0, 0.0), center + Vector2(18.0, 0.0), glow, 2.2)
+		draw_line(center + Vector2(0.0, -18.0), center + Vector2(0.0, 18.0), glow, 2.2)
+		glow.a = 0.38
+		draw_line(center + Vector2(-10.0, -10.0), center + Vector2(10.0, 10.0), glow, 1.5)
+		draw_line(center + Vector2(-10.0, 10.0), center + Vector2(10.0, -10.0), glow, 1.5)
 
 
 class FlowConnectorVisual:
