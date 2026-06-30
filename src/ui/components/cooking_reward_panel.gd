@@ -625,13 +625,30 @@ class MealResultSplitTitleVisual:
 		var font := get_theme_default_font()
 		if font == null:
 			return
-		var text_rect := Rect2(Vector2(size.x * 0.21, size.y * 0.18), Vector2(size.x * 0.66, size.y * 0.70))
+		var text_rect := Rect2(Vector2(size.x * 0.20, size.y * 0.10), Vector2(size.x * 0.66, size.y * 0.82))
 		var top := "%sを" % dish_name
-		var top_size := 32
+		var top_size := 38
 		if top.length() >= 10:
-			top_size = 29
-		var top_baseline := Vector2(text_rect.position.x, text_rect.position.y + 29.0)
-		var bottom_baseline := Vector2(text_rect.position.x, text_rect.position.y + 68.0)
+			top_size = 34
+		if top.length() >= 13:
+			top_size = 31
+		var bottom_size := 48
+		var top_baseline := Vector2(text_rect.position.x, size.y * 0.42)
+		var bottom_baseline := Vector2(text_rect.position.x, size.y * 0.82)
+		var impact_center := Vector2(text_rect.position.x + text_rect.size.x * 0.50, bottom_baseline.y - float(bottom_size) * 0.34)
+		draw_ellipse(impact_center, text_rect.size.x * 0.24, size.y * 0.20, Color("#fff1c7", 0.22))
+		draw_line(
+			Vector2(text_rect.position.x + text_rect.size.x * 0.26, bottom_baseline.y + 4.0),
+			Vector2(text_rect.position.x + text_rect.size.x * 0.74, bottom_baseline.y + 4.0),
+			Color("#9b2f17", 0.34),
+			5.0
+		)
+		draw_line(
+			Vector2(text_rect.position.x + text_rect.size.x * 0.30, bottom_baseline.y + 8.0),
+			Vector2(text_rect.position.x + text_rect.size.x * 0.70, bottom_baseline.y + 8.0),
+			Color("#ffe081", 0.28),
+			2.0
+		)
 		draw_string_outline(
 			font,
 			top_baseline,
@@ -639,8 +656,8 @@ class MealResultSplitTitleVisual:
 			HORIZONTAL_ALIGNMENT_CENTER,
 			text_rect.size.x,
 			top_size,
-			4,
-			Color("#fff3d6", 0.76)
+			5,
+			Color("#fff3d6", 0.82)
 		)
 		draw_string(font, top_baseline, top, HORIZONTAL_ALIGNMENT_CENTER, text_rect.size.x, top_size, Color("#2a160c"))
 		draw_string_outline(
@@ -649,11 +666,11 @@ class MealResultSplitTitleVisual:
 			"食べた！",
 			HORIZONTAL_ALIGNMENT_CENTER,
 			text_rect.size.x,
-			37,
-			5,
-			Color("#fff3d6", 0.82)
+			bottom_size,
+			6,
+			Color("#fff3d6", 0.88)
 		)
-		draw_string(font, bottom_baseline, "食べた！", HORIZONTAL_ALIGNMENT_CENTER, text_rect.size.x, 37, Color("#9b2f17"))
+		draw_string(font, bottom_baseline, "食べた！", HORIZONTAL_ALIGNMENT_CENTER, text_rect.size.x, bottom_size, Color("#9b2f17"))
 
 
 class MealResultModeTabVisual:
@@ -1603,7 +1620,7 @@ func show_meal_result(result: Dictionary) -> void:
 	_set_stage_background(MEAL_SCENE_BG)
 	_apply_meal_result_composition()
 	var dish_name := String(result.get("dish_name", "料理"))
-	_set_result_banner_height(112.0)
+	_set_result_banner_height(124.0)
 	_set_header_title_font_size(35)
 	_set_bridge_font_size(12)
 	_set_exp_label_font_size(56)
@@ -2519,7 +2536,7 @@ func _apply_meal_result_composition() -> void:
 	if _scene_bonus_label != null:
 		_scene_bonus_label.visible = false
 	if _dish_card != null:
-		_dish_card.custom_minimum_size = Vector2(0.0, 210.0)
+		_dish_card.custom_minimum_size = Vector2(0.0, 198.0)
 	if _dish_card_bridge != null:
 		_dish_card_bridge.visible = true
 		_dish_card_bridge.queue_redraw()
