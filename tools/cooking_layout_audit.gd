@@ -104,6 +104,7 @@ func _audit_exp_gain() -> void:
 		[
 			"RewardCardBaseExp",
 			"RewardCardFirstBonus",
+			"RewardTotalPeakGlow",
 			"RewardCardTotalExp",
 			"RewardCardNextEffect",
 			"RewardCardGrowth",
@@ -141,6 +142,7 @@ func _audit_exp_gain_level_up() -> void:
 		[
 			"RewardCardBaseExp",
 			"RewardCardFirstBonus",
+			"RewardTotalPeakGlow",
 			"RewardCardTotalExp",
 			"RewardCardNextEffect",
 			"RewardCardGrowth",
@@ -177,6 +179,7 @@ func _audit_meal_result() -> void:
 	_expect_named_control_size("MEAL_RESULT", screen, "RewardCardBaseExp", Vector2(230.0, 48.0))
 	_expect_named_control_size("MEAL_RESULT", screen, "RewardCardFirstBonus", Vector2(230.0, 48.0))
 	_expect_named_control_size("MEAL_RESULT", screen, "RewardCardTotalExp", Vector2(230.0, 48.0))
+	_expect_named_control_size("MEAL_RESULT", screen, "RewardTotalPeakGlow", Vector2(210.0, 48.0))
 	_expect_named_control_size("MEAL_RESULT", screen, "RewardCardNextEffect", Vector2(230.0, 48.0))
 	_expect_reward_status_strip("MEAL_RESULT", screen)
 	_expect_named_control_size("MEAL_RESULT", screen, "RewardConfirmButton", Vector2(420.0, 46.0))

@@ -720,6 +720,51 @@ class RewardIconVisual:
 		draw_arc(center + Vector2(0.0, 8.0), 16.0, 0.0, TAU, 24, Color("#ffe081"), 2.0)
 
 
+class RewardTotalPeakGlowVisual:
+	extends Control
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		if size.x <= 0.0 or size.y <= 0.0:
+			return
+		var center := Vector2(size.x * 0.50, size.y * 0.66)
+		var gold := Color("#ffe081")
+		var hot := Color("#ffb83d")
+		_draw_card_rays(center, hot)
+		for i in range(3):
+			var alpha := 0.12 - float(i) * 0.025
+			_draw_card_glow_ellipse(
+				center + Vector2(0.0, 8.0),
+				size.x * (0.30 + float(i) * 0.07),
+				20.0 + float(i) * 8.0,
+				Color("#ffd36a", alpha)
+			)
+		for i in range(9):
+			var p := Vector2(
+				size.x * (0.18 + float((i * 23) % 64) / 100.0),
+				size.y * (0.28 + float((i * 17) % 54) / 100.0)
+			)
+			var sparkle := gold
+			sparkle.a = 0.48 if i % 3 == 0 else 0.30
+			var arm := 3.0 + float(i % 2)
+			draw_line(p + Vector2(-arm, 0.0), p + Vector2(arm, 0.0), sparkle, 1.4)
+			draw_line(p + Vector2(0.0, -arm), p + Vector2(0.0, arm), sparkle, 1.4)
+
+	func _draw_card_rays(center: Vector2, color: Color) -> void:
+		for i in range(24):
+			var a := TAU * float(i) / 24.0
+			var inner := center + Vector2(cos(a), sin(a)) * 20.0
+			var outer := center + Vector2(cos(a), sin(a)) * (92.0 if i % 3 == 0 else 66.0)
+			var ray := color
+			ray.a = 0.18 if i % 3 == 0 else 0.10
+			draw_line(inner, outer, ray, 3.2 if i % 3 == 0 else 1.6)
+
+	func _draw_card_glow_ellipse(center: Vector2, rx: float, ry: float, color: Color) -> void:
+		draw_ellipse(center, rx, ry, color)
+
+
 class RewardBuffSignalVisual:
 	extends Control
 
@@ -2229,6 +2274,11 @@ func _reward_line(parent: GridContainer, title: String, icon_mode: String, accen
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.draw.connect(func() -> void: _draw_reward_card_backdrop(card, icon_mode))
 	parent.add_child(card)
+	if icon_mode == "total":
+		var peak_glow := RewardTotalPeakGlowVisual.new()
+		peak_glow.name = "RewardTotalPeakGlow"
+		peak_glow.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		card.add_child(peak_glow)
 	var box := VBoxContainer.new()
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.add_theme_constant_override("separation", 4)
