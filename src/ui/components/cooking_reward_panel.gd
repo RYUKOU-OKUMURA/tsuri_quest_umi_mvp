@@ -2691,6 +2691,7 @@ func _apply_meal_result_composition() -> void:
 		_dish_card_bridge.queue_redraw()
 	if _dish_image != null:
 		_dish_image.custom_minimum_size = Vector2(430.0, 0.0)
+		_dish_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	if _dish_title != null:
 		_dish_title.add_theme_font_size_override("font_size", 32)
 	if _dish_note_label != null:
@@ -2752,6 +2753,7 @@ func _apply_exp_gain_composition() -> void:
 		_dish_card_bridge.visible = false
 	if _dish_image != null:
 		_dish_image.custom_minimum_size = Vector2(304.0, 0.0)
+		_dish_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	if _dish_title != null:
 		_dish_title.add_theme_font_size_override("font_size", 30)
 	if _dish_note_label != null:
