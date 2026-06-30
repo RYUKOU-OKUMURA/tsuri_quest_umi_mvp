@@ -385,6 +385,48 @@ class ExpTrailVisual:
 			draw_line(p + Vector2(0.0, -5.0), p + Vector2(0.0, 5.0), color, 2.0)
 
 
+class MealResultRewardCueVisual:
+	extends Control
+
+	func _draw() -> void:
+		var gold := Color("#ffe081")
+		var amber := Color("#d7a456")
+		var glow := Color("#fff1c7")
+		var y := size.y * 0.48
+		var left := size.x * 0.46
+		var right := size.x * 0.96
+		glow.a = 0.18
+		draw_line(Vector2(left, y), Vector2(right, y), glow, 8.0)
+		gold.a = 0.70
+		draw_line(Vector2(left + 10.0, y), Vector2(right - 14.0, y), gold, 2.0)
+		for i in range(4):
+			var x := lerpf(left + 70.0, right - 82.0, float(i) / 3.0)
+			_draw_down_chevron(Vector2(x, y + 2.0), amber if i % 2 == 0 else gold)
+		for i in range(8):
+			var p := Vector2(left + 28.0 + float(i) * ((right - left - 56.0) / 7.0), y - 5.0 + float(i % 2) * 9.0)
+			var spark := glow
+			spark.a = 0.58 if i % 2 == 0 else 0.34
+			draw_line(p + Vector2(-3.0, 0.0), p + Vector2(3.0, 0.0), spark, 1.5)
+			draw_line(p + Vector2(0.0, -3.0), p + Vector2(0.0, 3.0), spark, 1.5)
+
+	func _draw_down_chevron(center: Vector2, color: Color) -> void:
+		color.a = 0.82
+		var points := PackedVector2Array(
+			[
+				center + Vector2(-12.0, -4.0),
+				center + Vector2(0.0, 8.0),
+				center + Vector2(12.0, -4.0),
+				center + Vector2(7.0, -4.0),
+				center,
+				center + Vector2(-7.0, -4.0),
+			]
+		)
+		var colors := PackedColorArray()
+		for _i in range(points.size()):
+			colors.append(color)
+		draw_polygon(points, colors)
+
+
 class FlowConnectorVisual:
 	extends Control
 
@@ -729,6 +771,7 @@ var _effect_preview_visual: TextureRect
 var _effect_name_label: Label
 var _effect_text_label: Label
 var _effect_duration_label: Label
+var _meal_reward_cue: MealResultRewardCueVisual
 var _reward_grid: GridContainer
 var _exp_card: PanelContainer
 var _exp_bar: GaugeBar
@@ -997,6 +1040,13 @@ func _build_screen() -> void:
 
 	_build_effect_preview_card(hero)
 
+	_meal_reward_cue = MealResultRewardCueVisual.new()
+	_meal_reward_cue.name = "MealResultRewardCue"
+	_meal_reward_cue.custom_minimum_size = Vector2(0.0, 16.0)
+	_meal_reward_cue.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_meal_reward_cue.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(_meal_reward_cue)
+
 	_reward_grid = GridContainer.new()
 	_reward_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_reward_grid.add_theme_constant_override("h_separation", 8)
@@ -1066,6 +1116,8 @@ func show_meal_result(result: Dictionary) -> void:
 	_scene_title.text = "食べる"
 	_set_scene_actor_mode("meal")
 	_exp_trail_visual.visible = false
+	_meal_reward_cue.visible = true
+	_meal_reward_cue.queue_redraw()
 	_dish_card.visible = true
 	_exp_focus_card.visible = false
 	_effect_preview_card.visible = false
@@ -1130,6 +1182,7 @@ func show_reward(
 	_dish_card.visible = false
 	_exp_focus_card.visible = true
 	_effect_preview_card.visible = true
+	_meal_reward_cue.visible = false
 	_exp_card.visible = false
 	_reward_grid.visible = false
 	_reward_grid.columns = 5
@@ -1861,6 +1914,9 @@ func _apply_meal_result_composition() -> void:
 	_set_flow_row_compact(true)
 	if _confirm_button != null:
 		_confirm_button.custom_minimum_size = Vector2(382.0, 54.0)
+	if _meal_reward_cue != null:
+		_meal_reward_cue.visible = true
+		_meal_reward_cue.custom_minimum_size = Vector2(0.0, 16.0)
 	_set_reward_cards_height(108.0)
 
 
@@ -1879,6 +1935,9 @@ func _apply_exp_gain_composition() -> void:
 		_exp_focus_card.custom_minimum_size = Vector2(0.0, 306.0)
 	if _effect_preview_card != null:
 		_effect_preview_card.custom_minimum_size = Vector2(254.0, 360.0)
+	if _meal_reward_cue != null:
+		_meal_reward_cue.visible = false
+		_meal_reward_cue.custom_minimum_size = Vector2(0.0, 0.0)
 	if _dish_image != null:
 		_dish_image.custom_minimum_size = Vector2(304.0, 0.0)
 	if _flow_row != null:
