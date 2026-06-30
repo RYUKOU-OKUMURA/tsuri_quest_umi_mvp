@@ -1129,12 +1129,12 @@ func show_meal_result(result: Dictionary) -> void:
 	_exp_card.visible = false
 	_reward_grid.visible = true
 	_reward_grid.columns = 4
-	_base_label.text = "食経験値を獲得した！\n+%d EXP" % int(result.get("base_exp", 0))
+	_base_label.text = "+%d EXP" % int(result.get("base_exp", 0))
 	if bool(result.get("first_time", false)):
-		_bonus_label.text = "はじめて作った料理！\n+%d EXP" % int(result.get("first_bonus", 0))
+		_bonus_label.text = "+%d EXP" % int(result.get("first_bonus", 0))
 	else:
 		_bonus_label.text = "記録済み"
-	_total_label.text = "合計獲得食経験値\n+%d EXP" % int(result.get("total_exp", 0))
+	_total_label.text = "+%d EXP" % int(result.get("total_exp", 0))
 
 	var buff := Dictionary(result.get("buff", {}))
 	_buff_label.text = _meal_buff_reward_text(buff)
@@ -1964,9 +1964,9 @@ func _apply_exp_gain_composition() -> void:
 
 
 func _apply_meal_reward_hierarchy() -> void:
-	_set_reward_label_style(_base_label, 18, Palette.GAUGE_CYAN_HI, 2)
-	_set_reward_label_style(_bonus_label, 18, Palette.GOLD_BRIGHT, 2)
-	_set_reward_label_style(_total_label, 27, Palette.GOLD_BRIGHT, 4)
+	_set_reward_label_style(_base_label, 24, Palette.GAUGE_CYAN_HI, 3)
+	_set_reward_label_style(_bonus_label, 24, Palette.GOLD_BRIGHT, 3)
+	_set_reward_label_style(_total_label, 34, Palette.GOLD_BRIGHT, 5)
 	_set_reward_label_style(_buff_label, 16, Palette.GAUGE_GREEN_HI, 2)
 	_set_reward_card_modulate(_base_label, Color(0.92, 0.96, 1.0, 0.92))
 	_set_reward_card_modulate(_bonus_label, Color(1.0, 0.96, 0.86, 0.94))

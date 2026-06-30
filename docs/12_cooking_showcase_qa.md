@@ -260,6 +260,7 @@
 - 追記: 右端の `RewardCardNextEffect` は3行説明の12px表示だと報酬カードの中で効果が拾いにくかったため、`最大体力 +5%` と `次回1回で発動` の2行へ圧縮し、MEAL_RESULT時のバフ値を16pxへ上げた。カード内の魚/上昇ビジュアルと合わせて、次回釣行効果が文字だけの説明ではなく主報酬として読めるようにする。
 - 追記: 右側の結果バナー、`MealDishCard`、下段報酬カードがそれぞれ独立した枠に見えやすかったため、`MealResultRewardCue` を追加し、料理カード直下から報酬カード上へ細い金ラインと下向きシェブロンを描く。新しい説明文は増やさず、参照02の「食べた -> 今回の料理 -> 報酬」へ視線が落ちる階段構図だけを補強する。content/layout auditではMEAL_RESULTで表示、EXP_GAIN系で非表示を固定する。
 - 追記: 左の食事カード下部に `湯気の立つ...を味わった。` と `初回ボーナス +20 EXP` を置くと、絵の下に説明が付いたカードに戻りやすかったため、MEAL_RESULTでは `MealSceneCaption` と `MealSceneBonusBadge` を非表示にし、その高さを `MealSceneVisualStack` と `MealTableSpread` へ戻した。初回ボーナスは下段報酬カード側で読ませ、左は人物/料理/窓辺/湯気の一枚絵として扱う。EXP_GAINではこの2ラベルを再表示し、料理からEXPへ流れる説明を維持する。
+- 追記: 下段報酬カードの本文が `食経験値を獲得した！` / `はじめて作った料理！` / `合計獲得食経験値` の説明文を含むと、カード全体が情報表に戻りやすかったため、MEAL_RESULTでは見出し行に意味を持たせ、本文は `+20 EXP` / `+40 EXP` の主要値へ圧縮した。`基本EXP`、`初回ボーナス`、`合計獲得` はカード見出しで読み、数値は24px/34pxへ上げて参照02の「報酬値が最初に目に入る」状態を固定する。content auditでは長い説明文がMEAL_RESULTへ戻らないことを確認する。
 - 通過ゲート: `HOME=/private/tmp/tsuri_home tools/cooking_verify.sh`、`HOME=/private/tmp/tsuri_home tools/cooking_visual_qa.sh`、`git diff --check`。更新後の確認スクショは `/tmp/tsuri_cooking_result.png`、比較レポートは `/tmp/tsuri_cooking_reference_report.html`。
 - 残る差分: 左食事シーンは白い板/カード感を脱し、報酬カードと下部ステータス帯も文字だけの密度から脱してきた。参照02のような高密度の人物・料理・窓辺まで一体化した一枚絵にはまだ届かないため、次パスで触るなら左背景と人物の接続光、または結果バナー/料理カード/報酬カード間の視線誘導を比較する。
 
