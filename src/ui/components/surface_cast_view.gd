@@ -25,6 +25,11 @@ const SURFACE_ANGLER_CAST_PATH := "res://assets/showcase/surface/surface_angler_
 const SURFACE_BOBBER_PATH := "res://assets/showcase/surface/surface_bobber.png"
 const SURFACE_FISH_SHADOW_PATH := "res://assets/showcase/surface/surface_fish_shadow.png"
 const SURFACE_SPLASH_PATH := "res://assets/showcase/surface/surface_splash.png"
+const SURFACE_SCENE_READY_PATH := "res://assets/showcase/surface/surface_scene_ready.png"
+const SURFACE_SCENE_CASTING_PATH := "res://assets/showcase/surface/surface_scene_casting.png"
+const SURFACE_SCENE_WAITING_PATH := "res://assets/showcase/surface/surface_scene_waiting.png"
+const SURFACE_SCENE_APPROACH_PATH := "res://assets/showcase/surface/surface_scene_approach.png"
+const SURFACE_SCENE_BITE_PATH := "res://assets/showcase/surface/surface_scene_bite.png"
 
 var simulator: FishingSimulator
 var fish_data: Dictionary = {}
@@ -45,6 +50,11 @@ var _surface_angler_cast: Texture2D
 var _surface_bobber: Texture2D
 var _surface_fish_shadow: Texture2D
 var _surface_splash: Texture2D
+var _surface_scene_ready: Texture2D
+var _surface_scene_casting: Texture2D
+var _surface_scene_waiting: Texture2D
+var _surface_scene_approach: Texture2D
+var _surface_scene_bite: Texture2D
 
 
 func bind_simulator(value: FishingSimulator) -> void:
@@ -99,6 +109,9 @@ func _on_state_changed(state: int) -> void:
 
 func _draw() -> void:
 	draw_set_transform(Juicer.get_offset())
+	if _surface_scene_ready != null:
+		_draw_state_plate_scene()
+		return
 	if _surface_bg != null:
 		_draw_asset_scene()
 		return
@@ -124,6 +137,11 @@ func _load_surface_assets() -> void:
 	_surface_bobber = _load_texture_if_exists(SURFACE_BOBBER_PATH)
 	_surface_fish_shadow = _load_texture_if_exists(SURFACE_FISH_SHADOW_PATH)
 	_surface_splash = _load_texture_if_exists(SURFACE_SPLASH_PATH)
+	_surface_scene_ready = _load_texture_if_exists(SURFACE_SCENE_READY_PATH)
+	_surface_scene_casting = _load_texture_if_exists(SURFACE_SCENE_CASTING_PATH)
+	_surface_scene_waiting = _load_texture_if_exists(SURFACE_SCENE_WAITING_PATH)
+	_surface_scene_approach = _load_texture_if_exists(SURFACE_SCENE_APPROACH_PATH)
+	_surface_scene_bite = _load_texture_if_exists(SURFACE_SCENE_BITE_PATH)
 
 
 func _load_texture_if_exists(path: String) -> Texture2D:
@@ -147,6 +165,31 @@ func _draw_asset_scene() -> void:
 		_draw_cover_texture(_surface_color_grade, rect, Color(1.0, 1.0, 1.0, 0.64), Vector2(0.5, 0.50))
 	_draw_hit_flash()
 	_draw_frame()
+
+
+func _draw_state_plate_scene() -> void:
+	var texture := _surface_scene_texture_for_state()
+	_draw_cover_texture(texture, Rect2(Vector2.ZERO, size), Color.WHITE, Vector2(0.5, 0.50))
+	if _state() == FishingSimulator.State.BITE:
+		_draw_hit_flash()
+	_draw_frame()
+
+
+func _surface_scene_texture_for_state() -> Texture2D:
+	match _state():
+		FishingSimulator.State.CASTING:
+			if _surface_scene_casting != null:
+				return _surface_scene_casting
+		FishingSimulator.State.WAITING:
+			if _surface_scene_waiting != null:
+				return _surface_scene_waiting
+		FishingSimulator.State.APPROACH:
+			if _surface_scene_approach != null:
+				return _surface_scene_approach
+		FishingSimulator.State.BITE:
+			if _surface_scene_bite != null:
+				return _surface_scene_bite
+	return _surface_scene_ready
 
 
 func _draw_cover_texture(texture: Texture2D, target_rect: Rect2, modulate: Color, align := Vector2(0.5, 0.5)) -> void:

@@ -441,6 +441,140 @@ def create_splash() -> None:
     save_image(canvas.finish(), OUT_DIR / "surface_splash.png")
 
 
+def _scene_source_base() -> Image.Image:
+    source_path = OUT_DIR / "surface_scene_source.png"
+    if not source_path.exists():
+        return Image.open(OUT_DIR / "surface_cast_bg.png").convert("RGBA")
+    source = Image.open(source_path).convert("RGBA")
+    scaled_h = round(source.height * CANVAS_W / source.width)
+    scaled = source.resize((CANVAS_W, scaled_h), Image.Resampling.LANCZOS)
+    if scaled_h >= CANVAS_H:
+        y0 = 0
+        return scaled.crop((0, y0, CANVAS_W, y0 + CANVAS_H))
+    plate = Image.new("RGBA", (CANVAS_W, CANVAS_H), (0, 0, 0, 255))
+    plate.alpha_composite(scaled, (0, (CANVAS_H - scaled_h) // 2))
+    return plate
+
+
+def _draw_state_fish(draw: ImageDraw.ImageDraw, center: tuple[float, float], scale: float, alpha: int) -> None:
+    cx, cy = center
+    body = (cx - 60 * scale, cy - 18 * scale, cx + 56 * scale, cy + 18 * scale)
+    draw.ellipse(body, fill=(3, 42, 60, alpha))
+    draw.polygon(
+        [
+            (cx - 57 * scale, cy),
+            (cx - 96 * scale, cy - 24 * scale),
+            (cx - 88 * scale, cy),
+            (cx - 96 * scale, cy + 24 * scale),
+        ],
+        fill=(3, 42, 60, round(alpha * 0.72)),
+    )
+    draw.polygon(
+        [
+            (cx + 2 * scale, cy - 10 * scale),
+            (cx + 32 * scale, cy - 34 * scale),
+            (cx + 22 * scale, cy - 5 * scale),
+        ],
+        fill=(3, 42, 60, round(alpha * 0.34)),
+    )
+    draw.ellipse((cx + 31 * scale, cy - 8 * scale, cx + 39 * scale, cy), fill=(214, 247, 255, round(alpha * 0.22)))
+    draw.ellipse((cx - 5 * scale, cy - 13 * scale, cx + 30 * scale, cy + 13 * scale), fill=(255, 255, 255, round(alpha * 0.05)))
+
+
+def _draw_ripple(draw: ImageDraw.ImageDraw, center: tuple[float, float], rx: float, ry: float, alpha: int, width: int = 2) -> None:
+    cx, cy = center
+    draw.ellipse((cx - rx, cy - ry, cx + rx, cy + ry), outline=(232, 255, 255, alpha), width=width)
+
+
+def _draw_splash_burst(draw: ImageDraw.ImageDraw, center: tuple[float, float]) -> None:
+    cx, cy = center
+    for index in range(4):
+        _draw_ripple(draw, (cx, cy + 8), 34 + index * 18, 10 + index * 5, 154 - index * 30, 3)
+    for index in range(24):
+        angle = -math.pi * 0.95 + (index / 23.0) * math.pi * 0.92
+        length = 20 + (index % 7) * 8
+        sx = cx + math.cos(angle) * 14
+        sy = cy + math.sin(angle) * 8
+        ex = cx + math.cos(angle) * length
+        ey = cy + math.sin(angle) * length * 0.82
+        draw.line((sx, sy, ex, ey), fill=(238, 255, 255, 218), width=3)
+        draw.ellipse((ex - 3, ey - 3, ex + 3, ey + 3), fill=(255, 255, 255, 232))
+    draw.ellipse((cx - 30, cy - 19, cx + 35, cy + 21), fill=(255, 255, 255, 130))
+    draw.ellipse((cx - 21, cy - 9, cx + 25, cy + 18), fill=(92, 213, 232, 142))
+
+
+def _add_vignette(image: Image.Image, color: tuple[int, int, int, int], strength: float) -> None:
+    mask = Image.new("L", image.size, 0)
+    draw = ImageDraw.Draw(mask)
+    inset = 18
+    draw.rectangle((inset, inset, image.width - inset, image.height - inset), fill=0)
+    mask = ImageOps.invert(mask.filter(ImageFilter.GaussianBlur(48)))
+    layer = Image.new("RGBA", image.size, color)
+    layer.putalpha(mask.point(lambda value: round((255 - value) * strength)))
+    image.alpha_composite(layer)
+
+
+def _save_scene_plate(image: Image.Image, name: str) -> None:
+    _add_vignette(image, (0, 18, 36, 255), 0.16)
+    opaque = Image.new("RGBA", image.size, (0, 0, 0, 255))
+    opaque.alpha_composite(image)
+    save_image(opaque, OUT_DIR / name)
+
+
+def create_scene_state_plates() -> None:
+    base = _scene_source_base()
+    bobber = (270, 303)
+    rod_tip = (522, 178)
+
+    ready = base.copy()
+    _save_scene_plate(ready, "surface_scene_ready.png")
+
+    casting = base.copy()
+    casting_overlay = Image.new("RGBA", casting.size, (0, 0, 0, 0))
+    cd = ImageDraw.Draw(casting_overlay, "RGBA")
+    cd.line([(643, 238), (552, 175), (454, 165), (349, 215), (279, 292)], fill=(255, 255, 255, 132), width=3, joint="curve")
+    cd.line([(641, 238), (552, 175), (454, 165), (349, 215), (279, 292)], fill=(32, 98, 120, 58), width=1, joint="curve")
+    for i in range(5):
+        cd.arc((244 - i * 7, 275 - i * 4, 318 + i * 9, 322 + i * 4), 194, 338, fill=(238, 255, 255, 70 - i * 9), width=2)
+    cd.ellipse((rod_tip[0] - 10, rod_tip[1] - 10, rod_tip[0] + 10, rod_tip[1] + 10), fill=(255, 232, 142, 28))
+    casting.alpha_composite(casting_overlay)
+    _save_scene_plate(casting, "surface_scene_casting.png")
+
+    waiting = base.copy()
+    waiting_overlay = Image.new("RGBA", waiting.size, (0, 0, 0, 0))
+    wd = ImageDraw.Draw(waiting_overlay, "RGBA")
+    for i in range(5):
+        _draw_ripple(wd, bobber, 26 + i * 16, 8 + i * 4, 150 - i * 24, 2)
+    for i in range(18):
+        x = 228 + (i * 29) % 164
+        y = 271 + (i * 17) % 58
+        wd.line((x - 6, y, x + 7, y), fill=(255, 255, 255, 80), width=1)
+    waiting.alpha_composite(waiting_overlay)
+    _save_scene_plate(waiting, "surface_scene_waiting.png")
+
+    approach = base.copy()
+    approach_overlay = Image.new("RGBA", approach.size, (0, 0, 0, 0))
+    ad = ImageDraw.Draw(approach_overlay, "RGBA")
+    _draw_state_fish(ad, (224, 314), 0.58, 112)
+    ad.line((209, 309, 247, 303, 274, 304), fill=(226, 255, 255, 88), width=2)
+    for i in range(4):
+        _draw_ripple(ad, (240 + i * 12, 307 + i), 28 + i * 10, 7 + i * 3, 96 - i * 17, 2)
+    ad.ellipse((bobber[0] - 9, bobber[1] - 9, bobber[0] + 9, bobber[1] + 9), fill=(255, 246, 160, 78))
+    approach.alpha_composite(approach_overlay)
+    _save_scene_plate(approach, "surface_scene_approach.png")
+
+    bite = base.copy()
+    bite_overlay = Image.new("RGBA", bite.size, (0, 0, 0, 0))
+    bd = ImageDraw.Draw(bite_overlay, "RGBA")
+    _draw_state_fish(bd, (232, 314), 0.72, 148)
+    _draw_splash_burst(bd, bobber)
+    bd.line([(642, 238), (526, 179), (390, 229), (bobber[0], bobber[1] - 2)], fill=(255, 255, 255, 226), width=4, joint="curve")
+    bite.alpha_composite(bite_overlay)
+    flash = Image.new("RGBA", bite.size, (255, 244, 170, 24))
+    bite.alpha_composite(flash)
+    _save_scene_plate(bite, "surface_scene_bite.png")
+
+
 def main() -> None:
     create_background()
     create_dock_foreground()
@@ -450,6 +584,7 @@ def main() -> None:
     create_bobber()
     create_fish_shadow()
     create_splash()
+    create_scene_state_plates()
 
 
 if __name__ == "__main__":
