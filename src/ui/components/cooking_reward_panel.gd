@@ -363,6 +363,7 @@ class MealSceneTableBridgeVisual:
 		draw_ellipse(Vector2(size.x * 0.23, size.y * 0.83), size.x * 0.18, 13.0, Color(0.0, 0.0, 0.0, 0.24))
 		draw_ellipse(Vector2(size.x * 0.66, size.y * 0.78), size.x * 0.28, 18.0, Color(0.0, 0.0, 0.0, 0.22))
 		draw_circle(Vector2(size.x * 0.48, size.y * 0.55), size.x * 0.34, Color("#ffd18a", 0.06))
+		_draw_shared_steam()
 		for i in range(5):
 			var p := Vector2(
 				size.x * (0.26 + float((i * 17) % 58) / 100.0),
@@ -371,6 +372,15 @@ class MealSceneTableBridgeVisual:
 			var gold := Color("#ffe081", 0.40 if i % 2 == 0 else 0.26)
 			draw_line(p + Vector2(-3.0, 0.0), p + Vector2(3.0, 0.0), gold, 1.5)
 			draw_line(p + Vector2(0.0, -3.0), p + Vector2(0.0, 3.0), gold, 1.5)
+
+	func _draw_shared_steam() -> void:
+		var steam := Color("#fff1c7", 0.20)
+		for i in range(5):
+			var x := size.x * (0.42 + float(i) * 0.075)
+			var y := size.y * (0.36 + float(i % 2) * 0.075)
+			var radius := 18.0 + float(i % 3) * 5.0
+			steam.a = 0.22 - float(i) * 0.025
+			draw_arc(Vector2(x, y), radius, -1.75, 0.75, 18, steam, 2.0)
 
 
 class ExpMessagePortraitVisual:
