@@ -5,6 +5,7 @@
 - `01_surface_fishing_mockup.png`：水上から釣る画面の方向性
 - `02_underwater_fight_mockup.png`：看板となる水中ファイト画面
 - `03_cooking_levelup_mockup.png`：調理・食事・レベルアップ画面
+- `05_fishing_spot_map_mockup.png`：釣り場マップ画面の完成イメージ
 
 ゲーム本体はこれらの画像を読み込んでいません。正式実装では、背景、魚、UI枠、ボタン、アイコン、ゲージ、文字へ分解し、解像度とライセンスを確定した本番素材へ置換してください。
 
