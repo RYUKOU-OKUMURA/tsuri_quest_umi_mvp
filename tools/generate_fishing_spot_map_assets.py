@@ -214,9 +214,9 @@ def _draw_footer_frame(size: tuple[int, int]) -> Image.Image:
     mask_draw = ImageDraw.Draw(board_mask)
     mask_draw.rounded_rectangle((0, 0, board.width - 1, board.height - 1), radius=10, fill=255)
     frame.paste(board, (28, 27), board_mask)
-    _rounded(draw, (28, 27, size[0] - 402, size[1] - 27), 10, None, (110, 72, 35, 190), 2)
-    _rounded(draw, (39, 38, size[0] - 413, 69), 7, (8, 50, 78, 232), (213, 171, 88, 190), 1)
-    draw.line((55, 47, size[0] - 430, 47), fill=(255, 255, 255, 42), width=1)
+    _rounded(draw, (28, 27, size[0] - 402, size[1] - 27), 10, None, (110, 72, 35, 178), 2)
+    _rounded(draw, (39, 36, size[0] - 413, 65), 7, (7, 46, 72, 226), (213, 171, 88, 165), 1)
+    draw.line((55, 45, size[0] - 430, 45), fill=(255, 255, 255, 34), width=1)
     for x in range(54, size[0] - 438, 74):
         draw.line((x, 78, x + 42, 78), fill=(118, 79, 38, 42), width=1)
 
@@ -331,22 +331,22 @@ def _draw_spot_marker(spot_id: str, state: str, size: int = 128) -> Image.Image:
     fill = (10, 66, 100, 248)
     ring = (236, 203, 118, 248)
     symbol = (225, 246, 238, 255)
-    inner = (7, 54, 76, 232)
+    inner = (8, 60, 85, 236)
     outline = (31, 19, 11, 238)
     if selected:
         fill = (8, 78, 124, 252)
         ring = (255, 222, 86, 255)
         symbol = (255, 249, 205, 255)
-        inner = (8, 64, 95, 238)
+        inner = (9, 70, 104, 242)
     if locked:
         fill = (58, 66, 70, 220)
         ring = (116, 106, 87, 230)
         symbol = (181, 178, 159, 255)
-        inner = (64, 68, 68, 222)
+        inner = (68, 72, 70, 222)
     if spot_id == "harbor_boulder" and not locked:
         fill = (93, 38, 32, 248)
         ring = (229, 151, 82, 248)
-        inner = (79, 39, 35, 232)
+        inner = (84, 42, 37, 236)
 
     tail = [
         (cx - 15 * u, cy + 24 * u),
@@ -360,8 +360,8 @@ def _draw_spot_marker(spot_id: str, state: str, size: int = 128) -> Image.Image:
     draw.ellipse((35 * u, 27 * u, work_size - 35 * u, work_size - 52 * u), fill=inner, outline=(255, 244, 190, 74), width=2 * u)
     draw.arc((32 * u, 22 * u, work_size - 32 * u, work_size - 58 * u), 198, 338, fill=(255, 255, 255, 64), width=3 * u)
 
-    symbol_scale = 0.56 * u
-    symbol_y = cy - 8 * u
+    symbol_scale = 0.64 * u
+    symbol_y = cy - 7 * u
     _draw_spot_symbol(draw, spot_id, cx + 2 * u, symbol_y + 3 * u, symbol_scale, (0, 0, 0, 96))
     _draw_spot_symbol(draw, spot_id, cx, symbol_y, symbol_scale, symbol)
     if locked:
@@ -462,7 +462,7 @@ def _draw_completion_slot_frame(size: tuple[int, int], state: str) -> Image.Imag
     selected = state == "selected"
     locked = state == "locked"
     img = Image.new("RGBA", size, (0, 0, 0, 0))
-    base = (192, 187, 168) if locked else (230, 210, 170)
+    base = (188, 184, 168) if locked else (223, 207, 174)
     paper = _paper_texture((size[0] - 12, size[1] - 12), 740 + len(state), base)
     mask = Image.new("L", paper.size, 0)
     mask_draw = ImageDraw.Draw(mask)
@@ -470,26 +470,26 @@ def _draw_completion_slot_frame(size: tuple[int, int], state: str) -> Image.Imag
     img.paste(paper, (6, 6), mask)
 
     draw = ImageDraw.Draw(img)
-    border = (96, 84, 70, 205) if locked else (135, 88, 40, 225)
-    accent = (113, 103, 86, 145) if locked else (219, 176, 86, 210)
+    border = (91, 82, 70, 170) if locked else (111, 82, 48, 172)
+    accent = (113, 103, 86, 118) if locked else (177, 132, 65, 135)
     if selected:
-        border = (255, 218, 88, 245)
-        accent = (255, 232, 126, 235)
-    _rounded(draw, (6, 6, size[0] - 6, size[1] - 6), 9, None, border, 2 if not selected else 3)
+        border = (235, 184, 67, 222)
+        accent = (255, 221, 103, 190)
+    _rounded(draw, (6, 6, size[0] - 6, size[1] - 6), 9, None, border, 2)
     _rounded(draw, (12, 12, size[0] - 12, size[1] - 12), 5, None, accent, 1)
 
-    rail = (14, 14, size[0] - 14, 42)
-    rail_color = (78, 82, 78, 188) if locked else (9, 58, 86, 222)
+    rail = (14, 14, size[0] - 14, 39)
+    rail_color = (72, 77, 74, 170) if locked else (7, 52, 78, 210)
     if selected:
-        rail_color = (8, 67, 100, 238)
+        rail_color = (7, 61, 92, 225)
     _rounded(draw, rail, 5, rail_color, None, 1)
-    draw.line((rail[0] + 8, rail[1] + 7, rail[2] - 8, rail[1] + 7), fill=(255, 255, 255, 38), width=1)
+    draw.line((rail[0] + 8, rail[1] + 7, rail[2] - 8, rail[1] + 7), fill=(255, 255, 255, 30), width=1)
 
-    body = (14, 47, size[0] - 14, size[1] - 13)
-    body_fill = (240, 222, 184, 184) if not locked else (198, 191, 171, 150)
+    body = (14, 44, size[0] - 14, size[1] - 13)
+    body_fill = (235, 219, 187, 150) if not locked else (195, 189, 173, 130)
     _rounded(draw, body, 5, body_fill, (119, 82, 42, 60), 1)
     if selected:
-        draw.rectangle((18, 48, 24, size[1] - 17), fill=(255, 210, 73, 215))
+        draw.rectangle((18, 45, 23, size[1] - 17), fill=(255, 210, 73, 190))
     if locked:
         draw.rectangle((18, 50, size[0] - 18, size[1] - 16), fill=(96, 91, 83, 45))
         draw.line((size[0] - 42, 58, size[0] - 20, 75), fill=(96, 84, 66, 120), width=3)

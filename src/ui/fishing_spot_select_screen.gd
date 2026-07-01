@@ -11,7 +11,7 @@ const COMPLETION_SLOT_SELECTED_PATH := "res://assets/showcase/fishing_spots/map_
 const COMPLETION_SLOT_LOCKED_PATH := "res://assets/showcase/fishing_spots/map_completion_slot_locked.png"
 const THUMB_BASE_PATH := "res://assets/showcase/fishing_spots/thumbs"
 const DETAIL_ICON_SIZE := 96.0
-const COMPLETION_SLOT_SIZE := Vector2(108.0, 76.0)
+const COMPLETION_SLOT_SIZE := Vector2(106.0, 74.0)
 
 var _selected_spot_id: String = GameData.DEFAULT_FISHING_SPOT_ID
 var _continue_trip := false
@@ -314,7 +314,7 @@ func _detail_row_style() -> StyleBoxFlat:
 
 func _build_footer(parent: Control) -> void:
 	var panel := Control.new()
-	panel.custom_minimum_size = Vector2(0.0, 134.0)
+	panel.custom_minimum_size = Vector2(0.0, 136.0)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(panel)
 
@@ -336,7 +336,7 @@ func _build_footer(parent: Control) -> void:
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 22)
-	margin.add_theme_constant_override("margin_top", 12)
+	margin.add_theme_constant_override("margin_top", 20)
 	margin.add_theme_constant_override("margin_right", 22)
 	margin.add_theme_constant_override("margin_bottom", 12)
 	panel.add_child(margin)
@@ -344,27 +344,27 @@ func _build_footer(parent: Control) -> void:
 	var row := HBoxContainer.new()
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	row.add_theme_constant_override("separation", 12)
+	row.add_theme_constant_override("separation", 16)
 	margin.add_child(row)
 
 	var board_box := VBoxContainer.new()
 	board_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	board_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	board_box.add_theme_constant_override("separation", 5)
+	board_box.add_theme_constant_override("separation", 3)
 	row.add_child(board_box)
 
 	var board_header := HBoxContainer.new()
-	board_header.custom_minimum_size = Vector2(0.0, 28.0)
+	board_header.custom_minimum_size = Vector2(0.0, 21.0)
 	board_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	board_header.add_theme_constant_override("separation", 12)
 	board_box.add_child(board_header)
 
-	var board_title := make_label("釣り場達成度", 15, Palette.TEXT_BONE, 1, Palette.TEXT_OUTLINE_DARK)
+	var board_title := make_label("釣り場達成度", 14, Palette.TEXT_BONE, 1, Palette.TEXT_OUTLINE_DARK)
 	board_title.custom_minimum_size = Vector2(142.0, 0.0)
 	board_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	board_header.add_child(board_title)
 
-	var board_note := make_label("対象魚種の記録", 12, Color("#d9c38d"), 1, Palette.TEXT_OUTLINE_DARK)
+	var board_note := make_label("魚種記録", 11, Color("#d9c38d"), 1, Palette.TEXT_OUTLINE_DARK)
 	board_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	board_note.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	board_header.add_child(board_note)
@@ -373,21 +373,21 @@ func _build_footer(parent: Control) -> void:
 	_progress_box.columns = 8
 	_progress_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_progress_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_progress_box.add_theme_constant_override("h_separation", 5)
+	_progress_box.add_theme_constant_override("h_separation", 6)
 	_progress_box.add_theme_constant_override("v_separation", 0)
 	board_box.add_child(_progress_box)
 
 	var message_box := VBoxContainer.new()
-	message_box.custom_minimum_size = Vector2(286.0, 0.0)
+	message_box.custom_minimum_size = Vector2(270.0, 0.0)
 	message_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	message_box.add_theme_constant_override("separation", 4)
 	row.add_child(message_box)
 
-	var guide := make_label("調査メモ", 13, Palette.TEXT_BONE, 1, Palette.TEXT_OUTLINE_DARK)
+	var guide := make_label("調査メモ", 12, Palette.TEXT_BONE, 1, Palette.TEXT_OUTLINE_DARK)
 	guide.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	message_box.add_child(guide)
 
-	_message_label = make_label("", 12, Color("#eaf6ff"), 1, Palette.TEXT_OUTLINE_DARK)
+	_message_label = make_label("", 11, Color("#eaf6ff"), 1, Palette.TEXT_OUTLINE_DARK)
 	_message_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_message_label.add_theme_constant_override("line_spacing", 1)
@@ -436,25 +436,25 @@ func _make_completion_entry(spot: Dictionary) -> Control:
 	else:
 		_add_completion_slot_fallback(entry, unlocked, selected)
 
-	var title := _card_label(String(spot.get("short_name", spot.get("name", spot_id))), 13, Color("#fff2d2") if unlocked else Color("#d5cec1"), 1)
+	var title := _card_label(String(spot.get("short_name", spot.get("name", spot_id))), 12, Color("#fff2d2") if unlocked else Color("#d5cec1"), 1)
 	title.position = Vector2(10.0, 5.0)
-	title.size = Vector2(55.0, 18.0)
+	title.size = Vector2(58.0, 17.0)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	entry.add_child(title)
 
 	var badge_text := "現在" if selected and unlocked else _completion_badge_text(spot, unlocked, completion)
 	var badge := _card_label(badge_text, 11, Palette.GOLD_BRIGHT if selected else (Palette.GOLD_DEEP if unlocked else Color("#6b5740")), 1 if selected else 0)
-	badge.position = Vector2(65.0, 6.0)
-	badge.size = Vector2(35.0, 17.0)
+	badge.position = Vector2(68.0, 6.0)
+	badge.size = Vector2(30.0, 16.0)
 	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	entry.add_child(badge)
 
 	var body_color := Color("#23170d") if unlocked else Color("#4f4941")
 	var summary_text := _completion_summary_text(spot, unlocked, completion)
-	var summary := _card_label(summary_text, 12, body_color)
-	summary.position = Vector2(13.0, 32.0)
-	summary.size = Vector2(82.0, 16.0)
+	var summary := _card_label(summary_text, 11, body_color)
+	summary.position = Vector2(13.0, 30.0)
+	summary.size = Vector2(80.0, 15.0)
 	summary.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	entry.add_child(summary)
 
@@ -491,11 +491,11 @@ func _add_completion_marks(parent: Control, unlocked: bool, caught: int, total: 
 	if marks <= 0:
 		return
 	var start_x := 14.0
-	var y := 52.0
+	var y := 49.0
 	for index in range(marks):
 		var mark := ColorRect.new()
-		mark.position = Vector2(start_x + float(index) * 9.0, y)
-		mark.size = Vector2(6.0, 6.0)
+		mark.position = Vector2(start_x + float(index) * 8.0, y)
+		mark.size = Vector2(5.0, 5.0)
 		var filled := unlocked and index < caught
 		mark.color = Color("#d89132") if filled else Color("#82796b", 0.55)
 		if not unlocked:
@@ -507,8 +507,8 @@ func _add_completion_marks(parent: Control, unlocked: bool, caught: int, total: 
 func _add_completion_bar(parent: Control, unlocked: bool, selected: bool, ratio: float) -> void:
 	var back := ColorRect.new()
 	back.color = Color("#5c5143", 0.52) if unlocked else Color("#736d63", 0.44)
-	back.position = Vector2(14.0, 66.0)
-	back.size = Vector2(80.0, 5.0)
+	back.position = Vector2(14.0, 62.0)
+	back.size = Vector2(78.0, 4.0)
 	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(back)
 
