@@ -56,6 +56,9 @@ const COOKING_FISH_DISPLAY_ORDER := [
 	"boss_kurodai",
 ]
 const COOKING_FISH_MIN_VISIBLE_ROWS := 6
+const FISH_ROW_ICON_MIN_WIDTH := 120.0
+const FISH_ROW_NAME_MIN_WIDTH := 48.0
+const FISH_ROW_AMOUNT_WIDTH := 58.0
 
 
 class CookingSmallIcon:
@@ -538,6 +541,8 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	_fish_scroll.name = "FishListScroll"
 	_fish_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_fish_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_fish_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_fish_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	_fish_scroll.follow_focus = true
 	fish_layout.add_child(_fish_scroll)
 	_fish_box = VBoxContainer.new()
@@ -1010,7 +1015,9 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	row.add_child(marker)
 	var icon := TextureRect.new()
 	icon.texture = _fish_row_texture(fish_id)
-	icon.custom_minimum_size = Vector2(156, 60)
+	icon.custom_minimum_size = Vector2(FISH_ROW_ICON_MIN_WIDTH, 60)
+	icon.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	icon.size_flags_stretch_ratio = 1.45
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
@@ -1019,19 +1026,21 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	var display_name := _fish_row_display_name(fish_id, String(fish.get("name", fish_id)))
 	var name_font_size := 20 if display_name.length() <= 3 else 15
 	var name := make_label(display_name, name_font_size, Color("#241b12"), 1, Color("#fff2ca"))
-	name.custom_minimum_size = Vector2(62.0, 0.0)
+	name.custom_minimum_size = Vector2(FISH_ROW_NAME_MIN_WIDTH, 0.0)
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name.size_flags_stretch_ratio = 1.0
 	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	name.autowrap_mode = TextServer.AUTOWRAP_OFF
 	name.clip_text = true
 	row.add_child(name)
 	var amount_text := "× %d 匹" % count if owned else "未所持"
 	var amount_color := Color("#2a2118") if owned else Color("#756a56")
-	var amount := make_label(amount_text, 16 if owned else 12, amount_color, 1, Color("#fff0bd"))
-	amount.custom_minimum_size = Vector2(62.0, 34.0)
+	var amount := make_label(amount_text, 15 if owned else 12, amount_color, 1, Color("#fff0bd"))
+	amount.custom_minimum_size = Vector2(FISH_ROW_AMOUNT_WIDTH, 34.0)
 	amount.size_flags_horizontal = Control.SIZE_SHRINK_END
 	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	amount.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	amount.clip_text = true
 	row.add_child(amount)
 	_make_card_contents_click_through(card)
 	_fish_cards[fish_id] = {"card": card, "marker": marker, "owned": owned}

@@ -94,14 +94,18 @@ func _audit_fish_scroll() -> void:
 		_failures.append("FISH_SCROLL: missing named control 'FishListScroll'.")
 	elif scroll.get_v_scroll_bar().max_value <= scroll.get_v_scroll_bar().page + TOLERANCE:
 		_failures.append("FISH_SCROLL: fish list should be vertically scrollable with 9 owned fish.")
+	elif scroll.get_h_scroll_bar().max_value > scroll.get_h_scroll_bar().page + TOLERANCE:
+		_failures.append("FISH_SCROLL: fish list should not require horizontal scrolling.")
 	if target == null:
 		_failures.append("FISH_SCROLL: missing fish row beyond the first six owned rows.")
 	var row_count := _count_fish_rows(screen)
 	if row_count < 9:
 		_failures.append("FISH_SCROLL: expected at least 9 fish rows, got %d." % row_count)
 	if scroll != null and target != null:
+		_expect_visible_fish_rows_fit_width(scroll, "FISH_SCROLL_TOP")
 		scroll.scroll_vertical = int(scroll.get_v_scroll_bar().max_value)
 		await _tick()
+		_expect_visible_fish_rows_fit_width(scroll, "FISH_SCROLL_BOTTOM")
 		if not scroll.get_global_rect().intersects(target.get_global_rect()):
 			_failures.append(
 				"FISH_SCROLL: lower owned fish row should be visible after scrolling, got scroll=%s target=%s."
@@ -498,6 +502,30 @@ func _count_fish_rows(node: Node) -> int:
 	for child in node.get_children():
 		count += _count_fish_rows(child)
 	return count
+
+
+func _expect_visible_fish_rows_fit_width(scroll: ScrollContainer, state: String) -> void:
+	var scroll_rect := scroll.get_global_rect()
+	var rows: Array = []
+	_collect_fish_rows(scroll, rows)
+	for node in rows:
+		var row := node as Control
+		if row == null or not row.is_visible_in_tree():
+			continue
+		var rect := row.get_global_rect()
+		if not scroll_rect.intersects(rect):
+			continue
+		if rect.position.x < scroll_rect.position.x - TOLERANCE:
+			_failures.append("%s: %s starts left of fish scroll frame: row=%s scroll=%s." % [state, row.name, rect, scroll_rect])
+		if rect.end.x > scroll_rect.end.x + TOLERANCE:
+			_failures.append("%s: %s ends right of fish scroll frame: row=%s scroll=%s." % [state, row.name, rect, scroll_rect])
+
+
+func _collect_fish_rows(node: Node, out: Array) -> void:
+	if node is Control and String((node as Control).name).begins_with("FishRow"):
+		out.append(node)
+	for child in node.get_children():
+		_collect_fish_rows(child, out)
 
 
 func _find_first(node: Node, class_name_text: String) -> Node:
