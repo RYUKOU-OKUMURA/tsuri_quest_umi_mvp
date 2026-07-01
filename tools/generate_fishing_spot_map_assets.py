@@ -324,10 +324,10 @@ def _draw_spot_marker(spot_id: str, state: str, size: int = 128) -> Image.Image:
     selected = state == "selected"
     locked = state == "locked"
     if selected:
-        for radius, alpha in [(60 * u, 34), (51 * u, 64), (43 * u, 88)]:
+        for radius, alpha in [(54 * u, 28), (46 * u, 56), (38 * u, 80)]:
             draw.ellipse((cx - radius, cy - radius, cx + radius, cy + radius), fill=(255, 205, 58, alpha))
 
-    draw.ellipse((17 * u, 76 * u, work_size - 17 * u, 119 * u), fill=(0, 0, 0, 76))
+    draw.ellipse((22 * u, 80 * u, work_size - 22 * u, 119 * u), fill=(0, 0, 0, 70))
     fill = (10, 66, 100, 248)
     ring = (236, 203, 118, 248)
     symbol = (225, 246, 238, 255)
@@ -349,30 +349,31 @@ def _draw_spot_marker(spot_id: str, state: str, size: int = 128) -> Image.Image:
         inner = (84, 42, 37, 236)
 
     tail = [
-        (cx - 15 * u, cy + 24 * u),
-        (cx + 15 * u, cy + 24 * u),
-        (cx, cy + 55 * u),
+        (cx - 13 * u, cy + 22 * u),
+        (cx + 13 * u, cy + 22 * u),
+        (cx, cy + 60 * u),
     ]
     draw.polygon(tail, fill=fill)
     draw.line([tail[0], tail[1], tail[2], tail[0]], fill=outline, width=3 * u, joint="curve")
-    draw.ellipse((14 * u, 7 * u, work_size - 14 * u, work_size - 31 * u), fill=fill, outline=outline, width=3 * u)
-    draw.ellipse((22 * u, 15 * u, work_size - 22 * u, work_size - 39 * u), outline=ring, width=5 * u)
-    draw.ellipse((35 * u, 27 * u, work_size - 35 * u, work_size - 52 * u), fill=inner, outline=(255, 244, 190, 74), width=2 * u)
-    draw.arc((32 * u, 22 * u, work_size - 32 * u, work_size - 58 * u), 198, 338, fill=(255, 255, 255, 64), width=3 * u)
+    draw.ellipse((20 * u, 8 * u, work_size - 20 * u, work_size - 35 * u), fill=fill, outline=outline, width=3 * u)
+    draw.ellipse((28 * u, 16 * u, work_size - 28 * u, work_size - 43 * u), outline=ring, width=4 * u)
+    draw.ellipse((39 * u, 28 * u, work_size - 39 * u, work_size - 56 * u), fill=inner, outline=(255, 244, 190, 70), width=2 * u)
+    draw.arc((36 * u, 22 * u, work_size - 36 * u, work_size - 61 * u), 200, 336, fill=(255, 255, 255, 60), width=3 * u)
+    draw.line((cx - 7 * u, cy + 36 * u, cx + 7 * u, cy + 36 * u), fill=(255, 232, 154, 78), width=2 * u)
 
-    symbol_scale = 0.64 * u
-    symbol_y = cy - 7 * u
+    symbol_scale = 0.55 * u
+    symbol_y = cy - 10 * u
     _draw_spot_symbol(draw, spot_id, cx + 2 * u, symbol_y + 3 * u, symbol_scale, (0, 0, 0, 96))
     _draw_spot_symbol(draw, spot_id, cx, symbol_y, symbol_scale, symbol)
     if locked:
         veil = Image.new("RGBA", (work_size, work_size), (0, 0, 0, 0))
         veil_draw = ImageDraw.Draw(veil)
-        veil_draw.ellipse((14 * u, 7 * u, work_size - 14 * u, work_size - 31 * u), fill=(20, 24, 26, 78))
+        veil_draw.ellipse((20 * u, 8 * u, work_size - 20 * u, work_size - 35 * u), fill=(20, 24, 26, 78))
         cell.alpha_composite(veil)
         draw = ImageDraw.Draw(cell)
-        draw.rounded_rectangle((75 * u, 70 * u, 108 * u, 100 * u), radius=5 * u, fill=(227, 188, 86, 252), outline=(74, 45, 22, 255), width=2 * u)
-        draw.arc((80 * u, 51 * u, 103 * u, 83 * u), 180, 360, fill=(239, 222, 174, 245), width=5 * u)
-        draw.line((38 * u, 92 * u, 63 * u, 104 * u), fill=(238, 222, 165, 170), width=4 * u)
+        draw.rounded_rectangle((75 * u, 69 * u, 106 * u, 98 * u), radius=5 * u, fill=(227, 188, 86, 252), outline=(74, 45, 22, 255), width=2 * u)
+        draw.arc((80 * u, 51 * u, 102 * u, 82 * u), 180, 360, fill=(239, 222, 174, 245), width=5 * u)
+        draw.line((39 * u, 94 * u, 62 * u, 105 * u), fill=(238, 222, 165, 150), width=4 * u)
     return cell.resize((size, size), Image.Resampling.LANCZOS)
 
 

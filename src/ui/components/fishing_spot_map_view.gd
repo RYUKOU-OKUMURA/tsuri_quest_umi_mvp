@@ -147,6 +147,7 @@ func _draw() -> void:
 		draw_texture_rect_region(_map_grade, map_rect, _texture_source_region(_map_grade), Color(1.0, 1.0, 1.0, 0.70))
 	_draw_chart_overlay(map_rect)
 	_draw_depth_contours(map_rect)
+	_draw_environment_symbols(map_rect)
 	_draw_routes(map_rect)
 	_draw_markers(map_rect)
 	_draw_edge_shade(map_rect)
@@ -282,6 +283,99 @@ func _draw_contour(map_rect: Rect2, normalized_points: Array, color: Color, widt
 		draw_polyline(points, color, width, true)
 
 
+func _draw_environment_symbols(map_rect: Rect2) -> void:
+	var font := GameFontsScript.bold(get_theme_default_font())
+	_draw_tide_stream(
+		map_rect,
+		[
+			Vector2(0.555, 0.245),
+			Vector2(0.615, 0.190),
+			Vector2(0.705, 0.215),
+			Vector2(0.768, 0.330),
+		],
+		Color("#bfeaff", 0.23),
+		1.6
+	)
+	_draw_tide_stream(
+		map_rect,
+		[
+			Vector2(0.620, 0.465),
+			Vector2(0.706, 0.515),
+			Vector2(0.765, 0.650),
+			Vector2(0.840, 0.780),
+		],
+		Color("#f7d979", 0.26),
+		1.8
+	)
+	_draw_tide_stream(
+		map_rect,
+		[
+			Vector2(0.160, 0.620),
+			Vector2(0.255, 0.675),
+			Vector2(0.395, 0.675),
+			Vector2(0.462, 0.590),
+		],
+		Color("#c5f7dc", 0.18),
+		1.2
+	)
+	_draw_reef_marks(map_rect, [Vector2(0.260, 0.700), Vector2(0.315, 0.755), Vector2(0.370, 0.715)], Color("#e5f4c7", 0.30))
+	_draw_reef_marks(map_rect, [Vector2(0.430, 0.465), Vector2(0.480, 0.520), Vector2(0.405, 0.590)], Color("#f6e7ba", 0.28))
+	_draw_depth_label(font, map_rect, "5m", Vector2(0.270, 0.245), Color("#fff0b0", 0.35))
+	_draw_depth_label(font, map_rect, "10m", Vector2(0.540, 0.340), Color("#d8f2ff", 0.28))
+	_draw_depth_label(font, map_rect, "20m", Vector2(0.750, 0.455), Color("#d8f2ff", 0.28))
+	_draw_depth_label(font, map_rect, "潮流", Vector2(0.690, 0.235), Color("#d8f2ff", 0.32))
+	_draw_depth_label(font, map_rect, "岩礁帯", Vector2(0.325, 0.815), Color("#eef6c2", 0.30))
+
+
+func _draw_tide_stream(map_rect: Rect2, normalized_points: Array, color: Color, width: float) -> void:
+	var points := PackedVector2Array()
+	for point in normalized_points:
+		points.append(_map_normalized_point(map_rect, point))
+	if points.size() < 2:
+		return
+	draw_polyline(points, Color(0.0, 0.0, 0.0, color.a * 0.28), width + 2.0, false)
+	draw_polyline(points, color, width, false)
+	for index in range(points.size() - 1):
+		var from_point := points[index]
+		var to_point := points[index + 1]
+		if from_point.distance_to(to_point) < 18.0:
+			continue
+		_draw_current_arrow(from_point.lerp(to_point, 0.58), to_point - from_point, color)
+
+
+func _draw_current_arrow(center: Vector2, direction_delta: Vector2, color: Color) -> void:
+	var length := direction_delta.length()
+	if length <= 0.0:
+		return
+	var direction := direction_delta / length
+	var normal := Vector2(-direction.y, direction.x)
+	var tip := center + direction * 8.0
+	var tail := center - direction * 5.0
+	draw_line(tail, tip, color, 1.3)
+	draw_line(tip, tip - direction * 6.0 + normal * 4.0, color, 1.2)
+	draw_line(tip, tip - direction * 6.0 - normal * 4.0, color, 1.2)
+
+
+func _draw_reef_marks(map_rect: Rect2, normalized_points: Array, color: Color) -> void:
+	for point in normalized_points:
+		var center := _map_normalized_point(map_rect, point)
+		var size_a := 7.0
+		var size_b := 4.0
+		draw_line(center + Vector2(-size_a, -size_b), center + Vector2(size_a, size_b), Color(0.0, 0.0, 0.0, color.a * 0.35), 2.1)
+		draw_line(center + Vector2(-size_a, size_b), center + Vector2(size_a, -size_b), Color(0.0, 0.0, 0.0, color.a * 0.35), 2.1)
+		draw_line(center + Vector2(-size_a, -size_b), center + Vector2(size_a, size_b), color, 1.0)
+		draw_line(center + Vector2(-size_a, size_b), center + Vector2(size_a, -size_b), color, 1.0)
+
+
+func _draw_depth_label(font: Font, map_rect: Rect2, text: String, normalized: Vector2, color: Color) -> void:
+	var font_size := 12
+	var text_size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
+	var pos := _map_normalized_point(map_rect, normalized)
+	var baseline := pos + Vector2(-text_size.x * 0.5, text_size.y * 0.35)
+	draw_string_outline(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 2, Color(0.0, 0.0, 0.0, color.a * 0.45))
+	draw_string(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
+
+
 func _draw_routes(map_rect: Rect2) -> void:
 	for pair in ROUTES:
 		var from_id := String(pair[0])
@@ -343,7 +437,7 @@ func _draw_markers(map_rect: Rect2) -> void:
 		if selected and unlocked:
 			marker_index = MARKER_SELECTED
 			marker_row = 1
-		var marker_size := clampf(map_rect.size.x * (0.078 if selected else 0.066), 56.0, 88.0)
+		var marker_size := clampf(map_rect.size.x * (0.072 if selected else 0.060), 52.0, 82.0)
 		if _hovered_spot_id == spot_id:
 			marker_size *= 1.07
 		var target := Rect2(center - Vector2(marker_size, marker_size) * 0.5, Vector2(marker_size, marker_size))
