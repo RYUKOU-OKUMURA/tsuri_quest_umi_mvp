@@ -8,7 +8,7 @@ const DETAIL_ICON_SHEET_PATH := "res://assets/showcase/fishing_spots/map_detail_
 const FOOTER_FRAME_PATH := "res://assets/showcase/fishing_spots/map_footer_frame.png"
 const THUMB_BASE_PATH := "res://assets/showcase/fishing_spots/thumbs"
 const DETAIL_ICON_SIZE := 96.0
-const COMPLETION_SLOT_SIZE := Vector2(220.0, 43.0)
+const COMPLETION_SLOT_SIZE := Vector2(220.0, 44.0)
 
 var _selected_spot_id: String = GameData.DEFAULT_FISHING_SPOT_ID
 var _continue_trip := false
@@ -470,13 +470,27 @@ func _build_footer(parent: Control) -> void:
 	_ledger_total_label = _make_ledger_header_chip(board_header, 146.0, false)
 	_ledger_route_label = _make_ledger_header_chip(board_header, 168.0, true)
 
+	var ledger_body := PanelContainer.new()
+	ledger_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ledger_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	ledger_body.add_theme_stylebox_override("panel", _ledger_body_style())
+	board_box.add_child(ledger_body)
+
+	var ledger_body_margin := MarginContainer.new()
+	ledger_body_margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	ledger_body_margin.add_theme_constant_override("margin_left", 5)
+	ledger_body_margin.add_theme_constant_override("margin_top", 4)
+	ledger_body_margin.add_theme_constant_override("margin_right", 5)
+	ledger_body_margin.add_theme_constant_override("margin_bottom", 4)
+	ledger_body.add_child(ledger_body_margin)
+
 	_progress_box = GridContainer.new()
 	_progress_box.columns = 4
 	_progress_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_progress_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_progress_box.add_theme_constant_override("h_separation", 7)
-	_progress_box.add_theme_constant_override("v_separation", 2)
-	board_box.add_child(_progress_box)
+	_progress_box.add_theme_constant_override("h_separation", 0)
+	_progress_box.add_theme_constant_override("v_separation", 0)
+	ledger_body_margin.add_child(_progress_box)
 
 	var message_box := VBoxContainer.new()
 	message_box.custom_minimum_size = Vector2(270.0, 0.0)
@@ -585,6 +599,19 @@ func _ledger_header_style() -> StyleBoxFlat:
 	return style
 
 
+func _ledger_body_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#e7d4aa", 0.78)
+	style.border_color = Color("#d0a65a", 0.42)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 0
+	style.content_margin_right = 0
+	style.content_margin_top = 0
+	style.content_margin_bottom = 0
+	return style
+
+
 func _memo_header_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color("#073957", 0.94)
@@ -625,15 +652,19 @@ func _make_completion_entry(spot: Dictionary) -> Control:
 
 	_add_completion_slot_fallback(entry, unlocked, selected)
 
-	var title := _card_label(String(spot.get("short_name", spot.get("name", spot_id))), 12, Color("#fff2d2") if unlocked else Color("#d5cec1"), 1)
-	title.position = Vector2(10.0, 3.0)
+	var title_color := Color("#1d140b") if unlocked else Color("#5c554a")
+	var title := _card_label(String(spot.get("short_name", spot.get("name", spot_id))), 12, title_color, 0)
+	title.position = Vector2(12.0, 4.0)
 	title.size = Vector2(112.0, 15.0)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	entry.add_child(title)
 
-	var badge := _card_label(_completion_badge_text(spot, unlocked, completion), 11, Palette.GOLD_BRIGHT if selected else (Palette.GOLD_DEEP if unlocked else Color("#6b5740")), 1 if selected else 0)
-	badge.position = Vector2(156.0, 3.0)
-	badge.size = Vector2(52.0, 15.0)
+	var badge_color := Color("#7b4c15") if unlocked else Color("#6b5740")
+	if selected and unlocked:
+		badge_color = Color("#4f3518")
+	var badge := _card_label(_completion_badge_text(spot, unlocked, completion), 11, badge_color, 0)
+	badge.position = Vector2(158.0, 4.0)
+	badge.size = Vector2(48.0, 15.0)
 	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	entry.add_child(badge)
@@ -641,8 +672,8 @@ func _make_completion_entry(spot: Dictionary) -> Control:
 	var body_color := Color("#23170d") if unlocked else Color("#4f4941")
 	var summary_text := _completion_summary_text(spot, unlocked, completion)
 	var summary := _card_label(summary_text, 11, body_color)
-	summary.position = Vector2(10.0, 22.0)
-	summary.size = Vector2(76.0, 15.0)
+	summary.position = Vector2(12.0, 24.0)
+	summary.size = Vector2(88.0, 15.0)
 	summary.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	entry.add_child(summary)
 
@@ -658,27 +689,27 @@ func _add_completion_slot_fallback(parent: Control, unlocked: bool, selected: bo
 	parent.add_child(frame)
 
 	var body := ColorRect.new()
-	body.color = Color("#f2dfb6", 0.12) if unlocked else Color("#5d605a", 0.18)
+	body.color = Color("#f5e5bc", 0.16) if unlocked else Color("#5d605a", 0.16)
 	if selected and unlocked:
-		body.color = Color("#ffe070", 0.15)
+		body.color = Color("#ffe070", 0.11)
 	body.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	body.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(body)
 
-	var header := ColorRect.new()
-	header.color = Color("#083d5d", 0.92) if unlocked else Color("#4b514f", 0.70)
+	var top_rule := ColorRect.new()
+	top_rule.color = Color("#073957", 0.58) if unlocked else Color("#4b514f", 0.42)
 	if selected and unlocked:
-		header.color = Color("#0c4f78", 0.98)
-	header.anchor_left = 0.0
-	header.anchor_top = 0.0
-	header.anchor_right = 1.0
-	header.anchor_bottom = 0.0
-	header.offset_left = 6.0
-	header.offset_top = 2.0
-	header.offset_right = -6.0
-	header.offset_bottom = 19.0
-	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	parent.add_child(header)
+		top_rule.color = Palette.GOLD_BRIGHT
+	top_rule.anchor_left = 0.0
+	top_rule.anchor_top = 0.0
+	top_rule.anchor_right = 1.0
+	top_rule.anchor_bottom = 0.0
+	top_rule.offset_left = 8.0
+	top_rule.offset_top = 2.0
+	top_rule.offset_right = -8.0
+	top_rule.offset_bottom = 4.0
+	top_rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(top_rule)
 
 	var rule := ColorRect.new()
 	rule.color = Color("#7d5831", 0.35)
@@ -710,13 +741,13 @@ func _add_completion_slot_fallback(parent: Control, unlocked: bool, selected: bo
 
 func _completion_entry_style(unlocked: bool, selected: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#ead5a7", 0.08) if unlocked else Color("#4f514d", 0.10)
-	style.border_color = Color("#6d4b28", 0.32) if unlocked else Color("#4d463d", 0.22)
+	style.bg_color = Color("#ead5a7", 0.04) if unlocked else Color("#4f514d", 0.08)
+	style.border_color = Color("#6d4b28", 0.24) if unlocked else Color("#4d463d", 0.20)
 	if selected and unlocked:
-		style.bg_color = Color("#f3cf66", 0.13)
-		style.border_color = Color("#f4cf72", 0.80)
+		style.bg_color = Color("#f3cf66", 0.10)
+		style.border_color = Color("#f4cf72", 0.86)
 	style.set_border_width_all(1)
-	style.set_corner_radius_all(3)
+	style.set_corner_radius_all(2)
 	style.content_margin_left = 0
 	style.content_margin_right = 0
 	style.content_margin_top = 0
@@ -745,8 +776,8 @@ func _add_completion_marks(parent: Control, unlocked: bool, caught: int, total: 
 func _add_completion_bar(parent: Control, unlocked: bool, selected: bool, ratio: float) -> void:
 	var back := ColorRect.new()
 	back.color = Color("#5c5143", 0.52) if unlocked else Color("#736d63", 0.44)
-	back.position = Vector2(90.0, 30.0)
-	back.size = Vector2(116.0, 6.0)
+	back.position = Vector2(104.0, 31.0)
+	back.size = Vector2(100.0, 5.0)
 	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(back)
 
@@ -928,7 +959,7 @@ func _spot_completion_counts(spot: Dictionary) -> Dictionary:
 
 func _completion_badge_text(spot: Dictionary, unlocked: bool, completion: Dictionary) -> String:
 	if not unlocked:
-		return "LOCK"
+		return "Lv.%d" % int(spot.get("unlock_level", 1))
 	if bool(spot.get("boss_spot", false)):
 		return "%d/%d" % [int(completion.get("caught", 0)), int(completion.get("total", 0))]
 	return "%d%%" % int(round(float(completion.get("ratio", 0.0)) * 100.0))
@@ -936,7 +967,7 @@ func _completion_badge_text(spot: Dictionary, unlocked: bool, completion: Dictio
 
 func _completion_summary_text(spot: Dictionary, unlocked: bool, completion: Dictionary) -> String:
 	if not unlocked:
-		return "Lv.%d解放" % int(spot.get("unlock_level", 1))
+		return "未解放"
 	return "記録 %d/%d 種" % [
 		int(completion.get("caught", 0)),
 		int(completion.get("total", 0)),
