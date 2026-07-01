@@ -430,21 +430,51 @@ func _draw_spot_chip(
 	chip_pos.y = clampf(chip_pos.y, map_rect.position.y + 8.0, map_rect.end.y - chip_h - 8.0)
 	var chip_rect := Rect2(chip_pos, Vector2(chip_w, chip_h))
 	var fill := Color("#f0d79a", 0.92) if unlocked else Color("#b9afa0", 0.84)
-	var border := Color("#ffd967", 0.98) if selected else Color("#5e3a1c", 0.82)
+	var border := Color("#ffd967", 0.92) if selected else Color("#5e3a1c", 0.76)
 	if boss_spot and unlocked:
 		border = Color("#d9764d", 0.98)
-	draw_rect(chip_rect.grow(2.0), Color(0.0, 0.0, 0.0, 0.32), true)
+	_draw_spot_chip_leader(center, chip_rect, selected, unlocked)
+	draw_rect(chip_rect.grow(2.0), Color(0.0, 0.0, 0.0, 0.25), true)
 	draw_rect(chip_rect, fill, true)
 	draw_line(chip_rect.position + Vector2(4.0, 4.0), chip_rect.position + Vector2(chip_rect.size.x - 4.0, 4.0), Color("#fff1bf", 0.42), 1.0)
 	draw_line(chip_rect.position + Vector2(4.0, chip_rect.size.y - 4.0), chip_rect.position + Vector2(chip_rect.size.x - 4.0, chip_rect.size.y - 4.0), Color("#8b5b2b", 0.20), 1.0)
-	draw_rect(chip_rect, border, false, 2.0)
+	for corner in [
+		chip_rect.position + Vector2(4.0, 4.0),
+		Vector2(chip_rect.end.x - 4.0, chip_rect.position.y + 4.0),
+		Vector2(chip_rect.position.x + 4.0, chip_rect.end.y - 4.0),
+		chip_rect.end - Vector2(4.0, 4.0),
+	]:
+		draw_circle(corner, 1.6, Color("#6f4824", 0.42))
+	draw_rect(chip_rect, border, false, 1.4 if not selected else 1.8)
 	if selected:
-		draw_rect(chip_rect.grow(4.0), Color("#ffe070", 0.18), false, 1.0)
+		draw_rect(chip_rect.grow(3.0), Color("#ffe070", 0.13), false, 1.0)
 	var name_pos := chip_rect.position + Vector2((chip_rect.size.x - name_w) * 0.5, 21.0)
 	_draw_text(font, name, name_pos, font_size, Color("#24170d") if unlocked else Color("#554b42"), 1)
 	if not unlocked or boss_spot:
 		var extra_pos := chip_rect.position + Vector2((chip_rect.size.x - extra_w) * 0.5, 36.0)
 		_draw_text(font, extra, extra_pos, 12, Color("#842a24") if not unlocked else Color("#6d2a1d"), 0)
+
+
+func _draw_spot_chip_leader(center: Vector2, chip_rect: Rect2, selected: bool, unlocked: bool) -> void:
+	var edge := Vector2(
+		clampf(center.x, chip_rect.position.x, chip_rect.end.x),
+		clampf(center.y, chip_rect.position.y, chip_rect.end.y)
+	)
+	if center.y < chip_rect.position.y:
+		edge.y = chip_rect.position.y
+	elif center.y > chip_rect.end.y:
+		edge.y = chip_rect.end.y
+	elif center.x < chip_rect.position.x:
+		edge.x = chip_rect.position.x
+	elif center.x > chip_rect.end.x:
+		edge.x = chip_rect.end.x
+	else:
+		edge = chip_rect.get_center()
+	var line_color := Color("#ffe8a0", 0.50 if unlocked else 0.28)
+	if selected:
+		line_color = Color("#ffe070", 0.70)
+	draw_line(center, edge, Color(0.0, 0.0, 0.0, line_color.a * 0.45), 3.0)
+	draw_line(center, edge, line_color, 1.2 if not selected else 1.6)
 
 
 func _draw_dotted_line(from_point: Vector2, to_point: Vector2, color: Color, width: float, dash: float, gap: float) -> void:

@@ -466,28 +466,28 @@ def _draw_completion_slot_frame(size: tuple[int, int], state: str) -> Image.Imag
 
     # A ledger cell, not a card. The parchment board underneath remains visible
     # so this row reads as progress records instead of selectable destinations.
-    draw.line((0, 10, 0, size[1] - 8), fill=(91, 61, 32, 82), width=1)
-    draw.line((size[0] - 1, 10, size[0] - 1, size[1] - 8), fill=(255, 238, 180, 34), width=1)
+    draw.line((0, 6, 0, size[1] - 6), fill=(91, 61, 32, 70), width=1)
+    draw.line((size[0] - 1, 6, size[0] - 1, size[1] - 6), fill=(255, 238, 180, 30), width=1)
     fill = (241, 223, 184, 38) if not locked else (86, 82, 76, 42)
     if selected:
         fill = (255, 216, 82, 58)
-    draw.rectangle((3, 10, size[0] - 3, size[1] - 9), fill=fill)
+    draw.rectangle((3, 6, size[0] - 3, size[1] - 6), fill=fill)
 
-    rail = (5, 12, size[0] - 5, 31)
+    rail = (7, 6, size[0] - 7, 27)
     rail_color = (68, 72, 70, 136) if locked else (6, 50, 76, 186)
     if selected:
         rail_color = (7, 60, 91, 210)
     _rounded(draw, rail, 3, rail_color, None, 1)
-    draw.line((rail[0] + 6, rail[1] + 5, rail[2] - 6, rail[1] + 5), fill=(255, 255, 255, 24), width=1)
+    draw.line((rail[0] + 8, rail[1] + 5, rail[2] - 8, rail[1] + 5), fill=(255, 255, 255, 25), width=1)
 
-    draw.line((7, 39, size[0] - 8, 39), fill=(92, 65, 34, 64), width=1)
+    draw.line((8, 30, size[0] - 8, 30), fill=(92, 65, 34, 54), width=1)
     if selected:
-        draw.line((5, 8, size[0] - 5, 8), fill=(255, 216, 82, 190), width=2)
-        draw.line((5, size[1] - 7, size[0] - 5, size[1] - 7), fill=(255, 216, 82, 155), width=2)
+        draw.line((7, 4, size[0] - 7, 4), fill=(255, 216, 82, 180), width=2)
+        draw.line((7, size[1] - 5, size[0] - 7, size[1] - 5), fill=(255, 216, 82, 145), width=2)
     if locked:
-        draw.rectangle((6, 41, size[0] - 6, size[1] - 10), fill=(68, 66, 61, 28))
-        draw.line((size[0] - 36, 51, size[0] - 19, 66), fill=(86, 76, 61, 95), width=2)
-        draw.line((size[0] - 19, 51, size[0] - 36, 66), fill=(86, 76, 61, 95), width=2)
+        draw.rectangle((7, 31, size[0] - 7, size[1] - 7), fill=(68, 66, 61, 28))
+        draw.line((size[0] - 30, 35, size[0] - 17, 48), fill=(86, 76, 61, 90), width=2)
+        draw.line((size[0] - 17, 35, size[0] - 30, 48), fill=(86, 76, 61, 90), width=2)
     return img
 
 
@@ -551,9 +551,9 @@ def build() -> None:
     _draw_card_frame((420, 128), locked=True).save(CARD_FRAME_LOCKED_OUT)
     _draw_route_chip_frame((360, 84), locked=False).save(ROUTE_CHIP_FRAME_OUT)
     _draw_route_chip_frame((360, 84), locked=True).save(ROUTE_CHIP_FRAME_LOCKED_OUT)
-    _draw_completion_slot_frame((180, 140), "normal").save(COMPLETION_SLOT_FRAME_OUT)
-    _draw_completion_slot_frame((180, 140), "selected").save(COMPLETION_SLOT_SELECTED_OUT)
-    _draw_completion_slot_frame((180, 140), "locked").save(COMPLETION_SLOT_LOCKED_OUT)
+    _draw_completion_slot_frame((360, 78), "normal").save(COMPLETION_SLOT_FRAME_OUT)
+    _draw_completion_slot_frame((360, 78), "selected").save(COMPLETION_SLOT_SELECTED_OUT)
+    _draw_completion_slot_frame((360, 78), "locked").save(COMPLETION_SLOT_LOCKED_OUT)
     _make_thumbnails(bg)
 
 

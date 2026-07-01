@@ -18,7 +18,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_expect(_screen._map_view != null, "map view should be present")
 	_verify_progress_entries(8, 7)
-	_expect(_screen._completion_summary_text(GameData.get_fishing_spot("harbor_pier"), true, _screen._spot_completion_counts(GameData.get_fishing_spot("harbor_pier"))) == "2 / 5 種", "spot completion summary should use spot-specific catches")
+	_expect(_screen._completion_summary_text(GameData.get_fishing_spot("harbor_pier"), true, _screen._spot_completion_counts(GameData.get_fishing_spot("harbor_pier"))) == "2/5 種", "spot completion summary should use spot-specific catches")
 	_expect(_spot_card_buttons(_screen).is_empty(), "footer spot entries must not be selectable buttons")
 	_screen._select_spot("deep_ocean")
 	_expect(_navigated_to.is_empty(), "locked spot must not navigate")
