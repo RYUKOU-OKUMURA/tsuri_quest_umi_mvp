@@ -17,8 +17,9 @@ func _ready() -> void:
 	_screen = _make_screen()
 	await get_tree().process_frame
 	_expect(_screen._map_view != null, "map view should be present")
-	_expect(_screen._header_spot_value_label.text == "港内", "header selected spot should show default spot")
-	_verify_progress_entries(8, 7)
+	_expect(_screen._footer_completion_value_label != null, "footer completion label should be present")
+	_expect(_screen._footer_completion_value_label.text == "2 / 5", "footer completion should show aggregate unlocked progress")
+	_verify_no_footer_spot_entries()
 	_expect(_screen._completion_summary_text(GameData.get_fishing_spot("harbor_pier"), true, _screen._spot_completion_counts(GameData.get_fishing_spot("harbor_pier"))) == "記録 2/5 種", "spot completion summary should use spot-specific catches")
 	_expect(_spot_card_buttons(_screen).is_empty(), "footer spot entries must not be selectable buttons")
 	_screen._select_spot("deep_ocean")
@@ -35,7 +36,7 @@ func _ready() -> void:
 	PlayerProgress.level = GameData.BOSS_UNLOCK_LEVEL
 	_screen = _make_screen()
 	await get_tree().process_frame
-	_verify_progress_entries(8, 2)
+	_verify_no_footer_spot_entries()
 	_screen._select_spot(GameData.BOSS_FISHING_SPOT_ID)
 	_expect(_navigated_to == "fishing", "boss spot should navigate when unlocked")
 	_expect(String(_payload.get("spot_id", "")) == GameData.BOSS_FISHING_SPOT_ID, "boss spot payload mismatch")
@@ -53,7 +54,7 @@ func _ready() -> void:
 	})
 	await get_tree().process_frame
 	_expect(_screen._selected_spot_id == "outer_tide", "current fishing spot should be selected")
-	_expect(_screen._header_spot_value_label.text == "潮目", "header selected spot should follow current fishing spot")
+	_verify_no_footer_spot_entries()
 	_screen._select_spot("outer_tide")
 	_expect(_navigated_to == "fishing", "continued spot selection should navigate to fishing")
 	_expect(bool(_payload.get("continue_trip", false)), "continued spot selection should keep continue_trip")
@@ -83,14 +84,9 @@ func _make_screen(payload: Dictionary = {}) -> Control:
 	return screen
 
 
-func _verify_progress_entries(expected_entries: int, expected_locked: int) -> void:
+func _verify_no_footer_spot_entries() -> void:
 	var entries := _spot_progress_entries(_screen)
-	_expect(entries.size() == expected_entries, "spot progress entry count mismatch: expected %d got %d" % [expected_entries, entries.size()])
-	var locked := 0
-	for entry in entries:
-		if bool(entry.get_meta("locked", false)):
-			locked += 1
-	_expect(locked == expected_locked, "locked progress entry count mismatch: expected %d got %d" % [expected_locked, locked])
+	_expect(entries.is_empty(), "footer must not contain fishing spot ledger cells")
 
 
 func _spot_progress_entries(root: Node) -> Array[Control]:

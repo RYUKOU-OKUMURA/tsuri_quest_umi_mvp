@@ -21,8 +21,12 @@ OUT_DIR = ROOT / "assets" / "showcase" / "fishing_spots"
 MAP_BG_OUT = OUT_DIR / "map_bg.png"
 MAP_GRADE_OUT = OUT_DIR / "map_color_grade.png"
 HEADER_FRAME_OUT = OUT_DIR / "map_header_frame.png"
+TITLE_SIGN_OUT = OUT_DIR / "map_title_sign.png"
+STATUS_BAR_OUT = OUT_DIR / "map_status_bar.png"
+STATUS_ICON_SHEET_OUT = OUT_DIR / "map_status_icon_sheet.png"
 DETAIL_FRAME_OUT = OUT_DIR / "map_detail_frame.png"
 FOOTER_FRAME_OUT = OUT_DIR / "map_footer_frame.png"
+FOOTER_ICON_SHEET_OUT = OUT_DIR / "map_footer_icon_sheet.png"
 MARKER_SHEET_OUT = OUT_DIR / "map_marker_sheet.png"
 SPOT_MARKER_SHEET_OUT = OUT_DIR / "map_spot_marker_sheet.png"
 DETAIL_ICON_SHEET_OUT = OUT_DIR / "map_detail_icon_sheet.png"
@@ -167,20 +171,155 @@ def _draw_frame(
 
 def _draw_header_frame(size: tuple[int, int]) -> Image.Image:
     frame = Image.new("RGBA", size, (0, 0, 0, 0))
+
+    shadow = Image.new("RGBA", size, (0, 0, 0, 0))
+    shadow_draw = ImageDraw.Draw(shadow)
+    _rounded(shadow_draw, (8, 10, size[0] - 8, size[1] - 6), 8, (0, 0, 0, 72))
+    frame.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(5)))
+
+    body = _paper_texture((size[0] - 16, size[1] - 16), 1121, (7, 34, 56))
+    glaze = Image.new("RGBA", body.size, (2, 11, 22, 60))
+    body.alpha_composite(glaze)
+    mask = Image.new("L", body.size, 0)
+    mask_draw = ImageDraw.Draw(mask)
+    mask_draw.rounded_rectangle((0, 0, body.width - 1, body.height - 1), radius=7, fill=255)
+    frame.paste(body, (8, 8), mask)
+
     draw = ImageDraw.Draw(frame)
     # A calm single nautical status band. Text is drawn by Godot.
-    _rounded(draw, (8, 8, size[0] - 8, size[1] - 8), 7, (7, 31, 51, 250), (16, 67, 102, 245), 3)
+    _rounded(draw, (8, 8, size[0] - 8, size[1] - 8), 7, None, (16, 67, 102, 245), 3)
     _rounded(draw, (20, 20, size[0] - 20, size[1] - 20), 2, None, (196, 150, 70, 176), 2)
+    _rounded(draw, (26, 26, size[0] - 26, size[1] - 26), 2, None, (255, 232, 154, 48), 1)
     draw.rectangle((32, 32, size[0] - 32, size[1] - 32), fill=(10, 42, 68, 54))
     draw.line((32, 25, size[0] - 32, 25), fill=(255, 255, 255, 30), width=2)
     draw.line((32, size[1] - 24, size[0] - 32, size[1] - 24), fill=(0, 0, 0, 90), width=2)
     for x in [548, 850, 1182]:
         draw.line((x, 26, x, size[1] - 26), fill=(223, 177, 86, 70), width=1)
         draw.line((x + 2, 30, x + 2, size[1] - 30), fill=(0, 0, 0, 60), width=1)
+
+    # Corner hardware and logbook scuffs make the frame read as a produced asset
+    # instead of a flat runtime rectangle.
+    corner_segments = [
+        ((30, 25), (92, 25), (30, 25), (30, 66)),
+        ((size[0] - 92, 25), (size[0] - 30, 25), (size[0] - 30, 25), (size[0] - 30, 66)),
+        ((30, size[1] - 25), (92, size[1] - 25), (30, size[1] - 66), (30, size[1] - 25)),
+        ((size[0] - 92, size[1] - 25), (size[0] - 30, size[1] - 25), (size[0] - 30, size[1] - 66), (size[0] - 30, size[1] - 25)),
+    ]
+    for h0, h1, v0, v1 in corner_segments:
+        draw.line((*h0, *h1), fill=(231, 184, 91, 132), width=2)
+        draw.line((*v0, *v1), fill=(231, 184, 91, 132), width=2)
+        draw.line((h0[0], h0[1] + 3, h1[0], h1[1] + 3), fill=(0, 0, 0, 58), width=1)
+
+    rng = random.Random(1168)
+    for _ in range(46):
+        x = rng.randint(58, size[0] - 140)
+        y = rng.randint(36, size[1] - 38)
+        length = rng.randint(24, 94)
+        draw.line((x, y, x + length, y + rng.randint(-1, 1)), fill=(255, 236, 168, rng.randint(7, 18)), width=1)
+    for _ in range(18):
+        x = rng.randint(80, size[0] - 100)
+        y = rng.randint(34, size[1] - 34)
+        draw.line((x, y, x + rng.randint(18, 42), y + rng.randint(2, 5)), fill=(0, 0, 0, rng.randint(18, 35)), width=1)
+
     for x in [44, size[0] - 52]:
         for y in [34, size[1] - 42]:
             draw.ellipse((x - 4, y - 4, x + 4, y + 4), fill=(205, 157, 76, 170), outline=(62, 41, 25, 180))
     return frame
+
+
+def _draw_title_sign(size: tuple[int, int]) -> Image.Image:
+    img = Image.new("RGBA", size, (0, 0, 0, 0))
+    shadow = Image.new("RGBA", size, (0, 0, 0, 0))
+    shadow_draw = ImageDraw.Draw(shadow)
+    _rounded(shadow_draw, (10, 18, size[0] - 12, size[1] - 16), 12, (0, 0, 0, 118))
+    img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(5)))
+
+    plank = _paper_texture((size[0] - 44, size[1] - 30), 1402, (205, 157, 87))
+    stain = Image.new("RGBA", plank.size, (92, 52, 22, 26))
+    plank.alpha_composite(stain)
+    mask = Image.new("L", plank.size, 0)
+    mask_draw = ImageDraw.Draw(mask)
+    mask_draw.rounded_rectangle((0, 0, plank.width - 1, plank.height - 1), radius=12, fill=255)
+    img.paste(plank, (22, 12), mask)
+
+    draw = ImageDraw.Draw(img)
+    body = (22, 12, size[0] - 22, size[1] - 18)
+    _rounded(draw, body, 12, None, (76, 45, 22, 245), 4)
+    _rounded(draw, (31, 21, size[0] - 31, size[1] - 27), 8, None, (236, 198, 111, 150), 2)
+    draw.line((48, 31, size[0] - 56, 23), fill=(255, 235, 168, 55), width=2)
+    draw.line((56, size[1] - 34, size[0] - 54, size[1] - 36), fill=(61, 35, 17, 85), width=2)
+    rng = random.Random(1417)
+    for _ in range(90):
+        x = rng.randint(42, size[0] - 72)
+        y = rng.randint(25, size[1] - 38)
+        draw.line((x, y, x + rng.randint(20, 82), y + rng.randint(-2, 2)), fill=(73, 43, 20, rng.randint(16, 44)), width=1)
+
+    # Rope knots and loops, baked into the sign asset.
+    rope = (142, 96, 47, 248)
+    rope_hi = (237, 199, 121, 145)
+    for x in [26, size[0] - 54]:
+        draw.line((x + 12, 0, x + 24, 31), fill=rope, width=8)
+        draw.line((x + 4, 4, x + 28, 32), fill=rope_hi, width=2)
+        for offset in [0, 10, 20]:
+            draw.arc((x + offset - 7, 7, x + offset + 22, 36), 120, 315, fill=(82, 52, 26, 220), width=3)
+        draw.ellipse((x + 2, 22, x + 38, 58), fill=(130, 85, 40, 238), outline=(65, 39, 18, 230), width=3)
+        draw.arc((x + 7, 27, x + 33, 53), 20, 330, fill=rope_hi, width=2)
+
+    # Anchor pictogram area; Japanese title is drawn at runtime.
+    cx, cy = 86, 62
+    icon_col = (38, 54, 56, 245)
+    icon_hi = (232, 218, 163, 150)
+    draw.line((cx, cy - 31, cx, cy + 24), fill=icon_col, width=8)
+    draw.ellipse((cx - 15, cy - 42, cx + 15, cy - 14), outline=icon_col, width=7)
+    draw.line((cx - 28, cy - 5, cx + 28, cy - 5), fill=icon_col, width=7)
+    draw.arc((cx - 42, cy - 5, cx + 42, cy + 53), 25, 155, fill=icon_col, width=8)
+    draw.polygon([(cx - 44, cy + 19), (cx - 24, cy + 25), (cx - 35, cy + 39)], fill=icon_col)
+    draw.polygon([(cx + 44, cy + 19), (cx + 24, cy + 25), (cx + 35, cy + 39)], fill=icon_col)
+    draw.line((cx - 7, cy - 29, cx - 7, cy + 20), fill=icon_hi, width=2)
+    return img
+
+
+def _draw_status_bar(size: tuple[int, int]) -> Image.Image:
+    img = Image.new("RGBA", size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    _rounded(draw, (4, 8, size[0] - 4, size[1] - 8), 4, (5, 33, 58, 242), (199, 153, 75, 220), 2)
+    _rounded(draw, (13, 16, size[0] - 13, size[1] - 16), 2, None, (241, 199, 103, 95), 1)
+    draw.line((28, 19, size[0] - 30, 19), fill=(255, 244, 180, 42), width=1)
+    draw.line((28, size[1] - 19, size[0] - 30, size[1] - 19), fill=(0, 0, 0, 78), width=1)
+    for x in [185, 425]:
+        draw.line((x, 19, x, size[1] - 19), fill=(236, 190, 96, 78), width=1)
+        draw.line((x + 2, 22, x + 2, size[1] - 22), fill=(0, 0, 0, 70), width=1)
+    for x in [18, size[0] - 24]:
+        for y in [22, size[1] - 25]:
+            draw.polygon([(x, y), (x + 6, y - 4), (x + 12, y), (x + 6, y + 4)], fill=(224, 177, 84, 145))
+    return img
+
+
+def _draw_status_icon_sheet() -> Image.Image:
+    size = 96
+    sheet = Image.new("RGBA", (size * 3, size), (0, 0, 0, 0))
+    for i in range(3):
+        cell = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(cell)
+        if i == 0:
+            draw.polygon([(48, 12), (73, 24), (68, 62), (48, 82), (28, 62), (23, 24)], fill=(104, 117, 122, 255), outline=(235, 210, 148, 230))
+            draw.line((48, 23, 48, 68), fill=(36, 50, 58, 225), width=5)
+            draw.line((36, 38, 60, 38), fill=(36, 50, 58, 225), width=5)
+            draw.line((54, 24, 61, 60), fill=(255, 255, 255, 72), width=2)
+        elif i == 1:
+            draw.arc((20, 12, 82, 82), 110, 292, fill=(236, 193, 96, 255), width=6)
+            draw.line((34, 72, 21, 88), fill=(236, 193, 96, 255), width=5)
+            draw.ellipse((64, 16, 77, 29), fill=(235, 219, 164, 255), outline=(73, 45, 23, 220), width=2)
+            for x, y in [(41, 42), (52, 34), (58, 51)]:
+                draw.ellipse((x - 3, y - 3, x + 3, y + 3), fill=(237, 228, 186, 255))
+        else:
+            draw.ellipse((14, 14, 82, 82), fill=(217, 157, 49, 255), outline=(92, 57, 22, 240), width=4)
+            draw.ellipse((24, 24, 72, 72), outline=(255, 226, 117, 220), width=3)
+            draw.arc((36, 27, 63, 55), 80, 280, fill=(92, 57, 22, 220), width=4)
+            draw.arc((32, 41, 60, 69), 260, 100, fill=(92, 57, 22, 220), width=4)
+            draw.line((47, 24, 47, 72), fill=(92, 57, 22, 210), width=3)
+        sheet.alpha_composite(cell, (i * size, 0))
+    return sheet
 
 
 def _draw_detail_frame(size: tuple[int, int]) -> Image.Image:
@@ -211,32 +350,62 @@ def _draw_detail_frame(size: tuple[int, int]) -> Image.Image:
 def _draw_footer_frame(size: tuple[int, int]) -> Image.Image:
     frame = Image.new("RGBA", size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(frame)
-    _rounded(draw, (10, 10, size[0] - 10, size[1] - 10), 14, (6, 31, 50, 244), (190, 139, 61, 235), 3)
-    _rounded(draw, (20, 20, size[0] - 20, size[1] - 20), 9, None, (236, 196, 98, 180), 1)
-    draw.line((32, 22, size[0] - 32, 22), fill=(255, 236, 166, 52), width=1)
-    draw.line((32, size[1] - 22, size[0] - 32, size[1] - 22), fill=(0, 0, 0, 72), width=1)
+    _rounded(draw, (10, 12, size[0] - 10, size[1] - 10), 15, (5, 25, 43, 246), (190, 139, 61, 235), 3)
+    _rounded(draw, (22, 23, size[0] - 22, size[1] - 21), 10, None, (236, 196, 98, 165), 1)
+    draw.line((34, 27, size[0] - 34, 27), fill=(255, 236, 166, 42), width=1)
+    draw.line((34, size[1] - 25, size[0] - 34, size[1] - 25), fill=(0, 0, 0, 82), width=1)
 
-    # Left side is a logbook board, not another set of point-selection cards.
-    board = _paper_texture((size[0] - 430, size[1] - 54), 980, (221, 202, 162))
-    board_mask = Image.new("L", board.size, 0)
-    mask_draw = ImageDraw.Draw(board_mask)
-    mask_draw.rounded_rectangle((0, 0, board.width - 1, board.height - 1), radius=10, fill=255)
-    frame.paste(board, (28, 27), board_mask)
-    _rounded(draw, (28, 27, size[0] - 402, size[1] - 27), 10, None, (110, 72, 35, 178), 2)
-    _rounded(draw, (39, 36, size[0] - 413, 65), 7, (7, 46, 72, 226), (213, 171, 88, 165), 1)
-    draw.line((55, 45, size[0] - 430, 45), fill=(255, 255, 255, 34), width=1)
-    draw.line((size[0] - 399, 30, size[0] - 399, size[1] - 30), fill=(230, 184, 90, 120), width=1)
-    draw.line((size[0] - 396, 32, size[0] - 396, size[1] - 32), fill=(0, 0, 0, 70), width=1)
-    for x in range(54, size[0] - 438, 74):
-        draw.line((x, 78, x + 42, 78), fill=(118, 79, 38, 42), width=1)
-    for y in [87, 112]:
-        draw.line((47, y, size[0] - 430, y), fill=(105, 72, 37, 28), width=1)
-
-    # Right memo is parchment, visually secondary to the map and right detail panel.
-    _rounded(draw, (size[0] - 382, 27, size[0] - 30, size[1] - 27), 9, (225, 202, 155, 232), (132, 85, 38, 165), 2)
-    _rounded(draw, (size[0] - 362, 42, size[0] - 50, 70), 5, (8, 50, 78, 230), (210, 171, 88, 200), 1)
-    _rounded(draw, (size[0] - 362, size[1] - 59, size[0] - 50, size[1] - 31), 5, (8, 50, 78, 210), None, 1)
+    # Runtime places the controls inside these wells.
+    wells = [
+        (30, 31, 300, 119, (7, 55, 83, 222)),
+        (322, 33, 690, 118, (7, 32, 48, 210)),
+        (712, 33, 1334, 118, (7, 34, 51, 210)),
+        (1374, 31, 1570, 119, (36, 37, 36, 225)),
+    ]
+    for box in wells:
+        _rounded(draw, box[:4], 9, box[4], (201, 154, 77, 170), 2)
+        draw.line((box[0] + 18, box[1] + 12, box[2] - 18, box[1] + 12), fill=(255, 255, 255, 28), width=1)
+        draw.line((box[0] + 18, box[3] - 9, box[2] - 18, box[3] - 9), fill=(0, 0, 0, 70), width=1)
     return frame
+
+
+def _draw_footer_icon_sheet() -> Image.Image:
+    size = 96
+    sheet = Image.new("RGBA", (size * 4, size), (0, 0, 0, 0))
+    for i in range(4):
+        cell = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(cell)
+        if i == 0:
+            draw.rounded_rectangle((20, 24, 74, 76), radius=5, fill=(236, 221, 178, 255), outline=(81, 52, 27, 245), width=3)
+            draw.line((47, 25, 47, 76), fill=(118, 81, 45, 220), width=3)
+            for y in [36, 48, 60]:
+                draw.line((28, y, 42, y - 3), fill=(118, 81, 45, 120), width=2)
+                draw.line((53, y - 3, 68, y), fill=(118, 81, 45, 120), width=2)
+        elif i == 1:
+            draw.rounded_rectangle((20, 34, 76, 75), radius=4, fill=(171, 95, 31, 255), outline=(76, 43, 18, 245), width=3)
+            draw.polygon([(20, 34), (34, 21), (65, 21), (76, 34)], fill=(221, 165, 61, 255), outline=(76, 43, 18, 230))
+            draw.rectangle((45, 34, 53, 75), fill=(239, 190, 78, 255))
+            draw.ellipse((44, 46, 54, 56), fill=(92, 57, 22, 255))
+        elif i == 2:
+            cx, cy = 48, 48
+            for a in range(0, 360, 45):
+                x1 = cx + math.cos(math.radians(a)) * 17
+                y1 = cy + math.sin(math.radians(a)) * 17
+                x2 = cx + math.cos(math.radians(a)) * 36
+                y2 = cy + math.sin(math.radians(a)) * 36
+                draw.line((x1, y1, x2, y2), fill=(236, 221, 178, 255), width=6)
+            draw.ellipse((25, 25, 71, 71), fill=(88, 64, 42, 255), outline=(236, 221, 178, 255), width=5)
+            draw.ellipse((39, 39, 57, 57), fill=(236, 221, 178, 255))
+        else:
+            draw.ellipse((16, 16, 80, 80), fill=(76, 76, 70, 255), outline=(236, 221, 178, 245), width=4)
+            for a in range(0, 360, 45):
+                x = 48 + math.cos(math.radians(a)) * 31
+                y = 48 + math.sin(math.radians(a)) * 31
+                draw.rectangle((x - 5, y - 5, x + 5, y + 5), fill=(236, 221, 178, 255))
+            draw.ellipse((35, 35, 61, 61), fill=(236, 221, 178, 255))
+            draw.ellipse((43, 43, 53, 53), fill=(76, 76, 70, 255))
+        sheet.alpha_composite(cell, (i * size, 0))
+    return sheet
 
 
 def _draw_marker_cell(kind: str, size: int = 128) -> Image.Image:
@@ -550,8 +719,12 @@ def build() -> None:
     grade.save(MAP_GRADE_OUT)
 
     _draw_header_frame((1600, 128)).save(HEADER_FRAME_OUT)
+    _draw_title_sign((620, 124)).save(TITLE_SIGN_OUT)
+    _draw_status_bar((760, 84)).save(STATUS_BAR_OUT)
+    _draw_status_icon_sheet().save(STATUS_ICON_SHEET_OUT)
     _draw_detail_frame((520, 760)).save(DETAIL_FRAME_OUT)
     _draw_footer_frame((1600, 146)).save(FOOTER_FRAME_OUT)
+    _draw_footer_icon_sheet().save(FOOTER_ICON_SHEET_OUT)
 
     sheet = Image.new("RGBA", (128 * 4, 128), (0, 0, 0, 0))
     for i, kind in enumerate(["normal", "selected", "locked", "boss"]):

@@ -10,19 +10,14 @@ const OUT_CONTINUE := "/tmp/tsuri_fishing_spot_map_continue.png"
 
 
 func _ready() -> void:
-	PlayerProgress.level = 9
-	PlayerProgress.money = 12450
-	PlayerProgress.equipped_rod_id = "seabreeze_rod"
+	PlayerProgress.level = 3
+	PlayerProgress.money = 1200
+	PlayerProgress.equipped_rod_id = "starter"
 	PlayerProgress.spot_caught_counts = {
-		"harbor_pier": {"aji": 3, "iwashi": 2, "shirogisu": 1},
-		"shallow_sand": {"shirogisu": 2, "kawahagi": 1},
-		"rock_breakwater": {"kasago": 2, "mebaru": 1, "ainame": 1},
-		"outer_tide": {"saba": 2, "suzuki": 1},
-		"south_reef": {"akahata": 1},
-		"bluewater_route": {"kanpachi": 1, "buri": 1, "katsuo": 1},
+		"harbor_pier": {"aji": 3, "iwashi": 2},
 	}
 
-	await _capture({"spot_id": "bluewater_route"}, OUT_DEFAULT)
+	await _capture({"spot_id": "harbor_pier"}, OUT_DEFAULT)
 	await _capture(
 		{
 			"from_fishing": true,
