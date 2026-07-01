@@ -12,6 +12,8 @@ const HARBOR_BUTTON_PATH := "res://assets/showcase/harbor/harbor_facility_card.p
 const HARBOR_BUTTON_HOVER_PATH := "res://assets/showcase/harbor/harbor_facility_card_hover.png"
 const HARBOR_BUTTON_PRIMARY_PATH := "res://assets/showcase/harbor/harbor_facility_card_primary.png"
 const MAP_DETAIL_FRAME_PATH := "res://assets/showcase/fishing_spots/map_detail_frame.png"
+const MAP_DETAIL_ICON_SHEET_PATH := "res://assets/showcase/fishing_spots/map_detail_icon_sheet.png"
+const MAP_FOOTER_ICON_SHEET_PATH := "res://assets/showcase/fishing_spots/map_footer_icon_sheet.png"
 const MAP_STATUS_BAR_PATH := "res://assets/showcase/fishing_spots/map_status_bar.png"
 const MAP_TITLE_SIGN_PATH := "res://assets/showcase/fishing_spots/map_title_sign.png"
 const BOOK_CARD_FRAME_PATH := "res://assets/showcase/cooking/recipe_card_frame.png"
@@ -20,14 +22,15 @@ const BOOK_BADGE_FRAME_PATH := "res://assets/showcase/cooking/recipe_material_st
 const BOOK_DETAIL_ROW_FRAME_PATH := "res://assets/showcase/cooking/cook_detail_row_frame.png"
 const BOOK_ACTION_BUTTON_FRAME_PATH := "res://assets/showcase/cooking/flow_action_button_frame.png"
 const SPOT_THUMB_BASE_PATH := "res://assets/showcase/fishing_spots/thumbs"
+const FISH_BOOK_ICON_SIZE := 96.0
 
 const FILTERS := [
-	{"id": "all", "label": "全魚"},
-	{"id": "harbor", "label": "港内"},
-	{"id": "sand", "label": "砂浜"},
-	{"id": "rock", "label": "岩礁"},
-	{"id": "offshore", "label": "沖"},
-	{"id": "rare", "label": "レア"},
+	{"id": "all", "label": "全魚", "icon": 1},
+	{"id": "harbor", "label": "港内", "icon": 2},
+	{"id": "sand", "label": "砂浜", "icon": 0},
+	{"id": "rock", "label": "岩礁", "icon": 3},
+	{"id": "offshore", "label": "沖", "icon": 0},
+	{"id": "rare", "label": "レア", "icon": 3},
 ]
 
 var _active_filter := "all"
@@ -50,9 +53,13 @@ var _detail_habitat_label: Label
 var _detail_bait_label: Label
 var _detail_behavior_label: Label
 var _detail_spots: Control
+var _detail_icon_sheet: Texture2D
+var _footer_icon_sheet: Texture2D
 
 
 func _build_screen() -> void:
+	_detail_icon_sheet = _load_texture_if_exists(MAP_DETAIL_ICON_SHEET_PATH)
+	_footer_icon_sheet = _load_texture_if_exists(MAP_FOOTER_ICON_SHEET_PATH)
 	_build_background()
 	var root := Control.new()
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -251,12 +258,14 @@ func _build_footer(root: Control) -> void:
 		button.name = "FishBookFilter_%s" % filter_id
 		button.set_meta("fish_book_filter", filter_id)
 		_filter_buttons[filter_id] = button
+		_add_button_icon(button, _detail_icon(int(filter.get("icon", -1))), false)
 		_place_control(footer, button, x, 0.205, x + 0.118, 0.810)
 		x += 0.126
 
 	var back := _textured_button("港へ戻る", func() -> void: navigate("harbor"), true)
 	back.name = "FishBookReturnButton"
 	back.set_meta("fish_book_return", true)
+	_add_button_icon(back, _footer_icon(1), true)
 	var action_style := _texture_style(BOOK_ACTION_BUTTON_FRAME_PATH, Vector4(46, 24, 46, 24))
 	if action_style != null:
 		back.add_theme_stylebox_override("normal", action_style)
@@ -622,6 +631,22 @@ func _textured_button(text: String, callback: Callable, primary := false) -> But
 	return button
 
 
+func _add_button_icon(button: Button, texture: Texture2D, primary: bool) -> void:
+	if texture == null:
+		return
+	var icon := TextureRect.new()
+	icon.texture = texture
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon.modulate = Color(1.0, 0.94, 0.72, 0.95) if primary else Color(1.0, 0.96, 0.78, 0.85)
+	if primary:
+		_place_control(button, icon, 0.055, 0.170, 0.240, 0.830)
+	else:
+		_place_control(button, icon, 0.055, 0.235, 0.245, 0.770)
+
+
 func _header_chip(parent: Control, left: float, top: float, right: float, bottom: float, value: String, font_size := 17) -> Label:
 	var bg := ColorRect.new()
 	bg.color = Color(0.06, 0.035, 0.018, 0.62)
@@ -696,6 +721,23 @@ func _texture_style(path: String, margins: Vector4) -> StyleBoxTexture:
 	style.content_margin_right = 10.0
 	style.content_margin_bottom = 8.0
 	return style
+
+
+func _detail_icon(icon_index: int) -> Texture2D:
+	return _atlas_icon(_detail_icon_sheet, FISH_BOOK_ICON_SIZE, icon_index)
+
+
+func _footer_icon(icon_index: int) -> Texture2D:
+	return _atlas_icon(_footer_icon_sheet, FISH_BOOK_ICON_SIZE, icon_index)
+
+
+func _atlas_icon(sheet: Texture2D, cell_size: float, icon_index: int) -> Texture2D:
+	if sheet == null or icon_index < 0:
+		return null
+	var atlas := AtlasTexture.new()
+	atlas.atlas = sheet
+	atlas.region = Rect2(Vector2(cell_size * float(icon_index), 0.0), Vector2(cell_size, cell_size))
+	return atlas
 
 
 func _load_texture_if_exists(path: String) -> Texture2D:
