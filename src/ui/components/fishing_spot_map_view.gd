@@ -128,14 +128,15 @@ func _draw() -> void:
 	draw_rect(rect, Color("#04111f"), true)
 	var map_rect := _content_rect()
 	if _map_bg != null:
-		draw_texture_rect(_map_bg, map_rect, false, Color.WHITE)
+		draw_texture_rect_region(_map_bg, map_rect, _texture_source_region(_map_bg), Color.WHITE)
 	else:
 		draw_rect(map_rect, Color("#0b4564"), true)
 	if _map_grade != null:
-		draw_texture_rect(_map_grade, map_rect, false, Color(1.0, 1.0, 1.0, 0.70))
+		draw_texture_rect_region(_map_grade, map_rect, _texture_source_region(_map_grade), Color(1.0, 1.0, 1.0, 0.70))
 	_draw_chart_overlay(map_rect)
 	_draw_routes(map_rect)
 	_draw_markers(map_rect)
+	_draw_edge_shade(map_rect)
 	draw_rect(map_rect, Color(0.94, 0.78, 0.38, 0.52), false, 2.0)
 
 
@@ -180,6 +181,14 @@ func _draw_chart_overlay(map_rect: Rect2) -> void:
 		]),
 		Color("#99d8ee", 0.35)
 	)
+
+
+func _draw_edge_shade(map_rect: Rect2) -> void:
+	var edge := 26.0
+	draw_rect(Rect2(map_rect.position, Vector2(map_rect.size.x, edge)), Color("#020914", 0.22), true)
+	draw_rect(Rect2(Vector2(map_rect.position.x, map_rect.end.y - edge), Vector2(map_rect.size.x, edge)), Color("#020914", 0.24), true)
+	draw_rect(Rect2(map_rect.position, Vector2(edge, map_rect.size.y)), Color("#020914", 0.20), true)
+	draw_rect(Rect2(Vector2(map_rect.end.x - edge, map_rect.position.y), Vector2(edge, map_rect.size.y)), Color("#020914", 0.20), true)
 
 
 func _draw_routes(map_rect: Rect2) -> void:
@@ -330,20 +339,35 @@ func _spot_at_position(position: Vector2) -> String:
 
 func _map_point(map_rect: Rect2, spot_id: String) -> Vector2:
 	var normalized: Vector2 = SPOT_POINTS.get(spot_id, Vector2.ZERO)
-	return map_rect.position + Vector2(map_rect.size.x * normalized.x, map_rect.size.y * normalized.y)
+	var source_view := _source_view_rect()
+	var visible_x := (normalized.x - source_view.position.x) / source_view.size.x
+	var visible_y := (normalized.y - source_view.position.y) / source_view.size.y
+	return map_rect.position + Vector2(map_rect.size.x * visible_x, map_rect.size.y * visible_y)
 
 
 func _content_rect() -> Rect2:
-	var target_aspect := 16.0 / 9.0
 	var draw_size := size
 	if draw_size.x <= 0.0 or draw_size.y <= 0.0:
 		return Rect2(Vector2.ZERO, Vector2.ZERO)
-	var width := draw_size.x
-	var height := width / target_aspect
-	if height > draw_size.y:
-		height = draw_size.y
-		width = height * target_aspect
-	return Rect2((draw_size - Vector2(width, height)) * 0.5, Vector2(width, height))
+	return Rect2(Vector2.ZERO, draw_size)
+
+
+func _source_view_rect() -> Rect2:
+	var target_aspect := 16.0 / 9.0
+	if size.x <= 0.0 or size.y <= 0.0:
+		return Rect2(Vector2.ZERO, Vector2.ONE)
+	var view_aspect := size.x / size.y
+	if view_aspect > target_aspect:
+		var visible_h := target_aspect / view_aspect
+		return Rect2(Vector2(0.0, (1.0 - visible_h) * 0.5), Vector2(1.0, visible_h))
+	var visible_w := view_aspect / target_aspect
+	return Rect2(Vector2((1.0 - visible_w) * 0.5, 0.0), Vector2(visible_w, 1.0))
+
+
+func _texture_source_region(texture: Texture2D) -> Rect2:
+	var source_view := _source_view_rect()
+	var texture_size := Vector2(float(texture.get_width()), float(texture.get_height()))
+	return Rect2(source_view.position * texture_size, source_view.size * texture_size)
 
 
 func _draw_text(font: Font, text: String, baseline: Vector2, font_size: int, color: Color, outline: int) -> void:
