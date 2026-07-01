@@ -110,7 +110,7 @@ func _header_subtitle() -> String:
 
 func _build_header(parent: Control) -> void:
 	var panel := Control.new()
-	panel.custom_minimum_size = Vector2(0.0, 84.0)
+	panel.custom_minimum_size = Vector2(0.0, 96.0)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.clip_contents = true
 	parent.add_child(panel)
@@ -130,67 +130,20 @@ func _build_header(parent: Control) -> void:
 		fallback.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		panel.add_child(fallback)
 
-	var margin := MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 28)
-	margin.add_theme_constant_override("margin_top", 10)
-	margin.add_theme_constant_override("margin_right", 24)
-	margin.add_theme_constant_override("margin_bottom", 10)
-	panel.add_child(margin)
+	var title := make_label("釣り場を選ぶ", 28, Palette.TEXT_BONE, 2, Palette.TEXT_OUTLINE_DARK)
+	title.position = Vector2(42.0, 20.0)
+	title.size = Vector2(1160.0, 36.0)
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	panel.add_child(title)
 
-	var row := HBoxContainer.new()
-	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	row.add_theme_constant_override("separation", 28)
-	margin.add_child(row)
-
-	var title_box := VBoxContainer.new()
-	title_box.custom_minimum_size = Vector2(390.0, 0.0)
-	title_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	title_box.add_theme_constant_override("separation", -1)
-	row.add_child(title_box)
-
-	var title := make_label("釣り場を選ぶ", 27, Palette.TEXT_BONE, 2, Palette.TEXT_OUTLINE_DARK)
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	title.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-	title_box.add_child(title)
-
-	var subtitle_text := "航路図から出航先を指定"
-	if _continue_trip:
-		subtitle_text = "釣行継続中：ポイント変更"
-	var subtitle := make_label("・%s" % subtitle_text, 13, Color("#d8c48e"), 1, Palette.TEXT_OUTLINE_DARK)
-	subtitle.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_box.add_child(subtitle)
-
-	var status_row := HBoxContainer.new()
-	status_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	status_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	status_row.add_theme_constant_override("separation", 10)
-	row.add_child(status_row)
-	status_row.add_child(_make_header_status_cell("Lv.", "%d" % PlayerProgress.level))
-	status_row.add_child(_make_header_status_cell("装備", String(GameData.get_rod(PlayerProgress.equipped_rod_id).get("name", "入門竿"))))
-	status_row.add_child(_make_header_status_cell("所持金", "%d G" % PlayerProgress.money))
-
-
-func _make_header_status_cell(title: String, value: String) -> VBoxContainer:
-	var box := VBoxContainer.new()
-	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	box.add_theme_constant_override("separation", 0)
-	var title_label := make_label(title, 12, Color("#96cde8"), 1, Palette.TEXT_OUTLINE_DARK)
-	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	box.add_child(title_label)
-	var value_label := make_label(value, 16, Palette.TEXT_BONE, 2, Palette.TEXT_OUTLINE_DARK)
-	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	value_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	value_label.clip_text = true
-	value_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	box.add_child(value_label)
-	return box
+	var subtitle := make_label(_header_subtitle(), 15, Color("#dbe8f1"), 1, Palette.TEXT_OUTLINE_DARK)
+	subtitle.position = Vector2(43.0, 58.0)
+	subtitle.size = Vector2(1160.0, 32.0)
+	subtitle.autowrap_mode = TextServer.AUTOWRAP_OFF
+	subtitle.clip_text = false
+	subtitle.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	subtitle.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	panel.add_child(subtitle)
 
 
 func _build_map_panel(parent: Control) -> void:

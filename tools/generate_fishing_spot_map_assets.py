@@ -168,26 +168,12 @@ def _draw_frame(
 def _draw_header_frame(size: tuple[int, int]) -> Image.Image:
     frame = Image.new("RGBA", size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(frame)
-    # A calm nautical status band. The map should remain the hero.
+    # A calm single nautical status band. Text is drawn by Godot.
     _rounded(draw, (8, 8, size[0] - 8, size[1] - 8), 7, (9, 34, 55, 246), (16, 62, 95, 240), 3)
     _rounded(draw, (20, 20, size[0] - 20, size[1] - 20), 2, None, (176, 134, 64, 150), 2)
     draw.line((32, 25, size[0] - 32, 25), fill=(255, 255, 255, 24), width=2)
     draw.line((32, size[1] - 24, size[0] - 32, size[1] - 24), fill=(0, 0, 0, 86), width=2)
-
-    # Left title area is a subtle inset, not a separate plaque.
-    title_w = 500
-    draw.rectangle((32, 32, title_w, size[1] - 31), fill=(10, 42, 68, 115))
-    draw.line((title_w + 24, 31, title_w + 24, size[1] - 31), fill=(202, 158, 78, 105), width=2)
-
-    # Status cards on the right.
-    status_x = 575
-    status_w = (size[0] - status_x - 28) / 3.0
-    for i in range(3):
-        x0 = round(status_x + status_w * i)
-        x1 = round(status_x + status_w * (i + 1) - 10)
-        _rounded(draw, (x0, 26, x1, size[1] - 26), 6, (6, 38, 64, 218), (199, 154, 76, 165), 2)
-        draw.line((x0 + 14, 35, x1 - 14, 35), fill=(255, 255, 255, 34), width=1)
-        draw.line((x0 + 14, size[1] - 35, x1 - 14, size[1] - 35), fill=(0, 0, 0, 72), width=1)
+    draw.rectangle((32, 32, size[0] - 32, size[1] - 32), fill=(10, 42, 68, 46))
     return frame
 
 
