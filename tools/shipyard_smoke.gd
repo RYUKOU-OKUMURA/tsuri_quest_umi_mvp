@@ -16,17 +16,26 @@ func _ready() -> void:
 
 	_expect(_screen._background_rect.texture != null, "shipyard background should load")
 	_expect(_screen._boat_card_labels.size() == 3, "shipyard should render three boat cards")
+	_expect(_screen._boat_card_price_labels.size() == 3, "shipyard should render boat price badges")
+	_expect(_screen._boat_card_range_labels.size() == 3, "shipyard should render boat range labels")
 	_expect(_screen._selected_boat_id == "skiff", "first unowned boat should be selected")
 	_expect(_screen._buy_button.disabled, "initial 500G should not allow skiff purchase")
+	_expect(_screen._boat_card_price_labels.get("skiff").text == "3,600 G", "skiff card should show readable price")
+	_expect(_screen._detail_status_label.text == "資金不足", "detail should show purchase state")
+	_expect(_screen._shortage_label.text.contains("あと"), "detail should show shortage amount")
+	_expect(_screen._route_after_label.text == "購入後 1/3", "route legend should show selected purchase result")
 	_expect(_screen._footer_label.text.contains("あと"), "initial footer should explain missing money")
 
 	PlayerProgress.money = 4000
 	_screen._refresh()
 	_expect(not _screen._buy_button.disabled, "skiff should become purchasable with enough money")
+	_expect(_screen._detail_status_label.text == "購入可能", "detail state should update when money is enough")
+	_expect(_screen._shortage_label.text.is_empty(), "shortage amount should hide when purchasable")
 	_screen._buy_selected_boat()
 	_expect(PlayerProgress.has_boat("skiff"), "buying skiff should add owned boat")
 	_expect(PlayerProgress.money == 400, "buying skiff should subtract price")
 	_expect(_screen._buy_button.disabled, "owned skiff purchase button should be disabled")
+	_expect(_screen._boat_card_price_labels.get("skiff").text == "所持", "owned boat card should show ownership")
 	_expect(PlayerProgress.can_access_fishing_spot("south_reef"), "skiff should unlock south reef at Lv.5")
 
 	var money_after_skiff := PlayerProgress.money

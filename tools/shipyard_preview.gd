@@ -39,8 +39,8 @@ func _ready() -> void:
 
 
 func _setup_preview_progress() -> void:
-	PlayerProgress.level = 6
-	PlayerProgress.exp = 132
-	PlayerProgress.money = 12450
-	PlayerProgress.owned_boats = ["skiff"]
-	PlayerProgress.equipped_rod_id = "offshore"
+	PlayerProgress.level = 3
+	PlayerProgress.exp = 42
+	PlayerProgress.money = 400
+	PlayerProgress.owned_boats = []
+	PlayerProgress.equipped_rod_id = "starter"

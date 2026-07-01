@@ -14,17 +14,23 @@ var _top_rank_label: Label
 var _title_label: Label
 var _boat_card_labels: Dictionary = {}
 var _boat_card_status_labels: Dictionary = {}
+var _boat_card_price_labels: Dictionary = {}
+var _boat_card_range_labels: Dictionary = {}
+var _boat_card_rank_labels: Dictionary = {}
 var _boat_card_frames: Dictionary = {}
+var _detail_status_label: Label
 var _detail_name_label: Label
 var _detail_range_label: Label
 var _detail_rank_label: Label
 var _detail_unlock_label: Label
 var _detail_type_label: Label
 var _price_label: Label
+var _shortage_label: Label
 var _buy_button: Button
 var _route_title_label: Label
 var _route_status_label: Label
 var _route_locked_label: Label
+var _route_after_label: Label
 var _route_hint_label: Label
 var _footer_label: Label
 
@@ -104,17 +110,50 @@ func _build_boat_cards(root: Control) -> void:
 		holder.add_child(select_frame)
 		_boat_card_frames[boat_id] = select_frame
 
-		var name := _shipyard_label("", 16, Color("#3b2b17"), true, 0)
-		name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		_place_control(holder, name, 0.230, 0.720, 0.802, 0.865)
-		_boat_card_labels[boat_id] = name
+		var status_plate := Panel.new()
+		status_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		status_plate.add_theme_stylebox_override("panel", _status_badge_style(Color("#12344e"), Color("#d7b46a")))
+		_place_control(holder, status_plate, 0.355, 0.045, 0.675, 0.170)
 
-		var status := _shipyard_label("", 12, Color("#f7e7be"), true, 2, Color("#112538"))
+		var status := _shipyard_label("", 12, Color("#fff6cf"), true, 1, Color("#102033"))
 		status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		status.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		_place_control(holder, status, 0.130, 0.050, 0.880, 0.195)
+		_place_control(holder, status, 0.365, 0.046, 0.665, 0.165)
 		_boat_card_status_labels[boat_id] = status
+
+		var price_plate := Panel.new()
+		price_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		price_plate.add_theme_stylebox_override("panel", _status_badge_style(Color("#f3dfaa"), Color("#59320e")))
+		_place_control(holder, price_plate, 0.610, 0.055, 0.930, 0.188)
+
+		var price := _shipyard_label("", 13, Color("#4c2c0d"), true, 0)
+		price.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		price.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_place_control(holder, price, 0.630, 0.060, 0.915, 0.180)
+		_boat_card_price_labels[boat_id] = price
+
+		var name_plate := Panel.new()
+		name_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		name_plate.add_theme_stylebox_override("panel", _status_badge_style(Color("#08263c", 0.92), Color("#e7bd68")))
+		_place_control(holder, name_plate, 0.120, 0.715, 0.885, 0.855)
+
+		var name := _shipyard_label("", 17, Color("#fff2be"), true, 2, Color("#07131d"))
+		name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_place_control(holder, name, 0.145, 0.716, 0.860, 0.850)
+		_boat_card_labels[boat_id] = name
+
+		var rank := _shipyard_label("", 12, Color("#3b2b17"), true, 0)
+		rank.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		rank.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_place_control(holder, rank, 0.115, 0.858, 0.305, 0.960)
+		_boat_card_rank_labels[boat_id] = rank
+
+		var range := _shipyard_label("", 12, Color("#3b2b17"), true, 0)
+		range.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		range.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_place_control(holder, range, 0.315, 0.858, 0.890, 0.960)
+		_boat_card_range_labels[boat_id] = range
 
 		var hit := _transparent_button(func() -> void: _select_boat(boat_id))
 		hit.set_meta("shipyard_boat_card", boat_id)
@@ -127,10 +166,25 @@ func _build_center_detail(root: Control) -> void:
 	_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(root, _title_label, 0.362, 0.138, 0.635, 0.202)
 
-	_detail_name_label = _shipyard_label("", 19, Color("#fff3c3"), true, 2)
+	var detail_band := Panel.new()
+	detail_band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	detail_band.add_theme_stylebox_override("panel", _status_badge_style(Color("#08263c", 0.94), Color("#e0b760")))
+	_place_control(root, detail_band, 0.318, 0.640, 0.650, 0.696)
+
+	var detail_status_plate := Panel.new()
+	detail_status_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	detail_status_plate.add_theme_stylebox_override("panel", _status_badge_style(Color("#12344e", 0.92), Color("#d7b46a")))
+	_place_control(root, detail_status_plate, 0.322, 0.602, 0.442, 0.637)
+
+	_detail_status_label = _shipyard_label("", 13, Color("#fff3c3"), true, 1, Color("#07131d"))
+	_detail_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_detail_status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(root, _detail_status_label, 0.323, 0.604, 0.440, 0.635)
+
+	_detail_name_label = _shipyard_label("", 20, Color("#fff3c3"), true, 2)
 	_detail_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_detail_name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(root, _detail_name_label, 0.325, 0.648, 0.502, 0.688)
+	_place_control(root, _detail_name_label, 0.333, 0.646, 0.503, 0.688)
 
 	_detail_rank_label = _shipyard_label("", 15, Color("#463018"), true, 0)
 	_detail_rank_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -152,14 +206,19 @@ func _build_center_detail(root: Control) -> void:
 	_price_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(root, _price_label, 0.365, 0.800, 0.492, 0.855)
 
+	_shortage_label = _shipyard_label("", 13, Color("#ffdca8"), true, 1, Color("#07131d"))
+	_shortage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_shortage_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(root, _shortage_label, 0.362, 0.858, 0.495, 0.888)
+
 	_buy_button = _image_text_button("", _buy_selected_boat, 19)
 	_buy_button.set_meta("shipyard_buy_button", true)
 	_place_control(root, _buy_button, 0.545, 0.794, 0.654, 0.862)
 
-	_detail_range_label = _shipyard_label("", 15, Color("#3d2e1b"), true, 0)
+	_detail_range_label = _shipyard_label("", 15, Color("#fff2bd"), true, 1, Color("#07131d"))
 	_detail_range_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_detail_range_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(root, _detail_range_label, 0.365, 0.686, 0.632, 0.707)
+	_place_control(root, _detail_range_label, 0.493, 0.646, 0.640, 0.688)
 
 
 func _build_route_panel(root: Control) -> void:
@@ -174,10 +233,25 @@ func _build_route_panel(root: Control) -> void:
 	_route_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_place_control(root, _route_hint_label, 0.755, 0.200, 0.955, 0.272)
 
-	_route_status_label = _shipyard_label("", 15, Color("#fff0c2"), true, 2)
+	var current_plate := Panel.new()
+	current_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	current_plate.add_theme_stylebox_override("panel", _status_badge_style(Color("#08263c", 0.92), Color("#6bcff2")))
+	_place_control(root, current_plate, 0.754, 0.822, 0.875, 0.858)
+
+	var after_plate := Panel.new()
+	after_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	after_plate.add_theme_stylebox_override("panel", _status_badge_style(Color("#2e2415", 0.92), Color("#e0b760")))
+	_place_control(root, after_plate, 0.884, 0.822, 0.968, 0.858)
+
+	_route_status_label = _shipyard_label("", 13, Color("#e9fbff"), true, 1, Color("#07131d"))
 	_route_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_route_status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(root, _route_status_label, 0.762, 0.857, 0.850, 0.895)
+	_place_control(root, _route_status_label, 0.755, 0.823, 0.874, 0.856)
+
+	_route_after_label = _shipyard_label("", 13, Color("#fff2bd"), true, 1, Color("#07131d"))
+	_route_after_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_route_after_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(root, _route_after_label, 0.885, 0.823, 0.966, 0.856)
 
 	_route_locked_label = _shipyard_label("", 15, Color("#fff0c2"), true, 2)
 	_route_locked_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -210,12 +284,21 @@ func _refresh() -> void:
 		var boat := GameData.get_boat(boat_id)
 		var name_label: Label = _boat_card_labels.get(boat_id)
 		var status_label: Label = _boat_card_status_labels.get(boat_id)
+		var price_label: Label = _boat_card_price_labels.get(boat_id)
+		var rank_label: Label = _boat_card_rank_labels.get(boat_id)
+		var range_label: Label = _boat_card_range_labels.get(boat_id)
 		var frame: Panel = _boat_card_frames.get(boat_id)
 		if name_label != null:
 			name_label.text = String(boat.get("name", boat_id))
 		if status_label != null:
 			status_label.text = _boat_card_status_text(boat_id)
 			status_label.add_theme_color_override("font_color", _boat_status_color(boat_id))
+		if price_label != null:
+			price_label.text = _boat_card_price_text(boat_id)
+		if rank_label != null:
+			rank_label.text = "R%d" % int(boat.get("rank", 0))
+		if range_label != null:
+			range_label.text = _boat_compact_range_text(int(boat.get("rank", 0)))
 		if frame != null:
 			frame.visible = boat_id == _selected_boat_id
 
@@ -230,18 +313,23 @@ func _refresh_detail() -> void:
 	var price := int(boat.get("price", 0))
 	var owned := PlayerProgress.has_boat(_selected_boat_id)
 	var can_buy := PlayerProgress.money >= price and not owned
+	var selected_after_rank := maxi(PlayerProgress.best_boat_rank(), rank)
 	var unlocked_names := _boat_access_spot_names(rank)
 
 	_title_label.text = "船着き場"
+	_detail_status_label.text = _boat_card_status_text(_selected_boat_id)
+	_detail_status_label.add_theme_color_override("font_color", _boat_status_color(_selected_boat_id))
 	_detail_name_label.text = String(boat.get("name", "船"))
 	_detail_rank_label.text = "Rank %d" % rank
 	_detail_unlock_label.text = "%d航路" % unlocked_names.size()
 	_detail_type_label.text = "恒久"
 	_detail_range_label.text = String(boat.get("access_text", "出航範囲未設定")).replace("出航可能", "").strip_edges()
-	_price_label.text = "所持済み" if owned else "%s G" % _format_money(price)
+	_price_label.text = "登録済み" if owned else "%s G" % _format_money(price)
+	_shortage_label.text = "" if owned or can_buy else "あと %s G" % _format_money(price - PlayerProgress.money)
 	_route_title_label.text = "航路図　%s" % String(boat.get("short_name", "船"))
-	_route_status_label.text = "出航 %d/%d" % [_accessible_offshore_count(PlayerProgress.best_boat_rank()), OFFSHORE_SPOT_TOTAL]
+	_route_status_label.text = "現在 %d/%d" % [_accessible_offshore_count(PlayerProgress.best_boat_rank()), OFFSHORE_SPOT_TOTAL]
 	_route_locked_label.text = "未達 %d" % maxi(0, OFFSHORE_SPOT_TOTAL - _accessible_offshore_count(PlayerProgress.best_boat_rank()))
+	_route_after_label.text = "購入後 %d/%d" % [_accessible_offshore_count(selected_after_rank), OFFSHORE_SPOT_TOTAL]
 	_route_hint_label.text = _route_hint_text(rank)
 
 	if owned:
@@ -296,7 +384,21 @@ func _boat_card_status_text(boat_id: String) -> String:
 	var price := int(boat.get("price", 0))
 	if PlayerProgress.money >= price:
 		return "購入可能"
-	return "%s G" % _format_money(price)
+	return "資金不足"
+
+
+func _boat_card_price_text(boat_id: String) -> String:
+	var boat := GameData.get_boat(boat_id)
+	if PlayerProgress.has_boat(boat_id):
+		return "所持"
+	return "%s G" % _format_money(int(boat.get("price", 0)))
+
+
+func _boat_compact_range_text(rank: int) -> String:
+	var names := _boat_access_spot_names(rank)
+	if names.is_empty():
+		return "港周辺"
+	return "到達 %s" % " / ".join(PackedStringArray(names))
 
 
 func _boat_status_color(boat_id: String) -> Color:
@@ -419,6 +521,22 @@ func _selection_style() -> StyleBoxFlat:
 	style.shadow_color = Color("#1cdcff", 0.28)
 	style.shadow_size = 6
 	style.shadow_offset = Vector2.ZERO
+	return style
+
+
+func _status_badge_style(fill: Color, border: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = fill
+	style.border_color = border
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(3)
+	style.content_margin_left = 6.0
+	style.content_margin_top = 2.0
+	style.content_margin_right = 6.0
+	style.content_margin_bottom = 2.0
+	style.shadow_color = Color(0.0, 0.0, 0.0, 0.26)
+	style.shadow_size = 3
+	style.shadow_offset = Vector2(0.0, 1.0)
 	return style
 
 
