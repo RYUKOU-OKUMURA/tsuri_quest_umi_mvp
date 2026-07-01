@@ -147,6 +147,12 @@ func _build_header(parent: Control) -> void:
 	title_box.add_child(subtitle)
 
 	var rod_name := String(GameData.get_rod(PlayerProgress.equipped_rod_id).get("name", "入門竿"))
+	var status_group := PanelContainer.new()
+	status_group.position = Vector2(446.0, 16.0)
+	status_group.size = Vector2(796.0, 68.0)
+	status_group.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	status_group.add_theme_stylebox_override("panel", _header_status_group_style())
+	panel.add_child(status_group)
 	_add_header_status(panel, Rect2(Vector2(456.0, 20.0), Vector2(146.0, 60.0)), "Lv.", "%d" % PlayerProgress.level)
 	_add_header_status(panel, Rect2(Vector2(612.0, 20.0), Vector2(232.0, 60.0)), "装備", rod_name)
 	_header_spot_value_label = _add_header_status(panel, Rect2(Vector2(854.0, 20.0), Vector2(178.0, 60.0)), "出航先", "")
@@ -222,10 +228,26 @@ func _header_title_plate_style() -> StyleBoxFlat:
 	return style
 
 
+func _header_status_group_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#041b2e", 0.36)
+	style.border_color = Color("#d0a65a", 0.46)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(5)
+	style.content_margin_left = 0
+	style.content_margin_right = 0
+	style.content_margin_top = 0
+	style.content_margin_bottom = 0
+	style.shadow_color = Color(0.0, 0.0, 0.0, 0.16)
+	style.shadow_size = 2
+	style.shadow_offset = Vector2(1.0, 1.0)
+	return style
+
+
 func _header_status_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color("#052d49", 0.88)
-	style.border_color = Color("#d1a458", 0.92)
+	style.border_color = Color("#d1a458", 0.80)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(4)
 	style.content_margin_left = 12
