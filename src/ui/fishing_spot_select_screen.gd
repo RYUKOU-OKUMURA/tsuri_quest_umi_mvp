@@ -492,11 +492,25 @@ func _build_footer(parent: Control) -> void:
 	_progress_box.add_theme_constant_override("v_separation", 0)
 	ledger_body_margin.add_child(_progress_box)
 
+	var memo_frame := PanelContainer.new()
+	memo_frame.custom_minimum_size = Vector2(270.0, 0.0)
+	memo_frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	memo_frame.add_theme_stylebox_override("panel", _memo_frame_style())
+	row.add_child(memo_frame)
+
+	var memo_margin := MarginContainer.new()
+	memo_margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	memo_margin.add_theme_constant_override("margin_left", 8)
+	memo_margin.add_theme_constant_override("margin_top", 5)
+	memo_margin.add_theme_constant_override("margin_right", 8)
+	memo_margin.add_theme_constant_override("margin_bottom", 6)
+	memo_frame.add_child(memo_margin)
+
 	var message_box := VBoxContainer.new()
-	message_box.custom_minimum_size = Vector2(270.0, 0.0)
+	message_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	message_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	message_box.add_theme_constant_override("separation", 4)
-	row.add_child(message_box)
+	memo_margin.add_child(message_box)
 
 	var guide_panel := PanelContainer.new()
 	guide_panel.custom_minimum_size = Vector2(0.0, 22.0)
@@ -552,6 +566,19 @@ func _memo_line_style(primary: bool) -> StyleBoxFlat:
 	style.content_margin_right = 9
 	style.content_margin_top = 3
 	style.content_margin_bottom = 3
+	return style
+
+
+func _memo_frame_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#e7d4aa", 0.66)
+	style.border_color = Color("#d0a65a", 0.50)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 0
+	style.content_margin_right = 0
+	style.content_margin_top = 0
+	style.content_margin_bottom = 0
 	return style
 
 
