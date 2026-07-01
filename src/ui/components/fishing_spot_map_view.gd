@@ -69,6 +69,8 @@ var _map_grade: Texture2D
 var _marker_sheet: Texture2D
 var _spot_marker_sheet: Texture2D
 var _hovered_spot_id := ""
+var _animation_time := 0.0
+var _redraw_accumulator := 0.0
 
 
 func configure(initial_spot_id: String, level: int) -> void:
@@ -94,6 +96,16 @@ func _ready() -> void:
 	_map_grade = _load_texture_if_exists(MAP_GRADE_PATH)
 	_marker_sheet = _load_texture_if_exists(MARKER_SHEET_PATH)
 	_spot_marker_sheet = _load_texture_if_exists(SPOT_MARKER_SHEET_PATH)
+
+
+func _process(delta: float) -> void:
+	_animation_time = fmod(_animation_time + delta, 60.0)
+	if not is_visible_in_tree():
+		return
+	_redraw_accumulator += delta
+	if _redraw_accumulator >= 1.0 / 24.0:
+		_redraw_accumulator = 0.0
+		queue_redraw()
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -209,8 +221,29 @@ func _draw_routes(map_rect: Rect2) -> void:
 			color = Color("#a99c87", 0.36)
 		var width := 3.4 if selected_route else 2.0
 		if selected_route:
-			draw_line(from_point, to_point, Color("#ffe070", 0.18), width + 8.0)
+			var pulse := 0.5 + 0.5 * sin(_animation_time * TAU * 0.72)
+			draw_line(from_point, to_point, Color("#ffe070", 0.16 + pulse * 0.10), width + 9.0)
+			_draw_route_arrows(from_point, to_point, pulse)
 		_draw_dotted_line(from_point, to_point, color, width, 14.0, 10.0)
+
+
+func _draw_route_arrows(from_point: Vector2, to_point: Vector2, pulse: float) -> void:
+	var delta := to_point - from_point
+	var length := delta.length()
+	if length <= 1.0:
+		return
+	var direction := delta / length
+	var normal := Vector2(-direction.y, direction.x)
+	var base_shift := fmod(_animation_time * 0.22, 0.18)
+	for ratio in [0.34, 0.52, 0.70]:
+		var center := from_point.lerp(to_point, clampf(float(ratio) + base_shift, 0.18, 0.86))
+		var tip := center + direction * 10.0
+		var left := center - direction * 5.5 + normal * 6.0
+		var right := center - direction * 5.5 - normal * 6.0
+		draw_colored_polygon(
+			PackedVector2Array([tip, left, right]),
+			Color("#fff0a0", 0.36 + pulse * 0.18)
+		)
 
 
 func _draw_markers(map_rect: Rect2) -> void:
@@ -237,8 +270,16 @@ func _draw_markers(map_rect: Rect2) -> void:
 		if _hovered_spot_id == spot_id:
 			marker_size *= 1.07
 		var target := Rect2(center - Vector2(marker_size, marker_size) * 0.5, Vector2(marker_size, marker_size))
+		if selected and unlocked:
+			_draw_selected_marker_ping(center, marker_size)
 		_draw_spot_marker(spot_id, marker_row, marker_index, target)
 		_draw_spot_chip(font, map_rect, spot, center, unlocked, selected, boss_spot)
+
+
+func _draw_selected_marker_ping(center: Vector2, marker_size: float) -> void:
+	var pulse := 0.5 + 0.5 * sin(_animation_time * TAU * 0.86)
+	draw_circle(center, marker_size * (0.49 + pulse * 0.08), Color("#fff2a8", 0.18 + pulse * 0.12), false, 3.0)
+	draw_circle(center, marker_size * 0.63, Color("#ffe06d", 0.16), false, 1.8)
 
 
 func _draw_spot_marker(spot_id: String, marker_row: int, fallback_marker_index: int, target: Rect2) -> void:
