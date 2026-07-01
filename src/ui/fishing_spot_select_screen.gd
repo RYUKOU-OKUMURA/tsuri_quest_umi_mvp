@@ -98,16 +98,6 @@ func _load_assets() -> void:
 	_completion_slot_locked = _load_texture_if_exists(COMPLETION_SLOT_LOCKED_PATH)
 
 
-func _header_subtitle() -> String:
-	var trip_text := "　釣行継続中：ポイント変更" if _continue_trip else ""
-	return "Lv.%d　%s　所持金 %d G%s" % [
-		PlayerProgress.level,
-		String(GameData.get_rod(PlayerProgress.equipped_rod_id).get("name", "入門竿")),
-		PlayerProgress.money,
-		trip_text,
-	]
-
-
 func _build_header(parent: Control) -> void:
 	var panel := Control.new()
 	panel.custom_minimum_size = Vector2(0.0, 96.0)
@@ -130,20 +120,94 @@ func _build_header(parent: Control) -> void:
 		fallback.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		panel.add_child(fallback)
 
-	var title := make_label("釣り場を選ぶ", 28, Palette.TEXT_BONE, 2, Palette.TEXT_OUTLINE_DARK)
-	title.position = Vector2(42.0, 20.0)
-	title.size = Vector2(1160.0, 36.0)
-	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	panel.add_child(title)
+	var title_plate := PanelContainer.new()
+	title_plate.position = Vector2(28.0, 18.0)
+	title_plate.size = Vector2(400.0, 64.0)
+	title_plate.add_theme_stylebox_override("panel", _header_title_plate_style())
+	panel.add_child(title_plate)
 
-	var subtitle := make_label(_header_subtitle(), 15, Color("#dbe8f1"), 1, Palette.TEXT_OUTLINE_DARK)
-	subtitle.position = Vector2(43.0, 58.0)
-	subtitle.size = Vector2(1160.0, 32.0)
+	var title_box := VBoxContainer.new()
+	title_box.add_theme_constant_override("separation", 0)
+	title_plate.add_child(title_box)
+
+	var title := make_label("釣り場を選ぶ", 27, Palette.TEXT_BONE, 2, Palette.TEXT_OUTLINE_DARK)
+	title.custom_minimum_size = Vector2(0.0, 36.0)
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_box.add_child(title)
+
+	var subtitle_text := "航路図から出航先を指定"
+	if _continue_trip:
+		subtitle_text = "釣行継続中：ポイント変更"
+	var subtitle := make_label(subtitle_text, 13, Color("#3c2916"), 0)
+	subtitle.custom_minimum_size = Vector2(0.0, 19.0)
 	subtitle.autowrap_mode = TextServer.AUTOWRAP_OFF
-	subtitle.clip_text = false
+	subtitle.clip_text = true
 	subtitle.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	subtitle.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	panel.add_child(subtitle)
+	title_box.add_child(subtitle)
+
+	var rod_name := String(GameData.get_rod(PlayerProgress.equipped_rod_id).get("name", "入門竿"))
+	_add_header_status(panel, Rect2(Vector2(456.0, 20.0), Vector2(240.0, 60.0)), "Lv.", "%d" % PlayerProgress.level)
+	_add_header_status(panel, Rect2(Vector2(706.0, 20.0), Vector2(266.0, 60.0)), "装備", rod_name)
+	_add_header_status(panel, Rect2(Vector2(982.0, 20.0), Vector2(250.0, 60.0)), "所持金", "%d G" % PlayerProgress.money)
+
+
+func _add_header_status(parent: Control, rect: Rect2, caption: String, value: String) -> void:
+	var box := PanelContainer.new()
+	box.position = rect.position
+	box.size = rect.size
+	box.add_theme_stylebox_override("panel", _header_status_style())
+	parent.add_child(box)
+
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 0)
+	box.add_child(layout)
+
+	var caption_label := make_label(caption, 11, Color("#b8c4cf"), 1, Palette.TEXT_OUTLINE_DARK)
+	caption_label.custom_minimum_size = Vector2(0.0, 17.0)
+	caption_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	caption_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	caption_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	layout.add_child(caption_label)
+
+	var value_label := make_label(value, 17, Palette.TEXT_BONE, 1, Palette.TEXT_OUTLINE_DARK)
+	value_label.custom_minimum_size = Vector2(0.0, 34.0)
+	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	value_label.clip_text = true
+	value_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	layout.add_child(value_label)
+
+
+func _header_title_plate_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#d7b36d", 0.94)
+	style.border_color = Color("#8a5728", 0.92)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	style.content_margin_left = 18
+	style.content_margin_right = 18
+	style.content_margin_top = 6
+	style.content_margin_bottom = 5
+	style.shadow_color = Color(0.0, 0.0, 0.0, 0.30)
+	style.shadow_size = 4
+	style.shadow_offset = Vector2(2.0, 2.0)
+	return style
+
+
+func _header_status_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#062b45", 0.78)
+	style.border_color = Color("#c89c4e", 0.82)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(5)
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 4
+	style.content_margin_bottom = 4
+	return style
 
 
 func _build_map_panel(parent: Control) -> void:
