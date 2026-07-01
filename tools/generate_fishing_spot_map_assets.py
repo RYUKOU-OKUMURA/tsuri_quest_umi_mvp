@@ -169,11 +169,17 @@ def _draw_header_frame(size: tuple[int, int]) -> Image.Image:
     frame = Image.new("RGBA", size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(frame)
     # A calm single nautical status band. Text is drawn by Godot.
-    _rounded(draw, (8, 8, size[0] - 8, size[1] - 8), 7, (9, 34, 55, 246), (16, 62, 95, 240), 3)
-    _rounded(draw, (20, 20, size[0] - 20, size[1] - 20), 2, None, (176, 134, 64, 150), 2)
-    draw.line((32, 25, size[0] - 32, 25), fill=(255, 255, 255, 24), width=2)
-    draw.line((32, size[1] - 24, size[0] - 32, size[1] - 24), fill=(0, 0, 0, 86), width=2)
-    draw.rectangle((32, 32, size[0] - 32, size[1] - 32), fill=(10, 42, 68, 46))
+    _rounded(draw, (8, 8, size[0] - 8, size[1] - 8), 7, (7, 31, 51, 250), (16, 67, 102, 245), 3)
+    _rounded(draw, (20, 20, size[0] - 20, size[1] - 20), 2, None, (196, 150, 70, 176), 2)
+    draw.rectangle((32, 32, size[0] - 32, size[1] - 32), fill=(10, 42, 68, 54))
+    draw.line((32, 25, size[0] - 32, 25), fill=(255, 255, 255, 30), width=2)
+    draw.line((32, size[1] - 24, size[0] - 32, size[1] - 24), fill=(0, 0, 0, 90), width=2)
+    for x in [548, 850, 1182]:
+        draw.line((x, 26, x, size[1] - 26), fill=(223, 177, 86, 70), width=1)
+        draw.line((x + 2, 30, x + 2, size[1] - 30), fill=(0, 0, 0, 60), width=1)
+    for x in [44, size[0] - 52]:
+        for y in [34, size[1] - 42]:
+            draw.ellipse((x - 4, y - 4, x + 4, y + 4), fill=(205, 157, 76, 170), outline=(62, 41, 25, 180))
     return frame
 
 
@@ -205,8 +211,10 @@ def _draw_detail_frame(size: tuple[int, int]) -> Image.Image:
 def _draw_footer_frame(size: tuple[int, int]) -> Image.Image:
     frame = Image.new("RGBA", size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(frame)
-    _rounded(draw, (10, 10, size[0] - 10, size[1] - 10), 14, (7, 34, 54, 238), (178, 130, 58, 220), 3)
-    _rounded(draw, (20, 20, size[0] - 20, size[1] - 20), 9, None, (230, 190, 96, 165), 1)
+    _rounded(draw, (10, 10, size[0] - 10, size[1] - 10), 14, (6, 31, 50, 244), (190, 139, 61, 235), 3)
+    _rounded(draw, (20, 20, size[0] - 20, size[1] - 20), 9, None, (236, 196, 98, 180), 1)
+    draw.line((32, 22, size[0] - 32, 22), fill=(255, 236, 166, 52), width=1)
+    draw.line((32, size[1] - 22, size[0] - 32, size[1] - 22), fill=(0, 0, 0, 72), width=1)
 
     # Left side is a logbook board, not another set of point-selection cards.
     board = _paper_texture((size[0] - 430, size[1] - 54), 980, (221, 202, 162))
@@ -217,8 +225,12 @@ def _draw_footer_frame(size: tuple[int, int]) -> Image.Image:
     _rounded(draw, (28, 27, size[0] - 402, size[1] - 27), 10, None, (110, 72, 35, 178), 2)
     _rounded(draw, (39, 36, size[0] - 413, 65), 7, (7, 46, 72, 226), (213, 171, 88, 165), 1)
     draw.line((55, 45, size[0] - 430, 45), fill=(255, 255, 255, 34), width=1)
+    draw.line((size[0] - 399, 30, size[0] - 399, size[1] - 30), fill=(230, 184, 90, 120), width=1)
+    draw.line((size[0] - 396, 32, size[0] - 396, size[1] - 32), fill=(0, 0, 0, 70), width=1)
     for x in range(54, size[0] - 438, 74):
         draw.line((x, 78, x + 42, 78), fill=(118, 79, 38, 42), width=1)
+    for y in [87, 112]:
+        draw.line((47, y, size[0] - 430, y), fill=(105, 72, 37, 28), width=1)
 
     # Right memo is parchment, visually secondary to the map and right detail panel.
     _rounded(draw, (size[0] - 382, 27, size[0] - 30, size[1] - 27), 9, (225, 202, 155, 232), (132, 85, 38, 165), 2)

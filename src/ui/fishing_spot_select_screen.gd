@@ -27,6 +27,7 @@ var _detail_bait_value_label: Label
 var _detail_hint_value_label: Label
 var _action_button: Button
 var _progress_box: GridContainer
+var _ledger_route_label: Label
 
 var _header_frame: Texture2D
 var _detail_frame: Texture2D
@@ -117,6 +118,10 @@ func _build_header(parent: Control) -> void:
 	title_plate.size = Vector2(400.0, 64.0)
 	title_plate.add_theme_stylebox_override("panel", _header_title_plate_style())
 	panel.add_child(title_plate)
+	_add_rivet(panel, Vector2(39.0, 28.0))
+	_add_rivet(panel, Vector2(415.0, 28.0))
+	_add_rivet(panel, Vector2(39.0, 75.0))
+	_add_rivet(panel, Vector2(415.0, 75.0))
 
 	var title_box := VBoxContainer.new()
 	title_box.add_theme_constant_override("separation", 0)
@@ -157,20 +162,44 @@ func _add_header_status(parent: Control, rect: Rect2, caption: String, value: St
 	box.add_child(layout)
 
 	var caption_label := make_label(caption, 11, Color("#b8c4cf"), 1, Palette.TEXT_OUTLINE_DARK)
-	caption_label.custom_minimum_size = Vector2(0.0, 17.0)
+	caption_label.custom_minimum_size = Vector2(0.0, 18.0)
 	caption_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	caption_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	caption_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	layout.add_child(caption_label)
 
+	var rule := ColorRect.new()
+	rule.custom_minimum_size = Vector2(0.0, 1.0)
+	rule.color = Color("#d4a85b", 0.42)
+	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layout.add_child(rule)
+
 	var value_label := make_label(value, 17, Palette.TEXT_BONE, 1, Palette.TEXT_OUTLINE_DARK)
-	value_label.custom_minimum_size = Vector2(0.0, 34.0)
+	value_label.custom_minimum_size = Vector2(0.0, 31.0)
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value_label.clip_text = true
 	value_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	layout.add_child(value_label)
+
+
+func _add_rivet(parent: Control, position: Vector2) -> void:
+	var rivet := PanelContainer.new()
+	rivet.position = position
+	rivet.size = Vector2(8.0, 8.0)
+	rivet.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rivet.add_theme_stylebox_override("panel", _rivet_style())
+	parent.add_child(rivet)
+
+
+func _rivet_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#614224", 0.96)
+	style.border_color = Color("#e8c176", 0.72)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	return style
 
 
 func _header_title_plate_style() -> StyleBoxFlat:
@@ -191,14 +220,17 @@ func _header_title_plate_style() -> StyleBoxFlat:
 
 func _header_status_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#062b45", 0.78)
-	style.border_color = Color("#c89c4e", 0.82)
+	style.bg_color = Color("#052d49", 0.88)
+	style.border_color = Color("#d1a458", 0.92)
 	style.set_border_width_all(1)
-	style.set_corner_radius_all(5)
+	style.set_corner_radius_all(4)
 	style.content_margin_left = 12
 	style.content_margin_right = 12
-	style.content_margin_top = 4
+	style.content_margin_top = 3
 	style.content_margin_bottom = 4
+	style.shadow_color = Color(0.0, 0.0, 0.0, 0.20)
+	style.shadow_size = 2
+	style.shadow_offset = Vector2(1.0, 1.0)
 	return style
 
 
@@ -409,14 +441,19 @@ func _build_footer(parent: Control) -> void:
 	board_box.add_theme_constant_override("separation", 3)
 	row.add_child(board_box)
 
-	var board_header := HBoxContainer.new()
-	board_header.custom_minimum_size = Vector2(0.0, 20.0)
-	board_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	board_header.add_theme_constant_override("separation", 12)
-	board_box.add_child(board_header)
+	var board_header_panel := PanelContainer.new()
+	board_header_panel.custom_minimum_size = Vector2(0.0, 24.0)
+	board_header_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	board_header_panel.add_theme_stylebox_override("panel", _ledger_header_style())
+	board_box.add_child(board_header_panel)
 
-	var board_title := make_label("釣り場達成度", 14, Palette.TEXT_BONE, 1, Palette.TEXT_OUTLINE_DARK)
-	board_title.custom_minimum_size = Vector2(142.0, 0.0)
+	var board_header := HBoxContainer.new()
+	board_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	board_header.add_theme_constant_override("separation", 10)
+	board_header_panel.add_child(board_header)
+
+	var board_title := make_label("釣り場達成度", 13, Palette.TEXT_BONE, 1, Palette.TEXT_OUTLINE_DARK)
+	board_title.custom_minimum_size = Vector2(132.0, 0.0)
 	board_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	board_header.add_child(board_title)
 
@@ -424,6 +461,14 @@ func _build_footer(parent: Control) -> void:
 	board_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	board_note.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	board_header.add_child(board_note)
+
+	_ledger_route_label = make_label("", 11, Palette.GOLD_BRIGHT, 1, Palette.TEXT_OUTLINE_DARK)
+	_ledger_route_label.custom_minimum_size = Vector2(170.0, 0.0)
+	_ledger_route_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_ledger_route_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_ledger_route_label.clip_text = true
+	_ledger_route_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	board_header.add_child(_ledger_route_label)
 
 	_progress_box = GridContainer.new()
 	_progress_box.columns = 4
@@ -439,11 +484,16 @@ func _build_footer(parent: Control) -> void:
 	message_box.add_theme_constant_override("separation", 4)
 	row.add_child(message_box)
 
+	var guide_panel := PanelContainer.new()
+	guide_panel.custom_minimum_size = Vector2(0.0, 22.0)
+	guide_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	guide_panel.add_theme_stylebox_override("panel", _memo_header_style())
+	message_box.add_child(guide_panel)
+
 	var guide := make_label("調査メモ", 12, Palette.TEXT_BONE, 1, Palette.TEXT_OUTLINE_DARK)
-	guide.custom_minimum_size = Vector2(0.0, 18.0)
 	guide.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	guide.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	message_box.add_child(guide)
+	guide_panel.add_child(guide)
 
 	var primary_memo := PanelContainer.new()
 	primary_memo.custom_minimum_size = Vector2(0.0, 30.0)
@@ -488,6 +538,32 @@ func _memo_line_style(primary: bool) -> StyleBoxFlat:
 	style.content_margin_right = 9
 	style.content_margin_top = 3
 	style.content_margin_bottom = 3
+	return style
+
+
+func _ledger_header_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#073957", 0.94)
+	style.border_color = Color("#d0a65a", 0.52)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 10
+	style.content_margin_right = 10
+	style.content_margin_top = 2
+	style.content_margin_bottom = 2
+	return style
+
+
+func _memo_header_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#073957", 0.94)
+	style.border_color = Color("#d0a65a", 0.48)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 8
+	style.content_margin_right = 8
+	style.content_margin_top = 2
+	style.content_margin_bottom = 2
 	return style
 
 
@@ -545,6 +621,12 @@ func _make_completion_entry(spot: Dictionary) -> Control:
 
 
 func _add_completion_slot_fallback(parent: Control, unlocked: bool, selected: bool) -> void:
+	var frame := PanelContainer.new()
+	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.add_theme_stylebox_override("panel", _completion_entry_style(unlocked, selected))
+	parent.add_child(frame)
+
 	var body := ColorRect.new()
 	body.color = Color("#f2dfb6", 0.12) if unlocked else Color("#5d605a", 0.18)
 	if selected and unlocked:
@@ -594,6 +676,22 @@ func _add_completion_slot_fallback(parent: Control, unlocked: bool, selected: bo
 		accent.offset_bottom = -3.0
 		accent.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		parent.add_child(accent)
+
+
+func _completion_entry_style(unlocked: bool, selected: bool) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#ead5a7", 0.08) if unlocked else Color("#4f514d", 0.10)
+	style.border_color = Color("#6d4b28", 0.32) if unlocked else Color("#4d463d", 0.22)
+	if selected and unlocked:
+		style.bg_color = Color("#f3cf66", 0.13)
+		style.border_color = Color("#f4cf72", 0.80)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	style.content_margin_left = 0
+	style.content_margin_right = 0
+	style.content_margin_top = 0
+	style.content_margin_bottom = 0
+	return style
 
 
 func _add_completion_marks(parent: Control, unlocked: bool, caught: int, total: int) -> void:
@@ -646,12 +744,24 @@ func _focus_spot(spot_id: String, update_message: bool = true) -> void:
 		_map_view.set_selected_spot(spot_id)
 	_refresh_detail()
 	_rebuild_completion_entries()
+	_refresh_ledger_header()
 	if update_message or (_message_label != null and _message_label.text.is_empty()):
 		var spot := GameData.get_fishing_spot(spot_id)
 		if GameData.is_fishing_spot_unlocked(spot_id, PlayerProgress.level):
 			_set_survey_message(spot)
 		else:
 			_show_locked_message(spot_id)
+
+
+func _refresh_ledger_header() -> void:
+	if _ledger_route_label == null:
+		return
+	var spot := GameData.get_fishing_spot(_selected_spot_id)
+	var spot_name := String(spot.get("short_name", spot.get("name", _selected_spot_id)))
+	if GameData.is_fishing_spot_unlocked(_selected_spot_id, PlayerProgress.level):
+		_ledger_route_label.text = "出航先　%s" % spot_name
+	else:
+		_ledger_route_label.text = "未解放　Lv.%d" % int(spot.get("unlock_level", 1))
 
 
 func _refresh_detail() -> void:
