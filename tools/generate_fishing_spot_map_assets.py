@@ -462,38 +462,32 @@ def _draw_completion_slot_frame(size: tuple[int, int], state: str) -> Image.Imag
     selected = state == "selected"
     locked = state == "locked"
     img = Image.new("RGBA", size, (0, 0, 0, 0))
-    base = (188, 184, 168) if locked else (223, 207, 174)
-    paper = _paper_texture((size[0] - 12, size[1] - 12), 740 + len(state), base)
-    mask = Image.new("L", paper.size, 0)
-    mask_draw = ImageDraw.Draw(mask)
-    mask_draw.rounded_rectangle((0, 0, paper.width - 1, paper.height - 1), radius=9, fill=255)
-    img.paste(paper, (6, 6), mask)
-
     draw = ImageDraw.Draw(img)
-    border = (91, 82, 70, 170) if locked else (111, 82, 48, 172)
-    accent = (113, 103, 86, 118) if locked else (177, 132, 65, 135)
-    if selected:
-        border = (235, 184, 67, 222)
-        accent = (255, 221, 103, 190)
-    _rounded(draw, (6, 6, size[0] - 6, size[1] - 6), 9, None, border, 2)
-    _rounded(draw, (12, 12, size[0] - 12, size[1] - 12), 5, None, accent, 1)
 
-    rail = (14, 14, size[0] - 14, 39)
-    rail_color = (72, 77, 74, 170) if locked else (7, 52, 78, 210)
+    # A ledger cell, not a card. The parchment board underneath remains visible
+    # so this row reads as progress records instead of selectable destinations.
+    draw.line((0, 10, 0, size[1] - 8), fill=(91, 61, 32, 82), width=1)
+    draw.line((size[0] - 1, 10, size[0] - 1, size[1] - 8), fill=(255, 238, 180, 34), width=1)
+    fill = (241, 223, 184, 38) if not locked else (86, 82, 76, 42)
     if selected:
-        rail_color = (7, 61, 92, 225)
-    _rounded(draw, rail, 5, rail_color, None, 1)
-    draw.line((rail[0] + 8, rail[1] + 7, rail[2] - 8, rail[1] + 7), fill=(255, 255, 255, 30), width=1)
+        fill = (255, 216, 82, 58)
+    draw.rectangle((3, 10, size[0] - 3, size[1] - 9), fill=fill)
 
-    body = (14, 44, size[0] - 14, size[1] - 13)
-    body_fill = (235, 219, 187, 150) if not locked else (195, 189, 173, 130)
-    _rounded(draw, body, 5, body_fill, (119, 82, 42, 60), 1)
+    rail = (5, 12, size[0] - 5, 31)
+    rail_color = (68, 72, 70, 136) if locked else (6, 50, 76, 186)
     if selected:
-        draw.rectangle((18, 45, 23, size[1] - 17), fill=(255, 210, 73, 190))
+        rail_color = (7, 60, 91, 210)
+    _rounded(draw, rail, 3, rail_color, None, 1)
+    draw.line((rail[0] + 6, rail[1] + 5, rail[2] - 6, rail[1] + 5), fill=(255, 255, 255, 24), width=1)
+
+    draw.line((7, 39, size[0] - 8, 39), fill=(92, 65, 34, 64), width=1)
+    if selected:
+        draw.line((5, 8, size[0] - 5, 8), fill=(255, 216, 82, 190), width=2)
+        draw.line((5, size[1] - 7, size[0] - 5, size[1] - 7), fill=(255, 216, 82, 155), width=2)
     if locked:
-        draw.rectangle((18, 50, size[0] - 18, size[1] - 16), fill=(96, 91, 83, 45))
-        draw.line((size[0] - 42, 58, size[0] - 20, 75), fill=(96, 84, 66, 120), width=3)
-        draw.line((size[0] - 20, 58, size[0] - 42, 75), fill=(96, 84, 66, 120), width=3)
+        draw.rectangle((6, 41, size[0] - 6, size[1] - 10), fill=(68, 66, 61, 28))
+        draw.line((size[0] - 36, 51, size[0] - 19, 66), fill=(86, 76, 61, 95), width=2)
+        draw.line((size[0] - 19, 51, size[0] - 36, 66), fill=(86, 76, 61, 95), width=2)
     return img
 
 
