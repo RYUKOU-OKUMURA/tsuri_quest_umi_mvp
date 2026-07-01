@@ -37,7 +37,7 @@ func _build_screen() -> void:
 	)
 	var stats_label := make_label(
 		(
-			"Lv.%d\n食経験値：%s\n所持金：%d G\n\n最大体力：%d\n巻力：%.1f\n技量：%d\n集中力：%d\n安全域：%d〜%d%%\n\n装備：%s"
+			"Lv.%d\n食経験値：%s\n所持金：%d G\n\n最大体力：%d\n巻力：%.1f\n技量：%d\n集中力：%d\n安全域：%d〜%d%%\n\n装備：%s\n船：%s"
 			% [
 				PlayerProgress.level,
 				exp_text,
@@ -49,6 +49,7 @@ func _build_screen() -> void:
 				int(round(float(stats["safe_min"]) * 100.0)),
 				int(round(float(stats["safe_max"]) * 100.0)),
 				String(stats["rod_name"]),
+				_best_boat_text(),
 			]
 		),
 		20
@@ -195,6 +196,16 @@ func _build_collection_text() -> String:
 		var marker := "（装備中）" if rod_id == PlayerProgress.equipped_rod_id else ""
 		inventory_lines.append("%s%s" % [String(GameData.get_rod(rod_id)["name"]), marker])
 
+	inventory_lines.append("\n【所持している船】")
+	if PlayerProgress.owned_boats.is_empty():
+		inventory_lines.append("まだありません")
+	else:
+		for boat_id in PlayerProgress.owned_boats:
+			var boat := GameData.get_boat(boat_id)
+			if boat.is_empty():
+				continue
+			inventory_lines.append("%s：%s" % [String(boat["name"]), String(boat["access_text"])])
+
 	inventory_lines.append("\n【食べた料理】")
 	if PlayerProgress.eaten_recipes.is_empty():
 		inventory_lines.append("まだありません")
@@ -222,6 +233,13 @@ func _build_collection_text() -> String:
 				)
 			)
 	return "\n".join(PackedStringArray(inventory_lines))
+
+
+func _best_boat_text() -> String:
+	var boat := PlayerProgress.get_best_boat()
+	if boat.is_empty():
+		return "なし"
+	return String(boat.get("name", "船"))
 
 
 func _manual_save() -> void:

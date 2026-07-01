@@ -18,6 +18,7 @@ var best_sizes: Dictionary = {}
 var eaten_recipes: Dictionary = {}
 var owned_rods: Array[String] = ["starter"]
 var equipped_rod_id: String = "starter"
+var owned_boats: Array[String] = []
 var pending_buff: Dictionary = {}
 var play_seconds: float = 0.0
 
@@ -45,6 +46,7 @@ func reset_game() -> void:
 	eaten_recipes = {}
 	owned_rods = ["starter"]
 	equipped_rod_id = "starter"
+	owned_boats = []
 	pending_buff = {}
 	play_seconds = 0.0
 	save_game()
@@ -175,6 +177,53 @@ func buy_or_equip_rod(rod_id: String) -> Dictionary:
 	return {"ok": true, "action": "buy", "message": "%sを購入して装備しました。" % rod["name"]}
 
 
+func has_boat(boat_id: String) -> bool:
+	return boat_id in owned_boats
+
+
+func best_boat_rank() -> int:
+	return GameData.get_best_boat_rank(owned_boats)
+
+
+func get_best_boat() -> Dictionary:
+	var best_boat: Dictionary = {}
+	var best_rank := GameData.NO_BOAT_RANK
+	for boat_id in owned_boats:
+		var boat := GameData.get_boat(boat_id)
+		if boat.is_empty():
+			continue
+		var rank := int(boat.get("rank", GameData.NO_BOAT_RANK))
+		if rank > best_rank:
+			best_rank = rank
+			best_boat = boat
+	return best_boat
+
+
+func buy_boat(boat_id: String) -> Dictionary:
+	var boat := GameData.get_boat(boat_id)
+	if boat.is_empty():
+		return {"ok": false, "message": "船データが見つかりません。"}
+	if has_boat(boat_id):
+		return {"ok": false, "message": "%sはすでに所持しています。" % boat["name"]}
+
+	var price := int(boat["price"])
+	if money < price:
+		return {"ok": false, "message": "所持金が足りません。"}
+	money -= price
+	owned_boats.append(boat_id)
+	save_game()
+	progress_changed.emit()
+	return {"ok": true, "action": "buy_boat", "message": "%sを購入しました。%s。" % [boat["name"], boat["access_text"]]}
+
+
+func fishing_spot_access_status(spot_id: String) -> Dictionary:
+	return GameData.fishing_spot_access_status(spot_id, level, owned_boats)
+
+
+func can_access_fishing_spot(spot_id: String) -> bool:
+	return bool(fishing_spot_access_status(spot_id).get("ok", false))
+
+
 func get_base_stats() -> Dictionary:
 	var rod := GameData.get_rod(equipped_rod_id)
 	var technique_points := (level - 1) + int(rod.get("technique_bonus", 0))
@@ -233,6 +282,7 @@ func save_game() -> void:
 		"eaten_recipes": eaten_recipes,
 		"owned_rods": owned_rods,
 		"equipped_rod_id": equipped_rod_id,
+		"owned_boats": owned_boats,
 		"pending_buff": pending_buff,
 		"play_seconds": play_seconds,
 	}
@@ -293,6 +343,13 @@ func load_game() -> void:
 	equipped_rod_id = String(data.get("equipped_rod_id", "starter"))
 	if equipped_rod_id not in owned_rods:
 		equipped_rod_id = "starter"
+	owned_boats = []
+	var loaded_boats = data.get("owned_boats", [])
+	if typeof(loaded_boats) == TYPE_ARRAY:
+		for boat_id_variant in loaded_boats:
+			var boat_id := String(boat_id_variant)
+			if not GameData.get_boat(boat_id).is_empty() and boat_id not in owned_boats:
+				owned_boats.append(boat_id)
 	var loaded_buff = data.get("pending_buff", {})
 	pending_buff = loaded_buff.duplicate(true) if typeof(loaded_buff) == TYPE_DICTIONARY else {}
 	play_seconds = maxf(0.0, float(data.get("play_seconds", 0.0)))

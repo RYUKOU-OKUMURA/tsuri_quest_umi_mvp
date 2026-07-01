@@ -171,7 +171,7 @@ func _resolve_selected_spot() -> void:
 	var requested_id := String(route_payload.get("spot_id", GameData.DEFAULT_FISHING_SPOT_ID))
 	if (
 		not bool(route_payload.get("continue_trip", false))
-		and not GameData.is_fishing_spot_unlocked(requested_id, PlayerProgress.level)
+		and not PlayerProgress.can_access_fishing_spot(requested_id)
 	):
 		requested_id = GameData.DEFAULT_FISHING_SPOT_ID
 	_spot = GameData.get_fishing_spot(requested_id)

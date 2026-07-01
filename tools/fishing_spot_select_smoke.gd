@@ -11,6 +11,7 @@ var _failed := false
 
 func _ready() -> void:
 	PlayerProgress.level = 1
+	PlayerProgress.owned_boats = []
 	PlayerProgress.spot_caught_counts = {
 		"harbor_pier": {"aji": 2, "iwashi": 1},
 	}
@@ -34,6 +35,7 @@ func _ready() -> void:
 	_navigated_to = ""
 	_payload = {}
 	PlayerProgress.level = GameData.BOSS_UNLOCK_LEVEL
+	PlayerProgress.owned_boats = []
 	_screen = _make_screen()
 	await get_tree().process_frame
 	_verify_no_footer_spot_entries()
@@ -46,7 +48,24 @@ func _ready() -> void:
 
 	_navigated_to = ""
 	_payload = {}
+	PlayerProgress.level = 6
+	PlayerProgress.owned_boats = []
+	_screen = _make_screen()
+	await get_tree().process_frame
+	_screen._select_spot("bluewater_route")
+	_expect(_navigated_to.is_empty(), "boat-locked offshore spot must not navigate")
+	PlayerProgress.owned_boats = ["offshore_boat"]
+	_screen._select_spot("bluewater_route")
+	_expect(_navigated_to == "fishing", "offshore boat should allow bluewater route")
+	_expect(String(_payload.get("spot_id", "")) == "bluewater_route", "bluewater route payload mismatch")
+
+	_screen.queue_free()
+	await get_tree().process_frame
+
+	_navigated_to = ""
+	_payload = {}
 	PlayerProgress.level = 3
+	PlayerProgress.owned_boats = []
 	_screen = _make_screen({
 		"from_fishing": true,
 		"current_spot_id": "outer_tide",

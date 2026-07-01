@@ -4,6 +4,7 @@ const MAX_LEVEL: int = 10
 const BOSS_UNLOCK_LEVEL: int = 5
 const DEFAULT_FISHING_SPOT_ID := "harbor_pier"
 const BOSS_FISHING_SPOT_ID := "harbor_boulder"
+const NO_BOAT_RANK := 0
 
 const FISH: Dictionary = {
 	"aji":
@@ -890,13 +891,14 @@ const FISHING_SPOT_ORDER: Array[String] = [
 ]
 
 const FISHING_SPOTS: Dictionary = {
-	"harbor_pier":
-	{
-		"id": "harbor_pier",
-		"name": "港内・堤防",
-		"short_name": "港内",
-		"unlock_level": 1,
-		"depth_range": [5.0, 10.0],
+		"harbor_pier":
+		{
+			"id": "harbor_pier",
+			"name": "港内・堤防",
+			"short_name": "港内",
+			"unlock_level": 1,
+			"required_boat_rank": NO_BOAT_RANK,
+			"depth_range": [5.0, 10.0],
 		"description": "足場が良く、小魚が集まる入門ポイント。",
 		"common_modifier": 0.85,
 		"featured_fish": ["aji", "iwashi", "shirogisu", "mejina", "bora"],
@@ -905,13 +907,14 @@ const FISHING_SPOTS: Dictionary = {
 		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora"],
 		"fish_weight_modifiers": {"aji": 1.7, "iwashi": 1.8, "shirogisu": 1.2, "mejina": 1.1, "bora": 1.5},
 	},
-	"shallow_sand":
-	{
-		"id": "shallow_sand",
-		"name": "砂浜・かけあがり",
-		"short_name": "砂浜",
-		"unlock_level": 2,
-		"depth_range": [7.0, 15.0],
+		"shallow_sand":
+		{
+			"id": "shallow_sand",
+			"name": "砂浜・かけあがり",
+			"short_name": "砂浜",
+			"unlock_level": 2,
+			"required_boat_rank": NO_BOAT_RANK,
+			"depth_range": [7.0, 15.0],
 		"description": "砂地を探る。白身魚や底物を狙いやすい。",
 		"common_modifier": 0.75,
 		"featured_fish": ["shirogisu", "kawahagi", "kochi", "hirame"],
@@ -920,13 +923,14 @@ const FISHING_SPOTS: Dictionary = {
 		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "kochi", "hirame"],
 		"fish_weight_modifiers": {"shirogisu": 2.0, "kawahagi": 1.8, "kochi": 2.2, "hirame": 1.8},
 	},
-	"rock_breakwater":
-	{
-		"id": "rock_breakwater",
-		"name": "岩礁・消波ブロック",
-		"short_name": "岩礁",
-		"unlock_level": 2,
-		"depth_range": [9.0, 17.0],
+		"rock_breakwater":
+		{
+			"id": "rock_breakwater",
+			"name": "岩礁・消波ブロック",
+			"short_name": "岩礁",
+			"unlock_level": 2,
+			"required_boat_rank": NO_BOAT_RANK,
+			"depth_range": [9.0, 17.0],
 		"description": "根周りを攻める。潜る魚が多く、糸を出す判断が重要。",
 		"common_modifier": 0.75,
 		"featured_fish": ["kasago", "mebaru", "ainame", "ishidai"],
@@ -935,13 +939,14 @@ const FISHING_SPOTS: Dictionary = {
 		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "ishidai", "akahata", "kue"],
 		"fish_weight_modifiers": {"mejina": 1.4, "kasago": 1.7, "mebaru": 2.0, "ainame": 1.8, "ishidai": 2.1, "akahata": 1.2, "kue": 0.8},
 	},
-	"outer_tide":
-	{
-		"id": "outer_tide",
-		"name": "港外・潮目",
-		"short_name": "潮目",
-		"unlock_level": 3,
-		"depth_range": [8.0, 16.0],
+		"outer_tide":
+		{
+			"id": "outer_tide",
+			"name": "港外・潮目",
+			"short_name": "潮目",
+			"unlock_level": 3,
+			"required_boat_rank": NO_BOAT_RANK,
+			"depth_range": [8.0, 16.0],
 		"description": "潮通しのよい外側。横走りする魚の反応が多い。",
 		"common_modifier": 0.65,
 		"featured_fish": ["saba", "suzuki", "kamasu", "tachiuo"],
@@ -950,13 +955,14 @@ const FISHING_SPOTS: Dictionary = {
 		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "saba", "suzuki", "kamasu", "tachiuo", "kanpachi", "katsuo"],
 		"fish_weight_modifiers": {"saba": 2.1, "suzuki": 2.0, "kamasu": 2.4, "tachiuo": 2.0, "kanpachi": 0.8, "katsuo": 0.7},
 	},
-	"south_reef":
-	{
-		"id": "south_reef",
-		"name": "南の岩礁",
-		"short_name": "南岩礁",
-		"unlock_level": 5,
-		"depth_range": [12.0, 21.0],
+		"south_reef":
+		{
+			"id": "south_reef",
+			"name": "南の岩礁",
+			"short_name": "南岩礁",
+			"unlock_level": 5,
+			"required_boat_rank": 1,
+			"depth_range": [12.0, 21.0],
 		"description": "南側の根とサンゴ帯。色鮮やかな岩礁魚と大物の気配がある。",
 		"common_modifier": 0.55,
 		"featured_fish": ["akahata", "fuefukidai", "aobudai", "kue"],
@@ -965,13 +971,14 @@ const FISHING_SPOTS: Dictionary = {
 		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "madai", "ishidai", "akahata", "fuefukidai", "aobudai", "kue", "hiramasa"],
 		"fish_weight_modifiers": {"madai": 1.4, "ishidai": 1.4, "akahata": 2.2, "fuefukidai": 2.2, "aobudai": 2.2, "kue": 1.8, "hiramasa": 0.8},
 	},
-	"bluewater_route":
-	{
-		"id": "bluewater_route",
-		"name": "外海・回遊ルート",
-		"short_name": "外海",
-		"unlock_level": 6,
-		"depth_range": [10.0, 20.0],
+		"bluewater_route":
+		{
+			"id": "bluewater_route",
+			"name": "外海・回遊ルート",
+			"short_name": "外海",
+			"unlock_level": 6,
+			"required_boat_rank": 2,
+			"depth_range": [10.0, 20.0],
 		"description": "外海へ続く潮筋。青物や表層を走る魚を狙う。",
 		"common_modifier": 0.50,
 		"featured_fish": ["kanpachi", "buri", "katsuo", "shiira", "hiramasa"],
@@ -980,13 +987,14 @@ const FISHING_SPOTS: Dictionary = {
 		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "saba", "suzuki", "kamasu", "tachiuo", "kanpachi", "buri", "katsuo", "shiira", "hiramasa", "rouninaji"],
 		"fish_weight_modifiers": {"saba": 0.9, "suzuki": 0.8, "kamasu": 0.8, "tachiuo": 0.9, "kanpachi": 3.0, "buri": 3.0, "katsuo": 3.0, "shiira": 3.0, "hiramasa": 2.2, "rouninaji": 0.9},
 	},
-	"deep_ocean":
-	{
-		"id": "deep_ocean",
-		"name": "外洋の深場",
-		"short_name": "外洋",
-		"unlock_level": 9,
-		"depth_range": [15.0, 25.0],
+		"deep_ocean":
+		{
+			"id": "deep_ocean",
+			"name": "外洋の深場",
+			"short_name": "外洋",
+			"unlock_level": 9,
+			"required_boat_rank": 3,
+			"depth_range": [15.0, 25.0],
 		"description": "外洋の深い潮目。終盤の大物を低確率で狙う。",
 		"common_modifier": 0.45,
 		"featured_fish": ["rouninaji", "kajiki", "kue", "hiramasa"],
@@ -995,13 +1003,14 @@ const FISHING_SPOTS: Dictionary = {
 		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "madai", "tachiuo", "kanpachi", "buri", "kue", "hiramasa", "rouninaji", "kajiki"],
 		"fish_weight_modifiers": {"madai": 0.9, "tachiuo": 0.8, "kanpachi": 1.0, "buri": 1.0, "kue": 1.8, "hiramasa": 1.8, "rouninaji": 2.8, "kajiki": 3.5},
 	},
-	"harbor_boulder":
-	{
-		"id": "harbor_boulder",
-		"name": "港の大岩",
-		"short_name": "大岩",
-		"unlock_level": BOSS_UNLOCK_LEVEL,
-		"depth_range": [16.0, 22.0],
+		"harbor_boulder":
+		{
+			"id": "harbor_boulder",
+			"name": "港の大岩",
+			"short_name": "大岩",
+			"unlock_level": BOSS_UNLOCK_LEVEL,
+			"required_boat_rank": NO_BOAT_RANK,
+			"depth_range": [16.0, 22.0],
 		"description": "港口の大岩周辺。港のぬしに挑む専用ポイント。",
 		"common_modifier": 0.0,
 		"featured_fish": ["boss_kurodai"],
@@ -1108,6 +1117,45 @@ const RODS: Dictionary = {
 	},
 }
 
+const BOAT_ORDER: Array[String] = [
+	"skiff",
+	"offshore_boat",
+	"bluewater_boat",
+]
+
+const BOATS: Dictionary = {
+	"skiff":
+	{
+		"id": "skiff",
+		"name": "小型船・浜風",
+		"short_name": "小型船",
+		"rank": 1,
+		"price": 3600,
+		"description": "港から少し離れた南の岩礁へ向かえる小回りの利く船。",
+		"access_text": "南の岩礁まで出航可能",
+	},
+	"offshore_boat":
+	{
+		"id": "offshore_boat",
+		"name": "沖釣り船・潮路",
+		"short_name": "沖釣り船",
+		"rank": 2,
+		"price": 8200,
+		"description": "外海の回遊ルートまで出られる安定した釣り船。",
+		"access_text": "外海・回遊ルートまで出航可能",
+	},
+	"bluewater_boat":
+	{
+		"id": "bluewater_boat",
+		"name": "外洋船・群青",
+		"short_name": "外洋船",
+		"rank": 3,
+		"price": 14500,
+		"description": "深い潮目と外洋の大物を狙うための本格船。",
+		"access_text": "外洋の深場まで出航可能",
+	},
+}
+
 var _rng := RandomNumberGenerator.new()
 
 
@@ -1136,6 +1184,12 @@ func get_rod(rod_id: String) -> Dictionary:
 	if not RODS.has(rod_id):
 		return {}
 	return RODS[rod_id].duplicate(true)
+
+
+func get_boat(boat_id: String) -> Dictionary:
+	if not BOATS.has(boat_id):
+		return {}
+	return BOATS[boat_id].duplicate(true)
 
 
 func get_all_fish_ids() -> Array[String]:
@@ -1170,6 +1224,94 @@ func get_all_rod_ids() -> Array[String]:
 	var ids: Array[String] = []
 	for rod_id in RODS.keys():
 		ids.append(String(rod_id))
+	return ids
+
+
+func get_all_boat_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for boat_id in BOAT_ORDER:
+		ids.append(boat_id)
+	return ids
+
+
+func get_best_boat_rank(owned_boat_ids: Array) -> int:
+	var best_rank := NO_BOAT_RANK
+	for boat_id_variant in owned_boat_ids:
+		var boat := get_boat(String(boat_id_variant))
+		if boat.is_empty():
+			continue
+		best_rank = maxi(best_rank, int(boat.get("rank", NO_BOAT_RANK)))
+	return best_rank
+
+
+func get_required_boat_for_rank(required_rank: int) -> Dictionary:
+	if required_rank <= NO_BOAT_RANK:
+		return {}
+	for boat_id in BOAT_ORDER:
+		var boat: Dictionary = BOATS[boat_id]
+		if int(boat.get("rank", NO_BOAT_RANK)) >= required_rank:
+			return boat.duplicate(true)
+	return {}
+
+
+func fishing_spot_access_status(spot_id: String, player_level: int, owned_boat_ids: Array) -> Dictionary:
+	var resolved_id := _resolved_spot_id(spot_id)
+	var spot: Dictionary = FISHING_SPOTS[resolved_id]
+	var unlock_level := int(spot.get("unlock_level", 1))
+	var required_rank := int(spot.get("required_boat_rank", NO_BOAT_RANK))
+	var owned_rank := get_best_boat_rank(owned_boat_ids)
+	if player_level < unlock_level:
+		return {
+			"ok": false,
+			"spot_id": resolved_id,
+			"reason": "level",
+			"message": "未発見　Lv.%dで発見" % unlock_level,
+			"detail": "プレイヤーレベルが足りません。",
+			"button_text": "Lv.%dで解放" % unlock_level,
+			"required_level": unlock_level,
+			"required_boat_rank": required_rank,
+			"owned_boat_rank": owned_rank,
+		}
+
+	if owned_rank < required_rank:
+		var required_boat := get_required_boat_for_rank(required_rank)
+		var boat_name := String(required_boat.get("name", "船"))
+		return {
+			"ok": false,
+			"spot_id": resolved_id,
+			"reason": "boat",
+			"message": "出航不可　%sが必要" % boat_name,
+			"detail": "%sを購入すると、この釣り場へ出航できます。" % boat_name,
+			"button_text": "%sが必要" % String(required_boat.get("short_name", boat_name)),
+			"required_level": unlock_level,
+			"required_boat_rank": required_rank,
+			"owned_boat_rank": owned_rank,
+			"required_boat_id": String(required_boat.get("id", "")),
+			"required_boat_name": boat_name,
+		}
+
+	return {
+		"ok": true,
+		"spot_id": resolved_id,
+		"reason": "",
+		"message": "出航可能",
+		"detail": "この釣り場へ出航できます。",
+		"button_text": "ここで釣る",
+		"required_level": unlock_level,
+		"required_boat_rank": required_rank,
+		"owned_boat_rank": owned_rank,
+	}
+
+
+func is_fishing_spot_accessible(spot_id: String, player_level: int, owned_boat_ids: Array) -> bool:
+	return bool(fishing_spot_access_status(spot_id, player_level, owned_boat_ids).get("ok", false))
+
+
+func get_accessible_fishing_spot_ids(player_level: int, owned_boat_ids: Array) -> Array[String]:
+	var ids: Array[String] = []
+	for spot_id in FISHING_SPOT_ORDER:
+		if is_fishing_spot_accessible(spot_id, player_level, owned_boat_ids):
+			ids.append(spot_id)
 	return ids
 
 

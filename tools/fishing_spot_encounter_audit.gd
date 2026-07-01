@@ -10,6 +10,7 @@ func _initialize() -> void:
 	var failures: Array[String] = []
 	_check_spot_master(game_data, failures)
 	_check_level_gates(game_data, failures)
+	_check_boat_gates(game_data, failures)
 	_check_expected_rates(game_data, failures)
 	_print_sample_summary(game_data)
 	if not failures.is_empty():
@@ -31,6 +32,7 @@ func _check_spot_master(game_data: Object, failures: Array[String]) -> void:
 		"id",
 		"name",
 		"unlock_level",
+		"required_boat_rank",
 		"depth_range",
 		"description",
 		"common_modifier",
@@ -45,12 +47,17 @@ func _check_spot_master(game_data: Object, failures: Array[String]) -> void:
 		for key in required_keys:
 			if not spot.has(key):
 				failures.append("%s missing spot key %s" % [spot_id, key])
-		for fish_id in Array(spot.get("featured_fish", [])):
-			if game_data.get_fish(String(fish_id)).is_empty():
-				failures.append("%s featured unknown fish %s" % [spot_id, fish_id])
-		for fish_id in Array(spot.get("allowed_fish", [])):
-			if game_data.get_fish(String(fish_id)).is_empty():
-				failures.append("%s allows unknown fish %s" % [spot_id, fish_id])
+		for featured_fish_id in Array(spot.get("featured_fish", [])):
+			if game_data.get_fish(String(featured_fish_id)).is_empty():
+				failures.append("%s featured unknown fish %s" % [spot_id, featured_fish_id])
+		for allowed_fish_id in Array(spot.get("allowed_fish", [])):
+			if game_data.get_fish(String(allowed_fish_id)).is_empty():
+				failures.append("%s allows unknown fish %s" % [spot_id, allowed_fish_id])
+		var required_boat_rank := int(spot.get("required_boat_rank", 0))
+		if required_boat_rank < 0:
+			failures.append("%s has negative required_boat_rank" % spot_id)
+		if required_boat_rank > 0 and game_data.get_required_boat_for_rank(required_boat_rank).is_empty():
+			failures.append("%s requires missing boat rank %d" % [spot_id, required_boat_rank])
 
 
 func _check_level_gates(game_data: Object, failures: Array[String]) -> void:
@@ -69,6 +76,29 @@ func _check_level_gates(game_data: Object, failures: Array[String]) -> void:
 					failures.append("boss fish in normal weights level=%d spot=%s fish=%s" % [level, spot_id, fish_id])
 				if int(fish.get("min_level", 1)) > level:
 					failures.append("locked fish in weights level=%d spot=%s fish=%s" % [level, spot_id, fish_id])
+
+
+func _check_boat_gates(game_data: Object, failures: Array[String]) -> void:
+	var no_boats: Array[String] = []
+	var skiff: Array[String] = ["skiff"]
+	var offshore_boat: Array[String] = ["offshore_boat"]
+	var bluewater_boat: Array[String] = ["bluewater_boat"]
+	if game_data.is_fishing_spot_accessible("south_reef", 5, no_boats):
+		failures.append("south_reef should require a boat at Lv.5")
+	if not game_data.is_fishing_spot_accessible("south_reef", 5, skiff):
+		failures.append("south_reef should be accessible with skiff at Lv.5")
+	if game_data.is_fishing_spot_accessible("bluewater_route", 6, skiff):
+		failures.append("bluewater_route should require offshore boat at Lv.6")
+	if not game_data.is_fishing_spot_accessible("bluewater_route", 6, offshore_boat):
+		failures.append("bluewater_route should be accessible with offshore boat at Lv.6")
+	if game_data.is_fishing_spot_accessible("deep_ocean", 9, offshore_boat):
+		failures.append("deep_ocean should require bluewater boat at Lv.9")
+	if not game_data.is_fishing_spot_accessible("deep_ocean", 9, bluewater_boat):
+		failures.append("deep_ocean should be accessible with bluewater boat at Lv.9")
+	if game_data.is_fishing_spot_accessible("south_reef", 4, bluewater_boat):
+		failures.append("level gate should still block south_reef before Lv.5")
+	if not game_data.is_fishing_spot_accessible("harbor_boulder", 5, no_boats):
+		failures.append("boss spot should not require a boat at Lv.5")
 
 
 func _check_expected_rates(game_data: Object, failures: Array[String]) -> void:

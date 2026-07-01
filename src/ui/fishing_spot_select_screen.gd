@@ -90,7 +90,7 @@ func _resolve_route_state() -> void:
 	var requested_spot := GameData.get_fishing_spot(requested_id)
 	if requested_spot.is_empty():
 		requested_id = GameData.DEFAULT_FISHING_SPOT_ID
-	if not GameData.is_fishing_spot_unlocked(requested_id, PlayerProgress.level):
+	if not PlayerProgress.can_access_fishing_spot(requested_id):
 		requested_id = GameData.DEFAULT_FISHING_SPOT_ID
 	_selected_spot_id = requested_id
 
@@ -1005,7 +1005,7 @@ func _focus_spot(spot_id: String, update_message: bool = true) -> void:
 	_refresh_ledger_header()
 	if update_message or (_message_label != null and _message_label.text.is_empty()):
 		var spot := GameData.get_fishing_spot(spot_id)
-		if GameData.is_fishing_spot_unlocked(spot_id, PlayerProgress.level):
+		if PlayerProgress.can_access_fishing_spot(spot_id):
 			_set_survey_message(spot)
 		else:
 			_show_locked_message(spot_id)
@@ -1026,7 +1026,7 @@ func _ledger_completion_counts() -> Dictionary:
 	var caught := 0
 	var total := 0
 	for spot_id in GameData.get_all_fishing_spot_ids():
-		if not GameData.is_fishing_spot_unlocked(spot_id, PlayerProgress.level):
+		if not PlayerProgress.can_access_fishing_spot(spot_id):
 			continue
 		var completion := _spot_completion_counts(GameData.get_fishing_spot(spot_id))
 		caught += int(completion.get("caught", 0))
@@ -1041,15 +1041,16 @@ func _refresh_detail() -> void:
 	var spot := GameData.get_fishing_spot(_selected_spot_id)
 	if spot.is_empty():
 		return
-	var unlocked := GameData.is_fishing_spot_unlocked(_selected_spot_id, PlayerProgress.level)
+	var access := PlayerProgress.fishing_spot_access_status(_selected_spot_id)
+	var accessible := bool(access.get("ok", false))
 	var boss_spot := bool(spot.get("boss_spot", false))
 	_detail_title_label.text = String(spot.get("name", _selected_spot_id))
 	_detail_title_label.add_theme_font_size_override("font_size", 22 if _detail_title_label.text.length() >= 9 else 24)
-	if unlocked:
+	if accessible:
 		_detail_unlock_label.text = "解放済み　%s" % ("ぬし専用" if boss_spot else "通常ポイント")
 		_detail_unlock_label.add_theme_color_override("font_color", Color("#f2cf7d") if not boss_spot else Color("#ffb58d"))
 	else:
-		_detail_unlock_label.text = "未解放　Lv.%dで出航可能" % int(spot.get("unlock_level", 1))
+		_detail_unlock_label.text = String(access.get("message", "出航不可"))
 		_detail_unlock_label.add_theme_color_override("font_color", Color("#ffb0a0"))
 	if _detail_thumbnail != null:
 		_detail_thumbnail.texture = _thumbnail_for_spot(_selected_spot_id)
@@ -1058,14 +1059,14 @@ func _refresh_detail() -> void:
 	_detail_fish_value_label.text = _featured_fish_text(spot, 4)
 	_detail_bait_value_label.text = _bait_text(spot)
 	if _detail_hint_value_label != null:
-		_detail_hint_value_label.text = "ぬしの気配" if boss_spot else _rare_hint_text(spot)
+		_detail_hint_value_label.text = String(access.get("detail", "")) if not accessible else ("ぬしの気配" if boss_spot else _rare_hint_text(spot))
 	if _action_button != null:
-		_action_button.disabled = not unlocked
-		_action_button.text = "ここで釣る" if unlocked else "Lv.%dで解放" % int(spot.get("unlock_level", 1))
+		_action_button.disabled = not accessible
+		_action_button.text = String(access.get("button_text", "ここで釣る"))
 
 
 func _select_spot(spot_id: String) -> void:
-	if not GameData.is_fishing_spot_unlocked(spot_id, PlayerProgress.level):
+	if not PlayerProgress.can_access_fishing_spot(spot_id):
 		_show_locked_message(spot_id)
 		return
 	var payload := {"spot_id": spot_id}
@@ -1081,7 +1082,8 @@ func _show_locked_message(spot_id: String) -> void:
 	var spot := GameData.get_fishing_spot(spot_id)
 	_message_label.text = String(spot.get("name", spot_id))
 	if _message_detail_label != null:
-		_message_detail_label.text = "未解放　Lv.%dで解放" % int(spot.get("unlock_level", 1))
+		var access := PlayerProgress.fishing_spot_access_status(spot_id)
+		_message_detail_label.text = String(access.get("message", "出航不可"))
 
 
 func _set_survey_message(spot: Dictionary) -> void:
