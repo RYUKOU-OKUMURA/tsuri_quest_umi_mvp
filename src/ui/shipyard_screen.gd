@@ -1,0 +1,462 @@
+extends "res://src/ui/screen_base.gd"
+
+const GameFontsScript = preload("res://src/ui/game_fonts.gd")
+
+const SHIPYARD_BG_PATH := "res://assets/showcase/shipyard/shipyard_purchase_bg.png"
+const OFFSHORE_SPOT_TOTAL := 3
+
+var _background_rect: TextureRect
+var _selected_boat_id := ""
+var _top_level_label: Label
+var _top_money_label: Label
+var _top_boat_label: Label
+var _top_rank_label: Label
+var _title_label: Label
+var _boat_card_labels: Dictionary = {}
+var _boat_card_status_labels: Dictionary = {}
+var _boat_card_frames: Dictionary = {}
+var _detail_name_label: Label
+var _detail_range_label: Label
+var _detail_rank_label: Label
+var _detail_unlock_label: Label
+var _detail_type_label: Label
+var _price_label: Label
+var _buy_button: Button
+var _route_title_label: Label
+var _route_status_label: Label
+var _route_locked_label: Label
+var _route_hint_label: Label
+var _footer_label: Label
+
+
+func _build_screen() -> void:
+	_background_rect = _texture_rect(SHIPYARD_BG_PATH)
+	_background_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_background_rect.stretch_mode = TextureRect.STRETCH_SCALE
+	add_child(_background_rect)
+
+	var root := Control.new()
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(root)
+
+	_selected_boat_id = _default_boat_id()
+	_build_top_bar(root)
+	_build_boat_cards(root)
+	_build_center_detail(root)
+	_build_route_panel(root)
+	_build_footer(root)
+	_refresh()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		navigate("harbor")
+
+
+func _build_top_bar(root: Control) -> void:
+	var place_label := _shipyard_label("船着き場", 20, Color("#fff0c2"), true, 3)
+	place_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	place_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(root, place_label, 0.072, 0.014, 0.178, 0.063)
+
+	_top_level_label = _shipyard_label("", 19, Color("#fff0c2"), true, 3)
+	_top_level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_top_level_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(root, _top_level_label, 0.222, 0.014, 0.274, 0.063)
+
+	_top_money_label = _shipyard_label("", 19, Color("#fff0c2"), true, 3)
+	_top_money_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_top_money_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(root, _top_money_label, 0.374, 0.014, 0.488, 0.063)
+
+	_top_boat_label = _shipyard_label("", 17, Color("#fff0c2"), true, 3)
+	_top_boat_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_top_boat_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(root, _top_boat_label, 0.565, 0.014, 0.652, 0.063)
+
+	_top_rank_label = _shipyard_label("", 17, Color("#fff0c2"), true, 3)
+	_top_rank_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_top_rank_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(root, _top_rank_label, 0.906, 0.014, 0.965, 0.063)
+
+
+func _build_boat_cards(root: Control) -> void:
+	var cards := [
+		{"id": "skiff", "rect": Rect2(0.022, 0.124, 0.231, 0.221)},
+		{"id": "offshore_boat", "rect": Rect2(0.022, 0.365, 0.231, 0.221)},
+		{"id": "bluewater_boat", "rect": Rect2(0.022, 0.606, 0.231, 0.221)},
+	]
+	for card in cards:
+		var boat_id := String(card["id"])
+		var rect: Rect2 = card["rect"]
+		var holder := _anchored_control(
+			root,
+			rect.position.x,
+			rect.position.y,
+			rect.position.x + rect.size.x,
+			rect.position.y + rect.size.y
+		)
+		var select_frame := Panel.new()
+		select_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		select_frame.add_theme_stylebox_override("panel", _selection_style())
+		select_frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		holder.add_child(select_frame)
+		_boat_card_frames[boat_id] = select_frame
+
+		var name := _shipyard_label("", 16, Color("#3b2b17"), true, 0)
+		name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_place_control(holder, name, 0.230, 0.720, 0.802, 0.865)
+		_boat_card_labels[boat_id] = name
+
+		var status := _shipyard_label("", 12, Color("#f7e7be"), true, 2, Color("#112538"))
+		status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		status.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_place_control(holder, status, 0.130, 0.050, 0.880, 0.195)
+		_boat_card_status_labels[boat_id] = status
+
+		var hit := _transparent_button(func() -> void: _select_boat(boat_id))
+		hit.set_meta("shipyard_boat_card", boat_id)
+		_place_control(holder, hit, 0.0, 0.0, 1.0, 1.0)
+
+
+func _build_center_detail(root: Control) -> void:
+	_title_label = _shipyard_label("船着き場", 32, Color("#5b3716"), true, 0)
+	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(root, _title_label, 0.362, 0.138, 0.635, 0.202)
+
+	_detail_name_label = _shipyard_label("", 19, Color("#fff3c3"), true, 2)
+	_detail_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_detail_name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(root, _detail_name_label, 0.325, 0.648, 0.502, 0.688)
+
+	_detail_rank_label = _shipyard_label("", 15, Color("#463018"), true, 0)
+	_detail_rank_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_detail_rank_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(root, _detail_rank_label, 0.363, 0.715, 0.421, 0.754)
+
+	_detail_unlock_label = _shipyard_label("", 15, Color("#463018"), true, 0)
+	_detail_unlock_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_detail_unlock_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(root, _detail_unlock_label, 0.476, 0.715, 0.534, 0.754)
+
+	_detail_type_label = _shipyard_label("", 15, Color("#463018"), true, 0)
+	_detail_type_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_detail_type_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(root, _detail_type_label, 0.592, 0.715, 0.648, 0.754)
+
+	_price_label = _shipyard_label("", 20, Color("#fff0c2"), true, 3)
+	_price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_price_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(root, _price_label, 0.365, 0.800, 0.492, 0.855)
+
+	_buy_button = _image_text_button("", _buy_selected_boat, 19)
+	_buy_button.set_meta("shipyard_buy_button", true)
+	_place_control(root, _buy_button, 0.545, 0.794, 0.654, 0.862)
+
+	_detail_range_label = _shipyard_label("", 15, Color("#3d2e1b"), true, 0)
+	_detail_range_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_detail_range_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(root, _detail_range_label, 0.365, 0.686, 0.632, 0.707)
+
+
+func _build_route_panel(root: Control) -> void:
+	_route_title_label = _shipyard_label("", 19, Color("#3b2b17"), true, 0)
+	_route_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_route_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(root, _route_title_label, 0.746, 0.140, 0.956, 0.184)
+
+	_route_hint_label = _shipyard_label("", 14, Color("#fff0c2"), true, 2)
+	_route_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_route_hint_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_route_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_place_control(root, _route_hint_label, 0.755, 0.200, 0.955, 0.272)
+
+	_route_status_label = _shipyard_label("", 15, Color("#fff0c2"), true, 2)
+	_route_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_route_status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(root, _route_status_label, 0.762, 0.857, 0.850, 0.895)
+
+	_route_locked_label = _shipyard_label("", 15, Color("#fff0c2"), true, 2)
+	_route_locked_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_route_locked_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(root, _route_locked_label, 0.898, 0.857, 0.976, 0.895)
+
+
+func _build_footer(root: Control) -> void:
+	var back := _image_text_button("港へ戻る", func() -> void: navigate("harbor"), 20)
+	back.set_meta("shipyard_return", true)
+	_place_control(root, back, 0.018, 0.912, 0.152, 0.976)
+
+	_footer_label = _shipyard_label("", 18, Color("#563a1c"), true, 0)
+	_footer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_footer_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_footer_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_place_control(root, _footer_label, 0.270, 0.912, 0.768, 0.976)
+
+
+func _refresh() -> void:
+	var best_boat := PlayerProgress.get_best_boat()
+	var best_rank := PlayerProgress.best_boat_rank()
+	var current_boat := "船なし" if best_boat.is_empty() else String(best_boat.get("short_name", best_boat.get("name", "船")))
+	_top_level_label.text = "%d" % PlayerProgress.level
+	_top_money_label.text = "%s G" % _format_money(PlayerProgress.money)
+	_top_boat_label.text = current_boat
+	_top_rank_label.text = "%d / 3" % best_rank
+
+	for boat_id in GameData.get_all_boat_ids():
+		var boat := GameData.get_boat(boat_id)
+		var name_label: Label = _boat_card_labels.get(boat_id)
+		var status_label: Label = _boat_card_status_labels.get(boat_id)
+		var frame: Panel = _boat_card_frames.get(boat_id)
+		if name_label != null:
+			name_label.text = String(boat.get("name", boat_id))
+		if status_label != null:
+			status_label.text = _boat_card_status_text(boat_id)
+			status_label.add_theme_color_override("font_color", _boat_status_color(boat_id))
+		if frame != null:
+			frame.visible = boat_id == _selected_boat_id
+
+	_refresh_detail()
+
+
+func _refresh_detail() -> void:
+	var boat := GameData.get_boat(_selected_boat_id)
+	if boat.is_empty():
+		return
+	var rank := int(boat.get("rank", 0))
+	var price := int(boat.get("price", 0))
+	var owned := PlayerProgress.has_boat(_selected_boat_id)
+	var can_buy := PlayerProgress.money >= price and not owned
+	var unlocked_names := _boat_access_spot_names(rank)
+
+	_title_label.text = "船着き場"
+	_detail_name_label.text = String(boat.get("name", "船"))
+	_detail_rank_label.text = "Rank %d" % rank
+	_detail_unlock_label.text = "%d航路" % unlocked_names.size()
+	_detail_type_label.text = "恒久"
+	_detail_range_label.text = String(boat.get("access_text", "出航範囲未設定")).replace("出航可能", "").strip_edges()
+	_price_label.text = "所持済み" if owned else "%s G" % _format_money(price)
+	_route_title_label.text = "航路図　%s" % String(boat.get("short_name", "船"))
+	_route_status_label.text = "出航 %d/%d" % [_accessible_offshore_count(PlayerProgress.best_boat_rank()), OFFSHORE_SPOT_TOTAL]
+	_route_locked_label.text = "未達 %d" % maxi(0, OFFSHORE_SPOT_TOTAL - _accessible_offshore_count(PlayerProgress.best_boat_rank()))
+	_route_hint_label.text = _route_hint_text(rank)
+
+	if owned:
+		_buy_button.text = "登録済み"
+		_buy_button.disabled = true
+	elif can_buy:
+		_buy_button.text = "購入"
+		_buy_button.disabled = false
+	else:
+		_buy_button.text = "資金不足"
+		_buy_button.disabled = true
+
+	if owned:
+		_footer_label.text = "%sは登録済み。釣り場マップで対象の沖釣り場へ出航できます。" % String(boat.get("short_name", "船"))
+	elif can_buy:
+		_footer_label.text = "%sを購入すると、%sへ出航できるようになります。" % [
+			String(boat.get("short_name", "船")),
+			"、".join(PackedStringArray(unlocked_names)),
+		]
+	else:
+		_footer_label.text = "あと %s G で%sを購入できます。魚市場で釣果を売って資金を作ろう。" % [
+			_format_money(price - PlayerProgress.money),
+			String(boat.get("short_name", "船")),
+		]
+
+
+func _select_boat(boat_id: String) -> void:
+	if GameData.get_boat(boat_id).is_empty():
+		return
+	_selected_boat_id = boat_id
+	_refresh()
+
+
+func _buy_selected_boat() -> void:
+	var result := PlayerProgress.buy_boat(_selected_boat_id)
+	_footer_label.text = String(result.get("message", "購入できませんでした。"))
+	_refresh()
+
+
+func _default_boat_id() -> String:
+	for boat_id in GameData.get_all_boat_ids():
+		if not PlayerProgress.has_boat(boat_id):
+			return boat_id
+	var ids := GameData.get_all_boat_ids()
+	return ids[ids.size() - 1] if not ids.is_empty() else ""
+
+
+func _boat_card_status_text(boat_id: String) -> String:
+	var boat := GameData.get_boat(boat_id)
+	if PlayerProgress.has_boat(boat_id):
+		return "登録済み"
+	var price := int(boat.get("price", 0))
+	if PlayerProgress.money >= price:
+		return "購入可能"
+	return "%s G" % _format_money(price)
+
+
+func _boat_status_color(boat_id: String) -> Color:
+	if PlayerProgress.has_boat(boat_id):
+		return Color("#bfffd0")
+	var boat := GameData.get_boat(boat_id)
+	if PlayerProgress.money >= int(boat.get("price", 0)):
+		return Color("#fff0a6")
+	return Color("#ffd0bc")
+
+
+func _boat_access_spot_names(rank: int) -> Array[String]:
+	var names: Array[String] = []
+	for spot_id in GameData.get_all_fishing_spot_ids():
+		var spot := GameData.get_fishing_spot(spot_id)
+		var required_rank := int(spot.get("required_boat_rank", GameData.NO_BOAT_RANK))
+		if required_rank > GameData.NO_BOAT_RANK and required_rank <= rank:
+			names.append(String(spot.get("short_name", spot.get("name", spot_id))))
+	return names
+
+
+func _accessible_offshore_count(rank: int) -> int:
+	var count := 0
+	for spot_id in GameData.get_all_fishing_spot_ids():
+		var spot := GameData.get_fishing_spot(spot_id)
+		var required_rank := int(spot.get("required_boat_rank", GameData.NO_BOAT_RANK))
+		if required_rank > GameData.NO_BOAT_RANK and required_rank <= rank:
+			count += 1
+	return count
+
+
+func _route_hint_text(rank: int) -> String:
+	var names := _boat_access_spot_names(rank)
+	if names.is_empty():
+		return "港周辺の航路のみ"
+	return "この船で到達: %s" % "、".join(PackedStringArray(names))
+
+
+func _anchored_control(parent: Control, left: float, top: float, right: float, bottom: float) -> Control:
+	var control := Control.new()
+	control.anchor_left = left
+	control.anchor_top = top
+	control.anchor_right = right
+	control.anchor_bottom = bottom
+	control.offset_left = 0.0
+	control.offset_top = 0.0
+	control.offset_right = 0.0
+	control.offset_bottom = 0.0
+	parent.add_child(control)
+	return control
+
+
+func _place_control(parent: Control, control: Control, left: float, top: float, right: float, bottom: float) -> void:
+	control.anchor_left = left
+	control.anchor_top = top
+	control.anchor_right = right
+	control.anchor_bottom = bottom
+	control.offset_left = 0.0
+	control.offset_top = 0.0
+	control.offset_right = 0.0
+	control.offset_bottom = 0.0
+	parent.add_child(control)
+
+
+func _texture_rect(path: String) -> TextureRect:
+	var rect := TextureRect.new()
+	rect.texture = _load_texture_if_exists(path)
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_SCALE
+	rect.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return rect
+
+
+func _load_texture_if_exists(path: String) -> Texture2D:
+	if ResourceLoader.exists(path):
+		return load(path) as Texture2D
+	if FileAccess.file_exists(path):
+		var image := Image.new()
+		if image.load(path) == OK:
+			return ImageTexture.create_from_image(image)
+	return null
+
+
+func _transparent_button(callback: Callable) -> Button:
+	var button := Button.new()
+	button.text = ""
+	button.focus_mode = Control.FOCUS_NONE
+	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_apply_empty_button_style(button)
+	button.pressed.connect(callback)
+	return button
+
+
+func _image_text_button(text: String, callback: Callable, font_size: int) -> Button:
+	var button := _transparent_button(callback)
+	button.text = text
+	button.add_theme_font_override("font", GameFontsScript.bold(get_theme_default_font()))
+	button.add_theme_font_size_override("font_size", font_size)
+	button.add_theme_color_override("font_color", Color("#fff4c7"))
+	button.add_theme_color_override("font_hover_color", Color.WHITE)
+	button.add_theme_color_override("font_pressed_color", Color("#ffe17d"))
+	button.add_theme_color_override("font_disabled_color", Color("#d1c4a7"))
+	button.add_theme_color_override("font_outline_color", Color("#07131d"))
+	button.add_theme_constant_override("outline_size", 3)
+	return button
+
+
+func _apply_empty_button_style(button: Button) -> void:
+	for style_name in ["normal", "hover", "pressed", "disabled", "focus"]:
+		button.add_theme_stylebox_override(style_name, StyleBoxEmpty.new())
+
+
+func _selection_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.2, 0.95, 1.0, 0.03)
+	style.border_color = Color("#5cf3ff")
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(4)
+	style.shadow_color = Color("#1cdcff", 0.28)
+	style.shadow_size = 6
+	style.shadow_offset = Vector2.ZERO
+	return style
+
+
+func _shipyard_label(
+	text: String,
+	font_size: int,
+	color: Color,
+	bold := false,
+	outline := 0,
+	outline_color := Color("#07131d")
+) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_color_override("font_color", color)
+	if outline > 0:
+		label.add_theme_color_override("font_outline_color", outline_color)
+		label.add_theme_constant_override("outline_size", outline)
+		label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.28))
+		label.add_theme_constant_override("shadow_offset_x", 1)
+		label.add_theme_constant_override("shadow_offset_y", 1)
+		label.add_theme_constant_override("shadow_outline_size", 1)
+	var fallback := get_theme_default_font()
+	label.add_theme_font_override("font", GameFontsScript.bold(fallback) if bold else GameFontsScript.regular(fallback))
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	label.clip_text = true
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return label
+
+
+func _format_money(value: int) -> String:
+	var raw := str(maxi(value, 0))
+	var result := ""
+	var count := 0
+	for index in range(raw.length() - 1, -1, -1):
+		if count > 0 and count % 3 == 0:
+			result = "," + result
+		result = raw[index] + result
+		count += 1
+	return result

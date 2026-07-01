@@ -8,6 +8,7 @@ const FishingScreen = preload("res://src/ui/fishing_screen.gd")
 const CookingScreen = preload("res://src/ui/cooking_screen.gd")
 const MarketScreen = preload("res://src/ui/market_screen.gd")
 const ShopScreen = preload("res://src/ui/shop_screen.gd")
+const ShipyardScreen = preload("res://src/ui/shipyard_screen.gd")
 const StatusScreen = preload("res://src/ui/status_screen.gd")
 const FishBookScreen = preload("res://src/ui/fish_book_screen.gd")
 
@@ -64,6 +65,8 @@ func _swap(screen_id: String, payload: Dictionary) -> void:
 			screen_script = MarketScreen
 		"shop":
 			screen_script = ShopScreen
+		"shipyard":
+			screen_script = ShipyardScreen
 		"status":
 			screen_script = StatusScreen
 		"fish_book":
