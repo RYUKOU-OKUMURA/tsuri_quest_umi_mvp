@@ -295,33 +295,31 @@ func _draw_routes(map_rect: Rect2) -> void:
 			GameData.is_fishing_spot_unlocked(from_id, player_level)
 			and GameData.is_fishing_spot_unlocked(to_id, player_level)
 		)
-		var color := Color("#ffe070", 0.94) if selected_route else Color("#f6e5b0", 0.34)
+		var color := Color("#ffe070", 0.88) if selected_route else Color("#f6e5b0", 0.34)
 		if not both_unlocked and not selected_route:
 			color = Color("#a99c87", 0.28)
-		var width := 4.4 if selected_route else 1.7
+		var width := 3.2 if selected_route else 1.7
 		if selected_route:
 			var pulse := 0.5 + 0.5 * sin(_animation_time * TAU * 0.72)
-			draw_line(from_point, to_point, Color("#ffe070", 0.22 + pulse * 0.14), width + 12.0)
-			_draw_route_arrows(from_point, to_point, pulse)
-		_draw_dotted_line(from_point, to_point, color, width, 14.0, 10.0)
+			draw_line(from_point, to_point, Color("#ffe070", 0.12 + pulse * 0.06), width + 8.0)
+			_draw_route_bearing_marks(from_point, to_point, pulse)
+		_draw_dotted_line(from_point, to_point, color, width, 13.0, 10.0)
 
 
-func _draw_route_arrows(from_point: Vector2, to_point: Vector2, pulse: float) -> void:
+func _draw_route_bearing_marks(from_point: Vector2, to_point: Vector2, pulse: float) -> void:
 	var delta := to_point - from_point
 	var length := delta.length()
 	if length <= 1.0:
 		return
 	var direction := delta / length
 	var normal := Vector2(-direction.y, direction.x)
-	var base_shift := fmod(_animation_time * 0.22, 0.18)
-	for ratio in [0.34, 0.52, 0.70]:
-		var center := from_point.lerp(to_point, clampf(float(ratio) + base_shift, 0.18, 0.86))
-		var tip := center + direction * 10.0
-		var left := center - direction * 5.5 + normal * 6.0
-		var right := center - direction * 5.5 - normal * 6.0
-		draw_colored_polygon(
-			PackedVector2Array([tip, left, right]),
-			Color("#fff0a0", 0.36 + pulse * 0.18)
+	for ratio in [0.30, 0.50, 0.70]:
+		var center := from_point.lerp(to_point, float(ratio))
+		draw_line(
+			center - normal * 6.5,
+			center + normal * 6.5,
+			Color("#fff0a0", 0.30 + pulse * 0.10),
+			1.2
 		)
 
 
@@ -358,9 +356,9 @@ func _draw_markers(map_rect: Rect2) -> void:
 func _draw_selected_marker_ping(center: Vector2, marker_size: float) -> void:
 	var pulse := 0.5 + 0.5 * sin(_animation_time * TAU * 0.86)
 	var radius := marker_size * (0.50 + pulse * 0.08)
-	draw_circle(center, radius, Color("#fff2a8", 0.19 + pulse * 0.13), false, 3.4)
-	draw_circle(center, marker_size * 0.68, Color("#ffe06d", 0.20), false, 2.0)
-	draw_circle(center, marker_size * 0.82, Color("#fff2a8", 0.10), false, 1.2)
+	draw_circle(center, radius, Color("#fff2a8", 0.14 + pulse * 0.09), false, 3.0)
+	draw_circle(center, marker_size * 0.68, Color("#ffe06d", 0.16), false, 1.8)
+	draw_circle(center, marker_size * 0.82, Color("#fff2a8", 0.08), false, 1.1)
 	var spin := fmod(_animation_time * 1.35, TAU)
 	for offset in [0.0, PI]:
 		draw_arc(
@@ -369,14 +367,14 @@ func _draw_selected_marker_ping(center: Vector2, marker_size: float) -> void:
 			spin + offset,
 			spin + offset + PI * 0.46,
 			18,
-			Color("#fff3b5", 0.52),
-			2.2,
+			Color("#fff3b5", 0.38),
+			1.8,
 			true
 		)
 	var tick := marker_size * 0.93
 	var tick_inner := marker_size * 0.76
 	for direction in [Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT]:
-		draw_line(center + direction * tick_inner, center + direction * tick, Color("#ffe070", 0.42), 1.6)
+		draw_line(center + direction * tick_inner, center + direction * tick, Color("#ffe070", 0.30), 1.3)
 
 
 func _draw_spot_marker(spot_id: String, marker_row: int, fallback_marker_index: int, target: Rect2) -> void:
@@ -437,7 +435,11 @@ func _draw_spot_chip(
 		border = Color("#d9764d", 0.98)
 	draw_rect(chip_rect.grow(2.0), Color(0.0, 0.0, 0.0, 0.32), true)
 	draw_rect(chip_rect, fill, true)
+	draw_line(chip_rect.position + Vector2(4.0, 4.0), chip_rect.position + Vector2(chip_rect.size.x - 4.0, 4.0), Color("#fff1bf", 0.42), 1.0)
+	draw_line(chip_rect.position + Vector2(4.0, chip_rect.size.y - 4.0), chip_rect.position + Vector2(chip_rect.size.x - 4.0, chip_rect.size.y - 4.0), Color("#8b5b2b", 0.20), 1.0)
 	draw_rect(chip_rect, border, false, 2.0)
+	if selected:
+		draw_rect(chip_rect.grow(4.0), Color("#ffe070", 0.18), false, 1.0)
 	var name_pos := chip_rect.position + Vector2((chip_rect.size.x - name_w) * 0.5, 21.0)
 	_draw_text(font, name, name_pos, font_size, Color("#24170d") if unlocked else Color("#554b42"), 1)
 	if not unlocked or boss_spot:
