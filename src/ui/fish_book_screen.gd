@@ -621,9 +621,15 @@ func _apply_filter_button_skin(button: Button, selected: bool) -> void:
 		button.add_theme_stylebox_override("hover", hover)
 		button.add_theme_stylebox_override("focus", hover)
 		button.add_theme_stylebox_override("pressed", hover)
-	button.add_theme_color_override("font_color", Color("#fff4c9") if selected else Color("#2c1d0e"))
+	button.add_theme_color_override("font_color", Color("#fff8d8") if selected else Color("#fff0bf"))
 	button.add_theme_color_override("font_hover_color", Color("#fff8d8"))
 	button.add_theme_color_override("font_pressed_color", Color("#fff8d8"))
+	button.add_theme_color_override("font_outline_color", Color("#2a1406"))
+	button.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.35))
+	button.add_theme_constant_override("outline_size", 3 if selected else 2)
+	button.add_theme_constant_override("shadow_offset_x", 1)
+	button.add_theme_constant_override("shadow_offset_y", 2)
+	button.add_theme_constant_override("shadow_outline_size", 1)
 
 
 func _textured_button(text: String, callback: Callable, primary := false) -> Button:
@@ -633,12 +639,16 @@ func _textured_button(text: String, callback: Callable, primary := false) -> But
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.pressed.connect(callback)
 	button.add_theme_font_override("font", GameFontsScript.extra_bold(get_theme_default_font()))
-	button.add_theme_font_size_override("font_size", 23 if primary else 20)
-	button.add_theme_color_override("font_color", Color("#fff4c9") if primary else Color("#2c1d0e"))
+	button.add_theme_font_size_override("font_size", 24 if primary else 21)
+	button.add_theme_color_override("font_color", Color("#fff8d8") if primary else Color("#fff0bf"))
 	button.add_theme_color_override("font_hover_color", Color("#fff8d8"))
 	button.add_theme_color_override("font_pressed_color", Color("#fff8d8"))
-	button.add_theme_color_override("font_outline_color", Color("#07131d"))
-	button.add_theme_constant_override("outline_size", 2 if primary else 1)
+	button.add_theme_color_override("font_outline_color", Color("#2a1406"))
+	button.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.35))
+	button.add_theme_constant_override("outline_size", 3 if primary else 2)
+	button.add_theme_constant_override("shadow_offset_x", 1)
+	button.add_theme_constant_override("shadow_offset_y", 2)
+	button.add_theme_constant_override("shadow_outline_size", 1)
 	_apply_filter_button_skin(button, primary)
 	_wire_button_juice(button)
 	return button
