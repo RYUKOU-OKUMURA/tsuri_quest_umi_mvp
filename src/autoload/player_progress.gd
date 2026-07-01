@@ -13,6 +13,7 @@ var exp: int = 0
 var money: int = 500
 var inventory: Dictionary = {}
 var caught_counts: Dictionary = {}
+var spot_caught_counts: Dictionary = {}
 var best_sizes: Dictionary = {}
 var eaten_recipes: Dictionary = {}
 var owned_rods: Array[String] = ["starter"]
@@ -39,6 +40,7 @@ func reset_game() -> void:
 	money = 500
 	inventory = {}
 	caught_counts = {}
+	spot_caught_counts = {}
 	best_sizes = {}
 	eaten_recipes = {}
 	owned_rods = ["starter"]
@@ -75,9 +77,16 @@ func add_exp(amount: int) -> Array[int]:
 	return leveled_to
 
 
-func record_catch(fish_id: String, size_cm: float) -> void:
+func record_catch(fish_id: String, size_cm: float, spot_id: String = "") -> void:
 	inventory[fish_id] = int(inventory.get(fish_id, 0)) + 1
 	caught_counts[fish_id] = int(caught_counts.get(fish_id, 0)) + 1
+	if not spot_id.is_empty():
+		var spot_counts: Dictionary = {}
+		var loaded_spot_counts = spot_caught_counts.get(spot_id, {})
+		if typeof(loaded_spot_counts) == TYPE_DICTIONARY:
+			spot_counts = loaded_spot_counts.duplicate(true)
+		spot_counts[fish_id] = int(spot_counts.get(fish_id, 0)) + 1
+		spot_caught_counts[spot_id] = spot_counts
 	best_sizes[fish_id] = maxf(float(best_sizes.get(fish_id, 0.0)), size_cm)
 	fish_caught.emit(fish_id, size_cm)
 	save_game()
@@ -219,6 +228,7 @@ func save_game() -> void:
 		"money": money,
 		"inventory": inventory,
 		"caught_counts": caught_counts,
+		"spot_caught_counts": spot_caught_counts,
 		"best_sizes": best_sizes,
 		"eaten_recipes": eaten_recipes,
 		"owned_rods": owned_rods,
@@ -249,6 +259,7 @@ func load_game() -> void:
 	money = maxi(0, int(data.get("money", 500)))
 	var loaded_inventory = data.get("inventory", {})
 	var loaded_caught_counts = data.get("caught_counts", {})
+	var loaded_spot_caught_counts = data.get("spot_caught_counts", {})
 	var loaded_best_sizes = data.get("best_sizes", {})
 	var loaded_eaten_recipes = data.get("eaten_recipes", {})
 	inventory = (
@@ -257,6 +268,11 @@ func load_game() -> void:
 	caught_counts = (
 		loaded_caught_counts.duplicate(true)
 		if typeof(loaded_caught_counts) == TYPE_DICTIONARY
+		else {}
+	)
+	spot_caught_counts = (
+		loaded_spot_caught_counts.duplicate(true)
+		if typeof(loaded_spot_caught_counts) == TYPE_DICTIONARY
 		else {}
 	)
 	best_sizes = (

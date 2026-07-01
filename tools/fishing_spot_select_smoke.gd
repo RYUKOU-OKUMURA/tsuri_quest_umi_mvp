@@ -11,10 +11,15 @@ var _failed := false
 
 func _ready() -> void:
 	PlayerProgress.level = 1
+	PlayerProgress.spot_caught_counts = {
+		"harbor_pier": {"aji": 2, "iwashi": 1},
+	}
 	_screen = _make_screen()
 	await get_tree().process_frame
 	_expect(_screen._map_view != null, "map view should be present")
-	_verify_card_locks(8, 7)
+	_verify_progress_entries(8, 7)
+	_expect(_screen._completion_summary_text(GameData.get_fishing_spot("harbor_pier"), true, _screen._spot_completion_counts(GameData.get_fishing_spot("harbor_pier"))) == "達成度 2/5 種", "spot completion summary should use spot-specific catches")
+	_expect(_spot_card_buttons(_screen).is_empty(), "footer spot entries must not be selectable buttons")
 	_screen._select_spot("deep_ocean")
 	_expect(_navigated_to.is_empty(), "locked spot must not navigate")
 	_screen._select_spot(GameData.DEFAULT_FISHING_SPOT_ID)
@@ -29,7 +34,7 @@ func _ready() -> void:
 	PlayerProgress.level = GameData.BOSS_UNLOCK_LEVEL
 	_screen = _make_screen()
 	await get_tree().process_frame
-	_verify_card_locks(8, 2)
+	_verify_progress_entries(8, 2)
 	_screen._select_spot(GameData.BOSS_FISHING_SPOT_ID)
 	_expect(_navigated_to == "fishing", "boss spot should navigate when unlocked")
 	_expect(String(_payload.get("spot_id", "")) == GameData.BOSS_FISHING_SPOT_ID, "boss spot payload mismatch")
@@ -52,6 +57,9 @@ func _ready() -> void:
 	_expect(bool(_payload.get("continue_trip", false)), "continued spot selection should keep continue_trip")
 	var stats: Dictionary = _payload.get("trip_stats", {})
 	_expect(String(stats.get("sentinel", "")) == "carried", "continued spot selection should carry trip_stats")
+	PlayerProgress.record_catch("saba", 32.0, "outer_tide")
+	var outer_counts: Dictionary = PlayerProgress.spot_caught_counts.get("outer_tide", {})
+	_expect(int(outer_counts.get("saba", 0)) == 1, "record_catch should store spot-specific catch counts")
 
 	if _failed:
 		return
@@ -73,14 +81,29 @@ func _make_screen(payload: Dictionary = {}) -> Control:
 	return screen
 
 
-func _verify_card_locks(expected_cards: int, expected_locked: int) -> void:
-	var buttons := _spot_card_buttons(_screen)
-	_expect(buttons.size() == expected_cards, "spot card count mismatch: expected %d got %d" % [expected_cards, buttons.size()])
+func _verify_progress_entries(expected_entries: int, expected_locked: int) -> void:
+	var entries := _spot_progress_entries(_screen)
+	_expect(entries.size() == expected_entries, "spot progress entry count mismatch: expected %d got %d" % [expected_entries, entries.size()])
 	var locked := 0
-	for button in buttons:
-		if button.disabled:
+	for entry in entries:
+		if bool(entry.get_meta("locked", false)):
 			locked += 1
-	_expect(locked == expected_locked, "locked card count mismatch: expected %d got %d" % [expected_locked, locked])
+	_expect(locked == expected_locked, "locked progress entry count mismatch: expected %d got %d" % [expected_locked, locked])
+
+
+func _spot_progress_entries(root: Node) -> Array[Control]:
+	var entries: Array[Control] = []
+	_collect_spot_progress_entries(root, entries)
+	return entries
+
+
+func _collect_spot_progress_entries(node: Node, entries: Array[Control]) -> void:
+	for child in node.get_children():
+		if child is Control:
+			var control := child as Control
+			if bool(control.get_meta("spot_progress_entry", false)):
+				entries.append(control)
+		_collect_spot_progress_entries(child, entries)
 
 
 func _spot_card_buttons(root: Node) -> Array[Button]:

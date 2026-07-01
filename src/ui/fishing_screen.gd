@@ -511,7 +511,7 @@ func _on_message_changed(message: String) -> void:
 func _on_fight_finished(caught: bool, reason: String) -> void:
 	if caught:
 		if not _result_recorded:
-			PlayerProgress.record_catch(String(_current_fish["id"]), _simulator.result_size_cm)
+			PlayerProgress.record_catch(String(_current_fish["id"]), _simulator.result_size_cm, _spot_id)
 			_result_recorded = true
 		_result_title.text = "釣り上げ成功！"
 		_result_details.text = (

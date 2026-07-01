@@ -13,6 +13,14 @@ func _ready() -> void:
 	PlayerProgress.level = 9
 	PlayerProgress.money = 12450
 	PlayerProgress.equipped_rod_id = "seabreeze_rod"
+	PlayerProgress.spot_caught_counts = {
+		"harbor_pier": {"aji": 3, "iwashi": 2, "shirogisu": 1},
+		"shallow_sand": {"shirogisu": 2, "kawahagi": 1},
+		"rock_breakwater": {"kasago": 2, "mebaru": 1, "ainame": 1},
+		"outer_tide": {"saba": 2, "suzuki": 1},
+		"south_reef": {"akahata": 1},
+		"bluewater_route": {"kanpachi": 1, "buri": 1, "katsuo": 1},
+	}
 
 	await _capture({"spot_id": "bluewater_route"}, OUT_DEFAULT)
 	await _capture(

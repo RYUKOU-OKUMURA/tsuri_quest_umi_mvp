@@ -27,7 +27,7 @@ var _detail_fish_value_label: Label
 var _detail_bait_value_label: Label
 var _detail_hint_value_label: Label
 var _action_button: Button
-var _cards_box: GridContainer
+var _progress_box: GridContainer
 
 var _header_frame: Texture2D
 var _detail_frame: Texture2D
@@ -389,13 +389,13 @@ func _build_footer(parent: Control) -> void:
 	row.add_theme_constant_override("separation", 12)
 	margin.add_child(row)
 
-	_cards_box = GridContainer.new()
-	_cards_box.columns = 4
-	_cards_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_cards_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_cards_box.add_theme_constant_override("h_separation", 8)
-	_cards_box.add_theme_constant_override("v_separation", 8)
-	row.add_child(_cards_box)
+	_progress_box = GridContainer.new()
+	_progress_box.columns = 4
+	_progress_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_progress_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_progress_box.add_theme_constant_override("h_separation", 8)
+	_progress_box.add_theme_constant_override("v_separation", 8)
+	row.add_child(_progress_box)
 
 	var message_box := VBoxContainer.new()
 	message_box.custom_minimum_size = Vector2(264.0, 0.0)
@@ -403,7 +403,7 @@ func _build_footer(parent: Control) -> void:
 	message_box.add_theme_constant_override("separation", 4)
 	row.add_child(message_box)
 
-	var guide := make_label("航路メモ", 14, Palette.TEXT_BONE, 1, Palette.TEXT_OUTLINE_DARK)
+	var guide := make_label("調査メモ", 14, Palette.TEXT_BONE, 1, Palette.TEXT_OUTLINE_DARK)
 	guide.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	message_box.add_child(guide)
 
@@ -415,30 +415,30 @@ func _build_footer(parent: Control) -> void:
 	message_box.add_child(_message_label)
 
 
-func _rebuild_spot_cards() -> void:
-	if _cards_box == null:
+func _rebuild_completion_entries() -> void:
+	if _progress_box == null:
 		return
-	for child in _cards_box.get_children():
+	for child in _progress_box.get_children():
 		child.queue_free()
 	for spot_id in GameData.get_all_fishing_spot_ids():
-		_cards_box.add_child(_make_spot_card(GameData.get_fishing_spot(spot_id)))
+		_progress_box.add_child(_make_completion_entry(GameData.get_fishing_spot(spot_id)))
 
 
-func _make_spot_card(spot: Dictionary) -> Button:
+func _make_completion_entry(spot: Dictionary) -> Control:
 	var spot_id := String(spot.get("id", GameData.DEFAULT_FISHING_SPOT_ID))
 	var unlocked := GameData.is_fishing_spot_unlocked(spot_id, PlayerProgress.level)
 	var selected := spot_id == _selected_spot_id
-	var button := Button.new()
-	button.text = ""
-	button.disabled = not unlocked
-	button.clip_contents = true
-	button.custom_minimum_size = ROUTE_CHIP_SIZE
-	button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	button.set_meta("spot_card", true)
-	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if unlocked else Control.CURSOR_ARROW
-	_apply_card_button_style(button, selected, unlocked)
-	if unlocked:
-		button.pressed.connect(func() -> void: _focus_spot(spot_id))
+	var completion := _spot_completion_counts(spot)
+	var entry := Control.new()
+	entry.clip_contents = true
+	entry.custom_minimum_size = ROUTE_CHIP_SIZE
+	entry.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	entry.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	entry.set_meta("spot_progress_entry", true)
+	entry.set_meta("spot_id", spot_id)
+	entry.set_meta("locked", not unlocked)
+	entry.set_meta("caught_species", int(completion.get("caught", 0)))
+	entry.set_meta("target_species", int(completion.get("total", 0)))
 
 	var frame_texture := _route_chip_frame if unlocked else _route_chip_frame_locked
 	if frame_texture != null:
@@ -448,40 +448,43 @@ func _make_spot_card(spot: Dictionary) -> Button:
 		frame.stretch_mode = TextureRect.STRETCH_SCALE
 		frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		button.add_child(frame)
+		entry.add_child(frame)
 	else:
-		_add_route_chip_fallback(button, unlocked)
-	_add_route_chip_body_wash(button, unlocked)
+		_add_route_chip_fallback(entry, unlocked)
+	_add_route_chip_body_wash(entry, unlocked)
 
 	var title := _card_label(String(spot.get("name", spot_id)), 14, Color("#fff2d2") if unlocked else Color("#d5cec1"), 1)
 	title.position = Vector2(12.0, 4.0)
 	title.size = Vector2(ROUTE_CHIP_SIZE.x - 68.0, 20.0)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	button.add_child(title)
+	entry.add_child(title)
 
-	var badge_text := "選択中" if selected else _unlock_badge_text(spot, unlocked)
+	var badge_text := "表示中" if selected else _completion_badge_text(spot, unlocked, completion)
 	var badge := _card_label(badge_text, 12, Palette.GOLD_BRIGHT if selected else (Palette.GOLD_DEEP if unlocked else Color("#6b5740")), 1 if selected else 0)
 	badge.position = Vector2(ROUTE_CHIP_SIZE.x - 60.0, 5.0)
 	badge.size = Vector2(48.0, 18.0)
 	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	button.add_child(badge)
+	entry.add_child(badge)
 
 	var body_color := Color("#23170d") if unlocked else Color("#4f4941")
-	var summary := _card_label("水深 %s" % _depth_range_text(spot), 11, body_color)
-	summary.position = Vector2(14.0, 31.0)
-	summary.size = Vector2(ROUTE_CHIP_SIZE.x - 28.0, 16.0)
+	var summary_text := _completion_summary_text(spot, unlocked, completion)
+	var summary := _card_label(summary_text, 11, body_color)
+	summary.position = Vector2(14.0, 28.0)
+	summary.size = Vector2(ROUTE_CHIP_SIZE.x - 28.0, 14.0)
 	summary.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	button.add_child(summary)
-	return button
+	entry.add_child(summary)
+
+	_add_completion_bar(entry, unlocked, selected, float(completion.get("ratio", 0.0)))
+	return entry
 
 
-func _add_route_chip_fallback(button: Button, unlocked: bool) -> void:
+func _add_route_chip_fallback(parent: Control, unlocked: bool) -> void:
 	var body := ColorRect.new()
 	body.color = Color("#ebd5a7") if unlocked else Color("#b7b0a0")
 	body.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	body.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	button.add_child(body)
+	parent.add_child(body)
 
 	var header := ColorRect.new()
 	header.color = Color("#0a3b57") if unlocked else Color("#4b514f")
@@ -494,10 +497,10 @@ func _add_route_chip_fallback(button: Button, unlocked: bool) -> void:
 	header.offset_right = -5.0
 	header.offset_bottom = 25.0
 	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	button.add_child(header)
+	parent.add_child(header)
 
 
-func _add_route_chip_body_wash(button: Button, unlocked: bool) -> void:
+func _add_route_chip_body_wash(parent: Control, unlocked: bool) -> void:
 	var wash := ColorRect.new()
 	wash.color = Color("#f7e6ba", 0.20) if unlocked else Color("#d6cfba", 0.16)
 	wash.anchor_left = 0.0
@@ -509,7 +512,23 @@ func _add_route_chip_body_wash(button: Button, unlocked: bool) -> void:
 	wash.offset_right = -8.0
 	wash.offset_bottom = -6.0
 	wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	button.add_child(wash)
+	parent.add_child(wash)
+
+
+func _add_completion_bar(parent: Control, unlocked: bool, selected: bool, ratio: float) -> void:
+	var back := ColorRect.new()
+	back.color = Color("#5c5143", 0.52) if unlocked else Color("#736d63", 0.44)
+	back.position = Vector2(14.0, 43.0)
+	back.size = Vector2(ROUTE_CHIP_SIZE.x - 28.0, 4.0)
+	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(back)
+
+	var fill := ColorRect.new()
+	fill.color = Palette.GOLD_BRIGHT if selected else Color("#d39135")
+	fill.position = back.position
+	fill.size = Vector2(back.size.x * clampf(ratio, 0.0, 1.0), back.size.y)
+	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(fill)
 
 
 func _card_label(text: String, font_size: int, color: Color, outline: int = 0) -> Label:
@@ -527,11 +546,11 @@ func _focus_spot(spot_id: String, update_message: bool = true) -> void:
 	if _map_view != null:
 		_map_view.set_selected_spot(spot_id)
 	_refresh_detail()
-	_rebuild_spot_cards()
+	_rebuild_completion_entries()
 	if update_message or (_message_label != null and _message_label.text.is_empty()):
 		var spot := GameData.get_fishing_spot(spot_id)
 		if GameData.is_fishing_spot_unlocked(spot_id, PlayerProgress.level):
-			_message_label.text = "%s を選択中。右ボタンで出航できます。" % String(spot.get("name", spot_id))
+			_message_label.text = "%s を航路図で指定中。右の「ここで釣る」から出航できます。" % String(spot.get("name", spot_id))
 		else:
 			_show_locked_message(spot_id)
 
@@ -583,23 +602,6 @@ func _show_locked_message(spot_id: String) -> void:
 	]
 
 
-func _apply_card_button_style(button: Button, selected: bool, unlocked: bool) -> void:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.0, 0.0, 0.0, 0.0)
-	style.border_color = Color("#ffe07a", 0.95) if selected else Color(0.0, 0.0, 0.0, 0.0)
-	style.set_border_width_all(3 if selected else 0)
-	style.set_corner_radius_all(8)
-	var hover := style.duplicate() as StyleBoxFlat
-	hover.border_color = Color("#fff0a4", 0.98) if unlocked else style.border_color
-	hover.set_border_width_all(3 if unlocked or selected else 0)
-	var disabled := style.duplicate() as StyleBoxFlat
-	disabled.bg_color = Color(0.0, 0.0, 0.0, 0.08)
-	button.add_theme_stylebox_override("normal", style)
-	button.add_theme_stylebox_override("hover", hover)
-	button.add_theme_stylebox_override("pressed", style)
-	button.add_theme_stylebox_override("disabled", disabled)
-
-
 func _depth_range_text(spot: Dictionary) -> String:
 	var range: Array = spot.get("depth_range", [0.0, 0.0])
 	if range.size() < 2:
@@ -626,12 +628,43 @@ func _bait_text(spot: Dictionary) -> String:
 	return "、".join(PackedStringArray(baits))
 
 
-func _unlock_badge_text(spot: Dictionary, unlocked: bool) -> String:
+func _spot_completion_counts(spot: Dictionary) -> Dictionary:
+	var spot_id := String(spot.get("id", GameData.DEFAULT_FISHING_SPOT_ID))
+	var target_fish := Array(spot.get("featured_fish", []))
+	var spot_counts: Dictionary = {}
+	var loaded_spot_counts = PlayerProgress.spot_caught_counts.get(spot_id, {})
+	if typeof(loaded_spot_counts) == TYPE_DICTIONARY:
+		spot_counts = loaded_spot_counts
+
+	var caught := 0
+	for fish_id_variant in target_fish:
+		var fish_id := String(fish_id_variant)
+		if int(spot_counts.get(fish_id, 0)) > 0:
+			caught += 1
+	var total := target_fish.size()
+	var ratio := 0.0 if total <= 0 else float(caught) / float(total)
+	return {
+		"caught": caught,
+		"total": total,
+		"ratio": ratio,
+	}
+
+
+func _completion_badge_text(spot: Dictionary, unlocked: bool, completion: Dictionary) -> String:
 	if not unlocked:
 		return "LOCK"
 	if bool(spot.get("boss_spot", false)):
-		return "ぬし"
-	return "Lv.%d" % int(spot.get("unlock_level", 1))
+		return "%d/%d" % [int(completion.get("caught", 0)), int(completion.get("total", 0))]
+	return "%d%%" % int(round(float(completion.get("ratio", 0.0)) * 100.0))
+
+
+func _completion_summary_text(spot: Dictionary, unlocked: bool, completion: Dictionary) -> String:
+	if not unlocked:
+		return "未解放 Lv.%d" % int(spot.get("unlock_level", 1))
+	return "達成度 %d/%d 種" % [
+		int(completion.get("caught", 0)),
+		int(completion.get("total", 0)),
+	]
 
 
 func _rare_hint_text(spot: Dictionary) -> String:
