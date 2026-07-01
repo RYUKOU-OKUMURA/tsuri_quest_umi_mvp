@@ -146,6 +146,7 @@ func _draw() -> void:
 	if _map_grade != null:
 		draw_texture_rect_region(_map_grade, map_rect, _texture_source_region(_map_grade), Color(1.0, 1.0, 1.0, 0.70))
 	_draw_chart_overlay(map_rect)
+	_draw_depth_contours(map_rect)
 	_draw_routes(map_rect)
 	_draw_markers(map_rect)
 	_draw_edge_shade(map_rect)
@@ -201,6 +202,84 @@ func _draw_edge_shade(map_rect: Rect2) -> void:
 	draw_rect(Rect2(Vector2(map_rect.position.x, map_rect.end.y - edge), Vector2(map_rect.size.x, edge)), Color("#020914", 0.24), true)
 	draw_rect(Rect2(map_rect.position, Vector2(edge, map_rect.size.y)), Color("#020914", 0.20), true)
 	draw_rect(Rect2(Vector2(map_rect.end.x - edge, map_rect.position.y), Vector2(edge, map_rect.size.y)), Color("#020914", 0.20), true)
+
+
+func _draw_depth_contours(map_rect: Rect2) -> void:
+	var shallow := Color("#f8deb0", 0.20)
+	var reef := Color("#c8f2df", 0.16)
+	var ocean := Color("#89c8e8", 0.12)
+	_draw_contour(
+		map_rect,
+		[
+			Vector2(0.135, 0.175),
+			Vector2(0.255, 0.145),
+			Vector2(0.375, 0.230),
+			Vector2(0.455, 0.360),
+			Vector2(0.420, 0.505),
+			Vector2(0.300, 0.615),
+			Vector2(0.155, 0.565),
+		],
+		shallow,
+		1.4
+	)
+	_draw_contour(
+		map_rect,
+		[
+			Vector2(0.185, 0.235),
+			Vector2(0.305, 0.225),
+			Vector2(0.405, 0.315),
+			Vector2(0.395, 0.440),
+			Vector2(0.275, 0.515),
+			Vector2(0.175, 0.470),
+		],
+		Color("#fff0b0", 0.16),
+		1.0
+	)
+	_draw_contour(
+		map_rect,
+		[
+			Vector2(0.185, 0.690),
+			Vector2(0.315, 0.630),
+			Vector2(0.425, 0.690),
+			Vector2(0.392, 0.810),
+			Vector2(0.238, 0.835),
+		],
+		reef,
+		1.2
+	)
+	_draw_contour(
+		map_rect,
+		[
+			Vector2(0.565, 0.245),
+			Vector2(0.650, 0.185),
+			Vector2(0.760, 0.245),
+			Vector2(0.800, 0.390),
+			Vector2(0.742, 0.555),
+			Vector2(0.645, 0.610),
+		],
+		ocean,
+		1.1
+	)
+	_draw_contour(
+		map_rect,
+		[
+			Vector2(0.735, 0.615),
+			Vector2(0.825, 0.690),
+			Vector2(0.885, 0.810),
+			Vector2(0.820, 0.915),
+			Vector2(0.710, 0.850),
+		],
+		ocean,
+		1.0
+	)
+
+
+func _draw_contour(map_rect: Rect2, normalized_points: Array, color: Color, width: float) -> void:
+	var points := PackedVector2Array()
+	for point in normalized_points:
+		points.append(_map_normalized_point(map_rect, point))
+	if points.size() >= 2:
+		draw_polyline(points, color, width, true)
 
 
 func _draw_routes(map_rect: Rect2) -> void:
@@ -380,6 +459,10 @@ func _spot_at_position(position: Vector2) -> String:
 
 func _map_point(map_rect: Rect2, spot_id: String) -> Vector2:
 	var normalized: Vector2 = SPOT_POINTS.get(spot_id, Vector2.ZERO)
+	return _map_normalized_point(map_rect, normalized)
+
+
+func _map_normalized_point(map_rect: Rect2, normalized: Vector2) -> Vector2:
 	var source_view := _source_view_rect()
 	var visible_x := (normalized.x - source_view.position.x) / source_view.size.x
 	var visible_y := (normalized.y - source_view.position.y) / source_view.size.y

@@ -11,7 +11,7 @@ import math
 import random
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -28,6 +28,8 @@ SPOT_MARKER_SHEET_OUT = OUT_DIR / "map_spot_marker_sheet.png"
 DETAIL_ICON_SHEET_OUT = OUT_DIR / "map_detail_icon_sheet.png"
 CARD_FRAME_OUT = OUT_DIR / "map_spot_card_frame.png"
 CARD_FRAME_LOCKED_OUT = OUT_DIR / "map_spot_card_frame_locked.png"
+ROUTE_CHIP_FRAME_OUT = OUT_DIR / "map_route_chip_frame.png"
+ROUTE_CHIP_FRAME_LOCKED_OUT = OUT_DIR / "map_route_chip_frame_locked.png"
 THUMB_DIR = OUT_DIR / "thumbs"
 
 SPOT_ORDER = [
@@ -62,6 +64,31 @@ def _cover_crop(image: Image.Image, size: tuple[int, int]) -> Image.Image:
     left = (resized.width - size[0]) // 2
     top = (resized.height - size[1]) // 2
     return resized.crop((left, top, left + size[0], top + size[1]))
+
+
+def _enhance_map_bg(image: Image.Image) -> Image.Image:
+    """Apply a final art pass so the map reads crisply at 720p UI scale."""
+    img = ImageEnhance.Color(image).enhance(1.11)
+    img = ImageEnhance.Contrast(img).enhance(1.07)
+    img = ImageEnhance.Sharpness(img).enhance(1.18)
+    img = img.filter(ImageFilter.UnsharpMask(radius=1.1, percent=72, threshold=3)).convert("RGBA")
+
+    glaze = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(glaze)
+    # Make shallow water around the island and reefs pop without repainting labels.
+    for cx, cy, rx, ry, color in [
+        (540, 410, 620, 390, (76, 225, 210, 20)),
+        (560, 760, 420, 220, (73, 212, 190, 18)),
+        (1280, 480, 520, 330, (24, 91, 142, 24)),
+        (1610, 660, 420, 280, (4, 28, 68, 28)),
+    ]:
+        draw.ellipse((cx - rx, cy - ry, cx + rx, cy + ry), fill=color)
+    # A subtle nautical paper/ink glaze keeps the image in the same family as the UI frames.
+    for x in range(0, img.width, 80):
+        draw.line((x, 0, x - 180, img.height), fill=(255, 232, 164, 5), width=1)
+    glaze = glaze.filter(ImageFilter.GaussianBlur(18))
+    img.alpha_composite(glaze)
+    return img.convert("RGB")
 
 
 def _paper_texture(size: tuple[int, int], seed: int, base: tuple[int, int, int]) -> Image.Image:
@@ -412,6 +439,31 @@ def _draw_card_frame(size: tuple[int, int], locked: bool) -> Image.Image:
     return img
 
 
+def _draw_route_chip_frame(size: tuple[int, int], locked: bool) -> Image.Image:
+    img = Image.new("RGBA", size, (0, 0, 0, 0))
+    base = (205, 196, 174) if locked else (236, 216, 174)
+    body = _paper_texture((size[0] - 8, size[1] - 8), 650 + int(locked), base)
+    mask = Image.new("L", body.size, 0)
+    draw_mask = ImageDraw.Draw(mask)
+    draw_mask.rounded_rectangle((0, 0, body.width - 1, body.height - 1), radius=8, fill=255)
+    img.paste(body, (4, 4), mask)
+
+    draw = ImageDraw.Draw(img)
+    border = (106, 95, 78, 220) if locked else (151, 99, 43, 235)
+    accent = (115, 106, 91, 155) if locked else (219, 176, 86, 230)
+    header = (65, 72, 72, 190) if locked else (9, 59, 87, 232)
+    _rounded(draw, (4, 4, size[0] - 4, size[1] - 4), 8, None, border, 2)
+    _rounded(draw, (8, 8, size[0] - 8, size[1] - 8), 5, None, accent, 1)
+    draw.rectangle((9, 8, size[0] - 9, 27), fill=header)
+    draw.line((13, 13, size[0] - 13, 13), fill=(255, 255, 255, 35), width=1)
+    draw.line((13, 28, size[0] - 13, 28), fill=accent, width=1)
+    if locked:
+        draw.rectangle((10, 29, size[0] - 10, size[1] - 9), fill=(185, 178, 157, 112))
+    else:
+        draw.rectangle((10, 29, size[0] - 10, size[1] - 9), fill=(246, 227, 187, 92))
+    return img
+
+
 def _make_thumbnails(bg: Image.Image) -> None:
     THUMB_DIR.mkdir(parents=True, exist_ok=True)
     thumb_size = (420, 184)
@@ -442,7 +494,7 @@ def build() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
     source = Image.open(SOURCE).convert("RGB")
-    bg = _cover_crop(source, (1920, 1080))
+    bg = _enhance_map_bg(_cover_crop(source, (1920, 1080)))
     bg.save(MAP_BG_OUT)
 
     grade = Image.new("RGBA", (1920, 1080), (0, 0, 0, 0))
@@ -470,6 +522,8 @@ def build() -> None:
 
     _draw_card_frame((420, 128), locked=False).save(CARD_FRAME_OUT)
     _draw_card_frame((420, 128), locked=True).save(CARD_FRAME_LOCKED_OUT)
+    _draw_route_chip_frame((360, 84), locked=False).save(ROUTE_CHIP_FRAME_OUT)
+    _draw_route_chip_frame((360, 84), locked=True).save(ROUTE_CHIP_FRAME_LOCKED_OUT)
     _make_thumbnails(bg)
 
 

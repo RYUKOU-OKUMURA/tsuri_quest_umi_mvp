@@ -6,11 +6,11 @@ const HEADER_FRAME_PATH := "res://assets/showcase/fishing_spots/map_header_frame
 const DETAIL_FRAME_PATH := "res://assets/showcase/fishing_spots/map_detail_frame.png"
 const DETAIL_ICON_SHEET_PATH := "res://assets/showcase/fishing_spots/map_detail_icon_sheet.png"
 const FOOTER_FRAME_PATH := "res://assets/showcase/fishing_spots/map_footer_frame.png"
-const CARD_FRAME_PATH := "res://assets/showcase/fishing_spots/map_spot_card_frame.png"
-const CARD_FRAME_LOCKED_PATH := "res://assets/showcase/fishing_spots/map_spot_card_frame_locked.png"
+const ROUTE_CHIP_FRAME_PATH := "res://assets/showcase/fishing_spots/map_route_chip_frame.png"
+const ROUTE_CHIP_FRAME_LOCKED_PATH := "res://assets/showcase/fishing_spots/map_route_chip_frame_locked.png"
 const THUMB_BASE_PATH := "res://assets/showcase/fishing_spots/thumbs"
 const DETAIL_ICON_SIZE := 96.0
-const SPOT_CARD_SIZE := Vector2(282.0, 86.0)
+const ROUTE_CHIP_SIZE := Vector2(214.0, 50.0)
 
 var _selected_spot_id: String = GameData.DEFAULT_FISHING_SPOT_ID
 var _continue_trip := false
@@ -27,14 +27,14 @@ var _detail_fish_value_label: Label
 var _detail_bait_value_label: Label
 var _detail_hint_value_label: Label
 var _action_button: Button
-var _cards_box: HBoxContainer
+var _cards_box: GridContainer
 
 var _header_frame: Texture2D
 var _detail_frame: Texture2D
 var _detail_icon_sheet: Texture2D
 var _footer_frame: Texture2D
-var _card_frame: Texture2D
-var _card_frame_locked: Texture2D
+var _route_chip_frame: Texture2D
+var _route_chip_frame_locked: Texture2D
 
 
 func _build_screen() -> void:
@@ -91,8 +91,8 @@ func _load_assets() -> void:
 	_detail_frame = _load_texture_if_exists(DETAIL_FRAME_PATH)
 	_detail_icon_sheet = _load_texture_if_exists(DETAIL_ICON_SHEET_PATH)
 	_footer_frame = _load_texture_if_exists(FOOTER_FRAME_PATH)
-	_card_frame = _load_texture_if_exists(CARD_FRAME_PATH)
-	_card_frame_locked = _load_texture_if_exists(CARD_FRAME_LOCKED_PATH)
+	_route_chip_frame = _load_texture_if_exists(ROUTE_CHIP_FRAME_PATH)
+	_route_chip_frame_locked = _load_texture_if_exists(ROUTE_CHIP_FRAME_LOCKED_PATH)
 
 
 func _header_subtitle() -> String:
@@ -389,14 +389,13 @@ func _build_footer(parent: Control) -> void:
 	row.add_theme_constant_override("separation", 12)
 	margin.add_child(row)
 
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	row.add_child(scroll)
-
-	_cards_box = HBoxContainer.new()
-	_cards_box.add_theme_constant_override("separation", 8)
-	scroll.add_child(_cards_box)
+	_cards_box = GridContainer.new()
+	_cards_box.columns = 4
+	_cards_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_cards_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_cards_box.add_theme_constant_override("h_separation", 8)
+	_cards_box.add_theme_constant_override("v_separation", 8)
+	row.add_child(_cards_box)
 
 	var message_box := VBoxContainer.new()
 	message_box.custom_minimum_size = Vector2(264.0, 0.0)
@@ -433,7 +432,7 @@ func _make_spot_card(spot: Dictionary) -> Button:
 	button.text = ""
 	button.disabled = not unlocked
 	button.clip_contents = true
-	button.custom_minimum_size = SPOT_CARD_SIZE
+	button.custom_minimum_size = ROUTE_CHIP_SIZE
 	button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	button.set_meta("spot_card", true)
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if unlocked else Control.CURSOR_ARROW
@@ -441,41 +440,76 @@ func _make_spot_card(spot: Dictionary) -> Button:
 	if unlocked:
 		button.pressed.connect(func() -> void: _focus_spot(spot_id))
 
-	var frame := TextureRect.new()
-	frame.texture = _card_frame if unlocked else _card_frame_locked
-	frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	frame.stretch_mode = TextureRect.STRETCH_SCALE
-	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	button.add_child(frame)
+	var frame_texture := _route_chip_frame if unlocked else _route_chip_frame_locked
+	if frame_texture != null:
+		var frame := TextureRect.new()
+		frame.texture = frame_texture
+		frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		frame.stretch_mode = TextureRect.STRETCH_SCALE
+		frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		button.add_child(frame)
+	else:
+		_add_route_chip_fallback(button, unlocked)
+	_add_route_chip_body_wash(button, unlocked)
 
 	var title := _card_label(String(spot.get("name", spot_id)), 14, Color("#fff2d2") if unlocked else Color("#d5cec1"), 1)
-	title.position = Vector2(16.0, 6.0)
-	title.size = Vector2(SPOT_CARD_SIZE.x - 80.0, 22.0)
+	title.position = Vector2(12.0, 4.0)
+	title.size = Vector2(ROUTE_CHIP_SIZE.x - 68.0, 20.0)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	button.add_child(title)
 
 	var badge_text := "選択中" if selected else _unlock_badge_text(spot, unlocked)
 	var badge := _card_label(badge_text, 12, Palette.GOLD_BRIGHT if selected else (Palette.GOLD_DEEP if unlocked else Color("#6b5740")), 1 if selected else 0)
-	badge.position = Vector2(SPOT_CARD_SIZE.x - 70.0, 8.0)
-	badge.size = Vector2(54.0, 18.0)
+	badge.position = Vector2(ROUTE_CHIP_SIZE.x - 60.0, 5.0)
+	badge.size = Vector2(48.0, 18.0)
 	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	button.add_child(badge)
 
 	var body_color := Color("#23170d") if unlocked else Color("#4f4941")
-	var depth := _card_label("水深 %s" % _depth_range_text(spot), 11, body_color)
-	depth.position = Vector2(18.0, 39.0)
-	depth.size = Vector2(SPOT_CARD_SIZE.x - 36.0, 17.0)
-	depth.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	button.add_child(depth)
-
-	var featured := _card_label("狙い %s" % _featured_fish_text(spot, 3), 11, body_color)
-	featured.position = Vector2(18.0, 61.0)
-	featured.size = Vector2(SPOT_CARD_SIZE.x - 36.0, 18.0)
-	featured.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	button.add_child(featured)
+	var summary := _card_label("水深 %s" % _depth_range_text(spot), 11, body_color)
+	summary.position = Vector2(14.0, 31.0)
+	summary.size = Vector2(ROUTE_CHIP_SIZE.x - 28.0, 16.0)
+	summary.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.add_child(summary)
 	return button
+
+
+func _add_route_chip_fallback(button: Button, unlocked: bool) -> void:
+	var body := ColorRect.new()
+	body.color = Color("#ebd5a7") if unlocked else Color("#b7b0a0")
+	body.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.add_child(body)
+
+	var header := ColorRect.new()
+	header.color = Color("#0a3b57") if unlocked else Color("#4b514f")
+	header.anchor_left = 0.0
+	header.anchor_top = 0.0
+	header.anchor_right = 1.0
+	header.anchor_bottom = 0.0
+	header.offset_left = 5.0
+	header.offset_top = 5.0
+	header.offset_right = -5.0
+	header.offset_bottom = 25.0
+	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.add_child(header)
+
+
+func _add_route_chip_body_wash(button: Button, unlocked: bool) -> void:
+	var wash := ColorRect.new()
+	wash.color = Color("#f7e6ba", 0.20) if unlocked else Color("#d6cfba", 0.16)
+	wash.anchor_left = 0.0
+	wash.anchor_top = 0.0
+	wash.anchor_right = 1.0
+	wash.anchor_bottom = 1.0
+	wash.offset_left = 8.0
+	wash.offset_top = 29.0
+	wash.offset_right = -8.0
+	wash.offset_bottom = -6.0
+	wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.add_child(wash)
 
 
 func _card_label(text: String, font_size: int, color: Color, outline: int = 0) -> Label:
