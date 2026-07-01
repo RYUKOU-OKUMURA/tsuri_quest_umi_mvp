@@ -23,6 +23,7 @@ func _ready() -> void:
 	add_child(_stage)
 
 	await _audit_cook_select()
+	await _audit_fish_scroll()
 	await _audit_exp_gain()
 	await _audit_exp_gain_level_up()
 	await _audit_meal_result()
@@ -79,6 +80,33 @@ func _audit_cook_select() -> void:
 	_expect_named_control_size("COOK_SELECT", screen, "PrepSummaryCardMeal", Vector2(160.0, 52.0))
 	_expect_named_control_size("COOK_SELECT", screen, "PrepSummaryCardFish", Vector2(160.0, 52.0))
 	_expect_named_control_size("COOK_SELECT", screen, "PrepSummaryCardMoney", Vector2(160.0, 52.0))
+	screen.queue_free()
+	await _tick()
+
+
+func _audit_fish_scroll() -> void:
+	_seed_many_fish_state()
+	var screen := await _mount_cooking_screen()
+	await _tick()
+	var scroll := _find_named(screen, "FishListScroll") as ScrollContainer
+	var target := _find_named(screen, "FishRowSuzuki") as Control
+	if scroll == null:
+		_failures.append("FISH_SCROLL: missing named control 'FishListScroll'.")
+	elif scroll.get_v_scroll_bar().max_value <= scroll.get_v_scroll_bar().page + TOLERANCE:
+		_failures.append("FISH_SCROLL: fish list should be vertically scrollable with 9 owned fish.")
+	if target == null:
+		_failures.append("FISH_SCROLL: missing fish row beyond the first six owned rows.")
+	var row_count := _count_fish_rows(screen)
+	if row_count < 9:
+		_failures.append("FISH_SCROLL: expected at least 9 fish rows, got %d." % row_count)
+	if scroll != null and target != null:
+		scroll.scroll_vertical = int(scroll.get_v_scroll_bar().max_value)
+		await _tick()
+		if not scroll.get_global_rect().intersects(target.get_global_rect()):
+			_failures.append(
+				"FISH_SCROLL: lower owned fish row should be visible after scrolling, got scroll=%s target=%s."
+				% [scroll.get_global_rect(), target.get_global_rect()]
+			)
 	screen.queue_free()
 	await _tick()
 
@@ -463,6 +491,15 @@ func _find_named(node: Node, node_name: String) -> Node:
 	return null
 
 
+func _count_fish_rows(node: Node) -> int:
+	var count := 0
+	if node is Control and String((node as Control).name).begins_with("FishRow"):
+		count += 1
+	for child in node.get_children():
+		count += _count_fish_rows(child)
+	return count
+
+
 func _find_first(node: Node, class_name_text: String) -> Node:
 	if node.is_class(class_name_text):
 		return node
@@ -498,6 +535,13 @@ func _seed_select_state() -> void:
 		"value": 0.05,
 		"text": "次の釣行で安全テンション域 +5%",
 	}
+
+
+func _seed_many_fish_state() -> void:
+	_seed_select_state()
+	PlayerProgress.inventory["mejina"] = 1
+	PlayerProgress.inventory["isaki"] = 1
+	PlayerProgress.inventory["suzuki"] = 1
 
 
 func _seed_after_meal_state() -> void:

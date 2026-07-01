@@ -55,7 +55,7 @@ const COOKING_FISH_DISPLAY_ORDER := [
 	"suzuki",
 	"boss_kurodai",
 ]
-const COOKING_FISH_ROW_LIMIT := 6
+const COOKING_FISH_MIN_VISIBLE_ROWS := 6
 
 
 class CookingSmallIcon:
@@ -381,6 +381,7 @@ var _level_label: Label
 var _money_label: Label
 var _exp_bar: GaugeBar
 var _exp_label: Label
+var _fish_scroll: ScrollContainer
 var _fish_box: VBoxContainer
 var _recipe_grid: GridContainer
 var _recipe_to_detail_arrow: TextureRect
@@ -533,10 +534,17 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	fish_layout.add_theme_constant_override("separation", 6)
 	fish_panel.add_child(fish_layout)
 	fish_layout.add_child(_section_ribbon("所持している魚", "fish", "FishSectionRibbon"))
+	_fish_scroll = ScrollContainer.new()
+	_fish_scroll.name = "FishListScroll"
+	_fish_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_fish_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_fish_scroll.follow_focus = true
+	fish_layout.add_child(_fish_scroll)
 	_fish_box = VBoxContainer.new()
-	_fish_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_fish_box.name = "FishList"
+	_fish_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_fish_box.add_theme_constant_override("separation", 6)
-	fish_layout.add_child(_fish_box)
+	_fish_scroll.add_child(_fish_box)
 
 	var recipe_panel := _texture_panel_box(
 		RECIPE_GRID_FRAME,
@@ -940,21 +948,27 @@ func _fish_display_ids() -> Array[String]:
 	var ids: Array[String] = []
 	var ordered_ids := _ordered_cooking_fish_ids()
 	for fish_id in ordered_ids:
-		if ids.size() >= COOKING_FISH_ROW_LIMIT:
-			break
 		if PlayerProgress.fish_count(fish_id) > 0:
-			ids.append(fish_id)
+			_append_fish_display_id(ids, fish_id)
 	for fish_id in ordered_ids:
-		if ids.size() >= COOKING_FISH_ROW_LIMIT:
+		if ids.size() >= COOKING_FISH_MIN_VISIBLE_ROWS:
 			break
 		if ids.has(fish_id):
 			continue
 		if fish_id == "boss_kurodai":
 			continue
-		ids.append(fish_id)
-	if ids.size() < COOKING_FISH_ROW_LIMIT and not ids.has("boss_kurodai"):
-		ids.append("boss_kurodai")
+		_append_fish_display_id(ids, fish_id)
+	if ids.size() < COOKING_FISH_MIN_VISIBLE_ROWS:
+		_append_fish_display_id(ids, "boss_kurodai")
 	return ids
+
+
+func _append_fish_display_id(ids: Array[String], fish_id: String) -> void:
+	if ids.has(fish_id):
+		return
+	if GameData.get_fish(fish_id).is_empty():
+		return
+	ids.append(fish_id)
 
 
 func _ordered_cooking_fish_ids() -> Array[String]:
@@ -1057,7 +1071,7 @@ func _fish_row_node_name(fish_id: String) -> String:
 		"boss_kurodai":
 			return "FishRowBossKurodai"
 		_:
-			return "FishRow"
+			return "FishRow_%s" % fish_id
 
 
 func _select_fish(fish_id: String) -> void:
