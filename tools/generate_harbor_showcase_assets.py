@@ -185,7 +185,7 @@ def build_frames() -> None:
     menu = _panel(
         (680, 810),
         fill=(9, 32, 54, 246),
-        body=(245, 229, 188, 238),
+        body=(249, 236, 202, 250),
         accent=(225, 174, 83, 230),
         radius=18,
         margin=16,
@@ -193,7 +193,7 @@ def build_frames() -> None:
     )
     draw = ImageDraw.Draw(menu)
     draw.rounded_rectangle((50, 48, 630, 112), radius=12, fill=(10, 56, 76, 230), outline=(239, 198, 102, 170), width=2)
-    _blend_noise(menu, (58, 132, 622, 748), 8, 0.027)
+    _blend_noise(menu, (58, 132, 622, 748), 5, 0.012)
     menu.save(MENU_FRAME_OUT)
 
     _panel(
@@ -226,23 +226,23 @@ def _facility_card(path: Path, *, primary: bool = False, hover: bool = False) ->
     img = Image.new("RGBA", size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
     if primary:
-        fill = (8, 74, 99, 244)
-        body = (9, 88, 116, 232)
+        fill = (6, 61, 84, 248)
+        body = (8, 84, 110, 246)
         accent = (245, 198, 90, 238)
     elif hover:
-        fill = (161, 105, 40, 244)
-        body = (205, 145, 56, 232)
-        accent = (255, 223, 132, 238)
+        fill = (163, 105, 42, 244)
+        body = (255, 242, 205, 248)
+        accent = (246, 194, 84, 236)
     else:
-        fill = (140, 93, 42, 236)
-        body = (246, 231, 192, 232)
-        accent = (178, 124, 55, 210)
+        fill = (130, 84, 38, 240)
+        body = (252, 239, 205, 248)
+        accent = (157, 103, 47, 190)
     draw.rounded_rectangle((8, 11, size[0] - 8, size[1] - 6), radius=10, fill=(0, 0, 0, 75))
     draw.rounded_rectangle((12, 8, size[0] - 12, size[1] - 10), radius=9, fill=fill, outline=(55, 33, 18, 230), width=3)
     draw.rounded_rectangle((22, 18, size[0] - 22, size[1] - 20), radius=7, fill=body, outline=accent, width=2)
-    line_start = 360
-    draw.line((line_start, 22, size[0] - 54, 22), fill=(255, 239, 169, 110 if primary or hover else 54), width=2)
-    draw.line((line_start, size[1] - 25, size[0] - 54, size[1] - 25), fill=(36, 23, 14, 38), width=1)
+    line_start = 432
+    draw.line((line_start, 22, size[0] - 54, 22), fill=(255, 239, 169, 82 if primary or hover else 32), width=2)
+    draw.line((line_start, size[1] - 25, size[0] - 54, size[1] - 25), fill=(36, 23, 14, 24), width=1)
     for x in (34, size[0] - 40):
         sign = 1 if x < size[0] / 2 else -1
         draw.polygon(

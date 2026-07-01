@@ -28,6 +28,8 @@ var _top_rod_label: Label
 var _top_exp_label: Label
 var _buff_name_label: Label
 var _buff_text_label: Label
+var _facility_detail_title_label: Label
+var _facility_detail_body_label: Label
 
 
 func _build_screen() -> void:
@@ -169,14 +171,42 @@ func _build_facility_menu(root: Control) -> void:
 	header.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(menu, header, 0.100, 0.030, 0.900, 0.120)
 
-	_build_facility_button(menu, 0.134, "釣り場へ向かう", "狙う魚に合わせてポイントを選ぶ", ICON_FISHING_PATH, func() -> void: navigate("fishing_spots"), true, 0.082)
-	_build_facility_button(menu, 0.229, "調理場", "魚を料理して食事にする", ICON_COOKING_PATH, func() -> void: navigate("cooking"), false, 0.082)
-	_build_facility_button(menu, 0.324, "魚市場", "釣果を売って資金にする", ICON_MARKET_PATH, func() -> void: navigate("market"), false, 0.082)
-	_build_facility_button(menu, 0.419, "釣具店", "竿を購入・装備する", ICON_SHOP_PATH, func() -> void: navigate("shop"), false, 0.082)
-	_build_facility_button(menu, 0.514, "船着き場", "船を購入して沖へ出る", ICON_SHIPYARD_PATH, func() -> void: navigate("shipyard"), false, 0.082)
-	_build_facility_button(menu, 0.609, "ステータス", "成長と装備を確認する", ICON_STATUS_PATH, func() -> void: navigate("status"), false, 0.082)
-	_build_facility_button(menu, 0.704, "魚図鑑", "釣った魚の記録を見る", ICON_BOOK_PATH, func() -> void: navigate("fish_book"), false, 0.082)
-	_build_facility_button(menu, 0.809, "タイトルへ戻る", "進行を保存して戻る", ICON_TITLE_PATH, _return_to_title, false, 0.082)
+	_build_facility_detail_panel(menu)
+
+	var button_height := 0.074
+	var row_step := 0.082
+	var row_top := 0.132
+	_build_facility_button(menu, row_top + row_step * 0.0, "釣り場へ向かう", "狙う魚に合わせてポイントを選ぶ", ICON_FISHING_PATH, func() -> void: navigate("fishing_spots"), true, button_height)
+	_build_facility_button(menu, row_top + row_step * 1.0, "調理場", "魚を料理して食事にする", ICON_COOKING_PATH, func() -> void: navigate("cooking"), false, button_height)
+	_build_facility_button(menu, row_top + row_step * 2.0, "魚市場", "釣果を売って資金にする", ICON_MARKET_PATH, func() -> void: navigate("market"), false, button_height)
+	_build_facility_button(menu, row_top + row_step * 3.0, "釣具店", "竿を購入・装備する", ICON_SHOP_PATH, func() -> void: navigate("shop"), false, button_height)
+	_build_facility_button(menu, row_top + row_step * 4.0, "船着き場", "船を購入して沖へ出る", ICON_SHIPYARD_PATH, func() -> void: navigate("shipyard"), false, button_height)
+	_build_facility_button(menu, row_top + row_step * 5.0, "ステータス", "成長と装備を確認する", ICON_STATUS_PATH, func() -> void: navigate("status"), false, button_height)
+	_build_facility_button(menu, row_top + row_step * 6.0, "魚図鑑", "釣った魚の記録を見る", ICON_BOOK_PATH, func() -> void: navigate("fish_book"), false, button_height)
+	_build_facility_button(menu, row_top + row_step * 7.0, "タイトルへ戻る", "進行を保存して戻る", ICON_TITLE_PATH, _return_to_title, false, button_height)
+	_set_facility_detail("釣り場へ向かう", "狙う魚に合わせてポイントを選ぶ", true)
+
+
+func _build_facility_detail_panel(parent: Control) -> void:
+	var panel := Panel.new()
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_theme_stylebox_override(
+		"panel",
+		_make_flat_panel_style(Color(0.035, 0.155, 0.215, 0.88), Color(0.95, 0.74, 0.34, 0.66), 8, 2)
+	)
+	_place_control(parent, panel, 0.088, 0.802, 0.912, 0.956)
+
+	_facility_detail_title_label = _harbor_label("", 15, Color("#fff2c6"), true, 2, Color("#07131c"))
+	_facility_detail_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_facility_detail_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_facility_detail_title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control(panel, _facility_detail_title_label, 0.055, 0.100, 0.945, 0.430)
+
+	_facility_detail_body_label = _harbor_label("", 13, Color("#e9f8ff"), false, 1, Color("#06131d"))
+	_facility_detail_body_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_facility_detail_body_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_facility_detail_body_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control(panel, _facility_detail_body_label, 0.055, 0.440, 0.945, 0.850)
 
 
 func _build_facility_button(
@@ -192,27 +222,52 @@ func _build_facility_button(
 	var button := make_button("", callback)
 	button.custom_minimum_size = Vector2.ZERO
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	button.focus_mode = Control.FOCUS_ALL
 	button.clip_contents = true
 	_apply_facility_button_skin(button, primary)
 	_place_control(parent, button, 0.088, top, 0.912, top + height)
+	button.mouse_entered.connect(func() -> void: _set_facility_detail(title_text, body_text, primary))
+	button.focus_entered.connect(func() -> void: _set_facility_detail(title_text, body_text, primary))
+
+	var accent := Panel.new()
+	accent.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	accent.add_theme_stylebox_override(
+		"panel",
+		_make_flat_panel_style(Color("#f2c85b") if primary else Color("#8e5a28"), Color.TRANSPARENT, 3, 0)
+	)
+	_place_control(button, accent, 0.023, 0.230, 0.039, 0.770)
+
+	var icon_plate := Panel.new()
+	icon_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon_plate.add_theme_stylebox_override(
+		"panel",
+		_make_flat_panel_style(
+			Color(0.02, 0.10, 0.13, 0.58) if primary else Color(0.98, 0.88, 0.62, 0.78),
+			Color(0.98, 0.76, 0.36, 0.56) if primary else Color(0.43, 0.27, 0.12, 0.42),
+			6,
+			1
+		)
+	)
+	_place_control(button, icon_plate, 0.055, 0.160, 0.165, 0.840)
 
 	var icon := _icon_rect(icon_path)
 	icon.modulate = Color(1.0, 1.0, 1.0, 0.96)
-	_place_control(button, icon, 0.038, 0.175, 0.155, 0.825)
+	_place_control(button, icon, 0.070, 0.210, 0.150, 0.790)
 
-	var title_size := 18 if height < 0.100 else 20
-	var body_size := 12 if height < 0.100 else 13
-	var title := _harbor_label(title_text, title_size, Color("#fff4c9") if primary else Color("#22180f"), true, 2 if primary else 0, Color("#1b1209"))
+	var title := _harbor_label(title_text, 21, Color("#fff4c9") if primary else Color("#20140b"), true, 2 if primary else 1, Color("#1b1209") if primary else Color("#fff8d8"))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(button, title, 0.185, 0.070, 0.930, 0.515)
+	_place_control(button, title, 0.205, 0.120, 0.900, 0.880)
 
-	var body := _harbor_label(body_text, body_size, Color("#d9f4ff") if primary else Color("#4d3219"), false, 1 if primary else 0, Color("#06131d"))
-	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	body.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	body.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(button, body, 0.185, 0.570, 0.930, 0.930)
+
+func _set_facility_detail(title_text: String, body_text: String, primary := false) -> void:
+	if _facility_detail_title_label == null or _facility_detail_body_label == null:
+		return
+	_facility_detail_title_label.text = title_text
+	_facility_detail_body_label.text = body_text
+	_facility_detail_title_label.add_theme_color_override("font_color", Color("#fff2c6") if primary else Color("#ffe8a0"))
+	_facility_detail_body_label.add_theme_color_override("font_color", Color("#e9f8ff") if primary else Color("#f7edce"))
 
 
 func _build_footer(root: Control) -> void:
@@ -347,7 +402,7 @@ func _harbor_label(
 
 func _apply_facility_button_skin(button: Button, primary: bool) -> void:
 	var normal_path := HARBOR_BUTTON_PRIMARY_PATH if primary else HARBOR_BUTTON_PATH
-	var hover_path := HARBOR_BUTTON_HOVER_PATH
+	var hover_path := HARBOR_BUTTON_PRIMARY_PATH if primary else HARBOR_BUTTON_HOVER_PATH
 	var normal := _make_button_style(normal_path)
 	var hover := _make_button_style(hover_path)
 	if normal == null or hover == null:
@@ -381,6 +436,30 @@ func _make_button_style(path: String) -> StyleBoxTexture:
 	style.content_margin_top = 8.0
 	style.content_margin_right = 22.0
 	style.content_margin_bottom = 8.0
+	return style
+
+
+func _make_flat_panel_style(
+	bg_color: Color,
+	border_color: Color,
+	radius: int,
+	border_width := 1
+) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = bg_color
+	style.border_color = border_color
+	style.border_width_left = border_width
+	style.border_width_top = border_width
+	style.border_width_right = border_width
+	style.border_width_bottom = border_width
+	style.corner_radius_top_left = radius
+	style.corner_radius_top_right = radius
+	style.corner_radius_bottom_right = radius
+	style.corner_radius_bottom_left = radius
+	style.content_margin_left = 6.0
+	style.content_margin_top = 4.0
+	style.content_margin_right = 6.0
+	style.content_margin_bottom = 4.0
 	return style
 
 
