@@ -294,37 +294,65 @@ def _draw_spot_symbol(draw: ImageDraw.ImageDraw, spot_id: str, cx: int, cy: int,
 
 
 def _draw_spot_marker(spot_id: str, state: str, size: int = 128) -> Image.Image:
-    cell = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    upscale = 4
+    work_size = size * upscale
+    u = upscale
+    cell = Image.new("RGBA", (work_size, work_size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(cell)
-    cx = cy = size // 2
+    cx = cy = work_size // 2
     selected = state == "selected"
     locked = state == "locked"
     if selected:
-        for radius, alpha in [(60, 36), (51, 70), (43, 95)]:
+        for radius, alpha in [(60 * u, 34), (51 * u, 64), (43 * u, 88)]:
             draw.ellipse((cx - radius, cy - radius, cx + radius, cy + radius), fill=(255, 205, 58, alpha))
-    draw.ellipse((18, 14, size - 18, size - 18), fill=(0, 0, 0, 92))
+
+    draw.ellipse((17 * u, 76 * u, work_size - 17 * u, 119 * u), fill=(0, 0, 0, 76))
     fill = (10, 66, 100, 248)
     ring = (236, 203, 118, 248)
-    symbol = (214, 241, 242, 255)
+    symbol = (225, 246, 238, 255)
+    inner = (7, 54, 76, 232)
+    outline = (31, 19, 11, 238)
     if selected:
-        fill = (10, 76, 118, 252)
+        fill = (8, 78, 124, 252)
         ring = (255, 222, 86, 255)
         symbol = (255, 249, 205, 255)
+        inner = (8, 64, 95, 238)
     if locked:
         fill = (58, 66, 70, 220)
         ring = (116, 106, 87, 230)
         symbol = (181, 178, 159, 255)
+        inner = (64, 68, 68, 222)
     if spot_id == "harbor_boulder" and not locked:
         fill = (93, 38, 32, 248)
         ring = (229, 151, 82, 248)
-    draw.ellipse((16, 8, size - 16, size - 26), fill=fill, outline=(36, 22, 12, 230), width=3)
-    draw.ellipse((22, 14, size - 22, size - 32), outline=ring, width=5)
-    draw.arc((36, 24, size - 36, size - 48), 198, 338, fill=(255, 255, 255, 58), width=3)
-    _draw_spot_symbol(draw, spot_id, cx, cy + 4, 0.88, symbol)
+        inner = (79, 39, 35, 232)
+
+    tail = [
+        (cx - 15 * u, cy + 24 * u),
+        (cx + 15 * u, cy + 24 * u),
+        (cx, cy + 55 * u),
+    ]
+    draw.polygon(tail, fill=fill)
+    draw.line([tail[0], tail[1], tail[2], tail[0]], fill=outline, width=3 * u, joint="curve")
+    draw.ellipse((14 * u, 7 * u, work_size - 14 * u, work_size - 31 * u), fill=fill, outline=outline, width=3 * u)
+    draw.ellipse((22 * u, 15 * u, work_size - 22 * u, work_size - 39 * u), outline=ring, width=5 * u)
+    draw.ellipse((35 * u, 27 * u, work_size - 35 * u, work_size - 52 * u), fill=inner, outline=(255, 244, 190, 74), width=2 * u)
+    draw.arc((32 * u, 22 * u, work_size - 32 * u, work_size - 58 * u), 198, 338, fill=(255, 255, 255, 64), width=3 * u)
+
+    symbol_scale = 0.56 * u
+    symbol_y = cy - 8 * u
+    _draw_spot_symbol(draw, spot_id, cx + 2 * u, symbol_y + 3 * u, symbol_scale, (0, 0, 0, 96))
+    _draw_spot_symbol(draw, spot_id, cx, symbol_y, symbol_scale, symbol)
     if locked:
-        draw.rounded_rectangle((75, 69, 108, 99), radius=5, fill=(227, 188, 86, 252), outline=(74, 45, 22, 255), width=2)
-        draw.arc((80, 50, 103, 83), 180, 360, fill=(239, 222, 174, 245), width=5)
-    return cell
+        veil = Image.new("RGBA", (work_size, work_size), (0, 0, 0, 0))
+        veil_draw = ImageDraw.Draw(veil)
+        veil_draw.ellipse((14 * u, 7 * u, work_size - 14 * u, work_size - 31 * u), fill=(20, 24, 26, 78))
+        cell.alpha_composite(veil)
+        draw = ImageDraw.Draw(cell)
+        draw.rounded_rectangle((75 * u, 70 * u, 108 * u, 100 * u), radius=5 * u, fill=(227, 188, 86, 252), outline=(74, 45, 22, 255), width=2 * u)
+        draw.arc((80 * u, 51 * u, 103 * u, 83 * u), 180, 360, fill=(239, 222, 174, 245), width=5 * u)
+        draw.line((38 * u, 92 * u, 63 * u, 104 * u), fill=(238, 222, 165, 170), width=4 * u)
+    return cell.resize((size, size), Image.Resampling.LANCZOS)
 
 
 def _draw_spot_marker_sheet() -> Image.Image:
@@ -374,10 +402,13 @@ def _draw_card_frame(size: tuple[int, int], locked: bool) -> Image.Image:
     accent = (110, 103, 88, 160) if locked else (213, 169, 83, 230)
     _rounded(draw, (5, 5, size[0] - 5, size[1] - 5), 10, None, border, 2)
     _rounded(draw, (10, 10, size[0] - 10, size[1] - 10), 6, None, accent, 1)
-    draw.rectangle((11, 10, size[0] - 11, 38), fill=(10, 58, 85, 224) if not locked else (72, 78, 80, 170))
-    draw.line((15, 39, size[0] - 15, 39), fill=accent, width=1)
+    draw.rectangle((11, 10, size[0] - 11, 42), fill=(10, 58, 85, 230) if not locked else (72, 78, 80, 174))
+    draw.line((17, 18, size[0] - 17, 18), fill=(255, 255, 255, 42), width=1)
+    draw.line((15, 43, size[0] - 15, 43), fill=accent, width=1)
     if not locked:
-        _rounded(draw, (16, 45, size[0] - 16, size[1] - 14), 5, (240, 222, 184, 205), (124, 82, 38, 70), 1)
+        _rounded(draw, (16, 49, size[0] - 16, size[1] - 14), 5, (240, 222, 184, 218), (124, 82, 38, 70), 1)
+    else:
+        _rounded(draw, (16, 49, size[0] - 16, size[1] - 14), 5, (202, 194, 171, 190), (94, 82, 61, 70), 1)
     return img
 
 
@@ -437,8 +468,8 @@ def build() -> None:
     _draw_spot_marker_sheet().save(SPOT_MARKER_SHEET_OUT)
     _draw_detail_icon_sheet().save(DETAIL_ICON_SHEET_OUT)
 
-    _draw_card_frame((360, 126), locked=False).save(CARD_FRAME_OUT)
-    _draw_card_frame((360, 126), locked=True).save(CARD_FRAME_LOCKED_OUT)
+    _draw_card_frame((420, 128), locked=False).save(CARD_FRAME_OUT)
+    _draw_card_frame((420, 128), locked=True).save(CARD_FRAME_LOCKED_OUT)
     _make_thumbnails(bg)
 
 

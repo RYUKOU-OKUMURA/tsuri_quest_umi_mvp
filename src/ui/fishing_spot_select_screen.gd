@@ -10,7 +10,7 @@ const CARD_FRAME_PATH := "res://assets/showcase/fishing_spots/map_spot_card_fram
 const CARD_FRAME_LOCKED_PATH := "res://assets/showcase/fishing_spots/map_spot_card_frame_locked.png"
 const THUMB_BASE_PATH := "res://assets/showcase/fishing_spots/thumbs"
 const DETAIL_ICON_SIZE := 96.0
-const SPOT_CARD_SIZE := Vector2(260.0, 86.0)
+const SPOT_CARD_SIZE := Vector2(282.0, 86.0)
 
 var _selected_spot_id: String = GameData.DEFAULT_FISHING_SPOT_ID
 var _continue_trip := false
@@ -305,11 +305,16 @@ func _build_detail_panel(parent: Control) -> void:
 
 
 func _make_detail_row(parent: Control, icon_index: int, title: String) -> Label:
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(0.0, 31.0)
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.add_theme_stylebox_override("panel", _detail_row_style())
+	parent.add_child(panel)
+
 	var row := HBoxContainer.new()
-	row.custom_minimum_size = Vector2(0.0, 30.0)
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_theme_constant_override("separation", 6)
-	parent.add_child(row)
+	panel.add_child(row)
 
 	var icon := TextureRect.new()
 	icon.custom_minimum_size = Vector2(24.0, 24.0)
@@ -336,9 +341,22 @@ func _make_detail_row(parent: Control, icon_index: int, title: String) -> Label:
 	return value_label
 
 
+func _detail_row_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#ead8ad", 0.94)
+	style.border_color = Color("#876036", 0.30)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(5)
+	style.content_margin_left = 5
+	style.content_margin_right = 5
+	style.content_margin_top = 1
+	style.content_margin_bottom = 1
+	return style
+
+
 func _build_footer(parent: Control) -> void:
 	var panel := Control.new()
-	panel.custom_minimum_size = Vector2(0.0, 118.0)
+	panel.custom_minimum_size = Vector2(0.0, 134.0)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(panel)
 
@@ -381,7 +399,7 @@ func _build_footer(parent: Control) -> void:
 	scroll.add_child(_cards_box)
 
 	var message_box := VBoxContainer.new()
-	message_box.custom_minimum_size = Vector2(288.0, 0.0)
+	message_box.custom_minimum_size = Vector2(264.0, 0.0)
 	message_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	message_box.add_theme_constant_override("separation", 4)
 	row.add_child(message_box)
@@ -392,6 +410,8 @@ func _build_footer(parent: Control) -> void:
 
 	_message_label = make_label("", 12, Color("#eaf6ff"), 1, Palette.TEXT_OUTLINE_DARK)
 	_message_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_message_label.add_theme_constant_override("line_spacing", 1)
 	_message_label.clip_text = true
 	message_box.add_child(_message_label)
 
@@ -430,14 +450,14 @@ func _make_spot_card(spot: Dictionary) -> Button:
 	button.add_child(frame)
 
 	var title := _card_label(String(spot.get("name", spot_id)), 14, Color("#fff2d2") if unlocked else Color("#d5cec1"), 1)
-	title.position = Vector2(14.0, 5.0)
+	title.position = Vector2(16.0, 6.0)
 	title.size = Vector2(SPOT_CARD_SIZE.x - 80.0, 22.0)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	button.add_child(title)
 
 	var badge_text := "選択中" if selected else _unlock_badge_text(spot, unlocked)
 	var badge := _card_label(badge_text, 12, Palette.GOLD_BRIGHT if selected else (Palette.GOLD_DEEP if unlocked else Color("#6b5740")), 1 if selected else 0)
-	badge.position = Vector2(SPOT_CARD_SIZE.x - 68.0, 7.0)
+	badge.position = Vector2(SPOT_CARD_SIZE.x - 70.0, 8.0)
 	badge.size = Vector2(54.0, 18.0)
 	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -445,22 +465,16 @@ func _make_spot_card(spot: Dictionary) -> Button:
 
 	var body_color := Color("#23170d") if unlocked else Color("#4f4941")
 	var depth := _card_label("水深 %s" % _depth_range_text(spot), 11, body_color)
-	depth.position = Vector2(17.0, 34.0)
-	depth.size = Vector2(SPOT_CARD_SIZE.x - 34.0, 15.0)
+	depth.position = Vector2(18.0, 39.0)
+	depth.size = Vector2(SPOT_CARD_SIZE.x - 36.0, 17.0)
 	depth.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	button.add_child(depth)
 
 	var featured := _card_label("狙い %s" % _featured_fish_text(spot, 3), 11, body_color)
-	featured.position = Vector2(17.0, 50.0)
-	featured.size = Vector2(SPOT_CARD_SIZE.x - 34.0, 15.0)
+	featured.position = Vector2(18.0, 61.0)
+	featured.size = Vector2(SPOT_CARD_SIZE.x - 36.0, 18.0)
 	featured.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	button.add_child(featured)
-
-	var bait := _card_label("エサ %s" % _bait_text(spot), 11, body_color)
-	bait.position = Vector2(17.0, 66.0)
-	bait.size = Vector2(SPOT_CARD_SIZE.x - 34.0, 15.0)
-	bait.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	button.add_child(bait)
 	return button
 
 
@@ -483,7 +497,7 @@ func _focus_spot(spot_id: String, update_message: bool = true) -> void:
 	if update_message or (_message_label != null and _message_label.text.is_empty()):
 		var spot := GameData.get_fishing_spot(spot_id)
 		if GameData.is_fishing_spot_unlocked(spot_id, PlayerProgress.level):
-			_message_label.text = "%s を選択中。右の「ここで釣る」から出航できます。" % String(spot.get("name", spot_id))
+			_message_label.text = "%s を選択中。右ボタンで出航できます。" % String(spot.get("name", spot_id))
 		else:
 			_show_locked_message(spot_id)
 

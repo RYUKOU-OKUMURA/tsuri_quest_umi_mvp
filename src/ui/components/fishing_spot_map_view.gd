@@ -133,9 +133,53 @@ func _draw() -> void:
 		draw_rect(map_rect, Color("#0b4564"), true)
 	if _map_grade != null:
 		draw_texture_rect(_map_grade, map_rect, false, Color(1.0, 1.0, 1.0, 0.70))
+	_draw_chart_overlay(map_rect)
 	_draw_routes(map_rect)
 	_draw_markers(map_rect)
 	draw_rect(map_rect, Color(0.94, 0.78, 0.38, 0.52), false, 2.0)
+
+
+func _draw_chart_overlay(map_rect: Rect2) -> void:
+	var grid_color := Color("#f6d682", 0.075)
+	for index in range(1, 8):
+		var x := map_rect.position.x + map_rect.size.x * float(index) / 8.0
+		draw_line(Vector2(x, map_rect.position.y + 8.0), Vector2(x, map_rect.end.y - 8.0), grid_color, 1.0)
+	for index in range(1, 5):
+		var y := map_rect.position.y + map_rect.size.y * float(index) / 5.0
+		draw_line(Vector2(map_rect.position.x + 8.0, y), Vector2(map_rect.end.x - 8.0, y), grid_color, 1.0)
+
+	var tick_color := Color("#f8dea0", 0.30)
+	for index in range(0, 17):
+		var x := map_rect.position.x + map_rect.size.x * float(index) / 16.0
+		draw_line(Vector2(x, map_rect.position.y), Vector2(x, map_rect.position.y + 9.0), tick_color, 1.0)
+		draw_line(Vector2(x, map_rect.end.y - 9.0), Vector2(x, map_rect.end.y), tick_color, 1.0)
+	for index in range(0, 10):
+		var y := map_rect.position.y + map_rect.size.y * float(index) / 9.0
+		draw_line(Vector2(map_rect.position.x, y), Vector2(map_rect.position.x + 9.0, y), tick_color, 1.0)
+		draw_line(Vector2(map_rect.end.x - 9.0, y), Vector2(map_rect.end.x, y), tick_color, 1.0)
+
+	var rose_center := map_rect.position + Vector2(map_rect.size.x * 0.895, map_rect.size.y * 0.155)
+	var rose_r := clampf(map_rect.size.x * 0.043, 28.0, 42.0)
+	draw_circle(rose_center, rose_r, Color("#031321", 0.24))
+	draw_circle(rose_center, rose_r, Color("#f7dfa0", 0.28), false, 1.5)
+	draw_line(rose_center + Vector2(0.0, -rose_r * 0.90), rose_center + Vector2(0.0, rose_r * 0.90), Color("#f7dfa0", 0.36), 1.4)
+	draw_line(rose_center + Vector2(-rose_r * 0.90, 0.0), rose_center + Vector2(rose_r * 0.90, 0.0), Color("#f7dfa0", 0.30), 1.2)
+	draw_colored_polygon(
+		PackedVector2Array([
+			rose_center + Vector2(0.0, -rose_r * 0.82),
+			rose_center + Vector2(-rose_r * 0.16, -rose_r * 0.10),
+			rose_center + Vector2(rose_r * 0.16, -rose_r * 0.10),
+		]),
+		Color("#ffdf74", 0.50)
+	)
+	draw_colored_polygon(
+		PackedVector2Array([
+			rose_center + Vector2(0.0, rose_r * 0.82),
+			rose_center + Vector2(-rose_r * 0.14, rose_r * 0.10),
+			rose_center + Vector2(rose_r * 0.14, rose_r * 0.10),
+		]),
+		Color("#99d8ee", 0.35)
+	)
 
 
 func _draw_routes(map_rect: Rect2) -> void:
@@ -180,7 +224,7 @@ func _draw_markers(map_rect: Rect2) -> void:
 		if selected and unlocked:
 			marker_index = MARKER_SELECTED
 			marker_row = 1
-		var marker_size := clampf(map_rect.size.x * (0.072 if selected else 0.061), 52.0, 82.0)
+		var marker_size := clampf(map_rect.size.x * (0.078 if selected else 0.066), 56.0, 88.0)
 		if _hovered_spot_id == spot_id:
 			marker_size *= 1.07
 		var target := Rect2(center - Vector2(marker_size, marker_size) * 0.5, Vector2(marker_size, marker_size))
