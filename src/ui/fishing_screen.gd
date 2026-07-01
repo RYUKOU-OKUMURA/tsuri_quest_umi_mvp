@@ -571,16 +571,14 @@ func _on_message_changed(message: String) -> void:
 func _on_fight_finished(caught: bool, reason: String) -> void:
 	if caught:
 		if not _result_recorded:
-			PlayerProgress.record_catch(String(_current_fish["id"]), _simulator.result_size_cm, _spot_id)
+			var catch_result := PlayerProgress.record_catch(
+				String(_current_fish["id"]),
+				_simulator.result_size_cm,
+				_spot_id
+			)
+			_result_details.text = _catch_result_details(catch_result)
 			_result_recorded = true
 		_result_title.text = "釣り上げ成功！"
-		_result_details.text = (
-			"%s\n大きさ %.1f cm\nクーラーボックスに入れた。\n港で売るか、料理して食べよう。"
-			% [
-				String(_current_fish["name"]),
-				_simulator.result_size_cm,
-			]
-		)
 		_retry_button.text = "続けて釣る"
 	else:
 		_result_title.text = "逃げられた……"
@@ -592,6 +590,27 @@ func _on_fight_finished(caught: bool, reason: String) -> void:
 
 func _retry() -> void:
 	_prepare_new_attempt()
+
+
+func _catch_result_details(catch_result: Dictionary) -> String:
+	var lines: Array[String] = [
+		String(_current_fish["name"]),
+		"大きさ %.1f cm" % _simulator.result_size_cm,
+		"クーラーボックスに入れた。",
+	]
+	var first_clear_reward: Dictionary = catch_result.get("boss_first_clear_reward", {})
+	if not first_clear_reward.is_empty():
+		var reward_money := int(first_clear_reward.get("money", 0))
+		if reward_money > 0:
+			lines.append("初回撃破報酬 +%d G" % reward_money)
+		var reward_message := String(first_clear_reward.get("message", ""))
+		if not reward_message.strip_edges().is_empty():
+			lines.append(reward_message)
+	elif bool(_current_fish.get("boss", false)):
+		lines.append("港の大岩では、腕試しとして何度でも再挑戦できる。")
+	else:
+		lines.append("港で売るか、料理して食べよう。")
+	return "\n".join(PackedStringArray(lines))
 
 
 func _update_ui() -> void:

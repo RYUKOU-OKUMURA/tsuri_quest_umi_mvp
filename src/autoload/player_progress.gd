@@ -79,9 +79,16 @@ func add_exp(amount: int) -> Array[int]:
 	return leveled_to
 
 
-func record_catch(fish_id: String, size_cm: float, spot_id: String = "") -> void:
+func record_catch(fish_id: String, size_cm: float, spot_id: String = "") -> Dictionary:
+	var fish := GameData.get_fish(fish_id)
+	var previous_count := int(caught_counts.get(fish_id, 0))
+	var catch_result := {
+		"fish_id": fish_id,
+		"first_catch": previous_count <= 0,
+		"boss_first_clear_reward": {},
+	}
 	inventory[fish_id] = int(inventory.get(fish_id, 0)) + 1
-	caught_counts[fish_id] = int(caught_counts.get(fish_id, 0)) + 1
+	caught_counts[fish_id] = previous_count + 1
 	if not spot_id.is_empty():
 		var spot_counts: Dictionary = {}
 		var loaded_spot_counts = spot_caught_counts.get(spot_id, {})
@@ -90,9 +97,16 @@ func record_catch(fish_id: String, size_cm: float, spot_id: String = "") -> void
 		spot_counts[fish_id] = int(spot_counts.get(fish_id, 0)) + 1
 		spot_caught_counts[spot_id] = spot_counts
 	best_sizes[fish_id] = maxf(float(best_sizes.get(fish_id, 0.0)), size_cm)
+	if previous_count <= 0 and bool(fish.get("boss", false)):
+		var reward := GameData.get_boss_first_clear_reward(fish_id)
+		var reward_money := int(reward.get("money", 0))
+		if reward_money > 0:
+			money += reward_money
+		catch_result["boss_first_clear_reward"] = reward
 	fish_caught.emit(fish_id, size_cm)
 	save_game()
 	progress_changed.emit()
+	return catch_result
 
 
 func fish_count(fish_id: String) -> int:

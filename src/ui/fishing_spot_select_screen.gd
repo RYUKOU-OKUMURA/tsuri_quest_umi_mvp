@@ -1076,7 +1076,11 @@ func _refresh_detail() -> void:
 	_detail_fish_value_label.text = _featured_fish_text(spot, 4)
 	_detail_bait_value_label.text = _bait_text(spot)
 	if _detail_hint_value_label != null:
-		_detail_hint_value_label.text = String(access.get("detail", "")) if not accessible else ("ぬしの気配" if boss_spot else _rare_hint_text(spot))
+		_detail_hint_value_label.text = (
+			String(access.get("detail", ""))
+			if not accessible
+			else (_boss_hint_text() if boss_spot else _rare_hint_text(spot))
+		)
 	if _action_button != null:
 		_action_button.disabled = not accessible
 		_action_button.text = String(access.get("button_text", "ここで釣る"))
@@ -1141,6 +1145,12 @@ func _bait_text(spot: Dictionary) -> String:
 	for bait_variant in Array(spot.get("recommended_baits", [])):
 		baits.append(String(bait_variant))
 	return "、".join(PackedStringArray(baits))
+
+
+func _boss_hint_text() -> String:
+	if int(PlayerProgress.caught_counts.get("boss_kurodai", 0)) > 0:
+		return "討伐済み・再挑戦可"
+	return "ぬしの気配"
 
 
 func _spot_completion_counts(spot: Dictionary) -> Dictionary:

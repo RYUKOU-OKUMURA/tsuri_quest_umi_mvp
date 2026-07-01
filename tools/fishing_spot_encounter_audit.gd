@@ -12,6 +12,7 @@ func _initialize() -> void:
 	_check_level_gates(game_data, failures)
 	_check_boat_gates(game_data, failures)
 	_check_expected_rates(game_data, failures)
+	_check_boss_challenge_rewards(game_data, failures)
 	_print_sample_summary(game_data)
 	if not failures.is_empty():
 		for failure in failures:
@@ -130,6 +131,26 @@ func _check_expected_rates(game_data: Object, failures: Array[String]) -> void:
 				failures.append("%s bluewater fish %s share %.1f%% exceeds 10%%" % [spot_id, fish_id, share * 100.0])
 			elif min_level >= 4 and share > 0.14:
 				failures.append("%s rare fish %s share %.1f%% exceeds 14%%" % [spot_id, fish_id, share * 100.0])
+
+
+func _check_boss_challenge_rewards(game_data: Object, failures: Array[String]) -> void:
+	for spot_id in game_data.get_all_fishing_spot_ids():
+		var spot: Dictionary = game_data.get_fishing_spot(spot_id)
+		if not bool(spot.get("boss_spot", false)):
+			continue
+		var allowed_fish: Array = spot.get("allowed_fish", [])
+		if allowed_fish.size() != 1:
+			failures.append("%s boss spot should allow exactly one boss fish" % spot_id)
+			continue
+		var fish_id := String(allowed_fish[0])
+		var fish: Dictionary = game_data.get_fish(fish_id)
+		if not bool(fish.get("boss", false)):
+			failures.append("%s boss spot target is not flagged as boss: %s" % [spot_id, fish_id])
+		var first_clear_reward: Dictionary = game_data.get_boss_first_clear_reward(fish_id)
+		if first_clear_reward.is_empty():
+			failures.append("%s boss target %s missing first-clear reward" % [spot_id, fish_id])
+		elif int(first_clear_reward.get("money", 0)) <= 0:
+			failures.append("%s boss target %s first-clear money must be positive" % [spot_id, fish_id])
 
 
 func _print_sample_summary(game_data: Object) -> void:

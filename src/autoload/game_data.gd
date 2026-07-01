@@ -5,6 +5,13 @@ const BOSS_UNLOCK_LEVEL: int = 5
 const DEFAULT_FISHING_SPOT_ID := "harbor_pier"
 const BOSS_FISHING_SPOT_ID := "harbor_boulder"
 const NO_BOAT_RANK := 0
+const BOSS_FIRST_CLEAR_REWARDS: Dictionary = {
+	"boss_kurodai":
+	{
+		"money": 3000,
+		"message": "港のぬしを討伐した！\n次は船を整え、南の岩礁からさらに沖の釣り場を目指そう。",
+	},
+}
 
 const FISH: Dictionary = {
 	"aji":
@@ -1192,6 +1199,12 @@ func get_fish(fish_id: String) -> Dictionary:
 	if not FISH.has(fish_id):
 		return {}
 	return FISH[fish_id].duplicate(true)
+
+
+func get_boss_first_clear_reward(fish_id: String) -> Dictionary:
+	if not BOSS_FIRST_CLEAR_REWARDS.has(fish_id):
+		return {}
+	return BOSS_FIRST_CLEAR_REWARDS[fish_id].duplicate(true)
 
 
 func get_fishing_spot(spot_id: String) -> Dictionary:
