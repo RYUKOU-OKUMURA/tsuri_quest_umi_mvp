@@ -30,6 +30,9 @@ CARD_FRAME_OUT = OUT_DIR / "map_spot_card_frame.png"
 CARD_FRAME_LOCKED_OUT = OUT_DIR / "map_spot_card_frame_locked.png"
 ROUTE_CHIP_FRAME_OUT = OUT_DIR / "map_route_chip_frame.png"
 ROUTE_CHIP_FRAME_LOCKED_OUT = OUT_DIR / "map_route_chip_frame_locked.png"
+COMPLETION_SLOT_FRAME_OUT = OUT_DIR / "map_completion_slot_frame.png"
+COMPLETION_SLOT_SELECTED_OUT = OUT_DIR / "map_completion_slot_selected.png"
+COMPLETION_SLOT_LOCKED_OUT = OUT_DIR / "map_completion_slot_locked.png"
 THUMB_DIR = OUT_DIR / "thumbs"
 
 SPOT_ORDER = [
@@ -227,9 +230,23 @@ def _draw_footer_frame(size: tuple[int, int]) -> Image.Image:
     draw = ImageDraw.Draw(frame)
     _rounded(draw, (10, 10, size[0] - 10, size[1] - 10), 14, (7, 34, 54, 238), (178, 130, 58, 220), 3)
     _rounded(draw, (20, 20, size[0] - 20, size[1] - 20), 9, None, (230, 190, 96, 165), 1)
-    _rounded(draw, (size[0] - 370, 28, size[0] - 30, size[1] - 28), 8, (225, 202, 155, 232), (132, 85, 38, 165), 2)
-    _rounded(draw, (size[0] - 352, 44, size[0] - 48, 74), 5, (8, 50, 78, 230), (210, 171, 88, 200), 1)
-    _rounded(draw, (size[0] - 352, size[1] - 57, size[0] - 48, size[1] - 30), 5, (8, 50, 78, 210), None, 1)
+
+    # Left side is a logbook board, not another set of point-selection cards.
+    board = _paper_texture((size[0] - 430, size[1] - 54), 980, (221, 202, 162))
+    board_mask = Image.new("L", board.size, 0)
+    mask_draw = ImageDraw.Draw(board_mask)
+    mask_draw.rounded_rectangle((0, 0, board.width - 1, board.height - 1), radius=10, fill=255)
+    frame.paste(board, (28, 27), board_mask)
+    _rounded(draw, (28, 27, size[0] - 402, size[1] - 27), 10, None, (110, 72, 35, 190), 2)
+    _rounded(draw, (39, 38, size[0] - 413, 69), 7, (8, 50, 78, 232), (213, 171, 88, 190), 1)
+    draw.line((55, 47, size[0] - 430, 47), fill=(255, 255, 255, 42), width=1)
+    for x in range(54, size[0] - 438, 74):
+        draw.line((x, 78, x + 42, 78), fill=(118, 79, 38, 42), width=1)
+
+    # Right memo is parchment, visually secondary to the map and right detail panel.
+    _rounded(draw, (size[0] - 382, 27, size[0] - 30, size[1] - 27), 9, (225, 202, 155, 232), (132, 85, 38, 165), 2)
+    _rounded(draw, (size[0] - 362, 42, size[0] - 50, 70), 5, (8, 50, 78, 230), (210, 171, 88, 200), 1)
+    _rounded(draw, (size[0] - 362, size[1] - 59, size[0] - 50, size[1] - 31), 5, (8, 50, 78, 210), None, 1)
     return frame
 
 
@@ -464,6 +481,45 @@ def _draw_route_chip_frame(size: tuple[int, int], locked: bool) -> Image.Image:
     return img
 
 
+def _draw_completion_slot_frame(size: tuple[int, int], state: str) -> Image.Image:
+    selected = state == "selected"
+    locked = state == "locked"
+    img = Image.new("RGBA", size, (0, 0, 0, 0))
+    base = (192, 187, 168) if locked else (230, 210, 170)
+    paper = _paper_texture((size[0] - 12, size[1] - 12), 740 + len(state), base)
+    mask = Image.new("L", paper.size, 0)
+    mask_draw = ImageDraw.Draw(mask)
+    mask_draw.rounded_rectangle((0, 0, paper.width - 1, paper.height - 1), radius=9, fill=255)
+    img.paste(paper, (6, 6), mask)
+
+    draw = ImageDraw.Draw(img)
+    border = (96, 84, 70, 205) if locked else (135, 88, 40, 225)
+    accent = (113, 103, 86, 145) if locked else (219, 176, 86, 210)
+    if selected:
+        border = (255, 218, 88, 245)
+        accent = (255, 232, 126, 235)
+    _rounded(draw, (6, 6, size[0] - 6, size[1] - 6), 9, None, border, 2 if not selected else 3)
+    _rounded(draw, (12, 12, size[0] - 12, size[1] - 12), 5, None, accent, 1)
+
+    rail = (14, 14, size[0] - 14, 42)
+    rail_color = (78, 82, 78, 188) if locked else (9, 58, 86, 222)
+    if selected:
+        rail_color = (8, 67, 100, 238)
+    _rounded(draw, rail, 5, rail_color, None, 1)
+    draw.line((rail[0] + 8, rail[1] + 7, rail[2] - 8, rail[1] + 7), fill=(255, 255, 255, 38), width=1)
+
+    body = (14, 47, size[0] - 14, size[1] - 13)
+    body_fill = (240, 222, 184, 184) if not locked else (198, 191, 171, 150)
+    _rounded(draw, body, 5, body_fill, (119, 82, 42, 60), 1)
+    if selected:
+        draw.rectangle((18, 48, 24, size[1] - 17), fill=(255, 210, 73, 215))
+    if locked:
+        draw.rectangle((18, 50, size[0] - 18, size[1] - 16), fill=(96, 91, 83, 45))
+        draw.line((size[0] - 42, 58, size[0] - 20, 75), fill=(96, 84, 66, 120), width=3)
+        draw.line((size[0] - 20, 58, size[0] - 42, 75), fill=(96, 84, 66, 120), width=3)
+    return img
+
+
 def _make_thumbnails(bg: Image.Image) -> None:
     THUMB_DIR.mkdir(parents=True, exist_ok=True)
     thumb_size = (420, 184)
@@ -524,6 +580,9 @@ def build() -> None:
     _draw_card_frame((420, 128), locked=True).save(CARD_FRAME_LOCKED_OUT)
     _draw_route_chip_frame((360, 84), locked=False).save(ROUTE_CHIP_FRAME_OUT)
     _draw_route_chip_frame((360, 84), locked=True).save(ROUTE_CHIP_FRAME_LOCKED_OUT)
+    _draw_completion_slot_frame((180, 126), "normal").save(COMPLETION_SLOT_FRAME_OUT)
+    _draw_completion_slot_frame((180, 126), "selected").save(COMPLETION_SLOT_SELECTED_OUT)
+    _draw_completion_slot_frame((180, 126), "locked").save(COMPLETION_SLOT_LOCKED_OUT)
     _make_thumbnails(bg)
 
 

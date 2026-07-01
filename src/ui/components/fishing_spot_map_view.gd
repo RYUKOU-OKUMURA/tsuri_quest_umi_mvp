@@ -295,13 +295,13 @@ func _draw_routes(map_rect: Rect2) -> void:
 			GameData.is_fishing_spot_unlocked(from_id, player_level)
 			and GameData.is_fishing_spot_unlocked(to_id, player_level)
 		)
-		var color := Color("#ffe070", 0.88) if selected_route else Color("#f6e5b0", 0.48)
+		var color := Color("#ffe070", 0.94) if selected_route else Color("#f6e5b0", 0.34)
 		if not both_unlocked and not selected_route:
-			color = Color("#a99c87", 0.36)
-		var width := 3.4 if selected_route else 2.0
+			color = Color("#a99c87", 0.28)
+		var width := 4.4 if selected_route else 1.7
 		if selected_route:
 			var pulse := 0.5 + 0.5 * sin(_animation_time * TAU * 0.72)
-			draw_line(from_point, to_point, Color("#ffe070", 0.16 + pulse * 0.10), width + 9.0)
+			draw_line(from_point, to_point, Color("#ffe070", 0.22 + pulse * 0.14), width + 12.0)
 			_draw_route_arrows(from_point, to_point, pulse)
 		_draw_dotted_line(from_point, to_point, color, width, 14.0, 10.0)
 
@@ -357,8 +357,26 @@ func _draw_markers(map_rect: Rect2) -> void:
 
 func _draw_selected_marker_ping(center: Vector2, marker_size: float) -> void:
 	var pulse := 0.5 + 0.5 * sin(_animation_time * TAU * 0.86)
-	draw_circle(center, marker_size * (0.49 + pulse * 0.08), Color("#fff2a8", 0.18 + pulse * 0.12), false, 3.0)
-	draw_circle(center, marker_size * 0.63, Color("#ffe06d", 0.16), false, 1.8)
+	var radius := marker_size * (0.50 + pulse * 0.08)
+	draw_circle(center, radius, Color("#fff2a8", 0.19 + pulse * 0.13), false, 3.4)
+	draw_circle(center, marker_size * 0.68, Color("#ffe06d", 0.20), false, 2.0)
+	draw_circle(center, marker_size * 0.82, Color("#fff2a8", 0.10), false, 1.2)
+	var spin := fmod(_animation_time * 1.35, TAU)
+	for offset in [0.0, PI]:
+		draw_arc(
+			center,
+			marker_size * 0.78,
+			spin + offset,
+			spin + offset + PI * 0.46,
+			18,
+			Color("#fff3b5", 0.52),
+			2.2,
+			true
+		)
+	var tick := marker_size * 0.93
+	var tick_inner := marker_size * 0.76
+	for direction in [Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT]:
+		draw_line(center + direction * tick_inner, center + direction * tick, Color("#ffe070", 0.42), 1.6)
 
 
 func _draw_spot_marker(spot_id: String, marker_row: int, fallback_marker_index: int, target: Rect2) -> void:
