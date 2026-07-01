@@ -6,6 +6,12 @@ const FightSidebarScript = preload("res://src/ui/components/fight_sidebar.gd")
 const FightHudScript = preload("res://src/ui/components/fight_hud.gd")
 const FightStatusBarScript = preload("res://src/ui/components/fight_status_bar.gd")
 
+const FISHING_BGM_VOLUME_DB := -9.0
+const FISHING_BGM_PATH_BY_SURFACE_KEY := {
+	"calm": "res://assets/audio/海辺（さざなみ）.mp3",
+	"windy": "res://assets/audio/海辺（少し風が強い）.mp3",
+}
+
 var _simulator: FishingSimulator
 var _trip_stats: Dictionary = {}
 var _current_fish: Dictionary = {}
@@ -47,6 +53,8 @@ func _build_screen() -> void:
 	_resolve_selected_spot()
 	_resolve_trip_stats()
 	_apply_spot_to_trip_stats()
+	_ensure_trip_environment()
+	_play_fishing_bgm()
 	_simulator = FishingSimulatorScript.new()
 	_simulator.state_changed.connect(_on_state_changed)
 	_simulator.message_changed.connect(_on_message_changed)
@@ -198,6 +206,29 @@ func _apply_spot_to_trip_stats() -> void:
 	_trip_stats["spot_featured_fish"] = _spot.get("featured_fish", [])
 	_trip_stats["spot_recommended_baits"] = _spot.get("recommended_baits", [])
 	_trip_stats["spot_boss"] = bool(_spot.get("boss_spot", false))
+
+
+func _ensure_trip_environment() -> void:
+	var environment_id := String(_trip_stats.get("environment_id", GameData.DEFAULT_FISHING_ENVIRONMENT_ID))
+	var environment := GameData.get_fishing_environment(environment_id)
+	if String(_trip_stats.get("environment_id", "")).strip_edges().is_empty():
+		_trip_stats["environment_id"] = String(environment.get("id", GameData.DEFAULT_FISHING_ENVIRONMENT_ID))
+	if String(_trip_stats.get("weather_id", "")).strip_edges().is_empty():
+		_trip_stats["weather_id"] = String(environment.get("weather_id", "sunny"))
+	if String(_trip_stats.get("weather_label", "")).strip_edges().is_empty():
+		_trip_stats["weather_label"] = String(environment.get("weather_label", "快晴"))
+	if String(_trip_stats.get("wind_id", "")).strip_edges().is_empty():
+		_trip_stats["wind_id"] = String(environment.get("wind_id", "weak"))
+	if String(_trip_stats.get("wind_label", "")).strip_edges().is_empty():
+		_trip_stats["wind_label"] = String(environment.get("wind_label", "風 弱"))
+	if String(_trip_stats.get("surface_bgm_key", "")).strip_edges().is_empty():
+		_trip_stats["surface_bgm_key"] = String(environment.get("surface_bgm_key", "calm"))
+
+
+func _play_fishing_bgm() -> void:
+	var bgm_key := String(_trip_stats.get("surface_bgm_key", "calm"))
+	var path := String(FISHING_BGM_PATH_BY_SURFACE_KEY.get(bgm_key, FISHING_BGM_PATH_BY_SURFACE_KEY["calm"]))
+	play_screen_bgm(path, FISHING_BGM_VOLUME_DB)
 
 
 func _spot_summary_text() -> String:

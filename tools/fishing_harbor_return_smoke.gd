@@ -162,6 +162,10 @@ func _verify_continue_trip_does_not_consume_pending_buff() -> void:
 		"line_break_limit": 1.0,
 		"rod_name": "港の入門竿",
 		"meal_buff": {"name": "既に適用済み"},
+		"environment_id": "sunny_windy",
+		"weather_label": "快晴",
+		"wind_label": "風 強",
+		"surface_bgm_key": "windy",
 	}
 	var continued := FishingScreenScript.new()
 	continued.theme = ThemeFactory.build_theme()
@@ -184,6 +188,10 @@ func _verify_continue_trip_does_not_consume_pending_buff() -> void:
 	_expect(
 		String(continued._trip_stats.get("spot_id", "")) == "outer_tide",
 		"continued fishing screen should update only selected spot data"
+	)
+	_expect(
+		continued._screen_bgm_path == "res://assets/audio/海辺（少し風が強い）.mp3",
+		"continued windy fishing screen should use windy seaside BGM"
 	)
 	_expect(
 		PlayerProgress.pending_buff == pending_buff,

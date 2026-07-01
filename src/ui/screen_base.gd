@@ -4,6 +4,8 @@ extends Control
 signal navigate_requested(screen_id: String, payload: Dictionary)
 
 var route_payload: Dictionary = {}
+var _screen_bgm_player: AudioStreamPlayer
+var _screen_bgm_path := ""
 
 static var _particle_tex: Texture2D
 
@@ -17,12 +19,66 @@ func _ready() -> void:
 	_build_screen()
 
 
+func _exit_tree() -> void:
+	stop_screen_bgm()
+
+
 func _build_screen() -> void:
 	pass
 
 
 func navigate(screen_id: String, payload: Dictionary = {}) -> void:
 	navigate_requested.emit(screen_id, payload)
+
+
+func play_screen_bgm(path: String, volume_db: float = -10.0) -> void:
+	if path.strip_edges().is_empty():
+		stop_screen_bgm()
+		return
+	if (
+		_screen_bgm_player != null
+		and is_instance_valid(_screen_bgm_player)
+		and _screen_bgm_path == path
+	):
+		if not _screen_bgm_player.playing:
+			_screen_bgm_player.play()
+		return
+	stop_screen_bgm()
+	if not ResourceLoader.exists(path) and not FileAccess.file_exists(path):
+		push_warning("BGMが見つかりません: %s" % path)
+		return
+	var stream := load(path) as AudioStream
+	if stream == null:
+		push_warning("BGMを読み込めません: %s" % path)
+		return
+	var mp3_stream := stream as AudioStreamMP3
+	if mp3_stream != null:
+		mp3_stream.loop = true
+	_screen_bgm_player = AudioStreamPlayer.new()
+	_screen_bgm_player.name = "ScreenBGMPlayer"
+	_screen_bgm_player.stream = stream
+	_screen_bgm_player.volume_db = volume_db
+	_screen_bgm_player.finished.connect(_on_screen_bgm_finished)
+	add_child(_screen_bgm_player)
+	_screen_bgm_path = path
+	_screen_bgm_player.play()
+
+
+func stop_screen_bgm() -> void:
+	if _screen_bgm_player == null or not is_instance_valid(_screen_bgm_player):
+		_screen_bgm_player = null
+		_screen_bgm_path = ""
+		return
+	var player := _screen_bgm_player
+	_screen_bgm_player = null
+	_screen_bgm_path = ""
+	player.stop()
+	player.queue_free()
+
+
+func _on_screen_bgm_finished() -> void:
+	if _screen_bgm_player != null and is_instance_valid(_screen_bgm_player) and is_inside_tree():
+		_screen_bgm_player.play()
 
 
 func add_background(color: Color = Color("#091a2d")) -> ColorRect:

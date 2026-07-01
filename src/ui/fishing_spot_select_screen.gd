@@ -11,6 +11,17 @@ const DETAIL_ICON_SHEET_PATH := "res://assets/showcase/fishing_spots/map_detail_
 const FOOTER_FRAME_PATH := "res://assets/showcase/fishing_spots/map_footer_frame.png"
 const FOOTER_ICON_SHEET_PATH := "res://assets/showcase/fishing_spots/map_footer_icon_sheet.png"
 const THUMB_BASE_PATH := "res://assets/showcase/fishing_spots/thumbs"
+const MAP_BGM_VOLUME_DB := -12.0
+const MAP_BGM_PATH_BY_SPOT := {
+	"harbor_pier": "res://assets/audio/港外・潮目.mp3",
+	"shallow_sand": "res://assets/audio/砂浜・かけあがり.mp3",
+	"rock_breakwater": "res://assets/audio/岩礁・消波ブロック.mp3",
+	"outer_tide": "res://assets/audio/港外・潮目.mp3",
+	"south_reef": "res://assets/audio/岩礁・消波ブロック.mp3",
+	"bluewater_route": "res://assets/audio/外海・回遊ルート.mp3",
+	"deep_ocean": "res://assets/audio/外海・回遊ルート.mp3",
+	"harbor_boulder": "res://assets/audio/港外・潮目.mp3",
+}
 const DETAIL_ICON_SIZE := 96.0
 const STATUS_ICON_SIZE := 96.0
 const FOOTER_ICON_SIZE := 96.0
@@ -1003,12 +1014,18 @@ func _focus_spot(spot_id: String, update_message: bool = true) -> void:
 	_refresh_detail()
 	_rebuild_completion_entries()
 	_refresh_ledger_header()
+	_play_map_bgm_for_spot(spot_id)
 	if update_message or (_message_label != null and _message_label.text.is_empty()):
 		var spot := GameData.get_fishing_spot(spot_id)
 		if PlayerProgress.can_access_fishing_spot(spot_id):
 			_set_survey_message(spot)
 		else:
 			_show_locked_message(spot_id)
+
+
+func _play_map_bgm_for_spot(spot_id: String) -> void:
+	var path := String(MAP_BGM_PATH_BY_SPOT.get(spot_id, MAP_BGM_PATH_BY_SPOT[GameData.DEFAULT_FISHING_SPOT_ID]))
+	play_screen_bgm(path, MAP_BGM_VOLUME_DB)
 
 
 func _refresh_ledger_header() -> void:

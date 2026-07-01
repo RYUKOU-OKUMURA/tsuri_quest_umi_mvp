@@ -1021,6 +1021,31 @@ const FISHING_SPOTS: Dictionary = {
 	},
 }
 
+const DEFAULT_FISHING_ENVIRONMENT_ID := "sunny_calm"
+
+const FISHING_ENVIRONMENTS: Dictionary = {
+	"sunny_calm":
+	{
+		"id": "sunny_calm",
+		"weather_id": "sunny",
+		"weather_label": "快晴",
+		"wind_id": "weak",
+		"wind_label": "風 弱",
+		"surface_bgm_key": "calm",
+		"weight": 0.70,
+	},
+	"sunny_windy":
+	{
+		"id": "sunny_windy",
+		"weather_id": "sunny",
+		"weather_label": "快晴",
+		"wind_id": "strong",
+		"wind_label": "風 強",
+		"surface_bgm_key": "windy",
+		"weight": 0.30,
+	},
+}
+
 const RECIPES: Dictionary = {
 	"salt_grill":
 	{
@@ -1172,6 +1197,29 @@ func get_fish(fish_id: String) -> Dictionary:
 func get_fishing_spot(spot_id: String) -> Dictionary:
 	var resolved_id := _resolved_spot_id(spot_id)
 	return FISHING_SPOTS[resolved_id].duplicate(true)
+
+
+func get_fishing_environment(environment_id: String) -> Dictionary:
+	if not FISHING_ENVIRONMENTS.has(environment_id):
+		environment_id = DEFAULT_FISHING_ENVIRONMENT_ID
+	return FISHING_ENVIRONMENTS[environment_id].duplicate(true)
+
+
+func roll_fishing_environment() -> Dictionary:
+	var total_weight := 0.0
+	for environment_variant in FISHING_ENVIRONMENTS.values():
+		var environment: Dictionary = environment_variant
+		total_weight += maxf(0.0, float(environment.get("weight", 1.0)))
+	if total_weight <= 0.0:
+		return get_fishing_environment(DEFAULT_FISHING_ENVIRONMENT_ID)
+	var target := _rng.randf_range(0.0, total_weight)
+	var current := 0.0
+	for environment_id in FISHING_ENVIRONMENTS.keys():
+		var environment: Dictionary = FISHING_ENVIRONMENTS[environment_id]
+		current += maxf(0.0, float(environment.get("weight", 1.0)))
+		if target <= current:
+			return environment.duplicate(true)
+	return get_fishing_environment(DEFAULT_FISHING_ENVIRONMENT_ID)
 
 
 func get_recipe(recipe_id: String) -> Dictionary:

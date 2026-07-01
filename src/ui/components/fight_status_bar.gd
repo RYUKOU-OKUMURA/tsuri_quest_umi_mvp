@@ -60,7 +60,7 @@ func _draw() -> void:
 	_draw_status_icon(slots[1], ICON_WEATHER)
 	_draw_status_icon(slots[2], ICON_COIN)
 	_draw_status_slot(font, regular_font, slots[0], "AM", "08:47", false)
-	_draw_status_slot(font, regular_font, slots[1], "快晴", "風 弱", false)
+	_draw_status_slot(font, regular_font, slots[1], _weather_label(), _wind_label(), false)
 	_draw_status_slot(font, regular_font, slots[2], "所持金", "%s G" % _format_money(PlayerProgress.money), false)
 	var depth := 0.0
 	if simulator != null:
@@ -101,11 +101,12 @@ func _draw_status_slot(font: Font, regular_font: Font, rect: Rect2, title: Strin
 		_draw_text_clipped(font, title, Vector2(text_x - 4.0, am_y), 16, Color("#21170f"), max_width, outline)
 		_draw_text_clipped(font, body, Vector2(text_x + 31.0, am_y + 1.0), 24, body_color, max_width - 31.0, outline)
 		return
-	if not dark and title == "快晴":
+	if not dark and body.begins_with("風"):
 		var inline_y := rect.position.y + rect.size.y * 0.57
 		_draw_text_clipped(font, title, Vector2(text_x - 2.0, inline_y), 21, body_color, max_width, outline)
+		var weather_width := font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, 21).x
 		var wind_icon_size := 21.0
-		var wind_x := text_x + 68.0
+		var wind_x := text_x - 2.0 + weather_width + 14.0
 		_draw_top_sheet_icon(
 			ICON_WIND,
 			Rect2(Vector2(wind_x, rect.position.y + (rect.size.y - wind_icon_size) * 0.5 + 1.0), Vector2(wind_icon_size, wind_icon_size)),
@@ -225,6 +226,20 @@ func _format_money(value: int) -> String:
 		result = raw[index] + result
 		count += 1
 	return result
+
+
+func _weather_label() -> String:
+	var label := String(trip_stats.get("weather_label", "快晴"))
+	if label.strip_edges().is_empty():
+		return "快晴"
+	return label
+
+
+func _wind_label() -> String:
+	var label := String(trip_stats.get("wind_label", "風 弱"))
+	if label.strip_edges().is_empty():
+		return "風 弱"
+	return label
 
 
 func _spot_title() -> String:

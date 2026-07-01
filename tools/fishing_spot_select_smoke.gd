@@ -18,6 +18,9 @@ func _ready() -> void:
 	_screen = _make_screen()
 	await get_tree().process_frame
 	_expect(_screen._map_view != null, "map view should be present")
+	_expect(_screen._screen_bgm_path == "res://assets/audio/港外・潮目.mp3", "default map BGM should use harbor tide track")
+	_screen._focus_spot("shallow_sand")
+	_expect(_screen._screen_bgm_path == "res://assets/audio/砂浜・かけあがり.mp3", "focused sand spot should switch map BGM")
 	_expect(_screen._footer_completion_value_label != null, "footer completion label should be present")
 	_expect(_screen._footer_completion_value_label.text == "2 / 5", "footer completion should show aggregate unlocked progress")
 	_verify_no_footer_spot_entries()

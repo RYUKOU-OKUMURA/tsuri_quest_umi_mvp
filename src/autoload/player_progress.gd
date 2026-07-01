@@ -244,6 +244,7 @@ func get_base_stats() -> Dictionary:
 
 func begin_fishing_trip() -> Dictionary:
 	var stats := get_base_stats()
+	var environment := GameData.roll_fishing_environment()
 	var applied_buff := pending_buff.duplicate(true)
 	if not applied_buff.is_empty():
 		match String(applied_buff.get("stat", "")):
@@ -263,6 +264,12 @@ func begin_fishing_trip() -> Dictionary:
 			"reel_power":
 				stats["reel_power"] *= 1.0 + float(applied_buff["value"])
 	stats["meal_buff"] = applied_buff
+	stats["environment_id"] = String(environment.get("id", GameData.DEFAULT_FISHING_ENVIRONMENT_ID))
+	stats["weather_id"] = String(environment.get("weather_id", "sunny"))
+	stats["weather_label"] = String(environment.get("weather_label", "快晴"))
+	stats["wind_id"] = String(environment.get("wind_id", "weak"))
+	stats["wind_label"] = String(environment.get("wind_label", "風 弱"))
+	stats["surface_bgm_key"] = String(environment.get("surface_bgm_key", "calm"))
 	pending_buff = {}
 	save_game()
 	progress_changed.emit()
