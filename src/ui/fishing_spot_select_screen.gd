@@ -11,7 +11,7 @@ const COMPLETION_SLOT_SELECTED_PATH := "res://assets/showcase/fishing_spots/map_
 const COMPLETION_SLOT_LOCKED_PATH := "res://assets/showcase/fishing_spots/map_completion_slot_locked.png"
 const THUMB_BASE_PATH := "res://assets/showcase/fishing_spots/thumbs"
 const DETAIL_ICON_SIZE := 96.0
-const COMPLETION_SLOT_SIZE := Vector2(106.0, 74.0)
+const COMPLETION_SLOT_SIZE := Vector2(106.0, 82.0)
 
 var _selected_spot_id: String = GameData.DEFAULT_FISHING_SPOT_ID
 var _continue_trip := false
@@ -196,7 +196,7 @@ func _build_detail_panel(parent: Control) -> void:
 	var box := VBoxContainer.new()
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	box.add_theme_constant_override("separation", 4)
+	box.add_theme_constant_override("separation", 3)
 	margin.add_child(box)
 
 	_detail_title_label = make_label("", 24, Palette.TEXT_BONE, 2, Palette.TEXT_OUTLINE_DARK)
@@ -215,7 +215,7 @@ func _build_detail_panel(parent: Control) -> void:
 	box.add_child(_detail_unlock_label)
 
 	var thumb_clip := Control.new()
-	thumb_clip.custom_minimum_size = Vector2(0.0, 96.0)
+	thumb_clip.custom_minimum_size = Vector2(0.0, 88.0)
 	thumb_clip.clip_contents = true
 	thumb_clip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(thumb_clip)
@@ -229,7 +229,7 @@ func _build_detail_panel(parent: Control) -> void:
 	thumb_clip.add_child(_detail_thumbnail)
 
 	_detail_description_label = make_label("", 12, Color("#2f2114"))
-	_detail_description_label.custom_minimum_size = Vector2(0.0, 42.0)
+	_detail_description_label.custom_minimum_size = Vector2(0.0, 36.0)
 	_detail_description_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_detail_description_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_detail_description_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -248,23 +248,23 @@ func _build_detail_panel(parent: Control) -> void:
 
 	var button_box := VBoxContainer.new()
 	button_box.size_flags_vertical = Control.SIZE_SHRINK_END
-	button_box.add_theme_constant_override("separation", 4)
+	button_box.add_theme_constant_override("separation", 3)
 	box.add_child(button_box)
 
 	_action_button = make_button("ここで釣る", func() -> void: _select_spot(_selected_spot_id), 0, true)
-	_action_button.custom_minimum_size.y = 34.0
+	_action_button.custom_minimum_size.y = 32.0
 	_action_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button_box.add_child(_action_button)
 
 	var back := make_button("港へ戻る", func() -> void: navigate("harbor"), 0)
-	back.custom_minimum_size.y = 32.0
+	back.custom_minimum_size.y = 30.0
 	back.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button_box.add_child(back)
 
 
 func _make_detail_row(parent: Control, icon_index: int, title: String) -> Label:
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(0.0, 29.0)
+	panel.custom_minimum_size = Vector2(0.0, 27.0)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.add_theme_stylebox_override("panel", _detail_row_style())
 	parent.add_child(panel)
@@ -275,7 +275,7 @@ func _make_detail_row(parent: Control, icon_index: int, title: String) -> Label:
 	panel.add_child(row)
 
 	var icon := TextureRect.new()
-	icon.custom_minimum_size = Vector2(22.0, 22.0)
+	icon.custom_minimum_size = Vector2(20.0, 20.0)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.texture = _detail_icon(icon_index)
@@ -314,7 +314,7 @@ func _detail_row_style() -> StyleBoxFlat:
 
 func _build_footer(parent: Control) -> void:
 	var panel := Control.new()
-	panel.custom_minimum_size = Vector2(0.0, 136.0)
+	panel.custom_minimum_size = Vector2(0.0, 144.0)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(panel)
 
@@ -336,7 +336,7 @@ func _build_footer(parent: Control) -> void:
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 22)
-	margin.add_theme_constant_override("margin_top", 20)
+	margin.add_theme_constant_override("margin_top", 22)
 	margin.add_theme_constant_override("margin_right", 22)
 	margin.add_theme_constant_override("margin_bottom", 12)
 	panel.add_child(margin)
@@ -354,7 +354,7 @@ func _build_footer(parent: Control) -> void:
 	row.add_child(board_box)
 
 	var board_header := HBoxContainer.new()
-	board_header.custom_minimum_size = Vector2(0.0, 21.0)
+	board_header.custom_minimum_size = Vector2(0.0, 22.0)
 	board_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	board_header.add_theme_constant_override("separation", 12)
 	board_box.add_child(board_header)
@@ -437,15 +437,15 @@ func _make_completion_entry(spot: Dictionary) -> Control:
 		_add_completion_slot_fallback(entry, unlocked, selected)
 
 	var title := _card_label(String(spot.get("short_name", spot.get("name", spot_id))), 12, Color("#fff2d2") if unlocked else Color("#d5cec1"), 1)
-	title.position = Vector2(10.0, 5.0)
-	title.size = Vector2(58.0, 17.0)
+	title.position = Vector2(8.0, 13.0)
+	title.size = Vector2(60.0, 16.0)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	entry.add_child(title)
 
 	var badge_text := "現在" if selected and unlocked else _completion_badge_text(spot, unlocked, completion)
 	var badge := _card_label(badge_text, 11, Palette.GOLD_BRIGHT if selected else (Palette.GOLD_DEEP if unlocked else Color("#6b5740")), 1 if selected else 0)
-	badge.position = Vector2(68.0, 6.0)
-	badge.size = Vector2(30.0, 16.0)
+	badge.position = Vector2(68.0, 13.0)
+	badge.size = Vector2(30.0, 15.0)
 	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	entry.add_child(badge)
@@ -453,7 +453,7 @@ func _make_completion_entry(spot: Dictionary) -> Control:
 	var body_color := Color("#23170d") if unlocked else Color("#4f4941")
 	var summary_text := _completion_summary_text(spot, unlocked, completion)
 	var summary := _card_label(summary_text, 11, body_color)
-	summary.position = Vector2(13.0, 30.0)
+	summary.position = Vector2(13.0, 43.0)
 	summary.size = Vector2(80.0, 15.0)
 	summary.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	entry.add_child(summary)
@@ -491,7 +491,7 @@ func _add_completion_marks(parent: Control, unlocked: bool, caught: int, total: 
 	if marks <= 0:
 		return
 	var start_x := 14.0
-	var y := 49.0
+	var y := 60.0
 	for index in range(marks):
 		var mark := ColorRect.new()
 		mark.position = Vector2(start_x + float(index) * 8.0, y)
@@ -507,7 +507,7 @@ func _add_completion_marks(parent: Control, unlocked: bool, caught: int, total: 
 func _add_completion_bar(parent: Control, unlocked: bool, selected: bool, ratio: float) -> void:
 	var back := ColorRect.new()
 	back.color = Color("#5c5143", 0.52) if unlocked else Color("#736d63", 0.44)
-	back.position = Vector2(14.0, 62.0)
+	back.position = Vector2(14.0, 72.0)
 	back.size = Vector2(78.0, 4.0)
 	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(back)

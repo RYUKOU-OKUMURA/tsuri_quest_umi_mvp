@@ -551,9 +551,9 @@ def build() -> None:
     _draw_card_frame((420, 128), locked=True).save(CARD_FRAME_LOCKED_OUT)
     _draw_route_chip_frame((360, 84), locked=False).save(ROUTE_CHIP_FRAME_OUT)
     _draw_route_chip_frame((360, 84), locked=True).save(ROUTE_CHIP_FRAME_LOCKED_OUT)
-    _draw_completion_slot_frame((180, 126), "normal").save(COMPLETION_SLOT_FRAME_OUT)
-    _draw_completion_slot_frame((180, 126), "selected").save(COMPLETION_SLOT_SELECTED_OUT)
-    _draw_completion_slot_frame((180, 126), "locked").save(COMPLETION_SLOT_LOCKED_OUT)
+    _draw_completion_slot_frame((180, 140), "normal").save(COMPLETION_SLOT_FRAME_OUT)
+    _draw_completion_slot_frame((180, 140), "selected").save(COMPLETION_SLOT_SELECTED_OUT)
+    _draw_completion_slot_frame((180, 140), "locked").save(COMPLETION_SLOT_LOCKED_OUT)
     _make_thumbnails(bg)
 
 
