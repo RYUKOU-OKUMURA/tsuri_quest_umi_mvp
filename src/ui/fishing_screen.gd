@@ -12,6 +12,9 @@ const FISHING_BGM_PATH_BY_SURFACE_KEY := {
 	"windy": "res://assets/audio/海辺（少し風が強い）.mp3",
 }
 const FIGHT_BGM_PATH_NORMAL := "res://assets/audio/水中ファイト通常.mp3"
+const BITE_SFX_PATH := "res://assets/audio/アタリ_ヒット音.mp3"
+const ESCAPED_SFX_PATH := "res://assets/audio/逃げられた.mp3"
+const FISHING_SFX_VOLUME_DB := -2.0
 
 var _simulator: FishingSimulator
 var _trip_stats: Dictionary = {}
@@ -554,15 +557,10 @@ func _on_state_changed(new_state: int) -> void:
 func _update_bgm_for_state(state: int) -> void:
 	if state == FishingSimulator.State.FIGHT:
 		_play_fight_bgm()
-	elif (
-		state == FishingSimulator.State.READY
-		or state == FishingSimulator.State.CASTING
-		or state == FishingSimulator.State.WAITING
-		or state == FishingSimulator.State.APPROACH
-		or state == FishingSimulator.State.BITE
-		or state == FishingSimulator.State.CAUGHT
-		or state == FishingSimulator.State.ESCAPED
-	):
+	elif state == FishingSimulator.State.BITE:
+		_play_fishing_bgm()
+		play_screen_sfx(BITE_SFX_PATH, FISHING_SFX_VOLUME_DB)
+	elif state != FishingSimulator.State.FIGHT:
 		_play_fishing_bgm()
 
 
@@ -588,6 +586,7 @@ func _on_fight_finished(caught: bool, reason: String) -> void:
 		_result_title.text = "逃げられた……"
 		_result_details.text = "%s\n\nテンションの安全域を保ち、魚の突進時は糸を出そう。" % reason
 		_retry_button.text = "再挑戦"
+		play_screen_sfx(ESCAPED_SFX_PATH, FISHING_SFX_VOLUME_DB)
 	_result_overlay.visible = true
 
 

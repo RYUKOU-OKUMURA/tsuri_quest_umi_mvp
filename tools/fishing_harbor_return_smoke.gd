@@ -29,6 +29,7 @@ func _ready() -> void:
 	_verify_fight_uses_escape_confirmation()
 	_verify_fight_spot_change_uses_escape_confirmation()
 	_verify_keyboard_confirmation_flow()
+	_verify_bite_escape_sfx()
 	await _verify_continue_trip_does_not_consume_pending_buff()
 
 	if _failed:
@@ -136,9 +137,22 @@ func _verify_keyboard_confirmation_flow() -> void:
 func _reset_attempt() -> void:
 	_navigated_to = ""
 	_payload = {}
+	_screen._last_sfx_path = ""
 	_screen._prepare_new_attempt()
 	_screen._hide_harbor_confirm()
 	_expect(_screen._screen_bgm_path == _expected_surface_bgm_path(_screen), "new attempt should use surface BGM")
+
+
+func _verify_bite_escape_sfx() -> void:
+	_reset_attempt()
+	_expect(_screen._simulator.cast(), "cast should start bite escape sfx attempt")
+	_advance_until_bite()
+	_screen._simulator.tick(_screen._simulator.bite_time_left() + 0.2)
+	_expect(_screen._simulator.state == FishingSimulator.State.ESCAPED, "bite timeout should enter ESCAPED")
+	_expect(
+		_screen._last_sfx_path == "res://assets/audio/逃げられた.mp3",
+		"escape result should play escaped SFX"
+	)
 
 
 func _verify_continue_trip_does_not_consume_pending_buff() -> void:
@@ -211,6 +225,10 @@ func _advance_until_bite() -> void:
 	for _index in range(90):
 		_screen._simulator.tick(0.10)
 		if _screen._simulator.state == FishingSimulator.State.BITE:
+			_expect(
+				_screen._last_sfx_path == "res://assets/audio/アタリ_ヒット音.mp3",
+				"entering BITE should play bite hit SFX"
+			)
 			return
 	_expect(false, "simulator did not reach BITE")
 

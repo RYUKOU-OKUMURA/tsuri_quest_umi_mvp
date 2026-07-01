@@ -6,6 +6,7 @@ signal navigate_requested(screen_id: String, payload: Dictionary)
 var route_payload: Dictionary = {}
 var _screen_bgm_player: AudioStreamPlayer
 var _screen_bgm_path := ""
+var _last_sfx_path := ""
 
 static var _particle_tex: Texture2D
 
@@ -79,6 +80,26 @@ func stop_screen_bgm() -> void:
 func _on_screen_bgm_finished() -> void:
 	if _screen_bgm_player != null and is_instance_valid(_screen_bgm_player) and is_inside_tree():
 		_screen_bgm_player.play()
+
+
+func play_screen_sfx(path: String, volume_db: float = -3.0) -> void:
+	_last_sfx_path = path
+	if path.strip_edges().is_empty():
+		return
+	if not ResourceLoader.exists(path) and not FileAccess.file_exists(path):
+		push_warning("効果音が見つかりません: %s" % path)
+		return
+	var stream := load(path) as AudioStream
+	if stream == null:
+		push_warning("効果音を読み込めません: %s" % path)
+		return
+	var player := AudioStreamPlayer.new()
+	player.name = "ScreenSFXPlayer"
+	player.stream = stream
+	player.volume_db = volume_db
+	player.finished.connect(func() -> void: player.queue_free())
+	add_child(player)
+	player.play()
 
 
 func add_background(color: Color = Color("#091a2d")) -> ColorRect:
