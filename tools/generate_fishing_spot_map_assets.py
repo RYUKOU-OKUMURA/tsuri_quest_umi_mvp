@@ -168,32 +168,26 @@ def _draw_frame(
 def _draw_header_frame(size: tuple[int, int]) -> Image.Image:
     frame = Image.new("RGBA", size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(frame)
-    # Dark nautical slab.
-    _rounded(draw, (8, 8, size[0] - 8, size[1] - 8), 8, (8, 33, 55, 244), (16, 62, 95, 245), 3)
-    _rounded(draw, (18, 18, size[0] - 18, size[1] - 18), 4, None, (184, 142, 68, 180), 2)
-    draw.line((28, 23, size[0] - 28, 23), fill=(255, 255, 255, 32), width=2)
-    draw.line((28, size[1] - 23, size[0] - 28, size[1] - 23), fill=(0, 0, 0, 80), width=2)
+    # A calm nautical status band. The map should remain the hero.
+    _rounded(draw, (8, 8, size[0] - 8, size[1] - 8), 7, (9, 34, 55, 246), (16, 62, 95, 240), 3)
+    _rounded(draw, (20, 20, size[0] - 20, size[1] - 20), 2, None, (176, 134, 64, 150), 2)
+    draw.line((32, 25, size[0] - 32, 25), fill=(255, 255, 255, 24), width=2)
+    draw.line((32, size[1] - 24, size[0] - 32, size[1] - 24), fill=(0, 0, 0, 86), width=2)
 
-    # Wood title plaque on the left.
-    plaque = _paper_texture((520, size[1] - 20), 920, (210, 169, 101))
-    plaque_mask = Image.new("L", plaque.size, 0)
-    mask_draw = ImageDraw.Draw(plaque_mask)
-    mask_draw.rounded_rectangle((0, 0, plaque.width - 1, plaque.height - 1), radius=10, fill=255)
-    frame.paste(plaque, (10, 10), plaque_mask)
-    _rounded(draw, (10, 10, 530, size[1] - 10), 10, None, (91, 55, 26, 235), 4)
-    _rounded(draw, (20, 20, 520, size[1] - 20), 6, None, (238, 199, 105, 210), 2)
-    for x, y in [(28, 28), (512, 28), (28, size[1] - 28), (512, size[1] - 28)]:
-        draw.ellipse((x - 5, y - 5, x + 5, y + 5), fill=(110, 69, 34, 230), outline=(255, 224, 139, 180))
+    # Left title area is a subtle inset, not a separate plaque.
+    title_w = 500
+    draw.rectangle((32, 32, title_w, size[1] - 31), fill=(10, 42, 68, 115))
+    draw.line((title_w + 24, 31, title_w + 24, size[1] - 31), fill=(202, 158, 78, 105), width=2)
 
     # Status cards on the right.
-    status_x = 570
-    status_w = (size[0] - status_x - 22) / 3.0
+    status_x = 575
+    status_w = (size[0] - status_x - 28) / 3.0
     for i in range(3):
         x0 = round(status_x + status_w * i)
         x1 = round(status_x + status_w * (i + 1) - 10)
-        _rounded(draw, (x0, 22, x1, size[1] - 22), 8, (6, 38, 64, 232), (199, 154, 76, 190), 2)
-        draw.line((x0 + 14, 31, x1 - 14, 31), fill=(255, 255, 255, 42), width=1)
-        draw.line((x0 + 14, size[1] - 31, x1 - 14, size[1] - 31), fill=(0, 0, 0, 70), width=1)
+        _rounded(draw, (x0, 26, x1, size[1] - 26), 6, (6, 38, 64, 218), (199, 154, 76, 165), 2)
+        draw.line((x0 + 14, 35, x1 - 14, 35), fill=(255, 255, 255, 34), width=1)
+        draw.line((x0 + 14, size[1] - 35, x1 - 14, size[1] - 35), fill=(0, 0, 0, 72), width=1)
     return frame
 
 
@@ -205,19 +199,16 @@ def _draw_detail_frame(size: tuple[int, int]) -> Image.Image:
     _rounded(draw, title, 8, (8, 50, 79, 242), (214, 174, 91, 235), 3)
     draw.line((title[0] + 14, title[1] + 10, title[2] - 14, title[1] + 10), fill=(255, 255, 255, 50), width=2)
 
-    thumb = (38, 106, size[0] - 38, 245)
+    thumb = (38, 106, size[0] - 38, 275)
     _rounded(draw, thumb, 8, (18, 43, 52, 205), (119, 83, 42, 130), 2)
     draw.rectangle((thumb[0] + 6, thumb[1] + 6, thumb[2] - 6, thumb[3] - 6), fill=(225, 205, 163, 80))
 
-    desc = (38, 258, size[0] - 38, 319)
-    _rounded(draw, desc, 7, (235, 215, 174, 230), (130, 88, 42, 88), 1)
+    desc = (38, 287, size[0] - 38, 354)
+    _rounded(draw, desc, 7, (235, 215, 174, 214), (130, 88, 42, 62), 1)
 
-    row_y = 331
-    row_h = 48
-    for i in range(4):
-        y0 = row_y + i * (row_h + 5)
-        _rounded(draw, (38, y0, size[0] - 38, y0 + row_h), 7, (239, 220, 179, 226), (122, 82, 38, 90), 1)
-        draw.line((95, y0 + 8, 95, y0 + row_h - 8), fill=(93, 61, 30, 65), width=1)
+    # Runtime draws the actual information rows. Keep this area as paper so
+    # row text never collides with baked guide lines after panel scaling.
+    _rounded(draw, (38, 366, size[0] - 38, 560), 7, (238, 218, 177, 92), (122, 82, 38, 26), 1)
 
     # Button wells at the bottom, left blank for Godot buttons.
     _rounded(draw, (38, size[1] - 143, size[0] - 38, size[1] - 91), 8, (7, 62, 96, 225), (213, 173, 85, 210), 2)

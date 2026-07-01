@@ -147,10 +147,10 @@ func _build_header(parent: Control) -> void:
 	var title_box := VBoxContainer.new()
 	title_box.custom_minimum_size = Vector2(390.0, 0.0)
 	title_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	title_box.add_theme_constant_override("separation", 0)
+	title_box.add_theme_constant_override("separation", -1)
 	row.add_child(title_box)
 
-	var title := make_label("釣り場を選ぶ", 28, Palette.TEXT_BONE, 3, Palette.TEXT_OUTLINE_DARK)
+	var title := make_label("釣り場を選ぶ", 27, Palette.TEXT_BONE, 2, Palette.TEXT_OUTLINE_DARK)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	title.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
@@ -159,7 +159,7 @@ func _build_header(parent: Control) -> void:
 	var subtitle_text := "航路図から出航先を指定"
 	if _continue_trip:
 		subtitle_text = "釣行継続中：ポイント変更"
-	var subtitle := make_label(subtitle_text, 14, Color("#15304a"))
+	var subtitle := make_label("・%s" % subtitle_text, 13, Color("#d8c48e"), 1, Palette.TEXT_OUTLINE_DARK)
 	subtitle.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_box.add_child(subtitle)
 
@@ -262,7 +262,7 @@ func _build_detail_panel(parent: Control) -> void:
 	box.add_child(_detail_unlock_label)
 
 	var thumb_clip := Control.new()
-	thumb_clip.custom_minimum_size = Vector2(0.0, 78.0)
+	thumb_clip.custom_minimum_size = Vector2(0.0, 96.0)
 	thumb_clip.clip_contents = true
 	thumb_clip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(thumb_clip)
@@ -276,9 +276,11 @@ func _build_detail_panel(parent: Control) -> void:
 	thumb_clip.add_child(_detail_thumbnail)
 
 	_detail_description_label = make_label("", 12, Color("#2f2114"))
-	_detail_description_label.custom_minimum_size = Vector2(0.0, 36.0)
+	_detail_description_label.custom_minimum_size = Vector2(0.0, 42.0)
 	_detail_description_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_detail_description_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_detail_description_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_detail_description_label.clip_text = true
 	box.add_child(_detail_description_label)
 
 	var rows := VBoxContainer.new()
@@ -309,7 +311,7 @@ func _build_detail_panel(parent: Control) -> void:
 
 func _make_detail_row(parent: Control, icon_index: int, title: String) -> Label:
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(0.0, 31.0)
+	panel.custom_minimum_size = Vector2(0.0, 29.0)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.add_theme_stylebox_override("panel", _detail_row_style())
 	parent.add_child(panel)
@@ -320,20 +322,20 @@ func _make_detail_row(parent: Control, icon_index: int, title: String) -> Label:
 	panel.add_child(row)
 
 	var icon := TextureRect.new()
-	icon.custom_minimum_size = Vector2(24.0, 24.0)
+	icon.custom_minimum_size = Vector2(22.0, 22.0)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.texture = _detail_icon(icon_index)
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(icon)
 
-	var title_label := make_label(title, 12, Color("#775126"))
+	var title_label := make_label(title, 12, Color("#6e4a24"))
 	title_label.custom_minimum_size = Vector2(34.0, 0.0)
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(title_label)
 
-	var value_label := make_label("", 13, Color("#1d1209"))
+	var value_label := make_label("", 13, Color("#1b1008"))
 	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	value_label.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -346,14 +348,14 @@ func _make_detail_row(parent: Control, icon_index: int, title: String) -> Label:
 
 func _detail_row_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#ead8ad", 0.94)
-	style.border_color = Color("#876036", 0.30)
+	style.bg_color = Color("#ead8ad", 0.72)
+	style.border_color = Color("#876036", 0.18)
 	style.set_border_width_all(1)
-	style.set_corner_radius_all(5)
+	style.set_corner_radius_all(4)
 	style.content_margin_left = 5
 	style.content_margin_right = 5
-	style.content_margin_top = 1
-	style.content_margin_bottom = 1
+	style.content_margin_top = 0
+	style.content_margin_bottom = 0
 	return style
 
 
