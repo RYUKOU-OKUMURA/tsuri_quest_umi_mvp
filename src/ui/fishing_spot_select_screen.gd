@@ -27,6 +27,7 @@ var _detail_bait_value_label: Label
 var _detail_hint_value_label: Label
 var _action_button: Button
 var _progress_box: GridContainer
+var _ledger_total_label: Label
 var _ledger_route_label: Label
 
 var _header_frame: Texture2D
@@ -453,22 +454,18 @@ func _build_footer(parent: Control) -> void:
 	board_header_panel.add_child(board_header)
 
 	var board_title := make_label("釣り場達成度", 13, Palette.TEXT_BONE, 1, Palette.TEXT_OUTLINE_DARK)
-	board_title.custom_minimum_size = Vector2(132.0, 0.0)
+	board_title.custom_minimum_size = Vector2(118.0, 0.0)
 	board_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	board_header.add_child(board_title)
 
 	var board_note := make_label("魚種記録", 11, Color("#d9c38d"), 1, Palette.TEXT_OUTLINE_DARK)
+	board_note.custom_minimum_size = Vector2(90.0, 0.0)
 	board_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	board_note.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	board_header.add_child(board_note)
 
-	_ledger_route_label = make_label("", 11, Palette.GOLD_BRIGHT, 1, Palette.TEXT_OUTLINE_DARK)
-	_ledger_route_label.custom_minimum_size = Vector2(170.0, 0.0)
-	_ledger_route_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_ledger_route_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_ledger_route_label.clip_text = true
-	_ledger_route_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	board_header.add_child(_ledger_route_label)
+	_ledger_total_label = _make_ledger_header_chip(board_header, 146.0, false)
+	_ledger_route_label = _make_ledger_header_chip(board_header, 168.0, true)
 
 	_progress_box = GridContainer.new()
 	_progress_box.columns = 4
@@ -538,6 +535,37 @@ func _memo_line_style(primary: bool) -> StyleBoxFlat:
 	style.content_margin_right = 9
 	style.content_margin_top = 3
 	style.content_margin_bottom = 3
+	return style
+
+
+func _make_ledger_header_chip(parent: Control, width: float, strong: bool) -> Label:
+	var chip := PanelContainer.new()
+	chip.custom_minimum_size = Vector2(width, 0.0)
+	chip.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	chip.add_theme_stylebox_override("panel", _ledger_header_chip_style(strong))
+	parent.add_child(chip)
+
+	var label := make_label("", 11, Palette.GOLD_BRIGHT if strong else Color("#e4d1a2"), 1, Palette.TEXT_OUTLINE_DARK)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	label.clip_text = true
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	chip.add_child(label)
+	return label
+
+
+func _ledger_header_chip_style(strong: bool) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#0b405f", 0.96) if strong else Color("#133f50", 0.72)
+	style.border_color = Color("#efca6e", 0.72) if strong else Color("#c99d54", 0.36)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	style.content_margin_left = 7
+	style.content_margin_right = 7
+	style.content_margin_top = 1
+	style.content_margin_bottom = 1
 	return style
 
 
@@ -754,6 +782,12 @@ func _focus_spot(spot_id: String, update_message: bool = true) -> void:
 
 
 func _refresh_ledger_header() -> void:
+	if _ledger_total_label != null:
+		var total := _ledger_completion_counts()
+		_ledger_total_label.text = "総合 %d/%d種" % [
+			int(total.get("caught", 0)),
+			int(total.get("total", 0)),
+		]
 	if _ledger_route_label == null:
 		return
 	var spot := GameData.get_fishing_spot(_selected_spot_id)
@@ -762,6 +796,21 @@ func _refresh_ledger_header() -> void:
 		_ledger_route_label.text = "出航先　%s" % spot_name
 	else:
 		_ledger_route_label.text = "未解放　Lv.%d" % int(spot.get("unlock_level", 1))
+
+
+func _ledger_completion_counts() -> Dictionary:
+	var caught := 0
+	var total := 0
+	for spot_id in GameData.get_all_fishing_spot_ids():
+		if not GameData.is_fishing_spot_unlocked(spot_id, PlayerProgress.level):
+			continue
+		var completion := _spot_completion_counts(GameData.get_fishing_spot(spot_id))
+		caught += int(completion.get("caught", 0))
+		total += int(completion.get("total", 0))
+	return {
+		"caught": caught,
+		"total": total,
+	}
 
 
 func _refresh_detail() -> void:
