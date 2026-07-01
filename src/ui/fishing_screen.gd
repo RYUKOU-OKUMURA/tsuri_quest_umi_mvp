@@ -11,6 +11,7 @@ const FISHING_BGM_PATH_BY_SURFACE_KEY := {
 	"calm": "res://assets/audio/海辺（さざなみ）.mp3",
 	"windy": "res://assets/audio/海辺（少し風が強い）.mp3",
 }
+const FIGHT_BGM_PATH_NORMAL := "res://assets/audio/水中ファイト通常.mp3"
 
 var _simulator: FishingSimulator
 var _trip_stats: Dictionary = {}
@@ -231,6 +232,14 @@ func _play_fishing_bgm() -> void:
 	play_screen_bgm(path, FISHING_BGM_VOLUME_DB)
 
 
+func _play_fight_bgm() -> void:
+	play_screen_bgm(_fight_bgm_path(), FISHING_BGM_VOLUME_DB)
+
+
+func _fight_bgm_path() -> String:
+	return FIGHT_BGM_PATH_NORMAL
+
+
 func _spot_summary_text() -> String:
 	var name := String(_spot.get("name", "港内・堤防"))
 	var role := "ぬし専用" if bool(_spot.get("boss_spot", false)) else "通常ポイント"
@@ -421,6 +430,7 @@ func _prepare_new_attempt() -> void:
 	_result_overlay.visible = false
 	if _quit_overlay != null:
 		_quit_overlay.visible = false
+	_play_fishing_bgm()
 	if bool(_spot.get("boss_spot", false)):
 		_current_fish = GameData.get_fish("boss_kurodai")
 	else:
@@ -536,8 +546,24 @@ func _navigate_to_spot_select() -> void:
 	})
 
 
-func _on_state_changed(_new_state: int) -> void:
+func _on_state_changed(new_state: int) -> void:
+	_update_bgm_for_state(new_state)
 	_update_ui()
+
+
+func _update_bgm_for_state(state: int) -> void:
+	if state == FishingSimulator.State.FIGHT:
+		_play_fight_bgm()
+	elif (
+		state == FishingSimulator.State.READY
+		or state == FishingSimulator.State.CASTING
+		or state == FishingSimulator.State.WAITING
+		or state == FishingSimulator.State.APPROACH
+		or state == FishingSimulator.State.BITE
+		or state == FishingSimulator.State.CAUGHT
+		or state == FishingSimulator.State.ESCAPED
+	):
+		_play_fishing_bgm()
 
 
 func _on_message_changed(message: String) -> void:

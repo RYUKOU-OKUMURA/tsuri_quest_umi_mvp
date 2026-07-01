@@ -94,6 +94,10 @@ func _verify_fight_uses_escape_confirmation() -> void:
 	_expect(_screen._simulator.cast(), "cast should start the fight attempt")
 	_advance_until_bite()
 	_expect(_screen._simulator.hook(), "hook should enter FIGHT")
+	_expect(
+		_screen._screen_bgm_path == "res://assets/audio/水中ファイト通常.mp3",
+		"hooking a fish should switch to underwater fight BGM"
+	)
 	_screen._request_harbor_return()
 	_expect(_screen._quit_overlay.visible, "FIGHT harbor return should show confirmation")
 	_expect(
@@ -134,6 +138,7 @@ func _reset_attempt() -> void:
 	_payload = {}
 	_screen._prepare_new_attempt()
 	_screen._hide_harbor_confirm()
+	_expect(_screen._screen_bgm_path == _expected_surface_bgm_path(_screen), "new attempt should use surface BGM")
 
 
 func _verify_continue_trip_does_not_consume_pending_buff() -> void:
@@ -215,6 +220,13 @@ func _press_key(keycode: Key) -> void:
 	event.keycode = keycode
 	event.pressed = true
 	_screen._input(event)
+
+
+func _expected_surface_bgm_path(screen: Variant) -> String:
+	var bgm_key := String(screen._trip_stats.get("surface_bgm_key", "calm"))
+	if bgm_key == "windy":
+		return "res://assets/audio/海辺（少し風が強い）.mp3"
+	return "res://assets/audio/海辺（さざなみ）.mp3"
 
 
 func _expect(condition: bool, message: String) -> void:
