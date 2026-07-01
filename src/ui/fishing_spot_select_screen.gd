@@ -6,12 +6,9 @@ const HEADER_FRAME_PATH := "res://assets/showcase/fishing_spots/map_header_frame
 const DETAIL_FRAME_PATH := "res://assets/showcase/fishing_spots/map_detail_frame.png"
 const DETAIL_ICON_SHEET_PATH := "res://assets/showcase/fishing_spots/map_detail_icon_sheet.png"
 const FOOTER_FRAME_PATH := "res://assets/showcase/fishing_spots/map_footer_frame.png"
-const COMPLETION_SLOT_FRAME_PATH := "res://assets/showcase/fishing_spots/map_completion_slot_frame.png"
-const COMPLETION_SLOT_SELECTED_PATH := "res://assets/showcase/fishing_spots/map_completion_slot_selected.png"
-const COMPLETION_SLOT_LOCKED_PATH := "res://assets/showcase/fishing_spots/map_completion_slot_locked.png"
 const THUMB_BASE_PATH := "res://assets/showcase/fishing_spots/thumbs"
 const DETAIL_ICON_SIZE := 96.0
-const COMPLETION_SLOT_SIZE := Vector2(218.0, 40.0)
+const COMPLETION_SLOT_SIZE := Vector2(220.0, 35.0)
 
 var _selected_spot_id: String = GameData.DEFAULT_FISHING_SPOT_ID
 var _continue_trip := false
@@ -19,6 +16,7 @@ var _trip_stats: Dictionary = {}
 
 var _map_view: FishingSpotMapView
 var _message_label: Label
+var _message_detail_label: Label
 var _detail_title_label: Label
 var _detail_unlock_label: Label
 var _detail_description_label: Label
@@ -34,9 +32,6 @@ var _header_frame: Texture2D
 var _detail_frame: Texture2D
 var _detail_icon_sheet: Texture2D
 var _footer_frame: Texture2D
-var _completion_slot_frame: Texture2D
-var _completion_slot_selected: Texture2D
-var _completion_slot_locked: Texture2D
 
 
 func _build_screen() -> void:
@@ -93,9 +88,6 @@ func _load_assets() -> void:
 	_detail_frame = _load_texture_if_exists(DETAIL_FRAME_PATH)
 	_detail_icon_sheet = _load_texture_if_exists(DETAIL_ICON_SHEET_PATH)
 	_footer_frame = _load_texture_if_exists(FOOTER_FRAME_PATH)
-	_completion_slot_frame = _load_texture_if_exists(COMPLETION_SLOT_FRAME_PATH)
-	_completion_slot_selected = _load_texture_if_exists(COMPLETION_SLOT_SELECTED_PATH)
-	_completion_slot_locked = _load_texture_if_exists(COMPLETION_SLOT_LOCKED_PATH)
 
 
 func _build_header(parent: Control) -> void:
@@ -437,8 +429,8 @@ func _build_footer(parent: Control) -> void:
 	_progress_box.columns = 4
 	_progress_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_progress_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_progress_box.add_theme_constant_override("h_separation", 8)
-	_progress_box.add_theme_constant_override("v_separation", 4)
+	_progress_box.add_theme_constant_override("h_separation", 7)
+	_progress_box.add_theme_constant_override("v_separation", 2)
 	board_box.add_child(_progress_box)
 
 	var message_box := VBoxContainer.new()
@@ -448,15 +440,55 @@ func _build_footer(parent: Control) -> void:
 	row.add_child(message_box)
 
 	var guide := make_label("調査メモ", 12, Palette.TEXT_BONE, 1, Palette.TEXT_OUTLINE_DARK)
+	guide.custom_minimum_size = Vector2(0.0, 18.0)
 	guide.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	guide.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	message_box.add_child(guide)
 
+	var primary_memo := PanelContainer.new()
+	primary_memo.custom_minimum_size = Vector2(0.0, 30.0)
+	primary_memo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	primary_memo.add_theme_stylebox_override("panel", _memo_line_style(true))
+	message_box.add_child(primary_memo)
+
 	_message_label = make_label("", 11, Color("#eaf6ff"), 1, Palette.TEXT_OUTLINE_DARK)
+	_message_label.custom_minimum_size = Vector2(0.0, 22.0)
+	_message_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_message_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_message_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_message_label.add_theme_constant_override("line_spacing", 1)
 	_message_label.clip_text = true
-	message_box.add_child(_message_label)
+	_message_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	primary_memo.add_child(_message_label)
+
+	var detail_memo := PanelContainer.new()
+	detail_memo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail_memo.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	detail_memo.add_theme_stylebox_override("panel", _memo_line_style(false))
+	message_box.add_child(detail_memo)
+
+	_message_detail_label = make_label("", 11, Color("#d8ecf8"), 1, Palette.TEXT_OUTLINE_DARK)
+	_message_detail_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_message_detail_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_message_detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_message_detail_label.add_theme_constant_override("line_spacing", 1)
+	_message_detail_label.clip_text = true
+	_message_detail_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	detail_memo.add_child(_message_detail_label)
+
+
+func _memo_line_style(primary: bool) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#073753", 0.96) if primary else Color("#062f49", 0.92)
+	style.border_color = Color("#d0a65a", 0.45 if primary else 0.24)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 9
+	style.content_margin_right = 9
+	style.content_margin_top = 3
+	style.content_margin_bottom = 3
+	return style
 
 
 func _rebuild_completion_entries() -> void:
@@ -476,7 +508,7 @@ func _make_completion_entry(spot: Dictionary) -> Control:
 	var entry := Control.new()
 	entry.clip_contents = true
 	entry.custom_minimum_size = COMPLETION_SLOT_SIZE
-	entry.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	entry.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	entry.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	entry.set_meta("spot_progress_entry", true)
 	entry.set_meta("spot_id", spot_id)
@@ -484,32 +516,18 @@ func _make_completion_entry(spot: Dictionary) -> Control:
 	entry.set_meta("caught_species", int(completion.get("caught", 0)))
 	entry.set_meta("target_species", int(completion.get("total", 0)))
 
-	var frame_texture := _completion_slot_frame
-	if selected and unlocked:
-		frame_texture = _completion_slot_selected
-	elif not unlocked:
-		frame_texture = _completion_slot_locked
-	if frame_texture != null:
-		var frame := TextureRect.new()
-		frame.texture = frame_texture
-		frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		frame.stretch_mode = TextureRect.STRETCH_SCALE
-		frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		entry.add_child(frame)
-	else:
-		_add_completion_slot_fallback(entry, unlocked, selected)
+	_add_completion_slot_fallback(entry, unlocked, selected)
 
 	var title := _card_label(String(spot.get("short_name", spot.get("name", spot_id))), 12, Color("#fff2d2") if unlocked else Color("#d5cec1"), 1)
-	title.position = Vector2(12.0, 7.0)
-	title.size = Vector2(132.0, 15.0)
+	title.position = Vector2(10.0, 3.0)
+	title.size = Vector2(112.0, 15.0)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	entry.add_child(title)
 
-	var badge_text := "現在地" if selected and unlocked else _completion_badge_text(spot, unlocked, completion)
+	var badge_text := "出航先" if selected and unlocked else _completion_badge_text(spot, unlocked, completion)
 	var badge := _card_label(badge_text, 11, Palette.GOLD_BRIGHT if selected else (Palette.GOLD_DEEP if unlocked else Color("#6b5740")), 1 if selected else 0)
-	badge.position = Vector2(150.0, 7.0)
-	badge.size = Vector2(56.0, 15.0)
+	badge.position = Vector2(150.0, 3.0)
+	badge.size = Vector2(58.0, 15.0)
 	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	entry.add_child(badge)
@@ -517,8 +535,8 @@ func _make_completion_entry(spot: Dictionary) -> Control:
 	var body_color := Color("#23170d") if unlocked else Color("#4f4941")
 	var summary_text := _completion_summary_text(spot, unlocked, completion)
 	var summary := _card_label(summary_text, 11, body_color)
-	summary.position = Vector2(12.0, 24.0)
-	summary.size = Vector2(58.0, 14.0)
+	summary.position = Vector2(10.0, 19.0)
+	summary.size = Vector2(56.0, 14.0)
 	summary.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	entry.add_child(summary)
 
@@ -528,25 +546,54 @@ func _make_completion_entry(spot: Dictionary) -> Control:
 
 func _add_completion_slot_fallback(parent: Control, unlocked: bool, selected: bool) -> void:
 	var body := ColorRect.new()
-	body.color = Color("#e7d2a7") if unlocked else Color("#b8b0a0")
+	body.color = Color("#f2dfb6", 0.12) if unlocked else Color("#5d605a", 0.18)
+	if selected and unlocked:
+		body.color = Color("#ffe070", 0.15)
 	body.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	body.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(body)
 
 	var header := ColorRect.new()
-	header.color = Color("#0a3b57") if unlocked else Color("#4b514f")
+	header.color = Color("#083d5d", 0.92) if unlocked else Color("#4b514f", 0.70)
 	if selected and unlocked:
-		header.color = Color("#0c4a72")
+		header.color = Color("#0c4f78", 0.98)
 	header.anchor_left = 0.0
 	header.anchor_top = 0.0
 	header.anchor_right = 1.0
 	header.anchor_bottom = 0.0
-	header.offset_left = 5.0
-	header.offset_top = 5.0
-	header.offset_right = -5.0
-	header.offset_bottom = 25.0
+	header.offset_left = 6.0
+	header.offset_top = 2.0
+	header.offset_right = -6.0
+	header.offset_bottom = 19.0
 	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(header)
+
+	var rule := ColorRect.new()
+	rule.color = Color("#7d5831", 0.35)
+	rule.anchor_left = 0.0
+	rule.anchor_top = 1.0
+	rule.anchor_right = 1.0
+	rule.anchor_bottom = 1.0
+	rule.offset_left = 7.0
+	rule.offset_right = -7.0
+	rule.offset_top = -2.0
+	rule.offset_bottom = -1.0
+	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(rule)
+
+	if selected and unlocked:
+		var accent := ColorRect.new()
+		accent.color = Palette.GOLD_BRIGHT
+		accent.anchor_left = 0.0
+		accent.anchor_top = 0.0
+		accent.anchor_right = 0.0
+		accent.anchor_bottom = 1.0
+		accent.offset_left = 2.0
+		accent.offset_right = 5.0
+		accent.offset_top = 3.0
+		accent.offset_bottom = -3.0
+		accent.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		parent.add_child(accent)
 
 
 func _add_completion_marks(parent: Control, unlocked: bool, caught: int, total: int) -> void:
@@ -570,8 +617,8 @@ func _add_completion_marks(parent: Control, unlocked: bool, caught: int, total: 
 func _add_completion_bar(parent: Control, unlocked: bool, selected: bool, ratio: float) -> void:
 	var back := ColorRect.new()
 	back.color = Color("#5c5143", 0.52) if unlocked else Color("#736d63", 0.44)
-	back.position = Vector2(78.0, 30.0)
-	back.size = Vector2(126.0, 5.0)
+	back.position = Vector2(72.0, 25.0)
+	back.size = Vector2(134.0, 5.0)
 	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(back)
 
@@ -602,7 +649,7 @@ func _focus_spot(spot_id: String, update_message: bool = true) -> void:
 	if update_message or (_message_label != null and _message_label.text.is_empty()):
 		var spot := GameData.get_fishing_spot(spot_id)
 		if GameData.is_fishing_spot_unlocked(spot_id, PlayerProgress.level):
-			_message_label.text = _survey_message_text(spot)
+			_set_survey_message(spot)
 		else:
 			_show_locked_message(spot_id)
 
@@ -648,10 +695,23 @@ func _show_locked_message(spot_id: String) -> void:
 	if _message_label == null:
 		return
 	var spot := GameData.get_fishing_spot(spot_id)
-	_message_label.text = "%s は Lv.%d で解放されます。現在は出航できません。" % [
-		String(spot.get("name", spot_id)),
-		int(spot.get("unlock_level", 1)),
+	_message_label.text = String(spot.get("name", spot_id))
+	if _message_detail_label != null:
+		_message_detail_label.text = "未解放　Lv.%dで解放" % int(spot.get("unlock_level", 1))
+
+
+func _set_survey_message(spot: Dictionary) -> void:
+	if _message_label == null:
+		return
+	var completion := _spot_completion_counts(spot)
+	var spot_id := String(spot.get("id", GameData.DEFAULT_FISHING_SPOT_ID))
+	_message_label.text = "%s　達成度 %d/%d種" % [
+		String(spot.get("short_name", spot.get("name", spot_id))),
+		int(completion.get("caught", 0)),
+		int(completion.get("total", 0)),
 	]
+	if _message_detail_label != null:
+		_message_detail_label.text = _survey_missing_text(spot)
 
 
 func _depth_range_text(spot: Dictionary) -> String:
@@ -722,6 +782,16 @@ func _completion_summary_text(spot: Dictionary, unlocked: bool, completion: Dict
 func _survey_message_text(spot: Dictionary) -> String:
 	var completion := _spot_completion_counts(spot)
 	var spot_id := String(spot.get("id", GameData.DEFAULT_FISHING_SPOT_ID))
+	return "%s\n達成度 %d/%d 種　%s" % [
+		String(spot.get("name", spot_id)),
+		int(completion.get("caught", 0)),
+		int(completion.get("total", 0)),
+		_survey_missing_text(spot),
+	]
+
+
+func _survey_missing_text(spot: Dictionary) -> String:
+	var spot_id := String(spot.get("id", GameData.DEFAULT_FISHING_SPOT_ID))
 	var missing: Array[String] = []
 	var spot_counts: Dictionary = {}
 	var loaded_spot_counts = PlayerProgress.spot_caught_counts.get(spot_id, {})
@@ -735,15 +805,9 @@ func _survey_message_text(spot: Dictionary) -> String:
 		missing.append(String(fish.get("name", fish_id)) if not fish.is_empty() else fish_id)
 		if missing.size() >= 3:
 			break
-	var missing_text := "未記録なし"
-	if not missing.is_empty():
-		missing_text = "未記録: %s" % "、".join(PackedStringArray(missing))
-	return "%s\n達成度 %d/%d 種　%s" % [
-		String(spot.get("name", spot_id)),
-		int(completion.get("caught", 0)),
-		int(completion.get("total", 0)),
-		missing_text,
-	]
+	if missing.is_empty():
+		return "未記録なし"
+	return "未記録: %s" % "、".join(PackedStringArray(missing))
 
 
 func _rare_hint_text(spot: Dictionary) -> String:

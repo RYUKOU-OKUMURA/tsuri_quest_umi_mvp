@@ -61,6 +61,17 @@ const ROUTES := [
 	["bluewater_route", "deep_ocean"],
 ]
 
+const ROUTE_PATHS := {
+	"harbor_pier": [],
+	"shallow_sand": [["harbor_pier", "shallow_sand"]],
+	"rock_breakwater": [["harbor_pier", "rock_breakwater"]],
+	"outer_tide": [["harbor_pier", "rock_breakwater"], ["rock_breakwater", "outer_tide"]],
+	"south_reef": [["harbor_pier", "south_reef"]],
+	"bluewater_route": [["harbor_pier", "rock_breakwater"], ["rock_breakwater", "outer_tide"], ["outer_tide", "bluewater_route"]],
+	"deep_ocean": [["harbor_pier", "rock_breakwater"], ["rock_breakwater", "outer_tide"], ["outer_tide", "bluewater_route"], ["bluewater_route", "deep_ocean"]],
+	"harbor_boulder": [["harbor_pier", "harbor_boulder"]],
+}
+
 var player_level := 1
 var selected_spot_id := GameData.DEFAULT_FISHING_SPOT_ID
 
@@ -377,6 +388,7 @@ func _draw_depth_label(font: Font, map_rect: Rect2, text: String, normalized: Ve
 
 
 func _draw_routes(map_rect: Rect2) -> void:
+	var selected_path := _selected_route_key_map()
 	for pair in ROUTES:
 		var from_id := String(pair[0])
 		var to_id := String(pair[1])
@@ -384,7 +396,9 @@ func _draw_routes(map_rect: Rect2) -> void:
 			continue
 		var from_point := _map_point(map_rect, from_id)
 		var to_point := _map_point(map_rect, to_id)
-		var selected_route := from_id == selected_spot_id or to_id == selected_spot_id
+		var selected_route := bool(selected_path.get(_route_key(from_id, to_id), false))
+		if selected_spot_id == GameData.DEFAULT_FISHING_SPOT_ID:
+			selected_route = from_id == selected_spot_id or to_id == selected_spot_id
 		var both_unlocked := (
 			GameData.is_fishing_spot_unlocked(from_id, player_level)
 			and GameData.is_fishing_spot_unlocked(to_id, player_level)
@@ -398,6 +412,19 @@ func _draw_routes(map_rect: Rect2) -> void:
 			draw_line(from_point, to_point, Color("#ffe070", 0.12 + pulse * 0.06), width + 8.0)
 			_draw_route_bearing_marks(from_point, to_point, pulse)
 		_draw_dotted_line(from_point, to_point, color, width, 13.0, 10.0)
+
+
+func _selected_route_key_map() -> Dictionary:
+	var result: Dictionary = {}
+	for pair in Array(ROUTE_PATHS.get(selected_spot_id, [])):
+		if pair.size() < 2:
+			continue
+		result[_route_key(String(pair[0]), String(pair[1]))] = true
+	return result
+
+
+func _route_key(from_id: String, to_id: String) -> String:
+	return "%s>%s" % [from_id, to_id]
 
 
 func _draw_route_bearing_marks(from_point: Vector2, to_point: Vector2, pulse: float) -> void:
@@ -437,7 +464,7 @@ func _draw_markers(map_rect: Rect2) -> void:
 		if selected and unlocked:
 			marker_index = MARKER_SELECTED
 			marker_row = 1
-		var marker_size := clampf(map_rect.size.x * (0.072 if selected else 0.060), 52.0, 82.0)
+		var marker_size := clampf(map_rect.size.x * (0.080 if selected else 0.060), 52.0, 88.0)
 		if _hovered_spot_id == spot_id:
 			marker_size *= 1.07
 		var target := Rect2(center - Vector2(marker_size, marker_size) * 0.5, Vector2(marker_size, marker_size))
