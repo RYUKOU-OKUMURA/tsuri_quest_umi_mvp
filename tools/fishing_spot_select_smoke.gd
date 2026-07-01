@@ -17,8 +17,9 @@ func _ready() -> void:
 	_screen = _make_screen()
 	await get_tree().process_frame
 	_expect(_screen._map_view != null, "map view should be present")
+	_expect(_screen._header_spot_value_label.text == "港内", "header selected spot should show default spot")
 	_verify_progress_entries(8, 7)
-	_expect(_screen._completion_summary_text(GameData.get_fishing_spot("harbor_pier"), true, _screen._spot_completion_counts(GameData.get_fishing_spot("harbor_pier"))) == "2/5 種", "spot completion summary should use spot-specific catches")
+	_expect(_screen._completion_summary_text(GameData.get_fishing_spot("harbor_pier"), true, _screen._spot_completion_counts(GameData.get_fishing_spot("harbor_pier"))) == "記録 2/5 種", "spot completion summary should use spot-specific catches")
 	_expect(_spot_card_buttons(_screen).is_empty(), "footer spot entries must not be selectable buttons")
 	_screen._select_spot("deep_ocean")
 	_expect(_navigated_to.is_empty(), "locked spot must not navigate")
@@ -52,6 +53,7 @@ func _ready() -> void:
 	})
 	await get_tree().process_frame
 	_expect(_screen._selected_spot_id == "outer_tide", "current fishing spot should be selected")
+	_expect(_screen._header_spot_value_label.text == "潮目", "header selected spot should follow current fishing spot")
 	_screen._select_spot("outer_tide")
 	_expect(_navigated_to == "fishing", "continued spot selection should navigate to fishing")
 	_expect(bool(_payload.get("continue_trip", false)), "continued spot selection should keep continue_trip")

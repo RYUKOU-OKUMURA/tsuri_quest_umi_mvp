@@ -8,7 +8,7 @@ const DETAIL_ICON_SHEET_PATH := "res://assets/showcase/fishing_spots/map_detail_
 const FOOTER_FRAME_PATH := "res://assets/showcase/fishing_spots/map_footer_frame.png"
 const THUMB_BASE_PATH := "res://assets/showcase/fishing_spots/thumbs"
 const DETAIL_ICON_SIZE := 96.0
-const COMPLETION_SLOT_SIZE := Vector2(220.0, 35.0)
+const COMPLETION_SLOT_SIZE := Vector2(220.0, 43.0)
 
 var _selected_spot_id: String = GameData.DEFAULT_FISHING_SPOT_ID
 var _continue_trip := false
@@ -27,6 +27,7 @@ var _detail_bait_value_label: Label
 var _detail_hint_value_label: Label
 var _action_button: Button
 var _progress_box: GridContainer
+var _header_spot_value_label: Label
 var _ledger_total_label: Label
 var _ledger_route_label: Label
 
@@ -146,12 +147,13 @@ func _build_header(parent: Control) -> void:
 	title_box.add_child(subtitle)
 
 	var rod_name := String(GameData.get_rod(PlayerProgress.equipped_rod_id).get("name", "入門竿"))
-	_add_header_status(panel, Rect2(Vector2(456.0, 20.0), Vector2(240.0, 60.0)), "Lv.", "%d" % PlayerProgress.level)
-	_add_header_status(panel, Rect2(Vector2(706.0, 20.0), Vector2(266.0, 60.0)), "装備", rod_name)
-	_add_header_status(panel, Rect2(Vector2(982.0, 20.0), Vector2(250.0, 60.0)), "所持金", "%d G" % PlayerProgress.money)
+	_add_header_status(panel, Rect2(Vector2(456.0, 20.0), Vector2(146.0, 60.0)), "Lv.", "%d" % PlayerProgress.level)
+	_add_header_status(panel, Rect2(Vector2(612.0, 20.0), Vector2(232.0, 60.0)), "装備", rod_name)
+	_header_spot_value_label = _add_header_status(panel, Rect2(Vector2(854.0, 20.0), Vector2(178.0, 60.0)), "出航先", "")
+	_add_header_status(panel, Rect2(Vector2(1042.0, 20.0), Vector2(190.0, 60.0)), "所持金", "%d G" % PlayerProgress.money)
 
 
-func _add_header_status(parent: Control, rect: Rect2, caption: String, value: String) -> void:
+func _add_header_status(parent: Control, rect: Rect2, caption: String, value: String) -> Label:
 	var box := PanelContainer.new()
 	box.position = rect.position
 	box.size = rect.size
@@ -183,6 +185,7 @@ func _add_header_status(parent: Control, rect: Rect2, caption: String, value: St
 	value_label.clip_text = true
 	value_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	layout.add_child(value_label)
+	return value_label
 
 
 func _add_rivet(parent: Control, position: Vector2) -> void:
@@ -403,7 +406,7 @@ func _detail_row_style() -> StyleBoxFlat:
 
 func _build_footer(parent: Control) -> void:
 	var panel := Control.new()
-	panel.custom_minimum_size = Vector2(0.0, 152.0)
+	panel.custom_minimum_size = Vector2(0.0, 160.0)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(panel)
 
@@ -628,10 +631,9 @@ func _make_completion_entry(spot: Dictionary) -> Control:
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	entry.add_child(title)
 
-	var badge_text := "出航先" if selected and unlocked else _completion_badge_text(spot, unlocked, completion)
-	var badge := _card_label(badge_text, 11, Palette.GOLD_BRIGHT if selected else (Palette.GOLD_DEEP if unlocked else Color("#6b5740")), 1 if selected else 0)
-	badge.position = Vector2(150.0, 3.0)
-	badge.size = Vector2(58.0, 15.0)
+	var badge := _card_label(_completion_badge_text(spot, unlocked, completion), 11, Palette.GOLD_BRIGHT if selected else (Palette.GOLD_DEEP if unlocked else Color("#6b5740")), 1 if selected else 0)
+	badge.position = Vector2(156.0, 3.0)
+	badge.size = Vector2(52.0, 15.0)
 	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	entry.add_child(badge)
@@ -639,8 +641,8 @@ func _make_completion_entry(spot: Dictionary) -> Control:
 	var body_color := Color("#23170d") if unlocked else Color("#4f4941")
 	var summary_text := _completion_summary_text(spot, unlocked, completion)
 	var summary := _card_label(summary_text, 11, body_color)
-	summary.position = Vector2(10.0, 19.0)
-	summary.size = Vector2(56.0, 14.0)
+	summary.position = Vector2(10.0, 22.0)
+	summary.size = Vector2(76.0, 15.0)
 	summary.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	entry.add_child(summary)
 
@@ -743,8 +745,8 @@ func _add_completion_marks(parent: Control, unlocked: bool, caught: int, total: 
 func _add_completion_bar(parent: Control, unlocked: bool, selected: bool, ratio: float) -> void:
 	var back := ColorRect.new()
 	back.color = Color("#5c5143", 0.52) if unlocked else Color("#736d63", 0.44)
-	back.position = Vector2(72.0, 25.0)
-	back.size = Vector2(134.0, 5.0)
+	back.position = Vector2(90.0, 30.0)
+	back.size = Vector2(116.0, 6.0)
 	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(back)
 
@@ -788,14 +790,17 @@ func _refresh_ledger_header() -> void:
 			int(total.get("caught", 0)),
 			int(total.get("total", 0)),
 		]
-	if _ledger_route_label == null:
-		return
 	var spot := GameData.get_fishing_spot(_selected_spot_id)
 	var spot_name := String(spot.get("short_name", spot.get("name", _selected_spot_id)))
-	if GameData.is_fishing_spot_unlocked(_selected_spot_id, PlayerProgress.level):
-		_ledger_route_label.text = "出航先　%s" % spot_name
-	else:
-		_ledger_route_label.text = "未解放　Lv.%d" % int(spot.get("unlock_level", 1))
+	var unlocked := GameData.is_fishing_spot_unlocked(_selected_spot_id, PlayerProgress.level)
+	if _header_spot_value_label != null:
+		_header_spot_value_label.text = spot_name if unlocked else "Lv.%d解放" % int(spot.get("unlock_level", 1))
+		_header_spot_value_label.add_theme_color_override("font_color", Palette.TEXT_BONE if unlocked else Color("#ffb0a0"))
+	if _ledger_route_label != null:
+		if unlocked:
+			_ledger_route_label.text = "出航先　%s" % spot_name
+		else:
+			_ledger_route_label.text = "未解放　Lv.%d" % int(spot.get("unlock_level", 1))
 
 
 func _ledger_completion_counts() -> Dictionary:
@@ -932,7 +937,7 @@ func _completion_badge_text(spot: Dictionary, unlocked: bool, completion: Dictio
 func _completion_summary_text(spot: Dictionary, unlocked: bool, completion: Dictionary) -> String:
 	if not unlocked:
 		return "Lv.%d解放" % int(spot.get("unlock_level", 1))
-	return "%d/%d 種" % [
+	return "記録 %d/%d 種" % [
 		int(completion.get("caught", 0)),
 		int(completion.get("total", 0)),
 	]
