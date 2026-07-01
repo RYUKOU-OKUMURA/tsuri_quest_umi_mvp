@@ -179,7 +179,7 @@ func _build_detail_panel(root: Control) -> void:
 	_detail_name_label = _book_label("アジ", 36, Color("#2a1a0c"), true, 0)
 	_detail_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_detail_name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(detail, _detail_name_label, 0.220, 0.065, 0.775, 0.155)
+	_place_control(detail, _detail_name_label, 0.330, 0.068, 0.725, 0.150)
 
 	var detail_badge := _texture_rect(BOOK_BADGE_FRAME_PATH)
 	_place_control(detail, detail_badge, 0.735, 0.066, 0.925, 0.150)
@@ -613,20 +613,24 @@ func _apply_card_skin(button: Button, discovered: bool, selected: bool) -> void:
 
 func _apply_filter_button_skin(button: Button, selected: bool) -> void:
 	var normal_path := HARBOR_BUTTON_PRIMARY_PATH if selected else HARBOR_BUTTON_PATH
+	var hover_path := HARBOR_BUTTON_PRIMARY_PATH if selected else HARBOR_BUTTON_HOVER_PATH
 	var normal := _texture_style(normal_path, Vector4(44, 24, 44, 24))
-	var hover := _texture_style(HARBOR_BUTTON_HOVER_PATH, Vector4(44, 24, 44, 24))
+	var hover := _texture_style(hover_path, Vector4(44, 24, 44, 24))
 	if normal != null:
 		button.add_theme_stylebox_override("normal", normal)
 	if hover != null:
 		button.add_theme_stylebox_override("hover", hover)
 		button.add_theme_stylebox_override("focus", hover)
 		button.add_theme_stylebox_override("pressed", hover)
-	button.add_theme_color_override("font_color", Color("#fff8d8") if selected else Color("#fff0bf"))
-	button.add_theme_color_override("font_hover_color", Color("#fff8d8"))
-	button.add_theme_color_override("font_pressed_color", Color("#fff8d8"))
-	button.add_theme_color_override("font_outline_color", Color("#2a1406"))
-	button.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.35))
-	button.add_theme_constant_override("outline_size", 3 if selected else 2)
+	var font_color := Color("#fff8d8") if selected else Color("#2b1809")
+	var outline_color := Color("#2a1406") if selected else Color("#ffe5a6")
+	var shadow_color := Color(0.0, 0.0, 0.0, 0.35) if selected else Color(1.0, 0.86, 0.48, 0.28)
+	button.add_theme_color_override("font_color", font_color)
+	button.add_theme_color_override("font_hover_color", font_color)
+	button.add_theme_color_override("font_pressed_color", font_color)
+	button.add_theme_color_override("font_outline_color", outline_color)
+	button.add_theme_color_override("font_shadow_color", shadow_color)
+	button.add_theme_constant_override("outline_size", 3 if selected else 1)
 	button.add_theme_constant_override("shadow_offset_x", 1)
 	button.add_theme_constant_override("shadow_offset_y", 2)
 	button.add_theme_constant_override("shadow_outline_size", 1)
@@ -640,12 +644,13 @@ func _textured_button(text: String, callback: Callable, primary := false) -> But
 	button.pressed.connect(callback)
 	button.add_theme_font_override("font", GameFontsScript.extra_bold(get_theme_default_font()))
 	button.add_theme_font_size_override("font_size", 24 if primary else 21)
-	button.add_theme_color_override("font_color", Color("#fff8d8") if primary else Color("#fff0bf"))
-	button.add_theme_color_override("font_hover_color", Color("#fff8d8"))
-	button.add_theme_color_override("font_pressed_color", Color("#fff8d8"))
-	button.add_theme_color_override("font_outline_color", Color("#2a1406"))
-	button.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.35))
-	button.add_theme_constant_override("outline_size", 3 if primary else 2)
+	var font_color := Color("#fff8d8") if primary else Color("#2b1809")
+	button.add_theme_color_override("font_color", font_color)
+	button.add_theme_color_override("font_hover_color", font_color)
+	button.add_theme_color_override("font_pressed_color", font_color)
+	button.add_theme_color_override("font_outline_color", Color("#2a1406") if primary else Color("#ffe5a6"))
+	button.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.35) if primary else Color(1.0, 0.86, 0.48, 0.28))
+	button.add_theme_constant_override("outline_size", 3 if primary else 1)
 	button.add_theme_constant_override("shadow_offset_x", 1)
 	button.add_theme_constant_override("shadow_offset_y", 2)
 	button.add_theme_constant_override("shadow_outline_size", 1)
