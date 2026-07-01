@@ -1,0 +1,706 @@
+extends "res://src/ui/screen_base.gd"
+
+const FightFishAssets = preload("res://src/ui/fight_fish_assets.gd")
+const GameFontsScript = preload("res://src/ui/game_fonts.gd")
+
+const HARBOR_BG_PATH := "res://assets/showcase/harbor/harbor_hub_bg.png"
+const HARBOR_TOP_FRAME_PATH := "res://assets/showcase/harbor/harbor_top_frame.png"
+const HARBOR_MAIN_FRAME_PATH := "res://assets/showcase/harbor/harbor_main_frame.png"
+const HARBOR_FOOTER_FRAME_PATH := "res://assets/showcase/harbor/harbor_footer_frame.png"
+const HARBOR_PARCHMENT_CARD_PATH := "res://assets/showcase/harbor/harbor_parchment_card.png"
+const HARBOR_BUTTON_PATH := "res://assets/showcase/harbor/harbor_facility_card.png"
+const HARBOR_BUTTON_HOVER_PATH := "res://assets/showcase/harbor/harbor_facility_card_hover.png"
+const HARBOR_BUTTON_PRIMARY_PATH := "res://assets/showcase/harbor/harbor_facility_card_primary.png"
+const MAP_DETAIL_FRAME_PATH := "res://assets/showcase/fishing_spots/map_detail_frame.png"
+const MAP_STATUS_BAR_PATH := "res://assets/showcase/fishing_spots/map_status_bar.png"
+const MAP_TITLE_SIGN_PATH := "res://assets/showcase/fishing_spots/map_title_sign.png"
+const SPOT_THUMB_BASE_PATH := "res://assets/showcase/fishing_spots/thumbs"
+
+const FILTERS := [
+	{"id": "all", "label": "全魚"},
+	{"id": "harbor", "label": "港内"},
+	{"id": "sand", "label": "砂浜"},
+	{"id": "rock", "label": "岩礁"},
+	{"id": "offshore", "label": "沖"},
+	{"id": "rare", "label": "レア"},
+]
+
+var _active_filter := "all"
+var _selected_fish_id := ""
+var _fish_card_buttons: Dictionary = {}
+var _filter_buttons: Dictionary = {}
+
+var _found_label: Label
+var _level_label: Label
+var _money_label: Label
+var _rod_label: Label
+var _grid: GridContainer
+var _detail_no_label: Label
+var _detail_name_label: Label
+var _detail_rarity_label: Label
+var _detail_portrait: TextureRect
+var _detail_count_label: Label
+var _detail_best_label: Label
+var _detail_habitat_label: Label
+var _detail_bait_label: Label
+var _detail_behavior_label: Label
+var _detail_spots: Control
+
+
+func _build_screen() -> void:
+	_build_background()
+	var root := Control.new()
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(root)
+
+	_build_header(root)
+	_build_book_grid(root)
+	_build_detail_panel(root)
+	_build_footer(root)
+	_ensure_valid_selection()
+	_refresh_all()
+
+
+func _build_background() -> void:
+	var bg := _texture_rect(HARBOR_BG_PATH)
+	bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(bg)
+	move_child(bg, 0)
+
+	var shade := ColorRect.new()
+	shade.color = Color(0.02, 0.07, 0.10, 0.22)
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(shade)
+
+
+func _build_header(root: Control) -> void:
+	var header := _anchored_control(root, 0.018, 0.020, 0.982, 0.154)
+	var frame := _texture_rect(HARBOR_TOP_FRAME_PATH)
+	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	header.add_child(frame)
+
+	var found_bar := _texture_rect(MAP_STATUS_BAR_PATH)
+	_place_control(header, found_bar, 0.022, 0.188, 0.258, 0.820)
+	_found_label = _book_label("発見済み 0/0", 22, Color("#fff2c6"), true, 2, Color("#07131d"))
+	_found_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_found_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(header, _found_label, 0.034, 0.230, 0.246, 0.770)
+
+	var sign := _texture_rect(MAP_TITLE_SIGN_PATH)
+	_place_control(header, sign, 0.345, -0.045, 0.655, 1.020)
+	var title := _book_label("魚図鑑", 42, Color("#fff0aa"), true, 4, Color("#2a1608"))
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(header, title, 0.385, 0.130, 0.615, 0.820)
+
+	_level_label = _header_chip(header, 0.676, 0.220, 0.760, 0.800, "Lv.1")
+	_money_label = _header_chip(header, 0.770, 0.220, 0.878, 0.800, "500 G")
+	_rod_label = _header_chip(header, 0.888, 0.220, 0.972, 0.800, "入門竿")
+
+
+func _build_book_grid(root: Control) -> void:
+	var left := _anchored_control(root, 0.030, 0.165, 0.590, 0.872)
+	var fill := ColorRect.new()
+	fill.color = Color(0.035, 0.070, 0.095, 0.78)
+	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control(left, fill, 0.018, 0.028, 0.982, 0.965)
+
+	var frame := _texture_rect(HARBOR_MAIN_FRAME_PATH)
+	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	left.add_child(frame)
+
+	var title := _book_label("魚の記録", 22, Color("#fff0aa"), true, 2, Color("#281607"))
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(left, title, 0.054, 0.035, 0.450, 0.105)
+
+	var hint := _book_label("カードを選ぶと詳しい記録を確認できます", 13, Color("#ead7aa"), false, 1, Color("#271708"))
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(left, hint, 0.420, 0.044, 0.935, 0.102)
+
+	var scroll := ScrollContainer.new()
+	scroll.name = "FishBookScroll"
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_place_control(left, scroll, 0.047, 0.125, 0.955, 0.940)
+
+	_grid = GridContainer.new()
+	_grid.name = "FishBookGrid"
+	_grid.columns = 3
+	_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_grid.add_theme_constant_override("hseparation", 8)
+	_grid.add_theme_constant_override("vseparation", 8)
+	scroll.add_child(_grid)
+
+
+func _build_detail_panel(root: Control) -> void:
+	var detail := _anchored_control(root, 0.608, 0.165, 0.970, 0.872)
+	var parchment := ColorRect.new()
+	parchment.color = Color("#ead4a4", 0.94)
+	parchment.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control(detail, parchment, 0.044, 0.032, 0.958, 0.968)
+
+	var frame := _texture_rect(MAP_DETAIL_FRAME_PATH)
+	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	detail.add_child(frame)
+
+	_detail_no_label = _book_label("No.000", 18, Color("#704b22"), true, 0)
+	_detail_no_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_detail_no_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(detail, _detail_no_label, 0.090, 0.050, 0.350, 0.105)
+
+	_detail_name_label = _book_label("アジ", 36, Color("#2a1a0c"), true, 0)
+	_detail_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_detail_name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(detail, _detail_name_label, 0.220, 0.065, 0.775, 0.155)
+
+	_detail_rarity_label = _book_label("コモン", 18, Color.WHITE, true, 2, Color("#07131d"))
+	_detail_rarity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_detail_rarity_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(detail, _detail_rarity_label, 0.735, 0.072, 0.910, 0.145)
+
+	_detail_portrait = TextureRect.new()
+	_detail_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_detail_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_detail_portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_detail_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var portrait_bg := ColorRect.new()
+	portrait_bg.color = Color("#f5e4ba", 0.84)
+	portrait_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control(detail, portrait_bg, 0.095, 0.165, 0.915, 0.430)
+	_place_control(detail, _detail_portrait, 0.110, 0.170, 0.900, 0.420)
+
+	_detail_count_label = _book_label("釣果 0匹", 27, Color("#2b1b0d"), true, 0)
+	_detail_count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_detail_count_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(detail, _detail_count_label, 0.090, 0.430, 0.500, 0.510)
+
+	_detail_best_label = _book_label("最大 --.-cm", 21, Color("#2b1b0d"), true, 0)
+	_detail_best_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_detail_best_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(detail, _detail_best_label, 0.510, 0.438, 0.910, 0.505)
+
+	_detail_habitat_label = _detail_row(detail, 0.535, "生息地")
+	_detail_bait_label = _detail_row(detail, 0.620, "好物")
+	_detail_behavior_label = _detail_row(detail, 0.705, "行動")
+
+	var spot_title := _book_label("よく釣れる場所", 18, Color("#fff1bf"), true, 2, Color("#2b1608"))
+	spot_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	spot_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(detail, spot_title, 0.090, 0.802, 0.560, 0.862)
+
+	_detail_spots = Control.new()
+	_detail_spots.name = "FishBookSpotStrip"
+	_place_control(detail, _detail_spots, 0.088, 0.862, 0.915, 0.960)
+
+
+func _detail_row(parent: Control, top: float, label_text: String) -> Label:
+	var plate := ColorRect.new()
+	plate.color = Color("#6b4521")
+	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control(parent, plate, 0.090, top, 0.235, top + 0.055)
+
+	var title := _book_label(label_text, 16, Color("#fff4ce"), true, 1, Color("#2a1608"))
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(parent, title, 0.090, top, 0.235, top + 0.055)
+
+	var value := _book_label("", 16, Color("#3f2b17"), false, 0)
+	value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	value.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	value.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	_place_control(parent, value, 0.270, top - 0.004, 0.902, top + 0.076)
+	return value
+
+
+func _build_footer(root: Control) -> void:
+	var footer := _anchored_control(root, 0.024, 0.890, 0.976, 0.975)
+	var frame := _texture_rect(HARBOR_FOOTER_FRAME_PATH)
+	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	footer.add_child(frame)
+
+	var x := 0.032
+	for filter in FILTERS:
+		var filter_id := String(filter["id"])
+		var button := _textured_button(String(filter["label"]), _set_filter.bind(filter_id), false)
+		button.name = "FishBookFilter_%s" % filter_id
+		button.set_meta("fish_book_filter", filter_id)
+		_filter_buttons[filter_id] = button
+		_place_control(footer, button, x, 0.205, x + 0.118, 0.810)
+		x += 0.126
+
+	var back := _textured_button("港へ戻る", func() -> void: navigate("harbor"), true)
+	back.name = "FishBookReturnButton"
+	back.set_meta("fish_book_return", true)
+	_place_control(footer, back, 0.795, 0.142, 0.962, 0.860)
+
+
+func _refresh_all() -> void:
+	_refresh_header()
+	_rebuild_grid()
+	_refresh_detail()
+	_refresh_filter_buttons()
+
+
+func _refresh_header() -> void:
+	var total := GameData.get_all_fish_ids().size()
+	var found := 0
+	for fish_id in GameData.get_all_fish_ids():
+		if _is_discovered(fish_id):
+			found += 1
+	_found_label.text = "発見済み  %d/%d" % [found, total]
+	_level_label.text = "Lv.%d" % PlayerProgress.level
+	_money_label.text = "%s G" % _format_money(PlayerProgress.money)
+	var rod := GameData.get_rod(PlayerProgress.equipped_rod_id)
+	_rod_label.text = String(rod.get("name", "入門竿"))
+
+
+func _rebuild_grid() -> void:
+	for child in _grid.get_children():
+		child.queue_free()
+	_fish_card_buttons.clear()
+	for fish_id in _filtered_fish_ids():
+		var fish := GameData.get_fish(fish_id)
+		if fish.is_empty():
+			continue
+		var card := _make_fish_card(fish)
+		_grid.add_child(card)
+		_fish_card_buttons[fish_id] = card
+
+
+func _make_fish_card(fish: Dictionary) -> Button:
+	var fish_id := String(fish.get("id", ""))
+	var discovered := _is_discovered(fish_id)
+	var selected := fish_id == _selected_fish_id
+	var button := Button.new()
+	button.name = "FishBookCard_%s" % fish_id
+	button.text = ""
+	button.custom_minimum_size = Vector2(204.0, 148.0)
+	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	button.clip_contents = true
+	button.set_meta("fish_book_card", fish_id)
+	button.pressed.connect(_select_fish.bind(fish_id))
+	_apply_card_skin(button, discovered, selected)
+	_silence_button_text(button)
+	_wire_button_juice(button)
+
+	var no_label := _book_label(String(fish.get("fish_no", "No.---")), 14, Color("#fff0c9"), true, 2, Color("#281607"))
+	no_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	no_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	no_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control(button, no_label, 0.055, 0.035, 0.390, 0.155)
+
+	var name_text := String(fish.get("name", fish_id)) if discovered else "？？？？？"
+	var name_color := Color("#fff0aa") if selected and discovered else Color("#2a1c0d")
+	if not discovered:
+		name_color = Color("#d4c29b")
+	var name_label := _book_label(name_text, 19, name_color, true, 1 if discovered else 2, Color("#2b1708"))
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control(button, name_label, 0.270, 0.035, 0.925, 0.175)
+
+	var portrait := TextureRect.new()
+	portrait.texture = _fish_portrait_texture(fish)
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	portrait.modulate = Color(0.05, 0.04, 0.03, 0.72) if not discovered else Color.WHITE
+	_place_control(button, portrait, 0.060, 0.185, 0.925, 0.635)
+
+	if not discovered:
+		var mark := _book_label("？", 42, Color("#d7c08d"), true, 2, Color("#271708"))
+		mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		mark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_place_control(button, mark, 0.385, 0.300, 0.615, 0.600)
+		var lock := _book_label("未発見", 14, Color("#f4e0a8"), true, 1, Color("#2b1708"))
+		lock.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lock.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_place_control(button, lock, 0.640, 0.700, 0.930, 0.850)
+		return button
+
+	var rarity := String(fish.get("rarity", ""))
+	var rarity_label := _book_label(rarity, 12, Color.WHITE, true, 1, Color("#07131d"))
+	rarity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	rarity_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	rarity_label.add_theme_color_override("font_color", _rarity_text_color(rarity))
+	rarity_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control(button, rarity_label, 0.060, 0.660, 0.330, 0.790)
+
+	var count := int(PlayerProgress.caught_counts.get(fish_id, 0))
+	var best := float(PlayerProgress.best_sizes.get(fish_id, 0.0))
+	var stat_color := Color("#fff0c9") if selected else Color("#2d1d0d")
+	var count_label := _book_label("釣果 %d匹" % count, 14, stat_color, true, 0)
+	count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	count_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	count_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control(button, count_label, 0.060, 0.805, 0.460, 0.950)
+
+	var best_label := _book_label("最大 %.1fcm" % best, 14, stat_color, true, 0)
+	best_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	best_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	best_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control(button, best_label, 0.430, 0.805, 0.930, 0.950)
+	return button
+
+
+func _refresh_detail() -> void:
+	var fish := GameData.get_fish(_selected_fish_id)
+	if fish.is_empty():
+		_detail_no_label.text = "No.---"
+		_detail_name_label.text = "魚を選択"
+		_detail_rarity_label.text = ""
+		_detail_portrait.texture = null
+		_detail_count_label.text = "釣果 --"
+		_detail_best_label.text = "最大 --.-cm"
+		_detail_habitat_label.text = ""
+		_detail_bait_label.text = ""
+		_detail_behavior_label.text = ""
+		_rebuild_spot_strip([])
+		return
+
+	var fish_id := String(fish.get("id", ""))
+	var discovered := _is_discovered(fish_id)
+	var rarity := String(fish.get("rarity", ""))
+	_detail_no_label.text = String(fish.get("fish_no", "No.---"))
+	_detail_name_label.text = String(fish.get("name", fish_id)) if discovered else "？？？？？"
+	_detail_rarity_label.text = rarity if discovered else "未発見"
+	_detail_rarity_label.add_theme_color_override("font_color", _rarity_text_color(rarity) if discovered else Color("#e8d0a0"))
+	_detail_portrait.texture = _fish_portrait_texture(fish)
+	_detail_portrait.modulate = Color.WHITE if discovered else Color(0.04, 0.035, 0.03, 0.70)
+
+	var count := int(PlayerProgress.caught_counts.get(fish_id, 0))
+	var best := float(PlayerProgress.best_sizes.get(fish_id, 0.0))
+	_detail_count_label.text = "釣果  %d匹" % count if discovered else "釣果  未記録"
+	_detail_best_label.text = "最大  %.1fcm" % best if discovered else "最大  --.-cm"
+	_detail_habitat_label.text = String(fish.get("habitat", "")) if discovered else "まだ釣ったことがない魚。記録すると詳細が開きます。"
+	_detail_bait_label.text = String(fish.get("preferred_bait", "")) if discovered else "？？？"
+	_detail_behavior_label.text = String(fish.get("behavior", "")) if discovered else "釣り場で出会うまで行動は不明。"
+	_rebuild_spot_strip(_spot_ids_for_fish(fish_id) if discovered else [])
+
+
+func _rebuild_spot_strip(spot_ids: Array) -> void:
+	for child in _detail_spots.get_children():
+		child.queue_free()
+	if spot_ids.is_empty():
+		var empty := _book_label("記録後に表示されます", 15, Color("#6b5331"), true, 0)
+		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		empty.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_place_control(_detail_spots, empty, 0.0, 0.0, 1.0, 1.0)
+		return
+
+	var count := mini(spot_ids.size(), 4)
+	for index in range(count):
+		var spot := GameData.get_fishing_spot(spot_ids[index])
+		var item_left := float(index) / 4.0 + 0.010
+		var item_right := item_left + 0.225
+		var card := Control.new()
+		card.name = "FishBookSpot_%s" % String(spot.get("id", "spot"))
+		_place_control(_detail_spots, card, item_left, 0.0, item_right, 1.0)
+
+		var thumb := _texture_rect("%s/%s.png" % [SPOT_THUMB_BASE_PATH, String(spot.get("id", ""))])
+		thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		_place_control(card, thumb, 0.0, 0.0, 1.0, 0.730)
+
+		var label_bg := ColorRect.new()
+		label_bg.color = Color("#12324a")
+		label_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_place_control(card, label_bg, 0.0, 0.700, 1.0, 1.0)
+
+		var label := _book_label(String(spot.get("short_name", spot.get("name", ""))), 13, Color("#fff2c0"), true, 1, Color("#06131d"))
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_place_control(card, label, 0.0, 0.700, 1.0, 1.0)
+
+
+func _set_filter(filter_id: String) -> void:
+	if _active_filter == filter_id:
+		return
+	_active_filter = filter_id
+	_ensure_valid_selection()
+	_refresh_all()
+
+
+func _select_fish(fish_id: String) -> void:
+	_selected_fish_id = fish_id
+	_refresh_all()
+
+
+func _ensure_valid_selection() -> void:
+	var ids := _filtered_fish_ids()
+	if ids.is_empty():
+		_selected_fish_id = ""
+		return
+	if ids.has(_selected_fish_id):
+		return
+	for fish_id in ids:
+		if _is_discovered(fish_id):
+			_selected_fish_id = fish_id
+			return
+	_selected_fish_id = ids[0]
+
+
+func _filtered_fish_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for fish_id in GameData.get_all_fish_ids():
+		var fish := GameData.get_fish(fish_id)
+		if _fish_matches_filter(fish):
+			ids.append(fish_id)
+	return ids
+
+
+func _fish_matches_filter(fish: Dictionary) -> bool:
+	if fish.is_empty():
+		return false
+	var fish_id := String(fish.get("id", ""))
+	match _active_filter:
+		"all":
+			return true
+		"rare":
+			var rarity := String(fish.get("rarity", ""))
+			return rarity == "レア" or rarity == "ぬし" or bool(fish.get("boss", false))
+		"harbor":
+			return _spot_group_has_fish(["harbor_pier", "harbor_boulder"], fish_id)
+		"sand":
+			return _spot_group_has_fish(["shallow_sand"], fish_id) or String(fish.get("habitat", "")).contains("砂")
+		"rock":
+			var habitat := String(fish.get("habitat", ""))
+			return _spot_group_has_fish(["rock_breakwater", "south_reef"], fish_id) or habitat.contains("岩") or habitat.contains("根")
+		"offshore":
+			return _spot_group_has_fish(["outer_tide", "bluewater_route", "deep_ocean"], fish_id)
+		_:
+			return true
+
+
+func _spot_group_has_fish(spot_ids: Array, fish_id: String) -> bool:
+	for spot_id in spot_ids:
+		var spot := GameData.get_fishing_spot(spot_id)
+		if Array(spot.get("featured_fish", [])).has(fish_id):
+			return true
+		if Array(spot.get("allowed_fish", [])).has(fish_id):
+			return true
+	return false
+
+
+func _spot_ids_for_fish(fish_id: String) -> Array[String]:
+	var featured: Array[String] = []
+	var allowed: Array[String] = []
+	for spot_id in GameData.get_all_fishing_spot_ids():
+		var spot := GameData.get_fishing_spot(spot_id)
+		if Array(spot.get("featured_fish", [])).has(fish_id):
+			featured.append(spot_id)
+		elif Array(spot.get("allowed_fish", [])).has(fish_id):
+			allowed.append(spot_id)
+	var result := featured
+	for spot_id in allowed:
+		if not result.has(spot_id):
+			result.append(spot_id)
+	return result
+
+
+func _is_discovered(fish_id: String) -> bool:
+	return int(PlayerProgress.caught_counts.get(fish_id, 0)) > 0
+
+
+func _fish_portrait_texture(fish: Dictionary) -> Texture2D:
+	var path := FightFishAssets.card_portrait_path(fish)
+	var texture := _load_texture_if_exists(path)
+	if texture != null:
+		return texture
+	return UITextures.get_fish_icon(Color.from_string(String(fish.get("color", "#8aa7b5")), Color("#8aa7b5")))
+
+
+func _refresh_filter_buttons() -> void:
+	for filter_id in _filter_buttons.keys():
+		var button := _filter_buttons[filter_id] as Button
+		_apply_filter_button_skin(button, String(filter_id) == _active_filter)
+
+
+func _apply_card_skin(button: Button, discovered: bool, selected: bool) -> void:
+	var normal: StyleBox
+	if selected:
+		normal = _texture_style(HARBOR_BUTTON_PRIMARY_PATH, Vector4(48, 28, 48, 28))
+	elif discovered:
+		normal = _texture_style(HARBOR_PARCHMENT_CARD_PATH, Vector4(46, 28, 46, 28))
+	else:
+		normal = UITextures.flat_style(Color("#4a3825"), Color("#25160b"), 2, 8, true, 4)
+	var hover := _texture_style(HARBOR_BUTTON_HOVER_PATH, Vector4(48, 28, 48, 28))
+	if normal != null:
+		button.add_theme_stylebox_override("normal", normal)
+	if hover != null:
+		button.add_theme_stylebox_override("hover", hover)
+		button.add_theme_stylebox_override("focus", hover)
+		button.add_theme_stylebox_override("pressed", hover)
+
+
+func _apply_filter_button_skin(button: Button, selected: bool) -> void:
+	var normal_path := HARBOR_BUTTON_PRIMARY_PATH if selected else HARBOR_BUTTON_PATH
+	var normal := _texture_style(normal_path, Vector4(44, 24, 44, 24))
+	var hover := _texture_style(HARBOR_BUTTON_HOVER_PATH, Vector4(44, 24, 44, 24))
+	if normal != null:
+		button.add_theme_stylebox_override("normal", normal)
+	if hover != null:
+		button.add_theme_stylebox_override("hover", hover)
+		button.add_theme_stylebox_override("focus", hover)
+		button.add_theme_stylebox_override("pressed", hover)
+	button.add_theme_color_override("font_color", Color("#fff4c9") if selected else Color("#2c1d0e"))
+	button.add_theme_color_override("font_hover_color", Color("#fff8d8"))
+	button.add_theme_color_override("font_pressed_color", Color("#fff8d8"))
+
+
+func _textured_button(text: String, callback: Callable, primary := false) -> Button:
+	var button := Button.new()
+	button.text = text
+	button.custom_minimum_size = Vector2(0.0, 50.0)
+	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	button.pressed.connect(callback)
+	button.add_theme_font_override("font", GameFontsScript.extra_bold(get_theme_default_font()))
+	button.add_theme_font_size_override("font_size", 23 if primary else 20)
+	button.add_theme_color_override("font_color", Color("#fff4c9") if primary else Color("#2c1d0e"))
+	button.add_theme_color_override("font_hover_color", Color("#fff8d8"))
+	button.add_theme_color_override("font_pressed_color", Color("#fff8d8"))
+	button.add_theme_color_override("font_outline_color", Color("#07131d"))
+	button.add_theme_constant_override("outline_size", 2 if primary else 1)
+	_apply_filter_button_skin(button, primary)
+	_wire_button_juice(button)
+	return button
+
+
+func _header_chip(parent: Control, left: float, top: float, right: float, bottom: float, value: String) -> Label:
+	var bg := ColorRect.new()
+	bg.color = Color(0.06, 0.035, 0.018, 0.62)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control(parent, bg, left, top, right, bottom)
+	var label := _book_label(value, 17, Color("#fff4c7"), true, 2, Color("#06131d"))
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(parent, label, left + 0.006, top + 0.030, right - 0.006, bottom - 0.030)
+	return label
+
+
+func _book_label(
+	text: String,
+	font_size: int,
+	color: Color,
+	bold := false,
+	outline := 0,
+	outline_color := Color("#07131d")
+) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_color_override("font_color", color)
+	if outline > 0:
+		label.add_theme_color_override("font_outline_color", outline_color)
+		label.add_theme_constant_override("outline_size", outline)
+		label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.25))
+		label.add_theme_constant_override("shadow_offset_x", 1)
+		label.add_theme_constant_override("shadow_offset_y", 1)
+		label.add_theme_constant_override("shadow_outline_size", 1)
+	var fallback := get_theme_default_font()
+	label.add_theme_font_override("font", GameFontsScript.bold(fallback) if bold else GameFontsScript.regular(fallback))
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	label.clip_text = true
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	return label
+
+
+func _silence_button_text(button: Button) -> void:
+	button.add_theme_color_override("font_color", Color.TRANSPARENT)
+	button.add_theme_color_override("font_hover_color", Color.TRANSPARENT)
+	button.add_theme_color_override("font_pressed_color", Color.TRANSPARENT)
+	button.add_theme_color_override("font_disabled_color", Color.TRANSPARENT)
+	button.add_theme_constant_override("outline_size", 0)
+
+
+func _texture_rect(path: String) -> TextureRect:
+	var rect := TextureRect.new()
+	rect.texture = _load_texture_if_exists(path)
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_SCALE
+	rect.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return rect
+
+
+func _texture_style(path: String, margins: Vector4) -> StyleBoxTexture:
+	var texture := _load_texture_if_exists(path)
+	if texture == null:
+		return null
+	var style := StyleBoxTexture.new()
+	style.texture = texture
+	style.texture_margin_left = margins.x
+	style.texture_margin_top = margins.y
+	style.texture_margin_right = margins.z
+	style.texture_margin_bottom = margins.w
+	style.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+	style.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+	style.content_margin_left = 10.0
+	style.content_margin_top = 8.0
+	style.content_margin_right = 10.0
+	style.content_margin_bottom = 8.0
+	return style
+
+
+func _load_texture_if_exists(path: String) -> Texture2D:
+	if ResourceLoader.exists(path):
+		return load(path) as Texture2D
+	var absolute_path := ProjectSettings.globalize_path(path)
+	if FileAccess.file_exists(absolute_path):
+		var image := Image.new()
+		var err := image.load(absolute_path)
+		if err == OK:
+			return ImageTexture.create_from_image(image)
+	return null
+
+
+func _anchored_control(parent: Control, left: float, top: float, right: float, bottom: float) -> Control:
+	var control := Control.new()
+	_place_control(parent, control, left, top, right, bottom)
+	return control
+
+
+func _place_control(parent: Control, control: Control, left: float, top: float, right: float, bottom: float) -> void:
+	control.anchor_left = left
+	control.anchor_top = top
+	control.anchor_right = right
+	control.anchor_bottom = bottom
+	control.offset_left = 0.0
+	control.offset_top = 0.0
+	control.offset_right = 0.0
+	control.offset_bottom = 0.0
+	parent.add_child(control)
+
+
+func _rarity_text_color(rarity: String) -> Color:
+	match rarity:
+		"コモン":
+			return Color("#e9f7ff")
+		"アンコモン":
+			return Color("#9fffd0")
+		"レア":
+			return Color("#f8c8ff")
+		"ぬし":
+			return Color("#ffcf83")
+		_:
+			return Color("#fff0aa")
+
+
+func _format_money(value: int) -> String:
+	var raw := str(value)
+	var result := ""
+	var count := 0
+	for index in range(raw.length() - 1, -1, -1):
+		if count > 0 and count % 3 == 0:
+			result = "," + result
+		result = raw[index] + result
+		count += 1
+	return result

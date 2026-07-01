@@ -17,6 +17,7 @@ const ICON_COOKING_PATH := "res://assets/showcase/cooking/dish_feature_aji_shioy
 const ICON_MARKET_PATH := "res://assets/showcase/cooking/status_money_art.png"
 const ICON_SHOP_PATH := "res://assets/showcase/underwater/fight_tackle_card_icon.png"
 const ICON_STATUS_PATH := "res://assets/showcase/cooking/player_status_portrait.png"
+const ICON_BOOK_PATH := "res://assets/showcase/underwater/fish/aji_card_portrait.png"
 const ICON_TITLE_PATH := "res://assets/showcase/underwater/fight_action_card_icon.png"
 
 var _status_label: Label
@@ -167,12 +168,13 @@ func _build_facility_menu(root: Control) -> void:
 	header.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(menu, header, 0.100, 0.030, 0.900, 0.120)
 
-	_build_facility_button(menu, 0.160, "釣り場へ向かう", "狙う魚に合わせてポイントを選ぶ", ICON_FISHING_PATH, func() -> void: navigate("fishing_spots"), true)
-	_build_facility_button(menu, 0.285, "調理場", "魚を料理して食事にする", ICON_COOKING_PATH, func() -> void: navigate("cooking"))
-	_build_facility_button(menu, 0.410, "魚市場", "釣果を売って資金にする", ICON_MARKET_PATH, func() -> void: navigate("market"))
-	_build_facility_button(menu, 0.535, "釣具店", "竿を購入・装備する", ICON_SHOP_PATH, func() -> void: navigate("shop"))
-	_build_facility_button(menu, 0.660, "ステータス・図鑑", "成長と釣果を確認する", ICON_STATUS_PATH, func() -> void: navigate("status"))
-	_build_facility_button(menu, 0.795, "タイトルへ戻る", "進行を保存して戻る", ICON_TITLE_PATH, _return_to_title)
+	_build_facility_button(menu, 0.145, "釣り場へ向かう", "狙う魚に合わせてポイントを選ぶ", ICON_FISHING_PATH, func() -> void: navigate("fishing_spots"), true, 0.092)
+	_build_facility_button(menu, 0.250, "調理場", "魚を料理して食事にする", ICON_COOKING_PATH, func() -> void: navigate("cooking"), false, 0.092)
+	_build_facility_button(menu, 0.355, "魚市場", "釣果を売って資金にする", ICON_MARKET_PATH, func() -> void: navigate("market"), false, 0.092)
+	_build_facility_button(menu, 0.460, "釣具店", "竿を購入・装備する", ICON_SHOP_PATH, func() -> void: navigate("shop"), false, 0.092)
+	_build_facility_button(menu, 0.565, "ステータス", "成長と装備を確認する", ICON_STATUS_PATH, func() -> void: navigate("status"), false, 0.092)
+	_build_facility_button(menu, 0.670, "魚図鑑", "釣った魚の記録を見る", ICON_BOOK_PATH, func() -> void: navigate("fish_book"), false, 0.092)
+	_build_facility_button(menu, 0.795, "タイトルへ戻る", "進行を保存して戻る", ICON_TITLE_PATH, _return_to_title, false, 0.092)
 
 
 func _build_facility_button(
@@ -182,26 +184,29 @@ func _build_facility_button(
 	body_text: String,
 	icon_path: String,
 	callback: Callable,
-	primary := false
+	primary := false,
+	height := 0.108
 ) -> void:
 	var button := make_button("", callback)
 	button.custom_minimum_size = Vector2.ZERO
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.clip_contents = true
 	_apply_facility_button_skin(button, primary)
-	_place_control(parent, button, 0.088, top, 0.912, top + 0.108)
+	_place_control(parent, button, 0.088, top, 0.912, top + height)
 
 	var icon := _icon_rect(icon_path)
 	icon.modulate = Color(1.0, 1.0, 1.0, 0.96)
 	_place_control(button, icon, 0.038, 0.175, 0.155, 0.825)
 
-	var title := _harbor_label(title_text, 20, Color("#fff4c9") if primary else Color("#22180f"), true, 2 if primary else 0, Color("#1b1209"))
+	var title_size := 18 if height < 0.100 else 20
+	var body_size := 12 if height < 0.100 else 13
+	var title := _harbor_label(title_text, title_size, Color("#fff4c9") if primary else Color("#22180f"), true, 2 if primary else 0, Color("#1b1209"))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(button, title, 0.185, 0.070, 0.930, 0.515)
 
-	var body := _harbor_label(body_text, 13, Color("#d9f4ff") if primary else Color("#4d3219"), false, 1 if primary else 0, Color("#06131d"))
+	var body := _harbor_label(body_text, body_size, Color("#d9f4ff") if primary else Color("#4d3219"), false, 1 if primary else 0, Color("#06131d"))
 	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	body.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	body.mouse_filter = Control.MOUSE_FILTER_IGNORE

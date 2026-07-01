@@ -9,6 +9,7 @@ const CookingScreen = preload("res://src/ui/cooking_screen.gd")
 const MarketScreen = preload("res://src/ui/market_screen.gd")
 const ShopScreen = preload("res://src/ui/shop_screen.gd")
 const StatusScreen = preload("res://src/ui/status_screen.gd")
+const FishBookScreen = preload("res://src/ui/fish_book_screen.gd")
 
 const OPENING_BGM_PATH := "res://assets/audio/opening_bgm.mp3"
 const OPENING_BGM_VOLUME_DB := -10.0
@@ -65,6 +66,8 @@ func _swap(screen_id: String, payload: Dictionary) -> void:
 			screen_script = ShopScreen
 		"status":
 			screen_script = StatusScreen
+		"fish_book":
+			screen_script = FishBookScreen
 		_:
 			push_warning("未知の画面IDです: %s" % screen_id)
 			screen_script = HarborScreen
