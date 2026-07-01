@@ -113,46 +113,46 @@ func _build_boat_cards(root: Control) -> void:
 		var status_plate := Panel.new()
 		status_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		status_plate.add_theme_stylebox_override("panel", _status_badge_style(Color("#12344e"), Color("#d7b46a")))
-		_place_control(holder, status_plate, 0.355, 0.045, 0.675, 0.170)
+		_place_control(holder, status_plate, 0.355, 0.052, 0.600, 0.172)
 
-		var status := _shipyard_label("", 12, Color("#fff6cf"), true, 1, Color("#102033"))
+		var status := _shipyard_label("", 11, Color("#fff6cf"), true, 1, Color("#102033"))
 		status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		status.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		_place_control(holder, status, 0.365, 0.046, 0.665, 0.165)
+		_place_control(holder, status, 0.362, 0.055, 0.592, 0.168)
 		_boat_card_status_labels[boat_id] = status
 
 		var price_plate := Panel.new()
 		price_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		price_plate.add_theme_stylebox_override("panel", _status_badge_style(Color("#f3dfaa"), Color("#59320e")))
-		_place_control(holder, price_plate, 0.610, 0.055, 0.930, 0.188)
+		_place_control(holder, price_plate, 0.615, 0.052, 0.930, 0.172)
 
 		var price := _shipyard_label("", 13, Color("#4c2c0d"), true, 0)
 		price.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		price.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		_place_control(holder, price, 0.630, 0.060, 0.915, 0.180)
+		_place_control(holder, price, 0.628, 0.055, 0.915, 0.168)
 		_boat_card_price_labels[boat_id] = price
 
 		var name_plate := Panel.new()
 		name_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		name_plate.add_theme_stylebox_override("panel", _status_badge_style(Color("#08263c", 0.92), Color("#e7bd68")))
-		_place_control(holder, name_plate, 0.120, 0.715, 0.885, 0.855)
+		_place_control(holder, name_plate, 0.120, 0.705, 0.885, 0.840)
 
 		var name := _shipyard_label("", 17, Color("#fff2be"), true, 2, Color("#07131d"))
 		name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		_place_control(holder, name, 0.145, 0.716, 0.860, 0.850)
+		_place_control(holder, name, 0.145, 0.706, 0.860, 0.836)
 		_boat_card_labels[boat_id] = name
 
 		var rank := _shipyard_label("", 12, Color("#3b2b17"), true, 0)
 		rank.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		rank.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		_place_control(holder, rank, 0.115, 0.858, 0.305, 0.960)
+		_place_control(holder, rank, 0.115, 0.846, 0.305, 0.938)
 		_boat_card_rank_labels[boat_id] = rank
 
 		var range := _shipyard_label("", 12, Color("#3b2b17"), true, 0)
 		range.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		range.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		_place_control(holder, range, 0.315, 0.858, 0.890, 0.960)
+		_place_control(holder, range, 0.315, 0.846, 0.890, 0.938)
 		_boat_card_range_labels[boat_id] = range
 
 		var hit := _transparent_button(func() -> void: _select_boat(boat_id))
@@ -189,27 +189,27 @@ func _build_center_detail(root: Control) -> void:
 	_detail_rank_label = _shipyard_label("", 15, Color("#463018"), true, 0)
 	_detail_rank_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_detail_rank_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(root, _detail_rank_label, 0.363, 0.715, 0.421, 0.754)
+	_place_control(root, _detail_rank_label, 0.363, 0.721, 0.421, 0.752)
 
 	_detail_unlock_label = _shipyard_label("", 15, Color("#463018"), true, 0)
 	_detail_unlock_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_detail_unlock_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(root, _detail_unlock_label, 0.476, 0.715, 0.534, 0.754)
+	_place_control(root, _detail_unlock_label, 0.476, 0.721, 0.534, 0.752)
 
 	_detail_type_label = _shipyard_label("", 15, Color("#463018"), true, 0)
 	_detail_type_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_detail_type_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(root, _detail_type_label, 0.592, 0.715, 0.648, 0.754)
+	_place_control(root, _detail_type_label, 0.592, 0.721, 0.648, 0.752)
 
 	_price_label = _shipyard_label("", 20, Color("#fff0c2"), true, 3)
 	_price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_price_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(root, _price_label, 0.365, 0.800, 0.492, 0.855)
+	_place_control(root, _price_label, 0.354, 0.800, 0.466, 0.855)
 
 	_shortage_label = _shipyard_label("", 13, Color("#ffdca8"), true, 1, Color("#07131d"))
 	_shortage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_shortage_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(root, _shortage_label, 0.362, 0.858, 0.495, 0.888)
+	_place_control(root, _shortage_label, 0.354, 0.858, 0.474, 0.888)
 
 	_buy_button = _image_text_button("", _buy_selected_boat, 19)
 	_buy_button.set_meta("shipyard_buy_button", true)
@@ -236,22 +236,22 @@ func _build_route_panel(root: Control) -> void:
 	var current_plate := Panel.new()
 	current_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	current_plate.add_theme_stylebox_override("panel", _status_badge_style(Color("#08263c", 0.92), Color("#6bcff2")))
-	_place_control(root, current_plate, 0.754, 0.822, 0.875, 0.858)
+	_place_control(root, current_plate, 0.758, 0.824, 0.874, 0.858)
 
 	var after_plate := Panel.new()
 	after_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	after_plate.add_theme_stylebox_override("panel", _status_badge_style(Color("#2e2415", 0.92), Color("#e0b760")))
-	_place_control(root, after_plate, 0.884, 0.822, 0.968, 0.858)
+	_place_control(root, after_plate, 0.889, 0.824, 0.965, 0.858)
 
 	_route_status_label = _shipyard_label("", 13, Color("#e9fbff"), true, 1, Color("#07131d"))
 	_route_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_route_status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(root, _route_status_label, 0.755, 0.823, 0.874, 0.856)
+	_place_control(root, _route_status_label, 0.759, 0.825, 0.873, 0.856)
 
 	_route_after_label = _shipyard_label("", 13, Color("#fff2bd"), true, 1, Color("#07131d"))
 	_route_after_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_route_after_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(root, _route_after_label, 0.885, 0.823, 0.966, 0.856)
+	_place_control(root, _route_after_label, 0.890, 0.825, 0.964, 0.856)
 
 	_route_locked_label = _shipyard_label("", 15, Color("#fff0c2"), true, 2)
 	_route_locked_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

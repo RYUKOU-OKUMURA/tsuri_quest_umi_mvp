@@ -25,6 +25,8 @@ func _ready() -> void:
 
 	await get_tree().process_frame
 	await get_tree().process_frame
+	screen._select_boat("bluewater_boat")
+	await get_tree().process_frame
 	await get_tree().create_timer(0.35).timeout
 
 	if FileAccess.file_exists(OUT):
@@ -39,8 +41,8 @@ func _ready() -> void:
 
 
 func _setup_preview_progress() -> void:
-	PlayerProgress.level = 3
+	PlayerProgress.level = 5
 	PlayerProgress.exp = 42
 	PlayerProgress.money = 400
-	PlayerProgress.owned_boats = []
+	PlayerProgress.owned_boats = ["skiff"]
 	PlayerProgress.equipped_rod_id = "starter"
