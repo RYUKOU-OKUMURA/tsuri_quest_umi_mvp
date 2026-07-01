@@ -132,24 +132,41 @@ def _draw_triangle(draw: ImageDraw.ImageDraw, center: tuple[float, float], radiu
 
 def _key_icon_path(label: str) -> Path:
     return {
-        "A": ASSET_DIR / "hud_key_a.png",
-        "B": ASSET_DIR / "hud_key_b.png",
-        "L/R": ASSET_DIR / "hud_key_lr.png",
         "+": ASSET_DIR / "hud_key_plus.png",
         "-": ASSET_DIR / "hud_key_minus.png",
     }.get(label, ASSET_DIR / "__missing_keycap.png")
 
 
-def _draw_key_cap(base: Image.Image, draw: ImageDraw.ImageDraw, box: tuple[float, float, float, float], label: str, size: int) -> None:
-    icon_path = _key_icon_path(label)
-    if icon_path.exists():
-        _paste_icon_contain(base, Image.open(icon_path).convert("RGBA"), box)
-        return
-    fill = {"A": "#28445f", "B": "#3a3023", "L/R": "#1c2029"}.get(label, "#1c2029")
-    draw.rounded_rectangle(box, radius=999, fill=fill, outline="#f0c66a", width=1)
-    draw.arc((box[0] + 4, box[1] + 3, box[2] - 4, box[3] - 4), 200, 340, fill=(255, 244, 190, 76), width=1)
-    tw = _text_width(label, size)
-    _draw_text(draw, (box[0] + (box[2] - box[0] - tw) * 0.5, box[1] + 15), label, size, "#fff5d0", stroke=1)
+def _keyboard_key_width(key: str) -> float:
+    return {
+        "Space": 58.0,
+        "Shift": 54.0,
+        "E / Enter": 76.0,
+    }.get(key, 44.0)
+
+
+def _draw_keyboard_key_cap(
+    draw: ImageDraw.ImageDraw,
+    box: tuple[float, float, float, float],
+    key: str,
+    *,
+    active: bool = False,
+    enabled: bool = True,
+) -> None:
+    fill = (34, 50, 71, 235 if enabled else 115)
+    if key == "Shift":
+        fill = (45, 52, 44, 235 if enabled else 115)
+    elif key == "E / Enter":
+        fill = (74, 47, 42, 245 if enabled else 122)
+    if active:
+        fill = tuple(min(255, round(channel * 1.16)) for channel in fill[:3]) + (fill[3],)
+    outline = (240, 198, 106, 219 if enabled else 92)
+    draw.rounded_rectangle(box, radius=5, fill=fill, outline=outline, width=1)
+    draw.line((box[0] + 6, box[1] + 4, box[2] - 6, box[1] + 4), fill=(255, 255, 255, 38 if enabled else 13), width=1)
+    size = 10 if key == "E / Enter" else 11
+    tw = _text_width(key, size)
+    fill_text = (255, 245, 208, 255 if enabled else 140)
+    _draw_text(draw, (box[0] + (box[2] - box[0] - tw) * 0.5, box[1] + 16), key, size, fill_text, stroke=1 if enabled else 0)
 
 
 def _hint_slots(hint: tuple[float, float, float, float]) -> list[tuple[float, float, float, float]]:
@@ -162,24 +179,82 @@ def _hint_slots(hint: tuple[float, float, float, float]) -> list[tuple[float, fl
     ]
 
 
-def _draw_key_hint(base: Image.Image, draw: ImageDraw.ImageDraw, slot: tuple[float, float, float, float], key: str, label: str, note: str) -> None:
-    is_long = key == "L/R"
-    cap_w = 27 if not is_long else 46
-    cap_h = 24
-    cap = (slot[0] + 6.5, slot[1] + 5, slot[0] + 6.5 + cap_w, slot[1] + 5 + cap_h)
-    _draw_key_cap(base, draw, cap, key, 12 if is_long else 14)
-    label_x = cap[0] + cap_w + (4 if is_long else 5)
-    label_size = 16 if is_long else 17
-    note_size = 10 if is_long else 11
+def _draw_keyboard_hint(
+    draw: ImageDraw.ImageDraw,
+    slot: tuple[float, float, float, float],
+    key: str,
+    label: str,
+    note: str,
+    *,
+    active: bool = False,
+    enabled: bool = True,
+    accent: bool = False,
+) -> None:
+    cap_w = _keyboard_key_width(key)
+    cap = (slot[0] + 6, slot[1] + 4, slot[0] + 6 + cap_w, slot[1] + 27)
+    _draw_keyboard_key_cap(draw, cap, key, active=active, enabled=enabled or accent)
+    label_size = 16 if key == "E / Enter" else 17
+    label_x = cap[2] + 6
     label_y = cap[1] + 17
-    _draw_text(draw, (label_x, label_y), label, label_size, "#21170f")
-    note_text = "テンション" if is_long else f"（{note}）"
-    note_x = label_x + _text_width(label, label_size) + (3 if is_long else 2)
-    note_y = label_y
-    available = slot[2] - note_x - 1
-    while _text_width(note_text, note_size, bold=False) > available and note_size > 9:
-        note_size = max(9, note_size - 1)
-    _draw_text(draw, (note_x, note_y), note_text, note_size, "#3a2a18", bold=False)
+    label_w = _text_width(label, label_size)
+    if label_x + label_w > slot[2] - 2:
+        label_x = cap[0]
+        label_y = cap[1] + 38
+    label_fill = (33, 23, 15, 255) if enabled or accent else (92, 75, 53, 199)
+    note_fill = (58, 42, 24, 255) if enabled or accent else (108, 92, 67, 158)
+    _draw_text(draw, (label_x, label_y), label, label_size, label_fill)
+    note_size = 10
+    note_x = cap[0]
+    note_y = cap[1] + 38
+    if label_y > cap[1] + 24:
+        note_x = label_x + label_w + 5
+        note_y = label_y
+    while _text_width(note, note_size, bold=False) > slot[2] - note_x - 2 and note_size > 8:
+        note_size = max(8, note_size - 1)
+    _draw_text(draw, (note_x, note_y), note, note_size, note_fill, bold=False)
+
+
+def _draw_safe_zone_hint(draw: ImageDraw.ImageDraw, slot: tuple[float, float, float, float]) -> None:
+    gauge = (slot[0] + 6, slot[1] + 9, slot[0] + 64, slot[1] + 21)
+    draw.rectangle((gauge[0] - 1, gauge[1] - 1, gauge[2] + 1, gauge[3] + 1), fill=(0, 0, 0, 51))
+    draw.rectangle(gauge, fill=(9, 19, 13, 219))
+    segments = 5
+    gap = 1.5
+    seg_w = ((gauge[2] - gauge[0]) - gap * (segments - 1)) / segments
+    for i in range(segments):
+        x0 = gauge[0] + i * (seg_w + gap)
+        fill = (27, 59, 44)
+        if 1 <= i <= 3:
+            fill = (39, 200, 95)
+        draw.rectangle((x0, gauge[1] + 2, x0 + seg_w, gauge[3] - 2), fill=fill)
+        draw.rectangle((x0, gauge[1] + 2, x0 + seg_w, gauge[1] + 4), fill=tuple(min(255, channel + 22) for channel in fill))
+    _draw_text(draw, (slot[0] + 72, slot[1] + 19), "安全域", 16, "#21170f")
+    _draw_text(draw, (slot[0] + 6, slot[1] + 40), "緑ゲージを保つ", 10, "#3a2a18", bold=False)
+
+
+def _draw_status_hint(draw: ImageDraw.ImageDraw, slot: tuple[float, float, float, float], label: str, note: str) -> None:
+    cx, cy = slot[0] + 14, slot[1] + 16
+    draw.ellipse((cx - 5, cy - 5, cx + 5, cy + 5), fill=(0, 0, 0, 46))
+    draw.ellipse((cx - 4, cy - 4, cx + 4, cy + 4), fill=(215, 183, 102, 179))
+    _draw_text(draw, (slot[0] + 26, slot[1] + 20), label, 16, (92, 75, 53, 219))
+    _draw_text(draw, (slot[0] + 8, slot[1] + 40), note, 10, (108, 92, 67, 184), bold=False)
+
+
+def _draw_operation_hints(draw: ImageDraw.ImageDraw, hint: tuple[float, float, float, float], state: str) -> None:
+    slots = _hint_slots(hint)
+    fight_enabled = state == "fight"
+    _draw_keyboard_hint(draw, slots[0], "Space", "巻く", "長押し", enabled=fight_enabled)
+    _draw_keyboard_hint(draw, slots[1], "Shift", "糸を出す", "長押し", enabled=fight_enabled)
+    if state == "ready":
+        _draw_keyboard_hint(draw, slots[2], "E / Enter", "投げる", "仕掛け投入", enabled=True, accent=True)
+    elif state == "bite":
+        _draw_keyboard_hint(draw, slots[2], "E / Enter", "アワセる", "食いつき中", enabled=True, accent=True)
+    elif state == "fight":
+        _draw_safe_zone_hint(draw, slots[2])
+    elif state in {"casting", "waiting", "approach"}:
+        _draw_status_hint(draw, slots[2], "反応待ち", "魚影を待つ")
+    else:
+        _draw_status_hint(draw, slots[2], "結果確認", "次の操作へ")
 
 
 def _draw_menu_row(base: Image.Image, draw: ImageDraw.ImageDraw, pos: tuple[float, float], key: str, label: str) -> None:
@@ -196,7 +271,7 @@ def _draw_menu_row(base: Image.Image, draw: ImageDraw.ImageDraw, pos: tuple[floa
     _draw_text(draw, (pos[0] + 28, pos[1] + 4), label, label_size, "#f7ecd0", stroke=1)
 
 
-def build_current_hud() -> Image.Image:
+def build_current_hud(state: str = "fight") -> Image.Image:
     frame = _resize(Image.open(ASSET_DIR / "fight_hud_frame.png").convert("RGBA"), HUD_SIZE)
     draw = ImageDraw.Draw(frame)
     w, h = HUD_SIZE
@@ -273,14 +348,18 @@ def build_current_hud() -> Image.Image:
     hint_title = "操作のヒント"
     hint_title_w = _text_width(hint_title, 16)
     _draw_text(draw, (hint[0] + (hint[2] - hint[0] - hint_title_w) * 0.5, hint[1] + 21), hint_title, 16, "#f7ecd0", stroke=1)
-    for slot, args in zip(_hint_slots(hint), (("A", "巻く", "リールを巻く"), ("B", "緩める", "ラインを出す"), ("L/R", "調整", "テンション"))):
-        _draw_key_hint(frame, draw, slot, *args)
+    _draw_operation_hints(draw, hint, state)
 
     menu_h = menu[3] - menu[1]
-    harbor = (menu[0] + 9, menu[1] + menu_h * 0.24, menu[2] - 9, menu[1] + menu_h * 0.80)
-    draw.rounded_rectangle(harbor, radius=4, fill=(14, 70, 111, 220), outline=(215, 183, 102, 224), width=1)
-    draw.line((harbor[0] + 7, harbor[1] + 4, harbor[2] - 7, harbor[1] + 4), fill=(255, 255, 255, 31), width=1)
-    _draw_menu_row(frame, draw, (harbor[0] + 25, harbor[1] + (harbor[3] - harbor[1]) * 0.57), "-", "港へ戻る")
+    menu_button_gap = 6
+    menu_button_h = (menu_h - 20 - menu_button_gap) * 0.5
+    change_spot = (menu[0] + 9, menu[1] + 10, menu[2] - 9, menu[1] + 10 + menu_button_h)
+    harbor = (menu[0] + 9, menu[1] + 10 + menu_button_h + menu_button_gap, menu[2] - 9, menu[1] + 10 + menu_button_h * 2 + menu_button_gap)
+    for row in (change_spot, harbor):
+        draw.rounded_rectangle(row, radius=4, fill=(14, 70, 111, 220), outline=(215, 183, 102, 224), width=1)
+        draw.line((row[0] + 7, row[1] + 4, row[2] - 7, row[1] + 4), fill=(255, 255, 255, 31), width=1)
+    _draw_menu_row(frame, draw, (change_spot[0] + 25, change_spot[1] + (change_spot[3] - change_spot[1]) * 0.62), "+", "釣り場変更")
+    _draw_menu_row(frame, draw, (harbor[0] + 25, harbor[1] + (harbor[3] - harbor[1]) * 0.62), "-", "港へ戻る")
     return frame.convert("RGB")
 
 
@@ -292,18 +371,22 @@ def build_reference_hud() -> Image.Image:
 
 def main() -> int:
     reference = build_reference_hud()
-    current = build_current_hud()
+    current_fight = build_current_hud("fight")
+    current_bite = build_current_hud("bite")
     label_h = 38
     gap = 24
-    width = max(reference.width, current.width) + 32
-    height = label_h * 2 + reference.height + current.height + gap + 18
+    width = max(reference.width, current_fight.width, current_bite.width) + 32
+    height = label_h * 3 + reference.height + current_fight.height + current_bite.height + gap * 2 + 18
     out = Image.new("RGB", (width, height), BG)
     draw = ImageDraw.Draw(out)
     draw.text((16, 12), "REFERENCE LOWER HUD", fill=TEXT_LABEL)
     out.paste(reference, (16, label_h))
     y = label_h + reference.height + gap
-    draw.text((16, y + 12), "CURRENT STATIC LOWER HUD", fill=TEXT_LABEL)
-    out.paste(current, (16, y + label_h))
+    draw.text((16, y + 12), "CURRENT STATIC LOWER HUD: FIGHT", fill=TEXT_LABEL)
+    out.paste(current_fight, (16, y + label_h))
+    y += label_h + current_fight.height + gap
+    draw.text((16, y + 12), "CURRENT STATIC LOWER HUD: BITE", fill=TEXT_LABEL)
+    out.paste(current_bite, (16, y + label_h))
     out.save(OUT)
     print(OUT)
     return 0

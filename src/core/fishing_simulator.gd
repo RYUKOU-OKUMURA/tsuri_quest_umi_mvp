@@ -72,7 +72,7 @@ func prepare(target_fish: Dictionary, stats: Dictionary) -> void:
 	visual_position = Vector2(0.26, clampf(depth / 25.0, 0.30, 0.78))
 	visual_direction = 1.0
 	action_name = "準備"
-	_set_message("狙う魚を決めて仕掛けを投げよう。")
+	_set_message("E / Enterで仕掛けを投げよう。")
 	_set_state(State.READY)
 
 
@@ -202,7 +202,7 @@ func _tick_approach(delta: float) -> void:
 	if _phase_timer <= 0.0:
 		_bite_timer = 1.05 + float(player_stats.get("bite_window_bonus", 0.0))
 		action_name = "食いつき"
-		_set_message("食いついた！ Eキーか［アワセる］を押せ！")
+		_set_message("食いついた！ E / Enterでアワセ！")
 		_set_state(State.BITE)
 
 

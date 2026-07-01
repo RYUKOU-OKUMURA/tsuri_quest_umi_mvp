@@ -15,9 +15,6 @@ const ICON_SHEET_PATH := "res://assets/showcase/underwater/fight_icon_sheet.png"
 const HUD_BAIT_ICON_PATH := "res://assets/showcase/underwater/hud_bait_icon.png"
 const HUD_TENSION_ICON_PATH := "res://assets/showcase/underwater/hud_tension_icon.png"
 const HUD_STAMINA_ICON_PATH := "res://assets/showcase/underwater/hud_stamina_icon.png"
-const HUD_KEY_A_PATH := "res://assets/showcase/underwater/hud_key_a.png"
-const HUD_KEY_B_PATH := "res://assets/showcase/underwater/hud_key_b.png"
-const HUD_KEY_LR_PATH := "res://assets/showcase/underwater/hud_key_lr.png"
 const HUD_KEY_PLUS_PATH := "res://assets/showcase/underwater/hud_key_plus.png"
 const HUD_KEY_MINUS_PATH := "res://assets/showcase/underwater/hud_key_minus.png"
 const ICON_TENSION := 4
@@ -33,9 +30,6 @@ var _icons: Texture2D
 var _bait_icon: Texture2D
 var _tension_icon: Texture2D
 var _stamina_icon: Texture2D
-var _key_a_icon: Texture2D
-var _key_b_icon: Texture2D
-var _key_lr_icon: Texture2D
 var _key_plus_icon: Texture2D
 var _key_minus_icon: Texture2D
 
@@ -69,12 +63,6 @@ func _ready() -> void:
 		_tension_icon = load(HUD_TENSION_ICON_PATH) as Texture2D
 	if ResourceLoader.exists(HUD_STAMINA_ICON_PATH):
 		_stamina_icon = load(HUD_STAMINA_ICON_PATH) as Texture2D
-	if ResourceLoader.exists(HUD_KEY_A_PATH):
-		_key_a_icon = load(HUD_KEY_A_PATH) as Texture2D
-	if ResourceLoader.exists(HUD_KEY_B_PATH):
-		_key_b_icon = load(HUD_KEY_B_PATH) as Texture2D
-	if ResourceLoader.exists(HUD_KEY_LR_PATH):
-		_key_lr_icon = load(HUD_KEY_LR_PATH) as Texture2D
 	if ResourceLoader.exists(HUD_KEY_PLUS_PATH):
 		_key_plus_icon = load(HUD_KEY_PLUS_PATH) as Texture2D
 	if ResourceLoader.exists(HUD_KEY_MINUS_PATH):
@@ -232,16 +220,19 @@ func _draw_stamina(font: Font, rect: Rect2) -> void:
 
 func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 	var gap := 10.0
-	var bait_w := rect.size.x * (0.27 if _hud_frame == null else 0.245)
-	var menu_w := rect.size.x * (0.24 if _hud_frame == null else 0.245)
+	var bait_w := rect.size.x * (0.27 if _hud_frame == null else 0.265)
+	var menu_w := rect.size.x * (0.24 if _hud_frame == null else 0.175)
 	var hint_w := rect.size.x - bait_w - menu_w - gap * 2.0
 	var bait := Rect2(rect.position, Vector2(bait_w, rect.size.y))
 	var hint := Rect2(Vector2(bait.end.x + gap, rect.position.y), Vector2(hint_w, rect.size.y))
 	var menu := Rect2(Vector2(hint.end.x + gap, rect.position.y), Vector2(menu_w, rect.size.y))
-	_main_rect = bait
 	var key_slots := _hint_key_slots(hint)
-	_reel_rect = key_slots[0]
-	_give_rect = key_slots[1]
+	_main_rect = Rect2()
+	_reel_rect = Rect2()
+	_give_rect = Rect2()
+	if _can_reel_controls():
+		_reel_rect = key_slots[0]
+		_give_rect = key_slots[1]
 	var menu_button_gap := 6.0
 	var menu_button_h := (menu.size.y - 20.0 - menu_button_gap) * 0.5
 	_change_spot_rect = Rect2(menu.position + Vector2(9.0, 10.0), Vector2(menu.size.x - 18.0, menu_button_h))
@@ -279,14 +270,7 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 		_draw_text(font, hint_title, hint.position + Vector2((hint.size.x - hint_title_w) * 0.5, 21.0), hint_title_size, Palette.TEXT_BONE, 1)
 	else:
 		_draw_text(font, hint_title, hint.position + Vector2(18.0, 21.0), 18, Color("#6a4c2b"), 0)
-	if _hud_frame != null:
-		_draw_key_hint_compact(font, key_slots[0], "A", "巻く", "リールを巻く", _reeling)
-		_draw_key_hint_compact(font, key_slots[1], "B", "緩める", "ラインを出す", _giving)
-		_draw_key_hint_compact(font, key_slots[2], "L/R", "調整", "テンション", false)
-	else:
-		_draw_key_hint(font, _reel_rect, "A", "巻く")
-		_draw_key_hint(font, _give_rect, "B", "緩める")
-		_draw_key_hint(font, key_slots[2], "L/R", "調整")
+	_draw_operation_hints(font, key_slots)
 
 	_draw_panel(menu, Color("#0b355f"), Color("#08213c"), Palette.GOLD)
 	_draw_menu_button(_change_spot_rect)
@@ -447,73 +431,162 @@ func _draw_bait_icon(center: Vector2) -> void:
 	draw_circle(center + Vector2(-12.0, -8.0), 2.0, Color("#fff2ce"))
 
 
-func _draw_key_hint(font: Font, rect: Rect2, key: String, label: String) -> void:
-	if _hud_frame == null:
-		draw_rect(rect, Color(0.0, 0.0, 0.0, 0.07), true)
-		draw_rect(rect, Color("#c8b27f"), false, 1.0)
-	_draw_key_row(font, rect.position + Vector2(14.0, 20.0), key, label)
+func _draw_operation_hints(font: Font, key_slots: Array[Rect2]) -> void:
+	var state := _simulator_state()
+	var fight_enabled := state == FishingSimulator.State.FIGHT
+	_draw_keyboard_hint(
+		font,
+		key_slots[0],
+		"Space",
+		"巻く",
+		"長押し",
+		_is_reeling_active(),
+		fight_enabled
+	)
+	_draw_keyboard_hint(
+		font,
+		key_slots[1],
+		"Shift",
+		"糸を出す",
+		"長押し",
+		_is_giving_active(),
+		fight_enabled
+	)
+	match state:
+		FishingSimulator.State.READY:
+			_main_rect = key_slots[2]
+			_draw_keyboard_hint(font, key_slots[2], "E / Enter", "投げる", "仕掛け投入", false, true, true)
+		FishingSimulator.State.BITE:
+			_main_rect = key_slots[2]
+			_draw_keyboard_hint(font, key_slots[2], "E / Enter", "アワセる", "食いつき中", false, true, true)
+		FishingSimulator.State.FIGHT:
+			_draw_safe_zone_hint(font, key_slots[2])
+		FishingSimulator.State.CASTING, FishingSimulator.State.WAITING, FishingSimulator.State.APPROACH:
+			_draw_status_hint(font, key_slots[2], "反応待ち", "魚影を待つ")
+		_:
+			_draw_status_hint(font, key_slots[2], "結果確認", "次の操作へ")
 
 
-func _draw_key_hint_compact(font: Font, rect: Rect2, key: String, label: String, note: String, active: bool = false) -> void:
-	var is_long_key := key.length() > 1
-	var key_origin := rect.position + Vector2(6.5, 5.0)
-	var key_w := 27.0 if not is_long_key else 46.0
-	var key_h := 24.0
-	var key_rect := Rect2(key_origin, Vector2(key_w, key_h))
-	var key_texture := _key_texture(key)
-	if _hud_frame != null and key_texture != null:
-		var modulate := Color(1.13, 1.10, 1.02, 1.0) if active else Color.WHITE
-		_draw_texture_icon_modulated(key_texture, key_rect, modulate)
-	else:
-		_draw_procedural_key_cap(font, key_rect, key, active)
-	var label_size := 17 if not is_long_key else 16
-	var note_size := 11 if not is_long_key else 10
-	var label_pos := key_rect.position + Vector2(key_rect.size.x + (5.0 if not is_long_key else 4.0), 17.0)
-	_draw_text(font, label, label_pos, label_size, Color("#21170f"), 0)
-	var note_font := GameFontsScript.regular(get_theme_default_font())
-	var note_text := _compact_control_note(note)
-	if not is_long_key:
-		note_text = "（%s）" % note_text
+func _draw_keyboard_hint(
+	font: Font,
+	rect: Rect2,
+	key: String,
+	label: String,
+	note: String,
+	active: bool = false,
+	enabled: bool = true,
+	accent: bool = false
+) -> void:
+	var key_rect := Rect2(rect.position + Vector2(6.0, 4.0), Vector2(_keyboard_key_width(key), 23.0))
+	_draw_keyboard_key_cap(font, key_rect, key, active, enabled or accent)
+	var label_size := 17 if _hud_frame != null else 16
+	if key == "E / Enter":
+		label_size = 16
+	var label_color := Color("#21170f") if enabled or accent else Color("#5c4b35", 0.78)
+	var note_color := Color("#3a2a18") if enabled or accent else Color("#6c5c43", 0.62)
+	var label_x := key_rect.end.x + 6.0
+	var label_baseline := key_rect.position.y + 17.0
 	var label_w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
-	var note_pos := label_pos + Vector2(label_w + (3.0 if is_long_key else 2.0), 0.0)
-	var available_w := rect.end.x - note_pos.x - 1.0
-	var note_w := note_font.get_string_size(note_text, HORIZONTAL_ALIGNMENT_LEFT, -1, note_size).x
-	while note_w > available_w and note_size > 9:
-		note_size = max(9, note_size - 1)
-		note_w = note_font.get_string_size(note_text, HORIZONTAL_ALIGNMENT_LEFT, -1, note_size).x
-	_draw_text(note_font, note_text, note_pos, note_size, Color("#3a2a18"), 0)
+	if label_x + label_w > rect.end.x - 2.0:
+		label_x = key_rect.position.x
+		label_baseline = key_rect.position.y + 38.0
+	_draw_text(font, label, Vector2(label_x, label_baseline), label_size, label_color, 0)
+	var note_font := GameFontsScript.regular(get_theme_default_font())
+	var note_size := 10 if _hud_frame != null else 11
+	var note_text := note
+	var note_pos := Vector2(key_rect.position.x, key_rect.position.y + 38.0)
+	if label_baseline > key_rect.position.y + 24.0:
+		note_pos = Vector2(label_x + label_w + 5.0, label_baseline)
+	var available_w := rect.end.x - note_pos.x - 2.0
+	while note_font.get_string_size(note_text, HORIZONTAL_ALIGNMENT_LEFT, -1, note_size).x > available_w and note_size > 8:
+		note_size = max(8, note_size - 1)
+	_draw_text(note_font, note_text, note_pos, note_size, note_color, 0)
 
 
-func _draw_procedural_key_cap(font: Font, key_rect: Rect2, key: String, active: bool) -> void:
-	var is_long_key := key.length() > 1
-	var key_fill := Color("#1c2029")
-	match key:
-		"A":
-			key_fill = Color("#28445f")
-		"B":
-			key_fill = Color("#3a3023")
+func _draw_keyboard_key_cap(font: Font, key_rect: Rect2, key: String, active: bool, enabled: bool) -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#223247", 0.92 if enabled else 0.45)
+	if key == "Shift":
+		style.bg_color = Color("#2d342c", 0.92 if enabled else 0.45)
+	elif key == "E / Enter":
+		style.bg_color = Color("#4a2f2a", 0.96 if enabled else 0.48)
 	if active:
-		key_fill = key_fill.lightened(0.18)
-	var key_border := Color("#d5b56b") if not active else Color("#ffe38f")
-	if is_long_key:
-		var style := StyleBoxFlat.new()
-		style.bg_color = key_fill
-		style.border_color = key_border
-		style.set_border_width_all(1)
-		style.set_corner_radius_all(4)
-		style.shadow_color = Color(0.0, 0.0, 0.0, 0.24)
-		style.shadow_size = 1
-		draw_style_box(style, key_rect)
-		draw_line(key_rect.position + Vector2(6.0, 4.0), key_rect.position + Vector2(key_rect.size.x - 6.0, 4.0), Color(1.0, 1.0, 1.0, 0.14), 1.0)
-	else:
-		var center := key_rect.position + key_rect.size * 0.5
-		draw_circle(center + Vector2(1.0, 1.4), 12.1, Color(0.0, 0.0, 0.0, 0.22))
-		draw_circle(center, 11.4, key_fill)
-		draw_circle(center, 11.4, key_border, false, 1.0)
-		draw_line(center + Vector2(-6.0, -5.5), center + Vector2(6.0, -5.5), Color(1.0, 1.0, 1.0, 0.16), 1.0)
-	var key_size := 14 if not is_long_key else 12
-	var key_text_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
-	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_text_w) * 0.5, 17.0), key_size, Color.WHITE, 1)
+		style.bg_color = style.bg_color.lightened(0.18)
+	style.border_color = Color("#f0c66a", 0.86 if enabled else 0.36)
+	if active:
+		style.border_color = Color("#ffe38f")
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(5)
+	style.shadow_color = Color(0.0, 0.0, 0.0, 0.24 if enabled else 0.10)
+	style.shadow_size = 1
+	draw_style_box(style, key_rect)
+	draw_line(
+		key_rect.position + Vector2(6.0, 4.0),
+		key_rect.position + Vector2(key_rect.size.x - 6.0, 4.0),
+		Color(1.0, 1.0, 1.0, 0.15 if enabled else 0.05),
+		1.0
+	)
+	var key_size := 11 if key != "E / Enter" else 10
+	var key_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
+	var text_color := Color("#fff5d0") if enabled else Color("#fff5d0", 0.55)
+	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_w) * 0.5, 16.0), key_size, text_color, 1 if enabled else 0)
+
+
+func _draw_safe_zone_hint(font: Font, rect: Rect2) -> void:
+	var gauge := Rect2(rect.position + Vector2(6.0, 9.0), Vector2(58.0, 12.0))
+	draw_rect(gauge.grow(1.5), Color(0.0, 0.0, 0.0, 0.20), true)
+	draw_rect(gauge, Color("#09130d", 0.86), true)
+	var segments := 5
+	var gap := 1.5
+	var seg_w := (gauge.size.x - gap * float(segments - 1)) / float(segments)
+	for i in range(segments):
+		var seg := Rect2(gauge.position + Vector2(float(i) * (seg_w + gap), 2.0), Vector2(seg_w, gauge.size.y - 4.0))
+		var color := Color("#1b3b2c")
+		if i >= 1 and i <= 3:
+			color = Color("#27c85f")
+		draw_rect(seg, color, true)
+		draw_rect(Rect2(seg.position, Vector2(seg.size.x, 2.0)), Color(1.0, 1.0, 1.0, 0.08), true)
+	_draw_text(font, "安全域", rect.position + Vector2(72.0, 19.0), 16 if _hud_frame != null else 15, Color("#21170f"), 0)
+	var note_font := GameFontsScript.regular(get_theme_default_font())
+	_draw_text(note_font, "緑ゲージを保つ", rect.position + Vector2(6.0, 40.0), 10 if _hud_frame != null else 11, Color("#3a2a18"), 0)
+
+
+func _draw_status_hint(font: Font, rect: Rect2, label: String, note: String) -> void:
+	var dot := rect.position + Vector2(14.0, 16.0)
+	draw_circle(dot + Vector2(1.0, 1.0), 5.0, Color(0.0, 0.0, 0.0, 0.18))
+	draw_circle(dot, 4.5, Color("#d7b766", 0.70))
+	_draw_text(font, label, rect.position + Vector2(26.0, 20.0), 16 if _hud_frame != null else 15, Color("#5c4b35", 0.86), 0)
+	var note_font := GameFontsScript.regular(get_theme_default_font())
+	_draw_text(note_font, note, rect.position + Vector2(8.0, 40.0), 10 if _hud_frame != null else 11, Color("#6c5c43", 0.72), 0)
+
+
+func _keyboard_key_width(key: String) -> float:
+	match key:
+		"Space":
+			return 58.0
+		"Shift":
+			return 54.0
+		"E / Enter":
+			return 76.0
+	return 44.0
+
+
+func _simulator_state() -> int:
+	if simulator == null:
+		return FishingSimulator.State.READY
+	return simulator.state
+
+
+func _can_reel_controls() -> bool:
+	return _simulator_state() == FishingSimulator.State.FIGHT
+
+
+func _is_reeling_active() -> bool:
+	return _reeling or (simulator != null and simulator.reeling)
+
+
+func _is_giving_active() -> bool:
+	return _giving or (simulator != null and simulator.giving_line)
 
 
 func _draw_key_row(font: Font, pos: Vector2, key: String, label: String) -> void:
@@ -546,25 +619,11 @@ func _draw_menu_row(font: Font, pos: Vector2, key: String, label: String) -> voi
 
 func _key_texture(key: String) -> Texture2D:
 	match key:
-		"A":
-			return _key_a_icon
-		"B":
-			return _key_b_icon
-		"L/R":
-			return _key_lr_icon
 		"+":
 			return _key_plus_icon
 		"-":
 			return _key_minus_icon
 	return null
-
-
-func _compact_control_note(note: String) -> String:
-	if note.begins_with("リール"):
-		return "リールを巻く"
-	if note.begins_with("ライン"):
-		return "ラインを出す"
-	return "テンション"
 
 
 func _hint_key_slots(hint: Rect2) -> Array[Rect2]:

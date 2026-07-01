@@ -392,10 +392,10 @@ func _input(event: InputEvent) -> void:
 		return
 	if _result_overlay != null and _result_overlay.visible:
 		return
-	if key_event.keycode == KEY_SPACE:
+	if key_event.keycode == KEY_SPACE and _simulator.state == FishingSimulator.State.FIGHT:
 		_simulator.set_reeling(key_event.pressed)
 		get_viewport().set_input_as_handled()
-	elif key_event.keycode == KEY_SHIFT:
+	elif key_event.keycode == KEY_SHIFT and _simulator.state == FishingSimulator.State.FIGHT:
 		_simulator.set_giving_line(key_event.pressed)
 		get_viewport().set_input_as_handled()
 	elif (
