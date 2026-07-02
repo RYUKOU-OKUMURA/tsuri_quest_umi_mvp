@@ -339,7 +339,7 @@ func _build_detail_panel(parent: Control) -> void:
 	box.add_child(_detail_unlock_label)
 
 	var thumb_clip := Control.new()
-	thumb_clip.custom_minimum_size = Vector2(0.0, 116.0)
+	thumb_clip.custom_minimum_size = Vector2(0.0, 108.0)
 	thumb_clip.clip_contents = true
 	thumb_clip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(thumb_clip)
@@ -353,7 +353,7 @@ func _build_detail_panel(parent: Control) -> void:
 	thumb_clip.add_child(_detail_thumbnail)
 
 	_detail_description_label = make_label("", 12, Color("#2f2114"))
-	_detail_description_label.custom_minimum_size = Vector2(0.0, 30.0)
+	_detail_description_label.custom_minimum_size = Vector2(0.0, 28.0)
 	_detail_description_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_detail_description_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_detail_description_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -363,15 +363,15 @@ func _build_detail_panel(parent: Control) -> void:
 	var rows := VBoxContainer.new()
 	rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rows.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	rows.add_theme_constant_override("separation", 4)
+	rows.add_theme_constant_override("separation", 3)
 	box.add_child(rows)
 	_detail_depth_value_label = _make_detail_row(rows, 0, "水深")
-	_detail_fish_value_label = _make_detail_row(rows, 1, "狙い")
+	_detail_fish_value_label = _make_detail_row(rows, 1, "狙い", 40.0, false, 14)
 	_detail_bait_value_label = _make_detail_row(rows, 2, "エサ")
 
 	var button_box := VBoxContainer.new()
 	button_box.size_flags_vertical = Control.SIZE_SHRINK_END
-	button_box.add_theme_constant_override("separation", 6)
+	button_box.add_theme_constant_override("separation", 4)
 	box.add_child(button_box)
 
 	_action_button = make_button("ここで釣る", func() -> void: _select_spot(_selected_spot_id), 0, true)
@@ -382,7 +382,7 @@ func _build_detail_panel(parent: Control) -> void:
 	button_box.add_child(_action_button)
 
 	var back := make_return_button(func() -> void: navigate("harbor"), 0.0)
-	back.custom_minimum_size.y = 40.0
+	back.custom_minimum_size.y = 50.0
 	back.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	back.add_theme_font_size_override("font_size", 20)
 	button_box.add_child(back)
@@ -443,20 +443,29 @@ func _detail_secondary_button_pressed_style() -> StyleBoxFlat:
 	return style
 
 
-func _make_detail_row(parent: Control, icon_index: int, title: String) -> Label:
+func _make_detail_row(
+	parent: Control,
+	icon_index: int,
+	title: String,
+	row_height: float = 36.0,
+	multiline_value: bool = false,
+	value_font_size: int = 17
+) -> Label:
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(0.0, 36.0)
+	panel.custom_minimum_size = Vector2(0.0, row_height)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.add_theme_stylebox_override("panel", _detail_row_style())
 	parent.add_child(panel)
 
 	var row := HBoxContainer.new()
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	row.add_theme_constant_override("separation", 8)
 	panel.add_child(row)
 
 	var icon := TextureRect.new()
 	icon.custom_minimum_size = Vector2(26.0, 26.0)
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.texture = _detail_icon(icon_index)
@@ -466,15 +475,20 @@ func _make_detail_row(parent: Control, icon_index: int, title: String) -> Label:
 	var title_label := make_label(title, 16, Color("#6e4a24"))
 	title_label.custom_minimum_size = Vector2(46.0, 0.0)
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(title_label)
 
-	var value_label := make_label("", 17, Color("#1b1008"))
+	var value_label := make_label("", 16 if multiline_value else value_font_size, Color("#1b1008"))
+	value_label.custom_minimum_size = Vector2(0.0, 40.0 if multiline_value else 0.0)
 	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	value_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	value_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	value_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP if multiline_value else VERTICAL_ALIGNMENT_CENTER
+	value_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if multiline_value else TextServer.AUTOWRAP_OFF
 	value_label.clip_text = true
-	value_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	value_label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING if multiline_value else TextServer.OVERRUN_TRIM_ELLIPSIS
+	if multiline_value:
+		value_label.max_lines_visible = 2
 	value_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(value_label)
 	return value_label
@@ -1083,7 +1097,7 @@ func _depth_range_text(spot: Dictionary) -> String:
 	return "%.1f〜%.1fm" % [float(range[0]), float(range[1])]
 
 
-func _featured_fish_text(spot: Dictionary, limit: int = 5) -> String:
+func _featured_fish_text(spot: Dictionary, limit: int = 5, names_per_line: int = 0) -> String:
 	var names: Array[String] = []
 	for fish_id_variant in Array(spot.get("featured_fish", [])):
 		var fish := GameData.get_fish(String(fish_id_variant))
@@ -1092,7 +1106,16 @@ func _featured_fish_text(spot: Dictionary, limit: int = 5) -> String:
 		names.append(String(fish.get("name", fish_id_variant)))
 		if names.size() >= limit:
 			break
-	return "、".join(PackedStringArray(names))
+	if names_per_line <= 0 or names.size() <= names_per_line:
+		return "、".join(PackedStringArray(names))
+	var lines: Array[String] = []
+	var line: Array[String] = []
+	for index in range(names.size()):
+		line.append(names[index])
+		if line.size() >= names_per_line or index == names.size() - 1:
+			lines.append("、".join(PackedStringArray(line)))
+			line.clear()
+	return "\n".join(PackedStringArray(lines))
 
 
 func _bait_text(spot: Dictionary) -> String:
