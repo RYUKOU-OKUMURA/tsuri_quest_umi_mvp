@@ -17,11 +17,17 @@ func _ready() -> void:
 	_expect(_screen._grid != null, "fish book grid should be present")
 	_expect(_screen._detail_name_label != null, "fish detail name label should be present")
 	_expect(_screen._detail_spots != null, "fish detail spot strip should be present")
-	_expect(_screen._found_label.text.contains("3/"), "found count should reflect caught fish")
+	_expect(_screen._found_label.text.contains("4/"), "found count should reflect caught fish")
+	_expect(_screen._player_status_bar._status_values()[1] == "青嵐", "status bar should shorten long rod names")
+	_expect(_screen._player_status_bar._status_values()[2] == "123,456 G", "status bar should format long money values")
 	_expect(_screen._selected_fish_id == "aji", "first discovered fish should be selected")
 	_expect(_screen._detail_name_label.text == "アジ", "discovered detail should show fish name")
 	_expect(_screen._detail_habitat_label.text != "？？？", "discovered detail should show habitat")
 	_expect(_screen._detail_spots.get_child_count() > 0, "discovered fish should show spot strip entries")
+
+	_screen._select_fish("boss_kurodai")
+	_expect(_screen._detail_name_label.text == "港のぬし・大岩クロダイ", "long boss fish name should be shown in full")
+	_expect(_screen._detail_rarity_label.text == "ぬし", "boss rarity should be shown")
 
 	_screen._select_fish("mejina")
 	_expect(_screen._detail_name_label.text == "？？？？？", "undiscovered fish name should be hidden")
@@ -32,6 +38,17 @@ func _ready() -> void:
 	_expect(_screen._filtered_fish_ids().has("madai"), "rare filter should include madai")
 	_expect(_screen._selected_fish_id == "madai", "rare filter should select discovered rare fish")
 	_expect(_screen._detail_name_label.text == "マダイ", "rare discovered fish should show detail")
+
+	PlayerProgress.caught_counts = {}
+	PlayerProgress.best_sizes = {}
+	PlayerProgress.spot_caught_counts = {}
+	_screen._active_filter = "all"
+	_screen._selected_fish_id = ""
+	_screen._ensure_valid_selection()
+	_screen._refresh_all()
+	await get_tree().process_frame
+	_expect(_screen._found_label.text.contains("0/"), "empty progress should show zero discovered fish")
+	_expect(_screen._detail_name_label.text == "？？？？？", "empty progress detail should stay hidden")
 
 	var return_button := _find_return_button(_screen)
 	_expect(return_button != null, "return button should exist")
@@ -47,22 +64,25 @@ func _ready() -> void:
 
 func _seed_progress() -> void:
 	PlayerProgress.level = 4
-	PlayerProgress.money = 12840
-	PlayerProgress.equipped_rod_id = "starter"
+	PlayerProgress.money = 123456
+	PlayerProgress.equipped_rod_id = "offshore"
 	PlayerProgress.caught_counts = {
 		"aji": 12,
 		"saba": 8,
 		"madai": 2,
+		"boss_kurodai": 1,
 	}
 	PlayerProgress.best_sizes = {
 		"aji": 34.2,
 		"saba": 38.6,
 		"madai": 48.2,
+		"boss_kurodai": 88.8,
 	}
 	PlayerProgress.spot_caught_counts = {
 		"harbor_pier": {"aji": 12},
 		"outer_tide": {"saba": 8},
 		"south_reef": {"madai": 2},
+		"harbor_boulder": {"boss_kurodai": 1},
 	}
 
 

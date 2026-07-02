@@ -34,7 +34,7 @@ func _draw() -> void:
 
 	var font := GameFontsScript.extra_bold(get_theme_default_font())
 	var values := _status_values()
-	var slots := _slot_rects(rect)
+	var slots := _slot_rects(rect, font, values)
 	for index in range(mini(values.size(), slots.size())):
 		_draw_slot(font, slots[index], index, String(values[index]))
 
@@ -48,13 +48,19 @@ func _status_values() -> Array[String]:
 	]
 
 
-func _slot_rects(rect: Rect2) -> Array[Rect2]:
+func _slot_rects(rect: Rect2, font: Font, values: Array[String]) -> Array[Rect2]:
 	var pad_x := maxf(10.0, rect.size.x * 0.018)
 	var y := rect.position.y + rect.size.y * 0.14
 	var h := rect.size.y * 0.72
 	var w := rect.size.x - pad_x * 2.0
-	var lv_w := w * 0.25
-	var rod_w := w * 0.43
+	var icon_size := clampf(h * 0.72, 28.0, 38.0)
+	var lv_text_w := font.get_string_size(String(values[0]), HORIZONTAL_ALIGNMENT_LEFT, -1, 17).x
+	var money_text_w := font.get_string_size(String(values[2]), HORIZONTAL_ALIGNMENT_LEFT, -1, 17).x
+	var lv_w := clampf(icon_size + lv_text_w + 24.0, w * 0.18, w * 0.24)
+	var money_w := clampf(icon_size + money_text_w + 24.0, w * 0.34, minf(w * 0.48, 184.0))
+	var rod_w := maxf(w - lv_w - money_w, w * 0.24)
+	if lv_w + rod_w + money_w > w:
+		rod_w = maxf(w - lv_w - money_w, 0.0)
 	return [
 		Rect2(rect.position.x + pad_x, y, lv_w, h),
 		Rect2(rect.position.x + pad_x + lv_w, y, rod_w, h),
@@ -64,6 +70,8 @@ func _slot_rects(rect: Rect2) -> Array[Rect2]:
 
 func _draw_slot(font: Font, rect: Rect2, icon_index: int, text: String) -> void:
 	var icon_size := clampf(rect.size.y * 0.72, 28.0, 38.0)
+	if icon_index == 2 and rect.size.x < 150.0:
+		icon_size = clampf(rect.size.y * 0.62, 24.0, 32.0)
 	var icon_rect := Rect2(
 		rect.position + Vector2(6.0, (rect.size.y - icon_size) * 0.5),
 		Vector2(icon_size, icon_size)
@@ -75,7 +83,9 @@ func _draw_slot(font: Font, rect: Rect2, icon_index: int, text: String) -> void:
 	var font_size := 19
 	if rect.size.x < 145.0:
 		font_size = 17
-	var display := _fit_text(font, text, font_size, max_width)
+	if icon_index == 2:
+		font_size = _fit_font_size(font, text, 17, 13, max_width)
+	var display := text if icon_index == 2 else _fit_text(font, text, font_size, max_width)
 	draw_string_outline(font, Vector2(text_x, baseline), display, HORIZONTAL_ALIGNMENT_LEFT, max_width, font_size, 2, Palette.TEXT_OUTLINE_DARK)
 	draw_string(font, Vector2(text_x, baseline), display, HORIZONTAL_ALIGNMENT_LEFT, max_width, font_size, Palette.TEXT_BONE)
 
@@ -111,6 +121,13 @@ func _fit_text(font: Font, text: String, font_size: int, max_width: float) -> St
 	return ellipsis
 
 
+func _fit_font_size(font: Font, text: String, base_size: int, minimum_size: int, max_width: float) -> int:
+	for size in range(base_size, minimum_size - 1, -1):
+		if font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x <= max_width:
+			return size
+	return minimum_size
+
+
 func _format_money(value: int) -> String:
 	var raw := str(value)
 	var result := ""
@@ -124,6 +141,8 @@ func _format_money(value: int) -> String:
 
 
 func _short_rod_name(rod_name: String) -> String:
+	if rod_name.begins_with("港の"):
+		rod_name = rod_name.substr(2)
 	var parts := rod_name.split("・")
 	if parts.size() >= 2:
 		return String(parts[1])
