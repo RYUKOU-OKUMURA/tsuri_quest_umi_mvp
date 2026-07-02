@@ -20,6 +20,14 @@ TEXT = "#f4ead1"
 MUTED = "#9fe8ff"
 
 PRESETS = {
+    "status": [
+        {
+            "id": "STATUS",
+            "reference": ROOT / "reference" / "08_status_screen_mockup.png",
+            "capture": Path("/tmp/tsuri_status.png"),
+            "out": Path("/tmp/tsuri_status_compare.png"),
+        }
+    ],
     "fish_book": [
         {
             "id": "FISH_BOOK",
