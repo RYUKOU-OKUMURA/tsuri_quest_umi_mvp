@@ -8,6 +8,8 @@ const VW := Vector2i(1280, 720)
 const OUT_DEFAULT := "/tmp/tsuri_fishing_spot_map.png"
 const OUT_CONTINUE := "/tmp/tsuri_fishing_spot_map_continue.png"
 
+var _had_capture_error := false
+
 
 func _ready() -> void:
 	PlayerProgress.level = 3
@@ -34,7 +36,7 @@ func _ready() -> void:
 	print("fishing_spot_map_preview:")
 	print(OUT_DEFAULT)
 	print(OUT_CONTINUE)
-	get_tree().quit()
+	get_tree().quit(1 if _had_capture_error else 0)
 
 
 func _capture(payload: Dictionary, out_path: String) -> void:
@@ -57,7 +59,8 @@ func _capture(payload: Dictionary, out_path: String) -> void:
 	if FileAccess.file_exists(out_path):
 		DirAccess.remove_absolute(out_path)
 	var img := vp.get_texture().get_image()
-	if img == null:
+	if img == null or img.is_empty():
+		_had_capture_error = true
 		push_error("SubViewport get_image() returned null for %s" % out_path)
 	else:
 		img.save_png(out_path)
