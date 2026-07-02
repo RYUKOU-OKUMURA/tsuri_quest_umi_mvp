@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bkld2332wlkoy"
-path="res://.godot/imported/shiira_card_portrait.png-0739c0a7d246137600ca9f9134a49193.ctex"
+path="res://.godot/imported/shiira_card_portrait.png-93a07143e701a477ea4adc7371596308.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/underwater/fish/shiira_card_portrait.png"
-dest_files=["res://.godot/imported/shiira_card_portrait.png-0739c0a7d246137600ca9f9134a49193.ctex"]
+source_file="res://assets/showcase/fish/shiira_card_portrait.png"
+dest_files=["res://.godot/imported/shiira_card_portrait.png-93a07143e701a477ea4adc7371596308.ctex"]
 
 [params]
 

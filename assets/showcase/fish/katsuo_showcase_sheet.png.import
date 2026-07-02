@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://lyrv47xjhkbg"
-path="res://.godot/imported/katsuo_showcase_sheet.png-9627096a69ea90b7a147996b3ea1b8a5.ctex"
+path="res://.godot/imported/katsuo_showcase_sheet.png-3d5149b33eb98c5a23b85ba0ae19bbd4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/underwater/fish/katsuo_showcase_sheet.png"
-dest_files=["res://.godot/imported/katsuo_showcase_sheet.png-9627096a69ea90b7a147996b3ea1b8a5.ctex"]
+source_file="res://assets/showcase/fish/katsuo_showcase_sheet.png"
+dest_files=["res://.godot/imported/katsuo_showcase_sheet.png-3d5149b33eb98c5a23b85ba0ae19bbd4.ctex"]
 
 [params]
 

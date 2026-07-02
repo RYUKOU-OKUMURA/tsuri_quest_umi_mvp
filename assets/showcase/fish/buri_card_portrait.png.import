@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://coc6idymeaste"
-path="res://.godot/imported/buri_card_portrait.png-be386fdeaa8201518c76de6c932e95df.ctex"
+path="res://.godot/imported/buri_card_portrait.png-b039c1c0639f81f70b07ebc04d05c272.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/underwater/fish/buri_card_portrait.png"
-dest_files=["res://.godot/imported/buri_card_portrait.png-be386fdeaa8201518c76de6c932e95df.ctex"]
+source_file="res://assets/showcase/fish/buri_card_portrait.png"
+dest_files=["res://.godot/imported/buri_card_portrait.png-b039c1c0639f81f70b07ebc04d05c272.ctex"]
 
 [params]
 

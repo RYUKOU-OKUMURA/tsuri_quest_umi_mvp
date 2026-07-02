@@ -4,6 +4,7 @@ const GaugeBarScript = preload("res://src/ui/components/gauge_bar.gd")
 const LevelUpPanelScript = preload("res://src/ui/components/level_up_panel.gd")
 const CookingRewardPanelScript = preload("res://src/ui/components/cooking_reward_panel.gd")
 const CookingStatusPanelScript = preload("res://src/ui/components/cooking_status_panel.gd")
+const FightFishAssets = preload("res://src/ui/fight_fish_assets.gd")
 
 const COOKING_BG := "res://assets/showcase/cooking/cooking_room_bg.png"
 const COOKING_TITLE_BANNER := "res://assets/showcase/cooking/cooking_title_banner.png"
@@ -29,20 +30,6 @@ const PREP_SUMMARY_BAR_FRAME := "res://assets/showcase/cooking/prep_summary_bar_
 const PREP_SUMMARY_CARD_FRAME := "res://assets/showcase/cooking/prep_summary_card_frame.png"
 const FISH_ROW_FRAME := "res://assets/showcase/cooking/fish_row_frame.png"
 const PLAYER_HEADER_PORTRAIT := "res://assets/showcase/cooking/player_status_portrait_pixel.png"
-const FISH_CARD_PORTRAIT_PATHS := {
-	"aji": "res://assets/showcase/underwater/fish/aji_card_portrait.png",
-	"saba": "res://assets/showcase/underwater/fish/saba_card_portrait.png",
-	"tai": "res://assets/showcase/underwater/fish/madai_card_portrait.png",
-	"madai": "res://assets/showcase/underwater/fish/madai_card_portrait.png",
-	"kasago": "res://assets/showcase/underwater/fish/kasago_card_portrait.png",
-	"suzuki": "res://assets/showcase/underwater/fish/suzuki_card_portrait.png",
-	"kawahagi": "res://assets/showcase/underwater/fish/kawahagi_card_portrait.png",
-	"hirame": "res://assets/showcase/underwater/fish/hirame_card_portrait.png",
-	"mejina": "res://assets/showcase/underwater/fish/mejina_card_portrait.png",
-	"isaki": "res://assets/showcase/underwater/fish/isaki_card_portrait.png",
-	"boss_kurodai": "res://assets/showcase/underwater/fish/kurodai_card_portrait.png",
-}
-
 const COOKING_FISH_DISPLAY_ORDER := [
 	"aji",
 	"saba",
@@ -2227,13 +2214,8 @@ func _fish_row_texture(fish_id: String) -> Texture2D:
 
 
 func _fish_portrait(fish_id: String) -> Texture2D:
-	var path := String(FISH_CARD_PORTRAIT_PATHS.get(fish_id, ""))
-	if not path.is_empty():
-		var tex := load(path) as Texture2D
-		if tex != null:
-			return tex
-	var asset_id := "kurodai" if fish_id == "boss_kurodai" else fish_id
-	path = "res://assets/showcase/underwater/fish/%s_card_portrait.png" % asset_id
+	var asset_id := "madai" if fish_id == "tai" else fish_id
+	var path := FightFishAssets.card_portrait_path({"id": asset_id})
 	if ResourceLoader.exists(path) or FileAccess.file_exists(path):
 		var generated_tex := load(path) as Texture2D
 		if generated_tex != null:

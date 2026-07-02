@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://xabyfp63b7d8"
-path="res://.godot/imported/katsuo_card_portrait.png-64cf90f3617debc1587e0b651c38fc54.ctex"
+path="res://.godot/imported/katsuo_card_portrait.png-2e72c037dd530d3f48c54d4c1e9fe7ec.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/underwater/fish/katsuo_card_portrait.png"
-dest_files=["res://.godot/imported/katsuo_card_portrait.png-64cf90f3617debc1587e0b651c38fc54.ctex"]
+source_file="res://assets/showcase/fish/katsuo_card_portrait.png"
+dest_files=["res://.godot/imported/katsuo_card_portrait.png-2e72c037dd530d3f48c54d4c1e9fe7ec.ctex"]
 
 [params]
 

@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://lkkxq37k7oiu"
-path="res://.godot/imported/isaki_showcase_sheet.png-c2717ece2ac233da08581cd0004230a8.ctex"
+path="res://.godot/imported/isaki_showcase_sheet.png-d705f17bdb2900dbea295b4981865582.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/underwater/fish/isaki_showcase_sheet.png"
-dest_files=["res://.godot/imported/isaki_showcase_sheet.png-c2717ece2ac233da08581cd0004230a8.ctex"]
+source_file="res://assets/showcase/fish/isaki_showcase_sheet.png"
+dest_files=["res://.godot/imported/isaki_showcase_sheet.png-d705f17bdb2900dbea295b4981865582.ctex"]
 
 [params]
 

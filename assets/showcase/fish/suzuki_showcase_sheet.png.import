@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://blgqkmnhh73di"
-path="res://.godot/imported/suzuki_showcase_sheet.png-7817d0df6e0df399a23a34f3bddad7aa.ctex"
+path="res://.godot/imported/suzuki_showcase_sheet.png-9e465b821390e25393ff396aa15d95f6.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/underwater/fish/suzuki_showcase_sheet.png"
-dest_files=["res://.godot/imported/suzuki_showcase_sheet.png-7817d0df6e0df399a23a34f3bddad7aa.ctex"]
+source_file="res://assets/showcase/fish/suzuki_showcase_sheet.png"
+dest_files=["res://.godot/imported/suzuki_showcase_sheet.png-9e465b821390e25393ff396aa15d95f6.ctex"]
 
 [params]
 

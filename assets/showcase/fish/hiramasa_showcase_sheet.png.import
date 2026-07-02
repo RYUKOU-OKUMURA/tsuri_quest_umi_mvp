@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ixlc2654u4qc"
-path="res://.godot/imported/hiramasa_showcase_sheet.png-846be17950d5ad1ad42988baf97817fd.ctex"
+path="res://.godot/imported/hiramasa_showcase_sheet.png-1e53ed6e5399e83efedde4bc38a37b70.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/underwater/fish/hiramasa_showcase_sheet.png"
-dest_files=["res://.godot/imported/hiramasa_showcase_sheet.png-846be17950d5ad1ad42988baf97817fd.ctex"]
+source_file="res://assets/showcase/fish/hiramasa_showcase_sheet.png"
+dest_files=["res://.godot/imported/hiramasa_showcase_sheet.png-1e53ed6e5399e83efedde4bc38a37b70.ctex"]
 
 [params]
 

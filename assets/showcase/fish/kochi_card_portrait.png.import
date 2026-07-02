@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://sldvfoterjvq"
-path="res://.godot/imported/kochi_card_portrait.png-145caedf5d3171bdf002f0847d882e9b.ctex"
+path="res://.godot/imported/kochi_card_portrait.png-07cfb8eaaddb17af27d5f1c56bf336ad.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/underwater/fish/kochi_card_portrait.png"
-dest_files=["res://.godot/imported/kochi_card_portrait.png-145caedf5d3171bdf002f0847d882e9b.ctex"]
+source_file="res://assets/showcase/fish/kochi_card_portrait.png"
+dest_files=["res://.godot/imported/kochi_card_portrait.png-07cfb8eaaddb17af27d5f1c56bf336ad.ctex"]
 
 [params]
 

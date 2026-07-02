@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://emkwnquyphpg"
-path="res://.godot/imported/kurodai_showcase_sheet.png-7ec1ef3e65aaa76a2c1bacb94f522ad8.ctex"
+path="res://.godot/imported/kurodai_showcase_sheet.png-f3ef23d484fbca1036a19083791b4b41.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/underwater/fish/kurodai_showcase_sheet.png"
-dest_files=["res://.godot/imported/kurodai_showcase_sheet.png-7ec1ef3e65aaa76a2c1bacb94f522ad8.ctex"]
+source_file="res://assets/showcase/fish/kurodai_showcase_sheet.png"
+dest_files=["res://.godot/imported/kurodai_showcase_sheet.png-f3ef23d484fbca1036a19083791b4b41.ctex"]
 
 [params]
 

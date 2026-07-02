@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dmv553dicfkbu"
-path="res://.godot/imported/kanpachi_card_portrait.png-e9ae2461bb00c9e85b680e6c503e50a2.ctex"
+path="res://.godot/imported/kanpachi_card_portrait.png-b50f4919fec8866355c137c7607c2820.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/underwater/fish/kanpachi_card_portrait.png"
-dest_files=["res://.godot/imported/kanpachi_card_portrait.png-e9ae2461bb00c9e85b680e6c503e50a2.ctex"]
+source_file="res://assets/showcase/fish/kanpachi_card_portrait.png"
+dest_files=["res://.godot/imported/kanpachi_card_portrait.png-b50f4919fec8866355c137c7607c2820.ctex"]
 
 [params]
 

@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d125m243qivl7"
-path="res://.godot/imported/tachiuo_card_portrait.png-ba38b57812ab706e276efc991388daad.ctex"
+path="res://.godot/imported/tachiuo_card_portrait.png-f83320199ead1769749eedfa1c397b5e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/underwater/fish/tachiuo_card_portrait.png"
-dest_files=["res://.godot/imported/tachiuo_card_portrait.png-ba38b57812ab706e276efc991388daad.ctex"]
+source_file="res://assets/showcase/fish/tachiuo_card_portrait.png"
+dest_files=["res://.godot/imported/tachiuo_card_portrait.png-f83320199ead1769749eedfa1c397b5e.ctex"]
 
 [params]
 

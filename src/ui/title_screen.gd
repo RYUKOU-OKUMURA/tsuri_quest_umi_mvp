@@ -2,6 +2,7 @@ extends "res://src/ui/screen_base.gd"
 
 const TitleBackdropScript = preload("res://src/ui/components/title_backdrop.gd")
 const GameFontsScript = preload("res://src/ui/game_fonts.gd")
+const FightFishAssets = preload("res://src/ui/fight_fish_assets.gd")
 
 const TITLE_LOGO_FRAME_PATH := "res://assets/showcase/title/title_logo_frame.png"
 const TITLE_MENU_FRAME_PATH := "res://assets/showcase/title/title_menu_frame.png"
@@ -11,8 +12,7 @@ const TITLE_BUTTON_PRIMARY_PRESSED_PATH := "res://assets/showcase/title/title_bu
 const TITLE_BUTTON_SECONDARY_PATH := "res://assets/showcase/title/title_button_secondary.png"
 const TITLE_BUTTON_SECONDARY_HOVER_PATH := "res://assets/showcase/title/title_button_secondary_hover.png"
 const TITLE_BUTTON_DISABLED_PATH := "res://assets/showcase/title/title_button_disabled.png"
-const TITLE_FISH_PATH := "res://assets/showcase/underwater/fish/kurodai_card_portrait.png"
-const TITLE_BAIT_PATH := "res://assets/showcase/underwater/hud_bait_icon.png"
+const TITLE_BAIT_PATH := "res://assets/showcase/common/nav_fishing_icon.png"
 
 var _confirm_reset: ConfirmationDialog
 
@@ -70,7 +70,7 @@ func _build_fish_feature(root: Control) -> void:
 	var feature := _anchored_control(root, 0.050, 0.555, 0.430, 0.930, 0, 0, 0, 0)
 	feature.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-	var fish_texture := _load_texture_if_exists(TITLE_FISH_PATH)
+	var fish_texture := _load_texture_if_exists(FightFishAssets.card_portrait_path({"id": "boss_kurodai"}))
 	if fish_texture != null:
 		var fish := TextureRect.new()
 		fish.texture = fish_texture

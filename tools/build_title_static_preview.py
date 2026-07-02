@@ -12,6 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSET_DIR = ROOT / "assets" / "showcase"
 TITLE_DIR = ASSET_DIR / "title"
 UNDERWATER_DIR = ASSET_DIR / "underwater"
+COMMON_DIR = ASSET_DIR / "common"
+FISH_DIR = ASSET_DIR / "fish"
 FONT_BOLD = ROOT / "assets" / "fonts" / "line_seed" / "LINESeedJP_A_TTF_Eb.ttf"
 FONT_REGULAR = ROOT / "assets" / "fonts" / "line_seed" / "LINESeedJP_A_TTF_Rg.ttf"
 OUT = Path("/tmp/tsuri_title_static_preview.png")
@@ -93,7 +95,7 @@ def _rect(ratios: tuple[float, float, float, float]) -> tuple[int, int, int, int
 
 def build_preview() -> Image.Image:
     bg = _cover(Image.open(TITLE_DIR / "title_ocean_bg.png").convert("RGBA"), VIEWPORT)
-    ambience_path = UNDERWATER_DIR / "underwater_foreground_ambience.png"
+    ambience_path = TITLE_DIR / "title_foreground_ambience.png"
     if ambience_path.exists():
         _alpha_composite(bg, _cover(Image.open(ambience_path).convert("RGBA"), VIEWPORT, (0.5, 0.55)), alpha=0.22)
     grade_path = TITLE_DIR / "title_color_grade.png"
@@ -140,7 +142,7 @@ def build_preview() -> Image.Image:
     )
 
     fish_box = _rect((0.050, 0.555, 0.430, 0.930))
-    fish = Image.open(UNDERWATER_DIR / "fish" / "kurodai_card_portrait.png").convert("RGBA")
+    fish = Image.open(FISH_DIR / "kurodai_card_portrait.png").convert("RGBA")
     fish = _fit_contain(fish, (fish_box[2] - fish_box[0], fish_box[3] - fish_box[1] - 40))
     fish.putalpha(fish.getchannel("A").point(lambda v: round(v * 0.92)))
     _alpha_composite(bg, fish, (round((fish_box[0] + fish_box[2] - fish.width) * 0.5), fish_box[1] - 10))
@@ -154,7 +156,7 @@ def build_preview() -> Image.Image:
     menu_w = menu_box[2] - menu_box[0]
     menu_h = menu_box[3] - menu_box[1]
     header_y = menu_box[1] + round(menu_h * 0.128)
-    bait = Image.open(UNDERWATER_DIR / "hud_bait_icon.png").convert("RGBA").resize((34, 34), Image.Resampling.LANCZOS)
+    bait = Image.open(COMMON_DIR / "nav_fishing_icon.png").convert("RGBA").resize((34, 34), Image.Resampling.LANCZOS)
     _alpha_composite(bg, bait, (menu_box[0] + round(menu_w * 0.285), menu_box[1] + round(menu_h * 0.075)))
     _draw_centered_text(
         draw,
@@ -204,8 +206,8 @@ def main() -> int:
         TITLE_DIR / "title_menu_frame.png",
         TITLE_DIR / "title_button_primary.png",
         TITLE_DIR / "title_button_disabled.png",
-        UNDERWATER_DIR / "fish" / "kurodai_card_portrait.png",
-        UNDERWATER_DIR / "hud_bait_icon.png",
+        FISH_DIR / "kurodai_card_portrait.png",
+        COMMON_DIR / "nav_fishing_icon.png",
     ]
     missing = [path for path in missing if not path.exists()]
     if missing:

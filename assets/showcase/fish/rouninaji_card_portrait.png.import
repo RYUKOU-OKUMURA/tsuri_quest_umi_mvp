@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://nfa7gtm4msfc"
-path="res://.godot/imported/rouninaji_card_portrait.png-c0db5477fed579ba3d787030e2c56ad7.ctex"
+path="res://.godot/imported/rouninaji_card_portrait.png-1c48e8c7b9a44be66379f34c817c3f04.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/underwater/fish/rouninaji_card_portrait.png"
-dest_files=["res://.godot/imported/rouninaji_card_portrait.png-c0db5477fed579ba3d787030e2c56ad7.ctex"]
+source_file="res://assets/showcase/fish/rouninaji_card_portrait.png"
+dest_files=["res://.godot/imported/rouninaji_card_portrait.png-1c48e8c7b9a44be66379f34c817c3f04.ctex"]
 
 [params]
 

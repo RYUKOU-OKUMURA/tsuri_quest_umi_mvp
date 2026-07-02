@@ -9,6 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "assets" / "showcase" / "underwater"
+FISH_OUT_DIR = ROOT / "assets" / "showcase" / "fish"
 
 Color = tuple[int, int, int, int]
 
@@ -275,7 +276,8 @@ def create_fish_sheet() -> None:
     sheet = Canvas(frames[0].w * 4, frames[0].h)
     for i, frame in enumerate(frames):
         sheet.paste(frame, i * frame.w, 0)
-    sheet.save_png(OUT_DIR / "kurodai_showcase_sheet.png")
+    FISH_OUT_DIR.mkdir(parents=True, exist_ok=True)
+    sheet.save_png(FISH_OUT_DIR / "kurodai_showcase_sheet.png")
 
 
 def create_hit_burst() -> None:
@@ -299,6 +301,7 @@ def create_hit_burst() -> None:
 
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
+    FISH_OUT_DIR.mkdir(parents=True, exist_ok=True)
     create_background()
     create_fish_sheet()
     create_hit_burst()

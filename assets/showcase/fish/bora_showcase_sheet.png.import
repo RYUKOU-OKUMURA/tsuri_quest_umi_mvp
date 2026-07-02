@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dw4c52hieb21j"
-path="res://.godot/imported/bora_showcase_sheet.png-c7419c4c4f22201007c197e2ec99fd3f.ctex"
+path="res://.godot/imported/bora_showcase_sheet.png-f7b84b881757e33a78d3728c174fcddc.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/underwater/fish/bora_showcase_sheet.png"
-dest_files=["res://.godot/imported/bora_showcase_sheet.png-c7419c4c4f22201007c197e2ec99fd3f.ctex"]
+source_file="res://assets/showcase/fish/bora_showcase_sheet.png"
+dest_files=["res://.godot/imported/bora_showcase_sheet.png-f7b84b881757e33a78d3728c174fcddc.ctex"]
 
 [params]
 

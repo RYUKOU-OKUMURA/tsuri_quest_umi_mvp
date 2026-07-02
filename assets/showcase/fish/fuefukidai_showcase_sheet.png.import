@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c3pucutx6kjvs"
-path="res://.godot/imported/fuefukidai_showcase_sheet.png-4c66df2d056d3af1e478b70987d04d92.ctex"
+path="res://.godot/imported/fuefukidai_showcase_sheet.png-724ac7567d864c8d5b1219e230716f8a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/underwater/fish/fuefukidai_showcase_sheet.png"
-dest_files=["res://.godot/imported/fuefukidai_showcase_sheet.png-4c66df2d056d3af1e478b70987d04d92.ctex"]
+source_file="res://assets/showcase/fish/fuefukidai_showcase_sheet.png"
+dest_files=["res://.godot/imported/fuefukidai_showcase_sheet.png-724ac7567d864c8d5b1219e230716f8a.ctex"]
 
 [params]
 

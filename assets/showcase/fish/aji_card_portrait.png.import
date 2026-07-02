@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dogiwr1nefwe0"
-path="res://.godot/imported/aji_card_portrait.png-5dadf2fb57248b9e6c911a0cf814cb76.ctex"
+path="res://.godot/imported/aji_card_portrait.png-db647c81c322133865aca6cec96e0b6a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/underwater/fish/aji_card_portrait.png"
-dest_files=["res://.godot/imported/aji_card_portrait.png-5dadf2fb57248b9e6c911a0cf814cb76.ctex"]
+source_file="res://assets/showcase/fish/aji_card_portrait.png"
+dest_files=["res://.godot/imported/aji_card_portrait.png-db647c81c322133865aca6cec96e0b6a.ctex"]
 
 [params]
 

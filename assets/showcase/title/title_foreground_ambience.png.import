@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bqlggkudgjloi"
-path="res://.godot/imported/shirogisu_card_portrait.png-7b3cfee40ef8040edca07d8c79ef6ffd.ctex"
+uid="uid://wq253vq04ddq"
+path="res://.godot/imported/title_foreground_ambience.png-9b8027d9311f1884be968d8d4644f770.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/fish/shirogisu_card_portrait.png"
-dest_files=["res://.godot/imported/shirogisu_card_portrait.png-7b3cfee40ef8040edca07d8c79ef6ffd.ctex"]
+source_file="res://assets/showcase/title/title_foreground_ambience.png"
+dest_files=["res://.godot/imported/title_foreground_ambience.png-9b8027d9311f1884be968d8d4644f770.ctex"]
 
 [params]
 

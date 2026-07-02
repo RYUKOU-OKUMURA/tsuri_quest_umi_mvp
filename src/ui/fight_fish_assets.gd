@@ -1,8 +1,8 @@
 extends RefCounted
 
-const FISH_ASSET_DIR := "res://assets/showcase/underwater/fish"
-const LEGACY_SHEET_PATH := "res://assets/showcase/underwater/kurodai_showcase_sheet.png"
-const LEGACY_CARD_PORTRAIT_PATH := "res://assets/showcase/underwater/kurodai_card_portrait.png"
+const FISH_ASSET_DIR := "res://assets/showcase/fish"
+const LEGACY_SHEET_PATH := "res://assets/showcase/fish/kurodai_showcase_sheet.png"
+const LEGACY_CARD_PORTRAIT_PATH := "res://assets/showcase/fish/kurodai_card_portrait.png"
 
 
 static func asset_id(fish_data: Dictionary) -> String:

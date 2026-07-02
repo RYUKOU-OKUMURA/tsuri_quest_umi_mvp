@@ -3,12 +3,12 @@ extends Control
 
 const TITLE_BG_PATH := "res://assets/showcase/title/title_ocean_bg.png"
 const TITLE_GRADE_PATH := "res://assets/showcase/title/title_color_grade.png"
-const UNDERWATER_AMBIENCE_PATH := "res://assets/showcase/underwater/underwater_foreground_ambience.png"
+const TITLE_AMBIENCE_PATH := "res://assets/showcase/title/title_foreground_ambience.png"
 
 var _time := 0.0
 var _title_bg: Texture2D
 var _title_grade: Texture2D
-var _underwater_ambience: Texture2D
+var _title_ambience: Texture2D
 
 
 func _ready() -> void:
@@ -17,7 +17,7 @@ func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_title_bg = _load_texture_if_exists(TITLE_BG_PATH)
 	_title_grade = _load_texture_if_exists(TITLE_GRADE_PATH)
-	_underwater_ambience = _load_texture_if_exists(UNDERWATER_AMBIENCE_PATH)
+	_title_ambience = _load_texture_if_exists(TITLE_AMBIENCE_PATH)
 
 
 func _process(delta: float) -> void:
@@ -31,8 +31,8 @@ func _draw() -> void:
 		_draw_cover_texture(_title_bg, rect, Color.WHITE, Vector2(0.5, 0.5))
 	else:
 		_draw_fallback_gradient()
-	if _underwater_ambience != null:
-		_draw_cover_texture(_underwater_ambience, rect, Color(1.0, 1.0, 1.0, 0.22), Vector2(0.5, 0.55))
+	if _title_ambience != null:
+		_draw_cover_texture(_title_ambience, rect, Color(1.0, 1.0, 1.0, 0.22), Vector2(0.5, 0.55))
 	_draw_surface_glints()
 	_draw_bubbles()
 	_draw_drifting_fish()

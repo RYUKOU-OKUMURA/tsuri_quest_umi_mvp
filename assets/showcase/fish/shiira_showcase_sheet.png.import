@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://0vjpl0v78kmk"
-path="res://.godot/imported/shiira_showcase_sheet.png-47192d164f1b50763a123a736e4ce617.ctex"
+path="res://.godot/imported/shiira_showcase_sheet.png-f550f38bf64bc7700180f43de116da16.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/underwater/fish/shiira_showcase_sheet.png"
-dest_files=["res://.godot/imported/shiira_showcase_sheet.png-47192d164f1b50763a123a736e4ce617.ctex"]
+source_file="res://assets/showcase/fish/shiira_showcase_sheet.png"
+dest_files=["res://.godot/imported/shiira_showcase_sheet.png-f550f38bf64bc7700180f43de116da16.ctex"]
 
 [params]
 

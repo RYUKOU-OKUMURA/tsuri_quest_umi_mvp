@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dwvsbtwleotxr"
-path="res://.godot/imported/saba_card_portrait.png-b53f16e3740a3d461cc0703444862b10.ctex"
+path="res://.godot/imported/saba_card_portrait.png-cf45158086f014e8f84a6d3639380124.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/underwater/fish/saba_card_portrait.png"
-dest_files=["res://.godot/imported/saba_card_portrait.png-b53f16e3740a3d461cc0703444862b10.ctex"]
+source_file="res://assets/showcase/fish/saba_card_portrait.png"
+dest_files=["res://.godot/imported/saba_card_portrait.png-cf45158086f014e8f84a6d3639380124.ctex"]
 
 [params]
 

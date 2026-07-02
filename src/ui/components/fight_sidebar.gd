@@ -5,6 +5,7 @@ extends Control
 
 const GameFontsScript = preload("res://src/ui/game_fonts.gd")
 const FightFishAssetsScript = preload("res://src/ui/fight_fish_assets.gd")
+const RarityStylesScript = preload("res://src/ui/rarity_styles.gd")
 const SIDEBAR_FRAME_PATH := "res://assets/showcase/underwater/sidebar_frame.png"
 const ICON_SHEET_PATH := "res://assets/showcase/underwater/fight_icon_sheet.png"
 const ACTION_CARD_ICON_PATH := "res://assets/showcase/underwater/fight_action_card_icon.png"
@@ -628,8 +629,8 @@ func _draw_ellipse(center: Vector2, rx: float, ry: float, color: Color, points :
 
 func _draw_rarity_tag(font: Font, rect: Rect2, rarity: String) -> void:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#96517e")
-	style.border_color = Color("#ddb3ce")
+	style.bg_color = RarityStylesScript.badge_color(rarity)
+	style.border_color = RarityStylesScript.border_color(rarity)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(3)
 	style.shadow_color = Color(0.18, 0.07, 0.12, 0.28)

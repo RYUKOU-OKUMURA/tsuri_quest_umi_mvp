@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://njhylirjx5ni"
-path="res://.godot/imported/kamasu_showcase_sheet.png-2920e3691597007aa304081f577dbc9d.ctex"
+path="res://.godot/imported/kamasu_showcase_sheet.png-fedc1260e454e6de36e1e366a35cfc22.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/underwater/fish/kamasu_showcase_sheet.png"
-dest_files=["res://.godot/imported/kamasu_showcase_sheet.png-2920e3691597007aa304081f577dbc9d.ctex"]
+source_file="res://assets/showcase/fish/kamasu_showcase_sheet.png"
+dest_files=["res://.godot/imported/kamasu_showcase_sheet.png-fedc1260e454e6de36e1e366a35cfc22.ctex"]
 
 [params]
 

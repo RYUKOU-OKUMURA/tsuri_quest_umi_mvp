@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bb8adco5yfwnd"
-path="res://.godot/imported/mebaru_card_portrait.png-7388d31184756bf17f2470c0132d4883.ctex"
+path="res://.godot/imported/mebaru_card_portrait.png-f1282a49311238f4c2df9634e08f38bb.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/underwater/fish/mebaru_card_portrait.png"
-dest_files=["res://.godot/imported/mebaru_card_portrait.png-7388d31184756bf17f2470c0132d4883.ctex"]
+source_file="res://assets/showcase/fish/mebaru_card_portrait.png"
+dest_files=["res://.godot/imported/mebaru_card_portrait.png-f1282a49311238f4c2df9634e08f38bb.ctex"]
 
 [params]
 

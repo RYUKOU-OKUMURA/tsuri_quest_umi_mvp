@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://chs3orx7rrcj"
-path="res://.godot/imported/akahata_card_portrait.png-ef0447616b1102c72a78d43cce9d63fd.ctex"
+path="res://.godot/imported/akahata_card_portrait.png-08e22cac6bb9b04e0521b081814a56b0.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/underwater/fish/akahata_card_portrait.png"
-dest_files=["res://.godot/imported/akahata_card_portrait.png-ef0447616b1102c72a78d43cce9d63fd.ctex"]
+source_file="res://assets/showcase/fish/akahata_card_portrait.png"
+dest_files=["res://.godot/imported/akahata_card_portrait.png-08e22cac6bb9b04e0521b081814a56b0.ctex"]
 
 [params]
 

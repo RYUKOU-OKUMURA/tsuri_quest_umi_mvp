@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://nouamsp67m50"
-path="res://.godot/imported/iwashi_showcase_sheet.png-c7a6f7d235e202cb112106641e6f5ae8.ctex"
+path="res://.godot/imported/iwashi_showcase_sheet.png-502d7f7c5da9ea9d9fb9ce50438c6267.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/underwater/fish/iwashi_showcase_sheet.png"
-dest_files=["res://.godot/imported/iwashi_showcase_sheet.png-c7a6f7d235e202cb112106641e6f5ae8.ctex"]
+source_file="res://assets/showcase/fish/iwashi_showcase_sheet.png"
+dest_files=["res://.godot/imported/iwashi_showcase_sheet.png-502d7f7c5da9ea9d9fb9ce50438c6267.ctex"]
 
 [params]
 

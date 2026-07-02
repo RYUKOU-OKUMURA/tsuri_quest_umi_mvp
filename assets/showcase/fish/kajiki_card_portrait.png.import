@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d141j4wmquwop"
-path="res://.godot/imported/kajiki_card_portrait.png-88414d753fd4ecefb2165af38d98ff82.ctex"
+path="res://.godot/imported/kajiki_card_portrait.png-6f76f967830a19b82325cdc5cd933459.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/underwater/fish/kajiki_card_portrait.png"
-dest_files=["res://.godot/imported/kajiki_card_portrait.png-88414d753fd4ecefb2165af38d98ff82.ctex"]
+source_file="res://assets/showcase/fish/kajiki_card_portrait.png"
+dest_files=["res://.godot/imported/kajiki_card_portrait.png-6f76f967830a19b82325cdc5cd933459.ctex"]
 
 [params]
 

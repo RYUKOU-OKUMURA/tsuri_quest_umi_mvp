@@ -2,6 +2,7 @@ extends "res://src/ui/screen_base.gd"
 
 const HarborBackdropScript = preload("res://src/ui/components/harbor_backdrop.gd")
 const GameFontsScript = preload("res://src/ui/game_fonts.gd")
+const FightFishAssets = preload("res://src/ui/fight_fish_assets.gd")
 
 const HARBOR_TOP_FRAME_PATH := "res://assets/showcase/harbor/harbor_top_frame.png"
 const HARBOR_MAIN_FRAME_PATH := "res://assets/showcase/harbor/harbor_main_frame.png"
@@ -12,14 +13,13 @@ const HARBOR_PARCHMENT_CARD_PATH := "res://assets/showcase/harbor/harbor_parchme
 const HARBOR_BUTTON_PATH := "res://assets/showcase/harbor/harbor_facility_card.png"
 const HARBOR_BUTTON_HOVER_PATH := "res://assets/showcase/harbor/harbor_facility_card_hover.png"
 const HARBOR_BUTTON_PRIMARY_PATH := "res://assets/showcase/harbor/harbor_facility_card_primary.png"
-const ICON_FISHING_PATH := "res://assets/showcase/underwater/hud_bait_icon.png"
-const ICON_COOKING_PATH := "res://assets/showcase/cooking/dish_feature_aji_shioyaki.png"
-const ICON_MARKET_PATH := "res://assets/showcase/cooking/status_money_art.png"
-const ICON_SHOP_PATH := "res://assets/showcase/underwater/fight_tackle_card_icon.png"
-const ICON_SHIPYARD_PATH := "res://assets/showcase/surface/surface_dock_foreground.png"
-const ICON_STATUS_PATH := "res://assets/showcase/cooking/player_status_portrait.png"
-const ICON_BOOK_PATH := "res://assets/showcase/underwater/fish/aji_card_portrait.png"
-const ICON_TITLE_PATH := "res://assets/showcase/underwater/fight_action_card_icon.png"
+const ICON_FISHING_PATH := "res://assets/showcase/common/nav_fishing_icon.png"
+const ICON_COOKING_PATH := "res://assets/showcase/common/nav_cooking_icon.png"
+const ICON_MARKET_PATH := "res://assets/showcase/common/nav_market_icon.png"
+const ICON_SHOP_PATH := "res://assets/showcase/common/nav_shop_icon.png"
+const ICON_SHIPYARD_PATH := "res://assets/showcase/common/nav_shipyard_icon.png"
+const ICON_STATUS_PATH := "res://assets/showcase/common/nav_status_icon.png"
+const ICON_TITLE_PATH := "res://assets/showcase/common/nav_title_icon.png"
 
 var _status_label: Label
 var _top_level_label: Label
@@ -182,7 +182,7 @@ func _build_facility_menu(root: Control) -> void:
 	_build_facility_button(menu, row_top + row_step * 3.0, "釣具店", "竿を購入・装備する", ICON_SHOP_PATH, func() -> void: navigate("shop"), false, button_height)
 	_build_facility_button(menu, row_top + row_step * 4.0, "船着き場", "船を購入して沖へ出る", ICON_SHIPYARD_PATH, func() -> void: navigate("shipyard"), false, button_height)
 	_build_facility_button(menu, row_top + row_step * 5.0, "ステータス", "成長と装備を確認する", ICON_STATUS_PATH, func() -> void: navigate("status"), false, button_height)
-	_build_facility_button(menu, row_top + row_step * 6.0, "魚図鑑", "釣った魚の記録を見る", ICON_BOOK_PATH, func() -> void: navigate("fish_book"), false, button_height)
+	_build_facility_button(menu, row_top + row_step * 6.0, "魚図鑑", "釣った魚の記録を見る", FightFishAssets.card_portrait_path({"id": "aji"}), func() -> void: navigate("fish_book"), false, button_height)
 	_build_facility_button(menu, row_top + row_step * 7.0, "タイトルへ戻る", "進行を保存して戻る", ICON_TITLE_PATH, _return_to_title, false, button_height)
 	_set_facility_detail("釣り場へ向かう", "狙う魚に合わせてポイントを選ぶ", true)
 

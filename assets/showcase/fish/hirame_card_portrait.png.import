@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://vy8ccy3vdlu7"
-path="res://.godot/imported/hirame_card_portrait.png-cdf6aec282160aee4a5bfff63bcc5087.ctex"
+path="res://.godot/imported/hirame_card_portrait.png-1fda9eceb9c407094105f15807a66b02.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/underwater/fish/hirame_card_portrait.png"
-dest_files=["res://.godot/imported/hirame_card_portrait.png-cdf6aec282160aee4a5bfff63bcc5087.ctex"]
+source_file="res://assets/showcase/fish/hirame_card_portrait.png"
+dest_files=["res://.godot/imported/hirame_card_portrait.png-1fda9eceb9c407094105f15807a66b02.ctex"]
 
 [params]
 
