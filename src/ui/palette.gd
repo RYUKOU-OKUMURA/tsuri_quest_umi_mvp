@@ -50,6 +50,20 @@ const TEXT_OUTLINE_LIGHT := Color("#3a2410")
 
 const SHADOW := Color(0.0, 0.0, 0.0, 0.34)
 
+# --- レアリティ ---
+const RARITY_COMMON_TEXT := Color("#e9f7ff")
+const RARITY_UNCOMMON_TEXT := Color("#9fffd0")
+const RARITY_RARE_TEXT := Color("#f8c8ff")
+const RARITY_BOSS_TEXT := Color("#ffcf83")
+const RARITY_COMMON_BADGE := Color("#156d9b")
+const RARITY_UNCOMMON_BADGE := Color("#287d34")
+const RARITY_RARE_BADGE := Color("#7f3aa2")
+const RARITY_BOSS_BADGE := Color("#9b3d24")
+const RARITY_UNKNOWN_BADGE := Color("#6b4521")
+const RARITY_COMMON_BORDER := Color("#8dd5f5")
+const RARITY_UNCOMMON_BORDER := Color("#a7e7a1")
+const RARITY_RARE_BORDER := Color("#e5b4ff")
+
 ## ゲージの意味色を状態で取得（安全域=緑, 警戒=琥珀, 危険=赤）。
 static func gauge_pair(level: String) -> Dictionary:
 	match level:

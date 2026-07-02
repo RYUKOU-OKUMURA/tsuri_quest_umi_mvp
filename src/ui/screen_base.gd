@@ -1,6 +1,8 @@
 class_name ScreenBase
 extends Control
 
+const ShowcaseAssetsScript = preload("res://src/ui/showcase_assets.gd")
+
 signal navigate_requested(screen_id: String, payload: Dictionary)
 
 var route_payload: Dictionary = {}
@@ -238,6 +240,27 @@ func make_button(text: String, callback: Callable, minimum_width: float = 0.0, g
 	button.custom_minimum_size = Vector2(maxf(minimum_width, 0.0), 50.0)
 	button.pressed.connect(callback)
 	_wire_button_juice(button)
+	return button
+
+
+func make_return_button(callback: Callable, minimum_width: float = 180.0) -> Button:
+	var button := make_button("港へ戻る", callback, minimum_width, false)
+	button.name = "HarborReturnButton"
+	button.set_meta("harbor_return", true)
+	var normal := ShowcaseAssetsScript.texture_style(
+		"res://assets/showcase/common/action_button_frame.png",
+		Vector4(46.0, 24.0, 46.0, 24.0)
+	)
+	if normal != null:
+		button.add_theme_stylebox_override("normal", normal)
+		button.add_theme_stylebox_override("hover", normal)
+		button.add_theme_stylebox_override("pressed", normal)
+		button.add_theme_stylebox_override("focus", normal)
+	button.add_theme_color_override("font_color", Palette.TEXT_BONE)
+	button.add_theme_color_override("font_hover_color", Palette.GOLD_BRIGHT)
+	button.add_theme_color_override("font_pressed_color", Palette.GOLD_BRIGHT)
+	button.add_theme_color_override("font_outline_color", Palette.TEXT_OUTLINE_DARK)
+	button.add_theme_constant_override("outline_size", 2)
 	return button
 
 
