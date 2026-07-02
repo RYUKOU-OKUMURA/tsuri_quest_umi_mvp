@@ -1,6 +1,6 @@
 ---
 name: ui-screen-uplift
-description: Quality uplift of an EXISTING game screen UI in this repo. Use when the user asks to raise/polish/improve a screen's visual quality (クオリティを上げる, ブラッシュアップ, 参照に近づける, 見た目改善) for screens like fish book (`src/ui/fish_book_screen.gd`), fishing spot map (`src/ui/fishing_spot_select_screen.gd`), underwater fight, title, or harbor. For building a brand-new screen use ui-screen-build instead; for the cooking/meal/level-up flow use tsuri-cooking-showcase-uplift instead.
+description: Quality uplift of an EXISTING game screen UI in this repo. Use when the user asks to raise/polish/improve a screen's visual quality (クオリティを上げる, ブラッシュアップ, 参照に近づける, 見た目改善) for screens like fish book (`src/ui/fish_book_screen.gd`), fishing spot map (`src/ui/fishing_spot_select_screen.gd`), underwater fight, title, or harbor. For building a brand-new screen OR formalizing an existing placeholder/simple screen into its first production v1 (○○画面を正式化) use ui-screen-build instead; for the cooking/meal/level-up flow use tsuri-cooking-showcase-uplift instead.
 ---
 
 # UI Screen Uplift（既存画面ブラッシュアップ）
