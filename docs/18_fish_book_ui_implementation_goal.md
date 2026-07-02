@@ -138,7 +138,7 @@ Date: 2026-07-01
 - `港へ戻る` ボタン枠
 - スクロールバー装飾
 
-魚ポートレートは既存の `assets/showcase/underwater/fish/*_card_portrait.png` を優先して使う。存在しない場合だけ、色付き簡易アイコンやシルエットにフォールバックする。
+魚ポートレートは `assets/showcase/fish/*_card_portrait.png` を優先して使う。画面からは `FightFishAssets.card_portrait_path()` 経由で参照し、存在しない場合だけ、色付き簡易アイコンやシルエットにフォールバックする。
 
 新規PNGは、`ResourceLoader.exists()` だけに依存せず、必要なら `ImageTexture.create_from_image()` のフォールバックを入れる。Godot import前のheadless確認でも表示が崩れないようにする。
 

@@ -18,7 +18,7 @@ P1破綻がない限り、背景やレイアウトの微調整へ戻らない。
 
 ## 最終魚アート
 
-入力スロットは `tools/source_assets/kurodai_final_art_source.png`。このファイルを差し替えた後、`python3 tools/process_underwater_fish_assets.py` を実行して `assets/showcase/underwater/kurodai_showcase_sheet.png` と `assets/showcase/underwater/kurodai_card_portrait.png` を再生成する。
+入力スロットは `tools/source_assets/kurodai_final_art_source.png`。このファイルを差し替えた後、`python3 tools/process_underwater_fish_assets.py` を実行して `assets/showcase/fish/kurodai_showcase_sheet.png` と `assets/showcase/fish/kurodai_card_portrait.png` を再生成する。
 
 差し替え前に必ず `tools/build_fish_asset_contact_sheet.py` で候補をプレビューする。候補処理後フレームが現行ランタイム魚より弱い、欠ける、背景が混じる、ハロが出る、鱗やヒレが失われる場合は採用しない。
 

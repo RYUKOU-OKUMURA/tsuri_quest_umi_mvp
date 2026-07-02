@@ -92,8 +92,8 @@
 | `assets/showcase/underwater/underwater_seabed_detail.png` | 海底/左右の密度補助 | `tools/generate_underwater_foreground_assets.py` で生成 | 透明PNG、岩場・海藻・サンゴ・水底光を含み、主役魚を邪魔しない |
 | `assets/showcase/underwater/underwater_foreground_ambience.png` | 前景密度補助 | `tools/generate_underwater_foreground_assets.py` で生成 | 透明PNG、泡柱・中央の小さな泡列・中央水底光・上部光束・水面 shimmer・遠景魚・光粒を含み主役魚を邪魔しない |
 | `assets/showcase/underwater/kurodai_chroma_source.png` | クロダイ中間素材 | リファレンス魚の切り出しを ImageGen で背景抽出 | フラットなマゼンタ背景、単体魚または横4フレーム |
-| `assets/showcase/underwater/kurodai_showcase_sheet.png` | クロダイ | `tools/process_underwater_fish_assets.py` で生成 | 透明背景、横 4 フレーム、全フレーム同サイズ、頭/胴体は安定、尾びれ側に小さなポーズ差分、マゼンタ縁を残さず青い水中背景上で輪郭が浮きすぎない |
-| `assets/showcase/underwater/kurodai_card_portrait.png` | 右カード用クロダイ | `tools/process_underwater_fish_assets.py` で生成 | 透明背景、左向き、560x310 の詰めたカード窓比率、暗い矩形・青いハロ・丸角の二重パネルを出さず、魚が紙面に印字された主役として読める |
+| `assets/showcase/fish/kurodai_showcase_sheet.png` | クロダイ | `tools/process_underwater_fish_assets.py` で生成 | 透明背景、横 4 フレーム、全フレーム同サイズ、頭/胴体は安定、尾びれ側に小さなポーズ差分、マゼンタ縁を残さず青い水中背景上で輪郭が浮きすぎない |
+| `assets/showcase/fish/kurodai_card_portrait.png` | 右カード用クロダイ | `tools/process_underwater_fish_assets.py` で生成 | 透明背景、左向き、560x310 の詰めたカード窓比率、暗い矩形・青いハロ・丸角の二重パネルを出さず、魚が紙面に印字された主役として読める |
 | `assets/showcase/underwater/hit_burst.png` | ヒット演出 | `tools/process_underwater_fish_assets.py` で生成 | 濃紺の水しぶき、透明背景、文字は含めない、白い放射線と泡粒は控えめにする |
 | `assets/showcase/underwater/hit_badge_full.png` | 一体型ヒット看板 | `tools/process_underwater_fish_assets.py` で `hit_burst.png` と参照由来の `ヒット！` 文字抽出を合成 | 透明背景、文字と台座が一体に見える。Godot側の文字描画はこの素材がない場合のフォールバックにする |
 | `assets/showcase/underwater/fight_lure.png` | 釣り餌/疑似餌 | `tools/process_underwater_fish_assets.py` で参照画像から抽出・透明化 | 透明背景、暖色のエビ/疑似餌として読める、青背景・魚端・余計な泡を含めず、コード描画の丸/針に戻さない |
