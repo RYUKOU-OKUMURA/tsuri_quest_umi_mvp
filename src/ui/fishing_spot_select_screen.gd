@@ -24,6 +24,7 @@ const MAP_BGM_PATH_BY_SPOT := {
 const DETAIL_ICON_SIZE := 96.0
 const FOOTER_ICON_SIZE := 96.0
 const COMPLETION_SLOT_SIZE := Vector2(220.0, 44.0)
+const DETAIL_FRAME_SOURCE_SIZE := Vector2(520.0, 760.0)
 
 var _selected_spot_id: String = GameData.DEFAULT_FISHING_SPOT_ID
 var _continue_trip := false
@@ -309,41 +310,23 @@ func _build_detail_panel(parent: Control) -> void:
 		fallback.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		panel.add_child(fallback)
 
-	var margin := MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 24)
-	margin.add_theme_constant_override("margin_top", 14)
-	margin.add_theme_constant_override("margin_right", 24)
-	margin.add_theme_constant_override("margin_bottom", 12)
-	panel.add_child(margin)
-
-	var box := VBoxContainer.new()
-	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	box.add_theme_constant_override("separation", 3)
-	margin.add_child(box)
-
 	_detail_title_label = make_label("", 24, Palette.TEXT_BONE, 2, Palette.TEXT_OUTLINE_DARK)
-	_detail_title_label.custom_minimum_size = Vector2(0.0, 40.0)
 	_detail_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_detail_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_detail_title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_detail_title_label.clip_text = true
 	_detail_title_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	box.add_child(_detail_title_label)
+	_add_detail_frame_child(panel, _detail_title_label, Rect2(44.0, 31.0, 432.0, 60.0))
 
 	_detail_unlock_label = make_label("", 12, Palette.TEXT_BONE, 1, Palette.TEXT_OUTLINE_DARK)
-	_detail_unlock_label.custom_minimum_size = Vector2(0.0, 14.0)
 	_detail_unlock_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_detail_unlock_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_detail_unlock_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	box.add_child(_detail_unlock_label)
+	_detail_unlock_label.clip_text = true
+	_detail_unlock_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_add_detail_frame_child(panel, _detail_unlock_label, Rect2(44.0, 88.0, 432.0, 24.0))
 
 	var thumb_clip := Control.new()
-	thumb_clip.custom_minimum_size = Vector2(0.0, 126.0)
 	thumb_clip.clip_contents = true
-	thumb_clip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	box.add_child(thumb_clip)
+	_add_detail_frame_child(panel, thumb_clip, Rect2(44.0, 112.0, 432.0, 157.0))
 
 	_detail_thumbnail = TextureRect.new()
 	_detail_thumbnail.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -354,39 +337,47 @@ func _build_detail_panel(parent: Control) -> void:
 	thumb_clip.add_child(_detail_thumbnail)
 
 	_detail_description_label = make_label("", 12, Color("#2f2114"))
-	_detail_description_label.custom_minimum_size = Vector2(0.0, 24.0)
-	_detail_description_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_detail_description_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_detail_description_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_detail_description_label.clip_text = true
-	box.add_child(_detail_description_label)
+	_add_detail_frame_child(panel, _detail_description_label, Rect2(44.0, 287.0, 432.0, 67.0))
 
-	var rows := VBoxContainer.new()
-	rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	rows.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	rows.add_theme_constant_override("separation", 2)
-	box.add_child(rows)
-	_detail_depth_value_label = _make_detail_row(rows, 0, "水深", 34.0)
-	_detail_fish_value_label = _make_detail_row(rows, 1, "狙い", 40.0, false, 14)
-	_detail_bait_value_label = _make_detail_row(rows, 2, "エサ", 34.0)
-
-	var button_box := VBoxContainer.new()
-	button_box.size_flags_vertical = Control.SIZE_SHRINK_END
-	button_box.add_theme_constant_override("separation", 3)
-	box.add_child(button_box)
+	_detail_depth_value_label = _make_detail_row(panel, 0, "水深", 32.0)
+	_apply_detail_frame_rect(_detail_row_panel(_detail_depth_value_label), Rect2(44.0, 366.0, 432.0, 46.0))
+	_detail_fish_value_label = _make_detail_row(panel, 1, "狙い", 58.0, true, 14)
+	_apply_detail_frame_rect(_detail_row_panel(_detail_fish_value_label), Rect2(44.0, 415.0, 432.0, 96.0))
+	_detail_bait_value_label = _make_detail_row(panel, 2, "エサ", 32.0)
+	_apply_detail_frame_rect(_detail_row_panel(_detail_bait_value_label), Rect2(44.0, 514.0, 432.0, 46.0))
 
 	_action_button = make_button("ここで釣る", func() -> void: _select_spot(_selected_spot_id), 0, true)
-	_action_button.custom_minimum_size.y = 48.0
-	_action_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_apply_button_style(_action_button, _detail_primary_button_style(false), _detail_primary_button_style(true), _detail_primary_button_pressed_style())
-	_action_button.add_theme_font_size_override("font_size", 22)
-	button_box.add_child(_action_button)
+	_action_button.add_theme_font_size_override("font_size", 21)
+	_add_detail_frame_child(panel, _action_button, Rect2(38.0, 597.0, 444.0, 72.0))
 
 	var back := make_return_button(func() -> void: navigate("harbor"), 0.0)
-	back.custom_minimum_size.y = 50.0
-	back.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	back.add_theme_font_size_override("font_size", 20)
-	button_box.add_child(back)
+	_add_detail_frame_child(panel, back, Rect2(38.0, 675.0, 444.0, 77.0))
+
+
+func _add_detail_frame_child(parent: Control, child: Control, frame_rect: Rect2) -> void:
+	parent.add_child(child)
+	_apply_detail_frame_rect(child, frame_rect)
+
+
+func _apply_detail_frame_rect(control: Control, frame_rect: Rect2) -> void:
+	var end := frame_rect.position + frame_rect.size
+	control.anchor_left = frame_rect.position.x / DETAIL_FRAME_SOURCE_SIZE.x
+	control.anchor_top = frame_rect.position.y / DETAIL_FRAME_SOURCE_SIZE.y
+	control.anchor_right = end.x / DETAIL_FRAME_SOURCE_SIZE.x
+	control.anchor_bottom = end.y / DETAIL_FRAME_SOURCE_SIZE.y
+	control.offset_left = 0.0
+	control.offset_top = 0.0
+	control.offset_right = 0.0
+	control.offset_bottom = 0.0
+
+
+func _detail_row_panel(value_label: Label) -> Control:
+	return value_label.get_parent().get_parent() as Control
 
 
 func _apply_button_style(button: Button, normal: StyleBox, hover: StyleBox, pressed: StyleBox) -> void:
@@ -480,7 +471,7 @@ func _make_detail_row(
 	title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(title_label)
 
-	var value_label := make_label("", 16 if multiline_value else value_font_size, Color("#1b1008"))
+	var value_label := make_label("", value_font_size, Color("#1b1008"))
 	value_label.custom_minimum_size = Vector2(0.0, 40.0 if multiline_value else 0.0)
 	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -1043,7 +1034,7 @@ func _refresh_detail() -> void:
 		_detail_thumbnail.texture = _thumbnail_for_spot(_selected_spot_id)
 	_detail_description_label.text = String(spot.get("description", ""))
 	_detail_depth_value_label.text = _depth_range_text(spot)
-	_detail_fish_value_label.text = _featured_fish_text(spot, 4)
+	_detail_fish_value_label.text = _featured_fish_text(spot, 4, 2)
 	_detail_bait_value_label.text = _bait_text(spot)
 	if _detail_hint_value_label != null:
 		_detail_hint_value_label.text = (
