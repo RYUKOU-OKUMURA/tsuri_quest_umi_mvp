@@ -16,6 +16,7 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "tools" / "source_assets" / "fishing_spot_map_source.png"
+THUMB_SOURCE_DIR = ROOT / "tools" / "source_assets" / "fishing_spot_thumbs"
 OUT_DIR = ROOT / "assets" / "showcase" / "fishing_spots"
 
 MAP_BG_OUT = OUT_DIR / "map_bg.png"
@@ -677,6 +678,12 @@ def _make_thumbnails(bg: Image.Image) -> None:
     THUMB_DIR.mkdir(parents=True, exist_ok=True)
     thumb_size = (420, 184)
     for spot_id in SPOT_ORDER:
+        source_path = THUMB_SOURCE_DIR / f"{spot_id}.png"
+        if source_path.exists():
+            thumb = _normalize_thumbnail_source(Image.open(source_path).convert("RGB"), thumb_size)
+            thumb.save(THUMB_DIR / f"{spot_id}.png")
+            continue
+
         nx, ny = SPOT_POINTS[spot_id]
         cx = int(bg.width * nx)
         cy = int(bg.height * ny)
@@ -695,6 +702,27 @@ def _make_thumbnails(bg: Image.Image) -> None:
         crop_rgba = crop.convert("RGBA")
         crop_rgba.alpha_composite(overlay)
         crop_rgba.save(THUMB_DIR / f"{spot_id}.png")
+
+
+def _normalize_thumbnail_source(image: Image.Image, thumb_size: tuple[int, int]) -> Image.Image:
+    crop = _cover_crop(image, thumb_size).convert("RGBA")
+    crop = ImageEnhance.Color(crop).enhance(1.06)
+    crop = ImageEnhance.Contrast(crop).enhance(1.04)
+    crop = crop.filter(ImageFilter.UnsharpMask(radius=0.8, percent=44, threshold=3))
+
+    glaze = Image.new("RGBA", thumb_size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(glaze)
+    for x in range(thumb_size[0]):
+        edge_x = max(x / max(1, thumb_size[0] - 1), 1.0 - x / max(1, thumb_size[0] - 1))
+        alpha = int(max(0.0, edge_x - 0.62) * 38)
+        draw.line((x, 0, x, thumb_size[1]), fill=(4, 18, 28, alpha))
+    for y in range(thumb_size[1]):
+        edge_y = max(y / max(1, thumb_size[1] - 1), 1.0 - y / max(1, thumb_size[1] - 1))
+        alpha = int(max(0.0, edge_y - 0.58) * 42)
+        draw.line((0, y, thumb_size[0], y), fill=(4, 18, 28, alpha))
+    draw.rectangle((0, 0, thumb_size[0] - 1, thumb_size[1] - 1), outline=(42, 29, 18, 190), width=3)
+    crop.alpha_composite(glaze)
+    return crop
 
 
 def build() -> None:
