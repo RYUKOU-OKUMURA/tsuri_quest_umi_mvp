@@ -155,3 +155,30 @@ Godot runtime が担うもの:
 - `港へ戻る` が主操作として最も目立つ。
 - `tools/status_visual_qa.sh` が参照横並びを再生成できる。
 - status smoke と `./tools/validate_project.sh` が通る。
+
+## 実装ログ
+
+2026-07-02:
+
+- `tools/status_visual_qa.sh` と `tools/build_screen_visual_comparison.py` の `status` preset を追加した。
+- `src/ui/status_screen.gd` を参照画像の読み順へ作り替えた。
+  - 上部: `ステータス` 見出し + `PlayerStatusBar`
+  - 左: プレイヤー能力、EXP、装備中の竿、船、次の食事効果
+  - 中央: 釣果サマリー、最近釣れた魚、図鑑コンプリート率
+  - 右: クーラーボックス、所持竿、料理/食事効果ログ
+  - 下部: `魚図鑑`、`料理・食事`、`港へ戻る`
+- 旧 `FishBookGrid` 相当の全魚一覧は status から撤去し、`fish_book` 導線へ分離した。
+- `tools/status_smoke.gd` / `tools/status_smoke.tscn` を追加し、3ペイン、主要導線、主要データ、旧魚図鑑グリッド不在を検証対象にした。
+- Visual QA出力:
+  - `/tmp/tsuri_status.png`
+  - `/tmp/tsuri_status_compare.png`
+- 検証:
+  - `HOME=/tmp/tsuri_status_home /Applications/Godot.app/Contents/MacOS/Godot --headless --path . res://tools/status_smoke.tscn`
+  - `./tools/status_visual_qa.sh`
+  - `./tools/validate_project.sh`
+
+現時点の判断:
+
+- v1のP1破綻である旧魚図鑑グリッド、主要テキスト省略、導線未検証は解消した。
+- 画面専用の外周木枠/ヘッダーPNGはまだ作っていない。共通キットとruntime描画でv1構成を固定し、専用素材はv2候補として扱う。
+- 参照画像の Lv/所持金重複表示は `docs/19` の同一情報重複禁止を優先し、上部 `PlayerStatusBar` に集約した。
