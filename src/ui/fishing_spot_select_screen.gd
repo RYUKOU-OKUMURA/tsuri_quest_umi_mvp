@@ -320,11 +320,11 @@ func _build_detail_panel(parent: Control) -> void:
 	var box := VBoxContainer.new()
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	box.add_theme_constant_override("separation", 4)
+	box.add_theme_constant_override("separation", 3)
 	margin.add_child(box)
 
 	_detail_title_label = make_label("", 24, Palette.TEXT_BONE, 2, Palette.TEXT_OUTLINE_DARK)
-	_detail_title_label.custom_minimum_size = Vector2(0.0, 42.0)
+	_detail_title_label.custom_minimum_size = Vector2(0.0, 40.0)
 	_detail_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_detail_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_detail_title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -332,14 +332,15 @@ func _build_detail_panel(parent: Control) -> void:
 	_detail_title_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	box.add_child(_detail_title_label)
 
-	_detail_unlock_label = make_label("", 13, Palette.TEXT_BONE, 1, Palette.TEXT_OUTLINE_DARK)
-	_detail_unlock_label.custom_minimum_size = Vector2(0.0, 18.0)
+	_detail_unlock_label = make_label("", 12, Palette.TEXT_BONE, 1, Palette.TEXT_OUTLINE_DARK)
+	_detail_unlock_label.custom_minimum_size = Vector2(0.0, 14.0)
 	_detail_unlock_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_detail_unlock_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_detail_unlock_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(_detail_unlock_label)
 
 	var thumb_clip := Control.new()
-	thumb_clip.custom_minimum_size = Vector2(0.0, 108.0)
+	thumb_clip.custom_minimum_size = Vector2(0.0, 126.0)
 	thumb_clip.clip_contents = true
 	thumb_clip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(thumb_clip)
@@ -353,7 +354,7 @@ func _build_detail_panel(parent: Control) -> void:
 	thumb_clip.add_child(_detail_thumbnail)
 
 	_detail_description_label = make_label("", 12, Color("#2f2114"))
-	_detail_description_label.custom_minimum_size = Vector2(0.0, 28.0)
+	_detail_description_label.custom_minimum_size = Vector2(0.0, 24.0)
 	_detail_description_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_detail_description_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_detail_description_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -363,15 +364,15 @@ func _build_detail_panel(parent: Control) -> void:
 	var rows := VBoxContainer.new()
 	rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rows.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	rows.add_theme_constant_override("separation", 3)
+	rows.add_theme_constant_override("separation", 2)
 	box.add_child(rows)
-	_detail_depth_value_label = _make_detail_row(rows, 0, "水深")
+	_detail_depth_value_label = _make_detail_row(rows, 0, "水深", 34.0)
 	_detail_fish_value_label = _make_detail_row(rows, 1, "狙い", 40.0, false, 14)
-	_detail_bait_value_label = _make_detail_row(rows, 2, "エサ")
+	_detail_bait_value_label = _make_detail_row(rows, 2, "エサ", 34.0)
 
 	var button_box := VBoxContainer.new()
 	button_box.size_flags_vertical = Control.SIZE_SHRINK_END
-	button_box.add_theme_constant_override("separation", 4)
+	button_box.add_theme_constant_override("separation", 3)
 	box.add_child(button_box)
 
 	_action_button = make_button("ここで釣る", func() -> void: _select_spot(_selected_spot_id), 0, true)
