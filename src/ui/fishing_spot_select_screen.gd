@@ -1,11 +1,10 @@
 extends "res://src/ui/screen_base.gd"
 
 const FishingSpotMapViewScript = preload("res://src/ui/components/fishing_spot_map_view.gd")
+const PlayerStatusBarScript = preload("res://src/ui/components/player_status_bar.gd")
 
 const HEADER_FRAME_PATH := "res://assets/showcase/fishing_spots/map_header_frame.png"
 const TITLE_SIGN_PATH := "res://assets/showcase/fishing_spots/map_title_sign.png"
-const STATUS_BAR_PATH := "res://assets/showcase/fishing_spots/map_status_bar.png"
-const STATUS_ICON_SHEET_PATH := "res://assets/showcase/fishing_spots/map_status_icon_sheet.png"
 const DETAIL_FRAME_PATH := "res://assets/showcase/fishing_spots/map_detail_frame.png"
 const DETAIL_ICON_SHEET_PATH := "res://assets/showcase/fishing_spots/map_detail_icon_sheet.png"
 const FOOTER_FRAME_PATH := "res://assets/showcase/fishing_spots/map_footer_frame.png"
@@ -23,7 +22,6 @@ const MAP_BGM_PATH_BY_SPOT := {
 	"harbor_boulder": "res://assets/audio/港外・潮目.mp3",
 }
 const DETAIL_ICON_SIZE := 96.0
-const STATUS_ICON_SIZE := 96.0
 const FOOTER_ICON_SIZE := 96.0
 const COMPLETION_SLOT_SIZE := Vector2(220.0, 44.0)
 
@@ -49,8 +47,6 @@ var _footer_completion_back: ColorRect
 
 var _header_frame: Texture2D
 var _title_sign_frame: Texture2D
-var _status_bar_frame: Texture2D
-var _status_icon_sheet: Texture2D
 var _detail_frame: Texture2D
 var _detail_icon_sheet: Texture2D
 var _footer_frame: Texture2D
@@ -109,8 +105,6 @@ func _resolve_route_state() -> void:
 func _load_assets() -> void:
 	_header_frame = _load_texture_if_exists(HEADER_FRAME_PATH)
 	_title_sign_frame = _load_texture_if_exists(TITLE_SIGN_PATH)
-	_status_bar_frame = _load_texture_if_exists(STATUS_BAR_PATH)
-	_status_icon_sheet = _load_texture_if_exists(STATUS_ICON_SHEET_PATH)
 	_detail_frame = _load_texture_if_exists(DETAIL_FRAME_PATH)
 	_detail_icon_sheet = _load_texture_if_exists(DETAIL_ICON_SHEET_PATH)
 	_footer_frame = _load_texture_if_exists(FOOTER_FRAME_PATH)
@@ -166,51 +160,13 @@ func _build_header(parent: Control) -> void:
 	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	panel.add_child(title)
 
-	var rod_name := String(GameData.get_rod(PlayerProgress.equipped_rod_id).get("name", "入門竿"))
 	var status_rect := Rect2(Vector2(650.0, 15.0), Vector2(596.0, 60.0))
-	if _status_bar_frame != null:
-		var status_bar := TextureRect.new()
-		status_bar.texture = _status_bar_frame
-		status_bar.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		status_bar.stretch_mode = TextureRect.STRETCH_SCALE
-		status_bar.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-		status_bar.position = status_rect.position
-		status_bar.size = status_rect.size
-		status_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		panel.add_child(status_bar)
-	else:
-		var status_group := PanelContainer.new()
-		status_group.position = status_rect.position
-		status_group.size = status_rect.size
-		status_group.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		status_group.add_theme_stylebox_override("panel", _header_status_group_style())
-		panel.add_child(status_group)
-	_add_header_bar_item(panel, Rect2(Vector2(676.0, 20.0), Vector2(156.0, 48.0)), 0, "Lv.%d" % PlayerProgress.level)
-	_add_header_bar_item(panel, Rect2(Vector2(862.0, 20.0), Vector2(206.0, 48.0)), 1, rod_name)
-	_add_header_bar_item(panel, Rect2(Vector2(1094.0, 20.0), Vector2(148.0, 48.0)), 2, "%d G" % PlayerProgress.money)
-
-
-func _add_header_bar_item(parent: Control, rect: Rect2, icon_index: int, value: String) -> void:
-	var icon := TextureRect.new()
-	icon.texture = _status_icon(icon_index)
-	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	icon.position = rect.position
-	icon.size = Vector2(40.0, 40.0)
-	icon.z_index = 20
-	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	parent.add_child(icon)
-
-	var value_label := make_label(value, 20, Palette.TEXT_BONE, 2, Palette.TEXT_OUTLINE_DARK)
-	value_label.z_index = 20
-	value_label.position = rect.position + Vector2(48.0, 0.0)
-	value_label.size = Vector2(rect.size.x - 48.0, rect.size.y)
-	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	value_label.clip_text = true
-	value_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	parent.add_child(value_label)
+	var status_bar := PlayerStatusBarScript.new()
+	status_bar.name = "FishingSpotPlayerStatusBar"
+	status_bar.z_index = 20
+	status_bar.position = status_rect.position
+	status_bar.size = status_rect.size
+	panel.add_child(status_bar)
 
 
 func _add_header_status(parent: Control, rect: Rect2, caption: String, value: String) -> Label:
@@ -425,10 +381,9 @@ func _build_detail_panel(parent: Control) -> void:
 	_action_button.add_theme_font_size_override("font_size", 22)
 	button_box.add_child(_action_button)
 
-	var back := make_button("港へ戻る", func() -> void: navigate("harbor"), 0)
+	var back := make_return_button(func() -> void: navigate("harbor"), 0.0)
 	back.custom_minimum_size.y = 40.0
 	back.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_apply_button_style(back, _detail_secondary_button_style(false), _detail_secondary_button_style(true), _detail_secondary_button_pressed_style())
 	back.add_theme_font_size_override("font_size", 20)
 	button_box.add_child(back)
 
@@ -1234,10 +1189,6 @@ func _rare_hint_text(spot: Dictionary) -> String:
 
 func _detail_icon(icon_index: int) -> Texture2D:
 	return _atlas_icon(_detail_icon_sheet, DETAIL_ICON_SIZE, icon_index)
-
-
-func _status_icon(icon_index: int) -> Texture2D:
-	return _atlas_icon(_status_icon_sheet, STATUS_ICON_SIZE, icon_index)
 
 
 func _footer_icon(icon_index: int) -> Texture2D:

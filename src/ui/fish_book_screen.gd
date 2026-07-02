@@ -2,27 +2,27 @@ extends "res://src/ui/screen_base.gd"
 
 const FightFishAssets = preload("res://src/ui/fight_fish_assets.gd")
 const GameFontsScript = preload("res://src/ui/game_fonts.gd")
+const PlayerStatusBarScript = preload("res://src/ui/components/player_status_bar.gd")
+const RarityStylesScript = preload("res://src/ui/rarity_styles.gd")
 
-const HARBOR_BG_PATH := "res://assets/showcase/harbor/harbor_hub_bg.png"
-const HARBOR_TOP_FRAME_PATH := "res://assets/showcase/harbor/harbor_top_frame.png"
-const HARBOR_MAIN_FRAME_PATH := "res://assets/showcase/harbor/harbor_main_frame.png"
-const HARBOR_FOOTER_FRAME_PATH := "res://assets/showcase/harbor/harbor_footer_frame.png"
-const HARBOR_PARCHMENT_CARD_PATH := "res://assets/showcase/harbor/harbor_parchment_card.png"
-const HARBOR_BUTTON_PATH := "res://assets/showcase/harbor/harbor_facility_card.png"
-const HARBOR_BUTTON_HOVER_PATH := "res://assets/showcase/harbor/harbor_facility_card_hover.png"
-const HARBOR_BUTTON_PRIMARY_PATH := "res://assets/showcase/harbor/harbor_facility_card_primary.png"
-const MAP_DETAIL_FRAME_PATH := "res://assets/showcase/fishing_spots/map_detail_frame.png"
-const MAP_DETAIL_ICON_SHEET_PATH := "res://assets/showcase/fishing_spots/map_detail_icon_sheet.png"
-const MAP_FOOTER_ICON_SHEET_PATH := "res://assets/showcase/fishing_spots/map_footer_icon_sheet.png"
-const MAP_HEADER_FRAME_PATH := "res://assets/showcase/fishing_spots/map_header_frame.png"
-const MAP_STATUS_BAR_PATH := "res://assets/showcase/fishing_spots/map_status_bar.png"
-const MAP_TITLE_SIGN_PATH := "res://assets/showcase/fishing_spots/map_title_sign.png"
-const BOOK_CARD_FRAME_PATH := "res://assets/showcase/cooking/recipe_card_frame.png"
-const BOOK_CARD_SELECTED_FRAME_PATH := "res://assets/showcase/cooking/recipe_selected_card_frame.png"
-const BOOK_BADGE_FRAME_PATH := "res://assets/showcase/cooking/recipe_material_strip_frame.png"
-const BOOK_DETAIL_ROW_FRAME_PATH := "res://assets/showcase/cooking/cook_detail_row_frame.png"
-const BOOK_ACTION_BUTTON_FRAME_PATH := "res://assets/showcase/cooking/flow_action_button_frame.png"
-const SPOT_THUMB_BASE_PATH := "res://assets/showcase/fishing_spots/thumbs"
+const FISH_BOOK_BG_PATH := "res://assets/showcase/fish_book/fish_book_bg.png"
+const FISH_BOOK_HEADER_FRAME_PATH := "res://assets/showcase/fish_book/fish_book_header_frame.png"
+const FISH_BOOK_TITLE_SIGN_PATH := "res://assets/showcase/fish_book/fish_book_title_sign.png"
+const FISH_BOOK_MAIN_FRAME_PATH := "res://assets/showcase/fish_book/fish_book_main_frame.png"
+const FISH_BOOK_DETAIL_FRAME_PATH := "res://assets/showcase/fish_book/fish_book_detail_frame.png"
+const FISH_BOOK_FOOTER_FRAME_PATH := "res://assets/showcase/fish_book/fish_book_footer_frame.png"
+const FISH_BOOK_THUMB_BASE_PATH := "res://assets/showcase/fish_book/thumbs"
+const COMMON_STATUS_BAR_PATH := "res://assets/showcase/common/status_bar_frame.png"
+const COMMON_DETAIL_ICON_SHEET_PATH := "res://assets/showcase/common/detail_icon_sheet.png"
+const COMMON_FOOTER_ICON_SHEET_PATH := "res://assets/showcase/common/footer_icon_sheet.png"
+const COMMON_CARD_FRAME_PATH := "res://assets/showcase/common/card_frame.png"
+const COMMON_CARD_SELECTED_FRAME_PATH := "res://assets/showcase/common/card_selected_frame.png"
+const COMMON_BADGE_FRAME_PATH := "res://assets/showcase/common/badge_frame.png"
+const COMMON_DETAIL_ROW_FRAME_PATH := "res://assets/showcase/common/detail_row_frame.png"
+const COMMON_BUTTON_PATH := "res://assets/showcase/common/button_frame.png"
+const COMMON_BUTTON_HOVER_PATH := "res://assets/showcase/common/button_frame_hover.png"
+const COMMON_BUTTON_PRIMARY_PATH := "res://assets/showcase/common/button_frame_primary.png"
+const COMMON_PARCHMENT_CARD_PATH := "res://assets/showcase/common/parchment_card.png"
 const FISH_BOOK_ICON_SIZE := 96.0
 
 const FILTERS := [
@@ -40,9 +40,7 @@ var _fish_card_buttons: Dictionary = {}
 var _filter_buttons: Dictionary = {}
 
 var _found_label: Label
-var _level_label: Label
-var _money_label: Label
-var _rod_label: Label
+var _player_status_bar: PlayerStatusBar
 var _grid: GridContainer
 var _detail_no_label: Label
 var _detail_name_label: Label
@@ -59,8 +57,8 @@ var _footer_icon_sheet: Texture2D
 
 
 func _build_screen() -> void:
-	_detail_icon_sheet = _load_texture_if_exists(MAP_DETAIL_ICON_SHEET_PATH)
-	_footer_icon_sheet = _load_texture_if_exists(MAP_FOOTER_ICON_SHEET_PATH)
+	_detail_icon_sheet = _load_texture_if_exists(COMMON_DETAIL_ICON_SHEET_PATH)
+	_footer_icon_sheet = _load_texture_if_exists(COMMON_FOOTER_ICON_SHEET_PATH)
 	_build_background()
 	var root := Control.new()
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -76,7 +74,7 @@ func _build_screen() -> void:
 
 
 func _build_background() -> void:
-	var bg := _texture_rect(HARBOR_BG_PATH)
+	var bg := _texture_rect(FISH_BOOK_BG_PATH)
 	bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
@@ -91,27 +89,28 @@ func _build_background() -> void:
 
 func _build_header(root: Control) -> void:
 	var header := _anchored_control(root, 0.018, 0.020, 0.982, 0.154)
-	var frame := _texture_rect(MAP_HEADER_FRAME_PATH)
+	var frame := _texture_rect(FISH_BOOK_HEADER_FRAME_PATH)
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	header.add_child(frame)
 
-	var found_bar := _texture_rect(MAP_STATUS_BAR_PATH)
+	var found_bar := _texture_rect(COMMON_STATUS_BAR_PATH)
 	_place_control(header, found_bar, 0.022, 0.188, 0.258, 0.820)
 	_found_label = _book_label("発見済み 0/0", 22, Color("#fff2c6"), true, 2, Color("#07131d"))
 	_found_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_found_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(header, _found_label, 0.034, 0.230, 0.246, 0.770)
 
-	var sign := _texture_rect(MAP_TITLE_SIGN_PATH)
+	var sign := _texture_rect(FISH_BOOK_TITLE_SIGN_PATH)
 	_place_control(header, sign, 0.345, -0.045, 0.655, 1.020)
 	var title := _book_label("魚図鑑", 42, Color("#fff0aa"), true, 4, Color("#2a1608"))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(header, title, 0.385, 0.130, 0.615, 0.820)
 
-	_level_label = _header_chip(header, 0.662, 0.220, 0.740, 0.800, "Lv.1", 17)
-	_money_label = _header_chip(header, 0.750, 0.220, 0.858, 0.800, "500 G", 17)
-	_rod_label = _header_chip(header, 0.868, 0.220, 0.974, 0.800, "入門竿", 15)
+	_player_status_bar = PlayerStatusBarScript.new()
+	_player_status_bar.name = "FishBookPlayerStatusBar"
+	_player_status_bar.z_index = 20
+	_place_control(header, _player_status_bar, 0.650, 0.188, 0.976, 0.820)
 
 
 func _build_book_grid(root: Control) -> void:
@@ -121,7 +120,7 @@ func _build_book_grid(root: Control) -> void:
 	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(left, fill, 0.018, 0.028, 0.982, 0.965)
 
-	var frame := _texture_rect(HARBOR_MAIN_FRAME_PATH)
+	var frame := _texture_rect(FISH_BOOK_MAIN_FRAME_PATH)
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	left.add_child(frame)
 
@@ -162,7 +161,7 @@ func _build_detail_panel(root: Control) -> void:
 	paper_wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(detail, paper_wash, 0.060, 0.055, 0.940, 0.945)
 
-	var frame := _texture_rect(MAP_DETAIL_FRAME_PATH)
+	var frame := _texture_rect(FISH_BOOK_DETAIL_FRAME_PATH)
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	detail.add_child(frame)
 
@@ -181,7 +180,7 @@ func _build_detail_panel(root: Control) -> void:
 	_detail_name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(detail, _detail_name_label, 0.330, 0.068, 0.725, 0.150)
 
-	var detail_badge := _texture_rect(BOOK_BADGE_FRAME_PATH)
+	var detail_badge := _texture_rect(COMMON_BADGE_FRAME_PATH)
 	_place_control(detail, detail_badge, 0.735, 0.066, 0.925, 0.150)
 	_detail_rarity_label = _book_label("コモン", 17, Color.WHITE, true, 2, Color("#07131d"))
 	_detail_rarity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -197,7 +196,7 @@ func _build_detail_panel(root: Control) -> void:
 	portrait_bg.color = Color("#f5e4ba", 0.84)
 	portrait_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(detail, portrait_bg, 0.090, 0.155, 0.920, 0.505)
-	var portrait_paper := _texture_rect(HARBOR_PARCHMENT_CARD_PATH)
+	var portrait_paper := _texture_rect(COMMON_PARCHMENT_CARD_PATH)
 	portrait_paper.modulate = Color(1.0, 0.98, 0.88, 0.76)
 	_place_control(detail, portrait_paper, 0.078, 0.145, 0.935, 0.510)
 	_add_rule(detail, 0.095, 0.160, 0.915, Color("#7e5a2b", 0.45), 2.0)
@@ -230,7 +229,7 @@ func _build_detail_panel(root: Control) -> void:
 
 
 func _detail_row(parent: Control, top: float, label_text: String) -> Label:
-	var row_frame := _texture_rect(BOOK_DETAIL_ROW_FRAME_PATH)
+	var row_frame := _texture_rect(COMMON_DETAIL_ROW_FRAME_PATH)
 	row_frame.modulate = Color(1.0, 1.0, 1.0, 0.40)
 	_place_control(parent, row_frame, 0.082, top - 0.010, 0.918, top + 0.063)
 
@@ -252,7 +251,7 @@ func _detail_row(parent: Control, top: float, label_text: String) -> Label:
 
 func _build_footer(root: Control) -> void:
 	var footer := _anchored_control(root, 0.024, 0.890, 0.976, 0.975)
-	var frame := _texture_rect(HARBOR_FOOTER_FRAME_PATH)
+	var frame := _texture_rect(FISH_BOOK_FOOTER_FRAME_PATH)
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	footer.add_child(frame)
 
@@ -267,15 +266,10 @@ func _build_footer(root: Control) -> void:
 		_place_control(footer, button, x, 0.205, x + 0.118, 0.810)
 		x += 0.126
 
-	var back := _textured_button("港へ戻る", func() -> void: navigate("harbor"), true)
+	var back := make_return_button(func() -> void: navigate("harbor"), 0.0)
 	back.name = "FishBookReturnButton"
 	back.set_meta("fish_book_return", true)
 	_add_button_icon(back, _footer_icon(1), true)
-	var action_style := _texture_style(BOOK_ACTION_BUTTON_FRAME_PATH, Vector4(46, 24, 46, 24))
-	if action_style != null:
-		back.add_theme_stylebox_override("normal", action_style)
-		back.add_theme_stylebox_override("hover", action_style)
-		back.add_theme_stylebox_override("pressed", action_style)
 	_place_control(footer, back, 0.795, 0.142, 0.962, 0.860)
 
 
@@ -293,10 +287,8 @@ func _refresh_header() -> void:
 		if _is_discovered(fish_id):
 			found += 1
 	_found_label.text = "発見済み  %d/%d" % [found, total]
-	_level_label.text = "Lv.%d" % PlayerProgress.level
-	_money_label.text = "%s G" % _format_money(PlayerProgress.money)
-	var rod := GameData.get_rod(PlayerProgress.equipped_rod_id)
-	_rod_label.text = _short_rod_name(String(rod.get("name", "入門竿")))
+	if _player_status_bar != null:
+		_player_status_bar.refresh()
 
 
 func _rebuild_grid() -> void:
@@ -476,7 +468,7 @@ func _rebuild_spot_strip(spot_ids: Array) -> void:
 		card.name = "FishBookSpot_%s" % String(spot.get("id", "spot"))
 		_place_control(_detail_spots, card, item_left, 0.0, item_right, 1.0)
 
-		var thumb := _texture_rect("%s/%s.png" % [SPOT_THUMB_BASE_PATH, String(spot.get("id", ""))])
+		var thumb := _texture_rect("%s/%s.png" % [FISH_BOOK_THUMB_BASE_PATH, String(spot.get("id", ""))])
 		thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 		_place_control(card, thumb, 0.0, 0.0, 1.0, 0.730)
 
@@ -535,8 +527,7 @@ func _fish_matches_filter(fish: Dictionary) -> bool:
 		"all":
 			return true
 		"rare":
-			var rarity := String(fish.get("rarity", ""))
-			return rarity == "レア" or rarity == "ぬし" or bool(fish.get("boss", false))
+			return RarityStylesScript.is_rare_or_boss(fish)
 		"harbor":
 			return _spot_group_has_fish(["harbor_pier", "harbor_boulder"], fish_id)
 		"sand":
@@ -597,12 +588,12 @@ func _refresh_filter_buttons() -> void:
 func _apply_card_skin(button: Button, discovered: bool, selected: bool) -> void:
 	var normal: StyleBox
 	if selected:
-		normal = _texture_style(BOOK_CARD_SELECTED_FRAME_PATH, Vector4(28, 26, 28, 26))
+		normal = _texture_style(COMMON_CARD_SELECTED_FRAME_PATH, Vector4(28, 26, 28, 26))
 	elif discovered:
-		normal = _texture_style(BOOK_CARD_FRAME_PATH, Vector4(24, 22, 24, 24))
+		normal = _texture_style(COMMON_CARD_FRAME_PATH, Vector4(24, 22, 24, 24))
 	else:
 		normal = UITextures.flat_style(Color("#4a3825"), Color("#25160b"), 2, 8, true, 4)
-	var hover := _texture_style(BOOK_CARD_SELECTED_FRAME_PATH, Vector4(28, 26, 28, 26))
+	var hover := _texture_style(COMMON_CARD_SELECTED_FRAME_PATH, Vector4(28, 26, 28, 26))
 	if normal != null:
 		button.add_theme_stylebox_override("normal", normal)
 	if hover != null:
@@ -612,8 +603,8 @@ func _apply_card_skin(button: Button, discovered: bool, selected: bool) -> void:
 
 
 func _apply_filter_button_skin(button: Button, selected: bool) -> void:
-	var normal_path := HARBOR_BUTTON_PRIMARY_PATH if selected else HARBOR_BUTTON_PATH
-	var hover_path := HARBOR_BUTTON_PRIMARY_PATH if selected else HARBOR_BUTTON_HOVER_PATH
+	var normal_path := COMMON_BUTTON_PRIMARY_PATH if selected else COMMON_BUTTON_PATH
+	var hover_path := COMMON_BUTTON_PRIMARY_PATH if selected else COMMON_BUTTON_HOVER_PATH
 	var normal := _texture_style(normal_path, Vector4(44, 24, 44, 24))
 	var hover := _texture_style(hover_path, Vector4(44, 24, 44, 24))
 	if normal != null:
@@ -738,32 +729,11 @@ func _silence_button_text(button: Button) -> void:
 
 
 func _texture_rect(path: String) -> TextureRect:
-	var rect := TextureRect.new()
-	rect.texture = _load_texture_if_exists(path)
-	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	rect.stretch_mode = TextureRect.STRETCH_SCALE
-	rect.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return rect
+	return ShowcaseAssetsScript.texture_rect(path)
 
 
 func _texture_style(path: String, margins: Vector4) -> StyleBoxTexture:
-	var texture := _load_texture_if_exists(path)
-	if texture == null:
-		return null
-	var style := StyleBoxTexture.new()
-	style.texture = texture
-	style.texture_margin_left = margins.x
-	style.texture_margin_top = margins.y
-	style.texture_margin_right = margins.z
-	style.texture_margin_bottom = margins.w
-	style.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
-	style.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
-	style.content_margin_left = 10.0
-	style.content_margin_top = 8.0
-	style.content_margin_right = 10.0
-	style.content_margin_bottom = 8.0
-	return style
+	return ShowcaseAssetsScript.texture_style(path, margins)
 
 
 func _detail_icon(icon_index: int) -> Texture2D:
@@ -777,22 +747,11 @@ func _footer_icon(icon_index: int) -> Texture2D:
 func _atlas_icon(sheet: Texture2D, cell_size: float, icon_index: int) -> Texture2D:
 	if sheet == null or icon_index < 0:
 		return null
-	var atlas := AtlasTexture.new()
-	atlas.atlas = sheet
-	atlas.region = Rect2(Vector2(cell_size * float(icon_index), 0.0), Vector2(cell_size, cell_size))
-	return atlas
+	return ShowcaseAssetsScript.atlas_icon_from_texture(sheet, cell_size, icon_index)
 
 
 func _load_texture_if_exists(path: String) -> Texture2D:
-	if ResourceLoader.exists(path):
-		return load(path) as Texture2D
-	var absolute_path := ProjectSettings.globalize_path(path)
-	if FileAccess.file_exists(absolute_path):
-		var image := Image.new()
-		var err := image.load(absolute_path)
-		if err == OK:
-			return ImageTexture.create_from_image(image)
-	return null
+	return ShowcaseAssetsScript.load_texture(path)
 
 
 func _anchored_control(parent: Control, left: float, top: float, right: float, bottom: float) -> Control:
@@ -814,31 +773,11 @@ func _place_control(parent: Control, control: Control, left: float, top: float, 
 
 
 func _rarity_text_color(rarity: String) -> Color:
-	match rarity:
-		"コモン":
-			return Color("#e9f7ff")
-		"アンコモン":
-			return Color("#9fffd0")
-		"レア":
-			return Color("#f8c8ff")
-		"ぬし":
-			return Color("#ffcf83")
-		_:
-			return Color("#fff0aa")
+	return RarityStylesScript.text_color(rarity)
 
 
 func _rarity_badge_color(rarity: String) -> Color:
-	match rarity:
-		"コモン":
-			return Color("#156d9b")
-		"アンコモン":
-			return Color("#287d34")
-		"レア":
-			return Color("#7f3aa2")
-		"ぬし":
-			return Color("#9b3d24")
-		_:
-			return Color("#6b4521")
+	return RarityStylesScript.badge_color(rarity)
 
 
 func _short_rod_name(rod_name: String) -> String:
