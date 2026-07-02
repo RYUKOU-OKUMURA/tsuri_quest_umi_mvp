@@ -14,23 +14,54 @@ func _ready() -> void:
 	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child(vp)
 
-	# 捏造：いくつか発見済みに（add_child 前＝_build_screen 実行前に行う）
+	# 捏造：参照に近い状態へ（add_child 前＝_build_screen 実行前に行う）
+	PlayerProgress.level = 12
+	PlayerProgress.exp = 1450
+	PlayerProgress.money = 12450
+	PlayerProgress.equipped_rod_id = "iso"
+	PlayerProgress.owned_rods = ["starter", "iso"]
+	PlayerProgress.owned_boats = ["skiff"]
+	PlayerProgress.pending_buff = {
+		"recipe_id": "salt_grill",
+		"name": "磯の活力丼",
+		"stat": "max_energy",
+		"value": 0.25,
+		"text": "体力 +25 / 安全域 +10%",
+	}
 	PlayerProgress.caught_counts.clear()
 	PlayerProgress.best_sizes.clear()
+	PlayerProgress.inventory.clear()
+	PlayerProgress.spot_caught_counts.clear()
+	PlayerProgress.eaten_recipes.clear()
 	var ids := GameData.get_all_fish_ids()
-	if ids.size() > 0:
-		PlayerProgress.caught_counts[ids[0]] = 12
-		PlayerProgress.best_sizes[ids[0]] = 23.5
-	if ids.size() > 1:
-		PlayerProgress.caught_counts[ids[1]] = 5
-		PlayerProgress.best_sizes[ids[1]] = 31.0
-	if ids.size() > 2:
-		PlayerProgress.caught_counts[ids[2]] = 3
-		PlayerProgress.best_sizes[ids[2]] = 28.2
-	for fid in ids:
-		if bool(GameData.get_fish(fid).get("boss", false)):
-			PlayerProgress.caught_counts[fid] = 1
-			PlayerProgress.best_sizes[fid] = 52.0
+	var seeded_counts := {
+		"aji": {"count": 12, "best": 34.2, "stock": 1, "spot": "harbor_pier"},
+		"mejina": {"count": 6, "best": 44.2, "stock": 1, "spot": "rock_breakwater"},
+		"kasago": {"count": 4, "best": 26.4, "stock": 2, "spot": "rock_breakwater"},
+		"saba": {"count": 3, "best": 38.6, "stock": 3, "spot": "outer_tide"},
+		"iwashi": {"count": 3, "best": 21.5, "stock": 3, "spot": "harbor_pier"},
+		"hirame": {"count": 1, "best": 52.7, "stock": 1, "spot": "shallow_sand"},
+		"suzuki": {"count": 1, "best": 62.4, "stock": 1, "spot": "outer_tide"},
+		"boss_kurodai": {"count": 1, "best": 52.0, "stock": 0, "spot": "harbor_boulder"},
+	}
+	for fish_id in seeded_counts.keys():
+		if not ids.has(fish_id):
+			continue
+		var data: Dictionary = seeded_counts[fish_id]
+		PlayerProgress.caught_counts[fish_id] = int(data["count"])
+		PlayerProgress.best_sizes[fish_id] = float(data["best"])
+		var stock := int(data["stock"])
+		if stock > 0:
+			PlayerProgress.inventory[fish_id] = stock
+		var spot_id := String(data["spot"])
+		var spot_counts: Dictionary = PlayerProgress.spot_caught_counts.get(spot_id, {})
+		spot_counts[fish_id] = int(data["count"])
+		PlayerProgress.spot_caught_counts[spot_id] = spot_counts
+	PlayerProgress.eaten_recipes = {
+		"aji:salt_grill": 3,
+		"mejina:simmered": 2,
+		"kasago:soup": 1,
+	}
 
 	var s := StatusScreen.new()
 	s.theme = ThemeFactory.build_theme()
