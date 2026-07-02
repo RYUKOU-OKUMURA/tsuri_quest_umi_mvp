@@ -1,0 +1,7 @@
+interface:
+  display_name: "UI Screen Build"
+  short_description: "新画面UIのゼロイチ実装を参照分解→構成→素材→v1収束の手順で進める"
+  default_prompt: "Use $ui-screen-build to implement the new screen UI from its reference image, following docs/19_ui_production_playbook.md."
+
+policy:
+  allow_implicit_invocation: true

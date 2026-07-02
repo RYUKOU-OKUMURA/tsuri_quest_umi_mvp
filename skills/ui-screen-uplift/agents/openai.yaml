@@ -1,0 +1,7 @@
+interface:
+  display_name: "UI Screen Uplift"
+  short_description: "既存画面UIの品質向上をトリアージ→1フェーズ→全画面比較採用の手順で進める"
+  default_prompt: "Use $ui-screen-uplift to raise the visual quality of the target screen toward its reference image, following docs/19_ui_production_playbook.md."
+
+policy:
+  allow_implicit_invocation: true
