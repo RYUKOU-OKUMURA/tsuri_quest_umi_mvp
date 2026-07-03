@@ -1,8 +1,8 @@
 # 水中ファイト画面 QA判断ログ
 
-最終更新: 2026-07-03 / 状態: **v1 showcase 合格・freeze中**（2026-06-26 判定）+ P0キャッチ演出追加
+最終更新: 2026-07-03 / 状態: **v1 showcase 合格・freeze中**（2026-06-26 判定）+ P0キャッチ演出写真風化
 参照画像: `reference/02_underwater_fight_mockup.png`
-QA更新コマンド: `./tools/fight_visual_qa.sh` / P0演出確認: `godot --path . res://tools/catch_fanfare_preview.tscn`
+QA更新コマンド: `./tools/fight_visual_qa.sh` / P0演出確認: `godot --path . res://tools/catch_fanfare_preview.tscn`（通常魚確認は `TSURI_CATCH_FANFARE_FISH_ID=aji`）
 詳細な経過履歴: `docs/qa/archive/underwater_fight_design_qa_2026-06.md`（旧 `design-qa.md`）
 
 ## 1. freeze値（正本）
@@ -66,10 +66,11 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 
 | 項目 | 値 | 場所 | 理由・備考 |
 |---|---|---|---|
-| 成功時ファンファーレ | 2.8秒のruntime描画オーバーレイ。白フラッシュ、金帯「釣り上げた！」、魚カード、結果プレート、星/紙吹雪、スキップボタンを表示 | `src/ui/components/catch_fanfare.gd` / `src/ui/fishing_screen.gd` | 既存の結果パネルは演出完了後に表示。既存freeze値は動かさない |
+| 成功時ファンファーレ | 2.8秒のruntime描画オーバーレイ。魚なし写真風ベース、runtime見出し「釣り上げた！」、既存魚ポートレートの前面合成、結果プレート文字、スキップボタンを表示 | `src/ui/components/catch_fanfare.gd` / `src/ui/fishing_screen.gd` | 既存の結果パネルは演出完了後に表示。既存freeze値は動かさない |
+| 写真風ベース素材 | `catch_photo_base.png` 1枚を全面表示し、その上へ魚だけを重ねる | `assets/showcase/underwater/catch_photo_base.png` | 日本語テキストと魚本体は焼き込まない。手前指マスクは使わず、魚が指を隠す方針 |
 | 魚画像参照 | `FightFishAssets.card_portrait_path()` 経由 | `catch_fanfare.gd` | 魚素材所有ルールを維持。直接パス参照なし |
 | 音 | `AudioStreamGenerator` による短い合成ファンファーレ | `catch_fanfare.gd` | 専用SE素材がないため、P0ではruntime生成で効果音経路を成立させる |
-| 検証画像 | `docs/qa/evidence/underwater_fight/2026-07-03_catch_fanfare_preview.png` | `tools/catch_fanfare_preview.gd` | 通常起動キャプチャ。headless `SubViewport` はnullで不可 |
+| 検証画像 | `docs/qa/evidence/underwater_fight/2026-07-03_catch_photo_base_boss.png` / `2026-07-03_catch_photo_base_aji.png` | `tools/catch_fanfare_preview.gd` | 通常起動キャプチャ。ぬし魚と通常魚で魚差し替え確認 |
 
 ### フォント
 
@@ -92,6 +93,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 | 被写体マスクを狭める背景ビルド | 元絵の魚残像が再発 | 2026-06 |
 | 強めの候補ディテール背景パス | 中央水域が暗くなる | 2026-06 |
 | ヒットフラッシュ 0.52 | ヒット瞬間に魚が白飛び | 2026-06 |
+| 低密度の手描き分割写真素材（背面・手前手・枠の3PNG） | 添付完成イメージの品質に届かず、キャラクターと背景が簡素すぎる。以後は魚なし高品質ベース1枚＋魚前面合成を採用 | 2026-07-03 |
 
 ## 3. 微調整カウンタ
 
@@ -101,6 +103,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 |---|---|---|---|
 | キャッチ演出・補足文 | 1 | 長文の結果補足が省略表示になったため、「初回記録」「撃破報酬」の短い2行へ変更 | 採用 |
 | キャッチ演出・表示時間 | 1 | 釣り上げ演出が短すぎたため、自動終了を1.85秒から2.8秒へ延長 | 採用 |
+| キャッチ演出・写真ベース | 1 | 右カード型の手描き分割素材をやめ、魚なし高品質ベース1枚＋既存魚ポートレート前面合成へ変更 | 採用 |
 
 ## 4. 暫定判定・再検証TODO
 
@@ -119,4 +122,4 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 
 ## 7. 判断ログ（直近パスのみ）
 
-- 2026-07-03: P0キャッチ演出を追加。`catch_fanfare.gd` を新設し、釣り上げ成功時に既存結果パネルの前へ2.8秒のファンファーレを挿入した。既存の背景・魚・HUD・右サイドバー・上部ステータスfreeze値は変更していない。採用判断は `docs/qa/evidence/underwater_fight/2026-07-03_catch_fanfare_preview.png`。P1として出た補足文の省略表示は短文2行化で解消。自動終了/スキップは `tools/catch_fanfare_smoke.tscn` で検証済み。
+- 2026-07-03: キャッチ演出を写真風ベース方式へ更新。`assets/showcase/underwater/catch_photo_base.png` を全面表示し、魚本体は `FightFishAssets.card_portrait_path()` の既存ポートレートを前面合成する。日本語テキストと魚はPNGへ焼き込まない。採用判断は `docs/qa/evidence/underwater_fight/2026-07-03_catch_photo_base_boss.png` と `docs/qa/evidence/underwater_fight/2026-07-03_catch_photo_base_aji.png`。既存の水中背景・HUD・上部・右サイドバー・成功後結果パネルのフローは変更していない。自動終了/スキップは `tools/catch_fanfare_smoke.tscn` で検証済み。

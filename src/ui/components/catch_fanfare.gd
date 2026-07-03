@@ -20,6 +20,12 @@ const FANFARE_NOTES := [
 	{"start": 0.69, "duration": 0.11, "freq": 987.77},
 	{"start": 0.81, "duration": 0.24, "freq": 1318.51},
 ]
+const CATCH_PHOTO_BASE_PATH := "res://assets/showcase/underwater/catch_photo_base.png"
+const PHOTO_TITLE_SLOT := Rect2(326.0, 28.0, 628.0, 112.0)
+const PHOTO_INFO_SLOT := Rect2(168.0, 503.0, 232.0, 70.0)
+const PHOTO_BONUS_SLOT := Rect2(758.0, 516.0, 356.0, 62.0)
+const PHOTO_FISH_SLOT := Rect2(210.0, 252.0, 860.0, 476.0)
+const PHOTO_SKIP_SLOT := Rect2(733.0, 642.0, 276.0, 54.0)
 
 var _fish_data: Dictionary = {}
 var _catch_result: Dictionary = {}
@@ -30,10 +36,12 @@ var _rare_mode := false
 var _particles: Array[Dictionary] = []
 
 var _flash: ColorRect
+var _photo_base_texture: TextureRect
 var _banner: PanelContainer
 var _banner_label: Label
 var _info_panel: PanelContainer
-var _fish_card: PanelContainer
+var _bonus_panel: PanelContainer
+var _fish_card: Control
 var _fish_texture: TextureRect
 var _fish_name_label: Label
 var _rarity_label: Label
@@ -45,6 +53,7 @@ var _finish_tween: Tween
 
 var _banner_target_position := Vector2.ZERO
 var _info_target_position := Vector2.ZERO
+var _bonus_target_position := Vector2.ZERO
 var _fish_card_target_position := Vector2.ZERO
 var _skip_target_position := Vector2.ZERO
 
@@ -124,18 +133,33 @@ func _draw() -> void:
 
 
 func _build_nodes() -> void:
+	_photo_base_texture = ShowcaseAssetsScript.texture_rect(CATCH_PHOTO_BASE_PATH, TextureRect.STRETCH_SCALE)
+	_photo_base_texture.name = "CatchPhotoBase"
+	add_child(_photo_base_texture)
+
+	_fish_card = Control.new()
+	_fish_card.name = "CatchPhotoFishLayer"
+	_fish_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_fish_card)
+
+	_fish_texture = TextureRect.new()
+	_fish_texture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_fish_texture.stretch_mode = TextureRect.STRETCH_SCALE
+	_fish_texture.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_fish_texture.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fish_card.add_child(_fish_texture)
+
 	_flash = ColorRect.new()
 	_flash.color = Color(1.0, 1.0, 1.0, 0.0)
 	_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_flash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(_flash)
 
 	_banner = PanelContainer.new()
 	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_banner.add_theme_stylebox_override("panel", _banner_style())
+	_banner.add_theme_stylebox_override("panel", _empty_style())
 	add_child(_banner)
 
-	_banner_label = _make_label("釣り上げた！", 46, Palette.TEXT_BONE, 4)
+	_banner_label = _make_label("釣り上げた！", 76, Palette.GOLD_BRIGHT, 6)
 	_banner_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_banner_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_banner_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -144,56 +168,49 @@ func _build_nodes() -> void:
 
 	_info_panel = PanelContainer.new()
 	_info_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_info_panel.add_theme_stylebox_override("panel", _info_panel_style())
+	_info_panel.add_theme_stylebox_override("panel", _empty_style())
 	add_child(_info_panel)
 	var info_box := VBoxContainer.new()
-	info_box.add_theme_constant_override("separation", 9)
+	info_box.add_theme_constant_override("separation", 0)
 	_info_panel.add_child(info_box)
-	_fish_name_label = _make_label("", 34, Palette.GOLD_BRIGHT, 3)
+	_fish_name_label = _make_label("", 23, Palette.TEXT_BONE, 2)
 	_fish_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	info_box.add_child(_fish_name_label)
-	_size_label = _make_label("", 22, Palette.TEXT_BONE, 2)
+	_size_label = _make_label("", 19, Palette.TEXT_BONE, 2)
+	_size_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	info_box.add_child(_size_label)
-	_rarity_label = _make_label("", 22, Palette.TEXT_BONE, 2)
+	_rarity_label = _make_label("", 17, Palette.TEXT_BONE, 2)
+	_rarity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	info_box.add_child(_rarity_label)
-	_bonus_label = _make_label("", 18, Palette.TEXT_BONE, 1)
+
+	_bonus_panel = PanelContainer.new()
+	_bonus_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bonus_panel.add_theme_stylebox_override("panel", _empty_style())
+	add_child(_bonus_panel)
+	_bonus_label = _make_label("", 18, Palette.TEXT_BONE, 2)
 	_bonus_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_bonus_label.max_lines_visible = 2
-	_bonus_label.custom_minimum_size = Vector2(0.0, 56.0)
-	_bonus_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	_bonus_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_bonus_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_bonus_label.clip_text = false
 	_bonus_label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
-	info_box.add_child(_bonus_label)
-
-	_fish_card = PanelContainer.new()
-	_fish_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_fish_card)
-	var card_box := VBoxContainer.new()
-	card_box.add_theme_constant_override("separation", 7)
-	_fish_card.add_child(card_box)
-	_fish_texture = TextureRect.new()
-	_fish_texture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_fish_texture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_fish_texture.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	_fish_texture.custom_minimum_size = Vector2(340.0, 220.0)
-	_fish_texture.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	card_box.add_child(_fish_texture)
-	var card_caption := _make_label("クーラーボックスに入れた", 18, Palette.TEXT_DARK, 0)
-	card_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	card_box.add_child(card_caption)
+	_bonus_panel.add_child(_bonus_label)
 
 	_skip_button = Button.new()
 	_skip_button.text = "スキップ"
-	_skip_button.custom_minimum_size = Vector2(156.0, 46.0)
-	_skip_button.add_theme_stylebox_override("normal", _skip_style(false))
-	_skip_button.add_theme_stylebox_override("hover", _skip_style(true))
-	_skip_button.add_theme_stylebox_override("focus", _skip_style(true))
-	_skip_button.add_theme_stylebox_override("pressed", _skip_pressed_style())
+	_skip_button.add_theme_stylebox_override("normal", _empty_style())
+	_skip_button.add_theme_stylebox_override("hover", _empty_style())
+	_skip_button.add_theme_stylebox_override("focus", _empty_style())
+	_skip_button.add_theme_stylebox_override("pressed", _empty_style())
 	_skip_button.add_theme_color_override("font_color", Palette.TEXT_BONE)
 	_skip_button.add_theme_color_override("font_hover_color", Palette.GOLD_BRIGHT)
-	_skip_button.add_theme_font_size_override("font_size", 17)
+	_skip_button.add_theme_color_override("font_outline_color", Palette.TEXT_OUTLINE_DARK)
+	_skip_button.add_theme_constant_override("outline_size", 3)
+	_skip_button.add_theme_font_size_override("font_size", 28)
 	_skip_button.pressed.connect(_finish_now)
 	add_child(_skip_button)
+
+	add_child(_flash)
 
 	_audio_player = AudioStreamPlayer.new()
 	_audio_player.name = "CatchFanfareAudio"
@@ -206,16 +223,21 @@ func _layout_nodes() -> void:
 		return
 	var scale_factor := minf(size.x / DESIGN_SIZE.x, size.y / DESIGN_SIZE.y)
 	var origin := (size - DESIGN_SIZE * scale_factor) * 0.5
-	_apply_rect(_banner, Rect2(196.0, 88.0, 644.0, 94.0), scale_factor, origin)
-	_apply_rect(_info_panel, Rect2(122.0, 252.0, 466.0, 246.0), scale_factor, origin)
-	_apply_rect(_fish_card, Rect2(744.0, 210.0, 370.0, 302.0), scale_factor, origin)
-	_apply_rect(_skip_button, Rect2(1062.0, 626.0, 156.0, 46.0), scale_factor, origin)
+	_apply_rect(_photo_base_texture, Rect2(Vector2.ZERO, DESIGN_SIZE), scale_factor, origin)
+	_apply_rect(_banner, PHOTO_TITLE_SLOT, scale_factor, origin)
+	_apply_rect(_info_panel, PHOTO_INFO_SLOT, scale_factor, origin)
+	_apply_rect(_bonus_panel, PHOTO_BONUS_SLOT, scale_factor, origin)
+	_apply_rect(_fish_card, PHOTO_FISH_SLOT, scale_factor, origin)
+	_apply_rect(_fish_texture, Rect2(Vector2.ZERO, _fish_card.size), 1.0, Vector2.ZERO)
+	_apply_rect(_skip_button, PHOTO_SKIP_SLOT, scale_factor, origin)
 	_banner_target_position = _banner.position
 	_info_target_position = _info_panel.position
+	_bonus_target_position = _bonus_panel.position
 	_fish_card_target_position = _fish_card.position
 	_skip_target_position = _skip_button.position
 	_banner.pivot_offset = _banner.size * 0.5
 	_info_panel.pivot_offset = _info_panel.size * 0.5
+	_bonus_panel.pivot_offset = _bonus_panel.size * 0.5
 	_fish_card.pivot_offset = _fish_card.size * 0.5
 
 
@@ -232,7 +254,6 @@ func _update_content() -> void:
 	_rarity_label.text = "レアリティ　%s" % rarity
 	_rarity_label.add_theme_color_override("font_color", RarityStylesScript.text_color(rarity))
 	_bonus_label.text = _bonus_text()
-	_fish_card.add_theme_stylebox_override("panel", _fish_card_style(rarity))
 	_fish_texture.texture = ShowcaseAssetsScript.load_texture(FightFishAssetsScript.card_portrait_path(_fish_data))
 
 
@@ -269,6 +290,9 @@ func _prepare_intro_state() -> void:
 	_info_panel.position = _info_target_position + Vector2(-72.0, 18.0)
 	_info_panel.scale = Vector2(0.96, 0.96)
 	_info_panel.modulate = Color(1.0, 1.0, 1.0, 0.0)
+	_bonus_panel.position = _bonus_target_position + Vector2(58.0, 16.0)
+	_bonus_panel.scale = Vector2(0.96, 0.96)
+	_bonus_panel.modulate = Color(1.0, 1.0, 1.0, 0.0)
 	_fish_card.position = _fish_card_target_position + Vector2(128.0, 20.0)
 	_fish_card.scale = Vector2(0.92, 0.92)
 	_fish_card.modulate = Color(1.0, 1.0, 1.0, 0.0)
@@ -287,6 +311,8 @@ func _start_animation() -> void:
 	_animation_tween.tween_property(_fish_card, "scale", Vector2.ONE, 0.42).set_delay(0.18).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 	_animation_tween.tween_property(_info_panel, "position", _info_target_position, 0.34).set_delay(0.36).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	_animation_tween.tween_property(_info_panel, "modulate:a", 1.0, 0.28).set_delay(0.36).set_ease(Tween.EASE_OUT)
+	_animation_tween.tween_property(_bonus_panel, "position", _bonus_target_position, 0.34).set_delay(0.40).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	_animation_tween.tween_property(_bonus_panel, "modulate:a", 1.0, 0.28).set_delay(0.40).set_ease(Tween.EASE_OUT)
 	_animation_tween.tween_property(_skip_button, "modulate:a", 1.0, 0.18).set_delay(0.82).set_ease(Tween.EASE_OUT)
 
 	_finish_tween = create_tween()
@@ -408,6 +434,15 @@ func _make_label(text: String, font_size: int, color: Color, outline: int = 0) -
 	return label
 
 
+func _empty_style() -> StyleBoxEmpty:
+	var style := StyleBoxEmpty.new()
+	style.content_margin_left = 0
+	style.content_margin_right = 0
+	style.content_margin_top = 0
+	style.content_margin_bottom = 0
+	return style
+
+
 func _banner_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(Palette.GOLD_DEEP, 0.92)
@@ -446,10 +481,10 @@ func _fish_card_style(rarity: String) -> StyleBoxFlat:
 	style.border_color = RarityStylesScript.border_color(rarity)
 	style.set_border_width_all(3)
 	style.set_corner_radius_all(8)
-	style.content_margin_left = 12
-	style.content_margin_right = 12
-	style.content_margin_top = 12
-	style.content_margin_bottom = 12
+	style.content_margin_left = 0
+	style.content_margin_right = 0
+	style.content_margin_top = 0
+	style.content_margin_bottom = 0
 	style.shadow_color = Color(Palette.TEXT_OUTLINE_DARK, 0.44)
 	style.shadow_size = 9
 	style.shadow_offset = Vector2(0.0, 4.0)

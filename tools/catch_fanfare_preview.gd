@@ -18,6 +18,10 @@ func _ready() -> void:
 
 	PlayerProgress.level = max(PlayerProgress.level, GameData.BOSS_UNLOCK_LEVEL)
 	PlayerProgress.money = 12450
+	var fish_id := OS.get_environment("TSURI_CATCH_FANFARE_FISH_ID")
+	if fish_id.is_empty():
+		fish_id = "boss_kurodai"
+	var spot_id := GameData.BOSS_FISHING_SPOT_ID if fish_id == "boss_kurodai" else GameData.DEFAULT_FISHING_SPOT_ID
 
 	var vp := SubViewport.new()
 	vp.size = VW
@@ -27,15 +31,13 @@ func _ready() -> void:
 
 	var screen := FishingScreenScript.new()
 	screen.theme = ThemeFactory.build_theme()
-	screen.configure({"spot_id": GameData.BOSS_FISHING_SPOT_ID})
+	screen.configure({"spot_id": spot_id})
 	screen.size = Vector2(VW)
 	vp.add_child(screen)
 	await get_tree().process_frame
 	await get_tree().process_frame
 
-	var fish := GameData.get_fish("boss_kurodai").duplicate(true)
-	fish["name"] = "クロダイ"
-	fish["rarity"] = "ぬし"
+	var fish := GameData.get_fish(fish_id).duplicate(true)
 	screen._current_fish = fish
 	screen._simulator.prepare(fish, screen._trip_stats)
 	screen._view.bind_simulator(screen._simulator)
@@ -44,10 +46,14 @@ func _ready() -> void:
 	screen._fight_hud.bind(screen._simulator, fish, screen._trip_stats)
 	screen._view.modulate.a = 1.0
 	screen._surface_view.modulate.a = 0.0
-	screen._catch_fanfare.play(fish, 48.2, {
-		"first_catch": true,
-		"boss_first_clear_reward": {"money": 3000},
-	})
+	var size_cm := 48.2 if fish_id == "boss_kurodai" else 23.4
+	var size_env := OS.get_environment("TSURI_CATCH_FANFARE_SIZE_CM")
+	if not size_env.is_empty():
+		size_cm = size_env.to_float()
+	var catch_result := {"first_catch": true}
+	if fish_id == "boss_kurodai":
+		catch_result["boss_first_clear_reward"] = {"money": 3000}
+	screen._catch_fanfare.play(fish, size_cm, catch_result)
 
 	await get_tree().create_timer(0.92).timeout
 	var img := vp.get_texture().get_image()

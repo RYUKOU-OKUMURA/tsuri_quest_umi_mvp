@@ -38,6 +38,7 @@ EXPLICIT_OWNERS: dict[Path, set[str]] = {
     Path("src/ui/fish_book_screen.gd"): {"fish_book", "common"},
     Path("src/ui/fishing_spot_select_screen.gd"): {"fishing_spots", "common"},
     Path("src/ui/components/fishing_spot_map_view.gd"): {"fishing_spots"},
+    Path("src/ui/components/catch_fanfare.gd"): {"underwater"},
     Path("src/ui/components/surface_cast_view.gd"): {"surface"},
     Path("src/ui/components/fight_hud.gd"): {"underwater"},
     Path("src/ui/components/fight_status_bar.gd"): {"underwater"},
