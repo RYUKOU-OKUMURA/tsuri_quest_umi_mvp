@@ -476,19 +476,27 @@ func _rebuild_spot_strip(spot_ids: Array) -> void:
 		card.name = "FishBookSpot_%s" % String(spot.get("id", "spot"))
 		_place_control(_detail_spots, card, item_left, 0.0, item_right, 1.0)
 
+		var card_bg := Panel.new()
+		card_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		card_bg.add_theme_stylebox_override("panel", _spot_record_card_style())
+		_place_control(card, card_bg, 0.0, 0.0, 1.0, 1.0)
+
 		var thumb := _texture_rect("%s/%s.png" % [FISH_BOOK_THUMB_BASE_PATH, String(spot.get("id", ""))])
 		thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-		_place_control(card, thumb, 0.0, 0.0, 1.0, 0.730)
+		thumb.modulate = Color(1.0, 0.965, 0.860, 0.92)
+		_place_control(card, thumb, 0.045, 0.055, 0.955, 0.680)
 
-		var label_bg := ColorRect.new()
-		label_bg.color = Color("#12324a")
-		label_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_place_control(card, label_bg, 0.0, 0.700, 1.0, 1.0)
+		var thumb_wash := _label_plate(_alpha(Palette.PARCHMENT, 0.12))
+		_place_control(card, thumb_wash, 0.045, 0.055, 0.955, 0.680)
+		var label_bg := _label_plate(_alpha(Palette.PARCHMENT_DEEP, 0.96))
+		_place_control(card, label_bg, 0.045, 0.700, 0.955, 0.955)
+		var label_rule := _label_plate(_alpha(Palette.WOOD_DARK, 0.34))
+		_place_control(card, label_rule, 0.080, 0.700, 0.920, 0.718)
 
-		var label := _book_label(String(spot.get("short_name", spot.get("name", ""))), 13, Color("#fff2c0"), true, 1, Color("#06131d"))
+		var label := _book_label(String(spot.get("short_name", spot.get("name", ""))), 13, Palette.TEXT_OUTLINE_LIGHT, true, 0)
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		_place_control(card, label, 0.0, 0.700, 1.0, 1.0)
+		_place_control(card, label, 0.055, 0.700, 0.945, 0.955)
 
 
 func _set_filter(filter_id: String) -> void:
@@ -920,6 +928,19 @@ func _label_plate(color: Color) -> ColorRect:
 	rect.color = color
 	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return rect
+
+
+func _spot_record_card_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = _alpha(Palette.PARCHMENT, 0.78)
+	style.border_color = _alpha(Palette.WOOD_DARK, 0.56)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	style.content_margin_left = 4.0
+	style.content_margin_top = 4.0
+	style.content_margin_right = 4.0
+	style.content_margin_bottom = 4.0
+	return style
 
 
 func _add_rule(parent: Control, left: float, y: float, right: float, color: Color, thickness: float) -> void:
