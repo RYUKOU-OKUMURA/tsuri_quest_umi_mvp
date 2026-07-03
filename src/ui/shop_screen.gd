@@ -7,6 +7,7 @@ const RIG_BACKPLATE_PATH := "res://assets/showcase/tackle_shop/shop_rig_backplat
 const ITEM_ICON_SHEET_PATH := "res://assets/showcase/tackle_shop/shop_item_icon_sheet.png"
 const BAIT_ICON_SHEET_PATH := "res://assets/showcase/tackle_shop/shop_bait_icon_sheet.png"
 
+const DESIGN_SIZE := Vector2(1280.0, 720.0)
 const ICON_CELL := 128.0
 const BAIT_CELL := 64.0
 
@@ -118,6 +119,8 @@ var _result_message := "装備を整えます。"
 var _item_icon_sheet: Texture2D
 var _bait_icon_sheet: Texture2D
 
+var _letterbox_backdrop: ColorRect
+var _design_canvas: Control
 var _backplate: TextureRect
 var _title_label: Label
 var _subtitle_label: Label
@@ -143,17 +146,23 @@ var _detail_stat_row_index := 0
 
 func _build_screen() -> void:
 	_load_assets()
-	_build_backplate()
+	_build_fixed_canvas()
+	_build_backplate(_design_canvas)
 
 	var root := Control.new()
-	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(root)
+	root.name = "TackleShopOverlay"
+	root.position = Vector2.ZERO
+	root.size = DESIGN_SIZE
+	root.custom_minimum_size = DESIGN_SIZE
+	root.mouse_filter = Control.MOUSE_FILTER_PASS
+	_design_canvas.add_child(root)
 
+	_build_cards(root)
 	_build_header_overlay(root)
 	_build_tabs(root)
-	_build_cards(root)
 	_build_detail_overlay(root)
 	_build_footer(root)
+	_layout_design_canvas()
 	_refresh()
 
 
@@ -162,11 +171,50 @@ func _load_assets() -> void:
 	_bait_icon_sheet = ShowcaseAssetsScript.load_texture(BAIT_ICON_SHEET_PATH)
 
 
-func _build_backplate() -> void:
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED:
+		_layout_design_canvas()
+
+
+func _build_fixed_canvas() -> void:
+	_letterbox_backdrop = ColorRect.new()
+	_letterbox_backdrop.name = "TackleShopLetterboxBackdrop"
+	_letterbox_backdrop.color = Palette.TEXT_OUTLINE_DARK
+	_letterbox_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_letterbox_backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(_letterbox_backdrop)
+
+	_design_canvas = Control.new()
+	_design_canvas.name = "TackleShopDesignCanvas"
+	_design_canvas.position = Vector2.ZERO
+	_design_canvas.size = DESIGN_SIZE
+	_design_canvas.custom_minimum_size = DESIGN_SIZE
+	_design_canvas.mouse_filter = Control.MOUSE_FILTER_PASS
+	add_child(_design_canvas)
+
+
+func _layout_design_canvas() -> void:
+	if _design_canvas == null:
+		return
+	var available := size
+	if available.x <= 1.0 or available.y <= 1.0:
+		available = get_viewport_rect().size
+	var scale_factor := minf(available.x / DESIGN_SIZE.x, available.y / DESIGN_SIZE.y)
+	if scale_factor <= 0.0:
+		scale_factor = 1.0
+	var scaled_size := DESIGN_SIZE * scale_factor
+	_design_canvas.position = ((available - scaled_size) * 0.5).floor()
+	_design_canvas.size = DESIGN_SIZE
+	_design_canvas.scale = Vector2(scale_factor, scale_factor)
+
+
+func _build_backplate(parent: Control) -> void:
 	_backplate = ShowcaseAssetsScript.texture_rect(ROD_BACKPLATE_PATH)
-	_backplate.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_backplate.position = Vector2.ZERO
+	_backplate.size = DESIGN_SIZE
+	_backplate.custom_minimum_size = DESIGN_SIZE
 	_backplate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_backplate)
+	parent.add_child(_backplate)
 
 
 func _build_header_overlay(parent: Control) -> void:

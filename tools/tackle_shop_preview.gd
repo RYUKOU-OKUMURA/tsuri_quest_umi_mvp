@@ -5,20 +5,34 @@ const ShopScreen = preload("res://src/ui/shop_screen.gd")
 const ThemeFactory = preload("res://src/ui/ui_theme.gd")
 
 const VW := Vector2i(1280, 720)
+const VW_EXPANDED := Vector2i(2124, 1507)
 const OUT_ROD := "/tmp/tsuri_tackle_shop_rod.png"
 const OUT_RIG := "/tmp/tsuri_tackle_shop_rig.png"
+const OUT_ROD_EXPANDED := "/tmp/tsuri_tackle_shop_rod_expanded.png"
+const OUT_RIG_EXPANDED := "/tmp/tsuri_tackle_shop_rig_expanded.png"
 
 var _had_capture_error := false
 
 
 func _ready() -> void:
 	_seed_progress()
-	await _capture("rod", OUT_ROD)
-	await _capture("rig", OUT_RIG)
+	var vp := SubViewport.new()
+	vp.disable_3d = true
+	vp.transparent_bg = false
+	vp.render_target_clear_mode = SubViewport.CLEAR_MODE_ALWAYS
+	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(vp)
+
+	await _capture(vp, "rod", OUT_ROD, VW)
+	await _capture(vp, "rig", OUT_RIG, VW)
+	await _capture(vp, "rod", OUT_ROD_EXPANDED, VW_EXPANDED)
+	await _capture(vp, "rig", OUT_RIG_EXPANDED, VW_EXPANDED)
 
 	print("tackle_shop_preview:")
 	print(OUT_ROD)
 	print(OUT_RIG)
+	print(OUT_ROD_EXPANDED)
+	print(OUT_RIG_EXPANDED)
 	get_tree().quit(1 if _had_capture_error else 0)
 
 
@@ -42,17 +56,17 @@ func _seed_progress() -> void:
 	PlayerProgress.pending_buff = {}
 
 
-func _capture(mode: String, out_path: String) -> void:
-	var vp := SubViewport.new()
-	vp.size = VW
-	vp.disable_3d = true
-	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	add_child(vp)
+func _capture(vp: SubViewport, mode: String, out_path: String, viewport_size: Vector2i) -> void:
+	for child in vp.get_children():
+		child.queue_free()
+	await get_tree().process_frame
+
+	vp.size = viewport_size
 
 	var screen := ShopScreen.new()
 	screen.theme = ThemeFactory.build_theme()
 	screen.configure({})
-	screen.size = Vector2(VW)
+	screen.size = Vector2(viewport_size)
 	vp.add_child(screen)
 
 	await get_tree().process_frame
@@ -73,5 +87,4 @@ func _capture(mode: String, out_path: String) -> void:
 		push_error("SubViewport get_image() returned null for %s" % out_path)
 	else:
 		img.save_png(out_path)
-	vp.queue_free()
 	await get_tree().process_frame
