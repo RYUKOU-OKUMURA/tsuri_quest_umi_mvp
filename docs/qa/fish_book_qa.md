@@ -1,6 +1,6 @@
 # 魚図鑑画面 QA判断ログ
 
-最終更新: 2026-07-03 / 状態: **v1.21 P2中央綴じ目合格・freeze中**
+最終更新: 2026-07-03 / 状態: **v1.22 P2下部索引タブ化合格・freeze中**
 参照画像: `reference/07_fish_book_mockup.png`
 QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
@@ -27,6 +27,7 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 | 左カード内部再設計 | カード最小サイズ 204x106、魚名 10/12/14/16px段階、No. 12px、写真下地 0.070/0.190–0.930/0.615、ポートレートclip 0.080/0.198–0.920/0.602、レアリティ 0.060/0.610–0.438/0.765、統計行 0.070/0.765–0.930/0.945、統計文字 12px | `src/ui/fish_book_screen.gd` | 左一覧で4段目まで実用表示しつつ、魚写真をカード内の枠へ揃え、魚名・レアリティ・釣果・最大サイズを読ませる |
 | 右詳細記録ラベル | 上部紙面wash `Palette.PARCHMENT_DEEP` alpha 0.92 を 0.082/0.052–0.918/0.150、No木札 `Palette.WOOD_DARK` alpha 0.88 を 0.082/0.052–0.318/0.118、場所見出し紙面wash alpha 0.90 を 0.086/0.824–0.915/0.882、場所見出し木札 alpha 0.88 を 0.090/0.834–0.545/0.884 | `src/ui/fish_book_screen.gd` | 右詳細の濃紺UI帯を、羊皮紙ページ上の記録ラベルとして読ませる |
 | 釣り場カード紙面化 | 右下釣り場カードに `Palette.PARCHMENT` alpha 0.78 の1px紙枠、サムネ 0.045/0.055–0.955/0.680、サムネtint `Color(1.0, 0.965, 0.860, 0.92)`、ラベル紙面 `Palette.PARCHMENT_DEEP` alpha 0.96 を 0.045/0.700–0.955/0.955、ラベル文字13px `Palette.TEXT_OUTLINE_LIGHT` | `src/ui/fish_book_screen.gd` | 右下サムネを濃紺UIストリップから羊皮紙ページ内の記録カードへ寄せる |
+| 下部索引タブ | フィルタ6件を 0.032 から x step 0.125 / 幅 0.122、y 0.072–0.850 に配置。背面に索引レール `Palette.PARCHMENT_DEEP` alpha 0.16、上罫線 `Palette.GOLD_DEEP` alpha 0.24、下影 `Palette.TEXT_OUTLINE_DARK` alpha 0.20 を敷く。選択タブは `Palette.DARK_PANEL` alpha 0.94 + `Palette.GOLD_BRIGHT` border、非選択は `Palette.PARCHMENT_DEEP` alpha 0.88 + `Palette.WOOD_DARK` border | `src/ui/fish_book_screen.gd` | 下部フィルタを汎用ボタン列ではなく、図鑑の収集カテゴリをめくる索引タブとして読ませる |
 | 未発見カード封印紙面 | 未発見カードの魚窓下地 `Palette.PARCHMENT_DEEP` alpha 0.58、魚影 `Palette.WOOD_DARK` alpha 0.62、紙面wash `Palette.PARCHMENT` alpha 0.18、No木札 `Palette.WOOD_DARK` alpha 0.72、`？` は `Palette.GOLD_DEEP` alpha 0.88、`未発見` 札は `Palette.PARCHMENT_DEEP` alpha 0.94 + `Palette.WOOD_DARK` alpha 0.34 の罫線 | `src/ui/fish_book_screen.gd` | 未発見カードを濃紺UIパネルではなく封印された紙面記録として読ませる |
 | 右詳細魚標本窓 | 右詳細の大魚clip内に横罫線3本 `Palette.GOLD_DEEP` alpha 0.12、左測定線 `Palette.WOOD_DARK` alpha 0.10、魚上の紙面wash `Palette.PARCHMENT` alpha 0.08 を追加。魚clip座標と魚PNG本体は変更なし | `src/ui/fish_book_screen.gd` | 右詳細の大魚をPNGステッカーではなく紙面上の標本画として読ませる |
 | 右詳細高解像度魚フレーム | 発見済み右詳細の大魚のみ、`showcase_sheet` frame0 を左向きにミラーし、既存alpha bboxクロップで表示する。未発見・左カード・clip座標は変更せず、読み込み不可時は `card_portrait` へフォールバック | `src/ui/fish_book_screen.gd`, `assets/showcase/fish/` | 右詳細の大魚をカード用縮小ポートレートではなく、詳細ページの主役としてより鮮明に見せる |
@@ -57,10 +58,11 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 | 左一覧写真ウェル明確化 | 1 | 写真下地を線付きの紙面ウェルへ変更し、全カードで同じ写真枠として見せる | P1/P2写真収まりとしてfreeze |
 | 左一覧カード紙面ベース化 | 1 | カード枠内側へ紙面ベースを追加し、暗色台帳地がカード中央に透ける状態を解消 | P2台帳感としてfreeze |
 | 中央綴じ目 | 1 | 左右ページ間に細い背表紙影・中央fold・金細線を追加 | P2台帳感としてfreeze |
+| 下部索引タブ化 | 1 | フィルタ6件を紙/濃紺の索引タブstyleへ変更し、背面に薄い索引レールを追加 | P2収集導線としてfreeze |
 
 ## 4. 暫定判定・再検証TODO
 
-なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-03_book_spine_before_after.png` と `docs/qa/evidence/fish_book/2026-07-03_book_spine_compare.png` に保存済み。
+なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-03_index_tabs_before_after.png` と `docs/qa/evidence/fish_book/2026-07-03_index_tabs_compare.png` に保存済み。
 
 ## 5. 現在の残ギャップ
 
@@ -73,4 +75,4 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
 ## 7. 判断ログ（直近パスのみ）
 
-- 2026-07-03: v1.21 P2中央綴じ目フェーズ。左一覧ページと右詳細ページの間だけを対象に、細い綴じ目/背表紙影を追加した。台帳外周フレーム、左一覧カード、カード最小サイズ、3列グリッド、スクロール領域、写真下地座標、魚ポートレートclip、一覧専用tight crop、右詳細の紙面/魚/行/釣り場カード、ヘッダー/フッター/フィルタ、背景スクリムはfreeze値のまま維持。`./tools/fish_book_visual_qa.sh` の実スクショで、左右ページが別ウィンドウではなく開いた一冊の台帳としてつながり、文字・魚・チップへの重なりも再発しなかったため採用。判断根拠: `docs/qa/evidence/fish_book/2026-07-03_book_spine_before_after.png`、`docs/qa/evidence/fish_book/2026-07-03_book_spine_compare.png`。検証: `git diff --check` exit 0、`fish_book_smoke: ok`、`./tools/validate_project.sh` exit 0（Godot終了時のObjectDB/resource警告あり）。
+- 2026-07-03: v1.22 P2下部索引タブ化フェーズ。下部フィルタ6件の見た目だけを対象に、索引レールと紙/濃紺のタブstyleへ変更した。フィルタの種類/順序/遷移、港へ戻るボタン、台帳外周フレーム、中央綴じ目、左一覧カード、カード最小サイズ、3列グリッド、スクロール領域、魚写真枠、右詳細、ヘッダー、背景スクリムはfreeze値のまま維持。`./tools/fish_book_visual_qa.sh` の実スクショで、下部フィルタが汎用ボタン列ではなく図鑑の索引タブとして読め、文字・アイコン・戻るボタンの重なりや見切れも再発しなかったため採用。判断根拠: `docs/qa/evidence/fish_book/2026-07-03_index_tabs_before_after.png`、`docs/qa/evidence/fish_book/2026-07-03_index_tabs_compare.png`。検証: `git diff --check` exit 0、`fish_book_smoke: ok`、`./tools/validate_project.sh` exit 0（Godot終了時のObjectDB/resource警告あり）。

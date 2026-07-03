@@ -303,6 +303,13 @@ func _detail_row(parent: Control, top: float, label_text: String) -> Label:
 func _build_footer(root: Control) -> void:
 	var footer := _anchored_control(root, 0.024, 0.890, 0.976, 0.975)
 
+	var index_rail := _label_plate(_alpha(Palette.PARCHMENT_DEEP, 0.16))
+	_place_control(footer, index_rail, 0.026, 0.132, 0.784, 0.868)
+	var rail_top := _label_plate(_alpha(Palette.GOLD_DEEP, 0.24))
+	_place_control(footer, rail_top, 0.034, 0.132, 0.776, 0.162)
+	var rail_shadow := _label_plate(_alpha(Palette.TEXT_OUTLINE_DARK, 0.20))
+	_place_control(footer, rail_shadow, 0.034, 0.812, 0.776, 0.868)
+
 	var x := 0.032
 	for filter in FILTERS:
 		var filter_id := String(filter["id"])
@@ -311,7 +318,7 @@ func _build_footer(root: Control) -> void:
 		button.set_meta("fish_book_filter", filter_id)
 		_filter_buttons[filter_id] = button
 		_add_button_icon(button, _detail_icon(int(filter.get("icon", -1))), false)
-		_place_control(footer, button, x, 0.155, x + 0.122, 0.850)
+		_place_control(footer, button, x, 0.072, x + 0.122, 0.850)
 		x += 0.125
 
 	var back := make_return_button(func() -> void: navigate("harbor"), 0.0)
@@ -706,19 +713,15 @@ func _apply_card_skin(button: Button, discovered: bool, selected: bool) -> void:
 
 
 func _apply_filter_button_skin(button: Button, selected: bool) -> void:
-	var normal_path := COMMON_BUTTON_PRIMARY_PATH if selected else COMMON_BUTTON_PATH
-	var hover_path := COMMON_BUTTON_PRIMARY_PATH if selected else COMMON_BUTTON_HOVER_PATH
-	var normal := _texture_style(normal_path, Vector4(44, 24, 44, 24))
-	var hover := _texture_style(hover_path, Vector4(44, 24, 44, 24))
-	if normal != null:
-		button.add_theme_stylebox_override("normal", normal)
-	if hover != null:
-		button.add_theme_stylebox_override("hover", hover)
-		button.add_theme_stylebox_override("focus", hover)
-		button.add_theme_stylebox_override("pressed", hover)
-	var font_color := Color("#fff8d8") if selected else Color("#2b1809")
-	var outline_color := Color("#2a1406") if selected else Color("#ffe5a6")
-	var shadow_color := Color(0.0, 0.0, 0.0, 0.35) if selected else Color(1.0, 0.86, 0.48, 0.28)
+	var normal := _filter_tab_style(selected, false)
+	var hover := _filter_tab_style(selected, true)
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("focus", hover)
+	button.add_theme_stylebox_override("pressed", hover)
+	var font_color := Palette.TEXT_BONE if selected else Palette.TEXT_OUTLINE_LIGHT
+	var outline_color := Palette.TEXT_OUTLINE_DARK if selected else _alpha(Palette.GOLD_BRIGHT, 0.95)
+	var shadow_color := _alpha(Palette.TEXT_OUTLINE_DARK, 0.34) if selected else _alpha(Palette.GOLD, 0.26)
 	button.add_theme_color_override("font_color", font_color)
 	button.add_theme_color_override("font_hover_color", font_color)
 	button.add_theme_color_override("font_pressed_color", font_color)
@@ -1037,6 +1040,27 @@ func _spot_record_card_style() -> StyleBoxFlat:
 	style.content_margin_top = 4.0
 	style.content_margin_right = 4.0
 	style.content_margin_bottom = 4.0
+	return style
+
+
+func _filter_tab_style(selected: bool, hot: bool) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	if selected:
+		style.bg_color = _alpha(Palette.DARK_PANEL, 0.94 if not hot else 0.98)
+		style.border_color = _alpha(Palette.GOLD_BRIGHT, 0.82 if not hot else 0.95)
+	else:
+		style.bg_color = _alpha(Palette.PARCHMENT_DEEP, 0.88 if not hot else 0.96)
+		style.border_color = _alpha(Palette.WOOD_DARK, 0.72 if not hot else 0.86)
+	style.set_border_width_all(1)
+	style.set_border_width(SIDE_TOP, 2 if selected else 1)
+	style.set_corner_radius_all(5)
+	style.content_margin_left = 8.0
+	style.content_margin_top = 3.0
+	style.content_margin_right = 8.0
+	style.content_margin_bottom = 4.0
+	style.shadow_color = _alpha(Palette.TEXT_OUTLINE_DARK, 0.22 if selected else 0.14)
+	style.shadow_size = 2
+	style.shadow_offset = Vector2(0.0, 2.0)
 	return style
 
 
