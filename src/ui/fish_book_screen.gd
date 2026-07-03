@@ -312,7 +312,7 @@ func _make_fish_card(fish: Dictionary) -> Button:
 	var button := Button.new()
 	button.name = "FishBookCard_%s" % fish_id
 	button.text = ""
-	button.custom_minimum_size = Vector2(204.0, 144.0)
+	button.custom_minimum_size = Vector2(204.0, 106.0)
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.clip_contents = true
 	button.set_meta("fish_book_card", fish_id)
@@ -324,13 +324,13 @@ func _make_fish_card(fish: Dictionary) -> Button:
 	var portrait_field := ColorRect.new()
 	portrait_field.color = _alpha(Palette.PARCHMENT if discovered else Palette.DARK_PANEL_DEEP, 0.78 if discovered else 0.34)
 	portrait_field.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(button, portrait_field, 0.070, 0.185, 0.930, 0.700)
+	_place_control(button, portrait_field, 0.070, 0.165, 0.930, 0.700)
 
 	var no_plate := _label_plate(Color("#6b4521", 0.80) if discovered else Color("#2e1c0e", 0.88))
 	no_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(button, no_plate, 0.055, 0.052, 0.300, 0.178)
 
-	var no_label := _book_label(String(fish.get("fish_no", "No.---")), 14, Color("#fff0c9"), true, 2, Color("#281607"))
+	var no_label := _book_label(String(fish.get("fish_no", "No.---")), 12, Color("#fff0c9"), true, 2, Color("#281607"))
 	no_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	no_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	no_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -340,7 +340,7 @@ func _make_fish_card(fish: Dictionary) -> Button:
 	var name_color := Color("#3a230e")
 	if not discovered:
 		name_color = Color("#d4c29b")
-	var name_label := _book_label(name_text, 18, name_color, true, 1 if not discovered else 0, Color("#2b1708"))
+	var name_label := _book_label(name_text, 16, name_color, true, 1 if not discovered else 0, Color("#2b1708"))
 	name_label.add_theme_font_size_override("font_size", _card_name_font_size(name_text))
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -351,7 +351,7 @@ func _make_fish_card(fish: Dictionary) -> Button:
 	var portrait := _portrait_rect(Color(0.05, 0.04, 0.03, 0.72) if not discovered else _portrait_paper_tint())
 	portrait.texture = portrait_texture
 	var portrait_clip := _portrait_clip()
-	_place_control(button, portrait_clip, 0.055, 0.165, 0.945, 0.670)
+	_place_control(button, portrait_clip, 0.055, 0.135, 0.945, 0.680)
 	if discovered:
 		var portrait_shadow := _portrait_rect(Color(0.18, 0.105, 0.040, 0.16))
 		portrait_shadow.texture = portrait_texture
@@ -363,49 +363,49 @@ func _make_fish_card(fish: Dictionary) -> Button:
 		mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		mark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_place_control(button, mark, 0.385, 0.350, 0.615, 0.660)
+		_place_control(button, mark, 0.385, 0.285, 0.615, 0.680)
 		var lock_plate := _label_plate(Color("#2e1c0e", 0.86))
 		lock_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_place_control(button, lock_plate, 0.615, 0.710, 0.930, 0.855)
-		var lock := _book_label("未発見", 14, Color("#f4e0a8"), true, 1, Color("#2b1708"))
+		_place_control(button, lock_plate, 0.615, 0.665, 0.930, 0.825)
+		var lock := _book_label("未発見", 12, Color("#f4e0a8"), true, 1, Color("#2b1708"))
 		lock.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lock.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_place_control(button, lock, 0.640, 0.700, 0.930, 0.850)
+		_place_control(button, lock, 0.640, 0.660, 0.930, 0.825)
 		return button
 
 	var rarity := String(fish.get("rarity", ""))
 	var badge_bg := _label_plate(_rarity_badge_color(rarity))
 	badge_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(button, badge_bg, 0.060, 0.660, 0.438, 0.805)
+	_place_control(button, badge_bg, 0.060, 0.610, 0.438, 0.765)
 	var rarity_label := _book_label(rarity, _rarity_font_size(rarity, false), Color.WHITE, true, 1, Color("#07131d"))
 	rarity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	rarity_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	rarity_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(button, rarity_label, 0.066, 0.668, 0.424, 0.795)
+	_place_control(button, rarity_label, 0.066, 0.618, 0.424, 0.755)
 
 	var count := int(PlayerProgress.caught_counts.get(fish_id, 0))
 	var best := float(PlayerProgress.best_sizes.get(fish_id, 0.0))
 	var stat_strip := ColorRect.new()
 	stat_strip.color = _alpha(Palette.PARCHMENT_DEEP, 0.90)
 	stat_strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(button, stat_strip, 0.070, 0.806, 0.930, 0.955)
+	_place_control(button, stat_strip, 0.070, 0.765, 0.930, 0.945)
 	var divider := ColorRect.new()
 	divider.color = Color("#7c592a", 0.34)
 	divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(button, divider, 0.080, 0.824, 0.920, 0.834)
+	_place_control(button, divider, 0.080, 0.778, 0.920, 0.788)
 	var stat_color := Color("#2d1d0d")
-	var count_label := _book_label("釣果 %d匹" % count, 14, stat_color, true, 0)
+	var count_label := _book_label("釣果 %d匹" % count, 12, stat_color, true, 0)
 	count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	count_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	count_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(button, count_label, 0.065, 0.838, 0.460, 0.955)
+	_place_control(button, count_label, 0.065, 0.796, 0.460, 0.940)
 
-	var best_label := _book_label("最大 %.1fcm" % best, 14, stat_color, true, 0)
+	var best_label := _book_label("最大 %.1fcm" % best, 12, stat_color, true, 0)
 	best_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	best_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	best_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(button, best_label, 0.430, 0.838, 0.930, 0.955)
+	_place_control(button, best_label, 0.430, 0.796, 0.930, 0.940)
 	return button
 
 
@@ -851,12 +851,12 @@ func _rarity_badge_color(rarity: String) -> Color:
 func _card_name_font_size(text: String) -> int:
 	var length := text.length()
 	if length >= 11:
-		return 11
+		return 10
 	if length >= 8:
-		return 13
+		return 12
 	if length >= 5:
-		return 16
-	return 18
+		return 14
+	return 16
 
 
 func _detail_name_font_size(text: String) -> int:
