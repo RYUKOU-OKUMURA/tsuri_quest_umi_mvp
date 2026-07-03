@@ -1,6 +1,6 @@
 # 釣具店画面 QA判断ログ
 
-最終更新: 2026-07-04 / 状態: 座標再同期 + 視認性ブラッシュアップ済み v1 freeze中
+最終更新: 2026-07-04 / 状態: 座標再同期 + ラベル位置ブラッシュアップ済み v1 freeze中
 参照画像: `reference/09_tackle_shop_rod_mockup.png` / `reference/09_tackle_shop_gear_mockup.png`
 QA更新コマンド: `./tools/tackle_shop_visual_qa.sh`
 
@@ -12,10 +12,10 @@ QA更新コマンド: `./tools/tackle_shop_visual_qa.sh`
 | 実ウィンドウ表示 | 1280x720デザインキャンバスを等比スケール + 中央寄せ | `shop_screen.gd` / `TackleShopDesignCanvas` | `window/stretch/aspect="expand"` で広い/縦長viewportになっても、backplateとruntime文字/クリック領域を同じ座標系に保つ |
 | 正規リファレンス | 店主なし竿5本 / 店主なし仕掛け6種 | `reference/09_tackle_shop_*_mockup.png` | 商品陳列を主役にする。旧店主あり画像と現行スクショ由来 `*_complete.png` は正規参照から外す |
 | backplate | 全画面 1280x720、竿/仕掛けで同一骨格 | `shop_screen.gd` / `assets/showcase/tackle_shop/shop_*_backplate.png` | 店内、棚、商品カード、空プレート、詳細紙面、装飾枠をPNGで担う。仕掛け側の旧カテゴリUIは削除 |
-| 商品カード座標 | 3x2共通グリッド。竿は先頭5枠、仕掛けは6枠 | `shop_screen.gd` / `CARD_SLOT_RECTS` | 透明Button、選択ハイライト、商品名Label、価格/状態Labelを同じカード枠から派生させる |
-| 商品名/状態プレート | 商品名はカード上部プレート中央、価格/所持/装備中/Lv不足は下部プレート中央。太字・輪郭付き | `shop_screen.gd` / `CARD_NAME_OFFSET` / `CARD_STATUS_OFFSET` | 個別Rect管理による左ズレ再発を防ぎ、拡大viewportでも読める文字量にする |
+| 商品カード座標 | 3x2共通グリッド。竿は先頭5枠、仕掛けは6枠 | `shop_screen.gd` / `CARD_SLOT_RECTS` | 透明Button、選択ハイライトは共通カード枠へ合わせる |
+| 商品名/状態プレート | 商品名はカード上部プレート中央、価格/所持/装備中/Lv不足は下部プレート中央。太字・輪郭付き | `shop_screen.gd` / `ROD_CARD_*_RECTS` / `RIG_CARD_*_RECTS` | 竿/仕掛けで微妙に異なる実プレート位置へruntime文字を合わせ、列が右へ流れる再発を防ぐ |
 | 詳細表示 | 右紙面上にruntime表示 + 選択商品詳細大絵 | `shop_screen.gd` / `shop_detail_item_sheet.png` | 商品名、状態、説明、性能、対応エサ、購入/装備文言は焼き込まない。詳細大絵は384x224セルで商品ID差し替え |
-| 下部操作 | 右下購入/装備、下部右の紙面中央に港戻り | `shop_screen.gd` | 戻る文言が右端飾りへ寄らないよう透明Button領域を紙面中央へ合わせる |
+| 下部操作 | 右下購入/装備、下部右の紙面中央に港戻り | `shop_screen.gd` | 戻る文言が紙面ボタン内の縦横中央に乗るよう透明Button領域を合わせる |
 | 入力検証 | 実クリックでタブ切替、商品選択、購入/装備、港戻りを検証 | `tools/tackle_shop_smoke.gd` | 内部メソッド直呼びだけでは、レイヤーが入力を塞ぐP1を検出できないため |
 
 ## 2. 不採用・再試行禁止リスト
@@ -32,7 +32,7 @@ QA更新コマンド: `./tools/tackle_shop_visual_qa.sh`
 | パラメータ | 回数 | 直近の変更内容 | 状態 |
 |---|---|---|---|
 | backplate正規化 | 1 | 生成コンセプトを1280x720へ縮小し、referenceとassetsへ分離 | 採用 |
-| 商品ラベル配置 | 1 | backplate内の空プレートへruntimeラベルを配置 | freeze |
+| 商品ラベル配置 | 2 | 共通offsetをやめ、竿/仕掛けの実プレートRectへruntimeラベルを配置 | freeze |
 | 詳細パネル文字配置 | 2 | 初回は左へ寄りすぎたため、右紙面のタイトル/説明/性能行へ座標補正 | freeze |
 | 港戻り導線 | 1 | backplate下部右のボタン幅に合わせて透明Button領域を拡張 | freeze |
 | 固定キャンバス化 | 1 | 1280x720の`TackleShopDesignCanvas`へ全素材/文字/クリック領域を収め、実viewportへ等比スケール | P1解消としてfreeze |
@@ -42,12 +42,13 @@ QA更新コマンド: `./tools/tackle_shop_visual_qa.sh`
 | 詳細商品絵追従 | 1 | 固定大絵をbackplateから外し、`shop_detail_item_sheet.png` をruntime表示 | P1解消としてfreeze |
 | 商品文字視認性 | 1 | カード名/状態、詳細行、下部メッセージを太字・大型化し、プレート幅を広く使用 | P1/P2解消としてfreeze |
 | 詳細商品絵サイズ | 2 | 詳細シートを384x224横長セルへ変更し、小さい切り抜きも拡大して右紙面で主役化 | P2解消としてfreeze |
-| 港戻り導線 | 2 | 右端飾りではなく紙面ボタン中央へ透明Button/文字位置を再配置 | P1解消としてfreeze |
+| ヘッダー装備表示 | 1 | Lv/竿/所持金/仕掛けのruntime文字を上部プレート中央へ下げ、所持金は実プレート中心へ左寄せ | P1解消としてfreeze |
+| 港戻り導線 | 3 | 右端飾りではなく紙面ボタン中央へ透明Button/文字位置を再配置 | P1解消としてfreeze |
 | visual QA拡大キャプチャ | 2 | キャプチャごとにSubViewportを作り、描画待ちと`RenderingServer.force_draw()`を追加 | P1再発防止としてfreeze |
 
 ## 4. 暫定判定・再検証TODO
 
-なし。視認性ブラッシュアップ後の比較画像は `docs/qa/evidence/tackle_shop/2026-07-04_tackle_shop_rod_readability_compare.png` / `docs/qa/evidence/tackle_shop/2026-07-04_tackle_shop_rig_readability_compare.png` に保存済み。広いviewport確認は `docs/qa/evidence/tackle_shop/2026-07-04_tackle_shop_rod_readability_expanded.png` / `docs/qa/evidence/tackle_shop/2026-07-04_tackle_shop_rig_readability_expanded.png` に保存済み。
+なし。ラベル位置ブラッシュアップ後の比較画像は `docs/qa/evidence/tackle_shop/2026-07-04_tackle_shop_rod_label_alignment_compare.png` / `docs/qa/evidence/tackle_shop/2026-07-04_tackle_shop_rig_label_alignment_compare.png` に保存済み。広いviewport確認は `docs/qa/evidence/tackle_shop/2026-07-04_tackle_shop_rod_label_alignment_expanded.png` / `docs/qa/evidence/tackle_shop/2026-07-04_tackle_shop_rig_label_alignment_expanded.png` に保存済み。
 
 ## 5. 現在の残ギャップ
 
@@ -64,9 +65,10 @@ QA更新コマンド: `./tools/tackle_shop_visual_qa.sh`
 - 2026-07-04: backplateとruntime UIレイヤーの座標不一致をP1として再修正。カードButton、選択ハイライト、商品名Label、価格/状態Labelを共通カードグリッドから派生させ、仕掛けbackplateを竿画面と同じヘッダー/下部タブ/商品エリア/詳細パネル骨格へ再合成した。
 - 2026-07-04追補: 詳細パネルの固定大絵を削除し、`shop_detail_item_sheet.png` のAtlas regionを選択商品IDで差し替える方式へ変更。仕掛け側のリール/糸/箱/カゴ系カテゴリUIはbackplateから削除した。
 - 2026-07-04再追補: カード名/状態/価格、詳細行、下部メッセージを太字化・大型化し、港戻りを紙面ボタン中央へ移動。詳細商品絵は384x224横長セルへ変更して右紙面で大きく見せる。装飾アイコン列と重なる詳細ヒント文は非表示にした。
+- 2026-07-04三追補: カード文字を単一offsetから竿/仕掛け別の6枠プレートRectへ変更。上部ヘッダー表示を実プレート中心へ下げ、所持金はプレート中心へ左寄せ、港戻りは紙面ボタン中央へ再調整した。
 - 判断画像: `docs/qa/evidence/tackle_shop/2026-07-03_no_shopkeeper_rod_5lineup_concept.png` / `docs/qa/evidence/tackle_shop/2026-07-03_no_shopkeeper_rig_concept.png`。
-- 実装後比較: `docs/qa/evidence/tackle_shop/2026-07-04_tackle_shop_rod_readability_compare.png` / `docs/qa/evidence/tackle_shop/2026-07-04_tackle_shop_rig_readability_compare.png`。
-- 広いviewport証拠: `docs/qa/evidence/tackle_shop/2026-07-04_tackle_shop_rod_readability_expanded.png` / `docs/qa/evidence/tackle_shop/2026-07-04_tackle_shop_rig_readability_expanded.png`。
+- 実装後比較: `docs/qa/evidence/tackle_shop/2026-07-04_tackle_shop_rod_label_alignment_compare.png` / `docs/qa/evidence/tackle_shop/2026-07-04_tackle_shop_rig_label_alignment_compare.png`。
+- 広いviewport証拠: `docs/qa/evidence/tackle_shop/2026-07-04_tackle_shop_rod_label_alignment_expanded.png` / `docs/qa/evidence/tackle_shop/2026-07-04_tackle_shop_rig_label_alignment_expanded.png`。
 - 採用理由: 旧PIL背景より店内密度、商品主役感、紙面/金具の質感が明確に高く、店主なしでも釣具店として成立する。商品名・価格・状態値はruntime描画のまま維持できる。
 - 検証: `./tools/tackle_shop_visual_qa.sh` exit 0、座標/詳細絵追従assert込み `tackle_shop_smoke` ok、`status_smoke` ok、`./tools/validate_project.sh` exit 0。Godot終了時に既存のObjectDB/resource警告あり。
 - 固定条件: reference画像を実装から直接読まない。商品名・価格・状態値はPNGへ焼き込まない。今後の改善は全画面比較で現行に明確に勝つ候補だけ採用する。

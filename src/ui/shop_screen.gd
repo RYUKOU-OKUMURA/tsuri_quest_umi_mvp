@@ -15,16 +15,16 @@ const BAIT_CELL := 64.0
 
 const TITLE_RECT := Rect2(92.0, 18.0, 198.0, 42.0)
 const SUBTITLE_RECT := Rect2(334.0, 18.0, 102.0, 28.0)
-const LV_RECT := Rect2(552.0, 17.0, 90.0, 30.0)
-const ROD_STATUS_RECT := Rect2(720.0, 17.0, 120.0, 30.0)
-const MONEY_RECT := Rect2(918.0, 17.0, 122.0, 30.0)
-const RIG_STATUS_RECT := Rect2(1062.0, 17.0, 144.0, 30.0)
+const LV_RECT := Rect2(552.0, 29.0, 90.0, 28.0)
+const ROD_STATUS_RECT := Rect2(722.0, 29.0, 120.0, 28.0)
+const MONEY_RECT := Rect2(886.0, 29.0, 144.0, 28.0)
+const RIG_STATUS_RECT := Rect2(1058.0, 29.0, 150.0, 28.0)
 
 const ROD_TAB_RECT := Rect2(82.0, 642.0, 96.0, 58.0)
 const RIG_TAB_RECT := Rect2(182.0, 642.0, 124.0, 58.0)
 const RESULT_RECT := Rect2(314.0, 646.0, 540.0, 42.0)
 const FOOTER_ACTION_RECT := Rect2(888.0, 568.0, 294.0, 48.0)
-const FOOTER_RETURN_RECT := Rect2(958.0, 646.0, 196.0, 44.0)
+const FOOTER_RETURN_RECT := Rect2(958.0, 650.0, 196.0, 44.0)
 
 const CARD_SLOT_RECTS := [
 	Rect2(216.0, 88.0, 192.0, 250.0),
@@ -34,8 +34,38 @@ const CARD_SLOT_RECTS := [
 	Rect2(414.0, 344.0, 192.0, 250.0),
 	Rect2(612.0, 344.0, 192.0, 250.0),
 ]
-const CARD_NAME_OFFSET := Rect2(36.0, 22.0, 156.0, 30.0)
-const CARD_STATUS_OFFSET := Rect2(34.0, 200.0, 150.0, 34.0)
+const ROD_CARD_NAME_RECTS := [
+	Rect2(248.0, 114.0, 144.0, 28.0),
+	Rect2(431.0, 113.0, 144.0, 28.0),
+	Rect2(613.0, 114.0, 144.0, 28.0),
+	Rect2(235.0, 349.0, 152.0, 28.0),
+	Rect2(421.0, 351.0, 152.0, 28.0),
+	Rect2(608.0, 351.0, 152.0, 28.0),
+]
+const RIG_CARD_NAME_RECTS := [
+	Rect2(245.0, 122.0, 150.0, 28.0),
+	Rect2(433.0, 122.0, 150.0, 28.0),
+	Rect2(620.0, 122.0, 150.0, 28.0),
+	Rect2(245.0, 357.0, 150.0, 28.0),
+	Rect2(433.0, 357.0, 150.0, 28.0),
+	Rect2(621.0, 357.0, 150.0, 28.0),
+]
+const ROD_CARD_STATUS_RECTS := [
+	Rect2(262.0, 293.0, 128.0, 30.0),
+	Rect2(446.0, 293.0, 128.0, 30.0),
+	Rect2(630.0, 293.0, 128.0, 30.0),
+	Rect2(251.0, 536.0, 128.0, 30.0),
+	Rect2(442.0, 536.0, 128.0, 30.0),
+	Rect2(626.0, 536.0, 128.0, 30.0),
+]
+const RIG_CARD_STATUS_RECTS := [
+	Rect2(249.0, 293.0, 106.0, 30.0),
+	Rect2(436.0, 293.0, 106.0, 30.0),
+	Rect2(624.0, 293.0, 106.0, 30.0),
+	Rect2(249.0, 532.0, 106.0, 30.0),
+	Rect2(436.0, 532.0, 106.0, 30.0),
+	Rect2(624.0, 532.0, 106.0, 30.0),
+]
 const CARD_SLOT_INDEX := {
 	"starter": 0,
 	"iso": 1,
@@ -585,24 +615,30 @@ func _atlas_texture(sheet: Texture2D, cell_size: Vector2, icon_index: int) -> Te
 
 
 func _card_rect(item_id: String) -> Rect2:
-	var index := int(CARD_SLOT_INDEX.get(item_id, -1))
+	var index := _card_slot_index(item_id)
 	if index < 0 or index >= CARD_SLOT_RECTS.size():
 		return Rect2()
 	return CARD_SLOT_RECTS[index]
 
 
 func _card_name_rect(item_id: String) -> Rect2:
-	return _offset_rect(_card_rect(item_id), CARD_NAME_OFFSET)
+	var index := _card_slot_index(item_id)
+	var rects := RIG_CARD_NAME_RECTS if _shop_mode == "rig" else ROD_CARD_NAME_RECTS
+	if index < 0 or index >= rects.size():
+		return Rect2()
+	return rects[index]
 
 
 func _card_status_rect(item_id: String) -> Rect2:
-	return _offset_rect(_card_rect(item_id), CARD_STATUS_OFFSET)
-
-
-func _offset_rect(base: Rect2, offset: Rect2) -> Rect2:
-	if base.size == Vector2.ZERO:
+	var index := _card_slot_index(item_id)
+	var rects := RIG_CARD_STATUS_RECTS if _shop_mode == "rig" else ROD_CARD_STATUS_RECTS
+	if index < 0 or index >= rects.size():
 		return Rect2()
-	return Rect2(base.position + offset.position, offset.size)
+	return rects[index]
+
+
+func _card_slot_index(item_id: String) -> int:
+	return int(CARD_SLOT_INDEX.get(item_id, -1))
 
 
 func _fit_card_text_size(text: String, base_size: int, minimum_size: int, width: float) -> int:
