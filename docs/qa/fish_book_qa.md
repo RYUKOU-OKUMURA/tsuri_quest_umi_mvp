@@ -1,6 +1,6 @@
 # 魚図鑑画面 QA判断ログ
 
-最終更新: 2026-07-03 / 状態: **v1.11 P2左カード内部再設計合格・freeze中**
+最終更新: 2026-07-03 / 状態: **v1.12 P2右詳細記録ラベル化合格・freeze中**
 参照画像: `reference/07_fish_book_mockup.png`
 QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
@@ -21,6 +21,7 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 | 左一覧密度/ウェル | 下地色 `Palette.WOOD_DARK` alpha 0.78、スクロール領域 0.047/0.105–0.955/0.970、グリッド間隔 h=6/v=3 | `src/ui/fish_book_screen.gd` | 左一覧を冷たい暗色パネルから木製台帳内の収集面へ寄せる |
 | 魚ポートレート表示なじませ | 発見済み魚に紙色tint `Color(1.0, 0.965, 0.880, 1.0)`、左カード影 alpha 0.16 / offset 0.014,0.036、右詳細影 alpha 0.20 / offset 0.012,0.036。未発見シルエットには影を追加しない | `src/ui/fish_book_screen.gd` | 魚PNG本体を変えず、紙面へ貼っただけに見える浮きを抑える |
 | 左カード内部再設計 | カード最小サイズ 204x106、魚名 10/12/14/16px段階、No. 12px、ポートレートclip 0.055/0.135–0.945/0.680、レアリティ 0.060/0.610–0.438/0.765、統計行 0.070/0.765–0.930/0.945、統計文字 12px | `src/ui/fish_book_screen.gd` | 左一覧で4段目まで実用表示しつつ、魚名・レアリティ・釣果・最大サイズを読ませる |
+| 右詳細記録ラベル | 上部紙面wash `Palette.PARCHMENT_DEEP` alpha 0.92 を 0.082/0.052–0.918/0.150、No木札 `Palette.WOOD_DARK` alpha 0.88 を 0.082/0.052–0.318/0.118、場所見出し紙面wash alpha 0.90 を 0.086/0.824–0.915/0.882、場所見出し木札 alpha 0.88 を 0.090/0.834–0.545/0.884 | `src/ui/fish_book_screen.gd` | 右詳細の濃紺UI帯を、羊皮紙ページ上の記録ラベルとして読ませる |
 
 ## 2. 不採用・再試行禁止リスト
 
@@ -38,10 +39,11 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 | 左一覧カード密度 | 3 | 112/124/132px案を比較し、単純圧縮は不採用。後続の内部再設計で204x106へ移行 | クローズ |
 | 魚ポートレート影 | 1 | 初回影が複製っぽく見えたため、左右ともalphaとoffsetを弱めた | P2表示なじませとしてfreeze |
 | 左カード内部再設計 | 1 | 204x106へ圧縮後、魚窓だけを0.135–0.680へ戻して魚の主役性を確保 | P2カード再設計としてfreeze |
+| 右詳細記録ラベル | 1 | 右詳細上部と場所見出しに紙面wash＋木札を追加し、濃紺バーを台帳内ラベル化 | P2詳細記録化としてfreeze |
 
 ## 4. 暫定判定・再検証TODO
 
-なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-03_card_reflow_compare.png` に保存済み。
+なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-03_detail_record_labels_compare.png` に保存済み。
 
 ## 5. 現在の残ギャップ
 
@@ -54,4 +56,4 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
 ## 7. 判断ログ（直近パスのみ）
 
-- 2026-07-03: v1.11 P2左カード内部再設計フェーズ。左カードの内部比率を作り直し、カード最小サイズを204x106へ下げても、魚名・レアリティ・釣果・最大サイズが読める配置へ変更した。単純圧縮では魚が小さくなりすぎたため、魚窓だけを0.135–0.680へ戻した。`./tools/fish_book_visual_qa.sh` の横並び比較で、左一覧が4段目まで実用表示され、参照に近い収集ページ密度へ寄った。P1（文字見切れ・魚画像はみ出し・素材未表示）の再発もないため採用。判断根拠: `docs/qa/evidence/fish_book/2026-07-03_card_reflow_compare.png`。検証: `./tools/validate_project.sh` exit 0（Godot終了時のObjectDB/resource警告あり）、`fish_book_smoke: ok`。
+- 2026-07-03: v1.12 P2右詳細記録ラベル化フェーズ。右詳細上部のNo/魚名帯と `よく釣れる場所` 見出し帯に、runtimeの紙面washと木札を重ね、濃紺UIバーではなく羊皮紙ページ上の記録ラベルとして読める見た目へ変更した。魚ポートレート、左カード、詳細本文、釣り場カード配置はfreeze値のまま維持。`./tools/fish_book_visual_qa.sh` の横並び比較で、右詳細が一冊の台帳内ページに寄り、P1（文字見切れ・魚画像はみ出し・素材未表示）の再発もないため採用。判断根拠: `docs/qa/evidence/fish_book/2026-07-03_detail_record_labels_compare.png`。検証: `./tools/validate_project.sh` exit 0（Godot終了時のObjectDB/resource警告あり）、`fish_book_smoke: ok`。

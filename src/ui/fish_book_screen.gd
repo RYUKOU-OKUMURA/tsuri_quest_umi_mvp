@@ -168,12 +168,14 @@ func _build_detail_panel(root: Control) -> void:
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	detail.add_child(frame)
 
-	var number_plate := ColorRect.new()
-	number_plate.color = Color("#13334b")
-	number_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var header_wash := _label_plate(_alpha(Palette.PARCHMENT_DEEP, 0.92))
+	_place_control(detail, header_wash, 0.082, 0.052, 0.918, 0.150)
+	_add_rule(detail, 0.095, 0.126, 0.905, _alpha(Palette.GOLD_DEEP, 0.30), 1.0)
+
+	var number_plate := _label_plate(_alpha(Palette.WOOD_DARK, 0.88))
 	_place_control(detail, number_plate, 0.082, 0.052, 0.318, 0.118)
 
-	_detail_no_label = _book_label("No.000", 18, Color("#d99742"), true, 1, Color("#0b1822"))
+	_detail_no_label = _book_label("No.000", 18, Palette.GOLD_BRIGHT, true, 1, Palette.TEXT_OUTLINE_DARK)
 	_detail_no_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_detail_no_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(detail, _detail_no_label, 0.098, 0.058, 0.308, 0.108)
@@ -221,7 +223,13 @@ func _build_detail_panel(root: Control) -> void:
 	_detail_bait_label = _detail_row(detail, 0.695, "好物")
 	_detail_behavior_label = _detail_row(detail, 0.770, "行動")
 
-	var spot_title := _book_label("よく釣れる場所", 18, Color("#fff1bf"), true, 2, Color("#2b1608"))
+	var spot_band_wash := _label_plate(_alpha(Palette.PARCHMENT_DEEP, 0.90))
+	_place_control(detail, spot_band_wash, 0.086, 0.824, 0.915, 0.882)
+	_add_rule(detail, 0.100, 0.826, 0.900, _alpha(Palette.GOLD_DEEP, 0.26), 1.0)
+	var spot_title_plate := _label_plate(_alpha(Palette.WOOD_DARK, 0.88))
+	_place_control(detail, spot_title_plate, 0.090, 0.834, 0.545, 0.884)
+
+	var spot_title := _book_label("よく釣れる場所", 18, Palette.TEXT_BONE, true, 2, Palette.TEXT_OUTLINE_LIGHT)
 	spot_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	spot_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(detail, spot_title, 0.090, 0.838, 0.560, 0.888)
