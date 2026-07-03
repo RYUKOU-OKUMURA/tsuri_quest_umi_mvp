@@ -342,8 +342,8 @@ func _make_fish_card(fish: Dictionary) -> Button:
 	_silence_button_text(button)
 	_wire_button_juice(button)
 
-	var portrait_field := ColorRect.new()
-	portrait_field.color = _alpha(Palette.PARCHMENT if discovered else Palette.PARCHMENT_DEEP, 0.78 if discovered else 0.58)
+	var portrait_field := Panel.new()
+	portrait_field.add_theme_stylebox_override("panel", _card_portrait_field_style(discovered))
 	portrait_field.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(button, portrait_field, 0.070, 0.190, 0.930, 0.615)
 
@@ -1005,6 +1005,19 @@ func _spot_record_card_style() -> StyleBoxFlat:
 	style.content_margin_top = 4.0
 	style.content_margin_right = 4.0
 	style.content_margin_bottom = 4.0
+	return style
+
+
+func _card_portrait_field_style(discovered: bool) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = _alpha(Palette.PARCHMENT if discovered else Palette.PARCHMENT_DEEP, 0.78 if discovered else 0.58)
+	style.border_color = _alpha(Palette.WOOD_DARK, 0.42 if discovered else 0.34)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(2)
+	style.content_margin_left = 2.0
+	style.content_margin_top = 2.0
+	style.content_margin_right = 2.0
+	style.content_margin_bottom = 2.0
 	return style
 
 
