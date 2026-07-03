@@ -123,7 +123,7 @@ func _build_header(root: Control) -> void:
 func _build_book_grid(root: Control) -> void:
 	var left := _anchored_control(root, 0.030, 0.165, 0.596, 0.872)
 	var fill := ColorRect.new()
-	fill.color = _alpha(Palette.DARK_PANEL_DEEP, 0.86)
+	fill.color = _alpha(Palette.WOOD_DARK, 0.78)
 	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(left, fill, 0.018, 0.028, 0.982, 0.965)
 
@@ -147,14 +147,14 @@ func _build_book_grid(root: Control) -> void:
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_style_scrollbar(scroll)
-	_place_control(left, scroll, 0.047, 0.125, 0.955, 0.940)
+	_place_control(left, scroll, 0.047, 0.105, 0.955, 0.970)
 
 	_grid = GridContainer.new()
 	_grid.name = "FishBookGrid"
 	_grid.columns = 3
 	_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_grid.add_theme_constant_override("hseparation", 8)
-	_grid.add_theme_constant_override("vseparation", 8)
+	_grid.add_theme_constant_override("hseparation", 6)
+	_grid.add_theme_constant_override("vseparation", 3)
 	scroll.add_child(_grid)
 
 
@@ -313,7 +313,7 @@ func _make_fish_card(fish: Dictionary) -> Button:
 	var button := Button.new()
 	button.name = "FishBookCard_%s" % fish_id
 	button.text = ""
-	button.custom_minimum_size = Vector2(204.0, 148.0)
+	button.custom_minimum_size = Vector2(204.0, 144.0)
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.clip_contents = true
 	button.set_meta("fish_book_card", fish_id)
