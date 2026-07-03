@@ -205,8 +205,14 @@ func _build_detail_panel(root: Control) -> void:
 	_add_rule(detail, 0.095, 0.505, 0.915, Color("#7e5a2b", 0.35), 1.0)
 	var detail_portrait_clip := _portrait_clip()
 	_place_control(detail, detail_portrait_clip, 0.095, 0.175, 0.915, 0.490)
+	_add_specimen_rule(detail_portrait_clip, 0.030, 0.245, 0.970, 0.252, _alpha(Palette.GOLD_DEEP, 0.12))
+	_add_specimen_rule(detail_portrait_clip, 0.030, 0.485, 0.970, 0.492, _alpha(Palette.GOLD_DEEP, 0.12))
+	_add_specimen_rule(detail_portrait_clip, 0.030, 0.725, 0.970, 0.732, _alpha(Palette.GOLD_DEEP, 0.12))
+	_add_specimen_rule(detail_portrait_clip, 0.075, 0.125, 0.080, 0.870, _alpha(Palette.WOOD_DARK, 0.10))
 	_place_control(detail_portrait_clip, _detail_portrait_shadow, 0.012, 0.036, 1.012, 1.036)
 	_place_control(detail_portrait_clip, _detail_portrait, 0.0, 0.0, 1.0, 1.0)
+	var specimen_wash := _label_plate(_alpha(Palette.PARCHMENT, 0.08))
+	_place_control(detail_portrait_clip, specimen_wash, 0.0, 0.0, 1.0, 1.0)
 
 	_detail_count_label = _book_label("釣果 0匹", 27, Color("#2b1b0d"), true, 0)
 	_detail_count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -935,6 +941,11 @@ func _label_plate(color: Color) -> ColorRect:
 	rect.color = color
 	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return rect
+
+
+func _add_specimen_rule(parent: Control, left: float, top: float, right: float, bottom: float, color: Color) -> void:
+	var rule := _label_plate(color)
+	_place_control(parent, rule, left, top, right, bottom)
 
 
 func _spot_record_card_style() -> StyleBoxFlat:
