@@ -97,10 +97,6 @@ func play(fish_data: Dictionary, size_cm: float, catch_result: Dictionary = {}) 
 	queue_redraw()
 
 
-func skip() -> void:
-	_request_continue()
-
-
 func _process(delta: float) -> void:
 	if not _playing:
 		return
@@ -485,54 +481,6 @@ func _make_photo_button(text: String) -> Button:
 	button.add_theme_stylebox_override("focus", _photo_button_style(true))
 	button.add_theme_stylebox_override("pressed", _photo_button_pressed_style())
 	return button
-
-
-func _banner_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(Palette.GOLD_DEEP, 0.92)
-	style.border_color = Palette.GOLD_BRIGHT
-	style.set_border_width_all(3)
-	style.set_corner_radius_all(8)
-	style.content_margin_left = 28
-	style.content_margin_right = 28
-	style.content_margin_top = 8
-	style.content_margin_bottom = 8
-	style.shadow_color = Color(Palette.TEXT_OUTLINE_DARK, 0.46)
-	style.shadow_size = 10
-	style.shadow_offset = Vector2(0.0, 4.0)
-	return style
-
-
-func _info_panel_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(Palette.DARK_PANEL, 0.90)
-	style.border_color = Color(Palette.GOLD, 0.82)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(8)
-	style.content_margin_left = 24
-	style.content_margin_right = 24
-	style.content_margin_top = 18
-	style.content_margin_bottom = 18
-	style.shadow_color = Color(Palette.TEXT_OUTLINE_DARK, 0.42)
-	style.shadow_size = 8
-	style.shadow_offset = Vector2(0.0, 3.0)
-	return style
-
-
-func _fish_card_style(rarity: String) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(Palette.PARCHMENT, 0.96)
-	style.border_color = RarityStylesScript.border_color(rarity)
-	style.set_border_width_all(3)
-	style.set_corner_radius_all(8)
-	style.content_margin_left = 0
-	style.content_margin_right = 0
-	style.content_margin_top = 0
-	style.content_margin_bottom = 0
-	style.shadow_color = Color(Palette.TEXT_OUTLINE_DARK, 0.44)
-	style.shadow_size = 9
-	style.shadow_offset = Vector2(0.0, 4.0)
-	return style
 
 
 func _photo_button_style(hovered: bool) -> StyleBoxFlat:

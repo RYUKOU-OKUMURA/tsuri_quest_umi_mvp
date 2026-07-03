@@ -34,9 +34,9 @@ func _ready() -> void:
 	fanfare.play(GameData.get_fish("aji"), 18.3, {})
 	await get_tree().process_frame
 	_expect(fanfare.is_playing(), "fanfare should restart")
-	fanfare.skip()
+	fanfare._request_continue()
 	await get_tree().process_frame
-	_expect(_continue_count == 1, "skip compatibility should request continue once")
+	_expect(_continue_count == 1, "continue action should emit once")
 	_expect(not fanfare.visible, "fanfare should hide after continue")
 	_expect(not fanfare.is_playing(), "fanfare should stop after continue")
 
