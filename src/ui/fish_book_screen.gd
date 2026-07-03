@@ -455,7 +455,7 @@ func _refresh_detail() -> void:
 	_detail_rarity_label.text = rarity if discovered else "未発見"
 	_detail_rarity_label.add_theme_font_size_override("font_size", _rarity_font_size(_detail_rarity_label.text, true))
 	_detail_rarity_label.add_theme_color_override("font_color", _rarity_text_color(rarity) if discovered else Color("#e8d0a0"))
-	var detail_texture := _fish_portrait_texture(fish, true)
+	var detail_texture := _fish_detail_portrait_texture(fish) if discovered else _fish_portrait_texture(fish, true)
 	_detail_portrait.texture = detail_texture
 	_detail_portrait_shadow.texture = detail_texture if discovered else null
 	_detail_portrait.modulate = _portrait_paper_tint() if discovered else Color(0.04, 0.035, 0.03, 0.70)
@@ -608,6 +608,34 @@ func _fish_portrait_texture(fish: Dictionary, crop_to_fish := false) -> Texture2
 	if crop_to_fish:
 		return _cropped_portrait_texture(texture)
 	return texture
+
+
+func _fish_detail_portrait_texture(fish: Dictionary) -> Texture2D:
+	var path := FightFishAssets.sheet_path(fish)
+	var key := "detail_frame:%s" % path
+	if _portrait_crop_cache.has(key):
+		return _portrait_crop_cache[key]
+	var sheet := _load_texture_if_exists(path)
+	if sheet == null:
+		var fallback := _fish_portrait_texture(fish, true)
+		_portrait_crop_cache[key] = fallback
+		return fallback
+	var image := sheet.get_image()
+	if image == null or image.is_empty():
+		var fallback := _fish_portrait_texture(fish, true)
+		_portrait_crop_cache[key] = fallback
+		return fallback
+	var frame_width := int(image.get_width() / 4)
+	if frame_width <= 0:
+		var fallback := _fish_portrait_texture(fish, true)
+		_portrait_crop_cache[key] = fallback
+		return fallback
+	var frame := image.get_region(Rect2i(0, 0, frame_width, image.get_height()))
+	frame.flip_x()
+	var texture := ImageTexture.create_from_image(frame)
+	var cropped := _cropped_portrait_texture(texture)
+	_portrait_crop_cache[key] = cropped
+	return cropped
 
 
 func _refresh_filter_buttons() -> void:
