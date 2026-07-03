@@ -6,6 +6,7 @@ const PlayerStatusBarScript = preload("res://src/ui/components/player_status_bar
 const RarityStylesScript = preload("res://src/ui/rarity_styles.gd")
 
 const FISH_BOOK_BG_PATH := "res://assets/showcase/fish_book/fish_book_bg.png"
+const FISH_BOOK_BOOK_FRAME_PATH := "res://assets/showcase/fish_book/fish_book_book_frame.png"
 const FISH_BOOK_HEADER_FRAME_PATH := "res://assets/showcase/fish_book/fish_book_header_frame.png"
 const FISH_BOOK_TITLE_SIGN_PATH := "res://assets/showcase/fish_book/fish_book_title_sign.png"
 const FISH_BOOK_MAIN_FRAME_PATH := "res://assets/showcase/fish_book/fish_book_main_frame.png"
@@ -90,22 +91,12 @@ func _build_background() -> void:
 
 
 func _build_book_backplate(root: Control) -> void:
-	var wood := ColorRect.new()
-	wood.color = _alpha(Palette.WOOD_DARK, 0.72)
-	wood.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(root, wood, 0.024, 0.118, 0.976, 0.982)
-
-	var well := ColorRect.new()
-	well.color = _alpha(Palette.DARK_PANEL_DEEP, 0.62)
-	well.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(root, well, 0.031, 0.135, 0.969, 0.970)
+	var frame := _texture_rect(FISH_BOOK_BOOK_FRAME_PATH)
+	_place_control(root, frame, 0.018, 0.018, 0.982, 0.982)
 
 
 func _build_header(root: Control) -> void:
 	var header := _anchored_control(root, 0.018, 0.020, 0.982, 0.154)
-	var frame := _texture_rect(FISH_BOOK_HEADER_FRAME_PATH)
-	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	header.add_child(frame)
 
 	var found_bar := _texture_rect(COMMON_STATUS_BAR_PATH)
 	_place_control(header, found_bar, 0.022, 0.188, 0.276, 0.820)
@@ -267,9 +258,6 @@ func _detail_row(parent: Control, top: float, label_text: String) -> Label:
 
 func _build_footer(root: Control) -> void:
 	var footer := _anchored_control(root, 0.024, 0.890, 0.976, 0.975)
-	var frame := _texture_rect(FISH_BOOK_FOOTER_FRAME_PATH)
-	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	footer.add_child(frame)
 
 	var x := 0.032
 	for filter in FILTERS:
