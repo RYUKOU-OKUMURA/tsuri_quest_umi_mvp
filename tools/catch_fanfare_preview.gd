@@ -55,7 +55,7 @@ func _ready() -> void:
 		catch_result["boss_first_clear_reward"] = {"money": 3000}
 	screen._catch_fanfare.play(fish, size_cm, catch_result)
 
-	await get_tree().create_timer(0.92).timeout
+	await get_tree().create_timer(1.15).timeout
 	var img := vp.get_texture().get_image()
 	if img == null:
 		push_error("SubViewport get_image() returned null; run with a real display driver.")

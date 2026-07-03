@@ -373,7 +373,8 @@ func _create_quit_overlay() -> void:
 func _create_catch_fanfare() -> void:
 	_catch_fanfare = CatchFanfareScript.new()
 	_catch_fanfare.z_index = 80
-	_catch_fanfare.finished.connect(_on_catch_fanfare_finished)
+	_catch_fanfare.continue_requested.connect(_on_catch_fanfare_continue_requested)
+	_catch_fanfare.harbor_requested.connect(_on_catch_fanfare_harbor_requested)
 	add_child(_catch_fanfare)
 
 
@@ -591,10 +592,7 @@ func _on_fight_finished(caught: bool, reason: String) -> void:
 				_simulator.result_size_cm,
 				_spot_id
 			)
-			_result_details.text = _catch_result_details(catch_result)
 			_result_recorded = true
-		_result_title.text = "釣り上げ成功！"
-		_retry_button.text = "続けて釣る"
 		if _catch_fanfare != null:
 			_result_overlay.visible = false
 			_catch_fanfare.play(_current_fish, _simulator.result_size_cm, catch_result)
@@ -607,35 +605,16 @@ func _on_fight_finished(caught: bool, reason: String) -> void:
 	_result_overlay.visible = true
 
 
-func _on_catch_fanfare_finished() -> void:
-	if _result_overlay == null:
-		return
-	_result_overlay.visible = true
+func _on_catch_fanfare_continue_requested() -> void:
+	_retry()
+
+
+func _on_catch_fanfare_harbor_requested() -> void:
+	navigate("harbor")
 
 
 func _retry() -> void:
 	_prepare_new_attempt()
-
-
-func _catch_result_details(catch_result: Dictionary) -> String:
-	var lines: Array[String] = [
-		String(_current_fish["name"]),
-		"大きさ %.1f cm" % _simulator.result_size_cm,
-		"クーラーボックスに入れた。",
-	]
-	var first_clear_reward: Dictionary = catch_result.get("boss_first_clear_reward", {})
-	if not first_clear_reward.is_empty():
-		var reward_money := int(first_clear_reward.get("money", 0))
-		if reward_money > 0:
-			lines.append("初回撃破報酬 +%d G" % reward_money)
-		var reward_message := String(first_clear_reward.get("message", ""))
-		if not reward_message.strip_edges().is_empty():
-			lines.append(reward_message)
-	elif bool(_current_fish.get("boss", false)):
-		lines.append("港の大岩では、腕試しとして何度でも再挑戦できる。")
-	else:
-		lines.append("港で売るか、料理して食べよう。")
-	return "\n".join(PackedStringArray(lines))
 
 
 func _update_ui() -> void:
