@@ -18,6 +18,8 @@ var best_sizes: Dictionary = {}
 var eaten_recipes: Dictionary = {}
 var owned_rods: Array[String] = ["starter"]
 var equipped_rod_id: String = "starter"
+var owned_rigs: Array[String] = [GameData.DEFAULT_RIG_ID]
+var equipped_rig_id: String = GameData.DEFAULT_RIG_ID
 var owned_boats: Array[String] = []
 var pending_buff: Dictionary = {}
 var play_seconds: float = 0.0
@@ -46,6 +48,8 @@ func reset_game() -> void:
 	eaten_recipes = {}
 	owned_rods = ["starter"]
 	equipped_rod_id = "starter"
+	owned_rigs = [GameData.DEFAULT_RIG_ID]
+	equipped_rig_id = GameData.DEFAULT_RIG_ID
 	owned_boats = []
 	pending_buff = {}
 	play_seconds = 0.0
@@ -191,6 +195,32 @@ func buy_or_equip_rod(rod_id: String) -> Dictionary:
 	return {"ok": true, "action": "buy", "message": "%sを購入して装備しました。" % rod["name"]}
 
 
+func buy_or_equip_rig(rig_id: String) -> Dictionary:
+	var rig := GameData.get_rig(rig_id)
+	if rig.is_empty():
+		return {"ok": false, "message": "仕掛けデータが見つかりません。"}
+
+	if rig_id in owned_rigs:
+		equipped_rig_id = rig_id
+		save_game()
+		progress_changed.emit()
+		return {"ok": true, "action": "equip", "message": "%sを装備しました。" % rig["name"]}
+
+	var unlock_level := int(rig.get("unlock_level", 1))
+	if level < unlock_level:
+		return {"ok": false, "message": "%sはLv.%dで解放されます。" % [rig["name"], unlock_level]}
+
+	var price := int(rig["price"])
+	if money < price:
+		return {"ok": false, "message": "所持金が足りません。"}
+	money -= price
+	owned_rigs.append(rig_id)
+	equipped_rig_id = rig_id
+	save_game()
+	progress_changed.emit()
+	return {"ok": true, "action": "buy", "message": "%sを購入して装備しました。" % rig["name"]}
+
+
 func has_boat(boat_id: String) -> bool:
 	return boat_id in owned_boats
 
@@ -284,6 +314,13 @@ func begin_fishing_trip() -> Dictionary:
 	stats["wind_id"] = String(environment.get("wind_id", "weak"))
 	stats["wind_label"] = String(environment.get("wind_label", "風 弱"))
 	stats["surface_bgm_key"] = String(environment.get("surface_bgm_key", "calm"))
+	var rig := GameData.get_rig(equipped_rig_id)
+	if rig.is_empty():
+		equipped_rig_id = GameData.DEFAULT_RIG_ID
+		rig = GameData.get_rig(equipped_rig_id)
+	stats["rig_id"] = String(rig.get("id", GameData.DEFAULT_RIG_ID))
+	stats["rig_name"] = String(rig.get("name", "サビキ仕掛け"))
+	stats["rig_bait_types"] = GameData.rig_bait_types(equipped_rig_id)
 	pending_buff = {}
 	save_game()
 	progress_changed.emit()
@@ -303,6 +340,8 @@ func save_game() -> void:
 		"eaten_recipes": eaten_recipes,
 		"owned_rods": owned_rods,
 		"equipped_rod_id": equipped_rod_id,
+		"owned_rigs": owned_rigs,
+		"equipped_rig_id": equipped_rig_id,
 		"owned_boats": owned_boats,
 		"pending_buff": pending_buff,
 		"play_seconds": play_seconds,
@@ -325,6 +364,10 @@ func load_game() -> void:
 		push_warning("セーブデータが壊れているため初期値を使用します。")
 		return
 	var data: Dictionary = parsed
+	_apply_save_data(data)
+
+
+func _apply_save_data(data: Dictionary) -> void:
 	level = clampi(int(data.get("level", 1)), 1, GameData.MAX_LEVEL)
 	exp = maxi(0, int(data.get("exp", 0)))
 	money = maxi(0, int(data.get("money", 500)))
@@ -364,6 +407,18 @@ func load_game() -> void:
 	equipped_rod_id = String(data.get("equipped_rod_id", "starter"))
 	if equipped_rod_id not in owned_rods:
 		equipped_rod_id = "starter"
+	owned_rigs = []
+	var loaded_rigs = data.get("owned_rigs", [GameData.DEFAULT_RIG_ID])
+	if typeof(loaded_rigs) == TYPE_ARRAY:
+		for rig_id_variant in loaded_rigs:
+			var rig_id := String(rig_id_variant)
+			if not GameData.get_rig(rig_id).is_empty() and rig_id not in owned_rigs:
+				owned_rigs.append(rig_id)
+	if GameData.DEFAULT_RIG_ID not in owned_rigs:
+		owned_rigs.push_front(GameData.DEFAULT_RIG_ID)
+	equipped_rig_id = String(data.get("equipped_rig_id", GameData.DEFAULT_RIG_ID))
+	if equipped_rig_id not in owned_rigs or GameData.get_rig(equipped_rig_id).is_empty():
+		equipped_rig_id = GameData.DEFAULT_RIG_ID
 	owned_boats = []
 	var loaded_boats = data.get("owned_boats", [])
 	if typeof(loaded_boats) == TYPE_ARRAY:

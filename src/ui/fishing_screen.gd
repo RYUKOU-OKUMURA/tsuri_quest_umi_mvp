@@ -60,6 +60,7 @@ func _build_screen() -> void:
 	_resolve_trip_stats()
 	_apply_spot_to_trip_stats()
 	_ensure_trip_environment()
+	_ensure_trip_rig()
 	_play_fishing_bgm()
 	_simulator = FishingSimulatorScript.new()
 	_simulator.state_changed.connect(_on_state_changed)
@@ -232,6 +233,19 @@ func _ensure_trip_environment() -> void:
 		_trip_stats["surface_bgm_key"] = String(environment.get("surface_bgm_key", "calm"))
 
 
+func _ensure_trip_rig() -> void:
+	var rig_id := String(_trip_stats.get("rig_id", ""))
+	if rig_id.strip_edges().is_empty() or GameData.get_rig(rig_id).is_empty():
+		rig_id = PlayerProgress.equipped_rig_id
+	var rig := GameData.get_rig(rig_id)
+	if rig.is_empty():
+		rig_id = GameData.DEFAULT_RIG_ID
+		rig = GameData.get_rig(rig_id)
+	_trip_stats["rig_id"] = rig_id
+	_trip_stats["rig_name"] = String(rig.get("name", "サビキ仕掛け"))
+	_trip_stats["rig_bait_types"] = GameData.rig_bait_types(rig_id)
+
+
 func _play_fishing_bgm() -> void:
 	var bgm_key := String(_trip_stats.get("surface_bgm_key", "calm"))
 	var path := String(FISHING_BGM_PATH_BY_SURFACE_KEY.get(bgm_key, FISHING_BGM_PATH_BY_SURFACE_KEY["calm"]))
@@ -254,11 +268,11 @@ func _spot_summary_text() -> String:
 
 func _spot_detail_text() -> String:
 	return (
-		"水深 %s\n狙い：%s\nエサ：%s"
+		"水深 %s\n狙い：%s\n仕掛け：%s"
 		% [
 			_depth_range_text(_spot),
 			_featured_fish_text(_spot),
-			_bait_text(_spot),
+			_rig_summary_text(),
 		]
 	)
 
@@ -287,6 +301,16 @@ func _bait_text(spot: Dictionary) -> String:
 	for bait_variant in Array(spot.get("recommended_baits", [])):
 		baits.append(String(bait_variant))
 	return "、".join(PackedStringArray(baits))
+
+
+func _rig_summary_text() -> String:
+	var rig_name := String(_trip_stats.get("rig_name", "サビキ仕掛け"))
+	var bait_types: Array[String] = []
+	for bait_variant in Array(_trip_stats.get("rig_bait_types", [])):
+		bait_types.append(String(bait_variant))
+	if bait_types.is_empty():
+		return rig_name
+	return "%s（%s）" % [rig_name, "、".join(PackedStringArray(bait_types))]
 
 
 func _create_result_overlay() -> void:
@@ -452,7 +476,11 @@ func _prepare_new_attempt() -> void:
 	if bool(_spot.get("boss_spot", false)):
 		_current_fish = GameData.get_fish("boss_kurodai")
 	else:
-		_current_fish = GameData.roll_normal_fish(PlayerProgress.level, _spot_id)
+		_current_fish = GameData.roll_normal_fish(
+			PlayerProgress.level,
+			_spot_id,
+			String(_trip_stats.get("rig_id", PlayerProgress.equipped_rig_id))
+		)
 	_simulator.prepare(_current_fish, _trip_stats)
 	_view.bind_simulator(_simulator)
 	_surface_view.bind_simulator(_simulator)

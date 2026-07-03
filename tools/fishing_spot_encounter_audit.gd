@@ -9,9 +9,11 @@ func _initialize() -> void:
 	var game_data := GameDataScript.new()
 	var failures: Array[String] = []
 	_check_spot_master(game_data, failures)
+	_check_rig_master(game_data, failures)
 	_check_level_gates(game_data, failures)
 	_check_boat_gates(game_data, failures)
 	_check_expected_rates(game_data, failures)
+	_check_rig_encounter_modifiers(game_data, failures)
 	_check_boss_challenge_rewards(game_data, failures)
 	_print_sample_summary(game_data)
 	if not failures.is_empty():
@@ -59,6 +61,31 @@ func _check_spot_master(game_data: Object, failures: Array[String]) -> void:
 			failures.append("%s has negative required_boat_rank" % spot_id)
 		if required_boat_rank > 0 and game_data.get_required_boat_for_rank(required_boat_rank).is_empty():
 			failures.append("%s requires missing boat rank %d" % [spot_id, required_boat_rank])
+
+
+func _check_rig_master(game_data: Object, failures: Array[String]) -> void:
+	var rig_ids: Array[String] = game_data.get_all_rig_ids()
+	if rig_ids.size() != 6:
+		failures.append("expected 6 rigs, got %d" % rig_ids.size())
+	if not rig_ids.has(game_data.DEFAULT_RIG_ID):
+		failures.append("rig list missing default rig %s" % game_data.DEFAULT_RIG_ID)
+	var covered_baits: Array[String] = []
+	for rig_id in rig_ids:
+		var rig: Dictionary = game_data.get_rig(rig_id)
+		for key in ["id", "name", "price", "bait_types", "unlock_level", "description"]:
+			if not rig.has(key):
+				failures.append("%s missing rig key %s" % [rig_id, key])
+		if Array(rig.get("bait_types", [])).is_empty():
+			failures.append("%s must support at least one bait type" % rig_id)
+		for bait_variant in Array(rig.get("bait_types", [])):
+			var bait := String(bait_variant)
+			if bait not in covered_baits:
+				covered_baits.append(bait)
+	for fish_id in game_data.get_all_fish_ids():
+		var fish: Dictionary = game_data.get_fish(fish_id)
+		var preferred_bait := String(fish.get("preferred_bait", ""))
+		if preferred_bait not in covered_baits:
+			failures.append("%s preferred bait is not covered by any rig: %s" % [fish_id, preferred_bait])
 
 
 func _check_level_gates(game_data: Object, failures: Array[String]) -> void:
@@ -131,6 +158,38 @@ func _check_expected_rates(game_data: Object, failures: Array[String]) -> void:
 				failures.append("%s bluewater fish %s share %.1f%% exceeds 10%%" % [spot_id, fish_id, share * 100.0])
 			elif min_level >= 4 and share > 0.14:
 				failures.append("%s rare fish %s share %.1f%% exceeds 14%%" % [spot_id, fish_id, share * 100.0])
+
+
+func _check_rig_encounter_modifiers(game_data: Object, failures: Array[String]) -> void:
+	for spot_id in game_data.get_all_fishing_spot_ids():
+		var spot: Dictionary = game_data.get_fishing_spot(spot_id)
+		var baseline: Dictionary = game_data.encounter_weights(10, spot_id)
+		if bool(spot.get("boss_spot", false)):
+			for rig_id in game_data.get_all_rig_ids():
+				var boss_weights: Dictionary = game_data.encounter_weights(10, spot_id, rig_id)
+				if not _weights_equal(baseline, boss_weights):
+					failures.append("%s boss spot should ignore rig modifier for %s" % [spot_id, rig_id])
+			continue
+		for rig_id in game_data.get_all_rig_ids():
+			var rig_weights: Dictionary = game_data.encounter_weights(10, spot_id, rig_id)
+			if rig_weights.is_empty():
+				failures.append("%s rig=%s has no encounter weights" % [spot_id, rig_id])
+				continue
+			for fish_id_variant in baseline.keys():
+				var fish_id := String(fish_id_variant)
+				var fish: Dictionary = game_data.get_fish(fish_id)
+				var expected_multiplier: float = (
+					game_data.RIG_MATCH_WEIGHT_MULTIPLIER
+					if game_data.rig_supports_bait(rig_id, String(fish.get("preferred_bait", "")))
+					else game_data.RIG_MISMATCH_WEIGHT_MULTIPLIER
+				)
+				var expected: float = float(baseline[fish_id]) * expected_multiplier
+				var actual := float(rig_weights.get(fish_id, -1.0))
+				if not _nearly_equal(actual, expected):
+					failures.append(
+						"%s rig=%s fish=%s expected %.3f got %.3f"
+						% [spot_id, rig_id, fish_id, expected, actual]
+					)
 
 
 func _check_boss_challenge_rewards(game_data: Object, failures: Array[String]) -> void:
@@ -222,3 +281,18 @@ func _low_level_share(game_data: Object, weights: Dictionary, total: float) -> f
 		if int(fish.get("min_level", 1)) <= 2:
 			low_weight += float(weights[fish_id])
 	return low_weight / total
+
+
+func _weights_equal(left: Dictionary, right: Dictionary) -> bool:
+	if left.size() != right.size():
+		return false
+	for key in left.keys():
+		if not right.has(key):
+			return false
+		if not _nearly_equal(float(left[key]), float(right[key])):
+			return false
+	return true
+
+
+func _nearly_equal(left: float, right: float) -> bool:
+	return absf(left - right) <= maxf(0.001, absf(right) * 0.001)

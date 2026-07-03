@@ -41,6 +41,8 @@ var _detail_depth_value_label: Label
 var _detail_fish_value_label: Label
 var _detail_bait_value_label: Label
 var _detail_hint_value_label: Label
+var _detail_rig_value_label: Label
+var _rig_cycle_button: Button
 var _action_button: Button
 var _footer_completion_value_label: Label
 var _footer_completion_fill: ColorRect
@@ -349,10 +351,13 @@ func _build_detail_panel(parent: Control) -> void:
 	_detail_bait_value_label = _make_detail_row(panel, 2, "エサ", 32.0)
 	_apply_detail_frame_rect(_detail_row_panel(_detail_bait_value_label), Rect2(44.0, 514.0, 432.0, 46.0))
 
+	_make_rig_control_row(panel)
+	_apply_detail_frame_rect(_detail_row_panel(_detail_rig_value_label), Rect2(44.0, 563.0, 432.0, 44.0))
+
 	_action_button = make_button("ここで釣る", func() -> void: _select_spot(_selected_spot_id), 0, true)
 	_apply_button_style(_action_button, _detail_primary_button_style(false), _detail_primary_button_style(true), _detail_primary_button_pressed_style())
 	_action_button.add_theme_font_size_override("font_size", 21)
-	_add_detail_frame_child(panel, _action_button, Rect2(38.0, 597.0, 444.0, 72.0))
+	_add_detail_frame_child(panel, _action_button, Rect2(38.0, 613.0, 444.0, 56.0))
 
 	var back := make_return_button(func() -> void: navigate("harbor"), 0.0)
 	back.add_theme_font_size_override("font_size", 20)
@@ -484,6 +489,45 @@ func _make_detail_row(
 	value_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(value_label)
 	return value_label
+
+
+func _make_rig_control_row(parent: Control) -> void:
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(0.0, 40.0)
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.add_theme_stylebox_override("panel", _detail_row_style())
+	parent.add_child(panel)
+
+	var row := HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", 8)
+	panel.add_child(row)
+
+	var title_label := make_label("仕掛け", 16, Color("#6e4a24"))
+	title_label.custom_minimum_size = Vector2(60.0, 0.0)
+	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(title_label)
+
+	_detail_rig_value_label = make_label("", 15, Color("#1b1008"))
+	_detail_rig_value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_detail_rig_value_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_detail_rig_value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_detail_rig_value_label.clip_text = true
+	_detail_rig_value_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_detail_rig_value_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(_detail_rig_value_label)
+
+	_rig_cycle_button = Button.new()
+	_rig_cycle_button.text = "切替"
+	_rig_cycle_button.custom_minimum_size = Vector2(82.0, 0.0)
+	_rig_cycle_button.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_rig_cycle_button.pressed.connect(_cycle_owned_rig)
+	_apply_button_style(_rig_cycle_button, _detail_secondary_button_style(false), _detail_secondary_button_style(true), _detail_secondary_button_pressed_style())
+	_rig_cycle_button.add_theme_font_size_override("font_size", 14)
+	row.add_child(_rig_cycle_button)
 
 
 func _detail_row_style() -> StyleBoxFlat:
@@ -1035,7 +1079,13 @@ func _refresh_detail() -> void:
 	_detail_description_label.text = String(spot.get("description", ""))
 	_detail_depth_value_label.text = _depth_range_text(spot)
 	_detail_fish_value_label.text = _featured_fish_text(spot, 4, 2)
-	_detail_bait_value_label.text = _bait_text(spot)
+	_detail_bait_value_label.text = _bait_text_with_match(spot)
+	if _detail_rig_value_label != null:
+		_detail_rig_value_label.text = _equipped_rig_text()
+	if _rig_cycle_button != null:
+		var owned_rig_ids := _valid_owned_rig_ids()
+		_rig_cycle_button.disabled = owned_rig_ids.size() <= 1
+		_rig_cycle_button.text = "切替" if owned_rig_ids.size() > 1 else "所持1"
 	if _detail_hint_value_label != null:
 		_detail_hint_value_label.text = (
 			String(access.get("detail", ""))
@@ -1054,7 +1104,9 @@ func _select_spot(spot_id: String) -> void:
 	var payload := {"spot_id": spot_id}
 	if _continue_trip:
 		payload["continue_trip"] = true
-		payload["trip_stats"] = _trip_stats.duplicate(true)
+		var stats := _trip_stats.duplicate(true)
+		_apply_current_rig_to_stats(stats)
+		payload["trip_stats"] = stats
 	navigate("fishing", payload)
 
 
@@ -1115,6 +1167,68 @@ func _bait_text(spot: Dictionary) -> String:
 	for bait_variant in Array(spot.get("recommended_baits", [])):
 		baits.append(String(bait_variant))
 	return "、".join(PackedStringArray(baits))
+
+
+func _bait_text_with_match(spot: Dictionary) -> String:
+	var base := _bait_text(spot)
+	var match_text := "◎おすすめ一致" if _rig_matches_spot(spot) else "相性ふつう"
+	if base.strip_edges().is_empty():
+		return match_text
+	return "%s　%s" % [base, match_text]
+
+
+func _equipped_rig_text() -> String:
+	var rig := GameData.get_rig(PlayerProgress.equipped_rig_id)
+	if rig.is_empty():
+		return "サビキ仕掛け"
+	var bait_types: Array[String] = []
+	for bait_variant in Array(rig.get("bait_types", [])):
+		bait_types.append(String(bait_variant))
+	return "%s / %s" % [String(rig.get("name", "サビキ仕掛け")), "、".join(PackedStringArray(bait_types))]
+
+
+func _cycle_owned_rig() -> void:
+	var owned_rig_ids := _valid_owned_rig_ids()
+	if owned_rig_ids.size() <= 1:
+		return
+	var current_index := owned_rig_ids.find(PlayerProgress.equipped_rig_id)
+	var next_index := 0 if current_index < 0 else (current_index + 1) % owned_rig_ids.size()
+	var result := PlayerProgress.buy_or_equip_rig(owned_rig_ids[next_index])
+	if _message_label != null:
+		_message_label.text = "仕掛けを変更"
+	if _message_detail_label != null:
+		_message_detail_label.text = String(result.get("message", "仕掛けを切り替えました。"))
+	_refresh_detail()
+
+
+func _valid_owned_rig_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for rig_id_variant in PlayerProgress.owned_rigs:
+		var rig_id := String(rig_id_variant)
+		if GameData.get_rig(rig_id).is_empty() or rig_id in ids:
+			continue
+		ids.append(rig_id)
+	if ids.is_empty():
+		ids.append(GameData.DEFAULT_RIG_ID)
+	return ids
+
+
+func _rig_matches_spot(spot: Dictionary) -> bool:
+	for bait_variant in Array(spot.get("recommended_baits", [])):
+		if GameData.rig_supports_bait(PlayerProgress.equipped_rig_id, String(bait_variant)):
+			return true
+	return false
+
+
+func _apply_current_rig_to_stats(stats: Dictionary) -> void:
+	var rig := GameData.get_rig(PlayerProgress.equipped_rig_id)
+	if rig.is_empty():
+		rig = GameData.get_rig(GameData.DEFAULT_RIG_ID)
+		stats["rig_id"] = GameData.DEFAULT_RIG_ID
+	else:
+		stats["rig_id"] = PlayerProgress.equipped_rig_id
+	stats["rig_name"] = String(rig.get("name", "サビキ仕掛け"))
+	stats["rig_bait_types"] = GameData.rig_bait_types(String(stats["rig_id"]))
 
 
 func _boss_hint_text() -> String:

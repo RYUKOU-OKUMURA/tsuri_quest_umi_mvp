@@ -10,8 +10,12 @@ var _failed := false
 
 
 func _ready() -> void:
+	_verify_old_save_rig_defaults()
+
 	PlayerProgress.level = 1
 	PlayerProgress.owned_boats = []
+	PlayerProgress.owned_rigs = [GameData.DEFAULT_RIG_ID, "chokusen"]
+	PlayerProgress.equipped_rig_id = GameData.DEFAULT_RIG_ID
 	PlayerProgress.spot_caught_counts = {
 		"harbor_pier": {"aji": 2, "iwashi": 1},
 	}
@@ -21,6 +25,10 @@ func _ready() -> void:
 	_expect(_screen._screen_bgm_path == "res://assets/audio/港外・潮目.mp3", "default map BGM should use harbor tide track")
 	_screen._focus_spot("shallow_sand")
 	_expect(_screen._screen_bgm_path == "res://assets/audio/砂浜・かけあがり.mp3", "focused sand spot should switch map BGM")
+	_expect(_screen._detail_bait_value_label.text.contains("相性ふつう"), "sabiki should not match shallow sand baits")
+	_screen._cycle_owned_rig()
+	_expect(PlayerProgress.equipped_rig_id == "chokusen", "rig cycle should equip next owned rig")
+	_expect(_screen._detail_bait_value_label.text.contains("おすすめ一致"), "chokusen should match shallow sand baits")
 	_expect(_screen._footer_completion_value_label != null, "footer completion label should be present")
 	_expect(_screen._footer_completion_value_label.text == "2 / 5", "footer completion should show aggregate unlocked progress")
 	_verify_no_footer_spot_entries()
@@ -69,6 +77,8 @@ func _ready() -> void:
 	_payload = {}
 	PlayerProgress.level = 3
 	PlayerProgress.owned_boats = []
+	PlayerProgress.owned_rigs = [GameData.DEFAULT_RIG_ID, "chokusen"]
+	PlayerProgress.equipped_rig_id = GameData.DEFAULT_RIG_ID
 	_screen = _make_screen({
 		"from_fishing": true,
 		"current_spot_id": "outer_tide",
@@ -77,11 +87,13 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_expect(_screen._selected_spot_id == "outer_tide", "current fishing spot should be selected")
 	_verify_no_footer_spot_entries()
+	_screen._cycle_owned_rig()
 	_screen._select_spot("outer_tide")
 	_expect(_navigated_to == "fishing", "continued spot selection should navigate to fishing")
 	_expect(bool(_payload.get("continue_trip", false)), "continued spot selection should keep continue_trip")
 	var stats: Dictionary = _payload.get("trip_stats", {})
 	_expect(String(stats.get("sentinel", "")) == "carried", "continued spot selection should carry trip_stats")
+	_expect(String(stats.get("rig_id", "")) == "chokusen", "continued spot selection should refresh rig stats")
 	PlayerProgress.record_catch("saba", 32.0, "outer_tide")
 	var outer_counts: Dictionary = PlayerProgress.spot_caught_counts.get("outer_tide", {})
 	_expect(int(outer_counts.get("saba", 0)) == 1, "record_catch should store spot-specific catch counts")
@@ -90,6 +102,27 @@ func _ready() -> void:
 		return
 	print("fishing_spot_select_smoke: ok")
 	get_tree().quit(0)
+
+
+func _verify_old_save_rig_defaults() -> void:
+	PlayerProgress._apply_save_data({
+		"version": 1,
+		"level": 3,
+		"exp": 12,
+		"money": 700,
+		"inventory": {},
+		"caught_counts": {},
+		"spot_caught_counts": {},
+		"best_sizes": {},
+		"eaten_recipes": {},
+		"owned_rods": ["starter"],
+		"equipped_rod_id": "starter",
+		"owned_boats": [],
+		"pending_buff": {},
+		"play_seconds": 0.0,
+	})
+	_expect(PlayerProgress.owned_rigs == [GameData.DEFAULT_RIG_ID], "old save should default owned_rigs to sabiki")
+	_expect(PlayerProgress.equipped_rig_id == GameData.DEFAULT_RIG_ID, "old save should default equipped_rig_id to sabiki")
 
 
 func _make_screen(payload: Dictionary = {}) -> Control:

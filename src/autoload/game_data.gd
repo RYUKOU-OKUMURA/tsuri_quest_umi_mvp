@@ -5,6 +5,9 @@ const BOSS_UNLOCK_LEVEL: int = 5
 const DEFAULT_FISHING_SPOT_ID := "harbor_pier"
 const BOSS_FISHING_SPOT_ID := "harbor_boulder"
 const NO_BOAT_RANK := 0
+const DEFAULT_RIG_ID := "sabiki"
+const RIG_MATCH_WEIGHT_MULTIPLIER := 2.5
+const RIG_MISMATCH_WEIGHT_MULTIPLIER := 0.4
 const BOSS_FIRST_CLEAR_REWARDS: Dictionary = {
 	"boss_kurodai":
 	{
@@ -1149,6 +1152,72 @@ const RODS: Dictionary = {
 	},
 }
 
+const RIG_ORDER: Array[String] = [
+	"sabiki",
+	"uki",
+	"chokusen",
+	"nomase",
+	"jigging",
+	"kani",
+]
+
+const RIGS: Dictionary = {
+	"sabiki":
+	{
+		"id": "sabiki",
+		"name": "サビキ仕掛け",
+		"price": 0,
+		"bait_types": ["アミエビ"],
+		"unlock_level": 1,
+		"description": "小魚の群れを狙う入門仕掛け。",
+	},
+	"uki":
+	{
+		"id": "uki",
+		"name": "ウキ釣り仕掛け",
+		"price": 400,
+		"bait_types": ["オキアミ", "練りエサ"],
+		"unlock_level": 2,
+		"description": "潮に流して中層から表層の魚を誘う仕掛け。",
+	},
+	"chokusen":
+	{
+		"id": "chokusen",
+		"name": "胴突き仕掛け",
+		"price": 600,
+		"bait_types": ["イソメ", "貝", "アサリ"],
+		"unlock_level": 2,
+		"description": "底物や岩場の魚を丁寧に探る仕掛け。",
+	},
+	"nomase":
+	{
+		"id": "nomase",
+		"name": "泳がせ仕掛け",
+		"price": 1500,
+		"bait_types": ["小魚"],
+		"unlock_level": 4,
+		"description": "活き餌で大型魚の反応を狙う仕掛け。",
+	},
+	"jigging":
+	{
+		"id": "jigging",
+		"name": "ルアー・ジグ",
+		"price": 2200,
+		"bait_types": ["大型ルアー"],
+		"unlock_level": 6,
+		"description": "外海の青物や回遊魚を速い誘いで狙う仕掛け。",
+	},
+	"kani":
+	{
+		"id": "kani",
+		"name": "カニ餌仕掛け",
+		"price": 1000,
+		"bait_types": ["岩ガニ"],
+		"unlock_level": 5,
+		"description": "石物やぬし級の魚に備える専用寄りの仕掛け。",
+	},
+}
+
 const BOAT_ORDER: Array[String] = [
 	"skiff",
 	"offshore_boat",
@@ -1247,6 +1316,12 @@ func get_rod(rod_id: String) -> Dictionary:
 	return RODS[rod_id].duplicate(true)
 
 
+func get_rig(rig_id: String) -> Dictionary:
+	if not RIGS.has(rig_id):
+		return {}
+	return RIGS[rig_id].duplicate(true)
+
+
 func get_boat(boat_id: String) -> Dictionary:
 	if not BOATS.has(boat_id):
 		return {}
@@ -1286,6 +1361,27 @@ func get_all_rod_ids() -> Array[String]:
 	for rod_id in RODS.keys():
 		ids.append(String(rod_id))
 	return ids
+
+
+func get_all_rig_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for rig_id in RIG_ORDER:
+		ids.append(rig_id)
+	return ids
+
+
+func rig_bait_types(rig_id: String) -> Array[String]:
+	var rig := get_rig(rig_id)
+	var bait_types: Array[String] = []
+	for bait_variant in Array(rig.get("bait_types", [])):
+		bait_types.append(String(bait_variant))
+	return bait_types
+
+
+func rig_supports_bait(rig_id: String, bait_type: String) -> bool:
+	if bait_type.strip_edges().is_empty():
+		return false
+	return rig_bait_types(rig_id).has(bait_type)
 
 
 func get_all_boat_ids() -> Array[String]:
@@ -1392,13 +1488,23 @@ func get_recipes_for_fish(fish_id: String, player_level: int) -> Array[Dictionar
 	return results
 
 
-func encounter_weights(player_level: int, spot_id: String = DEFAULT_FISHING_SPOT_ID) -> Dictionary:
+func encounter_weights(
+	player_level: int,
+	spot_id: String = DEFAULT_FISHING_SPOT_ID,
+	rig_id: String = ""
+) -> Dictionary:
+	var requested_spot_id := _resolved_spot_id(spot_id)
+	var requested_spot: Dictionary = FISHING_SPOTS[requested_spot_id]
 	var resolved_id := _normal_spot_id_for_roll(spot_id, player_level)
 	var spot: Dictionary = FISHING_SPOTS[resolved_id]
 	var weights: Dictionary = {}
 	var allowed_fish: Array = spot.get("allowed_fish", [])
 	var modifiers: Dictionary = spot.get("fish_weight_modifiers", {})
 	var common_modifier := float(spot.get("common_modifier", 1.0))
+	var apply_rig_modifier := (
+		not rig_id.strip_edges().is_empty()
+		and not bool(requested_spot.get("boss_spot", false))
+	)
 	for fish_id_variant in FISH.keys():
 		var fish_id := String(fish_id_variant)
 		var fish: Dictionary = FISH[fish_id]
@@ -1411,6 +1517,8 @@ func encounter_weights(player_level: int, spot_id: String = DEFAULT_FISHING_SPOT
 		var modifier := common_modifier
 		if modifiers.has(fish_id):
 			modifier = float(modifiers[fish_id])
+		if apply_rig_modifier:
+			modifier *= _rig_weight_modifier(fish, rig_id)
 		var weight := float(fish.get("weight", 0.0)) * maxf(0.0, modifier)
 		if weight <= 0.0:
 			continue
@@ -1418,8 +1526,12 @@ func encounter_weights(player_level: int, spot_id: String = DEFAULT_FISHING_SPOT
 	return weights
 
 
-func roll_normal_fish(player_level: int, spot_id: String = DEFAULT_FISHING_SPOT_ID) -> Dictionary:
-	var weights := encounter_weights(player_level, spot_id)
+func roll_normal_fish(
+	player_level: int,
+	spot_id: String = DEFAULT_FISHING_SPOT_ID,
+	rig_id: String = ""
+) -> Dictionary:
+	var weights := encounter_weights(player_level, spot_id, rig_id)
 	var candidate_ids: Array[String] = []
 	var total_weight := 0.0
 	for fish_id_variant in weights.keys():
@@ -1465,3 +1577,13 @@ func _normal_spot_id_for_roll(spot_id: String, player_level: int) -> String:
 	if int(spot.get("unlock_level", 1)) > player_level:
 		return DEFAULT_FISHING_SPOT_ID
 	return resolved_id
+
+
+func _rig_weight_modifier(fish: Dictionary, rig_id: String) -> float:
+	var rig := get_rig(rig_id)
+	if rig.is_empty():
+		return 1.0
+	var preferred_bait := String(fish.get("preferred_bait", ""))
+	if rig_supports_bait(rig_id, preferred_bait):
+		return RIG_MATCH_WEIGHT_MULTIPLIER
+	return RIG_MISMATCH_WEIGHT_MULTIPLIER

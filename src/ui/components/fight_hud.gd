@@ -259,8 +259,8 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 		)
 	else:
 		_draw_bait_icon(bait.position + Vector2(82.0 if _hud_frame == null else 95.0, bait.size.y * 0.62))
-	_draw_text(font, "オキアミ", bait.position + Vector2(116.0, bait.size.y * (0.56 if _hud_frame != null else 0.66)), 19 if _hud_frame != null else 20, Color("#2b2117"), 0)
-	_draw_text(font, "× 17", bait.position + Vector2(130.0, bait.size.y * (0.74 if _hud_frame != null else 0.92)), 17 if _hud_frame != null else 19, Color("#2b2117"), 0)
+	_draw_text(font, _rig_name_text(), bait.position + Vector2(116.0, bait.size.y * (0.56 if _hud_frame != null else 0.66)), 18 if _hud_frame != null else 19, Color("#2b2117"), 0)
+	_draw_text(font, _rig_bait_text(), bait.position + Vector2(116.0, bait.size.y * (0.74 if _hud_frame != null else 0.92)), 14 if _hud_frame != null else 16, Color("#2b2117"), 0)
 
 	_draw_panel(hint, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	var hint_title := "操作のヒント"
@@ -579,6 +579,22 @@ func _simulator_state() -> int:
 
 func _can_reel_controls() -> bool:
 	return _simulator_state() == FishingSimulator.State.FIGHT
+
+
+func _rig_name_text() -> String:
+	var rig_name := String(trip_stats.get("rig_name", "サビキ仕掛け"))
+	if rig_name.ends_with("仕掛け"):
+		rig_name = rig_name.trim_suffix("仕掛け")
+	return rig_name
+
+
+func _rig_bait_text() -> String:
+	var bait_types: Array[String] = []
+	for bait_variant in Array(trip_stats.get("rig_bait_types", [])):
+		bait_types.append(String(bait_variant))
+	if bait_types.is_empty():
+		return "対応餌：--"
+	return "対応餌：%s" % "、".join(PackedStringArray(bait_types))
 
 
 func _is_reeling_active() -> bool:

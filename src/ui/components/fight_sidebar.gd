@@ -606,6 +606,9 @@ func _target_mode_text() -> String:
 
 
 func _bait_text() -> String:
+	var rig_baits: Array = trip_stats.get("rig_bait_types", [])
+	if not rig_baits.is_empty():
+		return String(rig_baits[0])
 	var baits: Array = trip_stats.get("spot_recommended_baits", [])
 	if not baits.is_empty():
 		return String(baits[0])
