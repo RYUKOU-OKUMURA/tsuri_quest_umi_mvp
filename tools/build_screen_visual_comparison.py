@@ -50,6 +50,20 @@ PRESETS = {
             "out": Path("/tmp/tsuri_fishing_spot_map_continue_compare.png"),
         },
     ],
+    "tackle_shop": [
+        {
+            "id": "TACKLE_SHOP_ROD",
+            "reference": ROOT / "reference" / "09_tackle_shop_rod_mockup.png",
+            "capture": Path("/tmp/tsuri_tackle_shop_rod.png"),
+            "out": Path("/tmp/tsuri_tackle_shop_rod_compare.png"),
+        },
+        {
+            "id": "TACKLE_SHOP_RIG",
+            "reference": ROOT / "reference" / "09_tackle_shop_gear_mockup.png",
+            "capture": Path("/tmp/tsuri_tackle_shop_rig.png"),
+            "out": Path("/tmp/tsuri_tackle_shop_rig_compare.png"),
+        },
+    ],
 }
 
 

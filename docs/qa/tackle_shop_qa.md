@@ -1,6 +1,6 @@
 # 釣具店画面 QA判断ログ
 
-最終更新: 2026-07-03 / 状態: P2 PNGメイン正式化 作業中
+最終更新: 2026-07-03 / 状態: v1 freeze中
 参照画像: `reference/09_tackle_shop_rod_mockup.png` / `reference/09_tackle_shop_gear_mockup.png`
 QA更新コマンド: `./tools/tackle_shop_visual_qa.sh`
 
@@ -27,9 +27,9 @@ QA更新コマンド: `./tools/tackle_shop_visual_qa.sh`
 
 | パラメータ | 回数 | 直近の変更内容 | 状態 |
 |---|---|---|---|
-| 商品一覧カード配置 | 0 | 初期値 | 作業中 |
-| 詳細パネル文字サイズ | 0 | 初期値 | 作業中 |
-| 背景明度 | 0 | 初期値 | 作業中 |
+| 商品一覧カード配置 | 1 | カード名のx/幅/フォントサイズを調整し、通常seedの省略を解消 | 採用 |
+| 詳細パネル文字サイズ | 1 | 詳細の値列を1行ラベル化し、ヒント文を短縮 | 採用 |
+| 背景明度 | 0 | 初期値 | 採用 |
 
 ## 4. 暫定判定・再検証TODO
 
@@ -37,14 +37,15 @@ QA更新コマンド: `./tools/tackle_shop_visual_qa.sh`
 
 ## 5. 現在の残ギャップ
 
-- 実スクショ比較前。PNG素材を生成して実表示を確認する。
-- 竿タブ/仕掛けタブ両方のQA証拠画像を `docs/qa/evidence/tackle_shop/` に保存する。
+- 背景・店主・棚の質感はv1として成立。v2ではAI生成一点物背景への差し替え候補を検討できる。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-- 今回動かすパラメータ: 釣具店背景、商品カード、詳細パネル、タブ、下部メッセージ、釣具店専用アイコン。
-- 今回触らないfreeze値: 他画面の共通キット値、魚素材、仕掛けデータ、購入/装備ロジック、セーブ仕様。
+- なし。
 
 ## 7. 判断ログ（直近パスのみ）
 
-- 初期パス: PNGメイン正式化の作業開始。実装後に `tools/tackle_shop_visual_qa.sh` の比較画像を根拠として更新する。
+- 直近パス: `shop_screen.gd` をPNG背景・PNG商品カード・PNG詳細枠の構成へ置き換え、ItemList旧構成を撤去した。商品名、価格、所持金、所持/装備/Lv不足/資金不足はruntime描画。
+- 判断画像: `docs/qa/evidence/tackle_shop/2026-07-03_tackle_shop_rod_compare.png` / `docs/qa/evidence/tackle_shop/2026-07-03_tackle_shop_rig_compare.png`。
+- 採用理由: 竿/仕掛けの2状態でPNG素材が実表示され、通常preview seedのカード名・詳細文・ボタン文言に省略/重なりがない。購入/装備/ロックの主導線が右下操作に集約されている。`tools/tackle_shop_smoke.tscn`、`tools/tackle_shop_visual_qa.sh`、`./tools/validate_project.sh` は通過。
+- 固定条件: エサ単体販売を追加しない。日本語と状態値はPNGへ焼き込まない。商品カードの再調整はP1省略再発時のみ行う。
