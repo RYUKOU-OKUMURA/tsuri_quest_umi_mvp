@@ -252,6 +252,7 @@ func _build_detail_panel(root: Control) -> void:
 	_add_specimen_rule(detail_portrait_clip, 0.030, 0.485, 0.970, 0.492, _alpha(Palette.GOLD_DEEP, 0.12))
 	_add_specimen_rule(detail_portrait_clip, 0.030, 0.725, 0.970, 0.732, _alpha(Palette.GOLD_DEEP, 0.12))
 	_add_specimen_rule(detail_portrait_clip, 0.075, 0.125, 0.080, 0.870, _alpha(Palette.WOOD_DARK, 0.10))
+	_add_specimen_ruler(detail_portrait_clip)
 	_place_control(detail_portrait_clip, _detail_portrait_shadow, 0.012, 0.036, 1.012, 1.036)
 	_place_control(detail_portrait_clip, _detail_portrait, 0.0, 0.0, 1.0, 1.0)
 	var specimen_wash := _label_plate(_alpha(Palette.PARCHMENT, 0.08))
@@ -1041,6 +1042,21 @@ func _label_plate(color: Color) -> ColorRect:
 func _add_specimen_rule(parent: Control, left: float, top: float, right: float, bottom: float, color: Color) -> void:
 	var rule := _label_plate(color)
 	_place_control(parent, rule, left, top, right, bottom)
+
+
+func _add_specimen_ruler(parent: Control) -> void:
+	_add_specimen_rule(parent, 0.105, 0.858, 0.895, 0.864, _alpha(Palette.WOOD_DARK, 0.10))
+	for index in range(11):
+		var x := 0.105 + 0.079 * float(index)
+		var top := 0.848
+		var color := _alpha(Palette.WOOD_DARK, 0.12)
+		if index % 5 == 0:
+			top = 0.820
+			color = _alpha(Palette.WOOD_DARK, 0.18)
+		elif index % 2 == 0:
+			top = 0.838
+			color = _alpha(Palette.WOOD_DARK, 0.15)
+		_add_specimen_rule(parent, x - 0.002, top, x + 0.002, 0.866, color)
 
 
 func _spot_record_card_style() -> StyleBoxFlat:

@@ -1,6 +1,6 @@
 # 魚図鑑画面 QA判断ログ
 
-最終更新: 2026-07-03 / 状態: **v1.23 P2発見進捗バー化合格・freeze中**
+最終更新: 2026-07-03 / 状態: **v1.24 P2右詳細魚標本窓の採寸目盛り合格・freeze中**
 参照画像: `reference/07_fish_book_mockup.png`
 QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
@@ -30,7 +30,7 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 | 釣り場カード紙面化 | 右下釣り場カードに `Palette.PARCHMENT` alpha 0.78 の1px紙枠、サムネ 0.045/0.055–0.955/0.680、サムネtint `Color(1.0, 0.965, 0.860, 0.92)`、ラベル紙面 `Palette.PARCHMENT_DEEP` alpha 0.96 を 0.045/0.700–0.955/0.955、ラベル文字13px `Palette.TEXT_OUTLINE_LIGHT` | `src/ui/fish_book_screen.gd` | 右下サムネを濃紺UIストリップから羊皮紙ページ内の記録カードへ寄せる |
 | 下部索引タブ | フィルタ6件を 0.032 から x step 0.125 / 幅 0.122、y 0.072–0.850 に配置。背面に索引レール `Palette.PARCHMENT_DEEP` alpha 0.16、上罫線 `Palette.GOLD_DEEP` alpha 0.24、下影 `Palette.TEXT_OUTLINE_DARK` alpha 0.20 を敷く。選択タブは `Palette.DARK_PANEL` alpha 0.94 + `Palette.GOLD_BRIGHT` border、非選択は `Palette.PARCHMENT_DEEP` alpha 0.88 + `Palette.WOOD_DARK` border | `src/ui/fish_book_screen.gd` | 下部フィルタを汎用ボタン列ではなく、図鑑の収集カテゴリをめくる索引タブとして読ませる |
 | 未発見カード封印紙面 | 未発見カードの魚窓下地 `Palette.PARCHMENT_DEEP` alpha 0.58、魚影 `Palette.WOOD_DARK` alpha 0.62、紙面wash `Palette.PARCHMENT` alpha 0.18、No木札 `Palette.WOOD_DARK` alpha 0.72、`？` は `Palette.GOLD_DEEP` alpha 0.88、`未発見` 札は `Palette.PARCHMENT_DEEP` alpha 0.94 + `Palette.WOOD_DARK` alpha 0.34 の罫線 | `src/ui/fish_book_screen.gd` | 未発見カードを濃紺UIパネルではなく封印された紙面記録として読ませる |
-| 右詳細魚標本窓 | 右詳細の大魚clip内に横罫線3本 `Palette.GOLD_DEEP` alpha 0.12、左測定線 `Palette.WOOD_DARK` alpha 0.10、魚上の紙面wash `Palette.PARCHMENT` alpha 0.08 を追加。魚clip座標と魚PNG本体は変更なし | `src/ui/fish_book_screen.gd` | 右詳細の大魚をPNGステッカーではなく紙面上の標本画として読ませる |
+| 右詳細魚標本窓 | 右詳細の大魚clip内に横罫線3本 `Palette.GOLD_DEEP` alpha 0.12、左測定線 `Palette.WOOD_DARK` alpha 0.10、下辺の採寸目盛り（base alpha 0.10、minor/medium/major tick alpha 0.12/0.15/0.18）、魚上の紙面wash `Palette.PARCHMENT` alpha 0.08 を追加。魚clip座標と魚PNG本体は変更なし | `src/ui/fish_book_screen.gd` | 右詳細の大魚をPNGステッカーではなく、紙面上で採寸された標本画として読ませる |
 | 右詳細高解像度魚フレーム | 発見済み右詳細の大魚のみ、`showcase_sheet` frame0 を左向きにミラーし、既存alpha bboxクロップで表示する。未発見・左カード・clip座標は変更せず、読み込み不可時は `card_portrait` へフォールバック | `src/ui/fish_book_screen.gd`, `assets/showcase/fish/` | 右詳細の大魚をカード用縮小ポートレートではなく、詳細ページの主役としてより鮮明に見せる |
 
 ## 2. 不採用・再試行禁止リスト
@@ -52,7 +52,7 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 | 右詳細記録ラベル | 1 | 右詳細上部と場所見出しに紙面wash＋木札を追加し、濃紺バーを台帳内ラベル化 | P2詳細記録化としてfreeze |
 | 釣り場カード紙面化 | 1 | 右下釣り場サムネに紙カード枠、余白、羊皮紙ラベルを追加し、青いラベル帯を撤去 | P2収集導線としてfreeze |
 | 未発見カード封印紙面化 | 1 | 未発見カードの濃紺魚窓を羊皮紙色に寄せ、魚影・？・未発見札をセピア調へ変更 | P2収集導線としてfreeze |
-| 右詳細魚標本窓 | 1 | 大魚clip内に淡い測定罫線と紙面washを追加 | P2魚表示としてfreeze |
+| 右詳細魚標本窓 | 2 | 大魚clip内の下辺に淡い採寸目盛りを追加 | P2魚表示としてfreeze |
 | 右詳細高解像度魚フレーム化 | 1 | 右詳細の大魚ソースを `card_portrait` から `showcase_sheet` frame0 mirror へ変更 | P2魚表示としてfreeze |
 | 左一覧ヘッダー台帳ラベル化 | 1 | 操作説明文を記録注記へ置換し、紙面wash・木札・下罫線を追加 | P2台帳文法としてfreeze |
 | 左一覧魚写真枠収まり修正 | 2 | 初回は写真枠分離で魚が小さすぎたため、一覧専用tight cropを追加して魚を枠内で自然な大きさに戻した | P1/P2写真収まりとしてfreeze |
@@ -64,7 +64,7 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
 ## 4. 暫定判定・再検証TODO
 
-なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-03_collection_progress_before_after.png` と `docs/qa/evidence/fish_book/2026-07-03_collection_progress_compare.png` に保存済み。
+なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-03_detail_specimen_ruler_before_after.png` と `docs/qa/evidence/fish_book/2026-07-03_detail_specimen_ruler_compare.png` に保存済み。
 
 ## 5. 現在の残ギャップ
 
@@ -77,4 +77,4 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
 ## 7. 判断ログ（直近パスのみ）
 
-- 2026-07-03: v1.23 P2発見進捗バー化フェーズ。上部左「発見済み」表示内の小さな収集進捗線だけを対象に、`found / total` で伸縮する進捗fillを追加した。発見済みバー/タイトル/右ステータスバーの配置、台帳外周フレーム、中央綴じ目、左一覧カード、下部索引タブ、右詳細、背景スクリムはfreeze値のまま維持。`./tools/fish_book_visual_qa.sh` の実スクショで、発見済み表示が単なる数値ではなく収集進捗として読め、発見数文字の見切れ・進捗線との重なり・ヘッダー内の混線も再発しなかったため採用。判断根拠: `docs/qa/evidence/fish_book/2026-07-03_collection_progress_before_after.png`、`docs/qa/evidence/fish_book/2026-07-03_collection_progress_compare.png`。検証: `git diff --check` exit 0、`fish_book_smoke: ok`、`./tools/validate_project.sh` exit 0（Godot終了時のObjectDB/resource警告あり）。
+- 2026-07-03: v1.24 P2右詳細魚標本窓の採寸目盛りフェーズ。右詳細ページの大魚clip内だけを対象に、下辺へ薄い採寸目盛りを追加した。魚PNGソース、右詳細clip座標、左一覧カード/写真ウェル/クロップ、ヘッダー、中央綴じ目、下部索引タブ、釣り場カード、文字サイズ採用値はfreeze値のまま維持。`./tools/fish_book_visual_qa.sh` の実スクショで、魚本体・釣果/最大サイズ行・レアリティバッジへの干渉がなく、右詳細の大魚が単なる貼り込み画像ではなく採寸された標本画として読めるため採用。判断根拠: `docs/qa/evidence/fish_book/2026-07-03_detail_specimen_ruler_before_after.png`、`docs/qa/evidence/fish_book/2026-07-03_detail_specimen_ruler_compare.png`。検証: `git diff --check` exit 0、`fish_book_smoke: ok`、`./tools/validate_project.sh` exit 0（Godot終了時のObjectDB/resource警告あり）。
