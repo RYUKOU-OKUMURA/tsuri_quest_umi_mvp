@@ -132,15 +132,22 @@ func _build_book_grid(root: Control) -> void:
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	left.add_child(frame)
 
-	var title := _book_label("魚の記録", 22, Color("#fff0aa"), true, 2, Color("#281607"))
+	var header_wash := _label_plate(_alpha(Palette.PARCHMENT_DEEP, 0.22))
+	_place_control(left, header_wash, 0.050, 0.040, 0.935, 0.100)
+	_add_rule(left, 0.065, 0.100, 0.920, _alpha(Palette.GOLD_DEEP, 0.24), 1.0)
+
+	var title_plate := _label_plate(_alpha(Palette.WOOD_DARK, 0.88))
+	_place_control(left, title_plate, 0.052, 0.036, 0.272, 0.102)
+
+	var title := _book_label("魚の記録", 22, Palette.TEXT_BONE, true, 2, Palette.TEXT_OUTLINE_LIGHT)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(left, title, 0.054, 0.035, 0.450, 0.105)
+	_place_control(left, title, 0.070, 0.035, 0.285, 0.105)
 
-	var hint := _book_label("カードを選ぶと詳しい記録を確認できます", 13, Color("#ead7aa"), false, 1, Color("#271708"))
+	var hint := _book_label("発見した魚の写し絵と釣果", 13, Palette.TEXT_BONE, false, 1, Palette.TEXT_OUTLINE_LIGHT)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(left, hint, 0.420, 0.044, 0.935, 0.102)
+	_place_control(left, hint, 0.330, 0.044, 0.920, 0.102)
 
 	var scroll := ScrollContainer.new()
 	scroll.name = "FishBookScroll"
