@@ -9,7 +9,7 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 | 項目 | 値 | 場所 | 理由・備考 |
 |---|---|---|---|
 | 右上ステータスバー | `PlayerStatusBar` のスロット配分を所持金優先 | `src/ui/components/`（PlayerStatusBar） | P1だった所持金省略の解消 |
-| 竿名表記 | 短縮形（`港の入門竿`→`入門竿`、`外海竿・青嵐`→`青嵐`） | データ表示側 | ステータスバー内の収まり |
+| 竿名表記 | 短縮形（`港の入門竿`→`入門竿`、`外海竿・青嵐`→`青嵐`、`カジキ竿・蒼槍`→`蒼槍`） | データ表示側 | ステータスバー内の収まり |
 | 発見進捗バー | 上部左の発見済みバー内 0.054/0.674–0.244/0.758 に `StyleBoxFlat` の進捗trackを配置し、`found / total` に応じて `Palette.GOLD_BRIGHT` alpha 0.78 のfillを伸縮。track は `Palette.TEXT_OUTLINE_DARK` alpha 0.48、border は `Palette.GOLD_DEEP` alpha 0.52、角丸3px | `src/ui/fish_book_screen.gd` | 発見済み表示を単なる数値ではなく、魚図鑑の収集進捗として読ませる |
 | カード内レアリティチップ | 幅 0.060–0.438 | `src/ui/fish_book_screen.gd` | `アンコモン` の省略解消 |
 | 長い魚名 | カード/詳細で段階的にフォントサイズを落とす | 同上 | 省略ではなく縮小で収める採用値 |

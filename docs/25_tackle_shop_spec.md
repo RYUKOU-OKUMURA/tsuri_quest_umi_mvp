@@ -10,8 +10,8 @@ Date: 2026-07-03
 
 参照画像:
 
-- `reference/09_tackle_shop_rod_mockup.png`: 竿タブ
-- `reference/09_tackle_shop_gear_mockup.png`: 仕掛けタブ
+- `reference/09_tackle_shop_rod_mockup.png`: 店主なし・竿5本タブ
+- `reference/09_tackle_shop_gear_mockup.png`: 店主なし・仕掛け6種タブ
 
 2枚は同一画面のタブ違いとして扱う。複数画面を1枚に詰めた合成モックではない。
 
@@ -19,10 +19,10 @@ Date: 2026-07-03
 
 | 領域 | 役割 |
 |---|---|
-| 店内背景 | 木製の店内、棚、店主、釣具の密度で釣具店らしさを作る |
+| 店内backplate | 木製の店内、棚、商品陳列、空プレート、詳細紙面を一体素材として持ち、店主なしで釣具店らしさを作る |
 | 上部 | 画面タイトル、Lv/装備竿/所持金、装備中の仕掛け |
 | 商品タブ | 竿 / 仕掛けを切り替える |
-| 商品カード一覧 | 竿3種または仕掛け6種をカードで表示し、選択対象を明確にする |
+| 商品カード一覧 | 竿5本または仕掛け6種をカードで表示し、選択対象を明確にする |
 | 詳細パネル | 選択商品の説明、性能、対応エサ、代表魚、購入/装備操作を集約する |
 | 下部メッセージ | 購入結果、資金不足、解放条件などの結果文を1箇所に表示する |
 
@@ -32,6 +32,7 @@ Date: 2026-07-03
 - 船の購入導線。船は港の船着き場で扱う。
 - 商品一覧以外のおすすめランキングや広告枠。
 - 参照画像に見える文字をそのままPNG化した看板。
+- 店主キャラクター。商品陳列を優先し、店主は置かない。
 
 ## 操作とデータ
 
@@ -44,37 +45,32 @@ Date: 2026-07-03
 
 | 対象 | PNG | runtime |
 |---|---|---|
-| 店内背景 | 背景、棚、店主、カウンター | 減光スクリム |
-| UI枠 | ヘッダー、看板、商品カード、詳細パネル、メッセージ枠、タブ枠 | 選択中の表示切替、ラベル、ボタンテキスト |
-| 商品 | 竿/仕掛け/エサカテゴリのアイコン | 商品名、価格、状態バッジ、性能値 |
+| 店内backplate | 背景、棚、カウンター、商品カード、詳細紙面、空プレート、装飾枠 | 選択中ハイライト、透明クリック領域 |
+| UI枠 | ヘッダー、商品タブ、詳細パネル、メッセージ枠、ボタン枠 | ラベル、ボタンテキスト、状態表示 |
+| 商品 | 竿5本/仕掛け6種の陳列絵、詳細用の装飾絵、エサカテゴリのアイコン | 商品名、価格、状態バッジ、性能値 |
 | 状態 | なし | 所持金、装備中、所持、Lv不足、資金不足 |
 
 ## 採用しない参照要素
 
 | 要素 | 理由 |
 |---|---|
-| 日本語入りの看板・商品札 | docs/19のテキスト焼き込み禁止に反するためruntime描画にする |
+| 日本語入りの商品札・価格・状態値 | docs/19のテキスト焼き込み禁止に反するためruntime描画にする |
 | エサ在庫販売に見える表現 | P2のスコープ外。エサは仕掛けの対応カテゴリとして表示する |
-| 商品カードごとの過剰な金縁装飾 | 行/カード階層の金縁過多を避け、選択中のみ強調する |
+| 店主キャラクター | 商品陳列を主役にするため、正規リファレンスから外す |
+| 商品カードごとのruntime金縁フレーム | backplate側に紙面と装飾を持たせ、選択中のみ薄いruntimeハイライトを重ねる |
 
 ## 素材構成
 
-- `assets/showcase/tackle_shop/shop_bg.png`: 店内背景。
-- `assets/showcase/tackle_shop/shop_header_frame.png`: 上部ヘッダー枠。
-- `assets/showcase/tackle_shop/shop_title_sign.png`: タイトル看板。文字なし。
-- `assets/showcase/tackle_shop/shop_detail_frame.png`: 詳細パネル枠。
-- `assets/showcase/tackle_shop/shop_notice_frame.png`: 下部メッセージ枠。
-- `assets/showcase/tackle_shop/shop_card_frame.png`: 商品カード通常枠。
-- `assets/showcase/tackle_shop/shop_card_selected_frame.png`: 商品カード選択枠。
-- `assets/showcase/tackle_shop/shop_tab_frame.png`: 非選択タブ枠。
-- `assets/showcase/tackle_shop/shop_tab_active_frame.png`: 選択タブ枠。
-- `assets/showcase/tackle_shop/shop_item_icon_sheet.png`: 竿3種+仕掛け6種のアイコンシート。
+- `assets/showcase/tackle_shop/shop_rod_backplate.png`: 竿5本タブの店内・商品陳列・空プレート・詳細紙面。
+- `assets/showcase/tackle_shop/shop_rig_backplate.png`: 仕掛け6種タブの店内・商品陳列・空プレート・詳細紙面。
+- `assets/showcase/tackle_shop/shop_item_icon_sheet.png`: 竿5本+仕掛け6種のruntime詳細/小表示用アイコンシート。
 - `assets/showcase/tackle_shop/shop_bait_icon_sheet.png`: 対応エサカテゴリのアイコンシート。
 
 ## v1完了条件
 
 - 竿タブと仕掛けタブの実スクショが参照画像と横並び比較できる。
 - ItemListベースの旧構成が残っていない。
+- 竿タブは5本、仕掛けタブは6種の商品カードを透明クリック領域で操作できる。
 - 通常preview seedで日本語の省略・見切れ・重なりがない。
 - 購入、装備、資金不足、Lv不足、港戻りがsmokeで通る。
 - `tools/audit_showcase_asset_refs.py` と `./tools/validate_project.sh` が通る。

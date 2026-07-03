@@ -1119,6 +1119,14 @@ const RECIPES: Dictionary = {
 	},
 }
 
+const ROD_ORDER: Array[String] = [
+	"starter",
+	"iso",
+	"offshore",
+	"big_game",
+	"marlin",
+]
+
 const RODS: Dictionary = {
 	"starter":
 	{
@@ -1148,7 +1156,27 @@ const RODS: Dictionary = {
 		"reel_multiplier": 1.30,
 		"line_limit_bonus": 0.10,
 		"technique_bonus": 2,
-		"description": "ぬしとの長期戦を想定した上位竿。",
+		"description": "外海の青物や回遊魚に備える上位竿。",
+	},
+	"big_game":
+	{
+		"id": "big_game",
+		"name": "大物竿・剛潮",
+		"price": 5200,
+		"reel_multiplier": 1.48,
+		"line_limit_bonus": 0.18,
+		"technique_bonus": 3,
+		"description": "クエやヒラマサ級の重い引きに耐える剛竿。",
+	},
+	"marlin":
+	{
+		"id": "marlin",
+		"name": "カジキ竿・蒼槍",
+		"price": 9000,
+		"reel_multiplier": 1.68,
+		"line_limit_bonus": 0.30,
+		"technique_bonus": 4,
+		"description": "外洋の超大型魚を追う終盤用タックル。",
 	},
 }
 
@@ -1358,8 +1386,9 @@ func is_fishing_spot_unlocked(spot_id: String, player_level: int) -> bool:
 
 func get_all_rod_ids() -> Array[String]:
 	var ids: Array[String] = []
-	for rod_id in RODS.keys():
-		ids.append(String(rod_id))
+	for rod_id in ROD_ORDER:
+		if RODS.has(rod_id):
+			ids.append(rod_id)
 	return ids
 
 

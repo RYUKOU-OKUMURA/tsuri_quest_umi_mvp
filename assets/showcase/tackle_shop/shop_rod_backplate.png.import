@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ch61i14dxunkf"
-path="res://.godot/imported/shop_card_frame.png-300f468fa9ea8e126c8ab07d6cf6255d.ctex"
+uid="uid://dcl845khqtceq"
+path="res://.godot/imported/shop_rod_backplate.png-b7694628690efe0d2268e21fe2ec1cf3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/tackle_shop/shop_card_frame.png"
-dest_files=["res://.godot/imported/shop_card_frame.png-300f468fa9ea8e126c8ab07d6cf6255d.ctex"]
+source_file="res://assets/showcase/tackle_shop/shop_rod_backplate.png"
+dest_files=["res://.godot/imported/shop_rod_backplate.png-b7694628690efe0d2268e21fe2ec1cf3.ctex"]
 
 [params]
 

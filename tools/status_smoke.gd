@@ -29,6 +29,7 @@ func _ready() -> void:
 	_expect(_find_named(_screen, "StatusCompletionValue") != null, "completion value label should be present")
 	_expect(_find_named(_screen, "StatusRecentFish_aji") != null, "recent fish cards should be present")
 	_expect(_find_named(_screen, "StatusCoolerSlot_0") != null, "cooler item slots should be present")
+	_expect(_find_label_containing(_screen, "カジキ竿・蒼槍（装備中）") != null, "equipped marlin rod should be visible in owned rods")
 	_expect(_find_named(_screen, "FishBookGrid") == null, "old fish book grid must not remain in status")
 	_expect(_buttons_with_meta(_screen, "fish_book_card").is_empty(), "status must not contain full fish book cards")
 
@@ -53,8 +54,8 @@ func _seed_progress() -> void:
 	PlayerProgress.level = 4
 	PlayerProgress.exp = 52
 	PlayerProgress.money = 12840
-	PlayerProgress.equipped_rod_id = "iso"
-	PlayerProgress.owned_rods = ["starter", "iso"]
+	PlayerProgress.equipped_rod_id = "marlin"
+	PlayerProgress.owned_rods = ["starter", "iso", "offshore", "big_game", "marlin"]
 	PlayerProgress.owned_boats = ["skiff"]
 	PlayerProgress.caught_counts = {
 		"aji": 12,
@@ -110,6 +111,16 @@ func _find_named(root: Node, node_name: String) -> Node:
 		return root
 	for child in root.get_children():
 		var found := _find_named(child, node_name)
+		if found != null:
+			return found
+	return null
+
+
+func _find_label_containing(root: Node, text: String) -> Label:
+	if root is Label and String((root as Label).text).contains(text):
+		return root as Label
+	for child in root.get_children():
+		var found := _find_label_containing(child, text)
 		if found != null:
 			return found
 	return null

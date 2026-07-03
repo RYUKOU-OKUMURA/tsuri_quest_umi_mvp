@@ -476,7 +476,12 @@ func _add_cooler_grid(parent: Control) -> void:
 
 
 func _add_owned_rods(parent: Control) -> void:
-	var rods := PlayerProgress.owned_rods
+	var rods: Array[String] = []
+	if PlayerProgress.equipped_rod_id in PlayerProgress.owned_rods:
+		rods.append(PlayerProgress.equipped_rod_id)
+	for rod_id in PlayerProgress.owned_rods:
+		if rod_id not in rods:
+			rods.append(rod_id)
 	if rods.is_empty():
 		var empty := _status_label("まだありません", 14, Palette.TEXT_BODY, false)
 		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

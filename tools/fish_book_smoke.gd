@@ -18,7 +18,7 @@ func _ready() -> void:
 	_expect(_screen._detail_name_label != null, "fish detail name label should be present")
 	_expect(_screen._detail_spots != null, "fish detail spot strip should be present")
 	_expect(_screen._found_label.text.contains("4/"), "found count should reflect caught fish")
-	_expect(_screen._player_status_bar._status_values()[1] == "青嵐", "status bar should shorten long rod names")
+	_expect(_screen._player_status_bar._status_values()[1] == "蒼槍", "status bar should shorten long rod names")
 	_expect(_screen._player_status_bar._status_values()[2] == "123,456 G", "status bar should format long money values")
 	_expect(_screen._selected_fish_id == "aji", "first discovered fish should be selected")
 	_expect(_screen._detail_name_label.text == "アジ", "discovered detail should show fish name")
@@ -65,7 +65,7 @@ func _ready() -> void:
 func _seed_progress() -> void:
 	PlayerProgress.level = 4
 	PlayerProgress.money = 123456
-	PlayerProgress.equipped_rod_id = "offshore"
+	PlayerProgress.equipped_rod_id = "marlin"
 	PlayerProgress.caught_counts = {
 		"aji": 12,
 		"saba": 8,

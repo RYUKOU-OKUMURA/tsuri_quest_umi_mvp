@@ -400,12 +400,14 @@ func _apply_save_data(data: Dictionary) -> void:
 	owned_rods = []
 	var loaded_rods = data.get("owned_rods", ["starter"])
 	if typeof(loaded_rods) == TYPE_ARRAY:
-		for rod_id in loaded_rods:
-			owned_rods.append(String(rod_id))
+		for rod_id_variant in loaded_rods:
+			var rod_id := String(rod_id_variant)
+			if not GameData.get_rod(rod_id).is_empty() and rod_id not in owned_rods:
+				owned_rods.append(rod_id)
 	if "starter" not in owned_rods:
 		owned_rods.push_front("starter")
 	equipped_rod_id = String(data.get("equipped_rod_id", "starter"))
-	if equipped_rod_id not in owned_rods:
+	if equipped_rod_id not in owned_rods or GameData.get_rod(equipped_rod_id).is_empty():
 		equipped_rod_id = "starter"
 	owned_rigs = []
 	var loaded_rigs = data.get("owned_rigs", [GameData.DEFAULT_RIG_ID])

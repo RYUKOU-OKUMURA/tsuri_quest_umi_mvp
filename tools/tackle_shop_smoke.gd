@@ -21,6 +21,8 @@ func _ready() -> void:
 	_expect(_screen._return_button != null, "return button should be present")
 	_expect(_find_item_lists(_screen).is_empty(), "old ItemList must not remain")
 	_expect(_card_buttons(_screen, "rod").size() == GameData.get_all_rod_ids().size(), "rod cards should match rod data")
+	_expect(_card_button(_screen, "rod", "big_game") != null, "big_game rod card should be present")
+	_expect(_card_button(_screen, "rod", "marlin") != null, "marlin rod card should be present")
 	_expect(_card_buttons(_screen, "rig").is_empty(), "rig cards should not render while rod tab is active")
 
 	_screen._select_item("iso")
@@ -32,6 +34,22 @@ func _ready() -> void:
 	_expect(PlayerProgress.equipped_rod_id == "iso", "purchased rod should be equipped")
 	_expect(PlayerProgress.money == 150, "rod purchase should subtract money")
 
+	PlayerProgress.money = 10000
+	_screen._select_item("marlin")
+	await get_tree().process_frame
+	_expect(not _screen._action_button.disabled, "marlin rod should be purchasable when affordable")
+	_screen._action_button.pressed.emit()
+	_expect("marlin" in PlayerProgress.owned_rods, "marlin rod should be owned after purchase")
+	_expect(PlayerProgress.equipped_rod_id == "marlin", "marlin rod should equip after purchase")
+	_expect(PlayerProgress.money == 1000, "marlin purchase should subtract money")
+
+	PlayerProgress.money = 3000
+	_screen._select_item("big_game")
+	await get_tree().process_frame
+	_expect(_screen._action_button.disabled, "unaffordable big_game rod should disable action")
+	_expect(_screen._detail_status_label.text.contains("所持金"), "unaffordable rod should explain money shortage")
+
+	PlayerProgress.money = 150
 	_screen._set_shop_mode("rig")
 	await get_tree().process_frame
 	_expect(_card_buttons(_screen, "rig").size() == GameData.get_all_rig_ids().size(), "rig cards should match rig data")
@@ -98,6 +116,13 @@ func _card_buttons(root: Node, mode: String) -> Array[Button]:
 	var buttons: Array[Button] = []
 	_collect_card_buttons(root, mode, buttons)
 	return buttons
+
+
+func _card_button(root: Node, mode: String, item_id: String) -> Button:
+	for button in _card_buttons(root, mode):
+		if String(button.get_meta("shop_item_id", "")) == item_id:
+			return button
+	return null
 
 
 func _collect_card_buttons(node: Node, mode: String, buttons: Array[Button]) -> void:

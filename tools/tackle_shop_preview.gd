@@ -25,9 +25,9 @@ func _ready() -> void:
 func _seed_progress() -> void:
 	PlayerProgress.level = 3
 	PlayerProgress.exp = 42
-	PlayerProgress.money = 1800
-	PlayerProgress.owned_rods = ["starter", "iso"]
-	PlayerProgress.equipped_rod_id = "iso"
+	PlayerProgress.money = 5400
+	PlayerProgress.owned_rods = ["starter", "iso", "offshore"]
+	PlayerProgress.equipped_rod_id = "offshore"
 	PlayerProgress.owned_rigs = [GameData.DEFAULT_RIG_ID, "uki", "chokusen"]
 	PlayerProgress.equipped_rig_id = "chokusen"
 	PlayerProgress.owned_boats = []
@@ -61,7 +61,7 @@ func _capture(mode: String, out_path: String) -> void:
 		screen._set_shop_mode("rig")
 		screen._select_item("jigging")
 	else:
-		screen._select_item("offshore")
+		screen._select_item("marlin")
 	await get_tree().process_frame
 	await get_tree().create_timer(0.35).timeout
 
