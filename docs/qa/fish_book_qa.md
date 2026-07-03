@@ -1,6 +1,6 @@
 # 魚図鑑画面 QA判断ログ
 
-最終更新: 2026-07-03 / 状態: **v1.25 P2右詳細釣果記録欄合格・freeze中**
+最終更新: 2026-07-03 / 状態: **v1.26 P2左一覧選択ブックマーク合格・freeze中**
 参照画像: `reference/07_fish_book_mockup.png`
 QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
@@ -23,6 +23,7 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 | 左一覧カード紙面ベース | カード枠の内側 0.038/0.040–0.962/0.958 に `StyleBoxFlat` の紙面ベースを配置。発見済みは `Palette.PARCHMENT` alpha 0.76、選択中は alpha 0.84、未発見は `Palette.PARCHMENT_DEEP` alpha 0.50、border は `Palette.WOOD_DARK` alpha 0.24/0.30、1px、角丸2px | `src/ui/fish_book_screen.gd` | カード中央に暗色台帳地が透ける状態を抑え、魚写真・名前・釣果を一枚の紙カードとして読ませる |
 | 左一覧密度/ウェル | 下地色 `Palette.WOOD_DARK` alpha 0.78、スクロール領域 0.047/0.105–0.955/0.970、グリッド間隔 h=6/v=3 | `src/ui/fish_book_screen.gd` | 左一覧を冷たい暗色パネルから木製台帳内の収集面へ寄せる |
 | 左一覧ヘッダー台帳ラベル | 左一覧上部に `Palette.PARCHMENT_DEEP` alpha 0.22 の紙面wash 0.050/0.040–0.935/0.100、`Palette.WOOD_DARK` alpha 0.88 の木札 0.052/0.036–0.272/0.102、下罫線 `Palette.GOLD_DEEP` alpha 0.24 を配置。右側注記は操作説明ではなく `発見した魚の写し絵と釣果` | `src/ui/fish_book_screen.gd` | 左一覧上部を汎用UI説明ではなく、台帳内の記録ラベルとして読ませる |
+| 左一覧選択ブックマーク | 選択中カードだけに左端 0.036/0.205–0.064/0.760 のブックマークPanelを重ねる。`Palette.GOLD_DEEP` alpha 0.76、border `Palette.WOOD_DARK` alpha 0.72、glint は 0.044/0.230–0.050/0.720 に `Palette.GOLD_BRIGHT` alpha 0.38。写真ウェル・No.・魚名・レアリティ・統計行には重ねない | `src/ui/fish_book_screen.gd` | 左一覧で選んだカードが右ページに開かれている状態を、台帳のしおりとして読ませる |
 | 左一覧写真ウェル | 左カードの写真下地を `StyleBoxFlat` の紙面ウェル化。発見済みは `Palette.PARCHMENT` alpha 0.78、未発見は `Palette.PARCHMENT_DEEP` alpha 0.58、border は `Palette.WOOD_DARK` alpha 0.42/0.34、1px、角丸2px。座標は 0.070/0.190–0.930/0.615 | `src/ui/fish_book_screen.gd` | 魚写真が同じ矩形枠に入って並んでいる状態を明確にする |
 | 魚ポートレート表示なじませ | 発見済み魚に紙色tint `Color(1.0, 0.965, 0.880, 1.0)`、左カード影 alpha 0.16 / offset 0.014,0.036、右詳細影 alpha 0.20 / offset 0.012,0.036。未発見シルエットには影を追加しない | `src/ui/fish_book_screen.gd` | 魚PNG本体を変えず、紙面へ貼っただけに見える浮きを抑える |
 | 左カード内部再設計 | カード最小サイズ 204x106、魚名 10/12/14/16px段階、No. 12px、写真下地 0.070/0.190–0.930/0.615、ポートレートclip 0.080/0.198–0.920/0.602、レアリティ 0.060/0.610–0.438/0.765、統計行 0.070/0.765–0.930/0.945、統計文字 12px | `src/ui/fish_book_screen.gd` | 左一覧で4段目まで実用表示しつつ、魚写真をカード内の枠へ揃え、魚名・レアリティ・釣果・最大サイズを読ませる |
@@ -57,6 +58,7 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 | 右詳細魚標本窓 | 2 | 大魚clip内の下辺に淡い採寸目盛りを追加 | P2魚表示としてfreeze |
 | 右詳細高解像度魚フレーム化 | 1 | 右詳細の大魚ソースを `card_portrait` から `showcase_sheet` frame0 mirror へ変更 | P2魚表示としてfreeze |
 | 左一覧ヘッダー台帳ラベル化 | 1 | 操作説明文を記録注記へ置換し、紙面wash・木札・下罫線を追加 | P2台帳文法としてfreeze |
+| 左一覧選択ブックマーク | 1 | 選択中カードの左端に小さなしおり風マーカーを追加 | P2収集導線としてfreeze |
 | 左一覧魚写真枠収まり修正 | 2 | 初回は写真枠分離で魚が小さすぎたため、一覧専用tight cropを追加して魚を枠内で自然な大きさに戻した | P1/P2写真収まりとしてfreeze |
 | 左一覧写真ウェル明確化 | 1 | 写真下地を線付きの紙面ウェルへ変更し、全カードで同じ写真枠として見せる | P1/P2写真収まりとしてfreeze |
 | 左一覧カード紙面ベース化 | 1 | カード枠内側へ紙面ベースを追加し、暗色台帳地がカード中央に透ける状態を解消 | P2台帳感としてfreeze |
@@ -66,7 +68,7 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
 ## 4. 暫定判定・再検証TODO
 
-なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-03_detail_stat_slips_before_after.png` と `docs/qa/evidence/fish_book/2026-07-03_detail_stat_slips_compare.png` に保存済み。
+なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-03_selected_card_bookmark_before_after.png` と `docs/qa/evidence/fish_book/2026-07-03_selected_card_bookmark_compare.png` に保存済み。
 
 ## 5. 現在の残ギャップ
 
@@ -79,4 +81,4 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
 ## 7. 判断ログ（直近パスのみ）
 
-- 2026-07-03: v1.25 P2右詳細釣果記録欄フェーズ。右詳細ページの「釣果」「最大」表示だけを対象に、木札ラベル付きの紙面スリップへ分離した。魚PNGソース、右詳細魚clip座標、左一覧カード/写真ウェル/クロップ、ヘッダー、中央綴じ目、下部索引タブ、釣り場カード、詳細行（生息地/好物/行動）の採用値はfreeze値のまま維持。`./tools/fish_book_visual_qa.sh` の実スクショで、値の見切れ・詳細行との重なりがなく、収集成果が羊皮紙ページ上の記録欄として読めるため採用。判断根拠: `docs/qa/evidence/fish_book/2026-07-03_detail_stat_slips_before_after.png`、`docs/qa/evidence/fish_book/2026-07-03_detail_stat_slips_compare.png`。検証: `git diff --check` exit 0、`fish_book_smoke: ok`、`./tools/validate_project.sh` exit 0（Godot終了時のObjectDB/resource警告あり）。
+- 2026-07-03: v1.26 P2左一覧選択ブックマークフェーズ。左一覧の選択中カードだけを対象に、カード左端へ小さなしおり風マーカーを追加した。左一覧カード/写真ウェル/魚クロップ/カードサイズ、右詳細ページ、ヘッダー、中央綴じ目、下部索引タブ、釣り場カード、詳細行の採用値はfreeze値のまま維持。`./tools/fish_book_visual_qa.sh` の実スクショで、マーカーが魚写真・No.・魚名・レアリティ・釣果行へ干渉せず、左一覧で選んだ記録が右ページに開かれている状態として読めるため採用。判断根拠: `docs/qa/evidence/fish_book/2026-07-03_selected_card_bookmark_before_after.png`、`docs/qa/evidence/fish_book/2026-07-03_selected_card_bookmark_compare.png`。検証: `git diff --check` exit 0、`fish_book_smoke: ok`、`./tools/validate_project.sh` exit 0（Godot終了時のObjectDB/resource警告あり）。

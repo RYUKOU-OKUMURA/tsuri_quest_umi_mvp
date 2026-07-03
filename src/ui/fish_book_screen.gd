@@ -413,6 +413,15 @@ func _make_fish_card(fish: Dictionary) -> Button:
 	card_body.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(button, card_body, 0.038, 0.040, 0.962, 0.958)
 
+	if selected:
+		var bookmark := Panel.new()
+		bookmark.add_theme_stylebox_override("panel", _selected_card_bookmark_style())
+		bookmark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_place_control(button, bookmark, 0.036, 0.205, 0.064, 0.760)
+		var bookmark_glint := _label_plate(_alpha(Palette.GOLD_BRIGHT, 0.38))
+		bookmark_glint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_place_control(button, bookmark_glint, 0.044, 0.230, 0.050, 0.720)
+
 	var portrait_field := Panel.new()
 	portrait_field.add_theme_stylebox_override("panel", _card_portrait_field_style(discovered))
 	portrait_field.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1167,6 +1176,18 @@ func _card_portrait_field_style(discovered: bool) -> StyleBoxFlat:
 	style.content_margin_top = 2.0
 	style.content_margin_right = 2.0
 	style.content_margin_bottom = 2.0
+	return style
+
+
+func _selected_card_bookmark_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = _alpha(Palette.GOLD_DEEP, 0.76)
+	style.border_color = _alpha(Palette.WOOD_DARK, 0.72)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(2)
+	style.shadow_color = _alpha(Palette.TEXT_OUTLINE_DARK, 0.18)
+	style.shadow_size = 2
+	style.shadow_offset = Vector2(1.0, 1.0)
 	return style
 
 
