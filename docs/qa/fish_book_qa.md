@@ -1,6 +1,6 @@
 # 魚図鑑画面 QA判断ログ
 
-最終更新: 2026-07-03 / 状態: **v1.20 P2左一覧カード紙面ベース化合格・freeze中**
+最終更新: 2026-07-03 / 状態: **v1.21 P2中央綴じ目合格・freeze中**
 参照画像: `reference/07_fish_book_mockup.png`
 QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
@@ -17,6 +17,7 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 | 内側ウェル | 0.031/0.135–0.969/0.970 | 同上 | 同上 |
 | 魚ポートレート表示 | 透明余白をalpha bboxで実表示クロップ。左カードは一覧専用tight crop（pad x=0.012/y=0.025、alpha threshold=0.070、min pad=2）を使い、写真下地 0.070/0.190–0.930/0.615、clip 0.080/0.198–0.920/0.602 に収める。右詳細は clip 0.095/0.175–0.915/0.490 | `src/ui/fish_book_screen.gd` | 魚画像がカード名・レアリティチップ・統計行へ食い込むP1を解消し、一覧内で同じ写真枠に揃える |
 | 台帳外周フレーム | `fish_book_book_frame.png` を 0.018/0.018–0.982/0.982 に配置。ヘッダー/フッターの全面濃紺フレームは外し、ステータス/ボタンを木製レール上に載せる | `assets/showcase/fish_book/`, `src/ui/fish_book_screen.gd` | 画面全体を分離パネル群ではなく一冊の木製台帳として読ませる |
+| 中央綴じ目 | 左一覧と右詳細の間に 0.586/0.150–0.616/0.885 の綴じ目レイヤーを配置。`Palette.WOOD_DARK` alpha 0.62 の革/木影、中央fold `Palette.TEXT_OUTLINE_DARK` alpha 0.42、左右に `Palette.GOLD_DEEP` alpha 0.24/0.16 の細線を入れる | `src/ui/fish_book_screen.gd` | 左右のパネルを別ウィンドウではなく、開いた一冊の台帳の左右ページとして読ませる |
 | カード/詳細紙面素材 | 通常/選択/未発見カードに `fish_book_card_frame.png` / `fish_book_card_selected_frame.png` / `fish_book_card_locked_frame.png`、右詳細下地に `fish_book_detail_paper.png` を使用。カード内のruntime文字領域へ焼き込み罫線を入れない | `assets/showcase/fish_book/`, `src/ui/fish_book_screen.gd` | 汎用カード・runtime塗り紙面から、魚図鑑専用の収集カード/羊皮紙ページへ寄せる |
 | 左一覧カード紙面ベース | カード枠の内側 0.038/0.040–0.962/0.958 に `StyleBoxFlat` の紙面ベースを配置。発見済みは `Palette.PARCHMENT` alpha 0.76、選択中は alpha 0.84、未発見は `Palette.PARCHMENT_DEEP` alpha 0.50、border は `Palette.WOOD_DARK` alpha 0.24/0.30、1px、角丸2px | `src/ui/fish_book_screen.gd` | カード中央に暗色台帳地が透ける状態を抑え、魚写真・名前・釣果を一枚の紙カードとして読ませる |
 | 左一覧密度/ウェル | 下地色 `Palette.WOOD_DARK` alpha 0.78、スクロール領域 0.047/0.105–0.955/0.970、グリッド間隔 h=6/v=3 | `src/ui/fish_book_screen.gd` | 左一覧を冷たい暗色パネルから木製台帳内の収集面へ寄せる |
@@ -55,10 +56,11 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 | 左一覧魚写真枠収まり修正 | 2 | 初回は写真枠分離で魚が小さすぎたため、一覧専用tight cropを追加して魚を枠内で自然な大きさに戻した | P1/P2写真収まりとしてfreeze |
 | 左一覧写真ウェル明確化 | 1 | 写真下地を線付きの紙面ウェルへ変更し、全カードで同じ写真枠として見せる | P1/P2写真収まりとしてfreeze |
 | 左一覧カード紙面ベース化 | 1 | カード枠内側へ紙面ベースを追加し、暗色台帳地がカード中央に透ける状態を解消 | P2台帳感としてfreeze |
+| 中央綴じ目 | 1 | 左右ページ間に細い背表紙影・中央fold・金細線を追加 | P2台帳感としてfreeze |
 
 ## 4. 暫定判定・再検証TODO
 
-なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-03_card_paper_base_before_after.png` と `docs/qa/evidence/fish_book/2026-07-03_card_paper_base_compare.png` に保存済み。
+なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-03_book_spine_before_after.png` と `docs/qa/evidence/fish_book/2026-07-03_book_spine_compare.png` に保存済み。
 
 ## 5. 現在の残ギャップ
 
@@ -71,4 +73,4 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
 ## 7. 判断ログ（直近パスのみ）
 
-- 2026-07-03: v1.20 P2左一覧カード紙面ベース化フェーズ。左一覧カード枠の内側だけを対象に、薄い羊皮紙ベースを追加した。カード最小サイズ、3列グリッド、スクロール領域、写真下地座標、魚ポートレートclip、一覧専用tight crop、レアリティチップ幅、統計行、カード枠PNG、右詳細、フィルタ/戻るボタン、背景スクリムはfreeze値のまま維持。`./tools/fish_book_visual_qa.sh` の実スクショで、左一覧カード中央の暗色抜けが減り、魚写真・名前・釣果が一枚の紙カードとして読め、文字やチップへの重なりも再発しなかったため採用。判断根拠: `docs/qa/evidence/fish_book/2026-07-03_card_paper_base_before_after.png`、`docs/qa/evidence/fish_book/2026-07-03_card_paper_base_compare.png`。検証: `git diff --check` exit 0、`fish_book_smoke: ok`、`./tools/validate_project.sh` exit 0（Godot終了時のObjectDB/resource警告あり）。
+- 2026-07-03: v1.21 P2中央綴じ目フェーズ。左一覧ページと右詳細ページの間だけを対象に、細い綴じ目/背表紙影を追加した。台帳外周フレーム、左一覧カード、カード最小サイズ、3列グリッド、スクロール領域、写真下地座標、魚ポートレートclip、一覧専用tight crop、右詳細の紙面/魚/行/釣り場カード、ヘッダー/フッター/フィルタ、背景スクリムはfreeze値のまま維持。`./tools/fish_book_visual_qa.sh` の実スクショで、左右ページが別ウィンドウではなく開いた一冊の台帳としてつながり、文字・魚・チップへの重なりも再発しなかったため採用。判断根拠: `docs/qa/evidence/fish_book/2026-07-03_book_spine_before_after.png`、`docs/qa/evidence/fish_book/2026-07-03_book_spine_compare.png`。検証: `git diff --check` exit 0、`fish_book_smoke: ok`、`./tools/validate_project.sh` exit 0（Godot終了時のObjectDB/resource警告あり）。

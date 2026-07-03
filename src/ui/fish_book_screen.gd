@@ -71,6 +71,7 @@ func _build_screen() -> void:
 	add_child(root)
 
 	_build_book_backplate(root)
+	_build_book_spine(root)
 	_build_header(root)
 	_build_book_grid(root)
 	_build_detail_panel(root)
@@ -96,6 +97,32 @@ func _build_background() -> void:
 func _build_book_backplate(root: Control) -> void:
 	var frame := _texture_rect(FISH_BOOK_BOOK_FRAME_PATH)
 	_place_control(root, frame, 0.018, 0.018, 0.982, 0.982)
+
+
+func _build_book_spine(root: Control) -> void:
+	var spine := Control.new()
+	spine.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	spine.z_index = 4
+	_place_control(root, spine, 0.586, 0.150, 0.616, 0.885)
+
+	var outer_shadow := _label_plate(_alpha(Palette.TEXT_OUTLINE_DARK, 0.24))
+	_place_control(spine, outer_shadow, 0.0, 0.0, 1.0, 1.0)
+
+	var leather := _label_plate(_alpha(Palette.WOOD_DARK, 0.62))
+	_place_control(spine, leather, 0.160, 0.0, 0.840, 1.0)
+
+	var center_fold := _label_plate(_alpha(Palette.TEXT_OUTLINE_DARK, 0.42))
+	_place_control(spine, center_fold, 0.460, 0.0, 0.540, 1.0)
+
+	var left_highlight := _label_plate(_alpha(Palette.GOLD_DEEP, 0.24))
+	_place_control(spine, left_highlight, 0.180, 0.020, 0.220, 0.980)
+	var right_highlight := _label_plate(_alpha(Palette.GOLD_DEEP, 0.16))
+	_place_control(spine, right_highlight, 0.780, 0.020, 0.820, 0.980)
+
+	var page_shadow := _label_plate(_alpha(Palette.WOOD_DARK, 0.18))
+	_place_control(spine, page_shadow, 0.000, 0.0, 0.160, 1.0)
+	var page_light := _label_plate(_alpha(Palette.PARCHMENT_DEEP, 0.10))
+	_place_control(spine, page_light, 0.840, 0.0, 1.000, 1.0)
 
 
 func _build_header(root: Control) -> void:
