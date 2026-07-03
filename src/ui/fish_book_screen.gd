@@ -54,6 +54,7 @@ var _detail_behavior_label: Label
 var _detail_spots: Control
 var _detail_icon_sheet: Texture2D
 var _footer_icon_sheet: Texture2D
+var _portrait_crop_cache: Dictionary = {}
 
 
 func _build_screen() -> void:
@@ -214,7 +215,9 @@ func _build_detail_panel(root: Control) -> void:
 	_place_control(detail, portrait_paper, 0.078, 0.145, 0.935, 0.510)
 	_add_rule(detail, 0.095, 0.160, 0.915, Color("#7e5a2b", 0.45), 2.0)
 	_add_rule(detail, 0.095, 0.505, 0.915, Color("#7e5a2b", 0.35), 1.0)
-	_place_control(detail, _detail_portrait, 0.052, 0.112, 0.965, 0.515)
+	var detail_portrait_clip := _portrait_clip()
+	_place_control(detail, detail_portrait_clip, 0.095, 0.175, 0.915, 0.490)
+	_place_control(detail_portrait_clip, _detail_portrait, 0.0, 0.0, 1.0, 1.0)
 
 	_detail_count_label = _book_label("釣果 0匹", 27, Color("#2b1b0d"), true, 0)
 	_detail_count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -369,13 +372,15 @@ func _make_fish_card(fish: Dictionary) -> Button:
 	_place_control(button, name_label, 0.292, 0.048, 0.940, 0.185)
 
 	var portrait := TextureRect.new()
-	portrait.texture = _fish_portrait_texture(fish)
+	portrait.texture = _fish_portrait_texture(fish, true)
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	portrait.modulate = Color(0.05, 0.04, 0.03, 0.72) if not discovered else Color.WHITE
-	_place_control(button, portrait, 0.030, 0.120, 0.970, 0.742)
+	var portrait_clip := _portrait_clip()
+	_place_control(button, portrait_clip, 0.055, 0.165, 0.945, 0.670)
+	_place_control(portrait_clip, portrait, 0.0, 0.0, 1.0, 1.0)
 
 	if not discovered:
 		var mark := _book_label("？", 42, Color("#d7c08d"), true, 2, Color("#271708"))
@@ -452,7 +457,7 @@ func _refresh_detail() -> void:
 	_detail_rarity_label.text = rarity if discovered else "未発見"
 	_detail_rarity_label.add_theme_font_size_override("font_size", _rarity_font_size(_detail_rarity_label.text, true))
 	_detail_rarity_label.add_theme_color_override("font_color", _rarity_text_color(rarity) if discovered else Color("#e8d0a0"))
-	_detail_portrait.texture = _fish_portrait_texture(fish)
+	_detail_portrait.texture = _fish_portrait_texture(fish, true)
 	_detail_portrait.modulate = Color.WHITE if discovered else Color(0.04, 0.035, 0.03, 0.70)
 
 	var count := int(PlayerProgress.caught_counts.get(fish_id, 0))
@@ -587,12 +592,14 @@ func _is_discovered(fish_id: String) -> bool:
 	return int(PlayerProgress.caught_counts.get(fish_id, 0)) > 0
 
 
-func _fish_portrait_texture(fish: Dictionary) -> Texture2D:
+func _fish_portrait_texture(fish: Dictionary, crop_to_fish := false) -> Texture2D:
 	var path := FightFishAssets.card_portrait_path(fish)
 	var texture := _load_texture_if_exists(path)
-	if texture != null:
-		return texture
-	return UITextures.get_fish_icon(Color.from_string(String(fish.get("color", "#8aa7b5")), Color("#8aa7b5")))
+	if texture == null:
+		texture = UITextures.get_fish_icon(Color.from_string(String(fish.get("color", "#8aa7b5")), Color("#8aa7b5")))
+	if crop_to_fish:
+		return _cropped_portrait_texture(texture)
+	return texture
 
 
 func _refresh_filter_buttons() -> void:
@@ -768,6 +775,58 @@ func _atlas_icon(sheet: Texture2D, cell_size: float, icon_index: int) -> Texture
 
 func _load_texture_if_exists(path: String) -> Texture2D:
 	return ShowcaseAssetsScript.load_texture(path)
+
+
+func _portrait_clip() -> Control:
+	var clip := Control.new()
+	clip.clip_contents = true
+	clip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return clip
+
+
+func _cropped_portrait_texture(texture: Texture2D) -> Texture2D:
+	if texture == null:
+		return null
+	var key := texture.resource_path
+	if key.is_empty():
+		key = str(texture.get_instance_id())
+	if _portrait_crop_cache.has(key):
+		return _portrait_crop_cache[key]
+	var image := texture.get_image()
+	if image == null or image.is_empty():
+		_portrait_crop_cache[key] = texture
+		return texture
+	var width := image.get_width()
+	var height := image.get_height()
+	var min_x := width
+	var min_y := height
+	var max_x := -1
+	var max_y := -1
+	for y in range(height):
+		for x in range(width):
+			if image.get_pixel(x, y).a > 0.035:
+				min_x = mini(min_x, x)
+				min_y = mini(min_y, y)
+				max_x = maxi(max_x, x)
+				max_y = maxi(max_y, y)
+	if max_x < min_x or max_y < min_y:
+		_portrait_crop_cache[key] = texture
+		return texture
+	var fish_width := max_x - min_x + 1
+	var fish_height := max_y - min_y + 1
+	var pad_x := maxi(8, int(round(float(fish_width) * 0.035)))
+	var pad_y := maxi(8, int(round(float(fish_height) * 0.060)))
+	var region := Rect2(
+		maxi(0, min_x - pad_x),
+		maxi(0, min_y - pad_y),
+		mini(width, max_x + pad_x + 1) - maxi(0, min_x - pad_x),
+		mini(height, max_y + pad_y + 1) - maxi(0, min_y - pad_y)
+	)
+	var atlas := AtlasTexture.new()
+	atlas.atlas = texture
+	atlas.region = region
+	_portrait_crop_cache[key] = atlas
+	return atlas
 
 
 func _anchored_control(parent: Control, left: float, top: float, right: float, bottom: float) -> Control:
