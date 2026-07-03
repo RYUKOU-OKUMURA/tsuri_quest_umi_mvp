@@ -16,17 +16,10 @@ var _had_capture_error := false
 
 func _ready() -> void:
 	_seed_progress()
-	var vp := SubViewport.new()
-	vp.disable_3d = true
-	vp.transparent_bg = false
-	vp.render_target_clear_mode = SubViewport.CLEAR_MODE_ALWAYS
-	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	add_child(vp)
-
-	await _capture(vp, "rod", OUT_ROD, VW)
-	await _capture(vp, "rig", OUT_RIG, VW)
-	await _capture(vp, "rod", OUT_ROD_EXPANDED, VW_EXPANDED)
-	await _capture(vp, "rig", OUT_RIG_EXPANDED, VW_EXPANDED)
+	await _capture("rod", OUT_ROD, VW)
+	await _capture("rig", OUT_RIG, VW)
+	await _capture("rod", OUT_ROD_EXPANDED, VW_EXPANDED)
+	await _capture("rig", OUT_RIG_EXPANDED, VW_EXPANDED)
 
 	print("tackle_shop_preview:")
 	print(OUT_ROD)
@@ -56,12 +49,16 @@ func _seed_progress() -> void:
 	PlayerProgress.pending_buff = {}
 
 
-func _capture(vp: SubViewport, mode: String, out_path: String, viewport_size: Vector2i) -> void:
-	for child in vp.get_children():
-		child.queue_free()
-	await get_tree().process_frame
-
+func _capture(mode: String, out_path: String, viewport_size: Vector2i) -> void:
+	var vp := SubViewport.new()
+	vp.disable_3d = true
+	vp.transparent_bg = false
+	vp.render_target_clear_mode = SubViewport.CLEAR_MODE_ALWAYS
+	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	vp.size = viewport_size
+	add_child(vp)
+	await get_tree().process_frame
+	await get_tree().process_frame
 
 	var screen := ShopScreen.new()
 	screen.theme = ThemeFactory.build_theme()
@@ -71,13 +68,17 @@ func _capture(vp: SubViewport, mode: String, out_path: String, viewport_size: Ve
 
 	await get_tree().process_frame
 	await get_tree().process_frame
+	await get_tree().process_frame
 	if mode == "rig":
 		screen._set_shop_mode("rig")
 		screen._select_item("jigging")
 	else:
 		screen._select_item("marlin")
 	await get_tree().process_frame
-	await get_tree().create_timer(0.35).timeout
+	await get_tree().process_frame
+	await get_tree().create_timer(0.45).timeout
+	RenderingServer.force_draw()
+	await get_tree().process_frame
 
 	if FileAccess.file_exists(out_path):
 		DirAccess.remove_absolute(out_path)
@@ -87,4 +88,5 @@ func _capture(vp: SubViewport, mode: String, out_path: String, viewport_size: Ve
 		push_error("SubViewport get_image() returned null for %s" % out_path)
 	else:
 		img.save_png(out_path)
+	vp.queue_free()
 	await get_tree().process_frame

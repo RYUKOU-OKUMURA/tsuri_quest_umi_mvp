@@ -10,7 +10,7 @@ const BAIT_ICON_SHEET_PATH := "res://assets/showcase/tackle_shop/shop_bait_icon_
 
 const DESIGN_SIZE := Vector2(1280.0, 720.0)
 const ICON_CELL := 128.0
-const DETAIL_CELL := 256.0
+const DETAIL_CELL_SIZE := Vector2(384.0, 224.0)
 const BAIT_CELL := 64.0
 
 const TITLE_RECT := Rect2(92.0, 18.0, 198.0, 42.0)
@@ -24,7 +24,7 @@ const ROD_TAB_RECT := Rect2(82.0, 642.0, 96.0, 58.0)
 const RIG_TAB_RECT := Rect2(182.0, 642.0, 124.0, 58.0)
 const RESULT_RECT := Rect2(314.0, 646.0, 540.0, 42.0)
 const FOOTER_ACTION_RECT := Rect2(888.0, 568.0, 294.0, 48.0)
-const FOOTER_RETURN_RECT := Rect2(1108.0, 646.0, 160.0, 44.0)
+const FOOTER_RETURN_RECT := Rect2(958.0, 646.0, 196.0, 44.0)
 
 const CARD_SLOT_RECTS := [
 	Rect2(216.0, 88.0, 192.0, 250.0),
@@ -34,8 +34,8 @@ const CARD_SLOT_RECTS := [
 	Rect2(414.0, 344.0, 192.0, 250.0),
 	Rect2(612.0, 344.0, 192.0, 250.0),
 ]
-const CARD_NAME_OFFSET := Rect2(44.0, 24.0, 140.0, 26.0)
-const CARD_STATUS_OFFSET := Rect2(34.0, 204.0, 144.0, 28.0)
+const CARD_NAME_OFFSET := Rect2(36.0, 22.0, 156.0, 30.0)
+const CARD_STATUS_OFFSET := Rect2(34.0, 200.0, 150.0, 34.0)
 const CARD_SLOT_INDEX := {
 	"starter": 0,
 	"iso": 1,
@@ -53,7 +53,7 @@ const CARD_SLOT_INDEX := {
 const DETAIL_TITLE_RECT := Rect2(878.0, 106.0, 304.0, 30.0)
 const DETAIL_STATUS_RECT := Rect2(878.0, 140.0, 304.0, 24.0)
 const DETAIL_DESCRIPTION_RECT := Rect2(888.0, 166.0, 288.0, 62.0)
-const DETAIL_ART_RECT := Rect2(852.0, 206.0, 334.0, 168.0)
+const DETAIL_ART_RECT := Rect2(848.0, 196.0, 340.0, 184.0)
 const DETAIL_ICON_RECT := Rect2(856.0, 386.0, 40.0, 40.0)
 const DETAIL_STATS_RECT := Rect2(902.0, 380.0, 264.0, 98.0)
 const DETAIL_BAIT_RECT := Rect2(902.0, 486.0, 286.0, 34.0)
@@ -239,12 +239,15 @@ func _build_cards(parent: Control) -> void:
 
 func _build_detail_overlay(parent: Control) -> void:
 	_detail_title_label = _make_text("", 23, Palette.GOLD_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, 2)
+	_apply_label_font(_detail_title_label, "extra_bold")
 	_place_control(parent, _detail_title_label, DETAIL_TITLE_RECT)
 
 	_detail_status_label = _make_text("", 15, Palette.TEXT_BONE, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, 1)
+	_apply_label_font(_detail_status_label, "bold")
 	_place_control(parent, _detail_status_label, DETAIL_STATUS_RECT)
 
 	_detail_description_label = _make_text("", 15, Palette.TEXT_DARK, HORIZONTAL_ALIGNMENT_LEFT, VERTICAL_ALIGNMENT_TOP, 0)
+	_apply_label_font(_detail_description_label, "bold")
 	_detail_description_label.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
 	_place_control(parent, _detail_description_label, DETAIL_DESCRIPTION_RECT)
 
@@ -271,11 +274,13 @@ func _build_detail_overlay(parent: Control) -> void:
 
 	_detail_hint_label = _make_text("", 14, Palette.TEXT_DARK, HORIZONTAL_ALIGNMENT_LEFT, VERTICAL_ALIGNMENT_TOP, 0)
 	_detail_hint_label.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
+	_detail_hint_label.visible = false
 	_place_control(parent, _detail_hint_label, DETAIL_HINT_RECT)
 
 
 func _build_footer(parent: Control) -> void:
-	_result_label = _make_text(_result_message, 16, Palette.TEXT_BONE, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, 1)
+	_result_label = _make_text(_result_message, 18, Palette.TEXT_BONE, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, 2)
+	_apply_label_font(_result_label, "bold")
 	_place_control(parent, _result_label, RESULT_RECT)
 
 	_action_button = _make_transparent_button("購入する", _buy_or_equip)
@@ -286,7 +291,7 @@ func _build_footer(parent: Control) -> void:
 	_return_button = _make_transparent_button("港へ戻る", func() -> void: navigate("harbor"))
 	_return_button.name = "TackleShopReturnButton"
 	_return_button.set_meta("shop_nav", "harbor")
-	_return_button.add_theme_font_size_override("font_size", 14)
+	_return_button.add_theme_font_size_override("font_size", 16)
 	_place_control(parent, _return_button, FOOTER_RETURN_RECT)
 
 
@@ -376,11 +381,12 @@ func _add_card_labels(parent: Control, item_id: String) -> void:
 	var status := _item_status(item_id)
 	var name_rect := _card_name_rect(item_id)
 	var status_rect := _card_status_rect(item_id)
-	var name_size := 13 if _shop_mode == "rod" else 12
-	var status_size := 13
+	var name_size := 15
+	var status_size := 16
 
 	var title_text := String(data.get("name", ""))
-	var title := _make_text(title_text, _fit_card_text_size(title_text, name_size, 11, name_rect.size.x), Palette.TEXT_BONE, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, 1)
+	var title := _make_text(title_text, _fit_card_text_size(title_text, name_size, 13, name_rect.size.x), Palette.GOLD_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, 2)
+	_apply_label_font(title, "extra_bold")
 	title.name = "ShopCardName_%s" % item_id
 	title.set_meta("shop_item_id", item_id)
 	title.set_meta("shop_label_role", "name")
@@ -388,7 +394,8 @@ func _add_card_labels(parent: Control, item_id: String) -> void:
 	_place_control(parent, title, name_rect)
 
 	var status_text := String(status.get("card", ""))
-	var status_label := _make_text(status_text, _fit_card_text_size(status_text, status_size, 11, status_rect.size.x), _status_color(String(status.get("kind", ""))), HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, 1)
+	var status_label := _make_text(status_text, _fit_card_text_size(status_text, status_size, 13, status_rect.size.x), _status_color(String(status.get("kind", ""))), HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, 2)
+	_apply_label_font(status_label, "extra_bold")
 	status_label.name = "ShopCardStatus_%s" % item_id
 	status_label.set_meta("shop_item_id", item_id)
 	status_label.set_meta("shop_label_role", "status")
@@ -441,7 +448,7 @@ func _refresh_rod_detail(rod: Dictionary) -> void:
 	_add_stat_row("切断限界", "+%d%%" % line_percent)
 	_add_stat_row("技量補正", "+%d" % int(rod.get("technique_bonus", 0)))
 	_add_stat_row("価格", "%s G" % _format_money(int(rod.get("price", 0))))
-	_detail_hint_label.text = "強い引きでも判断の余裕が広がります。"
+	_detail_hint_label.text = ""
 
 
 func _refresh_rig_detail(rig: Dictionary) -> void:
@@ -453,11 +460,12 @@ func _refresh_rig_detail(rig: Dictionary) -> void:
 	for index in range(bait_types.size()):
 		var chip := _make_bait_chip(String(bait_types[index]))
 		_place_control(_detail_bait_box, chip, Rect2(float(index) * 96.0, 0.0, 88.0, 32.0))
-	_detail_hint_label.text = "対応エサ一致で反応が強くなります。"
+	_detail_hint_label.text = ""
 
 
 func _add_stat_row(caption: String, value: String) -> void:
-	var row_label := _make_text("%s：%s" % [caption, value], 14, Palette.TEXT_DARK, HORIZONTAL_ALIGNMENT_LEFT, VERTICAL_ALIGNMENT_CENTER, 0)
+	var row_label := _make_text("%s：%s" % [caption, value], 15, Palette.TEXT_DARK, HORIZONTAL_ALIGNMENT_LEFT, VERTICAL_ALIGNMENT_CENTER, 0)
+	_apply_label_font(row_label, "bold")
 	_place_control(_detail_stats_box, row_label, Rect2(0.0, float(_detail_stat_row_index) * 24.0, DETAIL_STATS_RECT.size.x, 22.0))
 	_detail_stat_row_index += 1
 
@@ -559,12 +567,21 @@ func _item_icon(item_id: String) -> Texture2D:
 
 
 func _detail_item_icon(item_id: String) -> Texture2D:
-	return ShowcaseAssetsScript.atlas_icon_from_texture(_detail_item_sheet, DETAIL_CELL, _item_icon_index(item_id))
+	return _atlas_texture(_detail_item_sheet, DETAIL_CELL_SIZE, _item_icon_index(item_id))
 
 
 func _bait_icon(bait: String) -> Texture2D:
 	var index := int(BAIT_ICON_INDEX.get(bait, 0))
 	return ShowcaseAssetsScript.atlas_icon_from_texture(_bait_icon_sheet, BAIT_CELL, index)
+
+
+func _atlas_texture(sheet: Texture2D, cell_size: Vector2, icon_index: int) -> Texture2D:
+	if sheet == null or icon_index < 0:
+		return null
+	var atlas := AtlasTexture.new()
+	atlas.atlas = sheet
+	atlas.region = Rect2(Vector2(cell_size.x * float(icon_index), 0.0), cell_size)
+	return atlas
 
 
 func _card_rect(item_id: String) -> Rect2:
@@ -590,9 +607,9 @@ func _offset_rect(base: Rect2, offset: Rect2) -> Rect2:
 
 func _fit_card_text_size(text: String, base_size: int, minimum_size: int, width: float) -> int:
 	var effective := base_size
-	if text.length() >= 8:
+	if text.length() >= 9:
 		effective -= 1
-	if text.length() >= 10:
+	if text.length() >= 12:
 		effective -= 1
 	if width < 132.0:
 		effective -= 1
@@ -668,6 +685,17 @@ func _chip_style() -> StyleBoxFlat:
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(4)
 	return style
+
+
+func _apply_label_font(label: Label, weight: String) -> void:
+	var fallback := get_theme_default_font()
+	match weight:
+		"extra_bold":
+			label.add_theme_font_override("font", GameFontsScript.extra_bold(fallback))
+		"bold":
+			label.add_theme_font_override("font", GameFontsScript.bold(fallback))
+		_:
+			label.add_theme_font_override("font", GameFontsScript.regular(fallback))
 
 
 func _make_text(

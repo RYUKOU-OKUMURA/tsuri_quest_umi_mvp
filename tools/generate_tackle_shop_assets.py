@@ -20,7 +20,8 @@ OUT = ROOT / "assets" / "showcase" / "tackle_shop"
 
 W, H = 1280, 720
 ITEM_CELL = 128
-DETAIL_CELL = 256
+DETAIL_CELL_W = 384
+DETAIL_CELL_H = 224
 BAIT_CELL = 64
 GOLD = (225, 189, 114)
 GOLD_DARK = (116, 82, 34)
@@ -52,11 +53,11 @@ DETAIL_TITLE_BOX = (884, 104, 1182, 160)
 ROD_TAB_BOX = (82, 642, 178, 700)
 RIG_TAB_BOX = (182, 642, 306, 700)
 PRODUCT_CROPS = [
-    (238, 140, 135, 145),  # starter
-    (438, 136, 132, 150),  # iso
-    (622, 134, 148, 152),  # offshore
-    (232, 390, 150, 145),  # big_game
-    (426, 390, 165, 145),  # marlin
+    (246, 142, 126, 142),  # starter
+    (442, 138, 126, 148),  # iso
+    (626, 136, 138, 150),  # offshore
+    (236, 392, 140, 142),  # big_game
+    (432, 392, 144, 142),  # marlin
     (198, 136, 160, 132),  # sabiki
     (416, 136, 145, 142),  # uki
     (608, 136, 160, 142),  # chokusen
@@ -145,24 +146,37 @@ def product_cutout(source: Image.Image, box: tuple[int, int, int, int]) -> Image
     return crop
 
 
-def product_sheet(rod: Image.Image, rig: Image.Image, cell_size: int, padding: int) -> Image.Image:
+def product_sheet(
+    rod: Image.Image,
+    rig: Image.Image,
+    cell_size: tuple[int, int],
+    padding: int,
+    allow_upscale: bool = False,
+) -> Image.Image:
+    cell_w, cell_h = cell_size
     sources = [rod] * 5 + [rig] * 6
-    sheet = Image.new("RGBA", (cell_size * len(PRODUCT_CROPS), cell_size), TRANSPARENT)
+    sheet = Image.new("RGBA", (cell_w * len(PRODUCT_CROPS), cell_h), TRANSPARENT)
     for index, (source, box) in enumerate(zip(sources, PRODUCT_CROPS)):
         crop = product_cutout(source, box)
-        crop.thumbnail((cell_size - padding * 2, cell_size - padding * 2), Image.Resampling.LANCZOS)
-        tile = Image.new("RGBA", (cell_size, cell_size), TRANSPARENT)
-        tile.alpha_composite(crop, ((cell_size - crop.width) // 2, (cell_size - crop.height) // 2))
-        sheet.alpha_composite(tile, (index * cell_size, 0))
+        target_w = cell_w - padding * 2
+        target_h = cell_h - padding * 2
+        scale = min(target_w / crop.width, target_h / crop.height)
+        if allow_upscale and scale > 1.0:
+            crop = crop.resize((int(crop.width * scale), int(crop.height * scale)), Image.Resampling.LANCZOS)
+        else:
+            crop.thumbnail((target_w, target_h), Image.Resampling.LANCZOS)
+        tile = Image.new("RGBA", (cell_w, cell_h), TRANSPARENT)
+        tile.alpha_composite(crop, ((cell_w - crop.width) // 2, (cell_h - crop.height) // 2))
+        sheet.alpha_composite(tile, (index * cell_w, 0))
     return sheet
 
 
 def item_icon_sheet(rod: Image.Image, rig: Image.Image) -> Image.Image:
-    return product_sheet(rod, rig, ITEM_CELL, 6)
+    return product_sheet(rod, rig, (ITEM_CELL, ITEM_CELL), 6)
 
 
 def detail_icon_sheet(rod: Image.Image, rig: Image.Image) -> Image.Image:
-    return product_sheet(rod, rig, DETAIL_CELL, 14)
+    return product_sheet(rod, rig, (DETAIL_CELL_W, DETAIL_CELL_H), 0, True)
 
 
 def bait_icon_sheet() -> Image.Image:

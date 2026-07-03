@@ -67,7 +67,7 @@ Date: 2026-07-03
 - `assets/showcase/tackle_shop/shop_rod_backplate.png`: 竿5本タブの店内・商品陳列・空プレート・詳細紙面。
 - `assets/showcase/tackle_shop/shop_rig_backplate.png`: 竿と同じ画面骨格に仕掛け6種カードを載せた店内・商品陳列・空プレート・詳細紙面。旧リール/糸/箱/カゴ系カテゴリUIは置かない。
 - `assets/showcase/tackle_shop/shop_item_icon_sheet.png`: 竿5本+仕掛け6種のruntime小表示用アイコンシート。
-- `assets/showcase/tackle_shop/shop_detail_item_sheet.png`: 選択中商品の詳細大絵用アイコンシート。商品IDに応じてruntimeで差し替える。
+- `assets/showcase/tackle_shop/shop_detail_item_sheet.png`: 選択中商品の詳細大絵用アイコンシート。384x224セルで商品IDに応じてruntimeで差し替える。
 - `assets/showcase/tackle_shop/shop_bait_icon_sheet.png`: 対応エサカテゴリのアイコンシート。
 
 ## v1完了条件
@@ -78,6 +78,7 @@ Date: 2026-07-03
 - 竿タブは5本、仕掛けタブは6種の商品カードを透明クリック領域で操作でき、クリック領域・選択ハイライト・商品名・価格/状態が同じカード紙面/プレート座標に揃う。
 - 竿/仕掛け切替時、ヘッダー、下部タブ、商品エリア、詳細パネルの基準位置は変わらず、商品カード内容とbackplateだけが自然に切り替わる。
 - 詳細パネルの大きな商品画像は選択中の商品IDへ追従し、固定の竿/仕掛け画像が残らない。
+- 右詳細パネル下部の装飾アイコン列へ説明文が重ならない。必要情報は性能行・対応エサチップ・購入/装備ボタンに集約する。
 - 竿/仕掛けタブ切替、商品選択、購入/装備、港戻りが内部メソッド直呼びではなく実クリックsmokeで通る。
 - 通常preview seedで日本語の省略・見切れ・重なりがない。
 - 購入、装備、資金不足、Lv不足、港戻りがsmokeで通る。
