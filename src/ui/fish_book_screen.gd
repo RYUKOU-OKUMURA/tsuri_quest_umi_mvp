@@ -43,6 +43,7 @@ var _fish_card_buttons: Dictionary = {}
 var _filter_buttons: Dictionary = {}
 
 var _found_label: Label
+var _found_progress_fill: ColorRect
 var _player_status_bar: PlayerStatusBar
 var _grid: GridContainer
 var _detail_no_label: Label
@@ -130,6 +131,14 @@ func _build_header(root: Control) -> void:
 
 	var found_bar := _texture_rect(COMMON_STATUS_BAR_PATH)
 	_place_control(header, found_bar, 0.022, 0.188, 0.276, 0.820)
+	var progress_track := Panel.new()
+	progress_track.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	progress_track.add_theme_stylebox_override("panel", _collection_progress_track_style())
+	_place_control(header, progress_track, 0.054, 0.674, 0.244, 0.758)
+	_found_progress_fill = _label_plate(_alpha(Palette.GOLD_BRIGHT, 0.78))
+	_place_control(progress_track, _found_progress_fill, 0.0, 0.0, 0.0, 1.0)
+	var progress_gloss := _label_plate(_alpha(Palette.PARCHMENT, 0.16))
+	_place_control(progress_track, progress_gloss, 0.0, 0.0, 1.0, 0.420)
 	_found_label = _book_label("発見済み 0/0", 22, Color("#fff2c6"), true, 2, Color("#07131d"))
 	_found_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_found_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -343,6 +352,10 @@ func _refresh_header() -> void:
 		if _is_discovered(fish_id):
 			found += 1
 	_found_label.text = "発見済み  %d/%d" % [found, total]
+	if _found_progress_fill != null:
+		var ratio := 0.0 if total <= 0 else clampf(float(found) / float(total), 0.0, 1.0)
+		_found_progress_fill.anchor_right = ratio
+		_found_progress_fill.offset_right = 0.0
 	if _player_status_bar != null:
 		_player_status_bar.refresh()
 
@@ -1061,6 +1074,19 @@ func _filter_tab_style(selected: bool, hot: bool) -> StyleBoxFlat:
 	style.shadow_color = _alpha(Palette.TEXT_OUTLINE_DARK, 0.22 if selected else 0.14)
 	style.shadow_size = 2
 	style.shadow_offset = Vector2(0.0, 2.0)
+	return style
+
+
+func _collection_progress_track_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = _alpha(Palette.TEXT_OUTLINE_DARK, 0.48)
+	style.border_color = _alpha(Palette.GOLD_DEEP, 0.52)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	style.content_margin_left = 1.0
+	style.content_margin_top = 1.0
+	style.content_margin_right = 1.0
+	style.content_margin_bottom = 1.0
 	return style
 
 

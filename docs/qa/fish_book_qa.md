@@ -1,6 +1,6 @@
 # 魚図鑑画面 QA判断ログ
 
-最終更新: 2026-07-03 / 状態: **v1.22 P2下部索引タブ化合格・freeze中**
+最終更新: 2026-07-03 / 状態: **v1.23 P2発見進捗バー化合格・freeze中**
 参照画像: `reference/07_fish_book_mockup.png`
 QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
@@ -10,6 +10,7 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 |---|---|---|---|
 | 右上ステータスバー | `PlayerStatusBar` のスロット配分を所持金優先 | `src/ui/components/`（PlayerStatusBar） | P1だった所持金省略の解消 |
 | 竿名表記 | 短縮形（`港の入門竿`→`入門竿`、`外海竿・青嵐`→`青嵐`） | データ表示側 | ステータスバー内の収まり |
+| 発見進捗バー | 上部左の発見済みバー内 0.054/0.674–0.244/0.758 に `StyleBoxFlat` の進捗trackを配置し、`found / total` に応じて `Palette.GOLD_BRIGHT` alpha 0.78 のfillを伸縮。track は `Palette.TEXT_OUTLINE_DARK` alpha 0.48、border は `Palette.GOLD_DEEP` alpha 0.52、角丸3px | `src/ui/fish_book_screen.gd` | 発見済み表示を単なる数値ではなく、魚図鑑の収集進捗として読ませる |
 | カード内レアリティチップ | 幅 0.060–0.438 | `src/ui/fish_book_screen.gd` | `アンコモン` の省略解消 |
 | 長い魚名 | カード/詳細で段階的にフォントサイズを落とす | 同上 | 省略ではなく縮小で収める採用値 |
 | 背景スクリム | alpha 0.42 | 同上 | docs/19 §4.5（スクリム減光型） |
@@ -59,10 +60,11 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 | 左一覧カード紙面ベース化 | 1 | カード枠内側へ紙面ベースを追加し、暗色台帳地がカード中央に透ける状態を解消 | P2台帳感としてfreeze |
 | 中央綴じ目 | 1 | 左右ページ間に細い背表紙影・中央fold・金細線を追加 | P2台帳感としてfreeze |
 | 下部索引タブ化 | 1 | フィルタ6件を紙/濃紺の索引タブstyleへ変更し、背面に薄い索引レールを追加 | P2収集導線としてfreeze |
+| 発見進捗バー化 | 1 | 上部左の発見済みバー内へ `found / total` で伸縮する小さな進捗線を追加 | P2収集導線としてfreeze |
 
 ## 4. 暫定判定・再検証TODO
 
-なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-03_index_tabs_before_after.png` と `docs/qa/evidence/fish_book/2026-07-03_index_tabs_compare.png` に保存済み。
+なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-03_collection_progress_before_after.png` と `docs/qa/evidence/fish_book/2026-07-03_collection_progress_compare.png` に保存済み。
 
 ## 5. 現在の残ギャップ
 
@@ -75,4 +77,4 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
 ## 7. 判断ログ（直近パスのみ）
 
-- 2026-07-03: v1.22 P2下部索引タブ化フェーズ。下部フィルタ6件の見た目だけを対象に、索引レールと紙/濃紺のタブstyleへ変更した。フィルタの種類/順序/遷移、港へ戻るボタン、台帳外周フレーム、中央綴じ目、左一覧カード、カード最小サイズ、3列グリッド、スクロール領域、魚写真枠、右詳細、ヘッダー、背景スクリムはfreeze値のまま維持。`./tools/fish_book_visual_qa.sh` の実スクショで、下部フィルタが汎用ボタン列ではなく図鑑の索引タブとして読め、文字・アイコン・戻るボタンの重なりや見切れも再発しなかったため採用。判断根拠: `docs/qa/evidence/fish_book/2026-07-03_index_tabs_before_after.png`、`docs/qa/evidence/fish_book/2026-07-03_index_tabs_compare.png`。検証: `git diff --check` exit 0、`fish_book_smoke: ok`、`./tools/validate_project.sh` exit 0（Godot終了時のObjectDB/resource警告あり）。
+- 2026-07-03: v1.23 P2発見進捗バー化フェーズ。上部左「発見済み」表示内の小さな収集進捗線だけを対象に、`found / total` で伸縮する進捗fillを追加した。発見済みバー/タイトル/右ステータスバーの配置、台帳外周フレーム、中央綴じ目、左一覧カード、下部索引タブ、右詳細、背景スクリムはfreeze値のまま維持。`./tools/fish_book_visual_qa.sh` の実スクショで、発見済み表示が単なる数値ではなく収集進捗として読め、発見数文字の見切れ・進捗線との重なり・ヘッダー内の混線も再発しなかったため採用。判断根拠: `docs/qa/evidence/fish_book/2026-07-03_collection_progress_before_after.png`、`docs/qa/evidence/fish_book/2026-07-03_collection_progress_compare.png`。検証: `git diff --check` exit 0、`fish_book_smoke: ok`、`./tools/validate_project.sh` exit 0（Godot終了時のObjectDB/resource警告あり）。
