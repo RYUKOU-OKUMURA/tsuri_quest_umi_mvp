@@ -1,6 +1,6 @@
 # 魚図鑑画面 QA判断ログ
 
-最終更新: 2026-07-03 / 状態: **v1.9 P2左一覧密度/ウェル合格・freeze中**
+最終更新: 2026-07-03 / 状態: **v1.10 P2魚ポートレート表示なじませ合格・freeze中**
 参照画像: `reference/07_fish_book_mockup.png`
 QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
@@ -19,6 +19,7 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 | 台帳外周フレーム | `fish_book_book_frame.png` を 0.018/0.018–0.982/0.982 に配置。ヘッダー/フッターの全面濃紺フレームは外し、ステータス/ボタンを木製レール上に載せる | `assets/showcase/fish_book/`, `src/ui/fish_book_screen.gd` | 画面全体を分離パネル群ではなく一冊の木製台帳として読ませる |
 | カード/詳細紙面素材 | 通常/選択/未発見カードに `fish_book_card_frame.png` / `fish_book_card_selected_frame.png` / `fish_book_card_locked_frame.png`、右詳細下地に `fish_book_detail_paper.png` を使用。カード内のruntime文字領域へ焼き込み罫線を入れない | `assets/showcase/fish_book/`, `src/ui/fish_book_screen.gd` | 汎用カード・runtime塗り紙面から、魚図鑑専用の収集カード/羊皮紙ページへ寄せる |
 | 左一覧密度/ウェル | 下地色 `Palette.WOOD_DARK` alpha 0.78、スクロール領域 0.047/0.105–0.955/0.970、グリッド間隔 h=6/v=3、カード最小サイズ 204x144 | `src/ui/fish_book_screen.gd` | 左一覧を冷たい暗色パネルから木製台帳内の収集面へ寄せ、3段目の釣果/最大サイズまで読める密度にする |
+| 魚ポートレート表示なじませ | 発見済み魚に紙色tint `Color(1.0, 0.965, 0.880, 1.0)`、左カード影 alpha 0.16 / offset 0.014,0.036、右詳細影 alpha 0.20 / offset 0.012,0.036。未発見シルエットには影を追加しない | `src/ui/fish_book_screen.gd` | 魚PNG本体を変えず、紙面へ貼っただけに見える浮きを抑える |
 
 ## 2. 不採用・再試行禁止リスト
 
@@ -34,10 +35,11 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 | 魚ポートレート表示枠 | 1 | alpha bboxクロップ＋clipコンテナ化 | P1解消としてfreeze |
 | カード/詳細紙面の焼き込み線 | 1 | 初回候補の罫線・傷線がruntime文字に近かったため、端の紙質表現だけに削減 | P2紙面素材としてfreeze |
 | 左一覧カード密度 | 3 | 112/124/132px案を比較し、文字収まりと魚サイズを優先して204x144＋vsep3を採用 | P2密度調整としてfreeze |
+| 魚ポートレート影 | 1 | 初回影が複製っぽく見えたため、左右ともalphaとoffsetを弱めた | P2表示なじませとしてfreeze |
 
 ## 4. 暫定判定・再検証TODO
 
-なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-03_list_density_compare.png` に保存済み。
+なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-03_portrait_blend_compare.png` に保存済み。
 
 ## 5. 現在の残ギャップ
 
@@ -50,4 +52,4 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
 ## 7. 判断ログ（直近パスのみ）
 
-- 2026-07-03: v1.9 P2左一覧密度/ウェル調整フェーズ。左一覧の下地を `Palette.WOOD_DARK` へ寄せ、スクロール領域とグリッド間隔を詰め、カード最小サイズを204x144にした。112/124/132px案は文字収まりまたは魚サイズが弱いため不採用。`./tools/fish_book_visual_qa.sh` の横並び比較で、旧状態より3段目の釣果/最大サイズまで読め、左一覧が冷たい暗色パネルではなく台帳内の収集面として見えやすくなった。P1（文字見切れ・魚画像はみ出し・素材未表示）の再発もないため採用。判断根拠: `docs/qa/evidence/fish_book/2026-07-03_list_density_compare.png`。検証: `./tools/validate_project.sh` exit 0（Godot終了時のObjectDB/resource警告あり）、`fish_book_smoke: ok`。
+- 2026-07-03: v1.10 P2魚ポートレート表示なじませフェーズ。魚PNG本体・alpha bboxクロップ・clip比率は触らず、発見済み魚の前面に紙色tint、背面に低alphaの同一TextureRect影を追加した。初回影は複製感が強かったため弱め、未発見シルエットには影を足さない採用値にした。`./tools/fish_book_visual_qa.sh` の横並び比較で、魚が紙面から浮く感じが少し減り、P1（魚の潰れ・文字見切れ・魚画像はみ出し・素材未表示）の再発もないため採用。判断根拠: `docs/qa/evidence/fish_book/2026-07-03_portrait_blend_compare.png`。検証: `./tools/validate_project.sh` exit 0（Godot終了時のObjectDB/resource警告あり）、`fish_book_smoke: ok`。

@@ -49,6 +49,7 @@ var _detail_no_label: Label
 var _detail_name_label: Label
 var _detail_rarity_label: Label
 var _detail_portrait: TextureRect
+var _detail_portrait_shadow: TextureRect
 var _detail_count_label: Label
 var _detail_best_label: Label
 var _detail_habitat_label: Label
@@ -189,11 +190,8 @@ func _build_detail_panel(root: Control) -> void:
 	_detail_rarity_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(detail, _detail_rarity_label, 0.762, 0.072, 0.928, 0.145)
 
-	_detail_portrait = TextureRect.new()
-	_detail_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_detail_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_detail_portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	_detail_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_detail_portrait_shadow = _portrait_rect(Color(0.18, 0.105, 0.040, 0.20))
+	_detail_portrait = _portrait_rect(_portrait_paper_tint())
 	var portrait_bg := ColorRect.new()
 	portrait_bg.color = Color("#f5e4ba", 0.84)
 	portrait_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -205,6 +203,7 @@ func _build_detail_panel(root: Control) -> void:
 	_add_rule(detail, 0.095, 0.505, 0.915, Color("#7e5a2b", 0.35), 1.0)
 	var detail_portrait_clip := _portrait_clip()
 	_place_control(detail, detail_portrait_clip, 0.095, 0.175, 0.915, 0.490)
+	_place_control(detail_portrait_clip, _detail_portrait_shadow, 0.012, 0.036, 1.012, 1.036)
 	_place_control(detail_portrait_clip, _detail_portrait, 0.0, 0.0, 1.0, 1.0)
 
 	_detail_count_label = _book_label("釣果 0匹", 27, Color("#2b1b0d"), true, 0)
@@ -348,15 +347,15 @@ func _make_fish_card(fish: Dictionary) -> Button:
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(button, name_label, 0.292, 0.048, 0.940, 0.185)
 
-	var portrait := TextureRect.new()
-	portrait.texture = _fish_portrait_texture(fish, true)
-	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	portrait.modulate = Color(0.05, 0.04, 0.03, 0.72) if not discovered else Color.WHITE
+	var portrait_texture := _fish_portrait_texture(fish, true)
+	var portrait := _portrait_rect(Color(0.05, 0.04, 0.03, 0.72) if not discovered else _portrait_paper_tint())
+	portrait.texture = portrait_texture
 	var portrait_clip := _portrait_clip()
 	_place_control(button, portrait_clip, 0.055, 0.165, 0.945, 0.670)
+	if discovered:
+		var portrait_shadow := _portrait_rect(Color(0.18, 0.105, 0.040, 0.16))
+		portrait_shadow.texture = portrait_texture
+		_place_control(portrait_clip, portrait_shadow, 0.014, 0.036, 1.014, 1.036)
 	_place_control(portrait_clip, portrait, 0.0, 0.0, 1.0, 1.0)
 
 	if not discovered:
@@ -417,6 +416,7 @@ func _refresh_detail() -> void:
 		_detail_name_label.text = "魚を選択"
 		_detail_rarity_label.text = ""
 		_detail_portrait.texture = null
+		_detail_portrait_shadow.texture = null
 		_detail_count_label.text = "釣果 --"
 		_detail_best_label.text = "最大 --.-cm"
 		_detail_habitat_label.text = ""
@@ -434,8 +434,10 @@ func _refresh_detail() -> void:
 	_detail_rarity_label.text = rarity if discovered else "未発見"
 	_detail_rarity_label.add_theme_font_size_override("font_size", _rarity_font_size(_detail_rarity_label.text, true))
 	_detail_rarity_label.add_theme_color_override("font_color", _rarity_text_color(rarity) if discovered else Color("#e8d0a0"))
-	_detail_portrait.texture = _fish_portrait_texture(fish, true)
-	_detail_portrait.modulate = Color.WHITE if discovered else Color(0.04, 0.035, 0.03, 0.70)
+	var detail_texture := _fish_portrait_texture(fish, true)
+	_detail_portrait.texture = detail_texture
+	_detail_portrait_shadow.texture = detail_texture if discovered else null
+	_detail_portrait.modulate = _portrait_paper_tint() if discovered else Color(0.04, 0.035, 0.03, 0.70)
 
 	var count := int(PlayerProgress.caught_counts.get(fish_id, 0))
 	var best := float(PlayerProgress.best_sizes.get(fish_id, 0.0))
@@ -734,6 +736,20 @@ func _texture_rect(path: String) -> TextureRect:
 
 func _texture_style(path: String, margins: Vector4) -> StyleBoxTexture:
 	return ShowcaseAssetsScript.texture_style(path, margins)
+
+
+func _portrait_rect(tint: Color) -> TextureRect:
+	var rect := TextureRect.new()
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	rect.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rect.modulate = tint
+	return rect
+
+
+func _portrait_paper_tint() -> Color:
+	return Color(1.0, 0.965, 0.880, 1.0)
 
 
 func _detail_icon(icon_index: int) -> Texture2D:
