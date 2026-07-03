@@ -51,6 +51,7 @@ var _detail_name_label: Label
 var _detail_rarity_label: Label
 var _detail_portrait: TextureRect
 var _detail_portrait_shadow: TextureRect
+var _detail_portrait_underprints: Array[TextureRect] = []
 var _detail_count_label: Label
 var _detail_best_label: Label
 var _detail_habitat_label: Label
@@ -168,6 +169,13 @@ func _build_book_grid(root: Control) -> void:
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	left.add_child(frame)
 
+	var page_surface := _label_plate(_alpha(Palette.PARCHMENT, 0.34))
+	_place_control(left, page_surface, 0.047, 0.105, 0.936, 0.970)
+	var page_wash := _paper_wash()
+	page_wash.modulate = Color(1.0, 0.965, 0.860, 0.46)
+	_place_control(left, page_wash, 0.047, 0.105, 0.936, 0.970)
+	_add_left_page_guides(left)
+
 	var header_wash := _label_plate(_alpha(Palette.PARCHMENT_DEEP, 0.22))
 	_place_control(left, header_wash, 0.050, 0.040, 0.935, 0.100)
 	_add_rule(left, 0.065, 0.100, 0.920, _alpha(Palette.GOLD_DEEP, 0.24), 1.0)
@@ -253,10 +261,13 @@ func _build_detail_panel(root: Control) -> void:
 	_add_specimen_rule(detail_portrait_clip, 0.030, 0.725, 0.970, 0.732, _alpha(Palette.GOLD_DEEP, 0.12))
 	_add_specimen_rule(detail_portrait_clip, 0.075, 0.125, 0.080, 0.870, _alpha(Palette.WOOD_DARK, 0.10))
 	_add_specimen_ruler(detail_portrait_clip)
+	_detail_portrait_underprints = _add_portrait_underprint(detail_portrait_clip, null, 0.16, 0.004, 0.009)
 	_place_control(detail_portrait_clip, _detail_portrait_shadow, 0.012, 0.036, 1.012, 1.036)
 	_place_control(detail_portrait_clip, _detail_portrait, 0.0, 0.0, 1.0, 1.0)
 	var specimen_wash := _label_plate(_alpha(Palette.PARCHMENT, 0.08))
 	_place_control(detail_portrait_clip, specimen_wash, 0.0, 0.0, 1.0, 1.0)
+	_add_detail_specimen_fixture(detail_portrait_clip, 0.060, 0.060, 0.210, 0.145)
+	_add_detail_specimen_fixture(detail_portrait_clip, 0.790, 0.060, 0.940, 0.145)
 
 	var count_slip := Panel.new()
 	count_slip.add_theme_stylebox_override("panel", _detail_stat_slip_style())
@@ -349,12 +360,23 @@ func _build_footer(root: Control) -> void:
 		_place_control(footer, button, x, 0.072, x + 0.122, 0.850)
 		x += 0.125
 
+	var return_plaque := Panel.new()
+	return_plaque.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return_plaque.add_theme_stylebox_override("panel", _return_button_plaque_style())
+	_place_control(footer, return_plaque, 0.778, 0.038, 0.974, 0.938)
+	var return_top_rule := _label_plate(_alpha(Palette.GOLD_BRIGHT, 0.42))
+	_place_control(footer, return_top_rule, 0.792, 0.086, 0.960, 0.118)
+	var return_bottom_shadow := _label_plate(_alpha(Palette.TEXT_OUTLINE_DARK, 0.24))
+	_place_control(footer, return_bottom_shadow, 0.792, 0.842, 0.960, 0.898)
+
 	var back := make_return_button(func() -> void: navigate("harbor"), 0.0)
 	back.name = "FishBookReturnButton"
 	back.set_meta("fish_book_return", true)
-	back.add_theme_font_size_override("font_size", 21)
+	back.add_theme_font_override("font", GameFontsScript.extra_bold(get_theme_default_font()))
+	back.add_theme_font_size_override("font_size", 22)
+	back.add_theme_constant_override("outline_size", 3)
 	_add_button_icon(back, _footer_icon(1), true)
-	_place_control(footer, back, 0.792, 0.112, 0.964, 0.885)
+	_place_control(footer, back, 0.786, 0.100, 0.970, 0.910)
 
 
 func _refresh_all() -> void:
@@ -448,12 +470,13 @@ func _make_fish_card(fish: Dictionary) -> Button:
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(button, name_label, 0.292, 0.048, 0.940, 0.185)
 
-	var portrait_texture := _fish_card_portrait_texture(fish)
+	var portrait_texture := _fish_card_portrait_texture(fish) if discovered else _fish_locked_card_portrait_texture(fish)
 	var portrait := _portrait_rect(_alpha(Palette.WOOD_DARK, 0.62) if not discovered else _portrait_paper_tint())
 	portrait.texture = portrait_texture
 	var portrait_clip := _portrait_clip()
 	_place_control(button, portrait_clip, 0.080, 0.198, 0.920, 0.602)
 	if discovered:
+		_add_portrait_underprint(portrait_clip, portrait_texture, 0.22, 0.006, 0.016)
 		var portrait_shadow := _portrait_rect(Color(0.18, 0.105, 0.040, 0.16))
 		portrait_shadow.texture = portrait_texture
 		_place_control(portrait_clip, portrait_shadow, 0.014, 0.036, 1.014, 1.036)
@@ -463,6 +486,19 @@ func _make_fish_card(fish: Dictionary) -> Button:
 		var sealed_wash := _label_plate(_alpha(Palette.PARCHMENT, 0.18))
 		sealed_wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_place_control(button, sealed_wash, 0.070, 0.190, 0.930, 0.615)
+
+		var seal_cord := _label_plate(_alpha(Palette.WOOD_DARK, 0.18))
+		seal_cord.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_place_control(button, seal_cord, 0.125, 0.492, 0.875, 0.508)
+		var seal := Panel.new()
+		seal.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		seal.add_theme_stylebox_override("panel", _locked_card_seal_style())
+		_place_control(button, seal, 0.125, 0.418, 0.255, 0.608)
+		var seal_mark := _book_label("封", 15, Palette.TEXT_BONE, true, 1, Palette.TEXT_OUTLINE_DARK)
+		seal_mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		seal_mark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		seal_mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_place_control(button, seal_mark, 0.125, 0.420, 0.255, 0.604)
 
 		var mark := _book_label("？", 42, _alpha(Palette.GOLD_DEEP, 0.88), true, 2, Palette.TEXT_OUTLINE_LIGHT)
 		mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -525,6 +561,8 @@ func _refresh_detail() -> void:
 		_detail_rarity_label.text = ""
 		_detail_portrait.texture = null
 		_detail_portrait_shadow.texture = null
+		for underprint in _detail_portrait_underprints:
+			underprint.texture = null
 		_detail_count_label.text = "--"
 		_detail_count_label.add_theme_font_size_override("font_size", 26)
 		_detail_best_label.text = "--.-cm"
@@ -547,6 +585,8 @@ func _refresh_detail() -> void:
 	var detail_texture := _fish_detail_portrait_texture(fish) if discovered else _fish_portrait_texture(fish, true)
 	_detail_portrait.texture = detail_texture
 	_detail_portrait_shadow.texture = detail_texture if discovered else null
+	for underprint in _detail_portrait_underprints:
+		underprint.texture = detail_texture if discovered else null
 	_detail_portrait.modulate = _portrait_paper_tint() if discovered else Color(0.04, 0.035, 0.03, 0.70)
 
 	var count := int(PlayerProgress.caught_counts.get(fish_id, 0))
@@ -702,34 +742,57 @@ func _fish_portrait_texture(fish: Dictionary, crop_to_fish := false) -> Texture2
 
 
 func _fish_card_portrait_texture(fish: Dictionary) -> Texture2D:
+	var texture := _fish_showcase_frame_texture(fish, "card_frame", null, 0.012, 0.025, 0.070, 2)
+	if texture == null:
+		return _fish_locked_card_portrait_texture(fish)
+	return texture
+
+
+func _fish_locked_card_portrait_texture(fish: Dictionary) -> Texture2D:
 	var texture := _fish_portrait_texture(fish, false)
 	return _cropped_portrait_texture(texture, 0.012, 0.025, 0.070, 2)
 
 
 func _fish_detail_portrait_texture(fish: Dictionary) -> Texture2D:
+	return _fish_showcase_frame_texture(fish, "detail_frame", _fish_portrait_texture(fish, true))
+
+
+func _fish_showcase_frame_texture(
+	fish: Dictionary,
+	cache_prefix: String,
+	fallback: Texture2D = null,
+	pad_x_ratio := 0.035,
+	pad_y_ratio := 0.060,
+	alpha_threshold := 0.035,
+	min_pad := 8
+) -> Texture2D:
 	var path := FightFishAssets.sheet_path(fish)
-	var key := "detail_frame:%s" % path
+	var key := "%s:%s:%s:%s:%s:%s" % [
+		cache_prefix,
+		path,
+		str(pad_x_ratio),
+		str(pad_y_ratio),
+		str(alpha_threshold),
+		str(min_pad),
+	]
 	if _portrait_crop_cache.has(key):
 		return _portrait_crop_cache[key]
 	var sheet := _load_texture_if_exists(path)
 	if sheet == null:
-		var fallback := _fish_portrait_texture(fish, true)
 		_portrait_crop_cache[key] = fallback
 		return fallback
 	var image := sheet.get_image()
 	if image == null or image.is_empty():
-		var fallback := _fish_portrait_texture(fish, true)
 		_portrait_crop_cache[key] = fallback
 		return fallback
 	var frame_width := int(image.get_width() / 4)
 	if frame_width <= 0:
-		var fallback := _fish_portrait_texture(fish, true)
 		_portrait_crop_cache[key] = fallback
 		return fallback
 	var frame := image.get_region(Rect2i(0, 0, frame_width, image.get_height()))
 	frame.flip_x()
 	var texture := ImageTexture.create_from_image(frame)
-	var cropped := _cropped_portrait_texture(texture)
+	var cropped := _cropped_portrait_texture(texture, pad_x_ratio, pad_y_ratio, alpha_threshold, min_pad)
 	_portrait_crop_cache[key] = cropped
 	return cropped
 
@@ -901,6 +964,28 @@ func _portrait_paper_tint() -> Color:
 	return Color(1.0, 0.965, 0.880, 1.0)
 
 
+func _add_portrait_underprint(
+	parent: Control,
+	texture: Texture2D,
+	alpha: float,
+	spread_x: float,
+	spread_y: float
+) -> Array[TextureRect]:
+	var layers: Array[TextureRect] = []
+	var offsets := [
+		Vector2(-spread_x, 0.0),
+		Vector2(spread_x, 0.0),
+		Vector2(0.0, -spread_y),
+		Vector2(0.0, spread_y),
+	]
+	for offset in offsets:
+		var layer := _portrait_rect(_alpha(Palette.WOOD_DARK, alpha))
+		layer.texture = texture
+		_place_control(parent, layer, offset.x, offset.y, 1.0 + offset.x, 1.0 + offset.y)
+		layers.append(layer)
+	return layers
+
+
 func _detail_icon(icon_index: int) -> Texture2D:
 	return _atlas_icon(_detail_icon_sheet, FISH_BOOK_ICON_SIZE, icon_index)
 
@@ -1047,8 +1132,8 @@ func _short_rod_name(rod_name: String) -> String:
 
 func _paper_wash() -> TextureRect:
 	var gradient := Gradient.new()
-	gradient.set_color(0, Color("#f2dfb0", 0.78))
-	gradient.set_color(1, Color("#d7b979", 0.44))
+	gradient.set_color(0, _alpha(Palette.PARCHMENT, 0.78))
+	gradient.set_color(1, _alpha(Palette.PARCHMENT_DEEP, 0.44))
 	var texture := GradientTexture2D.new()
 	texture.gradient = gradient
 	texture.fill_from = Vector2(0.0, 0.0)
@@ -1061,6 +1146,18 @@ func _paper_wash() -> TextureRect:
 	rect.stretch_mode = TextureRect.STRETCH_SCALE
 	rect.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	return rect
+
+
+func _add_left_page_guides(parent: Control) -> void:
+	var left_edge := _label_plate(_alpha(Palette.WOOD_DARK, 0.10))
+	_place_control(parent, left_edge, 0.047, 0.105, 0.056, 0.970)
+	var right_edge := _label_plate(_alpha(Palette.WOOD_DARK, 0.08))
+	_place_control(parent, right_edge, 0.927, 0.105, 0.936, 0.970)
+	for y in [0.310, 0.524, 0.738, 0.952]:
+		_add_rule(parent, 0.058, y, 0.922, _alpha(Palette.WOOD_DARK, 0.13), 1.0)
+	for x in [0.342, 0.636]:
+		var column_rule := _label_plate(_alpha(Palette.WOOD_DARK, 0.075))
+		_place_control(parent, column_rule, x, 0.126, x + 0.002, 0.952)
 
 
 func _label_plate(color: Color) -> ColorRect:
@@ -1088,6 +1185,19 @@ func _add_specimen_ruler(parent: Control) -> void:
 			top = 0.838
 			color = _alpha(Palette.WOOD_DARK, 0.15)
 		_add_specimen_rule(parent, x - 0.002, top, x + 0.002, 0.866, color)
+
+
+func _add_detail_specimen_fixture(parent: Control, left: float, top: float, right: float, bottom: float) -> void:
+	var tape := Panel.new()
+	tape.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tape.add_theme_stylebox_override("panel", _detail_specimen_tape_style())
+	_place_control(parent, tape, left, top, right, bottom)
+	var pin := Panel.new()
+	pin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pin.add_theme_stylebox_override("panel", _detail_specimen_pin_style())
+	var center_x := (left + right) * 0.5
+	var center_y := top + (bottom - top) * 0.50
+	_place_control(parent, pin, center_x - 0.018, center_y - 0.028, center_x + 0.018, center_y + 0.028)
 
 
 func _detail_stat_slip_style() -> StyleBoxFlat:
@@ -1134,6 +1244,62 @@ func _filter_tab_style(selected: bool, hot: bool) -> StyleBoxFlat:
 	style.shadow_color = _alpha(Palette.TEXT_OUTLINE_DARK, 0.22 if selected else 0.14)
 	style.shadow_size = 2
 	style.shadow_offset = Vector2(0.0, 2.0)
+	return style
+
+
+func _return_button_plaque_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = _alpha(Palette.WOOD_DARK, 0.70)
+	style.border_color = _alpha(Palette.GOLD_DEEP, 0.58)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 4.0
+	style.content_margin_top = 4.0
+	style.content_margin_right = 4.0
+	style.content_margin_bottom = 4.0
+	style.shadow_color = _alpha(Palette.TEXT_OUTLINE_DARK, 0.24)
+	style.shadow_size = 3
+	style.shadow_offset = Vector2(0.0, 2.0)
+	return style
+
+
+func _locked_card_seal_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = _alpha(Palette.GOLD_DEEP, 0.84)
+	style.border_color = _alpha(Palette.WOOD_DARK, 0.72)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(14)
+	style.content_margin_left = 2.0
+	style.content_margin_top = 2.0
+	style.content_margin_right = 2.0
+	style.content_margin_bottom = 2.0
+	style.shadow_color = _alpha(Palette.TEXT_OUTLINE_DARK, 0.24)
+	style.shadow_size = 2
+	style.shadow_offset = Vector2(1.0, 1.0)
+	return style
+
+
+func _detail_specimen_tape_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = _alpha(Palette.PARCHMENT_DEEP, 0.46)
+	style.border_color = _alpha(Palette.WOOD_DARK, 0.18)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(2)
+	style.shadow_color = _alpha(Palette.TEXT_OUTLINE_DARK, 0.10)
+	style.shadow_size = 2
+	style.shadow_offset = Vector2(0.0, 1.0)
+	return style
+
+
+func _detail_specimen_pin_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = _alpha(Palette.GOLD_DEEP, 0.78)
+	style.border_color = _alpha(Palette.WOOD_DARK, 0.52)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(8)
+	style.shadow_color = _alpha(Palette.TEXT_OUTLINE_DARK, 0.20)
+	style.shadow_size = 1
+	style.shadow_offset = Vector2(1.0, 1.0)
 	return style
 
 

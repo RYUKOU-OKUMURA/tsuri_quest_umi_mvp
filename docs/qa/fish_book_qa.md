@@ -1,6 +1,6 @@
 # 魚図鑑画面 QA判断ログ
 
-最終更新: 2026-07-03 / 状態: **v1.26 P2左一覧選択ブックマーク合格・freeze中**
+最終更新: 2026-07-03 / 状態: **v1.34 P2専用魚ポートレート素材ブリーフ追加・freeze中**
 参照画像: `reference/07_fish_book_mockup.png`
 QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
@@ -17,22 +17,26 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 | 木色バックプレート | 0.024/0.118–0.976/0.982 | 同上 | 分離パネルから「一冊の台帳」への寄せ |
 | 内側ウェル | 0.031/0.135–0.969/0.970 | 同上 | 同上 |
 | 魚ポートレート表示 | 透明余白をalpha bboxで実表示クロップ。左カードは一覧専用tight crop（pad x=0.012/y=0.025、alpha threshold=0.070、min pad=2）を使い、写真下地 0.070/0.190–0.930/0.615、clip 0.080/0.198–0.920/0.602 に収める。右詳細は clip 0.095/0.175–0.915/0.490 | `src/ui/fish_book_screen.gd` | 魚画像がカード名・レアリティチップ・統計行へ食い込むP1を解消し、一覧内で同じ写真枠に揃える |
+| 左一覧発見済み魚ソース | 発見済みカードの魚ポートレートは `showcase_sheet` frame0 を左向きにミラーし、一覧専用tight crop（pad x=0.012/y=0.025、alpha threshold=0.070、min pad=2）で表示する。読み込み不可時は従来の `card_portrait` にフォールバック。未発見カードは従来の `card_portrait` 由来シルエットを維持 | `src/ui/fish_book_screen.gd`, `assets/showcase/fish/` | 左一覧と右詳細の魚素材ソースを揃え、カード内の魚を紙面上の標本画として見せる |
 | 台帳外周フレーム | `fish_book_book_frame.png` を 0.018/0.018–0.982/0.982 に配置。ヘッダー/フッターの全面濃紺フレームは外し、ステータス/ボタンを木製レール上に載せる | `assets/showcase/fish_book/`, `src/ui/fish_book_screen.gd` | 画面全体を分離パネル群ではなく一冊の木製台帳として読ませる |
 | 中央綴じ目 | 左一覧と右詳細の間に 0.586/0.150–0.616/0.885 の綴じ目レイヤーを配置。`Palette.WOOD_DARK` alpha 0.62 の革/木影、中央fold `Palette.TEXT_OUTLINE_DARK` alpha 0.42、左右に `Palette.GOLD_DEEP` alpha 0.24/0.16 の細線を入れる | `src/ui/fish_book_screen.gd` | 左右のパネルを別ウィンドウではなく、開いた一冊の台帳の左右ページとして読ませる |
 | カード/詳細紙面素材 | 通常/選択/未発見カードに `fish_book_card_frame.png` / `fish_book_card_selected_frame.png` / `fish_book_card_locked_frame.png`、右詳細下地に `fish_book_detail_paper.png` を使用。カード内のruntime文字領域へ焼き込み罫線を入れない | `assets/showcase/fish_book/`, `src/ui/fish_book_screen.gd` | 汎用カード・runtime塗り紙面から、魚図鑑専用の収集カード/羊皮紙ページへ寄せる |
 | 左一覧カード紙面ベース | カード枠の内側 0.038/0.040–0.962/0.958 に `StyleBoxFlat` の紙面ベースを配置。発見済みは `Palette.PARCHMENT` alpha 0.76、選択中は alpha 0.84、未発見は `Palette.PARCHMENT_DEEP` alpha 0.50、border は `Palette.WOOD_DARK` alpha 0.24/0.30、1px、角丸2px | `src/ui/fish_book_screen.gd` | カード中央に暗色台帳地が透ける状態を抑え、魚写真・名前・釣果を一枚の紙カードとして読ませる |
 | 左一覧密度/ウェル | 下地色 `Palette.WOOD_DARK` alpha 0.78、スクロール領域 0.047/0.105–0.955/0.970、グリッド間隔 h=6/v=3 | `src/ui/fish_book_screen.gd` | 左一覧を冷たい暗色パネルから木製台帳内の収集面へ寄せる |
+| 左一覧ページ面 | 左一覧スクロール領域の背後 0.047/0.105–0.936/0.970 に `Palette.PARCHMENT` alpha 0.34 のページ下地と `_paper_wash()` alpha 0.46 を配置。左右端に `Palette.WOOD_DARK` alpha 0.10/0.08 の端影、y=0.310/0.524/0.738/0.952 に `Palette.WOOD_DARK` alpha 0.13 の淡い横罫線、x=0.342/0.636 に alpha 0.075 の列罫線を置く。カードサイズ・魚clip・スクロール領域は変更しない | `src/ui/fish_book_screen.gd` | カード間に見える暗色UI面を抑え、魚カードが羊皮紙台帳ページ上に並ぶ状態へ寄せる |
 | 左一覧ヘッダー台帳ラベル | 左一覧上部に `Palette.PARCHMENT_DEEP` alpha 0.22 の紙面wash 0.050/0.040–0.935/0.100、`Palette.WOOD_DARK` alpha 0.88 の木札 0.052/0.036–0.272/0.102、下罫線 `Palette.GOLD_DEEP` alpha 0.24 を配置。右側注記は操作説明ではなく `発見した魚の写し絵と釣果` | `src/ui/fish_book_screen.gd` | 左一覧上部を汎用UI説明ではなく、台帳内の記録ラベルとして読ませる |
 | 左一覧選択ブックマーク | 選択中カードだけに左端 0.036/0.205–0.064/0.760 のブックマークPanelを重ねる。`Palette.GOLD_DEEP` alpha 0.76、border `Palette.WOOD_DARK` alpha 0.72、glint は 0.044/0.230–0.050/0.720 に `Palette.GOLD_BRIGHT` alpha 0.38。写真ウェル・No.・魚名・レアリティ・統計行には重ねない | `src/ui/fish_book_screen.gd` | 左一覧で選んだカードが右ページに開かれている状態を、台帳のしおりとして読ませる |
 | 左一覧写真ウェル | 左カードの写真下地を `StyleBoxFlat` の紙面ウェル化。発見済みは `Palette.PARCHMENT` alpha 0.78、未発見は `Palette.PARCHMENT_DEEP` alpha 0.58、border は `Palette.WOOD_DARK` alpha 0.42/0.34、1px、角丸2px。座標は 0.070/0.190–0.930/0.615 | `src/ui/fish_book_screen.gd` | 魚写真が同じ矩形枠に入って並んでいる状態を明確にする |
 | 魚ポートレート表示なじませ | 発見済み魚に紙色tint `Color(1.0, 0.965, 0.880, 1.0)`、左カード影 alpha 0.16 / offset 0.014,0.036、右詳細影 alpha 0.20 / offset 0.012,0.036。未発見シルエットには影を追加しない | `src/ui/fish_book_screen.gd` | 魚PNG本体を変えず、紙面へ貼っただけに見える浮きを抑える |
+| 魚ポートレート印刷なじませ | 発見済み魚の下に `Palette.WOOD_DARK` のインク下刷りを4方向へ追加。左カードは alpha 0.22 / spread x=0.006 y=0.016、右詳細は alpha 0.16 / spread x=0.004 y=0.009。魚clip座標、魚cropパラメータ、カード内文字、未発見カードは変更しない | `src/ui/fish_book_screen.gd` | 魚の輪郭を紙面上の印刷/標本画として少し締め、貼り付けPNG感を弱める |
 | 左カード内部再設計 | カード最小サイズ 204x106、魚名 10/12/14/16px段階、No. 12px、写真下地 0.070/0.190–0.930/0.615、ポートレートclip 0.080/0.198–0.920/0.602、レアリティ 0.060/0.610–0.438/0.765、統計行 0.070/0.765–0.930/0.945、統計文字 12px | `src/ui/fish_book_screen.gd` | 左一覧で4段目まで実用表示しつつ、魚写真をカード内の枠へ揃え、魚名・レアリティ・釣果・最大サイズを読ませる |
 | 右詳細記録ラベル | 上部紙面wash `Palette.PARCHMENT_DEEP` alpha 0.92 を 0.082/0.052–0.918/0.150、No木札 `Palette.WOOD_DARK` alpha 0.88 を 0.082/0.052–0.318/0.118、場所見出し紙面wash alpha 0.90 を 0.086/0.824–0.915/0.882、場所見出し木札 alpha 0.88 を 0.090/0.834–0.545/0.884 | `src/ui/fish_book_screen.gd` | 右詳細の濃紺UI帯を、羊皮紙ページ上の記録ラベルとして読ませる |
 | 釣り場カード紙面化 | 右下釣り場カードに `Palette.PARCHMENT` alpha 0.78 の1px紙枠、サムネ 0.045/0.055–0.955/0.680、サムネtint `Color(1.0, 0.965, 0.860, 0.92)`、ラベル紙面 `Palette.PARCHMENT_DEEP` alpha 0.96 を 0.045/0.700–0.955/0.955、ラベル文字13px `Palette.TEXT_OUTLINE_LIGHT` | `src/ui/fish_book_screen.gd` | 右下サムネを濃紺UIストリップから羊皮紙ページ内の記録カードへ寄せる |
 | 右詳細釣果記録欄 | 大魚窓下の釣果欄を 0.090/0.518–0.500/0.596、最大欄を 0.510/0.518–0.910/0.596 の `StyleBoxFlat` 紙面スリップに分ける。各欄は `Palette.PARCHMENT_DEEP` alpha 0.48、border `Palette.WOOD_DARK` alpha 0.28、木札ラベル `Palette.WOOD_DARK` alpha 0.88、値は `Palette.TEXT_OUTLINE_LIGHT`。表示文言は値側を `12匹` / `34.2cm` に分離し、未発見は `未記録` / `--.-cm` | `src/ui/fish_book_screen.gd` | 釣果と最大サイズを単なる中央テキストではなく、羊皮紙ページ上の収集記録欄として読ませる |
 | 下部索引タブ | フィルタ6件を 0.032 から x step 0.125 / 幅 0.122、y 0.072–0.850 に配置。背面に索引レール `Palette.PARCHMENT_DEEP` alpha 0.16、上罫線 `Palette.GOLD_DEEP` alpha 0.24、下影 `Palette.TEXT_OUTLINE_DARK` alpha 0.20 を敷く。選択タブは `Palette.DARK_PANEL` alpha 0.94 + `Palette.GOLD_BRIGHT` border、非選択は `Palette.PARCHMENT_DEEP` alpha 0.88 + `Palette.WOOD_DARK` border | `src/ui/fish_book_screen.gd` | 下部フィルタを汎用ボタン列ではなく、図鑑の収集カテゴリをめくる索引タブとして読ませる |
-| 未発見カード封印紙面 | 未発見カードの魚窓下地 `Palette.PARCHMENT_DEEP` alpha 0.58、魚影 `Palette.WOOD_DARK` alpha 0.62、紙面wash `Palette.PARCHMENT` alpha 0.18、No木札 `Palette.WOOD_DARK` alpha 0.72、`？` は `Palette.GOLD_DEEP` alpha 0.88、`未発見` 札は `Palette.PARCHMENT_DEEP` alpha 0.94 + `Palette.WOOD_DARK` alpha 0.34 の罫線 | `src/ui/fish_book_screen.gd` | 未発見カードを濃紺UIパネルではなく封印された紙面記録として読ませる |
-| 右詳細魚標本窓 | 右詳細の大魚clip内に横罫線3本 `Palette.GOLD_DEEP` alpha 0.12、左測定線 `Palette.WOOD_DARK` alpha 0.10、下辺の採寸目盛り（base alpha 0.10、minor/medium/major tick alpha 0.12/0.15/0.18）、魚上の紙面wash `Palette.PARCHMENT` alpha 0.08 を追加。魚clip座標と魚PNG本体は変更なし | `src/ui/fish_book_screen.gd` | 右詳細の大魚をPNGステッカーではなく、紙面上で採寸された標本画として読ませる |
+| 港へ戻る主導線 | 下部右 0.778/0.038–0.974/0.938 に `Palette.WOOD_DARK` alpha 0.70 の木札受け板、`Palette.GOLD_DEEP` alpha 0.58 の1px枠、上金線 0.792/0.086–0.960/0.118、下影 0.792/0.842–0.960/0.898 を配置。`FishBookReturnButton` は 0.786/0.100–0.970/0.910、ExtraBold 22px、outline 3。共通 `make_return_button()` 本体は変更しない | `src/ui/fish_book_screen.gd` | 下部右の戻る導線を完成イメージの主ボタンに近づけ、フィルタタブ列から独立した操作として読ませる |
+| 未発見カード封印紙面 | 未発見カードの魚窓下地 `Palette.PARCHMENT_DEEP` alpha 0.58、魚影 `Palette.WOOD_DARK` alpha 0.62、紙面wash `Palette.PARCHMENT` alpha 0.18、No木札 `Palette.WOOD_DARK` alpha 0.72、`？` は `Palette.GOLD_DEEP` alpha 0.88、`未発見` 札は `Palette.PARCHMENT_DEEP` alpha 0.94 + `Palette.WOOD_DARK` alpha 0.34 の罫線。魚窓内には封印コード 0.125/0.492–0.875/0.508、封印印 0.125/0.418–0.255/0.608（`Palette.GOLD_DEEP` alpha 0.84、`封` 15px）を追加。カードサイズ・既存ラベル座標は変更しない | `src/ui/fish_book_screen.gd` | 未発見カードを濃紺UIパネルではなく、まだ開いていない封印記録として読ませる |
+| 右詳細魚標本窓 | 右詳細の大魚clip内に横罫線3本 `Palette.GOLD_DEEP` alpha 0.12、左測定線 `Palette.WOOD_DARK` alpha 0.10、下辺の採寸目盛り（base alpha 0.10、minor/medium/major tick alpha 0.12/0.15/0.18）、魚上の紙面wash `Palette.PARCHMENT` alpha 0.08 を追加。上部左右に紙テープ 0.060/0.060–0.210/0.145 と 0.790/0.060–0.940/0.145（`Palette.PARCHMENT_DEEP` alpha 0.46）と小さな金具を置く。魚clip座標と魚PNG本体は変更なし | `src/ui/fish_book_screen.gd` | 右詳細の大魚をPNGステッカーではなく、羊皮紙ページに留めた標本画として読ませる |
 | 右詳細高解像度魚フレーム | 発見済み右詳細の大魚のみ、`showcase_sheet` frame0 を左向きにミラーし、既存alpha bboxクロップで表示する。未発見・左カード・clip座標は変更せず、読み込み不可時は `card_portrait` へフォールバック | `src/ui/fish_book_screen.gd`, `assets/showcase/fish/` | 右詳細の大魚をカード用縮小ポートレートではなく、詳細ページの主役としてより鮮明に見せる |
 
 ## 2. 不採用・再試行禁止リスト
@@ -55,24 +59,31 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 | 釣り場カード紙面化 | 1 | 右下釣り場サムネに紙カード枠、余白、羊皮紙ラベルを追加し、青いラベル帯を撤去 | P2収集導線としてfreeze |
 | 右詳細釣果記録欄 | 1 | 釣果/最大サイズを木札ラベル付きの紙面スリップへ分離 | P2収集記録としてfreeze |
 | 未発見カード封印紙面化 | 1 | 未発見カードの濃紺魚窓を羊皮紙色に寄せ、魚影・？・未発見札をセピア調へ変更 | P2収集導線としてfreeze |
-| 右詳細魚標本窓 | 2 | 大魚clip内の下辺に淡い採寸目盛りを追加 | P2魚表示としてfreeze |
+| 右詳細魚標本窓 | 3 | 大魚clip上部左右に淡い紙テープと小さな金具を追加 | P2魚表示としてfreeze |
 | 右詳細高解像度魚フレーム化 | 1 | 右詳細の大魚ソースを `card_portrait` から `showcase_sheet` frame0 mirror へ変更 | P2魚表示としてfreeze |
 | 左一覧ヘッダー台帳ラベル化 | 1 | 操作説明文を記録注記へ置換し、紙面wash・木札・下罫線を追加 | P2台帳文法としてfreeze |
 | 左一覧選択ブックマーク | 1 | 選択中カードの左端に小さなしおり風マーカーを追加 | P2収集導線としてfreeze |
+| 左一覧魚ソース高解像度化 | 1 | 発見済みカードだけを `showcase_sheet` frame0 mirror ソースへ変更し、未発見カードは従来ソースを維持 | P2魚表示としてfreeze |
 | 左一覧魚写真枠収まり修正 | 2 | 初回は写真枠分離で魚が小さすぎたため、一覧専用tight cropを追加して魚を枠内で自然な大きさに戻した | P1/P2写真収まりとしてfreeze |
 | 左一覧写真ウェル明確化 | 1 | 写真下地を線付きの紙面ウェルへ変更し、全カードで同じ写真枠として見せる | P1/P2写真収まりとしてfreeze |
 | 左一覧カード紙面ベース化 | 1 | カード枠内側へ紙面ベースを追加し、暗色台帳地がカード中央に透ける状態を解消 | P2台帳感としてfreeze |
 | 中央綴じ目 | 1 | 左右ページ間に細い背表紙影・中央fold・金細線を追加 | P2台帳感としてfreeze |
 | 下部索引タブ化 | 1 | フィルタ6件を紙/濃紺の索引タブstyleへ変更し、背面に薄い索引レールを追加 | P2収集導線としてfreeze |
 | 発見進捗バー化 | 1 | 上部左の発見済みバー内へ `found / total` で伸縮する小さな進捗線を追加 | P2収集導線としてfreeze |
+| 左一覧ページ面紙面化 | 1 | 左一覧スクロール領域の背後へ羊皮紙下地、紙面wash、淡い端影/罫線を追加 | P2台帳感としてfreeze |
+| 港へ戻る主導線強化 | 1 | 下部右の戻るボタン背後へ木札受け板・金線・下影を追加し、ボタンを少し拡張 | P2主導線としてfreeze |
+| 未発見カード封印サイン強化 | 1 | 未発見カードの魚窓内へ淡い封印コードと小さな封印印を追加 | P2収集導線としてfreeze |
+| 魚ポートレート素材評価 | 1 | 魚図鑑の現行カードcrop、右詳細crop、既存 `card_portrait` を全魚で並べる contact sheet を追加 | 評価基盤としてfreeze |
+| 魚ポートレート印刷なじませ | 2 | 初回 alpha 0.16/0.13 は全画面比較で差が弱かったため、左カード0.22/右詳細0.16へ上げて輪郭だけを締めた | P2魚表示としてfreeze |
+| 専用魚ポートレート素材フェーズ設計 | 1 | `docs/24_fish_book_portrait_asset_brief.md` を追加し、候補置き場、優先魚、採用/不採用条件、contact sheet→全画面比較手順を定義 | 素材フェーズ入口としてfreeze |
 
 ## 4. 暫定判定・再検証TODO
 
-なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-03_selected_card_bookmark_before_after.png` と `docs/qa/evidence/fish_book/2026-07-03_selected_card_bookmark_compare.png` に保存済み。
+なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-03_portrait_asset_brief_current_compare.png`、`docs/qa/evidence/fish_book/2026-07-03_portrait_asset_brief_contact_sheet.png`、直前の実スクショ `docs/qa/evidence/fish_book/2026-07-03_portrait_ink_underprint_screen.png` に保存済み。
 
 ## 5. 現在の残ギャップ
 
-- **P2**: 魚ポートレート素材そのものの専用描き起こし・魚ごとの見せ方、フォント全体方針は未着手。次に品質を上げる場合は1フェーズだけ選び、contact sheet → 全画面比較で判定する。
+- **P2**: 魚ポートレート素材そのものの専用描き起こし・魚ごとの見せ方、フォント全体方針は未着手。魚ポートレートは `docs/24_fish_book_portrait_asset_brief.md` に従い、`tools/build_fish_book_portrait_contact_sheet.py` で全魚の現行カードcrop/右詳細crop/既存 `card_portrait` を比較してから、1フェーズだけ選んで全画面比較で判定する。
 - 文字収まりの採用値（レアリティチップ幅・段階的フォント縮小）を、P1再発なしに動かさないこと。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
@@ -81,4 +92,4 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
 ## 7. 判断ログ（直近パスのみ）
 
-- 2026-07-03: v1.26 P2左一覧選択ブックマークフェーズ。左一覧の選択中カードだけを対象に、カード左端へ小さなしおり風マーカーを追加した。左一覧カード/写真ウェル/魚クロップ/カードサイズ、右詳細ページ、ヘッダー、中央綴じ目、下部索引タブ、釣り場カード、詳細行の採用値はfreeze値のまま維持。`./tools/fish_book_visual_qa.sh` の実スクショで、マーカーが魚写真・No.・魚名・レアリティ・釣果行へ干渉せず、左一覧で選んだ記録が右ページに開かれている状態として読めるため採用。判断根拠: `docs/qa/evidence/fish_book/2026-07-03_selected_card_bookmark_before_after.png`、`docs/qa/evidence/fish_book/2026-07-03_selected_card_bookmark_compare.png`。検証: `git diff --check` exit 0、`fish_book_smoke: ok`、`./tools/validate_project.sh` exit 0（Godot終了時のObjectDB/resource警告あり）。
+- 2026-07-03: v1.34 P2専用魚ポートレート素材フェーズ設計。現行の画面座標、魚clip、crop、文字、台帳フレームは変更せず、残P2である魚ポートレート専用描き起こしの発注/採用条件を `docs/24_fish_book_portrait_asset_brief.md` として追加した。既存 `card_portrait` の単純差し替えでは全画面で明確に勝つ根拠が弱いため、次の実装は `aji` / `saba` / `kasago` などファーストビュー魚の専用候補を作り、contact sheet→全画面比較で採用判定する。判断根拠: `docs/qa/evidence/fish_book/2026-07-03_portrait_asset_brief_current_compare.png`、`docs/qa/evidence/fish_book/2026-07-03_portrait_asset_brief_contact_sheet.png`。検証: `git diff --check` exit 0、`python3 tools/build_fish_book_portrait_contact_sheet.py` exit 0、`./tools/fish_book_visual_qa.sh` exit 0、`fish_book_smoke: ok`、`./tools/validate_project.sh` exit 0（Godot終了時のObjectDB/resource警告あり）。
