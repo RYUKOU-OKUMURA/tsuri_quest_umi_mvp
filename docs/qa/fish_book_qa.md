@@ -1,6 +1,6 @@
 # 魚図鑑画面 QA判断ログ
 
-最終更新: 2026-07-03 / 状態: **v1.24 P2右詳細魚標本窓の採寸目盛り合格・freeze中**
+最終更新: 2026-07-03 / 状態: **v1.25 P2右詳細釣果記録欄合格・freeze中**
 参照画像: `reference/07_fish_book_mockup.png`
 QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
@@ -28,6 +28,7 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 | 左カード内部再設計 | カード最小サイズ 204x106、魚名 10/12/14/16px段階、No. 12px、写真下地 0.070/0.190–0.930/0.615、ポートレートclip 0.080/0.198–0.920/0.602、レアリティ 0.060/0.610–0.438/0.765、統計行 0.070/0.765–0.930/0.945、統計文字 12px | `src/ui/fish_book_screen.gd` | 左一覧で4段目まで実用表示しつつ、魚写真をカード内の枠へ揃え、魚名・レアリティ・釣果・最大サイズを読ませる |
 | 右詳細記録ラベル | 上部紙面wash `Palette.PARCHMENT_DEEP` alpha 0.92 を 0.082/0.052–0.918/0.150、No木札 `Palette.WOOD_DARK` alpha 0.88 を 0.082/0.052–0.318/0.118、場所見出し紙面wash alpha 0.90 を 0.086/0.824–0.915/0.882、場所見出し木札 alpha 0.88 を 0.090/0.834–0.545/0.884 | `src/ui/fish_book_screen.gd` | 右詳細の濃紺UI帯を、羊皮紙ページ上の記録ラベルとして読ませる |
 | 釣り場カード紙面化 | 右下釣り場カードに `Palette.PARCHMENT` alpha 0.78 の1px紙枠、サムネ 0.045/0.055–0.955/0.680、サムネtint `Color(1.0, 0.965, 0.860, 0.92)`、ラベル紙面 `Palette.PARCHMENT_DEEP` alpha 0.96 を 0.045/0.700–0.955/0.955、ラベル文字13px `Palette.TEXT_OUTLINE_LIGHT` | `src/ui/fish_book_screen.gd` | 右下サムネを濃紺UIストリップから羊皮紙ページ内の記録カードへ寄せる |
+| 右詳細釣果記録欄 | 大魚窓下の釣果欄を 0.090/0.518–0.500/0.596、最大欄を 0.510/0.518–0.910/0.596 の `StyleBoxFlat` 紙面スリップに分ける。各欄は `Palette.PARCHMENT_DEEP` alpha 0.48、border `Palette.WOOD_DARK` alpha 0.28、木札ラベル `Palette.WOOD_DARK` alpha 0.88、値は `Palette.TEXT_OUTLINE_LIGHT`。表示文言は値側を `12匹` / `34.2cm` に分離し、未発見は `未記録` / `--.-cm` | `src/ui/fish_book_screen.gd` | 釣果と最大サイズを単なる中央テキストではなく、羊皮紙ページ上の収集記録欄として読ませる |
 | 下部索引タブ | フィルタ6件を 0.032 から x step 0.125 / 幅 0.122、y 0.072–0.850 に配置。背面に索引レール `Palette.PARCHMENT_DEEP` alpha 0.16、上罫線 `Palette.GOLD_DEEP` alpha 0.24、下影 `Palette.TEXT_OUTLINE_DARK` alpha 0.20 を敷く。選択タブは `Palette.DARK_PANEL` alpha 0.94 + `Palette.GOLD_BRIGHT` border、非選択は `Palette.PARCHMENT_DEEP` alpha 0.88 + `Palette.WOOD_DARK` border | `src/ui/fish_book_screen.gd` | 下部フィルタを汎用ボタン列ではなく、図鑑の収集カテゴリをめくる索引タブとして読ませる |
 | 未発見カード封印紙面 | 未発見カードの魚窓下地 `Palette.PARCHMENT_DEEP` alpha 0.58、魚影 `Palette.WOOD_DARK` alpha 0.62、紙面wash `Palette.PARCHMENT` alpha 0.18、No木札 `Palette.WOOD_DARK` alpha 0.72、`？` は `Palette.GOLD_DEEP` alpha 0.88、`未発見` 札は `Palette.PARCHMENT_DEEP` alpha 0.94 + `Palette.WOOD_DARK` alpha 0.34 の罫線 | `src/ui/fish_book_screen.gd` | 未発見カードを濃紺UIパネルではなく封印された紙面記録として読ませる |
 | 右詳細魚標本窓 | 右詳細の大魚clip内に横罫線3本 `Palette.GOLD_DEEP` alpha 0.12、左測定線 `Palette.WOOD_DARK` alpha 0.10、下辺の採寸目盛り（base alpha 0.10、minor/medium/major tick alpha 0.12/0.15/0.18）、魚上の紙面wash `Palette.PARCHMENT` alpha 0.08 を追加。魚clip座標と魚PNG本体は変更なし | `src/ui/fish_book_screen.gd` | 右詳細の大魚をPNGステッカーではなく、紙面上で採寸された標本画として読ませる |
@@ -51,6 +52,7 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 | 左カード内部再設計 | 1 | 204x106へ圧縮後、魚窓だけを0.135–0.680へ戻して魚の主役性を確保 | P2カード再設計としてfreeze |
 | 右詳細記録ラベル | 1 | 右詳細上部と場所見出しに紙面wash＋木札を追加し、濃紺バーを台帳内ラベル化 | P2詳細記録化としてfreeze |
 | 釣り場カード紙面化 | 1 | 右下釣り場サムネに紙カード枠、余白、羊皮紙ラベルを追加し、青いラベル帯を撤去 | P2収集導線としてfreeze |
+| 右詳細釣果記録欄 | 1 | 釣果/最大サイズを木札ラベル付きの紙面スリップへ分離 | P2収集記録としてfreeze |
 | 未発見カード封印紙面化 | 1 | 未発見カードの濃紺魚窓を羊皮紙色に寄せ、魚影・？・未発見札をセピア調へ変更 | P2収集導線としてfreeze |
 | 右詳細魚標本窓 | 2 | 大魚clip内の下辺に淡い採寸目盛りを追加 | P2魚表示としてfreeze |
 | 右詳細高解像度魚フレーム化 | 1 | 右詳細の大魚ソースを `card_portrait` から `showcase_sheet` frame0 mirror へ変更 | P2魚表示としてfreeze |
@@ -64,7 +66,7 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
 ## 4. 暫定判定・再検証TODO
 
-なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-03_detail_specimen_ruler_before_after.png` と `docs/qa/evidence/fish_book/2026-07-03_detail_specimen_ruler_compare.png` に保存済み。
+なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-03_detail_stat_slips_before_after.png` と `docs/qa/evidence/fish_book/2026-07-03_detail_stat_slips_compare.png` に保存済み。
 
 ## 5. 現在の残ギャップ
 
@@ -77,4 +79,4 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
 ## 7. 判断ログ（直近パスのみ）
 
-- 2026-07-03: v1.24 P2右詳細魚標本窓の採寸目盛りフェーズ。右詳細ページの大魚clip内だけを対象に、下辺へ薄い採寸目盛りを追加した。魚PNGソース、右詳細clip座標、左一覧カード/写真ウェル/クロップ、ヘッダー、中央綴じ目、下部索引タブ、釣り場カード、文字サイズ採用値はfreeze値のまま維持。`./tools/fish_book_visual_qa.sh` の実スクショで、魚本体・釣果/最大サイズ行・レアリティバッジへの干渉がなく、右詳細の大魚が単なる貼り込み画像ではなく採寸された標本画として読めるため採用。判断根拠: `docs/qa/evidence/fish_book/2026-07-03_detail_specimen_ruler_before_after.png`、`docs/qa/evidence/fish_book/2026-07-03_detail_specimen_ruler_compare.png`。検証: `git diff --check` exit 0、`fish_book_smoke: ok`、`./tools/validate_project.sh` exit 0（Godot終了時のObjectDB/resource警告あり）。
+- 2026-07-03: v1.25 P2右詳細釣果記録欄フェーズ。右詳細ページの「釣果」「最大」表示だけを対象に、木札ラベル付きの紙面スリップへ分離した。魚PNGソース、右詳細魚clip座標、左一覧カード/写真ウェル/クロップ、ヘッダー、中央綴じ目、下部索引タブ、釣り場カード、詳細行（生息地/好物/行動）の採用値はfreeze値のまま維持。`./tools/fish_book_visual_qa.sh` の実スクショで、値の見切れ・詳細行との重なりがなく、収集成果が羊皮紙ページ上の記録欄として読めるため採用。判断根拠: `docs/qa/evidence/fish_book/2026-07-03_detail_stat_slips_before_after.png`、`docs/qa/evidence/fish_book/2026-07-03_detail_stat_slips_compare.png`。検証: `git diff --check` exit 0、`fish_book_smoke: ok`、`./tools/validate_project.sh` exit 0（Godot終了時のObjectDB/resource警告あり）。

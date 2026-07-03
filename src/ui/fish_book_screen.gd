@@ -258,15 +258,33 @@ func _build_detail_panel(root: Control) -> void:
 	var specimen_wash := _label_plate(_alpha(Palette.PARCHMENT, 0.08))
 	_place_control(detail_portrait_clip, specimen_wash, 0.0, 0.0, 1.0, 1.0)
 
-	_detail_count_label = _book_label("釣果 0匹", 27, Color("#2b1b0d"), true, 0)
-	_detail_count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var count_slip := Panel.new()
+	count_slip.add_theme_stylebox_override("panel", _detail_stat_slip_style())
+	_place_control(detail, count_slip, 0.090, 0.518, 0.500, 0.596)
+	var count_plate := _label_plate(_alpha(Palette.WOOD_DARK, 0.88))
+	_place_control(detail, count_plate, 0.108, 0.535, 0.225, 0.578)
+	var count_caption := _book_label("釣果", 16, Palette.TEXT_BONE, true, 1, Palette.TEXT_OUTLINE_LIGHT)
+	count_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	count_caption.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(detail, count_caption, 0.108, 0.535, 0.225, 0.578)
+	_detail_count_label = _book_label("0匹", 28, Palette.TEXT_OUTLINE_LIGHT, true, 0)
+	_detail_count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_detail_count_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(detail, _detail_count_label, 0.090, 0.522, 0.500, 0.590)
+	_place_control(detail, _detail_count_label, 0.245, 0.520, 0.485, 0.592)
 
-	_detail_best_label = _book_label("最大 --.-cm", 21, Color("#2b1b0d"), true, 0)
-	_detail_best_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var best_slip := Panel.new()
+	best_slip.add_theme_stylebox_override("panel", _detail_stat_slip_style())
+	_place_control(detail, best_slip, 0.510, 0.518, 0.910, 0.596)
+	var best_plate := _label_plate(_alpha(Palette.WOOD_DARK, 0.88))
+	_place_control(detail, best_plate, 0.528, 0.535, 0.645, 0.578)
+	var best_caption := _book_label("最大", 16, Palette.TEXT_BONE, true, 1, Palette.TEXT_OUTLINE_LIGHT)
+	best_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	best_caption.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(detail, best_caption, 0.528, 0.535, 0.645, 0.578)
+	_detail_best_label = _book_label("--.-cm", 24, Palette.TEXT_OUTLINE_LIGHT, true, 0)
+	_detail_best_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_detail_best_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(detail, _detail_best_label, 0.510, 0.530, 0.910, 0.585)
+	_place_control(detail, _detail_best_label, 0.662, 0.524, 0.895, 0.590)
 
 	_add_rule(detail, 0.095, 0.602, 0.910, Color("#7e5a2b", 0.30), 1.0)
 	_detail_habitat_label = _detail_row(detail, 0.620, "生息地")
@@ -498,8 +516,10 @@ func _refresh_detail() -> void:
 		_detail_rarity_label.text = ""
 		_detail_portrait.texture = null
 		_detail_portrait_shadow.texture = null
-		_detail_count_label.text = "釣果 --"
-		_detail_best_label.text = "最大 --.-cm"
+		_detail_count_label.text = "--"
+		_detail_count_label.add_theme_font_size_override("font_size", 26)
+		_detail_best_label.text = "--.-cm"
+		_detail_best_label.add_theme_font_size_override("font_size", 22)
 		_detail_habitat_label.text = ""
 		_detail_bait_label.text = ""
 		_detail_behavior_label.text = ""
@@ -522,8 +542,10 @@ func _refresh_detail() -> void:
 
 	var count := int(PlayerProgress.caught_counts.get(fish_id, 0))
 	var best := float(PlayerProgress.best_sizes.get(fish_id, 0.0))
-	_detail_count_label.text = "釣果  %d匹" % count if discovered else "釣果  未記録"
-	_detail_best_label.text = "最大  %.1fcm" % best if discovered else "最大  --.-cm"
+	_detail_count_label.text = "%d匹" % count if discovered else "未記録"
+	_detail_count_label.add_theme_font_size_override("font_size", 28 if discovered else 22)
+	_detail_best_label.text = "%.1fcm" % best if discovered else "--.-cm"
+	_detail_best_label.add_theme_font_size_override("font_size", 24 if discovered else 22)
 	_detail_habitat_label.text = String(fish.get("habitat", "")) if discovered else "まだ釣ったことがない魚。記録すると詳細が開きます。"
 	_detail_bait_label.text = String(fish.get("preferred_bait", "")) if discovered else "？？？"
 	_detail_behavior_label.text = String(fish.get("behavior", "")) if discovered else "釣り場で出会うまで行動は不明。"
@@ -1057,6 +1079,19 @@ func _add_specimen_ruler(parent: Control) -> void:
 			top = 0.838
 			color = _alpha(Palette.WOOD_DARK, 0.15)
 		_add_specimen_rule(parent, x - 0.002, top, x + 0.002, 0.866, color)
+
+
+func _detail_stat_slip_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = _alpha(Palette.PARCHMENT_DEEP, 0.48)
+	style.border_color = _alpha(Palette.WOOD_DARK, 0.28)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(2)
+	style.content_margin_left = 4.0
+	style.content_margin_top = 2.0
+	style.content_margin_right = 4.0
+	style.content_margin_bottom = 2.0
+	return style
 
 
 func _spot_record_card_style() -> StyleBoxFlat:
