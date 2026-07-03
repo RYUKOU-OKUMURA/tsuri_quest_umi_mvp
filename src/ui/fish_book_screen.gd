@@ -345,7 +345,7 @@ func _make_fish_card(fish: Dictionary) -> Button:
 	var portrait_field := ColorRect.new()
 	portrait_field.color = _alpha(Palette.PARCHMENT if discovered else Palette.PARCHMENT_DEEP, 0.78 if discovered else 0.58)
 	portrait_field.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(button, portrait_field, 0.070, 0.165, 0.930, 0.700)
+	_place_control(button, portrait_field, 0.070, 0.190, 0.930, 0.615)
 
 	var no_plate := _label_plate(Color("#6b4521", 0.80) if discovered else _alpha(Palette.WOOD_DARK, 0.72))
 	no_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -368,11 +368,11 @@ func _make_fish_card(fish: Dictionary) -> Button:
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(button, name_label, 0.292, 0.048, 0.940, 0.185)
 
-	var portrait_texture := _fish_portrait_texture(fish, true)
+	var portrait_texture := _fish_card_portrait_texture(fish)
 	var portrait := _portrait_rect(_alpha(Palette.WOOD_DARK, 0.62) if not discovered else _portrait_paper_tint())
 	portrait.texture = portrait_texture
 	var portrait_clip := _portrait_clip()
-	_place_control(button, portrait_clip, 0.055, 0.135, 0.945, 0.680)
+	_place_control(button, portrait_clip, 0.080, 0.198, 0.920, 0.602)
 	if discovered:
 		var portrait_shadow := _portrait_rect(Color(0.18, 0.105, 0.040, 0.16))
 		portrait_shadow.texture = portrait_texture
@@ -382,24 +382,24 @@ func _make_fish_card(fish: Dictionary) -> Button:
 	if not discovered:
 		var sealed_wash := _label_plate(_alpha(Palette.PARCHMENT, 0.18))
 		sealed_wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_place_control(button, sealed_wash, 0.070, 0.165, 0.930, 0.700)
+		_place_control(button, sealed_wash, 0.070, 0.190, 0.930, 0.615)
 
 		var mark := _book_label("？", 42, _alpha(Palette.GOLD_DEEP, 0.88), true, 2, Palette.TEXT_OUTLINE_LIGHT)
 		mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		mark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_place_control(button, mark, 0.385, 0.285, 0.615, 0.680)
+		_place_control(button, mark, 0.385, 0.275, 0.615, 0.600)
 		var lock_plate := _label_plate(_alpha(Palette.PARCHMENT_DEEP, 0.94))
 		lock_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_place_control(button, lock_plate, 0.615, 0.665, 0.930, 0.825)
+		_place_control(button, lock_plate, 0.615, 0.635, 0.930, 0.790)
 		var lock_rule := _label_plate(_alpha(Palette.WOOD_DARK, 0.34))
 		lock_rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_place_control(button, lock_rule, 0.640, 0.665, 0.910, 0.684)
+		_place_control(button, lock_rule, 0.640, 0.635, 0.910, 0.654)
 		var lock := _book_label("未発見", 12, Palette.TEXT_OUTLINE_LIGHT, true, 0)
 		lock.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lock.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_place_control(button, lock, 0.640, 0.660, 0.930, 0.825)
+		_place_control(button, lock, 0.640, 0.630, 0.930, 0.790)
 		return button
 
 	var rarity := String(fish.get("rarity", ""))
@@ -615,6 +615,11 @@ func _fish_portrait_texture(fish: Dictionary, crop_to_fish := false) -> Texture2
 	if crop_to_fish:
 		return _cropped_portrait_texture(texture)
 	return texture
+
+
+func _fish_card_portrait_texture(fish: Dictionary) -> Texture2D:
+	var texture := _fish_portrait_texture(fish, false)
+	return _cropped_portrait_texture(texture, 0.012, 0.025, 0.070, 2)
 
 
 func _fish_detail_portrait_texture(fish: Dictionary) -> Texture2D:
@@ -841,12 +846,19 @@ func _portrait_clip() -> Control:
 	return clip
 
 
-func _cropped_portrait_texture(texture: Texture2D) -> Texture2D:
+func _cropped_portrait_texture(
+	texture: Texture2D,
+	pad_x_ratio := 0.035,
+	pad_y_ratio := 0.060,
+	alpha_threshold := 0.035,
+	min_pad := 8
+) -> Texture2D:
 	if texture == null:
 		return null
-	var key := texture.resource_path
-	if key.is_empty():
-		key = str(texture.get_instance_id())
+	var base_key := texture.resource_path
+	if base_key.is_empty():
+		base_key = str(texture.get_instance_id())
+	var key := "%s:%s:%s:%s:%s" % [base_key, str(pad_x_ratio), str(pad_y_ratio), str(alpha_threshold), str(min_pad)]
 	if _portrait_crop_cache.has(key):
 		return _portrait_crop_cache[key]
 	var image := texture.get_image()
@@ -861,7 +873,7 @@ func _cropped_portrait_texture(texture: Texture2D) -> Texture2D:
 	var max_y := -1
 	for y in range(height):
 		for x in range(width):
-			if image.get_pixel(x, y).a > 0.035:
+			if image.get_pixel(x, y).a > alpha_threshold:
 				min_x = mini(min_x, x)
 				min_y = mini(min_y, y)
 				max_x = maxi(max_x, x)
@@ -871,8 +883,8 @@ func _cropped_portrait_texture(texture: Texture2D) -> Texture2D:
 		return texture
 	var fish_width := max_x - min_x + 1
 	var fish_height := max_y - min_y + 1
-	var pad_x := maxi(8, int(round(float(fish_width) * 0.035)))
-	var pad_y := maxi(8, int(round(float(fish_height) * 0.060)))
+	var pad_x := maxi(min_pad, int(round(float(fish_width) * pad_x_ratio)))
+	var pad_y := maxi(min_pad, int(round(float(fish_height) * pad_y_ratio)))
 	var region := Rect2(
 		maxi(0, min_x - pad_x),
 		maxi(0, min_y - pad_y),
