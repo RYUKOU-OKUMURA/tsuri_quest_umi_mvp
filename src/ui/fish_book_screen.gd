@@ -330,15 +330,15 @@ func _make_fish_card(fish: Dictionary) -> Button:
 	_wire_button_juice(button)
 
 	var portrait_field := ColorRect.new()
-	portrait_field.color = _alpha(Palette.PARCHMENT if discovered else Palette.DARK_PANEL_DEEP, 0.78 if discovered else 0.34)
+	portrait_field.color = _alpha(Palette.PARCHMENT if discovered else Palette.PARCHMENT_DEEP, 0.78 if discovered else 0.58)
 	portrait_field.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(button, portrait_field, 0.070, 0.165, 0.930, 0.700)
 
-	var no_plate := _label_plate(Color("#6b4521", 0.80) if discovered else Color("#2e1c0e", 0.88))
+	var no_plate := _label_plate(Color("#6b4521", 0.80) if discovered else _alpha(Palette.WOOD_DARK, 0.72))
 	no_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(button, no_plate, 0.055, 0.052, 0.300, 0.178)
 
-	var no_label := _book_label(String(fish.get("fish_no", "No.---")), 12, Color("#fff0c9"), true, 2, Color("#281607"))
+	var no_label := _book_label(String(fish.get("fish_no", "No.---")), 12, Palette.TEXT_BONE, true, 2, Color("#281607"))
 	no_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	no_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	no_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -347,8 +347,8 @@ func _make_fish_card(fish: Dictionary) -> Button:
 	var name_text := String(fish.get("name", fish_id)) if discovered else "？？？？？"
 	var name_color := Color("#3a230e")
 	if not discovered:
-		name_color = Color("#d4c29b")
-	var name_label := _book_label(name_text, 16, name_color, true, 1 if not discovered else 0, Color("#2b1708"))
+		name_color = Palette.TEXT_OUTLINE_LIGHT
+	var name_label := _book_label(name_text, 16, name_color, true, 0, Color("#2b1708"))
 	name_label.add_theme_font_size_override("font_size", _card_name_font_size(name_text))
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -356,7 +356,7 @@ func _make_fish_card(fish: Dictionary) -> Button:
 	_place_control(button, name_label, 0.292, 0.048, 0.940, 0.185)
 
 	var portrait_texture := _fish_portrait_texture(fish, true)
-	var portrait := _portrait_rect(Color(0.05, 0.04, 0.03, 0.72) if not discovered else _portrait_paper_tint())
+	var portrait := _portrait_rect(_alpha(Palette.WOOD_DARK, 0.62) if not discovered else _portrait_paper_tint())
 	portrait.texture = portrait_texture
 	var portrait_clip := _portrait_clip()
 	_place_control(button, portrait_clip, 0.055, 0.135, 0.945, 0.680)
@@ -367,15 +367,22 @@ func _make_fish_card(fish: Dictionary) -> Button:
 	_place_control(portrait_clip, portrait, 0.0, 0.0, 1.0, 1.0)
 
 	if not discovered:
-		var mark := _book_label("？", 42, Color("#d7c08d"), true, 2, Color("#271708"))
+		var sealed_wash := _label_plate(_alpha(Palette.PARCHMENT, 0.18))
+		sealed_wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_place_control(button, sealed_wash, 0.070, 0.165, 0.930, 0.700)
+
+		var mark := _book_label("？", 42, _alpha(Palette.GOLD_DEEP, 0.88), true, 2, Palette.TEXT_OUTLINE_LIGHT)
 		mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		mark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_place_control(button, mark, 0.385, 0.285, 0.615, 0.680)
-		var lock_plate := _label_plate(Color("#2e1c0e", 0.86))
+		var lock_plate := _label_plate(_alpha(Palette.PARCHMENT_DEEP, 0.94))
 		lock_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_place_control(button, lock_plate, 0.615, 0.665, 0.930, 0.825)
-		var lock := _book_label("未発見", 12, Color("#f4e0a8"), true, 1, Color("#2b1708"))
+		var lock_rule := _label_plate(_alpha(Palette.WOOD_DARK, 0.34))
+		lock_rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_place_control(button, lock_rule, 0.640, 0.665, 0.910, 0.684)
+		var lock := _book_label("未発見", 12, Palette.TEXT_OUTLINE_LIGHT, true, 0)
 		lock.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lock.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		lock.mouse_filter = Control.MOUSE_FILTER_IGNORE

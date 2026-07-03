@@ -1,6 +1,6 @@
 # 魚図鑑画面 QA判断ログ
 
-最終更新: 2026-07-03 / 状態: **v1.13 P2釣り場カード紙面化合格・freeze中**
+最終更新: 2026-07-03 / 状態: **v1.14 P2未発見カード封印紙面化合格・freeze中**
 参照画像: `reference/07_fish_book_mockup.png`
 QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
@@ -23,6 +23,7 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 | 左カード内部再設計 | カード最小サイズ 204x106、魚名 10/12/14/16px段階、No. 12px、ポートレートclip 0.055/0.135–0.945/0.680、レアリティ 0.060/0.610–0.438/0.765、統計行 0.070/0.765–0.930/0.945、統計文字 12px | `src/ui/fish_book_screen.gd` | 左一覧で4段目まで実用表示しつつ、魚名・レアリティ・釣果・最大サイズを読ませる |
 | 右詳細記録ラベル | 上部紙面wash `Palette.PARCHMENT_DEEP` alpha 0.92 を 0.082/0.052–0.918/0.150、No木札 `Palette.WOOD_DARK` alpha 0.88 を 0.082/0.052–0.318/0.118、場所見出し紙面wash alpha 0.90 を 0.086/0.824–0.915/0.882、場所見出し木札 alpha 0.88 を 0.090/0.834–0.545/0.884 | `src/ui/fish_book_screen.gd` | 右詳細の濃紺UI帯を、羊皮紙ページ上の記録ラベルとして読ませる |
 | 釣り場カード紙面化 | 右下釣り場カードに `Palette.PARCHMENT` alpha 0.78 の1px紙枠、サムネ 0.045/0.055–0.955/0.680、サムネtint `Color(1.0, 0.965, 0.860, 0.92)`、ラベル紙面 `Palette.PARCHMENT_DEEP` alpha 0.96 を 0.045/0.700–0.955/0.955、ラベル文字13px `Palette.TEXT_OUTLINE_LIGHT` | `src/ui/fish_book_screen.gd` | 右下サムネを濃紺UIストリップから羊皮紙ページ内の記録カードへ寄せる |
+| 未発見カード封印紙面 | 未発見カードの魚窓下地 `Palette.PARCHMENT_DEEP` alpha 0.58、魚影 `Palette.WOOD_DARK` alpha 0.62、紙面wash `Palette.PARCHMENT` alpha 0.18、No木札 `Palette.WOOD_DARK` alpha 0.72、`？` は `Palette.GOLD_DEEP` alpha 0.88、`未発見` 札は `Palette.PARCHMENT_DEEP` alpha 0.94 + `Palette.WOOD_DARK` alpha 0.34 の罫線 | `src/ui/fish_book_screen.gd` | 未発見カードを濃紺UIパネルではなく封印された紙面記録として読ませる |
 
 ## 2. 不採用・再試行禁止リスト
 
@@ -42,10 +43,11 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 | 左カード内部再設計 | 1 | 204x106へ圧縮後、魚窓だけを0.135–0.680へ戻して魚の主役性を確保 | P2カード再設計としてfreeze |
 | 右詳細記録ラベル | 1 | 右詳細上部と場所見出しに紙面wash＋木札を追加し、濃紺バーを台帳内ラベル化 | P2詳細記録化としてfreeze |
 | 釣り場カード紙面化 | 1 | 右下釣り場サムネに紙カード枠、余白、羊皮紙ラベルを追加し、青いラベル帯を撤去 | P2収集導線としてfreeze |
+| 未発見カード封印紙面化 | 1 | 未発見カードの濃紺魚窓を羊皮紙色に寄せ、魚影・？・未発見札をセピア調へ変更 | P2収集導線としてfreeze |
 
 ## 4. 暫定判定・再検証TODO
 
-なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-03_spot_record_cards_compare.png` に保存済み。
+なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-03_locked_record_cards_compare.png` に保存済み。
 
 ## 5. 現在の残ギャップ
 
@@ -58,4 +60,4 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
 ## 7. 判断ログ（直近パスのみ）
 
-- 2026-07-03: v1.13 P2釣り場カード紙面化フェーズ。右詳細下部の釣り場サムネを、濃紺ラベル付きのUIストリップから、紙枠・内側余白・羊皮紙ラベルを持つ記録カードへ変更した。魚ポートレート、左カード、右詳細の魚/統計/説明配置、右詳細記録ラベル、フィルタ/戻るボタンはfreeze値のまま維持。`./tools/fish_book_visual_qa.sh` の横並び比較で、右下の収集導線が一冊の台帳内ページに馴染み、P1（文字見切れ・素材未表示・サムネの過度な潰れ）の再発もないため採用。判断根拠: `docs/qa/evidence/fish_book/2026-07-03_spot_record_cards_compare.png`。検証: `./tools/validate_project.sh` exit 0（Godot終了時のObjectDB/resource警告あり）、`fish_book_smoke: ok`。
+- 2026-07-03: v1.14 P2未発見カード封印紙面化フェーズ。左一覧の未発見カードだけを対象に、濃紺の魚窓と黒い魚影を羊皮紙色・セピア魚影・紙札へ変更した。発見済みカード、カード最小サイズ、魚ポートレートclip、右詳細、釣り場カード、フィルタ/戻るボタンはfreeze値のまま維持。`./tools/fish_book_visual_qa.sh` の横並び比較で、未発見カードが封印された紙面記録として馴染み、P1（文字見切れ・カード情報の読めなさ・素材未表示）の再発もないため採用。判断根拠: `docs/qa/evidence/fish_book/2026-07-03_locked_record_cards_compare.png`。検証: `./tools/validate_project.sh` exit 0（Godot終了時のObjectDB/resource警告あり）、`fish_book_smoke: ok`。
