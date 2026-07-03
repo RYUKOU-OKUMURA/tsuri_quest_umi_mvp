@@ -23,7 +23,7 @@ func _ready() -> void:
 	})
 	_expect(fanfare.visible, "fanfare should be visible after play")
 	_expect(fanfare.is_playing(), "fanfare should report playing after play")
-	await get_tree().create_timer(2.05).timeout
+	await get_tree().create_timer(CatchFanfareScript.AUTO_FINISH_SECONDS + 0.25).timeout
 	_expect(_finished_count == 1, "fanfare should auto-finish once")
 	_expect(not fanfare.visible, "fanfare should hide after auto-finish")
 	_expect(not fanfare.is_playing(), "fanfare should stop playing after auto-finish")
@@ -68,7 +68,7 @@ func _verify_fishing_screen_result_flow() -> void:
 	screen._on_fight_finished(true, "釣り上げ成功")
 	_expect(screen._catch_fanfare.is_playing(), "caught fish should start catch fanfare")
 	_expect(not screen._result_overlay.visible, "result overlay should wait for fanfare")
-	await get_tree().create_timer(2.05).timeout
+	await get_tree().create_timer(CatchFanfareScript.AUTO_FINISH_SECONDS + 0.25).timeout
 	_expect(screen._result_overlay.visible, "result overlay should show after fanfare")
 	_expect(screen._retry_button.text == "続けて釣る", "caught result should keep continue label")
 	screen.queue_free()

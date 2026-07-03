@@ -8,7 +8,7 @@ const ShowcaseAssetsScript = preload("res://src/ui/showcase_assets.gd")
 signal finished
 
 const DESIGN_SIZE := Vector2(1280.0, 720.0)
-const AUTO_FINISH_SECONDS := 1.85
+const AUTO_FINISH_SECONDS := 2.8
 const AUDIO_MIX_RATE := 22050
 const AUDIO_SECONDS := 1.12
 const FANFARE_NOTES := [

@@ -66,7 +66,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 
 | 項目 | 値 | 場所 | 理由・備考 |
 |---|---|---|---|
-| 成功時ファンファーレ | 1.85秒のruntime描画オーバーレイ。白フラッシュ、金帯「釣り上げた！」、魚カード、結果プレート、星/紙吹雪、スキップボタンを表示 | `src/ui/components/catch_fanfare.gd` / `src/ui/fishing_screen.gd` | 既存の結果パネルは演出完了後に表示。既存freeze値は動かさない |
+| 成功時ファンファーレ | 2.8秒のruntime描画オーバーレイ。白フラッシュ、金帯「釣り上げた！」、魚カード、結果プレート、星/紙吹雪、スキップボタンを表示 | `src/ui/components/catch_fanfare.gd` / `src/ui/fishing_screen.gd` | 既存の結果パネルは演出完了後に表示。既存freeze値は動かさない |
 | 魚画像参照 | `FightFishAssets.card_portrait_path()` 経由 | `catch_fanfare.gd` | 魚素材所有ルールを維持。直接パス参照なし |
 | 音 | `AudioStreamGenerator` による短い合成ファンファーレ | `catch_fanfare.gd` | 専用SE素材がないため、P0ではruntime生成で効果音経路を成立させる |
 | 検証画像 | `docs/qa/evidence/underwater_fight/2026-07-03_catch_fanfare_preview.png` | `tools/catch_fanfare_preview.gd` | 通常起動キャプチャ。headless `SubViewport` はnullで不可 |
@@ -100,6 +100,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 | パラメータ | 回数 | 直近の変更内容 | 状態 |
 |---|---|---|---|
 | キャッチ演出・補足文 | 1 | 長文の結果補足が省略表示になったため、「初回記録」「撃破報酬」の短い2行へ変更 | 採用 |
+| キャッチ演出・表示時間 | 1 | 釣り上げ演出が短すぎたため、自動終了を1.85秒から2.8秒へ延長 | 採用 |
 
 ## 4. 暫定判定・再検証TODO
 
@@ -118,4 +119,4 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 
 ## 7. 判断ログ（直近パスのみ）
 
-- 2026-07-03: P0キャッチ演出を追加。`catch_fanfare.gd` を新設し、釣り上げ成功時に既存結果パネルの前へ1.85秒のファンファーレを挿入した。既存の背景・魚・HUD・右サイドバー・上部ステータスfreeze値は変更していない。採用判断は `docs/qa/evidence/underwater_fight/2026-07-03_catch_fanfare_preview.png`。P1として出た補足文の省略表示は短文2行化で解消。自動終了/スキップは `tools/catch_fanfare_smoke.tscn` で検証済み。
+- 2026-07-03: P0キャッチ演出を追加。`catch_fanfare.gd` を新設し、釣り上げ成功時に既存結果パネルの前へ2.8秒のファンファーレを挿入した。既存の背景・魚・HUD・右サイドバー・上部ステータスfreeze値は変更していない。採用判断は `docs/qa/evidence/underwater_fight/2026-07-03_catch_fanfare_preview.png`。P1として出た補足文の省略表示は短文2行化で解消。自動終了/スキップは `tools/catch_fanfare_smoke.tscn` で検証済み。
