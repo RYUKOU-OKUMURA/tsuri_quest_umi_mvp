@@ -1,8 +1,8 @@
 # 水中ファイト画面 QA判断ログ
 
-最終更新: 2026-07-03 / 状態: **v1 showcase 合格・freeze中**（2026-06-26 判定）
+最終更新: 2026-07-03 / 状態: **v1 showcase 合格・freeze中**（2026-06-26 判定）+ P0キャッチ演出追加
 参照画像: `reference/02_underwater_fight_mockup.png`
-QA更新コマンド: `./tools/fight_visual_qa.sh`
+QA更新コマンド: `./tools/fight_visual_qa.sh` / P0演出確認: `godot --path . res://tools/catch_fanfare_preview.tscn`
 詳細な経過履歴: `docs/qa/archive/underwater_fight_design_qa_2026-06.md`（旧 `design-qa.md`）
 
 ## 1. freeze値（正本）
@@ -62,6 +62,15 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 | アクション/タックル | y=59.18% / 80.08%、h=19.53% / 18.75%、アクションタイトル21px・メッセージ15px | 同上 | |
 | タックルカード | **5行13px（ロッド/リール/ライン/ハリス/針）、104pxアイコンレーン、118x86pxロッド/リール切り抜き** | 同上 | v1公式値。`docs/11_underwater_fight_showcase.md` と共通 |
 
+### キャッチ演出
+
+| 項目 | 値 | 場所 | 理由・備考 |
+|---|---|---|---|
+| 成功時ファンファーレ | 1.85秒のruntime描画オーバーレイ。白フラッシュ、金帯「釣り上げた！」、魚カード、結果プレート、星/紙吹雪、スキップボタンを表示 | `src/ui/components/catch_fanfare.gd` / `src/ui/fishing_screen.gd` | 既存の結果パネルは演出完了後に表示。既存freeze値は動かさない |
+| 魚画像参照 | `FightFishAssets.card_portrait_path()` 経由 | `catch_fanfare.gd` | 魚素材所有ルールを維持。直接パス参照なし |
+| 音 | `AudioStreamGenerator` による短い合成ファンファーレ | `catch_fanfare.gd` | 専用SE素材がないため、P0ではruntime生成で効果音経路を成立させる |
+| 検証画像 | `docs/qa/evidence/underwater_fight/2026-07-03_catch_fanfare_preview.png` | `tools/catch_fanfare_preview.gd` | 通常起動キャプチャ。headless `SubViewport` はnullで不可 |
+
 ### フォント
 
 | 項目 | 値 | 場所 | 理由・備考 |
@@ -90,6 +99,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 
 | パラメータ | 回数 | 直近の変更内容 | 状態 |
 |---|---|---|---|
+| キャッチ演出・補足文 | 1 | 長文の結果補足が省略表示になったため、「初回記録」「撃破報酬」の短い2行へ変更 | 採用 |
 
 ## 4. 暫定判定・再検証TODO
 
@@ -108,4 +118,4 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 
 ## 7. 判断ログ（直近パスのみ）
 
-- 2026-06-26: v1 showcase 合格。P1ゼロ（黒帯・マスク境界・残像・読めない魚/ライン/ルアー/ヒットなし）を全画面横並びで確認し、背景・魚基準値・HUD・右パネル・上部ステータス・実キーヒント・素材トリートメントを freeze。残る理想品質ギャップは3つの素材フェーズ（①最終魚アート差し替え ②専用UIフォント/アイコン ③authoredカード素材）に分割。エントリポイントは `docs/12_underwater_fight_production_asset_brief.md`。詳細経過は archive 参照。
+- 2026-07-03: P0キャッチ演出を追加。`catch_fanfare.gd` を新設し、釣り上げ成功時に既存結果パネルの前へ1.85秒のファンファーレを挿入した。既存の背景・魚・HUD・右サイドバー・上部ステータスfreeze値は変更していない。採用判断は `docs/qa/evidence/underwater_fight/2026-07-03_catch_fanfare_preview.png`。P1として出た補足文の省略表示は短文2行化で解消。自動終了/スキップは `tools/catch_fanfare_smoke.tscn` で検証済み。

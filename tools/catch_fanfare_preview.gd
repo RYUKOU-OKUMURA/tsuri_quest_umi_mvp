@@ -1,0 +1,59 @@
+extends Control
+## 釣り上げファンファーレのQA用キャプチャツール。
+
+const FishingScreenScript = preload("res://src/ui/fishing_screen.gd")
+const ThemeFactory = preload("res://src/ui/ui_theme.gd")
+const DEFAULT_OUT := "/tmp/tsuri_catch_fanfare.png"
+const VW := Vector2i(1280, 720)
+
+
+func _ready() -> void:
+	var out := OS.get_environment("TSURI_CATCH_FANFARE_OUT")
+	if out.is_empty():
+		out = DEFAULT_OUT
+	if FileAccess.file_exists(out):
+		var remove_error := DirAccess.remove_absolute(out)
+		if remove_error != OK:
+			push_warning("Failed to remove stale catch fanfare capture: %s" % out)
+
+	PlayerProgress.level = max(PlayerProgress.level, GameData.BOSS_UNLOCK_LEVEL)
+	PlayerProgress.money = 12450
+
+	var vp := SubViewport.new()
+	vp.size = VW
+	vp.disable_3d = true
+	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(vp)
+
+	var screen := FishingScreenScript.new()
+	screen.theme = ThemeFactory.build_theme()
+	screen.configure({"spot_id": GameData.BOSS_FISHING_SPOT_ID})
+	screen.size = Vector2(VW)
+	vp.add_child(screen)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var fish := GameData.get_fish("boss_kurodai").duplicate(true)
+	fish["name"] = "クロダイ"
+	fish["rarity"] = "ぬし"
+	screen._current_fish = fish
+	screen._simulator.prepare(fish, screen._trip_stats)
+	screen._view.bind_simulator(screen._simulator)
+	screen._surface_view.bind_simulator(screen._simulator)
+	screen._fight_sidebar.bind(screen._simulator, fish, screen._trip_stats)
+	screen._fight_hud.bind(screen._simulator, fish, screen._trip_stats)
+	screen._view.modulate.a = 1.0
+	screen._surface_view.modulate.a = 0.0
+	screen._catch_fanfare.play(fish, 48.2, {
+		"first_catch": true,
+		"boss_first_clear_reward": {"money": 3000},
+	})
+
+	await get_tree().create_timer(0.92).timeout
+	var img := vp.get_texture().get_image()
+	if img == null:
+		push_error("SubViewport get_image() returned null; run with a real display driver.")
+		get_tree().quit(1)
+		return
+	img.save_png(out)
+	get_tree().quit(0)

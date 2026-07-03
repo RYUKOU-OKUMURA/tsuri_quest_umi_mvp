@@ -5,6 +5,7 @@ const SurfaceCastViewScript = preload("res://src/ui/components/surface_cast_view
 const FightSidebarScript = preload("res://src/ui/components/fight_sidebar.gd")
 const FightHudScript = preload("res://src/ui/components/fight_hud.gd")
 const FightStatusBarScript = preload("res://src/ui/components/fight_status_bar.gd")
+const CatchFanfareScript = preload("res://src/ui/components/catch_fanfare.gd")
 
 const FISHING_BGM_VOLUME_DB := -9.0
 const FISHING_BGM_PATH_BY_SURFACE_KEY := {
@@ -40,6 +41,7 @@ var _surface_view: SurfaceCastView
 var _fight_sidebar: FightSidebar
 var _fight_hud: FightHud
 var _fight_status_bar: FightStatusBar
+var _catch_fanfare: CatchFanfare
 
 var _result_overlay: ColorRect
 var _result_title: Label
@@ -175,6 +177,7 @@ func _build_screen() -> void:
 
 	_create_result_overlay()
 	_create_quit_overlay()
+	_create_catch_fanfare()
 	_prepare_new_attempt()
 	_update_ui()
 
@@ -367,10 +370,19 @@ func _create_quit_overlay() -> void:
 	row.add_child(_quit_confirm_button)
 
 
+func _create_catch_fanfare() -> void:
+	_catch_fanfare = CatchFanfareScript.new()
+	_catch_fanfare.z_index = 80
+	_catch_fanfare.finished.connect(_on_catch_fanfare_finished)
+	add_child(_catch_fanfare)
+
+
 func _process(delta: float) -> void:
 	if _simulator == null:
 		return
 	if _quit_overlay != null and _quit_overlay.visible:
+		return
+	if _catch_fanfare != null and _catch_fanfare.is_playing():
 		return
 	_simulator.tick(delta)
 	_update_ui()
@@ -379,6 +391,8 @@ func _process(delta: float) -> void:
 
 func _input(event: InputEvent) -> void:
 	if _simulator == null or not event is InputEventKey:
+		return
+	if _catch_fanfare != null and _catch_fanfare.is_playing():
 		return
 	var key_event := event as InputEventKey
 	if _quit_overlay != null and _quit_overlay.visible:
@@ -570,8 +584,9 @@ func _on_message_changed(message: String) -> void:
 
 func _on_fight_finished(caught: bool, reason: String) -> void:
 	if caught:
+		var catch_result: Dictionary = {}
 		if not _result_recorded:
-			var catch_result := PlayerProgress.record_catch(
+			catch_result = PlayerProgress.record_catch(
 				String(_current_fish["id"]),
 				_simulator.result_size_cm,
 				_spot_id
@@ -580,11 +595,21 @@ func _on_fight_finished(caught: bool, reason: String) -> void:
 			_result_recorded = true
 		_result_title.text = "釣り上げ成功！"
 		_retry_button.text = "続けて釣る"
+		if _catch_fanfare != null:
+			_result_overlay.visible = false
+			_catch_fanfare.play(_current_fish, _simulator.result_size_cm, catch_result)
+			return
 	else:
 		_result_title.text = "逃げられた……"
 		_result_details.text = "%s\n\nテンションの安全域を保ち、魚の突進時は糸を出そう。" % reason
 		_retry_button.text = "再挑戦"
 		play_screen_sfx(ESCAPED_SFX_PATH, FISHING_SFX_VOLUME_DB)
+	_result_overlay.visible = true
+
+
+func _on_catch_fanfare_finished() -> void:
+	if _result_overlay == null:
+		return
 	_result_overlay.visible = true
 
 
