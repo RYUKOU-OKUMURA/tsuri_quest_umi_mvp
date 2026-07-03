@@ -11,13 +11,15 @@ const FISH_BOOK_HEADER_FRAME_PATH := "res://assets/showcase/fish_book/fish_book_
 const FISH_BOOK_TITLE_SIGN_PATH := "res://assets/showcase/fish_book/fish_book_title_sign.png"
 const FISH_BOOK_MAIN_FRAME_PATH := "res://assets/showcase/fish_book/fish_book_main_frame.png"
 const FISH_BOOK_DETAIL_FRAME_PATH := "res://assets/showcase/fish_book/fish_book_detail_frame.png"
+const FISH_BOOK_DETAIL_PAPER_PATH := "res://assets/showcase/fish_book/fish_book_detail_paper.png"
 const FISH_BOOK_FOOTER_FRAME_PATH := "res://assets/showcase/fish_book/fish_book_footer_frame.png"
 const FISH_BOOK_THUMB_BASE_PATH := "res://assets/showcase/fish_book/thumbs"
+const FISH_BOOK_CARD_FRAME_PATH := "res://assets/showcase/fish_book/fish_book_card_frame.png"
+const FISH_BOOK_CARD_SELECTED_FRAME_PATH := "res://assets/showcase/fish_book/fish_book_card_selected_frame.png"
+const FISH_BOOK_CARD_LOCKED_FRAME_PATH := "res://assets/showcase/fish_book/fish_book_card_locked_frame.png"
 const COMMON_STATUS_BAR_PATH := "res://assets/showcase/common/status_bar_frame.png"
 const COMMON_DETAIL_ICON_SHEET_PATH := "res://assets/showcase/common/detail_icon_sheet.png"
 const COMMON_FOOTER_ICON_SHEET_PATH := "res://assets/showcase/common/footer_icon_sheet.png"
-const COMMON_CARD_FRAME_PATH := "res://assets/showcase/common/card_frame.png"
-const COMMON_CARD_SELECTED_FRAME_PATH := "res://assets/showcase/common/card_selected_frame.png"
 const COMMON_BADGE_FRAME_PATH := "res://assets/showcase/common/badge_frame.png"
 const COMMON_DETAIL_ROW_FRAME_PATH := "res://assets/showcase/common/detail_row_frame.png"
 const COMMON_BUTTON_PATH := "res://assets/showcase/common/button_frame.png"
@@ -158,13 +160,8 @@ func _build_book_grid(root: Control) -> void:
 
 func _build_detail_panel(root: Control) -> void:
 	var detail := _anchored_control(root, 0.602, 0.165, 0.970, 0.872)
-	var parchment := ColorRect.new()
-	parchment.color = _alpha(Palette.PARCHMENT_DEEP, 0.96)
-	parchment.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(detail, parchment, 0.044, 0.032, 0.958, 0.968)
-	var paper_wash := _paper_wash()
-	paper_wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(detail, paper_wash, 0.060, 0.055, 0.940, 0.945)
+	var page_paper := _texture_rect(FISH_BOOK_DETAIL_PAPER_PATH)
+	_place_control(detail, page_paper, 0.044, 0.032, 0.958, 0.968)
 
 	var frame := _texture_rect(FISH_BOOK_DETAIL_FRAME_PATH)
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -325,14 +322,6 @@ func _make_fish_card(fish: Dictionary) -> Button:
 	_silence_button_text(button)
 	_wire_button_juice(button)
 
-	var page_fill := ColorRect.new()
-	page_fill.color = _alpha(Palette.PARCHMENT_DEEP if discovered else Palette.PARCHMENT, 0.94 if discovered else 0.42)
-	page_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(button, page_fill, 0.050, 0.130, 0.950, 0.955)
-	var paper_wash := _paper_wash()
-	paper_wash.modulate = Color(1.0, 1.0, 1.0, 0.42 if discovered else 0.22)
-	paper_wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(button, paper_wash, 0.050, 0.130, 0.950, 0.955)
 	var portrait_field := ColorRect.new()
 	portrait_field.color = _alpha(Palette.PARCHMENT if discovered else Palette.DARK_PANEL_DEEP, 0.78 if discovered else 0.34)
 	portrait_field.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -599,12 +588,12 @@ func _refresh_filter_buttons() -> void:
 func _apply_card_skin(button: Button, discovered: bool, selected: bool) -> void:
 	var normal: StyleBox
 	if selected:
-		normal = _texture_style(COMMON_CARD_SELECTED_FRAME_PATH, Vector4(28, 26, 28, 26))
+		normal = _texture_style(FISH_BOOK_CARD_SELECTED_FRAME_PATH, Vector4(30, 28, 30, 28))
 	elif discovered:
-		normal = _texture_style(COMMON_CARD_FRAME_PATH, Vector4(24, 22, 24, 24))
+		normal = _texture_style(FISH_BOOK_CARD_FRAME_PATH, Vector4(26, 24, 26, 24))
 	else:
-		normal = UITextures.flat_style(Color("#4a3825"), Color("#25160b"), 2, 8, true, 4)
-	var hover := _texture_style(COMMON_CARD_SELECTED_FRAME_PATH, Vector4(28, 26, 28, 26))
+		normal = _texture_style(FISH_BOOK_CARD_LOCKED_FRAME_PATH, Vector4(26, 24, 26, 24))
+	var hover := _texture_style(FISH_BOOK_CARD_SELECTED_FRAME_PATH, Vector4(30, 28, 30, 28))
 	if normal != null:
 		button.add_theme_stylebox_override("normal", normal)
 	if hover != null:
