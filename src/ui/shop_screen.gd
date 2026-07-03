@@ -5,10 +5,12 @@ const GameFontsScript = preload("res://src/ui/game_fonts.gd")
 const ROD_BACKPLATE_PATH := "res://assets/showcase/tackle_shop/shop_rod_backplate.png"
 const RIG_BACKPLATE_PATH := "res://assets/showcase/tackle_shop/shop_rig_backplate.png"
 const ITEM_ICON_SHEET_PATH := "res://assets/showcase/tackle_shop/shop_item_icon_sheet.png"
+const DETAIL_ITEM_SHEET_PATH := "res://assets/showcase/tackle_shop/shop_detail_item_sheet.png"
 const BAIT_ICON_SHEET_PATH := "res://assets/showcase/tackle_shop/shop_bait_icon_sheet.png"
 
 const DESIGN_SIZE := Vector2(1280.0, 720.0)
 const ICON_CELL := 128.0
+const DETAIL_CELL := 256.0
 const BAIT_CELL := 64.0
 
 const TITLE_RECT := Rect2(92.0, 18.0, 198.0, 42.0)
@@ -18,80 +20,51 @@ const ROD_STATUS_RECT := Rect2(720.0, 17.0, 120.0, 30.0)
 const MONEY_RECT := Rect2(918.0, 17.0, 122.0, 30.0)
 const RIG_STATUS_RECT := Rect2(1062.0, 17.0, 144.0, 30.0)
 
-const ROD_TAB_RECT := Rect2(82.0, 655.0, 82.0, 42.0)
-const RIG_TAB_RECT := Rect2(168.0, 655.0, 128.0, 42.0)
+const ROD_TAB_RECT := Rect2(82.0, 642.0, 96.0, 58.0)
+const RIG_TAB_RECT := Rect2(182.0, 642.0, 124.0, 58.0)
 const RESULT_RECT := Rect2(314.0, 646.0, 540.0, 42.0)
-const FOOTER_ACTION_RECT := Rect2(840.0, 560.0, 300.0, 50.0)
+const FOOTER_ACTION_RECT := Rect2(888.0, 568.0, 294.0, 48.0)
 const FOOTER_RETURN_RECT := Rect2(1108.0, 646.0, 160.0, 44.0)
 
-const ROD_CARD_RECTS := {
-	"starter": Rect2(178.0, 92.0, 132.0, 230.0),
-	"iso": Rect2(376.0, 92.0, 132.0, 230.0),
-	"offshore": Rect2(574.0, 92.0, 132.0, 230.0),
-	"big_game": Rect2(178.0, 348.0, 132.0, 224.0),
-	"marlin": Rect2(376.0, 348.0, 132.0, 224.0),
-}
-
-const ROD_CARD_NAME_RECTS := {
-	"starter": Rect2(222.0, 109.0, 120.0, 24.0),
-	"iso": Rect2(420.0, 109.0, 120.0, 24.0),
-	"offshore": Rect2(616.0, 109.0, 120.0, 24.0),
-	"big_game": Rect2(220.0, 365.0, 124.0, 24.0),
-	"marlin": Rect2(418.0, 365.0, 124.0, 24.0),
-}
-
-const ROD_CARD_STATUS_RECTS := {
-	"starter": Rect2(238.0, 293.0, 124.0, 24.0),
-	"iso": Rect2(436.0, 293.0, 124.0, 24.0),
-	"offshore": Rect2(632.0, 293.0, 124.0, 24.0),
-	"big_game": Rect2(238.0, 548.0, 124.0, 24.0),
-	"marlin": Rect2(436.0, 548.0, 124.0, 24.0),
-}
-
-const RIG_CARD_RECTS := {
-	"sabiki": Rect2(160.0, 94.0, 132.0, 228.0),
-	"uki": Rect2(382.0, 94.0, 132.0, 228.0),
-	"chokusen": Rect2(606.0, 94.0, 132.0, 228.0),
-	"nomase": Rect2(160.0, 324.0, 132.0, 220.0),
-	"jigging": Rect2(382.0, 324.0, 132.0, 220.0),
-	"kani": Rect2(606.0, 324.0, 132.0, 220.0),
-}
-
-const RIG_CARD_NAME_RECTS := {
-	"sabiki": Rect2(178.0, 112.0, 144.0, 24.0),
-	"uki": Rect2(402.0, 112.0, 144.0, 24.0),
-	"chokusen": Rect2(626.0, 112.0, 144.0, 24.0),
-	"nomase": Rect2(178.0, 344.0, 144.0, 24.0),
-	"jigging": Rect2(402.0, 344.0, 144.0, 24.0),
-	"kani": Rect2(626.0, 344.0, 144.0, 24.0),
-}
-
-const RIG_CARD_STATUS_RECTS := {
-	"sabiki": Rect2(178.0, 278.0, 136.0, 24.0),
-	"uki": Rect2(402.0, 278.0, 136.0, 24.0),
-	"chokusen": Rect2(626.0, 278.0, 136.0, 24.0),
-	"nomase": Rect2(178.0, 508.0, 136.0, 24.0),
-	"jigging": Rect2(402.0, 508.0, 136.0, 24.0),
-	"kani": Rect2(626.0, 508.0, 136.0, 24.0),
-}
-
-const DETAIL_TITLE_RECT := Rect2(878.0, 106.0, 304.0, 30.0)
-const DETAIL_STATUS_RECT := Rect2(878.0, 140.0, 304.0, 24.0)
-const DETAIL_DESCRIPTION_RECT := Rect2(892.0, 170.0, 284.0, 58.0)
-const DETAIL_ICON_RECT := Rect2(856.0, 382.0, 40.0, 40.0)
-const DETAIL_STATS_RECT := Rect2(902.0, 374.0, 264.0, 104.0)
-const DETAIL_BAIT_RECT := Rect2(902.0, 486.0, 286.0, 34.0)
-const DETAIL_HINT_RECT := Rect2(902.0, 520.0, 270.0, 38.0)
-
-const ROD_ICON_INDEX := {
+const CARD_SLOT_RECTS := [
+	Rect2(216.0, 88.0, 192.0, 250.0),
+	Rect2(414.0, 88.0, 192.0, 250.0),
+	Rect2(612.0, 88.0, 192.0, 250.0),
+	Rect2(216.0, 344.0, 192.0, 250.0),
+	Rect2(414.0, 344.0, 192.0, 250.0),
+	Rect2(612.0, 344.0, 192.0, 250.0),
+]
+const CARD_NAME_OFFSET := Rect2(44.0, 24.0, 140.0, 26.0)
+const CARD_STATUS_OFFSET := Rect2(34.0, 204.0, 144.0, 28.0)
+const CARD_SLOT_INDEX := {
 	"starter": 0,
 	"iso": 1,
 	"offshore": 2,
 	"big_game": 3,
 	"marlin": 4,
+	"sabiki": 0,
+	"uki": 1,
+	"chokusen": 2,
+	"nomase": 3,
+	"jigging": 4,
+	"kani": 5,
 }
 
-const RIG_ICON_INDEX := {
+const DETAIL_TITLE_RECT := Rect2(878.0, 106.0, 304.0, 30.0)
+const DETAIL_STATUS_RECT := Rect2(878.0, 140.0, 304.0, 24.0)
+const DETAIL_DESCRIPTION_RECT := Rect2(888.0, 166.0, 288.0, 62.0)
+const DETAIL_ART_RECT := Rect2(852.0, 206.0, 334.0, 168.0)
+const DETAIL_ICON_RECT := Rect2(856.0, 386.0, 40.0, 40.0)
+const DETAIL_STATS_RECT := Rect2(902.0, 380.0, 264.0, 98.0)
+const DETAIL_BAIT_RECT := Rect2(902.0, 486.0, 286.0, 34.0)
+const DETAIL_HINT_RECT := Rect2(902.0, 520.0, 270.0, 38.0)
+
+const ITEM_ICON_INDEX := {
+	"starter": 0,
+	"iso": 1,
+	"offshore": 2,
+	"big_game": 3,
+	"marlin": 4,
 	"sabiki": 5,
 	"uki": 6,
 	"chokusen": 7,
@@ -117,6 +90,7 @@ var _selected_item_id := "starter"
 var _result_message := "装備を整えます。"
 
 var _item_icon_sheet: Texture2D
+var _detail_item_sheet: Texture2D
 var _bait_icon_sheet: Texture2D
 
 var _letterbox_backdrop: ColorRect
@@ -131,6 +105,7 @@ var _rig_status_label: Label
 var _rod_tab_button: Button
 var _rig_tab_button: Button
 var _cards_layer: Control
+var _detail_art: TextureRect
 var _detail_icon: TextureRect
 var _detail_title_label: Label
 var _detail_status_label: Label
@@ -167,8 +142,9 @@ func _build_screen() -> void:
 
 
 func _load_assets() -> void:
-	_item_icon_sheet = ShowcaseAssetsScript.load_texture(ITEM_ICON_SHEET_PATH)
-	_bait_icon_sheet = ShowcaseAssetsScript.load_texture(BAIT_ICON_SHEET_PATH)
+	_item_icon_sheet = _load_tackle_texture(ITEM_ICON_SHEET_PATH)
+	_detail_item_sheet = _load_tackle_texture(DETAIL_ITEM_SHEET_PATH)
+	_bait_icon_sheet = _load_tackle_texture(BAIT_ICON_SHEET_PATH)
 
 
 func _notification(what: int) -> void:
@@ -209,7 +185,11 @@ func _layout_design_canvas() -> void:
 
 
 func _build_backplate(parent: Control) -> void:
-	_backplate = ShowcaseAssetsScript.texture_rect(ROD_BACKPLATE_PATH)
+	_backplate = TextureRect.new()
+	_backplate.texture = _load_tackle_texture(ROD_BACKPLATE_PATH)
+	_backplate.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_backplate.stretch_mode = TextureRect.STRETCH_SCALE
+	_backplate.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_backplate.position = Vector2.ZERO
 	_backplate.size = DESIGN_SIZE
 	_backplate.custom_minimum_size = DESIGN_SIZE
@@ -265,15 +245,22 @@ func _build_detail_overlay(parent: Control) -> void:
 	_place_control(parent, _detail_status_label, DETAIL_STATUS_RECT)
 
 	_detail_description_label = _make_text("", 15, Palette.TEXT_DARK, HORIZONTAL_ALIGNMENT_LEFT, VERTICAL_ALIGNMENT_TOP, 0)
-	_detail_description_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_detail_description_label.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
 	_place_control(parent, _detail_description_label, DETAIL_DESCRIPTION_RECT)
+
+	_detail_art = TextureRect.new()
+	_detail_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_detail_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_detail_art.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_detail_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control(parent, _detail_art, DETAIL_ART_RECT)
 
 	_detail_icon = TextureRect.new()
 	_detail_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_detail_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_detail_icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_detail_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_detail_icon.modulate = Color(1.0, 1.0, 1.0, 0.58)
+	_detail_icon.modulate = Color(1.0, 1.0, 1.0, 0.86)
 	_place_control(parent, _detail_icon, DETAIL_ICON_RECT)
 
 	_detail_stats_box = Control.new()
@@ -283,7 +270,7 @@ func _build_detail_overlay(parent: Control) -> void:
 	_place_control(parent, _detail_bait_box, DETAIL_BAIT_RECT)
 
 	_detail_hint_label = _make_text("", 14, Palette.TEXT_DARK, HORIZONTAL_ALIGNMENT_LEFT, VERTICAL_ALIGNMENT_TOP, 0)
-	_detail_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_detail_hint_label.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
 	_place_control(parent, _detail_hint_label, DETAIL_HINT_RECT)
 
 
@@ -316,7 +303,7 @@ func _refresh() -> void:
 func _refresh_backplate() -> void:
 	if _backplate == null:
 		return
-	_backplate.texture = ShowcaseAssetsScript.load_texture(ROD_BACKPLATE_PATH if _shop_mode == "rod" else RIG_BACKPLATE_PATH)
+	_backplate.texture = _load_tackle_texture(ROD_BACKPLATE_PATH if _shop_mode == "rod" else RIG_BACKPLATE_PATH)
 
 
 func _refresh_header() -> void:
@@ -370,11 +357,13 @@ func _make_item_card(item_id: String) -> Button:
 
 	if selected:
 		var highlight := ColorRect.new()
+		highlight.name = "ShopCardHighlight_%s" % item_id
 		highlight.color = Color(1.0, 0.82, 0.30, 0.08)
 		highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		highlight.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		button.add_child(highlight)
 		var frame := Panel.new()
+		frame.name = "ShopCardSelectionFrame_%s" % item_id
 		frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		frame.add_theme_stylebox_override("panel", _selection_style())
 		frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -390,11 +379,19 @@ func _add_card_labels(parent: Control, item_id: String) -> void:
 	var name_size := 13 if _shop_mode == "rod" else 12
 	var status_size := 13
 
-	var title := _make_text(String(data.get("name", "")), name_size, Palette.TEXT_BONE, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, 1)
+	var title_text := String(data.get("name", ""))
+	var title := _make_text(title_text, _fit_card_text_size(title_text, name_size, 11, name_rect.size.x), Palette.TEXT_BONE, HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, 1)
+	title.name = "ShopCardName_%s" % item_id
+	title.set_meta("shop_item_id", item_id)
+	title.set_meta("shop_label_role", "name")
 	title.z_index = 30
 	_place_control(parent, title, name_rect)
 
-	var status_label := _make_text(String(status.get("card", "")), status_size, _status_color(String(status.get("kind", ""))), HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, 1)
+	var status_text := String(status.get("card", ""))
+	var status_label := _make_text(status_text, _fit_card_text_size(status_text, status_size, 11, status_rect.size.x), _status_color(String(status.get("kind", ""))), HORIZONTAL_ALIGNMENT_CENTER, VERTICAL_ALIGNMENT_CENTER, 1)
+	status_label.name = "ShopCardStatus_%s" % item_id
+	status_label.set_meta("shop_item_id", item_id)
+	status_label.set_meta("shop_label_role", "status")
 	status_label.z_index = 30
 	_place_control(parent, status_label, status_rect)
 
@@ -418,6 +415,7 @@ func _refresh_detail() -> void:
 		return
 	var data := _item_data(_selected_item_id)
 	var status := _item_status(_selected_item_id)
+	_detail_art.texture = _detail_item_icon(_selected_item_id)
 	_detail_icon.texture = _item_icon(_selected_item_id)
 	_detail_title_label.text = String(data.get("name", ""))
 	_detail_status_label.text = String(status.get("detail", ""))
@@ -552,9 +550,16 @@ func _representative_fish_text(bait_types: Array[String]) -> String:
 	return "、".join(PackedStringArray(names))
 
 
+func _item_icon_index(item_id: String) -> int:
+	return int(ITEM_ICON_INDEX.get(item_id, 0))
+
+
 func _item_icon(item_id: String) -> Texture2D:
-	var index := int(ROD_ICON_INDEX.get(item_id, RIG_ICON_INDEX.get(item_id, 0)))
-	return ShowcaseAssetsScript.atlas_icon_from_texture(_item_icon_sheet, ICON_CELL, index)
+	return ShowcaseAssetsScript.atlas_icon_from_texture(_item_icon_sheet, ICON_CELL, _item_icon_index(item_id))
+
+
+func _detail_item_icon(item_id: String) -> Texture2D:
+	return ShowcaseAssetsScript.atlas_icon_from_texture(_detail_item_sheet, DETAIL_CELL, _item_icon_index(item_id))
 
 
 func _bait_icon(bait: String) -> Texture2D:
@@ -563,15 +568,35 @@ func _bait_icon(bait: String) -> Texture2D:
 
 
 func _card_rect(item_id: String) -> Rect2:
-	return (ROD_CARD_RECTS if _shop_mode == "rod" else RIG_CARD_RECTS).get(item_id, Rect2())
+	var index := int(CARD_SLOT_INDEX.get(item_id, -1))
+	if index < 0 or index >= CARD_SLOT_RECTS.size():
+		return Rect2()
+	return CARD_SLOT_RECTS[index]
 
 
 func _card_name_rect(item_id: String) -> Rect2:
-	return (ROD_CARD_NAME_RECTS if _shop_mode == "rod" else RIG_CARD_NAME_RECTS).get(item_id, Rect2())
+	return _offset_rect(_card_rect(item_id), CARD_NAME_OFFSET)
 
 
 func _card_status_rect(item_id: String) -> Rect2:
-	return (ROD_CARD_STATUS_RECTS if _shop_mode == "rod" else RIG_CARD_STATUS_RECTS).get(item_id, Rect2())
+	return _offset_rect(_card_rect(item_id), CARD_STATUS_OFFSET)
+
+
+func _offset_rect(base: Rect2, offset: Rect2) -> Rect2:
+	if base.size == Vector2.ZERO:
+		return Rect2()
+	return Rect2(base.position + offset.position, offset.size)
+
+
+func _fit_card_text_size(text: String, base_size: int, minimum_size: int, width: float) -> int:
+	var effective := base_size
+	if text.length() >= 8:
+		effective -= 1
+	if text.length() >= 10:
+		effective -= 1
+	if width < 132.0:
+		effective -= 1
+	return maxi(minimum_size, effective)
 
 
 func _make_transparent_button(label_text: String, callback: Callable) -> Button:
@@ -597,15 +622,34 @@ func _style_tab_button(button: Button, active: bool) -> void:
 		return
 	button.modulate = Color(1.0, 1.0, 1.0, 1.0 if active else 0.78)
 	button.add_theme_color_override("font_color", Palette.GOLD_BRIGHT if active else Palette.TEXT_BONE)
+	var normal := _tab_button_style(active, false)
+	var hover := _tab_button_style(active, true)
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", hover)
+	button.add_theme_stylebox_override("focus", hover)
 
 
 func _apply_transparent_button_style(button: Button) -> void:
-	var normal := StyleBoxEmpty.new()
+	var normal := _empty_style()
 	button.add_theme_stylebox_override("normal", normal)
 	button.add_theme_stylebox_override("hover", normal)
 	button.add_theme_stylebox_override("pressed", normal)
 	button.add_theme_stylebox_override("focus", normal)
 	button.add_theme_stylebox_override("disabled", normal)
+
+
+func _empty_style() -> StyleBoxEmpty:
+	return StyleBoxEmpty.new()
+
+
+func _tab_button_style(active: bool, hover: bool) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(Palette.DARK_PANEL, 0.60 if active else (0.28 if hover else 0.0))
+	style.border_color = Color(Palette.GOLD_BRIGHT, 0.86 if active else (0.46 if hover else 0.0))
+	style.set_border_width_all(2 if active or hover else 0)
+	style.set_corner_radius_all(6)
+	return style
 
 
 func _selection_style() -> StyleBoxFlat:
@@ -650,6 +694,18 @@ func _place_control(parent: Control, child: Control, rect: Rect2) -> void:
 	child.size = rect.size
 	child.custom_minimum_size = rect.size
 	parent.add_child(child)
+
+
+func _load_tackle_texture(path: String) -> Texture2D:
+	var imported := ShowcaseAssetsScript.load_texture(path)
+	if imported != null:
+		return imported
+	var absolute_path := ProjectSettings.globalize_path(path)
+	if FileAccess.file_exists(absolute_path):
+		var image := Image.new()
+		if image.load(absolute_path) == OK:
+			return ImageTexture.create_from_image(image)
+	return null
 
 
 func _clear_children(parent: Node) -> void:

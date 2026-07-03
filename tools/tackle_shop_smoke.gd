@@ -31,9 +31,14 @@ func _ready() -> void:
 	_expect(_card_button(_screen, "rod", "big_game") != null, "big_game rod card should be present")
 	_expect(_card_button(_screen, "rod", "marlin") != null, "marlin rod card should be present")
 	_expect(_card_buttons(_screen, "rig").is_empty(), "rig cards should not render while rod tab is active")
+	_expect_card_geometry("rod")
+	_expect_runtime_button_count("rod")
 
+	var starter_detail_region := _detail_art_region_x(_screen)
 	await _click_control(_card_button(_screen, "rod", "iso"))
 	_expect(_screen._selected_item_id == "iso", "rod card selection should update selected item")
+	_expect(_detail_art_region_x(_screen) != starter_detail_region, "rod detail art should change when selecting another rod")
+	_expect_card_geometry("rod")
 	_expect(not _screen._action_button.disabled, "affordable unowned rod should be purchasable")
 	await _click_control(_screen._action_button)
 	_expect("iso" in PlayerProgress.owned_rods, "purchased rod should be owned")
@@ -58,11 +63,19 @@ func _ready() -> void:
 	_expect(_screen._shop_mode == "rig", "clicking rig tab should switch shop mode")
 	_expect(_card_buttons(_screen, "rig").size() == GameData.get_all_rig_ids().size(), "rig cards should match rig data")
 	_expect(_card_buttons(_screen, "rod").is_empty(), "rod cards should not render while rig tab is active")
+	_expect_card_geometry("rig")
+	_expect_runtime_button_count("rig")
+	var sabiki_detail_region := _detail_art_region_x(_screen)
 
 	await _click_control(_screen._rod_tab_button)
 	_expect(_screen._shop_mode == "rod", "clicking rod tab should switch shop mode back")
 	await _click_control(_screen._rig_tab_button)
 	_expect(_screen._shop_mode == "rig", "rig tab should remain clickable after returning from rod tab")
+
+	await _click_control(_card_button(_screen, "rig", "jigging"))
+	_expect(_screen._selected_item_id == "jigging", "rig card selection should update selected item")
+	_expect(_detail_art_region_x(_screen) != sabiki_detail_region, "rig detail art should change when selecting another rig")
+	_expect_card_geometry("rig")
 
 	await _click_control(_card_button(_screen, "rig", "chokusen"))
 	_expect(_screen._action_button.disabled, "unaffordable rig should disable action")
@@ -146,6 +159,98 @@ func _collect_card_buttons(node: Node, mode: String, buttons: Array[Button]) -> 
 			if String(child.get_meta("shop_mode", "")) == mode:
 				buttons.append(child as Button)
 		_collect_card_buttons(child, mode, buttons)
+
+
+func _expect_card_geometry(mode: String) -> void:
+	for button in _card_buttons(_screen, mode):
+		var item_id := String(button.get_meta("shop_item_id", ""))
+		var expected_card: Rect2 = _screen._card_rect(item_id)
+		var button_rect := _logical_rect(button)
+		_expect(_rect_close(button_rect, expected_card, 0.5), "card button rect for %s should match the canonical card slot. got %s expected %s" % [item_id, button_rect, expected_card])
+		var name_label := _card_label(_screen, item_id, "name")
+		var status_label := _card_label(_screen, item_id, "status")
+		_expect(name_label != null, "name label should exist for %s" % item_id)
+		_expect(status_label != null, "status label should exist for %s" % item_id)
+		if name_label != null:
+			_expect(_rect_inside(_logical_rect(name_label), expected_card, 0.5), "name label for %s should stay inside the card slot" % item_id)
+			_expect(_rect_close(_logical_rect(name_label), _screen._card_name_rect(item_id), 0.5), "name label for %s should use the canonical name plate rect" % item_id)
+		if status_label != null:
+			_expect(_rect_inside(_logical_rect(status_label), expected_card, 0.5), "status label for %s should stay inside the card slot" % item_id)
+			_expect(_rect_close(_logical_rect(status_label), _screen._card_status_rect(item_id), 0.5), "status label for %s should use the canonical status plate rect" % item_id)
+		if item_id == _screen._selected_item_id:
+			var frame := button.get_node_or_null("ShopCardSelectionFrame_%s" % item_id) as Control
+			_expect(frame != null, "selected card %s should have a selection frame" % item_id)
+			if frame != null:
+				_expect(_rect_close(_logical_rect(frame), expected_card, 0.5), "selection frame for %s should cover the whole card slot" % item_id)
+
+
+func _expect_runtime_button_count(mode: String) -> void:
+	var buttons := _all_buttons(_screen)
+	var expected := _card_buttons(_screen, mode).size() + 4
+	_expect(buttons.size() == expected, "%s mode should only have card buttons plus rod/rig/action/return buttons, got %d expected %d" % [mode, buttons.size(), expected])
+	for button in buttons:
+		_expect(not bool(button.get_meta("shop_category", false)), "old category button metadata should not exist")
+
+
+func _card_label(root: Node, item_id: String, role: String) -> Label:
+	var labels: Array[Label] = []
+	_collect_card_labels(root, item_id, role, labels)
+	if labels.is_empty():
+		return null
+	return labels[0]
+
+
+func _collect_card_labels(node: Node, item_id: String, role: String, labels: Array[Label]) -> void:
+	for child in node.get_children():
+		if child is Label:
+			if String(child.get_meta("shop_item_id", "")) == item_id and String(child.get_meta("shop_label_role", "")) == role:
+				labels.append(child as Label)
+		_collect_card_labels(child, item_id, role, labels)
+
+
+func _all_buttons(root: Node) -> Array[Button]:
+	var buttons: Array[Button] = []
+	_collect_buttons(root, buttons)
+	return buttons
+
+
+func _collect_buttons(node: Node, buttons: Array[Button]) -> void:
+	for child in node.get_children():
+		if child is Button:
+			buttons.append(child as Button)
+		_collect_buttons(child, buttons)
+
+
+func _logical_rect(control: Control) -> Rect2:
+	var global_rect := control.get_global_rect()
+	var canvas_rect: Rect2 = _screen._design_canvas.get_global_rect()
+	var canvas_scale: float = _screen._design_canvas.scale.x
+	return Rect2((global_rect.position - canvas_rect.position) / canvas_scale, global_rect.size / canvas_scale)
+
+
+func _rect_close(actual: Rect2, expected: Rect2, tolerance: float) -> bool:
+	return (
+		actual.position.distance_to(expected.position) <= tolerance
+		and actual.size.distance_to(expected.size) <= tolerance
+	)
+
+
+func _rect_inside(inner: Rect2, outer: Rect2, tolerance: float) -> bool:
+	return (
+		inner.position.x >= outer.position.x - tolerance
+		and inner.position.y >= outer.position.y - tolerance
+		and inner.end.x <= outer.end.x + tolerance
+		and inner.end.y <= outer.end.y + tolerance
+	)
+
+
+func _detail_art_region_x(screen: Variant) -> int:
+	if screen._detail_art == null or screen._detail_art.texture == null:
+		return -1
+	var atlas := screen._detail_art.texture as AtlasTexture
+	if atlas == null:
+		return -1
+	return int(atlas.region.position.x)
 
 
 func _find_item_lists(root: Node) -> Array[ItemList]:
