@@ -50,7 +50,7 @@ description: Zero-to-one implementation of a game screen UI in this repo, OR for
    **v1は共通キット（`common/` + 昇格素材）だけで構成を固定する。** 専用PNGが必要と判明したものはv2候補として列挙するに留め、v1内で生成に着手しない（ユーザー合意がある場合のみ例外）。着手する場合は1回につき1スロット: 発注仕様（`docs/12_underwater_fight_production_asset_brief.md` 形式）→ 生成 → 統一処理（パレット寄せ・解像度規約・なじませ。プレイブック §3.3）→ contact sheet 比較 → 仮適用 → 全画面比較。**現行に明確に勝つ場合だけ採用**し、採用/却下理由を記録。
 
 6. **収束**
-   プレイブック §2.1 のv1チェックリストを全項目確認 → `./tools/validate_project.sh` + smoke → 採用値をfreezeとして画面別QAドキュメントへ記録。v2（90点）作業（専用PNG生成・看板品質の質感追求を含む）は別フェーズとして残課題を列挙して終了。
+   プレイブック §2.1 のv1チェックリストを全項目確認 → `./tools/validate_project.sh` + smoke → 採用値をfreezeとして画面別QAドキュメント `docs/qa/<screen>_qa.md` へ記録（新設。書式は `docs/qa/README.md`。freeze値は表で書く）。判断根拠の比較画像を `docs/qa/evidence/<screen>/` へコピー。v2（90点）作業（専用PNG生成・看板品質の質感追求を含む）は別フェーズとして残課題を列挙して終了。
 
 ## Acceptance Gate
 

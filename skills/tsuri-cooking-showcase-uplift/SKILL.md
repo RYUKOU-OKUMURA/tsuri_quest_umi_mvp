@@ -144,7 +144,7 @@ Use this extraction as the first comparison baseline. Refine it only after inspe
    - animation/juice after static composition reads well
 
 10. Record QA after each pass.
-   Keep notes in the relevant project QA doc or a cooking-specific QA file if one exists. Mark findings as P1/P2/P3 and include screenshot paths. If a region is "good enough for this pass", freeze it.
+   Keep notes in `docs/qa/cooking_qa.md` (create it from the `docs/qa/README.md` template if missing; write in Japanese). Mark findings as P1/P2/P3, overwrite the freeze table instead of appending, and record rejected candidates in the dedicated list. Copy the decisive comparison screenshots into `docs/qa/evidence/cooking/` with date-prefixed names — `/tmp` captures are lost between sessions. If a region is "good enough for this pass", freeze it.
 
 ## Acceptance Gate
 

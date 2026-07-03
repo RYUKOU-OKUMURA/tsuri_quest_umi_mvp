@@ -1,4 +1,9 @@
-# Underwater Fight Design QA
+# Underwater Fight Design QA（アーカイブ）
+
+> **注意: このファイルは詳細経過のアーカイブであり、正本ではない。**
+> 現在有効な freeze値・不採用リストは `docs/qa/underwater_fight_qa.md` を参照すること。
+> 魚図鑑・釣り場マップの記述も混入しているが、それぞれ `docs/qa/fish_book_qa.md` / `docs/qa/fishing_spot_map_qa.md` へ分離済み。
+> （旧リポジトリルートの `design-qa.md`。運用規約は `docs/qa/README.md`）
 
 final result: v1 showcase accepted for the current pass; remaining ideal-quality work is split into later asset phases
 
