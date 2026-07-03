@@ -105,6 +105,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 | キャッチ演出・表示時間 | 2 | 釣り上げ演出を成功結果画面へ統合し、自動終了を廃止してプレイヤー選択待ちに変更 | 採用 |
 | キャッチ演出・写真ベース | 1 | 右カード型の手描き分割素材をやめ、魚なし高品質ベース1枚＋既存魚ポートレート前面合成へ変更 | 採用 |
 | キャッチ演出・結果統合 | 1 | 成功時の旧白い結果ポップアップを廃止し、写真風画面の下部ボタンから「続けて釣る」「港へ戻る」を直接実行 | 採用 |
+| キャッチ結果・港ボタン位置 | 1 | 「港へ戻る」runtimeテキストがボタン枠より右へ寄っていたため、右ボタンスロットを30px左へ移動 | 採用 |
 
 ## 4. 暫定判定・再検証TODO
 
@@ -125,3 +126,4 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 
 - 2026-07-03: キャッチ演出を写真風ベース方式へ更新。`assets/showcase/underwater/catch_photo_base.png` を全面表示し、魚本体は `FightFishAssets.card_portrait_path()` の既存ポートレートを前面合成する。日本語テキストと魚はPNGへ焼き込まない。採用判断は `docs/qa/evidence/underwater_fight/2026-07-03_catch_photo_base_boss.png` と `docs/qa/evidence/underwater_fight/2026-07-03_catch_photo_base_aji.png`。既存の水中背景・HUD・上部・右サイドバー・成功後結果パネルのフローは変更していない。自動終了/スキップは `tools/catch_fanfare_smoke.tscn` で検証済み。
 - 2026-07-03: 成功時の旧白い結果ポップアップを廃止し、写真風釣り上げ画面を結果選択画面に統合。`CatchFanfare` は自動終了せず、`continue_requested` / `harbor_requested` で既存の次釣行・港遷移に接続する。魚位置を上げ、左情報枠を広げ、runtime文字にアウトラインと薄い紙色スクリムを追加。採用判断は `docs/qa/evidence/underwater_fight/2026-07-03_catch_result_photo_boss.png` と `docs/qa/evidence/underwater_fight/2026-07-03_catch_result_photo_aji.png`。新UX契約は `tools/catch_fanfare_smoke.tscn` で検証済み。
+- 2026-07-03: 写真風釣り上げ結果画面の「港へ戻る」ボタン位置を補正。右ボタンのruntimeテキスト領域を `x=704` から `x=674` へ移動し、ベース素材のボタン枠中心へ合わせた。採用判断は `docs/qa/evidence/underwater_fight/2026-07-03_catch_result_harbor_button_align.png`。

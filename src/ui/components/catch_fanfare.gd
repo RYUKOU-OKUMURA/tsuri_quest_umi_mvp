@@ -26,7 +26,7 @@ const PHOTO_INFO_SLOT := Rect2(150.0, 496.0, 284.0, 90.0)
 const PHOTO_BONUS_SLOT := Rect2(758.0, 516.0, 356.0, 62.0)
 const PHOTO_FISH_SLOT := Rect2(210.0, 204.0, 860.0, 476.0)
 const PHOTO_CONTINUE_SLOT := Rect2(280.0, 642.0, 300.0, 54.0)
-const PHOTO_HARBOR_SLOT := Rect2(704.0, 642.0, 300.0, 54.0)
+const PHOTO_HARBOR_SLOT := Rect2(674.0, 642.0, 300.0, 54.0)
 
 var _fish_data: Dictionary = {}
 var _catch_result: Dictionary = {}
