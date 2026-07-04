@@ -7,7 +7,9 @@ prices, or quantities. Runtime UI draws all variable state.
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
+from random import Random
 
 from PIL import Image, ImageDraw, ImageFilter
 
@@ -15,6 +17,7 @@ from PIL import Image, ImageDraw, ImageFilter
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "assets" / "showcase" / "fish_market"
 W, H = 1280, 720
+RNG = Random(20260704)
 
 
 COLORS = {
@@ -25,12 +28,16 @@ COLORS = {
     "gold_deep": (185, 138, 62, 255),
     "paper": (243, 232, 205, 255),
     "paper_deep": (231, 214, 173, 255),
+    "paper_shadow": (178, 147, 98, 255),
     "sand": (216, 192, 137, 255),
     "wood": (94, 58, 28, 255),
+    "wood_dark": (62, 38, 22, 255),
     "wood_hi": (138, 84, 40, 255),
     "teal": (47, 155, 214, 255),
+    "teal_deep": (19, 99, 112, 255),
     "shadow": (0, 0, 0, 86),
     "ice": (214, 238, 247, 255),
+    "ice_shadow": (120, 151, 162, 255),
 }
 
 
@@ -43,6 +50,47 @@ def rounded(draw: ImageDraw.ImageDraw, xy, radius, fill, outline=None, width=1):
     draw.rounded_rectangle(xy, radius=radius, fill=fill, outline=outline, width=width)
 
 
+def mix(a, b, t: float) -> tuple[int, int, int, int]:
+    return tuple(int(a[i] * (1.0 - t) + b[i] * t) for i in range(4))
+
+
+def gradient_rect(d: ImageDraw.ImageDraw, xy, top, bottom) -> None:
+    x0, y0, x1, y1 = map(int, xy)
+    height = max(1, y1 - y0)
+    for y in range(y0, y1):
+        t = (y - y0) / height
+        d.line((x0, y, x1, y), fill=mix(top, bottom, t))
+
+
+def add_panel_grain(base: Image.Image, xy, color, alpha: int, count: int) -> None:
+    x0, y0, x1, y1 = map(int, xy)
+    d = ImageDraw.Draw(base)
+    for _ in range(count):
+        x = RNG.randint(x0 + 6, x1 - 6)
+        y = RNG.randint(y0 + 6, y1 - 6)
+        r = RNG.choice((1, 1, 2))
+        a = RNG.randint(max(8, alpha // 3), alpha)
+        d.ellipse((x, y, x + r, y + r), fill=(*color[:3], a))
+
+
+def draw_corner_plates(d: ImageDraw.ImageDraw, xy, color, accent) -> None:
+    x0, y0, x1, y1 = xy
+    for sx, sy in ((1, 1), (-1, 1), (1, -1), (-1, -1)):
+        cx = x0 if sx == 1 else x1
+        cy = y0 if sy == 1 else y1
+        d.line((cx + sx * 8, cy + sy * 5, cx + sx * 52, cy + sy * 5), fill=color, width=2)
+        d.line((cx + sx * 5, cy + sy * 8, cx + sx * 5, cy + sy * 52), fill=color, width=2)
+        d.line((cx + sx * 16, cy + sy * 18, cx + sx * 34, cy + sy * 10), fill=accent, width=1)
+
+
+def draw_wood_planks(d: ImageDraw.ImageDraw, xy, base, highlight, shadow) -> None:
+    x0, y0, x1, y1 = map(int, xy)
+    gradient_rect(d, xy, highlight, base)
+    for y in range(y0 + 12, y1, 24):
+        d.line((x0, y, x1, y), fill=shadow, width=2)
+        d.line((x0, y + 2, x1, y + 2), fill=(*highlight[:3], 70), width=1)
+
+
 def shadowed_panel(base: Image.Image, xy, radius: int, fill, outline, width: int = 3, shadow=8):
     x0, y0, x1, y1 = xy
     layer = Image.new("RGBA", base.size, (0, 0, 0, 0))
@@ -52,13 +100,17 @@ def shadowed_panel(base: Image.Image, xy, radius: int, fill, outline, width: int
     base.alpha_composite(layer)
     d = ImageDraw.Draw(base)
     rounded(d, xy, radius, fill, outline, width)
+    x0, y0, x1, y1 = xy
+    rounded(d, (x0 + 5, y0 + 5, x1 - 5, y1 - 5), max(2, radius - 4), (255, 255, 255, 0), (255, 231, 168, 95), 1)
 
 
 def parchment_panel(base: Image.Image, xy, radius: int = 10):
     shadowed_panel(base, xy, radius, rgba("paper"), rgba("gold_deep"), 3, shadow=6)
     d = ImageDraw.Draw(base)
     x0, y0, x1, y1 = xy
-    rounded(d, (x0 + 8, y0 + 8, x1 - 8, y1 - 8), radius - 2, (255, 250, 232, 38), rgba("paper_deep"), 1)
+    rounded(d, (x0 + 8, y0 + 8, x1 - 8, y1 - 8), radius - 2, (255, 250, 232, 42), rgba("paper_deep"), 1)
+    draw_corner_plates(d, xy, rgba("gold_deep", 185), (255, 231, 168, 120))
+    add_panel_grain(base, xy, rgba("paper_shadow"), 12, 140)
 
 
 def navy_panel(base: Image.Image, xy, radius: int = 10):
@@ -66,43 +118,42 @@ def navy_panel(base: Image.Image, xy, radius: int = 10):
     d = ImageDraw.Draw(base)
     x0, y0, x1, y1 = xy
     rounded(d, (x0 + 8, y0 + 8, x1 - 8, y1 - 8), radius - 2, (13, 30, 48, 122), rgba("gold_deep", 170), 1)
+    draw_corner_plates(d, xy, rgba("gold_deep", 175), (255, 231, 168, 110))
+    add_panel_grain(base, xy, (76, 132, 164, 255), 10, 110)
 
 
 def draw_market_background(img: Image.Image) -> None:
     d = ImageDraw.Draw(img)
-    for y in range(H):
-        t = y / H
-        r = int(155 * (1 - t) + 9 * t)
-        g = int(214 * (1 - t) + 26 * t)
-        b = int(238 * (1 - t) + 45 * t)
-        d.line((0, y, W, y), fill=(r, g, b, 255))
+    gradient_rect(d, (0, 0, W, H), (132, 191, 209, 255), (9, 26, 45, 255))
 
     # Wooden roof and beams.
-    d.rectangle((0, 0, W, 92), fill=rgba("wood"))
+    draw_wood_planks(d, (0, 0, W, 116), rgba("wood"), rgba("wood_hi"), rgba("wood_dark", 190))
     for x in range(-40, W, 110):
-        d.polygon([(x, 0), (x + 72, 0), (x + 48, 92), (x - 24, 92)], fill=rgba("wood_hi", 210))
-    for y in (86, 676):
-        d.rectangle((0, y, W, y + 14), fill=rgba("wood"))
+        d.polygon([(x, 0), (x + 72, 0), (x + 48, 116), (x - 24, 116)], fill=rgba("wood_hi", 112))
+    for y in (102, 676):
+        draw_wood_planks(d, (0, y, W, y + 20), rgba("wood_dark"), rgba("wood"), rgba("wood_dark", 180))
 
-    # Distant market shapes.
-    for x in range(0, W, 165):
-        d.rectangle((x + 18, 112, x + 128, 520), fill=(37, 54, 58, 96))
-        d.rectangle((x + 10, 110, x + 136, 124), fill=rgba("wood_hi", 160))
-    d.rectangle((1012, 128, 1268, 292), fill=(201, 237, 247, 110))
-    d.rectangle((1012, 292, 1268, 320), fill=(47, 155, 214, 126))
+    # Distant market stalls and window shapes.
+    for x in range(-20, W, 155):
+        d.rectangle((x + 22, 124, x + 126, 528), fill=(25, 43, 49, 118))
+        d.rectangle((x + 14, 122, x + 134, 136), fill=rgba("wood_hi", 170))
+        d.rectangle((x + 28, 144, x + 118, 306), fill=(176, 220, 232, 58))
+    d.rectangle((1012, 126, 1268, 292), fill=(201, 237, 247, 118))
+    d.rectangle((1012, 292, 1268, 334), fill=(47, 155, 214, 150))
+    for x in (1034, 1110, 1184):
+        d.rectangle((x, 130, x + 7, 334), fill=(24, 42, 50, 130))
+    d.rectangle((1012, 246, 1268, 254), fill=(24, 42, 50, 100))
 
     # Crates and ice piles around the edges.
-    for box in [(20, 554, 220, 690), (1050, 510, 1266, 690), (24, 130, 214, 244), (1048, 340, 1262, 488)]:
-        x0, y0, x1, y1 = box
-        rounded(d, box, 8, rgba("wood", 235), rgba("gold_deep", 130), 2)
-        d.rectangle((x0 + 10, y0 + 20, x1 - 10, y0 + 34), fill=rgba("wood_hi", 190))
-        for i in range(18):
-            cx = x0 + 18 + (i * 29) % max(30, (x1 - x0 - 36))
-            cy = y0 + 46 + ((i * 19) % max(28, (y1 - y0 - 62)))
-            d.ellipse((cx, cy, cx + 24, cy + 12), fill=(142, 168, 172, 170), outline=(55, 75, 78, 130))
+    for box in [(18, 554, 228, 696), (1050, 526, 1268, 700), (22, 132, 218, 246), (1048, 352, 1264, 494)]:
+        draw_wood_crate(d, box)
+        draw_fish_mound(d, box, 18)
+
+    draw_hanging_scale(d, 1180, 64)
+    draw_lantern(d, 1038, 42)
 
     # Soft darkening behind the information surface.
-    overlay = Image.new("RGBA", img.size, (10, 22, 34, 86))
+    overlay = Image.new("RGBA", img.size, (10, 22, 34, 106))
     img.alpha_composite(overlay)
 
 
@@ -146,15 +197,23 @@ def draw_detail_panel(img: Image.Image) -> None:
     for x in (1148, 1172, 1196):
         d.polygon([(x, 232), (x + 10, 222), (x + 20, 232), (x + 10, 242)], fill=rgba("navy_deep"), outline=rgba("gold"))
 
-    # Fish art socket on crushed ice; runtime fish portrait sits on top.
-    rounded(d, (738, 198, 1118, 370), 8, (42, 69, 83, 225), rgba("gold_deep"), 2)
-    for i in range(80):
-        x = 750 + (i * 41) % 350
-        y = 212 + (i * 23) % 136
-        d.ellipse((x, y, x + 22, y + 16), fill=rgba("ice", 150), outline=(255, 255, 255, 90))
+    # Fish art socket on a market tray; runtime fish portrait sits on top.
+    rounded(d, (738, 198, 1118, 370), 8, (38, 70, 86, 230), rgba("gold_deep"), 2)
+    rounded(d, (772, 244, 1104, 358), 8, rgba("wood", 214), rgba("wood_dark", 180), 2)
+    d.rectangle((784, 254, 1092, 272), fill=rgba("wood_hi", 130))
+    d.rectangle((784, 328, 1092, 346), fill=rgba("wood_dark", 96))
+    draw_leaf(d, (782, 222), 108, -18)
+    draw_leaf(d, (998, 224), 100, 20)
+    for i in range(104):
+        x = 760 + (i * 41) % 340
+        y = 216 + (i * 23) % 126
+        w = RNG.randint(14, 28)
+        h = RNG.randint(10, 18)
+        fill = rgba("ice", RNG.randint(135, 198)) if i % 3 else rgba("ice_shadow", RNG.randint(110, 155))
+        d.ellipse((x, y, x + w, y + h), fill=fill, outline=(255, 255, 255, RNG.randint(50, 110)))
     for offset in range(0, 7):
-        y = 250 + offset * 12
-        d.arc((800, y - 36, 1058, y + 56), 185, 350, fill=(255, 255, 255, 28), width=2)
+        y = 248 + offset * 13
+        d.arc((792, y - 38, 1064, y + 58), 185, 350, fill=(255, 255, 255, 34), width=2)
 
     rounded(d, (724, 382, 1214, 450), 6, rgba("navy_deep", 220), rgba("gold_deep"), 1)
     for idx, y in enumerate((397, 426)):
@@ -199,6 +258,74 @@ def draw_basket_icon(d: ImageDraw.ImageDraw, x: int, y: int, s: int, color) -> N
     d.arc((x, y - s // 3, x + s, y + s // 2), 190, 350, fill=color, width=max(2, s // 9))
     d.polygon([(x + 3, y + s // 3), (x + s - 3, y + s // 3), (x + s - 8, y + s), (x + 8, y + s)], outline=color, fill=None)
     d.line((x + 8, y + s // 2, x + s - 8, y + s // 2), fill=color, width=max(1, s // 12))
+
+
+def draw_wood_crate(d: ImageDraw.ImageDraw, xy) -> None:
+    x0, y0, x1, y1 = xy
+    rounded(d, xy, 8, rgba("wood", 238), rgba("gold_deep", 120), 2)
+    for y in range(y0 + 16, y1 - 6, 26):
+        d.rectangle((x0 + 8, y, x1 - 8, y + 6), fill=rgba("wood_hi", 150))
+        d.line((x0 + 8, y + 7, x1 - 8, y + 7), fill=rgba("wood_dark", 140), width=1)
+    d.line((x0 + 14, y0 + 10, x0 + 14, y1 - 10), fill=rgba("wood_dark", 150), width=4)
+    d.line((x1 - 14, y0 + 10, x1 - 14, y1 - 10), fill=rgba("wood_dark", 150), width=4)
+
+
+def draw_fish_mound(d: ImageDraw.ImageDraw, xy, count: int) -> None:
+    x0, y0, x1, y1 = xy
+    width = max(40, x1 - x0 - 48)
+    height = max(34, y1 - y0 - 54)
+    for i in range(count):
+        cx = x0 + 22 + (i * 37) % width
+        cy = y0 + 48 + ((i * 23) % height)
+        body = (118, 147, 154, 165) if i % 2 else (178, 204, 208, 150)
+        d.ellipse((cx, cy, cx + 32, cy + 14), fill=body, outline=(43, 64, 70, 120))
+        d.polygon([(cx + 28, cy + 7), (cx + 42, cy), (cx + 42, cy + 14)], fill=(82, 112, 120, 130))
+        d.ellipse((cx + 7, cy + 4, cx + 10, cy + 7), fill=(9, 22, 30, 180))
+
+
+def draw_hanging_scale(d: ImageDraw.ImageDraw, x: int, y: int) -> None:
+    d.line((x, y, x, y + 272), fill=rgba("wood_dark", 210), width=4)
+    d.ellipse((x - 36, y + 160, x + 36, y + 232), fill=(54, 42, 34, 185), outline=rgba("gold_deep", 185), width=3)
+    for angle in range(210, 340, 18):
+        rad = math.radians(angle)
+        d.line((x, y + 196, x + int(math.cos(rad) * 28), y + 196 + int(math.sin(rad) * 28)), fill=(185, 166, 132, 120), width=1)
+    d.line((x, y + 196, x + 18, y + 176), fill=rgba("gold"), width=2)
+    d.line((x - 46, y + 264, x + 46, y + 264), fill=rgba("gold_deep"), width=3)
+    d.line((x - 38, y + 264, x - 4, y + 230), fill=rgba("gold_deep"), width=2)
+    d.line((x + 38, y + 264, x + 4, y + 230), fill=rgba("gold_deep"), width=2)
+    d.arc((x - 46, y + 242, x + 46, y + 286), 0, 180, fill=rgba("gold"), width=3)
+
+
+def draw_lantern(d: ImageDraw.ImageDraw, x: int, y: int) -> None:
+    d.line((x + 20, y, x + 20, y + 62), fill=rgba("wood_dark", 200), width=3)
+    d.rounded_rectangle((x, y + 58, x + 42, y + 104), radius=6, fill=(247, 207, 119, 140), outline=rgba("gold_deep", 170), width=2)
+    d.rectangle((x + 8, y + 64, x + 34, y + 98), fill=(255, 232, 154, 82))
+    d.line((x + 10, y + 58, x + 10, y + 104), fill=rgba("wood_dark", 160), width=2)
+    d.line((x + 32, y + 58, x + 32, y + 104), fill=rgba("wood_dark", 160), width=2)
+
+
+def draw_leaf(d: ImageDraw.ImageDraw, origin, length: int, angle: float) -> None:
+    ox, oy = origin
+    rad = math.radians(angle)
+    dx = math.cos(rad) * length
+    dy = math.sin(rad) * length
+    normal = (-math.sin(rad), math.cos(rad))
+    w = 24
+    pts = [
+        (ox, oy),
+        (ox + dx * 0.46 + normal[0] * w, oy + dy * 0.46 + normal[1] * w),
+        (ox + dx, oy + dy),
+        (ox + dx * 0.46 - normal[0] * w, oy + dy * 0.46 - normal[1] * w),
+    ]
+    d.polygon(pts, fill=(70, 113, 55, 180), outline=(27, 69, 38, 130))
+    d.line((ox, oy, ox + dx, oy + dy), fill=(167, 184, 100, 150), width=2)
+    for i in range(1, 5):
+        t = i / 5
+        cx = ox + dx * t
+        cy = oy + dy * t
+        spread = w * (1 - abs(t - 0.5) * 1.6)
+        d.line((cx, cy, cx + normal[0] * spread, cy + normal[1] * spread), fill=(167, 184, 100, 72), width=1)
+        d.line((cx, cy, cx - normal[0] * spread, cy - normal[1] * spread), fill=(167, 184, 100, 72), width=1)
 
 
 def main() -> int:

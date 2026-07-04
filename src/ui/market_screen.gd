@@ -45,6 +45,7 @@ var _page_label: Label
 var _prev_page_button: Button
 var _next_page_button: Button
 var _row_nodes: Array = []
+var _inventory_empty_panel: Control
 var _detail_title_label: Label
 var _detail_fish_image: TextureRect
 var _detail_rarity_label: Label
@@ -171,6 +172,7 @@ func _build_inventory(parent: Control) -> void:
 
 	for row_index in range(VISIBLE_ROW_COUNT):
 		_build_inventory_row(parent, row_index)
+	_build_inventory_empty_panel(parent)
 
 
 func _build_inventory_row(parent: Control, row_index: int) -> void:
@@ -251,6 +253,36 @@ func _build_inventory_row(parent: Control, row_index: int) -> void:
 	row["all_button"] = all_button
 
 	_row_nodes.append(row)
+
+
+func _build_inventory_empty_panel(parent: Control) -> void:
+	_inventory_empty_panel = PanelContainer.new()
+	_inventory_empty_panel.name = "MarketInventoryEmptyPanel"
+	_inventory_empty_panel.z_index = 28
+	_inventory_empty_panel.visible = false
+	var empty_style := _panel_style(Palette.PARCHMENT, Palette.GOLD_DEEP, 2, 8)
+	empty_style.bg_color = Palette.PARCHMENT
+	_inventory_empty_panel.add_theme_stylebox_override("panel", empty_style)
+	_place(parent, _inventory_empty_panel, Rect2(86.0, 204.0, 582.0, 422.0))
+
+	var box := VBoxContainer.new()
+	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	box.add_theme_constant_override("separation", 12)
+	_inventory_empty_panel.add_child(box)
+
+	var title := _market_label("クーラーボックスは空です", 25, Palette.TEXT_DARK, 0)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.custom_minimum_size = Vector2(0.0, 42.0)
+	box.add_child(title)
+
+	var body := _market_label("釣った魚がここに並びます。\nまずは釣り場へ向かいましょう。", 18, Palette.TEXT_BODY, 0)
+	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	body.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.custom_minimum_size = Vector2(0.0, 72.0)
+	box.add_child(body)
 
 
 func _build_detail(parent: Control) -> void:
@@ -427,6 +459,8 @@ func _refresh_inventory() -> void:
 	_page_label.text = "%d/%d" % [current_page, total_pages]
 	_prev_page_button.disabled = _scroll_offset <= 0
 	_next_page_button.disabled = _scroll_offset + VISIBLE_ROW_COUNT >= _fish_ids.size()
+	if _inventory_empty_panel != null:
+		_inventory_empty_panel.visible = _fish_ids.is_empty()
 
 	for row_index in range(VISIBLE_ROW_COUNT):
 		var fish_id := _visible_fish_id(row_index)
@@ -695,8 +729,11 @@ func _button_style(primary: bool, hover: bool) -> StyleBoxFlat:
 	if hover:
 		style.bg_color = _with_alpha(Palette.GOLD_BRIGHT if primary else Palette.BLUE_PANEL, 0.96 if primary else 0.86)
 	style.border_color = Palette.GOLD_DEEP if primary else Palette.GOLD
-	style.set_border_width_all(1 if not primary else 2)
+	style.set_border_width_all(1 if not primary else 3)
 	style.set_corner_radius_all(5)
+	style.shadow_color = _with_alpha(Palette.TEXT_OUTLINE_DARK, 0.28 if primary else 0.18)
+	style.shadow_size = 4 if primary else 2
+	style.shadow_offset = Vector2(0.0, 2.0)
 	style.content_margin_left = 4
 	style.content_margin_right = 4
 	style.content_margin_top = 2
