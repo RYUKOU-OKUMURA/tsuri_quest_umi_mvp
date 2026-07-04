@@ -240,6 +240,9 @@ func _draw_weather_scene_state_effects(rect: Rect2) -> void:
 	if state == FishingSimulator.State.READY or state == FishingSimulator.State.CASTING:
 		return
 	var horizon := _asset_horizon()
+	if state == FishingSimulator.State.WAITING:
+		_draw_bobber_ripples(_bobber_target_position(horizon), horizon)
+		return
 	_draw_asset_fish_shadow(horizon)
 	if state == FishingSimulator.State.BITE:
 		_draw_asset_bite_splash(_bobber_target_position(horizon))

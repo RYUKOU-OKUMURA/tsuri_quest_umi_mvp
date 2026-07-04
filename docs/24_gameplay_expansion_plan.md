@@ -194,7 +194,7 @@ UI作業のルール正本は `docs/19_ui_production_playbook.md`。本docはゲ
 - `encounter_weights(player_level, spot_id, rig_id, environment_id)` と `roll_normal_fish(..., environment_id)` に後方互換ありで天候引数を追加した。
 - `FishingScreen` は `trip_stats.environment_id` を通常魚抽選へ渡す。釣行継続/釣り場変更では既存 `trip_stats` を保持するため、同じ釣行中の天気は変わらない。
 - `SurfaceCastView` は既存の状態別シーンPNGを描いた後、`trip_stats.weather_id` に応じて天候grade/overlayを重ねる。上部/右/下部UIのfreeze値は変更していない。
-- READY状態は、`trip_stats.weather_id` に応じた天気専用フル画像5枚をruntime採用した。非快晴ではCASTING/WAITING/APPROACH/BITEも同じ天気ベースを維持し、魚影/波紋/スプラッシュをruntimeで重ねる。快晴は既存状態別PNGを使う。
+- READY状態は、`trip_stats.weather_id` に応じた天気専用フル画像5枚をruntime採用した。非快晴ではCASTING/WAITING/APPROACH/BITEも同じ天気ベースを維持し、WAITINGは波紋、APPROACH以降は魚影、BITEはスプラッシュをruntimeで重ねる。快晴は既存状態別PNGを使う。
 - `FightStatusBar` は天気ラベルだけでなく、`weather_status_icon_sheet.png` から天気アイコンも `weather_id` に追従して描画する。
 
 **素材**
@@ -228,7 +228,7 @@ UI作業のルール正本は `docs/19_ui_production_playbook.md`。本docはゲ
 
 **P3対象外・後続候補**
 - 天候SE、時間帯、専用雨BGM、釣り場選択画面での事前予報UIはP3完了条件に含めない。BGMは既存 `calm` / `windy` へのフォールバックで完了扱い。
-- CASTING/WAITING/APPROACH/BITE の状態別×天気画像は量産しない。非快晴は天気専用READYベース + runtime状態効果、快晴は既存状態別PNGで完了扱い。専用画像化は将来の見た目polish候補とする。
+- CASTING/WAITING/APPROACH/BITE の状態別×天気画像は量産しない。非快晴は天気専用READYベース + runtime状態効果、快晴は既存状態別PNGで完了扱い。WAITINGで魚影を出さず、APPROACH以降で魚影を出す旧演出段階を維持する。専用画像化は将来の見た目polish候補とする。
 
 ---
 
