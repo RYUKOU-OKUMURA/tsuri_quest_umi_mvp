@@ -24,6 +24,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 | 天気系統 | `sunny / partly_cloudy / cloudy / rain / fog`。`sunny_windy` は `weather_id=sunny` の風強互換枠 | `GameData.FISHING_ENVIRONMENTS` | 天気は5系統、環境は風違い込み6エントリ |
 | 描画方式 | 既存の状態別シーンPNGを描いた後、`trip_stats.weather_id` に応じてgrade/overlayを重ねる | `src/ui/components/surface_cast_view.gd` | 上部/右/下部HUDのfreeze値は動かさない |
 | 採用素材 | `surface_weather_partly_cloudy_grade.png` / `surface_weather_cloudy_grade.png` / `surface_weather_rain_grade.png` / `surface_weather_rain_overlay.png` / `surface_weather_fog_grade.png` / `surface_weather_fog_overlay.png` | `assets/showcase/surface/` | 状態別PNGを量産せず、overlay/grade方式で天候差を出す |
+| READY専用候補 | `surface_scene_ready_sunny.png` / `surface_scene_ready_partly_cloudy.png` / `surface_scene_ready_cloudy.png` / `surface_scene_ready_rain.png` / `surface_scene_ready_fog.png` | `assets/showcase/surface/` | 2026-07-04生成。runtime未接続。次フェーズでREADY状態だけ優先採用するか判断する |
 | 検証画像 | `docs/qa/evidence/underwater_fight/2026-07-04_surface_weather_asset_contact_sheet.png` / `2026-07-04_surface_weather_ready_compare.png` | `tools/surface_weather_visual_qa.sh` | 晴れ・曇り・雨・霧の差、上部天候ラベルの見切れなしを確認 |
 
 ### 魚（クロダイ）
@@ -116,6 +117,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 | キャッチ演出・結果統合 | 1 | 成功時の旧白い結果ポップアップを廃止し、写真風画面の下部ボタンから「続けて釣る」「港へ戻る」を直接実行 | 採用 |
 | キャッチ結果・港ボタン位置 | 1 | 「港へ戻る」runtimeテキストがボタン枠より右へ寄っていたため、右ボタンスロットを30px左へ移動 | 採用 |
 | 水面天候overlay | 1 | 5天気の候補contact sheetから、状態別PNG量産ではなくgrade/overlay方式を採用 | 採用 |
+| 水面READY専用画像 | 1 | READY用の5天気フル画像を生成し、runtime未接続の候補として保存 | 候補 |
 
 ## 4. 暫定判定・再検証TODO
 
@@ -126,7 +128,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 ## 5. 現在の残ギャップ
 
 - **P2**: 右パネル/HUD/上部の最終authored素材・専用タイポグラフィ品質が参照に未達。生成フレームの機械的な印象が残る。→ 対応は次フェーズ（下記）であり、フレーム素材のマイクロポリッシュ続行ではない。
-- **残**: 魚のアニメ/接地の微ポリッシュ、背景中央の理想画質、ヒットバッジの最終合わせ。水面天候5系統は2026-07-04に採用済み。
+- **残**: 魚のアニメ/接地の微ポリッシュ、背景中央の理想画質、ヒットバッジの最終合わせ。水面天候5系統はoverlay方式で採用済み。READY専用5枚はruntime未接続の候補として保存済み。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
@@ -138,3 +140,4 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 - 2026-07-03: 成功時の旧白い結果ポップアップを廃止し、写真風釣り上げ画面を結果選択画面に統合。`CatchFanfare` は自動終了せず、`continue_requested` / `harbor_requested` で既存の次釣行・港遷移に接続する。魚位置を上げ、左情報枠を広げ、runtime文字にアウトラインと薄い紙色スクリムを追加。採用判断は `docs/qa/evidence/underwater_fight/2026-07-03_catch_result_photo_boss.png` と `docs/qa/evidence/underwater_fight/2026-07-03_catch_result_photo_aji.png`。新UX契約は `tools/catch_fanfare_smoke.tscn` で検証済み。
 - 2026-07-03: 写真風釣り上げ結果画面の「港へ戻る」ボタン位置を補正。右ボタンのruntimeテキスト領域を `x=704` から `x=674` へ移動し、ベース素材のボタン枠中心へ合わせた。採用判断は `docs/qa/evidence/underwater_fight/2026-07-03_catch_result_harbor_button_align.png`。
 - 2026-07-04: P3天気パターンとして水面READYの5天気差分を採用。`assets/showcase/surface/surface_weather_contact_sheet.png` で候補比較し、`SurfaceCastView` は既存状態別シーンPNGの上へ天候grade/overlayを重ねる方式にした。HUD/右サイドバー/上部ステータスのfreeze値は変更していない。採用判断は `docs/qa/evidence/underwater_fight/2026-07-04_surface_weather_asset_contact_sheet.png` と `docs/qa/evidence/underwater_fight/2026-07-04_surface_weather_ready_compare.png`。`./tools/surface_weather_visual_qa.sh` で晴れ・晴れ曇り・曇り・小雨・霧のREADY画面差分と天候ラベル見切れなしを確認済み。
+- 2026-07-04: 水面READY用の天気専用フル画像5枚を生成。`sunny` は現行READYを維持し、`partly_cloudy/cloudy/rain/fog` は空・遠景・海面反射まで含めて描き分けた。生成前にbuilt-in imagegenで既存構図ベースの5天気contact sheetを作り方向性を確認し、最終候補は `tools/generate_surface_showcase_assets.py` の決定的PIL処理で960x405へ統一した。runtime切替は未実装で、HUD/右サイドバー/上部ステータスのfreeze値は変更していない。採用判断は `docs/qa/evidence/underwater_fight/2026-07-04_surface_scene_ready_weather_contact_sheet.png` と `docs/qa/evidence/underwater_fight/2026-07-04_surface_scene_ready_weather_candidate_compare.png`。現行overlayより天候差は明確だが、次フェーズでREADY状態だけ優先採用するまで候補扱い。

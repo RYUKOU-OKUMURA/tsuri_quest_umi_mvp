@@ -494,6 +494,207 @@ def _create_weather_contact_sheet() -> None:
     save_image(sheet, OUT_DIR / "surface_weather_contact_sheet.png")
 
 
+def _gradient_layer(
+    top_color: tuple[int, int, int],
+    bottom_color: tuple[int, int, int],
+    top_alpha: int,
+    bottom_alpha: int,
+) -> Image.Image:
+    layer = Image.new("RGBA", (CANVAS_W, CANVAS_H), (0, 0, 0, 0))
+    pix = layer.load()
+    for y in range(CANVAS_H):
+        t = y / max(1, CANVAS_H - 1)
+        color = mix(top_color, bottom_color, t)
+        alpha = round(lerp(top_alpha, bottom_alpha, t))
+        for x in range(CANVAS_W):
+            pix[x, y] = (color[0], color[1], color[2], alpha)
+    return layer
+
+
+def _draw_ready_cloud_mass(
+    layer: Image.Image,
+    seed: int,
+    count: int,
+    color: tuple[int, int, int],
+    alpha_range: tuple[int, int],
+    y_range: tuple[int, int],
+    scale_range: tuple[float, float],
+    blur: float,
+) -> None:
+    rng = random.Random(seed)
+    draw = ImageDraw.Draw(layer, "RGBA")
+    for _ in range(count):
+        cx = rng.randint(-90, CANVAS_W + 90)
+        cy = rng.randint(y_range[0], y_range[1])
+        scale = rng.uniform(scale_range[0], scale_range[1])
+        alpha = rng.randint(alpha_range[0], alpha_range[1])
+        for index in range(rng.randint(5, 9)):
+            w = rng.randint(80, 185) * scale
+            h = rng.randint(22, 62) * scale
+            x = cx + rng.randint(-130, 130) * scale
+            y = cy + rng.randint(-24, 24) * scale
+            draw.ellipse((x - w, y - h, x + w, y + h), fill=(color[0], color[1], color[2], alpha))
+    if blur > 0.0:
+        layer.paste(layer.filter(ImageFilter.GaussianBlur(blur)), (0, 0))
+
+
+def _draw_ready_weather_clouds(
+    image: Image.Image,
+    seed: int,
+    count: int,
+    color: tuple[int, int, int],
+    alpha_range: tuple[int, int],
+    y_range: tuple[int, int],
+    scale_range: tuple[float, float],
+    blur: float = 2.5,
+) -> None:
+    layer = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    _draw_ready_cloud_mass(layer, seed, count, color, alpha_range, y_range, scale_range, blur)
+    image.alpha_composite(layer)
+
+
+def _sea_tint(image: Image.Image, color: tuple[int, int, int], alpha_top: int, alpha_bottom: int) -> None:
+    layer = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    pix = layer.load()
+    start = max(0, HORIZON_Y - 6)
+    for y in range(start, CANVAS_H):
+        t = (y - start) / max(1, CANVAS_H - start - 1)
+        alpha = round(lerp(alpha_top, alpha_bottom, t))
+        for x in range(CANVAS_W):
+            pix[x, y] = (color[0], color[1], color[2], alpha)
+    image.alpha_composite(layer)
+
+
+def _sky_tint(image: Image.Image, color: tuple[int, int, int], alpha_top: int, alpha_bottom: int) -> None:
+    layer = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    pix = layer.load()
+    end = min(CANVAS_H, HORIZON_Y + 24)
+    for y in range(end):
+        t = y / max(1, end - 1)
+        alpha = round(lerp(alpha_top, alpha_bottom, t))
+        for x in range(CANVAS_W):
+            pix[x, y] = (color[0], color[1], color[2], alpha)
+    image.alpha_composite(layer)
+
+
+def _draw_ready_rain(image: Image.Image) -> None:
+    rng = random.Random(7721)
+    layer = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(layer, "RGBA")
+    for _ in range(250):
+        x = rng.randint(-60, CANVAS_W + 40)
+        y = rng.randint(-12, CANVAS_H + 12)
+        length = rng.randint(22, 48)
+        alpha = rng.randint(58, 130)
+        draw.line((x, y, x - length * 0.32, y + length), fill=(204, 229, 239, alpha), width=1)
+    for _ in range(58):
+        x = rng.randint(20, CANVAS_W - 20)
+        y = rng.randint(HORIZON_Y + 28, CANVAS_H - 18)
+        rx = rng.randint(6, 24)
+        ry = max(2, round(rx * 0.26))
+        draw.ellipse((x - rx, y - ry, x + rx, y + ry), outline=(218, 246, 255, rng.randint(38, 98)), width=1)
+    image.alpha_composite(layer.filter(ImageFilter.GaussianBlur(0.22)))
+
+
+def _draw_ready_fog(image: Image.Image) -> None:
+    from PIL import ImageEnhance
+
+    blurred = image.filter(ImageFilter.GaussianBlur(1.7))
+    far_mask = Image.new("L", image.size, 0)
+    pix = far_mask.load()
+    for y in range(CANVAS_H):
+        distance = 1.0 - abs((y - HORIZON_Y) / max(HORIZON_Y, CANVAS_H - HORIZON_Y))
+        alpha = round(max(0.0, distance) * 155)
+        for x in range(CANVAS_W):
+            pix[x, y] = alpha
+    image.paste(blurred, (0, 0), far_mask)
+    fog = Image.new("RGBA", image.size, (232, 240, 238, 0))
+    draw = ImageDraw.Draw(fog, "RGBA")
+    rng = random.Random(7731)
+    draw.rectangle((0, 0, CANVAS_W, CANVAS_H), fill=(226, 238, 237, 72))
+    for _ in range(18):
+        y = rng.randint(60, CANVAS_H - 20)
+        h = rng.randint(24, 76)
+        draw.ellipse((-170, y - h, CANVAS_W + 170, y + h), fill=(236, 244, 243, rng.randint(42, 92)))
+    fog = ImageEnhance.Contrast(fog.filter(ImageFilter.GaussianBlur(16))).enhance(0.9)
+    image.alpha_composite(fog)
+
+
+def _enhance_ready_weather(base: Image.Image, color: float, contrast: float, brightness: float, sharpness: float = 1.0) -> Image.Image:
+    from PIL import ImageEnhance
+
+    image = ImageEnhance.Color(base).enhance(color)
+    image = ImageEnhance.Contrast(image).enhance(contrast)
+    image = ImageEnhance.Brightness(image).enhance(brightness)
+    image = ImageEnhance.Sharpness(image).enhance(sharpness)
+    return image.convert("RGBA")
+
+
+def create_ready_weather_scene_assets() -> None:
+    ready_path = OUT_DIR / "surface_scene_ready.png"
+    if not ready_path.exists():
+        return
+    base = Image.open(ready_path).convert("RGBA")
+
+    sunny = base.copy()
+    save_image(sunny, OUT_DIR / "surface_scene_ready_sunny.png")
+
+    partly = _enhance_ready_weather(base, 0.95, 0.98, 0.99, 1.02)
+    _sky_tint(partly, (70, 104, 124), 22, 6)
+    _sea_tint(partly, (31, 94, 132), 10, 20)
+    _draw_ready_weather_clouds(partly, 7741, 9, (255, 255, 255), (38, 86), (24, 134), (0.44, 1.05), 1.7)
+    save_image(partly, OUT_DIR / "surface_scene_ready_partly_cloudy.png")
+
+    cloudy = _enhance_ready_weather(base, 0.74, 0.86, 0.92, 0.98)
+    _sky_tint(cloudy, (82, 96, 106), 78, 34)
+    _sea_tint(cloudy, (38, 68, 86), 32, 48)
+    _draw_ready_weather_clouds(cloudy, 7751, 18, (92, 105, 111), (48, 104), (4, 154), (0.60, 1.55), 4.8)
+    _draw_ready_weather_clouds(cloudy, 7752, 10, (178, 188, 186), (22, 48), (44, 142), (0.55, 1.15), 5.2)
+    save_image(cloudy, OUT_DIR / "surface_scene_ready_cloudy.png")
+
+    rain = _enhance_ready_weather(base, 0.60, 0.80, 0.82, 0.94)
+    rain.alpha_composite(_gradient_layer((30, 42, 54), (9, 33, 52), 76, 62))
+    _sea_tint(rain, (10, 47, 68), 42, 72)
+    _draw_ready_weather_clouds(rain, 7761, 21, (54, 65, 75), (62, 122), (0, 165), (0.72, 1.78), 5.8)
+    _draw_ready_rain(rain)
+    save_image(rain, OUT_DIR / "surface_scene_ready_rain.png")
+
+    fog = _enhance_ready_weather(base, 0.48, 0.58, 1.08, 0.90)
+    _sky_tint(fog, (224, 234, 232), 108, 76)
+    _sea_tint(fog, (186, 210, 213), 74, 92)
+    _draw_ready_fog(fog)
+    save_image(fog, OUT_DIR / "surface_scene_ready_fog.png")
+
+    _create_ready_weather_scene_contact_sheet()
+
+
+def _create_ready_weather_scene_contact_sheet() -> None:
+    variants = [
+        ("sunny", "surface_scene_ready_sunny.png"),
+        ("partly_cloudy", "surface_scene_ready_partly_cloudy.png"),
+        ("cloudy", "surface_scene_ready_cloudy.png"),
+        ("rain", "surface_scene_ready_rain.png"),
+        ("fog", "surface_scene_ready_fog.png"),
+    ]
+    thumb_w = 384
+    thumb_h = round(thumb_w * CANVAS_H / CANVAS_W)
+    label_h = 34
+    gutter = 16
+    sheet = Image.new("RGBA", (gutter + len(variants) * (thumb_w + gutter), thumb_h + label_h + gutter * 2), (10, 22, 34, 255))
+    draw = ImageDraw.Draw(sheet, "RGBA")
+    for index, (weather_id, file_name) in enumerate(variants):
+        path = OUT_DIR / file_name
+        if not path.exists():
+            continue
+        preview = Image.open(path).convert("RGBA").resize((thumb_w, thumb_h), Image.Resampling.LANCZOS)
+        x = gutter + index * (thumb_w + gutter)
+        y = gutter + label_h
+        draw.text((x, gutter + 4), weather_id, fill=(238, 232, 204, 255))
+        sheet.alpha_composite(preview, (x, y))
+        draw.rectangle((x, y, x + thumb_w - 1, y + thumb_h - 1), outline=(216, 172, 88, 255), width=2)
+    save_image(sheet, OUT_DIR / "surface_scene_ready_weather_contact_sheet.png")
+
+
 def draw_angler_common(canvas: HiCanvas, casting: bool) -> None:
     body_x = 194
     foot_y = 137
@@ -741,6 +942,7 @@ def main() -> None:
     create_fish_shadow()
     create_splash()
     create_scene_state_plates()
+    create_ready_weather_scene_assets()
     create_weather_assets()
 
 
