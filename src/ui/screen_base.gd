@@ -3,7 +3,15 @@ extends Control
 
 const ShowcaseAssetsScript = preload("res://src/ui/showcase_assets.gd")
 
+static var _qa_deterministic: Variant = null
+
 signal navigate_requested(screen_id: String, payload: Dictionary)
+
+
+static func is_qa_deterministic() -> bool:
+	if _qa_deterministic == null:
+		_qa_deterministic = OS.get_environment("TSURI_QA_DETERMINISTIC") == "1"
+	return _qa_deterministic
 
 var route_payload: Dictionary = {}
 var _screen_bgm_player: AudioStreamPlayer

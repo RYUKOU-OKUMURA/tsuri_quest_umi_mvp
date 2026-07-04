@@ -41,6 +41,10 @@ func set_value(new_value: float) -> void:
 	if clamped < value - 0.5:
 		_flash = 1.0   # 減少＝ダメージ点滅
 	value = clamped
+	if ScreenBase.is_qa_deterministic():
+		_displayed = value
+		_ghost = value
+		_flash = 0.0
 
 
 func set_ratio(ratio: float) -> void:
@@ -53,6 +57,8 @@ func ratio() -> float:
 
 
 func _process(delta: float) -> void:
+	if ScreenBase.is_qa_deterministic():
+		return
 	_time += delta
 	# 表示値を値へ指数補間（フレームレート非依存）
 	_displayed = lerpf(_displayed, value, 1.0 - exp(-14.0 * delta))

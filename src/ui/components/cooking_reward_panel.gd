@@ -2448,6 +2448,13 @@ func _add_reward_ambient_layer() -> void:
 
 
 func preview_accept() -> void:
+	if is_qa_deterministic():
+		if _closing:
+			return
+		_closing = true
+		closed.emit()
+		queue_free()
+		return
 	_close()
 
 
@@ -3232,6 +3239,9 @@ func _present() -> void:
 	_dialog.scale = Vector2(0.86, 0.86)
 	await get_tree().process_frame
 	_dialog.pivot_offset = _dialog.size * 0.5
+	if is_qa_deterministic():
+		_snap_present_state()
+		return
 	var tw := create_tween()
 	tw.set_ease(Tween.EASE_OUT)
 	tw.set_trans(Tween.TRANS_BACK)
@@ -3241,8 +3251,25 @@ func _present() -> void:
 	Juicer.add_trauma(0.18)
 
 
+func _snap_present_state() -> void:
+	_dialog.scale = Vector2.ONE
+	_dialog.modulate.a = 1.0
+	_snap_exp_animation()
+
+
+func _snap_exp_animation() -> void:
+	if not _exp_focus_card.visible:
+		return
+	_exp_bar.set_value(_target_exp)
+	_exp_label.scale = Vector2.ONE
+	_exp_label.pivot_offset = _exp_label.size * 0.5
+
+
 func _animate_exp() -> void:
 	if not _exp_focus_card.visible:
+		return
+	if is_qa_deterministic():
+		_snap_exp_animation()
 		return
 	var tw := create_tween()
 	tw.set_ease(Tween.EASE_OUT)

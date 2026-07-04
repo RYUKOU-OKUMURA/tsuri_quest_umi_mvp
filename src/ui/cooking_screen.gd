@@ -1584,7 +1584,8 @@ func _cook_selected() -> void:
 		leveled,
 		meal_status_snapshot
 	)
-	Juicer.add_trauma(0.16)
+	if not is_qa_deterministic():
+		Juicer.add_trauma(0.16)
 
 
 func preview_cook_selected() -> void:

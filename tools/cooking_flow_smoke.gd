@@ -131,6 +131,7 @@ func _ready() -> void:
 	if not _expect_overlay_count(screen, CookingStatusPanelScript, 0, "status harbor return"):
 		return
 
+	print("cooking_flow_smoke: ok")
 	get_tree().quit(0)
 
 

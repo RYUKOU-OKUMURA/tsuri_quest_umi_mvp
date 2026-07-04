@@ -1000,6 +1000,8 @@ func _effect_sentence(text: String) -> String:
 func _present() -> void:
 	modulate.a = 1.0
 	await get_tree().process_frame
+	if is_qa_deterministic():
+		return
 	_prepare_entry_part(_header_panel, -12.0)
 	for card in _summary_cards:
 		_prepare_entry_part(card, 18.0)
@@ -1041,6 +1043,10 @@ func _close() -> void:
 
 
 func preview_accept() -> void:
+	if is_qa_deterministic():
+		closed.emit()
+		queue_free()
+		return
 	_close()
 
 

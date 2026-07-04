@@ -85,7 +85,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 
 | 項目 | 値 | 場所 | 理由・備考 |
 |---|---|---|---|
-| ファイト画面フォント | ボールド系 `MPLUS1p-ExtraBold.ttf`＋本文 `MPLUS1p-Regular.ttf`、AA無効 | `src/ui/fight_fonts.gd` | AA方針は全体で分裂中（docs/19 §4.2 課題） |
+| ファイト画面フォント | LINE Seed JP（Eb/Bd/Rg）、AA有効 | `src/ui/game_fonts.gd` | 2026-07-05 AA方針統一（docs/19 §4.2 確定）に伴い `fight_fonts.gd` を削除し `game_fonts.gd` へ一本化。AA無効テキストはヒット演出のフォールバックのみで、PNGバッジ素材があるため実画面には描画されていなかった |
 
 ## 2. 不採用・再試行禁止リスト
 

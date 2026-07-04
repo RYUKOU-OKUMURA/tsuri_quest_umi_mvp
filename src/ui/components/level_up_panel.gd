@@ -791,6 +791,10 @@ func _present() -> void:
 	_dialog.scale = Vector2(0.82, 0.82)
 	await get_tree().process_frame
 	_dialog.pivot_offset = _dialog.size * 0.5
+	if is_qa_deterministic():
+		_dialog.scale = Vector2.ONE
+		_dialog.modulate.a = 1.0
+		return
 	var tw := create_tween()
 	tw.set_ease(Tween.EASE_OUT)
 	tw.set_trans(Tween.TRANS_BACK)

@@ -8,7 +8,7 @@
 |---|---|
 | `src/ui/` | 画面スクリプト（`*_screen.gd`）と `components/` |
 | `src/ui/palette.gd` | 共通色パレット（**色の正本。新規ハードコードhex禁止**） |
-| `src/ui/game_fonts.gd` / `fight_fonts.gd` | フォント（LINE Seed JP。AA方針が分裂中→docs/19 §4.2） |
+| `src/ui/game_fonts.gd` | フォント正本（LINE Seed JP、AA有効で全画面統一。2026-07-05確定→docs/19 §4.2） |
 | `assets/showcase/common/` | 共通UI素材（ステータスバー、汎用ボタン、カード/行枠、汎用アイコン） |
 | `assets/showcase/fish/` | 魚ドメイン共有素材（魚ポートレート、泳ぎシート）。画面からは `FightFishAssets` 経由で参照 |
 | `assets/showcase/<screen>/` | 画面別PNG素材（背景、料理、釣り場サムネ、画面専用フレームなどの一点物） |

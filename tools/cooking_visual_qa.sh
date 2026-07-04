@@ -35,7 +35,7 @@ done
 
 echo "==> Capture cooking reference states"
 set +e
-HOME="$GODOT_HOME" "$GODOT" --path "$ROOT" "res://tools/cooking_preview.tscn"
+TSURI_QA_DETERMINISTIC=1 HOME="$GODOT_HOME" "$GODOT" --path "$ROOT" "res://tools/cooking_preview.tscn"
 capture_status=$?
 set -e
 

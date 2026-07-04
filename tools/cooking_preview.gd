@@ -12,11 +12,14 @@ const OUT_LEVELUP := "/tmp/tsuri_cooking_levelup.png"
 const OUT_STATUS := "/tmp/tsuri_cooking_status.png"
 const OUT_MANIFEST := "/tmp/tsuri_cooking_capture_manifest.json"
 const VW := Vector2i(1280, 720)
+const CAPTURE_SETTLE_FRAMES := 10
 
 var _capture_manifest: Array[Dictionary] = []
 
 
 func _ready() -> void:
+	if ScreenBase.is_qa_deterministic():
+		seed(20260705)
 	theme = ThemeFactory.build_theme()
 	_reset_manifest()
 
@@ -33,6 +36,7 @@ func _ready() -> void:
 	if not _expect_current_prep_summary(screen, "COOK_SELECT capture"):
 		get_tree().quit(1)
 		return
+	await _await_capture_ready(vp)
 	if not _save_viewport(vp, OUT_SELECT):
 		get_tree().quit(1)
 		return
@@ -50,8 +54,7 @@ func _ready() -> void:
 	meal_result["status_snapshot"] = _meal_status_snapshot(7, 165, 285)
 	screen.preview_show_meal_reward_result(meal_result, true)
 
-	await get_tree().process_frame
-	await get_tree().process_frame
+	await _await_capture_ready(vp)
 	if not _expect_reward_state(screen, "MEAL_RESULT", "MEAL_RESULT capture"):
 		get_tree().quit(1)
 		return
@@ -68,8 +71,7 @@ func _ready() -> void:
 	var non_level_result := _fake_non_level_result()
 	_seed_after_non_level_meal_state()
 	screen.preview_show_reward_result(non_level_result, 127, 165, 285, false)
-	await get_tree().process_frame
-	await get_tree().process_frame
+	await _await_capture_ready(vp)
 	if not _expect_reward_state(screen, "EXP_GAIN", "EXP_GAIN capture"):
 		get_tree().quit(1)
 		return
@@ -86,8 +88,7 @@ func _ready() -> void:
 	var boss_unlock_result := _fake_boss_unlock_result()
 	_seed_after_boss_unlock_meal_state()
 	screen.preview_show_reward_result(boss_unlock_result, 92, 150, 150, true)
-	await get_tree().process_frame
-	await get_tree().process_frame
+	await _await_capture_ready(vp)
 	if not _expect_reward_state(screen, "EXP_GAIN_LEVELUP", "LEVEL_UP transition"):
 		get_tree().quit(1)
 		return
@@ -95,7 +96,10 @@ func _ready() -> void:
 		push_error("Expected EXP_GAIN_LEVELUP overlay before LEVEL_UP capture.")
 		get_tree().quit(1)
 		return
-	await get_tree().create_timer(0.45).timeout
+	if ScreenBase.is_qa_deterministic():
+		await _await_capture_ready(vp)
+	else:
+		await get_tree().create_timer(0.45).timeout
 	if not _expect_level_up_overlay(screen, "LEVEL_UP capture"):
 		get_tree().quit(1)
 		return
@@ -114,6 +118,7 @@ func _ready() -> void:
 	if not await _wait_for_level_up_overlay_to_close(screen, "STATUS_SUMMARY capture"):
 		get_tree().quit(1)
 		return
+	await _await_capture_ready(vp)
 	if not _expect_status_overlay(screen, "STATUS_SUMMARY capture"):
 		get_tree().quit(1)
 		return
@@ -131,9 +136,17 @@ func _mount_screen(vp: SubViewport, suppress_level_overlay := true) -> Control:
 	screen.configure({"suppress_level_overlay": suppress_level_overlay})
 	screen.size = Vector2(VW)
 	vp.add_child(screen)
-	await get_tree().process_frame
-	await get_tree().process_frame
+	await _await_capture_ready(vp)
 	return screen
+
+
+func _await_capture_ready(vp: SubViewport) -> void:
+	var frames := CAPTURE_SETTLE_FRAMES if ScreenBase.is_qa_deterministic() else 2
+	for _i in range(frames):
+		await get_tree().process_frame
+	if ScreenBase.is_qa_deterministic():
+		vp.render_target_update_mode = SubViewport.UPDATE_ONCE
+		await get_tree().process_frame
 
 
 func _seed_select_state() -> void:
@@ -386,7 +399,8 @@ func _expect_status_overlay(screen: Control, context: String) -> bool:
 
 
 func _wait_for_level_up_overlay_to_close(screen: Control, context: String) -> bool:
-	for i in range(24):
+	var max_frames := 4 if ScreenBase.is_qa_deterministic() else 24
+	for _i in range(max_frames):
 		await get_tree().process_frame
 		if not screen.preview_has_level_up_overlay():
 			return true

@@ -1,7 +1,6 @@
 class_name UnderwaterView
 extends Control
 
-const FightFontsScript = preload("res://src/ui/fight_fonts.gd")
 const GameFontsScript = preload("res://src/ui/game_fonts.gd")
 const FightFishAssetsScript = preload("res://src/ui/fight_fish_assets.gd")
 const SHOWCASE_BG_PATH := "res://assets/showcase/underwater/underwater_battle_bg.png"
@@ -648,7 +647,7 @@ func _draw_hit_burst() -> void:
 		var draw_size := tex_size * scale
 		var draw_rect := Rect2(burst_center - draw_size * 0.5, draw_size)
 		draw_texture_rect(_showcase_hit_burst, draw_rect, false, Color(1.0, 1.0, 1.0, alpha))
-	var font := FightFontsScript.extra_bold(get_theme_default_font())
+	var font := GameFontsScript.extra_bold(get_theme_default_font())
 	var text := "ヒット！"
 	var font_size := int(clampf(size.y * 0.108, 38.0, 52.0))
 	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
