@@ -224,9 +224,9 @@ UI作業のルール正本は `docs/19_ui_production_playbook.md`。本docはゲ
 
 **完了条件**: **完了**。釣行ごとに天候が変わり、見た目と釣果傾向の両方に差が出る。天候ラベルと天気アイコンは上部ステータスに表示され、天候別水面READYスクショで晴れ・曇り・雨・霧の差を確認できる。
 
-**残ギャップ**
-- 天候SE、時間帯、専用雨BGM、釣り場選択画面での事前予報UIは未実装。BGMは既存 `calm` / `windy` へフォールバックする。
-- READY以外の CASTING/WAITING/APPROACH/BITE は専用天気画像を量産せず、既存状態別PNG + 天候overlay/gradeのフォールバックを維持する。
+**P3対象外・後続候補**
+- 天候SE、時間帯、専用雨BGM、釣り場選択画面での事前予報UIはP3完了条件に含めない。BGMは既存 `calm` / `windy` へのフォールバックで完了扱い。
+- READY以外の CASTING/WAITING/APPROACH/BITE は専用天気画像を量産せず、既存状態別PNG + 天候overlay/gradeのフォールバックで完了扱い。専用画像化は将来の見た目polish候補とする。
 
 ---
 
