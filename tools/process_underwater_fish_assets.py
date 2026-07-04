@@ -145,7 +145,7 @@ FISH_ART_SOURCES = {
     },
     "mahaze": {"template": "kochi", "tint": "#b78a55", "tint_strength": 0.32, "scale_x": 0.72, "scale_y": 0.86, "markings": "sand_mottle"},
     "umitanago": {"template": "mejina", "tint": "#91a8ad", "tint_strength": 0.28, "scale_x": 0.82, "scale_y": 0.86, "markings": "soft_lateral"},
-    "sappa": {"template": "iwashi", "tint": "#c9d6da", "tint_strength": 0.30, "scale_x": 0.64, "scale_y": 0.72, "markings": "clean_silver"},
+    "sappa": {"template": "iwashi", "tint": "#d8e4e7", "tint_strength": 0.72, "scale_x": 0.50, "scale_y": 0.54, "markings": "sappa_plain"},
     "konoshiro": {"template": "iwashi", "tint": "#aebabe", "tint_strength": 0.24, "scale_x": 0.84, "scale_y": 0.88, "markings": "dark_spots"},
     "sayori": {"template": "kamasu", "tint": "#c4dfe2", "tint_strength": 0.30, "scale_x": 1.08, "scale_y": 0.62, "markings": "needle_line"},
     "maanago": {"template": "tachiuo", "tint": "#6e5840", "tint_strength": 0.72, "scale_x": 1.05, "scale_y": 0.54, "markings": "eel_spots"},
@@ -676,6 +676,11 @@ def _add_variant_markings(fish: Image.Image, markings: str) -> Image.Image:
         for index in range(5):
             x = int(w * (0.18 + index * 0.12))
             draw.line((x, int(h * 0.18), x + int(w * 0.05), int(h * 0.78)), fill=color, width=max(2, w // 120))
+    if markings == "sappa_plain":
+        draw.rectangle((0, 0, w, h), fill=(218, 232, 236, 96))
+        y = int(h * 0.49)
+        draw.line((int(w * 0.10), y, int(w * 0.92), y - int(h * 0.02)), fill=(246, 252, 252, 112), width=max(2, h // 20))
+        draw.line((int(w * 0.16), int(h * 0.33), int(w * 0.86), int(h * 0.29)), fill=(92, 122, 132, 36), width=max(1, h // 34))
     if markings in {"soft_lateral", "needle_line", "yellow_lateral", "clean_silver", "long_fin"}:
         color = (235, 204, 74, 92) if markings == "yellow_lateral" else (230, 242, 246, 72)
         y = int(h * (0.48 if markings != "needle_line" else 0.42))
@@ -747,8 +752,9 @@ def create_fish_card_portrait(sheet: Image.Image, output: Path) -> None:
     sd.ellipse((74, 226, canvas.width - 64, 276), fill=(72, 52, 31, 22))
     canvas.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(9)))
 
-    max_w = int(canvas.width * 0.985)
-    max_h = int(canvas.height * 0.955)
+    portrait_scale = 0.78 if output.name.startswith("sappa_") else 1.0
+    max_w = int(canvas.width * 0.985 * portrait_scale)
+    max_h = int(canvas.height * 0.955 * portrait_scale)
     scale = min(max_w / crop.width, max_h / crop.height)
     resized = crop.resize((round(crop.width * scale), round(crop.height * scale)), Image.Resampling.LANCZOS)
     x = (canvas.width - resized.width) // 2

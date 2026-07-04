@@ -211,22 +211,38 @@ func _build_inventory_row(parent: Control, row_index: int) -> void:
 	_place(parent, fish_image, Rect2(88.0, rect.position.y + 6.0, 78.0, 50.0))
 	row["fish_image"] = fish_image
 
-	var name_label := _market_label("", 17, Palette.TEXT_BONE, 2)
+	var name_panel := _market_field_panel(Palette.PARCHMENT_DEEP, Palette.SAND_DEEP, 0.74)
+	_place(parent, name_panel, Rect2(188.0, rect.position.y + 12.0, 144.0, 30.0))
+	row["name_panel"] = name_panel
+
+	var count_panel := _market_field_panel(Palette.PARCHMENT, Palette.SAND_DEEP, 0.88)
+	_place(parent, count_panel, Rect2(386.0, rect.position.y + 15.0, 62.0, 28.0))
+	row["count_panel"] = count_panel
+
+	var price_panel := _market_field_panel(Palette.PARCHMENT, Palette.GOLD_DEEP, 0.88)
+	_place(parent, price_panel, Rect2(456.0, rect.position.y + 15.0, 64.0, 28.0))
+	row["price_panel"] = price_panel
+
+	var quantity_panel := _market_field_panel(Palette.PARCHMENT_DEEP, Palette.SAND_DEEP, 0.86)
+	_place(parent, quantity_panel, Rect2(556.0, rect.position.y + 14.0, 48.0, 34.0))
+	row["quantity_panel"] = quantity_panel
+
+	var name_label := _market_label("", 17, Palette.TEXT_DARK, 0)
 	_place(parent, name_label, Rect2(190.0, rect.position.y + 9.0, 150.0, 26.0))
 	row["name_label"] = name_label
 
-	var meta_label := _market_label("", 12, Palette.TEXT_BONE, 1)
+	var meta_label := _market_label("", 12, Palette.TEXT_BODY, 0)
 	_place(parent, meta_label, Rect2(190.0, rect.position.y + 35.0, 160.0, 18.0))
 	row["meta_label"] = meta_label
 
 	var count_label := _market_label("", 15, Palette.TEXT_DARK, 0)
-	count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_place(parent, count_label, Rect2(356.0, rect.position.y + 17.0, 54.0, 25.0))
+	count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_place(parent, count_label, Rect2(386.0, rect.position.y + 17.0, 62.0, 25.0))
 	row["count_label"] = count_label
 
-	var price_label := _market_label("", 15, Palette.TEXT_DARK, 0)
-	price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_place(parent, price_label, Rect2(432.0, rect.position.y + 17.0, 82.0, 25.0))
+	var price_label := _market_label("", 14, Palette.TEXT_DARK, 0)
+	price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_place(parent, price_label, Rect2(456.0, rect.position.y + 17.0, 64.0, 25.0))
 	row["price_label"] = price_label
 
 	var minus_button := _market_button("-", _adjust_visible_row.bind(row_index, -1), false, 18)
@@ -235,7 +251,7 @@ func _build_inventory_row(parent: Control, row_index: int) -> void:
 	_place(parent, minus_button, Rect2(524.0, rect.position.y + 14.0, 28.0, 34.0))
 	row["minus_button"] = minus_button
 
-	var quantity_label := _market_label("0", 18, Palette.TEXT_BONE, 2)
+	var quantity_label := _market_label("0", 18, Palette.TEXT_DARK, 0)
 	quantity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_place(parent, quantity_label, Rect2(556.0, rect.position.y + 14.0, 48.0, 34.0))
 	row["quantity_label"] = quantity_label
@@ -484,9 +500,12 @@ func _refresh_inventory() -> void:
 		(row["select_button"] as Button).set_meta("fish_id", fish_id)
 		(row["fish_image"] as TextureRect).texture = ShowcaseAssetsScript.load_texture(FightFishAssets.card_portrait_path(fish))
 		(row["name_label"] as Label).text = String(fish.get("name", fish_id))
-		(row["meta_label"] as Label).text = String(fish.get("rarity", ""))
+		var rarity := String(fish.get("rarity", ""))
+		var meta_label := row["meta_label"] as Label
+		meta_label.text = rarity
+		meta_label.add_theme_color_override("font_color", _row_rarity_color(rarity))
 		(row["count_label"] as Label).text = "x%d" % count
-		(row["price_label"] as Label).text = "%s G" % _format_money(price)
+		(row["price_label"] as Label).text = _format_money(price)
 		(row["quantity_label"] as Label).text = str(quantity)
 		(row["minus_button"] as Button).disabled = quantity <= 0
 		(row["plus_button"] as Button).disabled = quantity >= count
@@ -739,6 +758,34 @@ func _button_style(primary: bool, hover: bool) -> StyleBoxFlat:
 	style.content_margin_top = 2
 	style.content_margin_bottom = 2
 	return style
+
+
+func _market_field_panel(bg: Color, border: Color, alpha: float) -> Panel:
+	var panel := Panel.new()
+	panel.z_index = 12
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var style := StyleBoxFlat.new()
+	style.bg_color = _with_alpha(bg, alpha)
+	style.border_color = _with_alpha(border, 0.82)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.shadow_color = _with_alpha(Palette.TEXT_OUTLINE_DARK, 0.12)
+	style.shadow_size = 2
+	style.shadow_offset = Vector2(0.0, 1.0)
+	panel.add_theme_stylebox_override("panel", style)
+	return panel
+
+
+func _row_rarity_color(rarity: String) -> Color:
+	match rarity:
+		"アンコモン":
+			return Palette.RARITY_UNCOMMON_BADGE
+		"レア":
+			return Palette.RARITY_RARE_BADGE
+		"ぬし":
+			return Palette.GOLD_DEEP
+		_:
+			return Palette.TEXT_BODY
 
 
 func _make_button_transparent(button: Button) -> void:

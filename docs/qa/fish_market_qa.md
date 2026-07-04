@@ -29,14 +29,16 @@ QA更新コマンド: ./tools/market_visual_qa.sh
 |---|---|---|---|
 | 空状態表示 | 1 | 左一覧にruntime空状態パネルを追加し、backplateの空スロットを操作残骸に見せない | 採用 |
 | backplate質感 | 3 | 市場背景、紙面粒状感、濃紺パネル装飾、査定トレーの氷・木箱・葉を強化。斜線・粒状ノイズを3回目で抑制 | 採用 |
+| 行パーツ品質 | 1 | 名前・所持数・単価・数量をruntimeフィールドパネル化。紙面上の白アウトライン文字とコイン/単価重なりを解消 | 採用 |
+| サッパ素材 | 1 | サバと混同しやすい見た目だったため、小型・淡色のサッパとして再生成 | 採用 |
 
 ## 4. v1判定
 
 | 状態 | 判定 | 証拠 |
 |---|---|---|
-| 通常選択 | 採用 | `docs/qa/evidence/fish_market/2026-07-04_market_select_uplift_compare.png` |
+| 通常選択 | 採用 | `docs/qa/evidence/fish_market/2026-07-04_market_row_polish_compare.png` |
 | 売却完了 | 採用 | `docs/qa/evidence/fish_market/2026-07-04_market_sold_uplift_compare.png` |
-| 空状態 | 採用 | `docs/qa/evidence/fish_market/2026-07-04_market_empty_uplift_compare.png` |
+| 空状態 | 採用 | `docs/qa/evidence/fish_market/2026-07-04_market_row_polish_empty_compare.png` |
 
 通常選択・売却完了・空状態の3状態で、参照画像の「左にクーラーボックス一覧、右上に査定、右下に売却カート」という構成を維持できている。魚名・所持数・単価・数量・合計・ボタン状態はruntime描画で、PNGへの日本語テキスト焼き込みはない。
 
@@ -60,3 +62,5 @@ QA更新コマンド: ./tools/market_visual_qa.sh
 - 右上説明文は長文時に省略表示が出たため、「料理素材に残すか、装備資金へ。」へ短縮して採用。
 - ブラッシュアップで空状態パネルを追加し、在庫0時の左一覧が操作残骸に見えないようにした。証拠: `2026-07-04_market_empty_uplift_compare.png`。
 - backplateは魚市場背景、パネル装飾、査定トレーを強化。1回目は角装飾と斜線が強すぎたため、3回目で密度を抑えた版を採用。証拠: `2026-07-04_market_select_uplift_compare.png`。
+- 行内の名前・所持数・単価・数量をruntimeフィールドパネルへ載せ替えた。単価は行内では数字のみ、詳細欄では `単価 ○○ G` の完全表記を維持する。証拠: `2026-07-04_market_row_polish_compare.png`。
+- `サバ` と `サッパ` はデータ上別魚。市場でサッパがサバに見えたため、`sappa` の魚素材だけ小型・淡色へ再生成し、名前自体は `サッパ` のまま維持した。
