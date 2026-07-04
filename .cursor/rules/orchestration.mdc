@@ -1,0 +1,40 @@
+---
+description: Fable オーケストレーション / Composer ワーカーの役割分担と fan-out 規約
+alwaysApply: true
+---
+
+# オーケストレーション
+
+正本: `AGENTS.md` §オーケストレーション、`docs/26_refactor_orchestration_plan.md`
+
+## 役割
+
+- **Fable（オーケストレーター）**: 計画、スライス分割、依存順、完了判断、マージ前レビュー
+- **Composer 2.5（ワーカー）**: brief で渡された scoped 作業のみ（実装・監査・チェック実行）
+
+## fan-out してよい条件
+
+サブタスクに**1 concern・触るファイル・DoD**を命名できるときだけ Composer subagent を起動する。
+命名できないときは Fable 単体（1 agent）のまま進める。
+
+## ワーカー brief（必須）
+
+1. **1 concern** — 複数目的を混ぜない
+2. **触ってよいファイル** — 明示リスト
+3. **触ってはいけないもの** — `docs/qa/*_qa.md` の freeze、他画面素材、無関係ファイル
+4. **Definition of Done** — 実行コマンドと期待結果
+5. **報告形式** — 変更概要 / 実行結果 / 未解決（短く）
+
+ワーカーに計画を考えさせない。独立スライスは並列起動可。
+
+## マージ前（Fable）
+
+- ワーカー報告を信じず diff をレビュー
+- ズレていれば brief を書き直して再投入。些末以外は Fable が黙って直さない
+- 各スライス後: `./tools/validate_project.sh` + 触った領域の smoke（UI 変更時は visual QA）
+
+## リファクタ原則
+
+- behavior-preserving を原則。1スライス = 1 PR 相当
+- UI 変更は `docs/19_ui_production_playbook.md` と freeze 値を尊重
+- コード整理と UI uplift を同一ワーカーに混ぜない

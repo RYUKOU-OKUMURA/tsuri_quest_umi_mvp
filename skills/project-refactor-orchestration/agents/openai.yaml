@@ -1,0 +1,7 @@
+interface:
+  display_name: "Project Refactor Orchestration"
+  short_description: "Fable 計画 + Composer fan-out で behavior-preserving リファクタを進める"
+  default_prompt: "Use $project-refactor-orchestration to run the next pending slice in docs/26_refactor_orchestration_plan.md. Fable orchestrates; Composer workers execute scoped briefs only."
+
+policy:
+  allow_implicit_invocation: true

@@ -17,6 +17,8 @@
 | `reference/` | 正式完成イメージ（`.gdignore` 済み。**ゲームに直接インポート禁止**） |
 | `docs/qa/` | 画面別QA判断ログ（freeze表・不採用リスト。**1画面1ファイル**。書式は `docs/qa/README.md`、過去経過は `archive/`、証拠画像は `evidence/`） |
 | `skills/` | 作業手順スキル（下記） |
+| `.cursor/rules/` | Cursor 常時ルール（オーケストレーション等） |
+| `docs/26_refactor_orchestration_plan.md` | 全体リファクタの作戦台帳（スライス・ベースライン・DoD） |
 
 ## 最重要参考資料
 
@@ -29,6 +31,50 @@
 | 新しい画面UIをゼロから実装 | `skills/ui-screen-build/SKILL.md` |
 | 既存画面UIの品質向上 | `skills/ui-screen-uplift/SKILL.md` |
 | 調理・食事・レベルアップフロー | `skills/tsuri-cooking-showcase-uplift/SKILL.md`（専用。上記2つより優先） |
+| プロジェクト全体リファクタ | `skills/project-refactor-orchestration/SKILL.md` |
+
+## オーケストレーション（Fable / Composer）
+
+Cursor 常時ルール: `.cursor/rules/orchestration.mdc`  
+作戦台帳: `docs/26_refactor_orchestration_plan.md`
+
+### 役割
+
+- **Fable（オーケストレーター）**: 計画、スライス分割、依存順、完了判断、マージ前レビュー
+- **Composer 2.5（ワーカー）**: brief で渡された scoped 作業（実装・監査・チェック実行）
+
+### Fable 単体（fan-out しない）
+
+- アーキテクチャ方針の決定（ScreenBase 責務、autoload 境界など）
+- 1スレッドで追うべき難バグ
+- freeze 値・docs/19 との衝突判断
+- サブタスクに名前を付けられない作業
+
+### Composer に fan-out する典型
+
+| サブタスク | モデル | 手順 |
+|---|---|---|
+| ベースライン計測・smoke 実行 | Composer | `docs/26` §Smoke |
+| palette / 素材参照監査修正 | Composer | AGENTS.md 不変ルール |
+| 指定ファイルの pure 関数抽出 | Composer | behavior-preserving のみ |
+| 画面別 UI uplift | Composer | `skills/ui-screen-uplift/` |
+| 調理フロー | Composer | `skills/tsuri-cooking-showcase-uplift/` |
+
+独立スライスは並列起動可。ワーカーに計画を考えさせない。
+
+### ワーカー brief 必須項目
+
+1. **1 concern** — 複数目的を混ぜない
+2. **触ってよいファイル** — 明示リスト
+3. **触ってはいけないもの** — `docs/qa/*_qa.md` の freeze、他画面素材
+4. **Definition of Done** — 実行コマンド + 期待結果
+5. **短い報告** — 変更概要 / 実行結果 / 未解決
+
+### マージ前（Fable）
+
+- ワーカー報告を信じず diff をレビュー
+- ズレていれば brief を書き直して再投入。些末以外は Fable が黙って直さない
+- 各スライス後: `./tools/validate_project.sh` + 触った領域の smoke（UI 変更時は visual QA）
 
 ## 検証コマンド
 
