@@ -1,4 +1,4 @@
-extends "res://src/ui/screen_base.gd"
+extends ScreenBase
 
 const TitleBackdropScript = preload("res://src/ui/components/title_backdrop.gd")
 const GameFontsScript = preload("res://src/ui/game_fonts.gd")
@@ -36,7 +36,7 @@ func _build_screen() -> void:
 
 
 func _build_logo(root: Control) -> void:
-	var logo_layer := _anchored_control(root, 0.055, 0.090, 0.720, 0.375, 0, 0, 0, 0)
+	var logo_layer := _anchored_control(root, 0.055, 0.090, 0.720, 0.375)
 	logo_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	var logo_frame := _texture_rect(TITLE_LOGO_FRAME_PATH)
@@ -67,7 +67,7 @@ func _build_logo(root: Control) -> void:
 
 
 func _build_fish_feature(root: Control) -> void:
-	var feature := _anchored_control(root, 0.050, 0.555, 0.430, 0.930, 0, 0, 0, 0)
+	var feature := _anchored_control(root, 0.050, 0.555, 0.430, 0.930)
 	feature.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	var fish_texture := _load_texture_if_exists(FightFishAssets.card_portrait_path({"id": "boss_kurodai"}))
@@ -98,7 +98,7 @@ func _build_fish_feature(root: Control) -> void:
 
 
 func _build_menu(root: Control) -> void:
-	var menu := _anchored_control(root, 0.550, 0.395, 0.960, 0.925, 0, 0, 0, 0)
+	var menu := _anchored_control(root, 0.550, 0.395, 0.960, 0.925)
 	var menu_frame := _texture_rect(TITLE_MENU_FRAME_PATH)
 	menu_frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	menu.add_child(menu_frame)
@@ -170,43 +170,6 @@ func _build_reset_dialog() -> void:
 	_confirm_reset.cancel_button_text = "キャンセル"
 	_confirm_reset.confirmed.connect(_start_new_game)
 	add_child(_confirm_reset)
-
-
-func _anchored_control(
-	parent: Control,
-	left: float,
-	top: float,
-	right: float,
-	bottom: float,
-	margin_left: float,
-	margin_top: float,
-	margin_right: float,
-	margin_bottom: float
-) -> Control:
-	var control := Control.new()
-	control.anchor_left = left
-	control.anchor_top = top
-	control.anchor_right = right
-	control.anchor_bottom = bottom
-	control.offset_left = margin_left
-	control.offset_top = margin_top
-	control.offset_right = -margin_right
-	control.offset_bottom = -margin_bottom
-	parent.add_child(control)
-	return control
-
-
-func _place_control(parent: Control, control: Control, left: float, top: float, right: float, bottom: float) -> void:
-	control.anchor_left = left
-	control.anchor_top = top
-	control.anchor_right = right
-	control.anchor_bottom = bottom
-	control.offset_left = 0.0
-	control.offset_top = 0.0
-	control.offset_right = 0.0
-	control.offset_bottom = 0.0
-	parent.add_child(control)
-
 
 func _texture_rect(path: String) -> TextureRect:
 	var rect := TextureRect.new()

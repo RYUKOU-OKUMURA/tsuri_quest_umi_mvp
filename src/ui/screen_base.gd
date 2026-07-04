@@ -10,8 +10,6 @@ var _screen_bgm_player: AudioStreamPlayer
 var _screen_bgm_path := ""
 var _last_sfx_path := ""
 
-static var _particle_tex: Texture2D
-
 
 func configure(payload: Dictionary) -> void:
 	route_payload = payload.duplicate(true)
@@ -134,35 +132,6 @@ func add_gradient_background(top_color: Color, bottom_color: Color) -> TextureRe
 	add_child(background)
 	move_child(background, 0)
 	return background
-
-
-# 明るい海のグラデーション（シェル画面用の簡易ヘルパ）。
-func add_sea_background() -> TextureRect:
-	return add_gradient_background(Palette.SKY_TOP, Palette.SEA_DEEP)
-
-
-# 環境のきらめき粒子（CPUParticles2D：macOS gl_compat で安全）。
-func add_sparkles(count: int = 18, area: Rect2 = Rect2()) -> CPUParticles2D:
-	var p := CPUParticles2D.new()
-	p.amount = count
-	p.lifetime = 3.0
-	p.texture = _get_particle_tex()
-	p.local_coords = true
-	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
-	if area.size.length() <= 0.0:
-		area = Rect2(Vector2.ZERO, Vector2(1280.0, 720.0))
-	p.emission_rect_extents = area.size * 0.5
-	p.position = area.get_center()
-	p.gravity = Vector2.ZERO
-	p.direction = Vector2(0.0, -1.0)
-	p.spread = 25.0
-	p.initial_velocity_min = 4.0
-	p.initial_velocity_max = 12.0
-	p.scale_amount_min = 0.6
-	p.scale_amount_max = 1.6
-	p.color = Palette.FOAM
-	p.modulate.a = 0.7
-	return p
 
 
 func make_root_margin(margin: int = 18) -> MarginContainer:
@@ -299,23 +268,6 @@ func make_panel(dark: bool = false) -> PanelContainer:
 	return panel
 
 
-func make_header(title: String, subtitle: String = "") -> PanelContainer:
-	var panel := make_panel(true)
-	panel.custom_minimum_size = Vector2(0.0, 68.0)
-	panel.clip_contents = true
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 4)
-	panel.add_child(box)
-	var title_label := make_label(title, 28, Palette.TEXT_BONE, 3, Palette.TEXT_OUTLINE_DARK)
-	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	box.add_child(title_label)
-	if not subtitle.is_empty():
-		var subtitle_label := make_label(subtitle, 16, Color("#d8e8f5"), 2, Palette.TEXT_OUTLINE_DARK)
-		subtitle_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		box.add_child(subtitle_label)
-	return panel
-
-
 func format_play_time(total_seconds: float) -> String:
 	var seconds := int(total_seconds)
 	var hours := seconds / 3600
@@ -324,10 +276,31 @@ func format_play_time(total_seconds: float) -> String:
 	return "%02d:%02d:%02d" % [hours, minutes, remaining]
 
 
-static func _get_particle_tex() -> Texture2D:
-	if _particle_tex != null:
-		return _particle_tex
-	var img := Image.create_empty(3, 3, false, Image.FORMAT_RGBA8)
-	img.fill(Color(1.0, 1.0, 1.0, 1.0))
-	_particle_tex = ImageTexture.create_from_image(img)
-	return _particle_tex
+static func format_money(value: int) -> String:
+	var raw := str(value)
+	var result := ""
+	var count := 0
+	for index in range(raw.length() - 1, -1, -1):
+		if count > 0 and count % 3 == 0:
+			result = "," + result
+		result = raw[index] + result
+		count += 1
+	return result
+
+
+func _anchored_control(parent: Control, left: float, top: float, right: float, bottom: float) -> Control:
+	var control := Control.new()
+	_place_control(parent, control, left, top, right, bottom)
+	return control
+
+
+func _place_control(parent: Control, control: Control, left: float, top: float, right: float, bottom: float) -> void:
+	control.anchor_left = left
+	control.anchor_top = top
+	control.anchor_right = right
+	control.anchor_bottom = bottom
+	control.offset_left = 0.0
+	control.offset_top = 0.0
+	control.offset_right = 0.0
+	control.offset_bottom = 0.0
+	parent.add_child(control)

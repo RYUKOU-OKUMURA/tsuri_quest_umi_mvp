@@ -1,16 +1,10 @@
-extends "res://src/ui/screen_base.gd"
+extends ScreenBase
 ## 調理後の MEAL_RESULT / EXP_GAIN を担う報酬オーバーレイ。
 # 料理を食べた結果、EXP、初回ボーナス、次回バフを一拍置いて見せる。
 signal closed
 
 const GaugeBarScript = preload("res://src/ui/components/gauge_bar.gd")
 
-const DISH_FEATURE_AJI := "res://assets/showcase/cooking/dish_feature_aji_shioyaki.png"
-const DISH_FEATURE_SASHIMI := "res://assets/showcase/cooking/dish_feature_sashimi.png"
-const DISH_FEATURE_SIMMERED := "res://assets/showcase/cooking/dish_feature_simmered.png"
-const DISH_FEATURE_SOUP := "res://assets/showcase/cooking/dish_feature_soup.png"
-const DISH_FEATURE_FRY := "res://assets/showcase/cooking/dish_feature_fry.png"
-const DISH_ICON_SHEET := "res://assets/showcase/cooking/dish_icon_sheet.png"
 const MEAL_RESULT_SCENE_ART := "res://assets/showcase/cooking/meal_result_scene_art_v2.png"
 const PLAYER_EATING_POSE := "res://assets/showcase/cooking/player_eating_pose_pixel_tight.png"
 const PLAYER_EXP_POSE := "res://assets/showcase/cooking/player_exp_message_pose_pixel.png"
@@ -23,7 +17,6 @@ const MEAL_BANNER_FRAME := "res://assets/showcase/cooking/meal_banner_frame.png"
 const MEAL_DISH_CARD_FRAME := "res://assets/showcase/cooking/meal_dish_card_frame.png"
 const EXP_BURST_FRAME := "res://assets/showcase/cooking/exp_burst_frame.png"
 const REWARD_CARD_FRAME := "res://assets/showcase/cooking/reward_card_frame.png"
-const FLOW_ACTION_BUTTON_FRAME := "res://assets/showcase/cooking/flow_action_button_frame.png"
 const PLAYER_STATUS_PORTRAIT := "res://assets/showcase/cooking/player_status_portrait_pixel.png"
 const STATUS_COOLER_ART := "res://assets/showcase/cooking/status_cooler_art.png"
 const STATUS_MONEY_ART := "res://assets/showcase/cooking/status_money_art.png"
@@ -1956,34 +1949,7 @@ func _draw_confirm_button_cue(button: Button) -> void:
 
 
 func _apply_flow_button_style(button: Button) -> void:
-	var normal_fallback := _style_box(Color("#102f51"), Palette.GOLD_DEEP, Palette.GOLD_BRIGHT, 4, 6)
-	var hover_fallback := _style_box(Color("#16436c"), Palette.GOLD_BRIGHT, Color("#fff0b2"), 4, 6)
-	var pressed_fallback := _style_box(Color("#081a2d"), Color("#a06d28"), Palette.GOLD_DEEP, 4, 6)
-	var disabled_fallback := _style_box(Color("#202a31"), Color("#71614a"), Color("#8c7b62"), 3, 6)
-	button.add_theme_stylebox_override(
-		"normal",
-		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, normal_fallback, 78.0, 8.0)
-	)
-	button.add_theme_stylebox_override(
-		"hover",
-		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, hover_fallback, 78.0, 8.0)
-	)
-	button.add_theme_stylebox_override(
-		"pressed",
-		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, pressed_fallback, 78.0, 8.0)
-	)
-	button.add_theme_stylebox_override(
-		"disabled",
-		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, disabled_fallback, 78.0, 8.0)
-	)
-	button.add_theme_stylebox_override(
-		"focus",
-		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, hover_fallback, 78.0, 8.0)
-	)
-	button.add_theme_color_override("font_color", Palette.GOLD_BRIGHT)
-	button.add_theme_color_override("font_hover_color", Color("#fff1ba"))
-	button.add_theme_color_override("font_pressed_color", Color("#f0c06b"))
-	button.add_theme_color_override("font_disabled_color", Color("#b6a68d"))
+	CookingAssets.apply_flow_button_style(button, 78.0, 6.0)
 
 
 func _set_confirm_button_emphasis(is_meal_result: bool) -> void:
@@ -2341,7 +2307,7 @@ func _status_icon_texture(icon_mode: String) -> Texture2D:
 		"level":
 			return load(PLAYER_STATUS_PORTRAIT) as Texture2D
 		"meal":
-			return load(DISH_FEATURE_AJI) as Texture2D
+			return load(CookingAssets.DISH_FEATURE_AJI) as Texture2D
 		"cooler":
 			return load(STATUS_COOLER_ART) as Texture2D
 		"money":
@@ -3338,9 +3304,7 @@ func _apply_close_cue() -> void:
 
 
 func _panel_box(fill: Color, border: Color, inner: Color, border_width: int) -> PanelContainer:
-	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _style_box(fill, border, inner, border_width, 5))
-	return panel
+	return CookingAssets.panel_box(fill, border, inner, border_width)
 
 
 func _compact_panel_box(fill: Color, border: Color, inner: Color, border_width: int) -> PanelContainer:
@@ -3350,20 +3314,7 @@ func _compact_panel_box(fill: Color, border: Color, inner: Color, border_width: 
 
 
 func _style_box(fill: Color, border: Color, inner: Color, border_width: int, radius: int) -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = fill
-	sb.border_color = border.lerp(inner, 0.18)
-	sb.set_border_width_all(border_width)
-	sb.set_corner_radius_all(radius)
-	sb.content_margin_left = 14.0
-	sb.content_margin_top = 10.0
-	sb.content_margin_right = 14.0
-	sb.content_margin_bottom = 10.0
-	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.35)
-	sb.shadow_size = 6
-	sb.shadow_offset = Vector2(0.0, 3.0)
-	sb.anti_aliasing = false
-	return sb
+	return CookingAssets.style_box(fill, border, inner, border_width, radius)
 
 
 func _compact_style_box(fill: Color, border: Color, inner: Color, border_width: int, radius: int) -> StyleBoxFlat:
@@ -3386,41 +3337,14 @@ func _compact_style_box(fill: Color, border: Color, inner: Color, border_width: 
 func _texture_style_box(
 	path: String, margin: int, fallback: StyleBox, content_x: float, content_y: float
 ) -> StyleBox:
-	var tex := load(path) as Texture2D
-	if tex == null:
-		return fallback
-	var sb := StyleBoxTexture.new()
-	sb.texture = tex
-	sb.texture_margin_left = margin
-	sb.texture_margin_top = margin
-	sb.texture_margin_right = margin
-	sb.texture_margin_bottom = margin
-	sb.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
-	sb.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
-	sb.expand_margin_left = 6.0
-	sb.expand_margin_top = 6.0
-	sb.expand_margin_right = 6.0
-	sb.expand_margin_bottom = 6.0
-	sb.content_margin_left = content_x
-	sb.content_margin_top = content_y
-	sb.content_margin_right = content_x
-	sb.content_margin_bottom = content_y
-	return sb
+	return CookingAssets.texture_style_box(path, margin, fallback, content_x, content_y, 6.0)
 
 
 func _featured_dish_texture(recipe_id: String) -> Texture2D:
-	match recipe_id:
-		"salt_grill":
-			return load(DISH_FEATURE_AJI) as Texture2D
-		"sashimi":
-			return load(DISH_FEATURE_SASHIMI) as Texture2D
-		"simmered":
-			return load(DISH_FEATURE_SIMMERED) as Texture2D
-		"soup":
-			return load(DISH_FEATURE_SOUP) as Texture2D
-		"fry":
-			return load(DISH_FEATURE_FRY) as Texture2D
-	return _recipe_icon(recipe_id)
+	var tex := CookingAssets.featured_dish_texture(recipe_id)
+	if tex == null:
+		return _recipe_icon(recipe_id)
+	return tex
 
 
 func _recipe_icon(recipe_id: String) -> Texture2D:
@@ -3434,7 +3358,7 @@ func _recipe_icon(recipe_id: String) -> Texture2D:
 			icon_index = 3
 		"fry":
 			icon_index = 4
-	var tex := load(DISH_ICON_SHEET) as Texture2D
+	var tex := load(CookingAssets.DISH_ICON_SHEET) as Texture2D
 	if tex == null:
 		return null
 	var atlas := AtlasTexture.new()

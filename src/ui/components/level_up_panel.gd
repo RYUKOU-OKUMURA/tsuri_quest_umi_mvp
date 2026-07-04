@@ -1,4 +1,4 @@
-extends "res://src/ui/screen_base.gd"
+extends ScreenBase
 ## 調理フローの LEVEL_UP_OVERLAY。
 # レベル遷移、能力上昇、Lv.5 解放を一画面の報酬ピークとして見せる。
 signal closed
@@ -6,7 +6,6 @@ signal closed
 const LEVEL_UP_FRAME := "res://assets/showcase/cooking/level_up_frame.png"
 const LEVEL_UNLOCK_RIBBON := "res://assets/showcase/cooking/level_unlock_ribbon.png"
 const LEVEL_STAT_ROW_FRAME := "res://assets/showcase/cooking/level_stat_row_frame.png"
-const FLOW_ACTION_BUTTON_FRAME := "res://assets/showcase/cooking/flow_action_button_frame.png"
 
 
 class LevelUpVisual:
@@ -816,34 +815,7 @@ func _close() -> void:
 
 
 func _apply_flow_button_style(button: Button) -> void:
-	var normal_fallback := _style_box(Color("#102f51"), Palette.GOLD_DEEP, Palette.GOLD_BRIGHT, 4, 6)
-	var hover_fallback := _style_box(Color("#16436c"), Palette.GOLD_BRIGHT, Color("#fff0b2"), 4, 6)
-	var pressed_fallback := _style_box(Color("#081a2d"), Color("#a06d28"), Palette.GOLD_DEEP, 4, 6)
-	var disabled_fallback := _style_box(Color("#202a31"), Color("#71614a"), Color("#8c7b62"), 3, 6)
-	button.add_theme_stylebox_override(
-		"normal",
-		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, normal_fallback, 76.0, 8.0)
-	)
-	button.add_theme_stylebox_override(
-		"hover",
-		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, hover_fallback, 76.0, 8.0)
-	)
-	button.add_theme_stylebox_override(
-		"pressed",
-		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, pressed_fallback, 76.0, 8.0)
-	)
-	button.add_theme_stylebox_override(
-		"disabled",
-		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, disabled_fallback, 76.0, 8.0)
-	)
-	button.add_theme_stylebox_override(
-		"focus",
-		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, hover_fallback, 76.0, 8.0)
-	)
-	button.add_theme_color_override("font_color", Palette.GOLD_BRIGHT)
-	button.add_theme_color_override("font_hover_color", Color("#fff1ba"))
-	button.add_theme_color_override("font_pressed_color", Color("#f0c06b"))
-	button.add_theme_color_override("font_disabled_color", Color("#b6a68d"))
+	CookingAssets.apply_flow_button_style(button, 76.0, 7.0)
 
 
 func _draw_confirm_button_cue(button: Button) -> void:
@@ -905,48 +877,14 @@ func _clear_container(container: Container) -> void:
 
 
 func _panel_box(fill: Color, border: Color, inner: Color, border_width: int) -> PanelContainer:
-	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _style_box(fill, border, inner, border_width, 5))
-	return panel
+	return CookingAssets.panel_box(fill, border, inner, border_width)
 
 
 func _style_box(fill: Color, border: Color, inner: Color, border_width: int, radius: int) -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = fill
-	sb.border_color = border.lerp(inner, 0.18)
-	sb.set_border_width_all(border_width)
-	sb.set_corner_radius_all(radius)
-	sb.content_margin_left = 14.0
-	sb.content_margin_top = 10.0
-	sb.content_margin_right = 14.0
-	sb.content_margin_bottom = 10.0
-	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.35)
-	sb.shadow_size = 6
-	sb.shadow_offset = Vector2(0.0, 3.0)
-	sb.anti_aliasing = false
-	return sb
+	return CookingAssets.style_box(fill, border, inner, border_width, radius)
 
 
 func _texture_style_box(
 	path: String, margin: int, fallback: StyleBox, content_x: float, content_y: float
 ) -> StyleBox:
-	var tex := load(path) as Texture2D
-	if tex == null:
-		return fallback
-	var sb := StyleBoxTexture.new()
-	sb.texture = tex
-	sb.texture_margin_left = margin
-	sb.texture_margin_top = margin
-	sb.texture_margin_right = margin
-	sb.texture_margin_bottom = margin
-	sb.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
-	sb.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
-	sb.expand_margin_left = 7.0
-	sb.expand_margin_top = 7.0
-	sb.expand_margin_right = 7.0
-	sb.expand_margin_bottom = 7.0
-	sb.content_margin_left = content_x
-	sb.content_margin_top = content_y
-	sb.content_margin_right = content_x
-	sb.content_margin_bottom = content_y
-	return sb
+	return CookingAssets.texture_style_box(path, margin, fallback, content_x, content_y, 7.0)

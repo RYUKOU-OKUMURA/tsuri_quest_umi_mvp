@@ -73,7 +73,7 @@ func _draw() -> void:
 	_draw_status_icon(slots[2], ICON_COIN)
 	_draw_status_slot(font, regular_font, slots[0], "AM", "08:47", false)
 	_draw_status_slot(font, regular_font, slots[1], _weather_label(), _wind_label(), false)
-	_draw_status_slot(font, regular_font, slots[2], "所持金", "%s G" % _format_money(PlayerProgress.money), false)
+	_draw_status_slot(font, regular_font, slots[2], "所持金", "%s G" % ScreenBase.format_money(PlayerProgress.money), false)
 	var depth := 0.0
 	if simulator != null:
 		depth = simulator.depth
@@ -240,18 +240,6 @@ func _fit_text(font: Font, text: String, font_size: int, max_width: float) -> St
 		if font.get_string_size(candidate, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x <= max_width:
 			return candidate
 	return ellipsis
-
-
-func _format_money(value: int) -> String:
-	var raw := str(value)
-	var result := ""
-	var count := 0
-	for index in range(raw.length() - 1, -1, -1):
-		if count > 0 and count % 3 == 0:
-			result = "," + result
-		result = raw[index] + result
-		count += 1
-	return result
 
 
 func _weather_id() -> String:

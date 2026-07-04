@@ -260,22 +260,10 @@ func _bonus_text() -> String:
 	var reward: Dictionary = _catch_result.get("boss_first_clear_reward", {})
 	var reward_money := int(reward.get("money", 0))
 	if reward_money > 0:
-		lines.append("撃破報酬 +%s G" % _format_money(reward_money))
+		lines.append("撃破報酬 +%s G" % ScreenBase.format_money(reward_money))
 	if lines.is_empty():
 		lines.append("港で売却 / 料理に使える")
 	return "\n".join(PackedStringArray(lines))
-
-
-func _format_money(value: int) -> String:
-	var text := str(value)
-	var result := ""
-	var count := 0
-	for index in range(text.length() - 1, -1, -1):
-		if count > 0 and count % 3 == 0:
-			result = "," + result
-		result = text[index] + result
-		count += 1
-	return result
 
 
 func _prepare_intro_state() -> void:

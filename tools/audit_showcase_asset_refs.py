@@ -31,6 +31,8 @@ EXPLICIT_OWNERS: dict[Path, set[str]] = {
     Path("src/ui/components/title_backdrop.gd"): {"title"},
     Path("src/ui/harbor_screen.gd"): {"harbor", "common"},
     Path("src/ui/components/harbor_backdrop.gd"): {"harbor"},
+    # R6: 調理フロー4ファイル共通の素材パス・スタイル定義を集約する所有モジュール
+    Path("src/ui/components/cooking_assets.gd"): {"cooking"},
     Path("src/ui/cooking_screen.gd"): {"cooking", "common"},
     Path("src/ui/components/cooking_status_panel.gd"): {"cooking"},
     Path("src/ui/components/cooking_reward_panel.gd"): {"cooking"},

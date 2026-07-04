@@ -1,4 +1,4 @@
-extends "res://src/ui/screen_base.gd"
+extends ScreenBase
 ## 調理フローの STATUS_SUMMARY。
 # `reference/cooking_flow/05_status_summary_concept.png` を基準にした全画面サマリー。
 signal closed
@@ -6,15 +6,7 @@ signal closed
 const GaugeBarScript = preload("res://src/ui/components/gauge_bar.gd")
 
 const STATUS_SUMMARY_BG := "res://assets/showcase/cooking/status_summary_bg.png"
-const COOKING_BG := "res://assets/showcase/cooking/cooking_room_bg.png"
 const STATUS_CARD_FRAME := "res://assets/showcase/cooking/status_card_frame.png"
-const DISH_FEATURE_AJI := "res://assets/showcase/cooking/dish_feature_aji_shioyaki.png"
-const DISH_FEATURE_SASHIMI := "res://assets/showcase/cooking/dish_feature_sashimi.png"
-const DISH_FEATURE_SIMMERED := "res://assets/showcase/cooking/dish_feature_simmered.png"
-const DISH_FEATURE_SOUP := "res://assets/showcase/cooking/dish_feature_soup.png"
-const DISH_FEATURE_FRY := "res://assets/showcase/cooking/dish_feature_fry.png"
-const DISH_ICON_SHEET := "res://assets/showcase/cooking/dish_icon_sheet.png"
-const FLOW_ACTION_BUTTON_FRAME := "res://assets/showcase/cooking/flow_action_button_frame.png"
 
 
 class StatusBackdropVisual:
@@ -491,7 +483,7 @@ func _build_screen() -> void:
 func _add_status_background() -> void:
 	var bg_tex := load(STATUS_SUMMARY_BG) as Texture2D
 	if bg_tex == null:
-		bg_tex = load(COOKING_BG) as Texture2D
+		bg_tex = load(CookingAssets.COOKING_BG) as Texture2D
 	if bg_tex != null:
 		var bg := TextureRect.new()
 		bg.name = "StatusSummaryBackground"
@@ -786,7 +778,7 @@ func _status_card(parent: HBoxContainer, title: String) -> VBoxContainer:
 	panel.add_child(box)
 
 	var title_band := _texture_panel_box(
-		FLOW_ACTION_BUTTON_FRAME,
+		CookingAssets.FLOW_ACTION_BUTTON_FRAME,
 		24,
 		_style_box(Color("#102f51"), Palette.GOLD_DEEP, Palette.GOLD_BRIGHT, 4, 4),
 		20.0,
@@ -958,34 +950,7 @@ func _stat_icon_mode(title: String) -> String:
 
 
 func _apply_flow_button_style(button: Button) -> void:
-	var normal_fallback := _style_box(Color("#102f51"), Palette.GOLD_DEEP, Palette.GOLD_BRIGHT, 4, 6)
-	var hover_fallback := _style_box(Color("#16436c"), Palette.GOLD_BRIGHT, Color("#fff0b2"), 4, 6)
-	var pressed_fallback := _style_box(Color("#081a2d"), Color("#a06d28"), Palette.GOLD_DEEP, 4, 6)
-	var disabled_fallback := _style_box(Color("#202a31"), Color("#71614a"), Color("#8c7b62"), 3, 6)
-	button.add_theme_stylebox_override(
-		"normal",
-		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, normal_fallback, 54.0, 8.0)
-	)
-	button.add_theme_stylebox_override(
-		"hover",
-		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, hover_fallback, 54.0, 8.0)
-	)
-	button.add_theme_stylebox_override(
-		"pressed",
-		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, pressed_fallback, 54.0, 8.0)
-	)
-	button.add_theme_stylebox_override(
-		"disabled",
-		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, disabled_fallback, 54.0, 8.0)
-	)
-	button.add_theme_stylebox_override(
-		"focus",
-		_texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, hover_fallback, 54.0, 8.0)
-	)
-	button.add_theme_color_override("font_color", Palette.GOLD_BRIGHT)
-	button.add_theme_color_override("font_hover_color", Color("#fff1ba"))
-	button.add_theme_color_override("font_pressed_color", Color("#f0c06b"))
-	button.add_theme_color_override("font_disabled_color", Color("#b6a68d"))
+	CookingAssets.apply_flow_button_style(button, 54.0, 5.0)
 
 
 func _draw_return_anchor(button: Button) -> void:
@@ -1101,19 +1066,13 @@ func _clear_container(container: Container) -> void:
 
 
 func _panel_box(fill: Color, border: Color, inner: Color, border_width: int) -> PanelContainer:
-	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _style_box(fill, border, inner, border_width, 5))
-	return panel
+	return CookingAssets.panel_box(fill, border, inner, border_width)
 
 
 func _texture_panel_box(
 	path: String, margin: int, fallback: StyleBox, content_x: float, content_y: float
 ) -> PanelContainer:
-	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override(
-		"panel", _texture_style_box(path, margin, fallback, content_x, content_y)
-	)
-	return panel
+	return CookingAssets.texture_panel_box(path, margin, fallback, content_x, content_y, 5.0)
 
 
 func _style_box(
@@ -1125,35 +1084,14 @@ func _style_box(
 	content_x: float = 14.0,
 	content_y: float = 10.0
 ) -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = fill
-	sb.border_color = border.lerp(inner, 0.18)
-	sb.set_border_width_all(border_width)
-	sb.set_corner_radius_all(radius)
-	sb.content_margin_left = content_x
-	sb.content_margin_top = content_y
-	sb.content_margin_right = content_x
-	sb.content_margin_bottom = content_y
-	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.35)
-	sb.shadow_size = 6
-	sb.shadow_offset = Vector2(0.0, 3.0)
-	sb.anti_aliasing = false
-	return sb
+	return CookingAssets.style_box(fill, border, inner, border_width, radius, content_x, content_y)
 
 
 func _meal_texture(recipe_id: String) -> Texture2D:
-	match recipe_id:
-		"salt_grill":
-			return load(DISH_FEATURE_AJI) as Texture2D
-		"sashimi":
-			return load(DISH_FEATURE_SASHIMI) as Texture2D
-		"simmered":
-			return load(DISH_FEATURE_SIMMERED) as Texture2D
-		"soup":
-			return load(DISH_FEATURE_SOUP) as Texture2D
-		"fry":
-			return load(DISH_FEATURE_FRY) as Texture2D
-	return _recipe_icon(recipe_id)
+	var tex := CookingAssets.featured_dish_texture(recipe_id)
+	if tex == null:
+		return _recipe_icon(recipe_id)
+	return tex
 
 
 func _recipe_icon(recipe_id: String) -> Texture2D:
@@ -1167,7 +1105,7 @@ func _recipe_icon(recipe_id: String) -> Texture2D:
 			icon_index = 3
 		"fry":
 			icon_index = 4
-	var tex := load(DISH_ICON_SHEET) as Texture2D
+	var tex := load(CookingAssets.DISH_ICON_SHEET) as Texture2D
 	if tex == null:
 		return null
 	var atlas := AtlasTexture.new()
@@ -1181,23 +1119,4 @@ func _recipe_icon(recipe_id: String) -> Texture2D:
 func _texture_style_box(
 	path: String, margin: int, fallback: StyleBox, content_x: float, content_y: float
 ) -> StyleBox:
-	var tex := load(path) as Texture2D
-	if tex == null:
-		return fallback
-	var sb := StyleBoxTexture.new()
-	sb.texture = tex
-	sb.texture_margin_left = margin
-	sb.texture_margin_top = margin
-	sb.texture_margin_right = margin
-	sb.texture_margin_bottom = margin
-	sb.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
-	sb.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
-	sb.expand_margin_left = 5.0
-	sb.expand_margin_top = 5.0
-	sb.expand_margin_right = 5.0
-	sb.expand_margin_bottom = 5.0
-	sb.content_margin_left = content_x
-	sb.content_margin_top = content_y
-	sb.content_margin_right = content_x
-	sb.content_margin_bottom = content_y
-	return sb
+	return CookingAssets.texture_style_box(path, margin, fallback, content_x, content_y, 5.0)

@@ -1,4 +1,4 @@
-extends "res://src/ui/screen_base.gd"
+extends ScreenBase
 
 const GameFontsScript = preload("res://src/ui/game_fonts.gd")
 
@@ -435,33 +435,6 @@ func _route_hint_text(rank: int) -> String:
 	if names.is_empty():
 		return "港周辺の航路のみ"
 	return "この船で到達: %s" % "、".join(PackedStringArray(names))
-
-
-func _anchored_control(parent: Control, left: float, top: float, right: float, bottom: float) -> Control:
-	var control := Control.new()
-	control.anchor_left = left
-	control.anchor_top = top
-	control.anchor_right = right
-	control.anchor_bottom = bottom
-	control.offset_left = 0.0
-	control.offset_top = 0.0
-	control.offset_right = 0.0
-	control.offset_bottom = 0.0
-	parent.add_child(control)
-	return control
-
-
-func _place_control(parent: Control, control: Control, left: float, top: float, right: float, bottom: float) -> void:
-	control.anchor_left = left
-	control.anchor_top = top
-	control.anchor_right = right
-	control.anchor_bottom = bottom
-	control.offset_left = 0.0
-	control.offset_top = 0.0
-	control.offset_right = 0.0
-	control.offset_bottom = 0.0
-	parent.add_child(control)
-
 
 func _texture_rect(path: String) -> TextureRect:
 	var rect := TextureRect.new()

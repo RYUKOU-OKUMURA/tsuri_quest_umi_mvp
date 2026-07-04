@@ -44,7 +44,7 @@ func _status_values() -> Array[String]:
 	return [
 		"Lv.%d" % PlayerProgress.level,
 		_short_rod_name(rod_name),
-		"%s G" % _format_money(PlayerProgress.money),
+		"%s G" % ScreenBase.format_money(PlayerProgress.money),
 	]
 
 
@@ -126,18 +126,6 @@ func _fit_font_size(font: Font, text: String, base_size: int, minimum_size: int,
 		if font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x <= max_width:
 			return size
 	return minimum_size
-
-
-func _format_money(value: int) -> String:
-	var raw := str(value)
-	var result := ""
-	var count := 0
-	for index in range(raw.length() - 1, -1, -1):
-		if count > 0 and count % 3 == 0:
-			result = "," + result
-		result = raw[index] + result
-		count += 1
-	return result
 
 
 func _short_rod_name(rod_name: String) -> String:

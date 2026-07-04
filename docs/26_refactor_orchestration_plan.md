@@ -1,6 +1,6 @@
 # リファクタ作戦台帳
 
-最終更新: 2026-07-05 / 状態: 計画策定中
+最終更新: 2026-07-05 / 状態: R0/R2/R6/R7 完了。次候補は R1（画面単位）または R3（game_data 分離）
 
 Fable オーケストレーターが本ファイルを正本としてスライス順・状態・ベースラインを管理する。
 Composer ワーカーは個別 brief のみ受け取り、本ファイルの更新はオーケストレーターが行う。
@@ -49,31 +49,44 @@ done
 
 | ID | concern | 依存 | 担当 | DoD | 状態 |
 |---|---|---|---|---|---|
-| R0 | ベースライン計測 | — | Composer | 全 smoke + validate の結果を §ベースラインに記録 | pending |
-| R1 | palette 外ハードコード色の洗い出しと修正 | R0 | Composer | `rg` 監査 green、validate + 触った画面 smoke | pending |
-| R2 | showcase 素材参照違反の修正 | R0 | Composer×画面 | `audit_showcase_asset_refs.py` green | pending |
-| R3 | autoload / core の pure ロジック境界抽出 | R0, Fable 設計 | Composer | 振る舞い不変、該当 smoke green | pending |
+| R0 | ベースライン計測 | — | Composer | 全 smoke + validate の結果を §ベースラインに記録 | **done (2026-07-05)** |
+| R1 | palette 外ハードコード色の洗い出しと修正 | R0 | Composer | `rg` 監査 green、validate + 触った画面 smoke | pending（洗い出しのみ完了: 約932件/22ファイル。機械置換の見た目退行リスクが高く、freeze済み画面のvisual QA前提で画面単位に分割して実施する） |
+| R2 | showcase 素材参照違反の修正 | R0 | Composer×画面 | `audit_showcase_asset_refs.py` green | **done（監査の結果、現状違反ゼロ。作業不要）** |
+| R3 | autoload / core の pure ロジック境界抽出 | R0, Fable 設計 | Composer | 振る舞い不変、該当 smoke green | pending（game_data.gd 1828行の静的データ/抽選ロジック分離が主対象） |
 | R4 | UI 共通基盤（ScreenBase 等）の整理 | R3, Fable 設計 | Composer | Fable 承認済み設計どおり、全 smoke green | pending |
 | R5 | 画面別 UI uplift | R4 | Composer×画面 | 各 `skills/ui-screen-uplift/` + visual QA | pending |
+| R6 | 調理フロー4ファイルの重複抽出（定数・StyleBoxヘルパ・皿テクスチャ解決→CookingAssets） | R0 | Composer | behavior-preserving、cooking_flow smoke + visual QA 画像一致、validate green | **done (2026-07-05)** 新規 `src/ui/components/cooking_assets.gd`。STATUS スクショはピクセル一致。RESULT/EXP/LEVELUP は元コードからキャプチャ非決定（アニメーション）のため cmp は参考値、visual QA passed |
+| R7 | 画面横断の重複ヘルパ統合と不要コード削除（_format_money 8重複、_load_texture_if_exists、ScreenBase未使用API、extends表記統一） | R0 | Composer | behavior-preserving、全 smoke + validate green | **done (2026-07-05)** `ScreenBase.format_money` / `_anchored_control` / `_place_control` へ統合。見送り: `_last_sfx_path`（smoke が参照）、`shipyard._format_money`（`maxi` で挙動差）、独自ロジック入り `_load_texture_if_exists` 9ファイル |
 
-**fan-out 向き**: R0、R1（ファイル単位）、R2（画面単位）、R5（画面単位・並列可）  
+**fan-out 向き**: R0、R1（ファイル単位）、R2（画面単位）、R5（画面単位・並列可）、R6/R7（ファイル集合が素で並列可）  
 **Fable 単体向き**: R3/R4 の設計判断、サブタスクに名前を付けられない調査
+
+### 監査で確認したが今回見送った項目（2026-07-05）
+
+- ラベル生成ラッパー統合（`_harbor_label` / `_shipyard_label` / `_book_label` 等）: docs/19 §4.2 のフォントAA方針分裂が未解決のため、方針確定後に実施
+- BGM 二重実装（`main.gd` の opening BGM と `ScreenBase.play_screen_bgm`）: main.gd は ScreenBase 非継承で境界設計が必要。Fable 単体向き
+- `PlayerProgress` の emit-only シグナル（`progress_changed` 等）: 拡張点として温存。削除しない判断
+- `fight_hud` 等 fight 系コンポーネントの hex 色: R1 へ
 
 ## ベースライン（R0 完了後に記録）
 
+Godot v4.7.stable.official（`/Applications/Godot.app/Contents/MacOS/Godot`）で計測。
+
 | チェック | 日付 | 結果 | 備考 |
 |---|---|---|---|
-| validate_project.sh | | | |
-| fishing_reveal_smoke | | | |
-| fishing_harbor_return_smoke | | | |
-| fishing_spot_select_smoke | | | |
-| shipyard_smoke | | | |
-| tackle_shop_smoke | | | |
-| market_smoke | | | |
-| cooking_flow_smoke | | | |
-| fish_book_smoke | | | |
-| status_smoke | | | |
-| catch_fanfare_smoke | | | |
+| validate_project.sh | 2026-07-05 | green (exit 0) | 終了時 ObjectDB 2件リーク / resource 1件残存の警告あり |
+| fishing_reveal_smoke | 2026-07-05 | green | |
+| fishing_harbor_return_smoke | 2026-07-05 | green | ObjectDB 2件リーク / resource 1件残存 |
+| fishing_spot_select_smoke | 2026-07-05 | green | ObjectDB 3件リーク / resource 1件残存 |
+| shipyard_smoke | 2026-07-05 | green | |
+| tackle_shop_smoke | 2026-07-05 | green | |
+| market_smoke | 2026-07-05 | green | |
+| cooking_flow_smoke | 2026-07-05 | green | 成功時の `ok` print がない唯一の smoke（観測性の改善候補） |
+| fish_book_smoke | 2026-07-05 | green | |
+| status_smoke | 2026-07-05 | green | |
+| catch_fanfare_smoke | 2026-07-05 | green | ObjectDB 6件リーク / resource 2件残存 |
+
+既知の警告（ベースライン時点から存在。リファクタの退行判定には使わない）: ObjectDB リーク、`Could not create ObjectDB Snapshots directory`。
 
 ## ワーカー brief テンプレート
 

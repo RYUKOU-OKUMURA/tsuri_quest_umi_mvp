@@ -1,4 +1,4 @@
-extends "res://src/ui/screen_base.gd"
+extends ScreenBase
 
 const FishingSpotMapViewScript = preload("res://src/ui/components/fishing_spot_map_view.gd")
 const PlayerStatusBarScript = preload("res://src/ui/components/player_status_bar.gd")

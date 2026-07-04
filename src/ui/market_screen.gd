@@ -1,4 +1,4 @@
-extends "res://src/ui/screen_base.gd"
+extends ScreenBase
 
 const GameFontsScript = preload("res://src/ui/game_fonts.gd")
 const PlayerStatusBarScript = preload("res://src/ui/components/player_status_bar.gd")
@@ -505,7 +505,7 @@ func _refresh_inventory() -> void:
 		meta_label.text = rarity
 		meta_label.add_theme_color_override("font_color", _row_rarity_color(rarity))
 		(row["count_label"] as Label).text = "x%d" % count
-		(row["price_label"] as Label).text = _format_money(price)
+		(row["price_label"] as Label).text = ScreenBase.format_money(price)
 		(row["quantity_label"] as Label).text = str(quantity)
 		(row["minus_button"] as Button).disabled = quantity <= 0
 		(row["plus_button"] as Button).disabled = quantity >= count
@@ -539,9 +539,9 @@ func _refresh_detail() -> void:
 		String(fish.get("habitat", "")),
 		"料理素材に残すか、装備資金へ。",
 	]
-	_detail_price_label.text = "単価 %s G" % _format_money(price)
+	_detail_price_label.text = "単価 %s G" % ScreenBase.format_money(price)
 	_detail_count_label.text = "所持 %d匹" % count
-	_detail_subtotal_label.text = "選択 %s G" % _format_money(price * quantity)
+	_detail_subtotal_label.text = "選択 %s G" % ScreenBase.format_money(price * quantity)
 
 
 func _refresh_cart() -> void:
@@ -549,13 +549,13 @@ func _refresh_cart() -> void:
 	var total_amount := int(summary["amount"])
 	var total_income := int(summary["income"])
 	var type_count := int(summary["types"])
-	_cart_total_label.text = "%s G" % _format_money(total_income)
+	_cart_total_label.text = "%s G" % ScreenBase.format_money(total_income)
 	_select_all_button.disabled = _fish_ids.is_empty()
 	_cart_action_button.disabled = total_amount <= 0
 	_cart_action_button.text = "まとめて売る" if total_amount <= 0 else "売却 %d匹" % total_amount
 
 	if total_amount > 0:
-		_last_message = "%d種 %d匹 / %s G" % [type_count, total_amount, _format_money(total_income)]
+		_last_message = "%d種 %d匹 / %s G" % [type_count, total_amount, ScreenBase.format_money(total_income)]
 	var selected := _selected_order_ids()
 	for index in range(_cart_thumbs.size()):
 		var thumb := _cart_thumbs[index]
@@ -638,7 +638,7 @@ func _show_confirm_overlay() -> void:
 	var body := "%d種類・%d匹を売却します。\n受け取り: %s G" % [
 		int(summary["types"]),
 		total_amount,
-		_format_money(int(summary["income"])),
+		ScreenBase.format_money(int(summary["income"])),
 	]
 	if _has_last_fish_warning():
 		body += "\n\n選んだ中に最後の1匹が含まれています。料理素材としては残りません。"
@@ -654,7 +654,7 @@ func _confirm_sell() -> void:
 	var result := PlayerProgress.sell_fish_batch(_sell_quantities)
 	_confirm_overlay.visible = false
 	if bool(result.get("ok", false)):
-		_last_message = "売却完了 +%s G" % _format_money(int(result.get("income", 0)))
+		_last_message = "売却完了 +%s G" % ScreenBase.format_money(int(result.get("income", 0)))
 		_sell_quantities.clear()
 		_rebuild_fish_ids()
 		_scroll_offset = 0
@@ -820,16 +820,4 @@ func _place(parent: Control, child: Control, rect: Rect2) -> void:
 func _with_alpha(color: Color, alpha: float) -> Color:
 	var result := color
 	result.a = alpha
-	return result
-
-
-func _format_money(value: int) -> String:
-	var raw := str(value)
-	var result := ""
-	var count := 0
-	for index in range(raw.length() - 1, -1, -1):
-		if count > 0 and count % 3 == 0:
-			result = "," + result
-		result = raw[index] + result
-		count += 1
 	return result

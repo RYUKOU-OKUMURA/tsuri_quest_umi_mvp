@@ -1,4 +1,4 @@
-extends "res://src/ui/screen_base.gd"
+extends ScreenBase
 
 const HarborBackdropScript = preload("res://src/ui/components/harbor_backdrop.gd")
 const GameFontsScript = preload("res://src/ui/game_fonts.gd")
@@ -294,7 +294,7 @@ func _refresh_labels() -> void:
 	var rod_name := String(GameData.get_rod(PlayerProgress.equipped_rod_id).get("name", "入門竿"))
 	_top_level_label.text = "Lv.%d" % PlayerProgress.level
 	_top_exp_label.text = "EXP %s" % next_text.replace(" EXP", "")
-	_top_money_label.text = "%s G" % _format_money(PlayerProgress.money)
+	_top_money_label.text = "%s G" % ScreenBase.format_money(PlayerProgress.money)
 	_top_rod_label.text = rod_name
 	_status_label.text = (
 		"クーラーボックス：%d匹　｜　食経験値：%s　｜　プレイ時間：%s"
@@ -323,33 +323,6 @@ func _top_metric(parent: Control, left: float, top: float, right: float, bottom:
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(parent, label, left, top, right, bottom)
 	return label
-
-
-func _anchored_control(parent: Control, left: float, top: float, right: float, bottom: float) -> Control:
-	var control := Control.new()
-	control.anchor_left = left
-	control.anchor_top = top
-	control.anchor_right = right
-	control.anchor_bottom = bottom
-	control.offset_left = 0.0
-	control.offset_top = 0.0
-	control.offset_right = 0.0
-	control.offset_bottom = 0.0
-	parent.add_child(control)
-	return control
-
-
-func _place_control(parent: Control, control: Control, left: float, top: float, right: float, bottom: float) -> void:
-	control.anchor_left = left
-	control.anchor_top = top
-	control.anchor_right = right
-	control.anchor_bottom = bottom
-	control.offset_left = 0.0
-	control.offset_top = 0.0
-	control.offset_right = 0.0
-	control.offset_bottom = 0.0
-	parent.add_child(control)
-
 
 func _texture_rect(path: String) -> TextureRect:
 	var rect := TextureRect.new()
@@ -461,15 +434,3 @@ func _make_flat_panel_style(
 	style.content_margin_right = 6.0
 	style.content_margin_bottom = 4.0
 	return style
-
-
-func _format_money(value: int) -> String:
-	var raw := str(value)
-	var result := ""
-	var count := 0
-	for index in range(raw.length() - 1, -1, -1):
-		if count > 0 and count % 3 == 0:
-			result = "," + result
-		result = raw[index] + result
-		count += 1
-	return result

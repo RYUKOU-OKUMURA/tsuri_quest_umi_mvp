@@ -1,4 +1,4 @@
-extends "res://src/ui/screen_base.gd"
+extends ScreenBase
 
 const FightFishAssets = preload("res://src/ui/fight_fish_assets.gd")
 const GameFontsScript = preload("res://src/ui/game_fonts.gd")
@@ -64,8 +64,8 @@ var _portrait_crop_cache: Dictionary = {}
 
 
 func _build_screen() -> void:
-	_detail_icon_sheet = _load_texture_if_exists(COMMON_DETAIL_ICON_SHEET_PATH)
-	_footer_icon_sheet = _load_texture_if_exists(COMMON_FOOTER_ICON_SHEET_PATH)
+	_detail_icon_sheet = ShowcaseAssets.load_texture(COMMON_DETAIL_ICON_SHEET_PATH)
+	_footer_icon_sheet = ShowcaseAssets.load_texture(COMMON_FOOTER_ICON_SHEET_PATH)
 	_build_background()
 	var root := Control.new()
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -733,7 +733,7 @@ func _is_discovered(fish_id: String) -> bool:
 
 func _fish_portrait_texture(fish: Dictionary, crop_to_fish := false) -> Texture2D:
 	var path := FightFishAssets.card_portrait_path(fish)
-	var texture := _load_texture_if_exists(path)
+	var texture := ShowcaseAssets.load_texture(path)
 	if texture == null:
 		texture = UITextures.get_fish_icon(Color.from_string(String(fish.get("color", "#8aa7b5")), Color("#8aa7b5")))
 	if crop_to_fish:
@@ -777,7 +777,7 @@ func _fish_showcase_frame_texture(
 	]
 	if _portrait_crop_cache.has(key):
 		return _portrait_crop_cache[key]
-	var sheet := _load_texture_if_exists(path)
+	var sheet := ShowcaseAssets.load_texture(path)
 	if sheet == null:
 		_portrait_crop_cache[key] = fallback
 		return fallback
@@ -999,11 +999,6 @@ func _atlas_icon(sheet: Texture2D, cell_size: float, icon_index: int) -> Texture
 		return null
 	return ShowcaseAssetsScript.atlas_icon_from_texture(sheet, cell_size, icon_index)
 
-
-func _load_texture_if_exists(path: String) -> Texture2D:
-	return ShowcaseAssetsScript.load_texture(path)
-
-
 func _portrait_clip() -> Control:
 	var clip := Control.new()
 	clip.clip_contents = true
@@ -1061,25 +1056,6 @@ func _cropped_portrait_texture(
 	atlas.region = region
 	_portrait_crop_cache[key] = atlas
 	return atlas
-
-
-func _anchored_control(parent: Control, left: float, top: float, right: float, bottom: float) -> Control:
-	var control := Control.new()
-	_place_control(parent, control, left, top, right, bottom)
-	return control
-
-
-func _place_control(parent: Control, control: Control, left: float, top: float, right: float, bottom: float) -> void:
-	control.anchor_left = left
-	control.anchor_top = top
-	control.anchor_right = right
-	control.anchor_bottom = bottom
-	control.offset_left = 0.0
-	control.offset_top = 0.0
-	control.offset_right = 0.0
-	control.offset_bottom = 0.0
-	parent.add_child(control)
-
 
 func _rarity_text_color(rarity: String) -> Color:
 	return RarityStylesScript.text_color(rarity)
@@ -1370,15 +1346,3 @@ func _add_rule(parent: Control, left: float, y: float, right: float, color: Colo
 	rule.offset_right = 0.0
 	rule.offset_bottom = thickness
 	parent.add_child(rule)
-
-
-func _format_money(value: int) -> String:
-	var raw := str(value)
-	var result := ""
-	var count := 0
-	for index in range(raw.length() - 1, -1, -1):
-		if count > 0 and count % 3 == 0:
-			result = "," + result
-		result = raw[index] + result
-		count += 1
-	return result
