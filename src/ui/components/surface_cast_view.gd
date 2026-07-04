@@ -30,6 +30,13 @@ const SURFACE_SCENE_CASTING_PATH := "res://assets/showcase/surface/surface_scene
 const SURFACE_SCENE_WAITING_PATH := "res://assets/showcase/surface/surface_scene_waiting.png"
 const SURFACE_SCENE_APPROACH_PATH := "res://assets/showcase/surface/surface_scene_approach.png"
 const SURFACE_SCENE_BITE_PATH := "res://assets/showcase/surface/surface_scene_bite.png"
+const READY_WEATHER_SCENE_PATHS := {
+	"sunny": "res://assets/showcase/surface/surface_scene_ready_sunny.png",
+	"partly_cloudy": "res://assets/showcase/surface/surface_scene_ready_partly_cloudy.png",
+	"cloudy": "res://assets/showcase/surface/surface_scene_ready_cloudy.png",
+	"rain": "res://assets/showcase/surface/surface_scene_ready_rain.png",
+	"fog": "res://assets/showcase/surface/surface_scene_ready_fog.png",
+}
 const WEATHER_GRADE_PATHS := {
 	"partly_cloudy": "res://assets/showcase/surface/surface_weather_partly_cloudy_grade.png",
 	"cloudy": "res://assets/showcase/surface/surface_weather_cloudy_grade.png",
@@ -66,6 +73,7 @@ var _surface_scene_casting: Texture2D
 var _surface_scene_waiting: Texture2D
 var _surface_scene_approach: Texture2D
 var _surface_scene_bite: Texture2D
+var _surface_scene_ready_weather: Dictionary = {}
 var _weather_grades: Dictionary = {}
 var _weather_overlays: Dictionary = {}
 
@@ -156,6 +164,8 @@ func _load_surface_assets() -> void:
 	_surface_scene_waiting = _load_texture_if_exists(SURFACE_SCENE_WAITING_PATH)
 	_surface_scene_approach = _load_texture_if_exists(SURFACE_SCENE_APPROACH_PATH)
 	_surface_scene_bite = _load_texture_if_exists(SURFACE_SCENE_BITE_PATH)
+	for weather_id in READY_WEATHER_SCENE_PATHS.keys():
+		_surface_scene_ready_weather[weather_id] = _load_texture_if_exists(String(READY_WEATHER_SCENE_PATHS[weather_id]))
 	for weather_id in WEATHER_GRADE_PATHS.keys():
 		_weather_grades[weather_id] = _load_texture_if_exists(String(WEATHER_GRADE_PATHS[weather_id]))
 	for weather_id in WEATHER_OVERLAY_PATHS.keys():
@@ -194,9 +204,13 @@ func _draw_asset_scene() -> void:
 
 func _draw_state_plate_scene() -> void:
 	var rect := Rect2(Vector2.ZERO, size)
-	var texture := _surface_scene_texture_for_state()
+	var weather_ready_texture := _ready_weather_scene_texture() if _state() == FishingSimulator.State.READY else null
+	var texture := weather_ready_texture if weather_ready_texture != null else _surface_scene_texture_for_state()
 	_draw_cover_texture(texture, rect, Color.WHITE, Vector2(0.5, 0.50))
-	_draw_weather_overlay(rect)
+	if weather_ready_texture != null:
+		_draw_weather_effect_overlay(rect)
+	else:
+		_draw_weather_overlay(rect)
 	if _state() == FishingSimulator.State.BITE:
 		_draw_hit_flash()
 	_draw_frame()
@@ -214,11 +228,21 @@ func _draw_weather_overlay(rect: Rect2) -> void:
 		_draw_cover_texture(overlay, rect, Color.WHITE, Vector2(0.5, 0.50))
 
 
+func _draw_weather_effect_overlay(rect: Rect2) -> void:
+	var overlay := _weather_overlays.get(_weather_id(), null) as Texture2D
+	if overlay != null:
+		_draw_cover_texture(overlay, rect, Color.WHITE, Vector2(0.5, 0.50))
+
+
 func _weather_id() -> String:
 	var weather_id := String(trip_stats.get("weather_id", "sunny"))
 	if weather_id.strip_edges().is_empty():
 		return "sunny"
 	return weather_id
+
+
+func _ready_weather_scene_texture() -> Texture2D:
+	return _surface_scene_ready_weather.get(_weather_id(), null) as Texture2D
 
 
 func _surface_scene_texture_for_state() -> Texture2D:

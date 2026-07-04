@@ -192,8 +192,15 @@ UI作業のルール正本は `docs/19_ui_production_playbook.md`。本docはゲ
 - `encounter_weights(player_level, spot_id, rig_id, environment_id)` と `roll_normal_fish(..., environment_id)` に後方互換ありで天候引数を追加した。
 - `FishingScreen` は `trip_stats.environment_id` を通常魚抽選へ渡す。釣行継続/釣り場変更では既存 `trip_stats` を保持するため、同じ釣行中の天気は変わらない。
 - `SurfaceCastView` は既存の状態別シーンPNGを描いた後、`trip_stats.weather_id` に応じて天候grade/overlayを重ねる。上部/右/下部UIのfreeze値は変更していない。
+- READY状態だけは、`trip_stats.weather_id` に応じた天気専用フル画像5枚をruntime採用した。CASTING/WAITING/APPROACH/BITE は既存状態別PNG + 天候grade/overlayを維持する。
+- `FightStatusBar` は天気ラベルだけでなく、`weather_status_icon_sheet.png` から天気アイコンも `weather_id` に追従して描画する。
 
 **素材**
+- `assets/showcase/surface/surface_scene_ready_sunny.png`
+- `assets/showcase/surface/surface_scene_ready_partly_cloudy.png`
+- `assets/showcase/surface/surface_scene_ready_cloudy.png`
+- `assets/showcase/surface/surface_scene_ready_rain.png`
+- `assets/showcase/surface/surface_scene_ready_fog.png`
 - `assets/showcase/surface/surface_weather_contact_sheet.png`
 - `assets/showcase/surface/surface_weather_partly_cloudy_grade.png`
 - `assets/showcase/surface/surface_weather_cloudy_grade.png`
@@ -201,10 +208,11 @@ UI作業のルール正本は `docs/19_ui_production_playbook.md`。本docはゲ
 - `assets/showcase/surface/surface_weather_rain_overlay.png`
 - `assets/showcase/surface/surface_weather_fog_grade.png`
 - `assets/showcase/surface/surface_weather_fog_overlay.png`
+- `assets/showcase/underwater/weather_status_icon_sheet.png`
 
 **QA運用**
 - 水面READYの天気別preview/visual QAとして `tools/surface_weather_preview.tscn` / `tools/surface_weather_visual_qa.sh` を追加した。
-- 採用証跡: `docs/qa/evidence/underwater_fight/2026-07-04_surface_weather_asset_contact_sheet.png` / `docs/qa/evidence/underwater_fight/2026-07-04_surface_weather_ready_compare.png`
+- 採用証跡: `docs/qa/evidence/underwater_fight/2026-07-04_surface_weather_asset_contact_sheet.png` / `docs/qa/evidence/underwater_fight/2026-07-04_surface_weather_ready_compare.png` / `docs/qa/evidence/underwater_fight/2026-07-04_surface_scene_ready_weather_runtime_compare.png` / `docs/qa/evidence/underwater_fight/2026-07-04_surface_weather_status_icon_compare.png`
 - `docs/qa/underwater_fight_qa.md` にfreeze条件・判断ログを記録済み。
 
 **検証**
@@ -214,10 +222,11 @@ UI作業のルール正本は `docs/19_ui_production_playbook.md`。本docはゲ
 - `./tools/fight_visual_qa.sh`
 - `./tools/validate_project.sh`
 
-**完了条件**: **完了**。釣行ごとに天候が変わり、見た目と釣果傾向の両方に差が出る。天候ラベルは上部ステータスに表示され、天候別水面READYスクショで晴れ・曇り・雨・霧の差を確認できる。
+**完了条件**: **完了**。釣行ごとに天候が変わり、見た目と釣果傾向の両方に差が出る。天候ラベルと天気アイコンは上部ステータスに表示され、天候別水面READYスクショで晴れ・曇り・雨・霧の差を確認できる。
 
 **残ギャップ**
 - 天候SE、時間帯、専用雨BGM、釣り場選択画面での事前予報UIは未実装。BGMは既存 `calm` / `windy` へフォールバックする。
+- READY以外の CASTING/WAITING/APPROACH/BITE は専用天気画像を量産せず、既存状態別PNG + 天候overlay/gradeのフォールバックを維持する。
 
 ---
 
