@@ -8,9 +8,12 @@ const AUDIT_LEVELS: Array[int] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 func _initialize() -> void:
 	var game_data := GameDataScript.new()
 	var failures: Array[String] = []
+	_check_fish_master(game_data, failures)
 	_check_spot_master(game_data, failures)
 	_check_environment_master(game_data, failures)
 	_check_rig_master(game_data, failures)
+	_check_area_limited_distribution(game_data, failures)
+	_check_completion_routes(game_data, failures)
 	_check_level_gates(game_data, failures)
 	_check_boat_gates(game_data, failures)
 	_check_expected_rates(game_data, failures)
@@ -27,6 +30,54 @@ func _initialize() -> void:
 	print("fishing_spot_encounter_audit: ok")
 	game_data.free()
 	quit(0)
+
+
+func _check_fish_master(game_data: Object, failures: Array[String]) -> void:
+	var fish_ids: Array[String] = game_data.get_all_fish_ids()
+	if fish_ids.size() != 70:
+		failures.append("expected 70 fish, got %d" % fish_ids.size())
+	var seen_numbers: Dictionary = {}
+	var required_keys: Array[String] = [
+		"id",
+		"name",
+		"rarity",
+		"min_level",
+		"boss",
+		"weight",
+		"size_min",
+		"size_max",
+		"sell_price",
+		"food_exp",
+		"stamina",
+		"power",
+		"speed",
+		"start_distance",
+		"start_depth",
+		"color",
+		"habitat",
+		"behavior",
+		"fish_no",
+		"preferred_bait",
+		"visual_scale",
+		"line_anchor_x",
+		"line_anchor_y",
+		"motion",
+		"action_profile",
+		"action_messages",
+	]
+	for fish_id in fish_ids:
+		var fish: Dictionary = game_data.get_fish(fish_id)
+		for key in required_keys:
+			if not fish.has(key):
+				failures.append("%s missing fish key %s" % [fish_id, key])
+		var fish_no := String(fish.get("fish_no", ""))
+		if seen_numbers.has(fish_no):
+			failures.append("%s duplicates fish_no %s with %s" % [fish_id, fish_no, String(seen_numbers[fish_no])])
+		seen_numbers[fish_no] = fish_id
+		if float(fish.get("size_min", 0.0)) >= float(fish.get("size_max", 0.0)):
+			failures.append("%s size_min must be below size_max" % fish_id)
+		if float(fish.get("weight", 0.0)) <= 0.0:
+			failures.append("%s weight must be positive" % fish_id)
 
 
 func _check_spot_master(game_data: Object, failures: Array[String]) -> void:
@@ -63,6 +114,60 @@ func _check_spot_master(game_data: Object, failures: Array[String]) -> void:
 			failures.append("%s has negative required_boat_rank" % spot_id)
 		if required_boat_rank > 0 and game_data.get_required_boat_for_rank(required_boat_rank).is_empty():
 			failures.append("%s requires missing boat rank %d" % [spot_id, required_boat_rank])
+
+
+func _check_area_limited_distribution(game_data: Object, failures: Array[String]) -> void:
+	var common_fish: Array = game_data.COMMON_LOW_LEVEL_FISH_IDS
+	var normal_spots: Array = game_data.NORMAL_FISHING_SPOT_IDS
+	var normal_presence: Dictionary = {}
+	for spot_id in normal_spots:
+		var spot: Dictionary = game_data.get_fishing_spot(String(spot_id))
+		var allowed: Array = spot.get("allowed_fish", [])
+		for common_id in common_fish:
+			if not allowed.has(common_id):
+				failures.append("%s missing common fish %s" % [spot_id, common_id])
+		var local_count := 0
+		for fish_id_variant in allowed:
+			var fish_id := String(fish_id_variant)
+			if fish_id in common_fish:
+				continue
+			local_count += 1
+			if not normal_presence.has(fish_id):
+				normal_presence[fish_id] = []
+			normal_presence[fish_id].append(String(spot_id))
+		if local_count < 8 or local_count > 9:
+			failures.append("%s should have 8-9 local fish, got %d" % [spot_id, local_count])
+	for fish_id in game_data.get_all_fish_ids():
+		var fish: Dictionary = game_data.get_fish(fish_id)
+		if bool(fish.get("boss", false)):
+			continue
+		if fish_id in common_fish:
+			continue
+		var spots: Array = normal_presence.get(fish_id, [])
+		if spots.size() != 1:
+			failures.append("%s should be area-limited to exactly one normal spot, got %s" % [fish_id, ", ".join(PackedStringArray(spots))])
+
+
+func _check_completion_routes(game_data: Object, failures: Array[String]) -> void:
+	for fish_id in game_data.get_all_fish_ids():
+		var fish: Dictionary = game_data.get_fish(fish_id)
+		if int(fish.get("sell_price", 0)) <= 0:
+			failures.append("%s sell_price must be positive" % fish_id)
+		if game_data.get_recipes_for_fish(fish_id, game_data.MAX_LEVEL).is_empty():
+			failures.append("%s must be cookable by at least one recipe" % fish_id)
+		if bool(fish.get("boss", false)):
+			var boss_spot: Dictionary = game_data.get_fishing_spot(game_data.BOSS_FISHING_SPOT_ID)
+			if not Array(boss_spot.get("allowed_fish", [])).has(fish_id):
+				failures.append("%s boss fish is not reachable from boss spot" % fish_id)
+			continue
+		var reachable := false
+		for spot_id in game_data.NORMAL_FISHING_SPOT_IDS:
+			var weights: Dictionary = game_data.encounter_weights(game_data.MAX_LEVEL, String(spot_id))
+			if weights.has(fish_id) and float(weights[fish_id]) > 0.0:
+				reachable = true
+				break
+		if not reachable:
+			failures.append("%s must be reachable in at least one normal spot at Lv.%d" % [fish_id, game_data.MAX_LEVEL])
 
 
 func _check_environment_master(game_data: Object, failures: Array[String]) -> void:

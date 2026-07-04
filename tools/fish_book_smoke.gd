@@ -17,7 +17,7 @@ func _ready() -> void:
 	_expect(_screen._grid != null, "fish book grid should be present")
 	_expect(_screen._detail_name_label != null, "fish detail name label should be present")
 	_expect(_screen._detail_spots != null, "fish detail spot strip should be present")
-	_expect(_screen._found_label.text.contains("4/"), "found count should reflect caught fish")
+	_expect(_screen._found_label.text.contains("5/"), "found count should reflect caught fish")
 	_expect(_screen._player_status_bar._status_values()[1] == "蒼槍", "status bar should shorten long rod names")
 	_expect(_screen._player_status_bar._status_values()[2] == "123,456 G", "status bar should format long money values")
 	_expect(_screen._selected_fish_id == "aji", "first discovered fish should be selected")
@@ -38,6 +38,11 @@ func _ready() -> void:
 	_expect(_screen._filtered_fish_ids().has("madai"), "rare filter should include madai")
 	_expect(_screen._selected_fish_id == "madai", "rare filter should select discovered rare fish")
 	_expect(_screen._detail_name_label.text == "マダイ", "rare discovered fish should show detail")
+
+	_screen._set_filter("all")
+	_screen._select_fish("medai")
+	_expect(_screen._detail_name_label.text == "メダイ", "expanded fish should show detail")
+	_expect(_screen._detail_spots.get_child_count() > 0, "expanded fish should show spot strip entries")
 
 	PlayerProgress.caught_counts = {}
 	PlayerProgress.best_sizes = {}
@@ -70,18 +75,21 @@ func _seed_progress() -> void:
 		"aji": 12,
 		"saba": 8,
 		"madai": 2,
+		"medai": 1,
 		"boss_kurodai": 1,
 	}
 	PlayerProgress.best_sizes = {
 		"aji": 34.2,
 		"saba": 38.6,
 		"madai": 48.2,
+		"medai": 72.4,
 		"boss_kurodai": 88.8,
 	}
 	PlayerProgress.spot_caught_counts = {
 		"harbor_pier": {"aji": 12},
 		"outer_tide": {"saba": 8},
 		"south_reef": {"madai": 2},
+		"deep_ocean": {"medai": 1},
 		"harbor_boulder": {"boss_kurodai": 1},
 	}
 

@@ -91,6 +91,10 @@ func _ready() -> void:
 	if not real_flow_ok:
 		return
 
+	var expanded_fish_flow_ok := await _run_expanded_fish_cooking_flow()
+	if not expanded_fish_flow_ok:
+		return
+
 	var level_panel := LevelUpPanelScript.new()
 	level_panel.theme = ThemeFactory.build_theme()
 	add_child(level_panel)
@@ -220,6 +224,40 @@ func _run_real_cooking_level_flow() -> bool:
 	if not _expect_overlay_count(screen, CookingStatusPanelScript, 0, "real status harbor return"):
 		return false
 
+	screen.queue_free()
+	await _tick()
+	return true
+
+
+func _run_expanded_fish_cooking_flow() -> bool:
+	PlayerProgress.level = 10
+	PlayerProgress.exp = 0
+	PlayerProgress.money = 1250
+	PlayerProgress.play_seconds = 12345.0
+	PlayerProgress.inventory.clear()
+	PlayerProgress.inventory["medai"] = 1
+	PlayerProgress.eaten_recipes.clear()
+	PlayerProgress.pending_buff = {}
+
+	var screen := await _mount_cooking_screen(false)
+	if not _expect_true(_find_named(screen, "FishRow_medai") != null, "Expanded fish row should be present in cooking list."):
+		return false
+	screen._select_fish("medai")
+	await _tick()
+	if not _expect_eq(String(screen.get("_selected_fish_id")), "medai", "Expanded fish should be selectable."):
+		return false
+	if not _expect_eq(String(screen.get("_selected_recipe_id")), "salt_grill", "Expanded fish should select an available recipe."):
+		return false
+	if not _press_named_button(screen, "CookButton", "expanded fish cook transition"):
+		return false
+	await get_tree().create_timer(0.15).timeout
+	if not _expect_eq(PlayerProgress.fish_count("medai"), 0, "Expanded fish cooking should consume one fish."):
+		return false
+	if not _expect_true(
+		PlayerProgress.eaten_recipes.has("medai:salt_grill"),
+		"Expanded fish cooking should record dish history."
+	):
+		return false
 	screen.queue_free()
 	await _tick()
 	return true

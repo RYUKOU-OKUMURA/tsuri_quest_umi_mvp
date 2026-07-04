@@ -17,7 +17,7 @@ func _ready() -> void:
 	PlayerProgress.owned_rigs = [GameData.DEFAULT_RIG_ID, "chokusen"]
 	PlayerProgress.equipped_rig_id = GameData.DEFAULT_RIG_ID
 	PlayerProgress.spot_caught_counts = {
-		"harbor_pier": {"aji": 2, "iwashi": 1},
+		"harbor_pier": {"aji": 2, "mahaze": 1},
 	}
 	_screen = _make_screen()
 	await get_tree().process_frame
@@ -30,9 +30,23 @@ func _ready() -> void:
 	_expect(PlayerProgress.equipped_rig_id == "chokusen", "rig cycle should equip next owned rig")
 	_expect(_screen._detail_bait_value_label.text.contains("おすすめ一致"), "chokusen should match shallow sand baits")
 	_expect(_screen._footer_completion_value_label != null, "footer completion label should be present")
-	_expect(_screen._footer_completion_value_label.text == "2 / 5", "footer completion should show aggregate unlocked progress")
+	var unlocked_completion: Dictionary = _screen._ledger_completion_counts()
+	_expect(
+		_screen._footer_completion_value_label.text == "%d / %d" % [
+			int(unlocked_completion.get("caught", 0)),
+			int(unlocked_completion.get("total", 0)),
+		],
+		"footer completion should show aggregate unlocked progress"
+	)
 	_verify_no_footer_spot_entries()
-	_expect(_screen._completion_summary_text(GameData.get_fishing_spot("harbor_pier"), true, _screen._spot_completion_counts(GameData.get_fishing_spot("harbor_pier"))) == "記録 2/5 種", "spot completion summary should use spot-specific catches")
+	var harbor_completion: Dictionary = _screen._spot_completion_counts(GameData.get_fishing_spot("harbor_pier"))
+	_expect(
+		_screen._completion_summary_text(GameData.get_fishing_spot("harbor_pier"), true, harbor_completion) == "記録 %d/%d 種" % [
+			int(harbor_completion.get("caught", 0)),
+			int(harbor_completion.get("total", 0)),
+		],
+		"spot completion summary should use spot-specific catches"
+	)
 	_expect(_spot_card_buttons(_screen).is_empty(), "footer spot entries must not be selectable buttons")
 	_screen._select_spot("deep_ocean")
 	_expect(_navigated_to.is_empty(), "locked spot must not navigate")

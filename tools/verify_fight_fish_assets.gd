@@ -6,41 +6,10 @@ const GameDataScript = preload("res://src/autoload/game_data.gd")
 
 func _initialize() -> void:
 	var game_data := GameDataScript.new()
-	var fish_ids: Array[String] = [
-		"aji",
-		"mejina",
-		"kasago",
-		"isaki",
-		"saba",
-		"suzuki",
-		"madai",
-		"hirame",
-		"kawahagi",
-		"iwashi",
-		"shirogisu",
-		"mebaru",
-		"ainame",
-		"bora",
-		"kamasu",
-		"kochi",
-		"tachiuo",
-		"ishidai",
-		"akahata",
-		"fuefukidai",
-		"aobudai",
-		"kanpachi",
-		"buri",
-		"katsuo",
-		"shiira",
-		"kue",
-		"hiramasa",
-		"rouninaji",
-		"kajiki",
-		"boss_kurodai",
-	]
+	var fish_ids := game_data.get_all_fish_ids()
 	var missing: Array[String] = []
-	if fish_ids.size() != 30:
-		missing.append("expected 30 fight fish ids, got %d" % fish_ids.size())
+	if fish_ids.size() != 70:
+		missing.append("expected 70 fight fish ids, got %d" % fish_ids.size())
 	var required_keys: Array[String] = [
 		"fish_no",
 		"preferred_bait",

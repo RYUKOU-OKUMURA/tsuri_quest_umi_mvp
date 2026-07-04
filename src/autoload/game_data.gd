@@ -1,5 +1,7 @@
 extends Node
 
+const FishExpansionData = preload("res://src/autoload/fish_expansion_data.gd")
+
 const MAX_LEVEL: int = 10
 const BOSS_UNLOCK_LEVEL: int = 5
 const DEFAULT_FISHING_SPOT_ID := "harbor_pier"
@@ -889,6 +891,29 @@ const FISH: Dictionary = {
 	},
 }
 
+const COMMON_LOW_LEVEL_FISH_IDS: Array[String] = [
+	"aji",
+	"mejina",
+	"kasago",
+	"iwashi",
+	"shirogisu",
+	"isaki",
+	"kawahagi",
+	"mebaru",
+	"ainame",
+	"bora",
+]
+
+const NORMAL_FISHING_SPOT_IDS: Array[String] = [
+	"harbor_pier",
+	"shallow_sand",
+	"rock_breakwater",
+	"outer_tide",
+	"south_reef",
+	"bluewater_route",
+	"deep_ocean",
+]
+
 const FISHING_SPOT_ORDER: Array[String] = [
 	"harbor_pier",
 	"shallow_sand",
@@ -901,126 +926,126 @@ const FISHING_SPOT_ORDER: Array[String] = [
 ]
 
 const FISHING_SPOTS: Dictionary = {
-		"harbor_pier":
-		{
-			"id": "harbor_pier",
-			"name": "港内・堤防",
-			"short_name": "港内",
-			"unlock_level": 1,
-			"required_boat_rank": NO_BOAT_RANK,
-			"depth_range": [5.0, 10.0],
-		"description": "足場が良く、小魚が集まる入門ポイント。",
-		"common_modifier": 0.85,
-		"featured_fish": ["aji", "iwashi", "shirogisu", "mejina", "bora"],
-		"recommended_baits": ["アミエビ", "イソメ"],
+	"harbor_pier":
+	{
+		"id": "harbor_pier",
+		"name": "港内・堤防",
+		"short_name": "港内",
+		"unlock_level": 1,
+		"required_boat_rank": NO_BOAT_RANK,
+		"depth_range": [5.0, 10.0],
+		"description": "足場が良く、小魚と港内の魚が集まる入門ポイント。",
+		"common_modifier": 0.78,
+		"featured_fish": ["aji", "mahaze", "umitanago", "sayori", "maanago", "kyusen"],
+		"recommended_baits": ["アミエビ", "イソメ", "オキアミ"],
 		"boss_spot": false,
-		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora"],
-		"fish_weight_modifiers": {"aji": 1.7, "iwashi": 1.8, "shirogisu": 1.2, "mejina": 1.1, "bora": 1.5},
+		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "mahaze", "umitanago", "sappa", "konoshiro", "sayori", "maanago", "kyusen", "nenbutsudai"],
+		"fish_weight_modifiers": {"aji": 1.6, "iwashi": 1.5, "mahaze": 2.2, "umitanago": 1.8, "sappa": 1.9, "konoshiro": 1.4, "sayori": 1.5, "maanago": 0.9, "kyusen": 1.3, "nenbutsudai": 1.4},
 	},
-		"shallow_sand":
-		{
-			"id": "shallow_sand",
-			"name": "砂浜・かけあがり",
-			"short_name": "砂浜",
-			"unlock_level": 2,
-			"required_boat_rank": NO_BOAT_RANK,
-			"depth_range": [7.0, 15.0],
+	"shallow_sand":
+	{
+		"id": "shallow_sand",
+		"name": "砂浜・かけあがり",
+		"short_name": "砂浜",
+		"unlock_level": 2,
+		"required_boat_rank": NO_BOAT_RANK,
+		"depth_range": [7.0, 15.0],
 		"description": "砂地を探る。白身魚や底物を狙いやすい。",
-		"common_modifier": 0.75,
-		"featured_fish": ["shirogisu", "kawahagi", "kochi", "hirame"],
-		"recommended_baits": ["イソメ", "小魚"],
+		"common_modifier": 0.72,
+		"featured_fish": ["shirogisu", "kochi", "hirame", "makogarei", "houbou", "megochi"],
+		"recommended_baits": ["イソメ", "小魚", "貝"],
 		"boss_spot": false,
-		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "kochi", "hirame"],
-		"fish_weight_modifiers": {"shirogisu": 2.0, "kawahagi": 1.8, "kochi": 2.2, "hirame": 1.8},
+		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "kochi", "hirame", "makogarei", "ishigarei", "shitabirame", "houbou", "kanagashira", "megochi"],
+		"fish_weight_modifiers": {"shirogisu": 1.8, "kawahagi": 1.5, "kochi": 2.0, "hirame": 1.6, "makogarei": 1.8, "ishigarei": 1.5, "shitabirame": 1.7, "houbou": 1.3, "kanagashira": 1.5, "megochi": 1.8},
 	},
-		"rock_breakwater":
-		{
-			"id": "rock_breakwater",
-			"name": "岩礁・消波ブロック",
-			"short_name": "岩礁",
-			"unlock_level": 2,
-			"required_boat_rank": NO_BOAT_RANK,
-			"depth_range": [9.0, 17.0],
+	"rock_breakwater":
+	{
+		"id": "rock_breakwater",
+		"name": "岩礁・消波ブロック",
+		"short_name": "岩礁",
+		"unlock_level": 2,
+		"required_boat_rank": NO_BOAT_RANK,
+		"depth_range": [9.0, 17.0],
 		"description": "根周りを攻める。潜る魚が多く、糸を出す判断が重要。",
-		"common_modifier": 0.75,
-		"featured_fish": ["kasago", "mebaru", "ainame", "ishidai"],
-		"recommended_baits": ["イソメ", "貝"],
+		"common_modifier": 0.58,
+		"featured_fish": ["kasago", "ishidai", "ishigakidai", "kurosoi", "kobudai", "onikasago"],
+		"recommended_baits": ["イソメ", "貝", "岩ガニ"],
 		"boss_spot": false,
-		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "ishidai", "akahata", "kue"],
-		"fish_weight_modifiers": {"mejina": 1.4, "kasago": 1.7, "mebaru": 2.0, "ainame": 1.8, "ishidai": 2.1, "akahata": 1.2, "kue": 0.8},
+		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "ishidai", "ishigakidai", "kurosoi", "murasoi", "takenokomebaru", "oomonhata", "onikasago", "kobudai"],
+		"fish_weight_modifiers": {"mejina": 1.2, "kasago": 1.6, "mebaru": 1.7, "ainame": 1.5, "ishidai": 1.8, "ishigakidai": 1.7, "kurosoi": 1.8, "murasoi": 1.7, "takenokomebaru": 1.4, "oomonhata": 1.4, "onikasago": 1.1, "kobudai": 0.9},
 	},
-		"outer_tide":
-		{
-			"id": "outer_tide",
-			"name": "港外・潮目",
-			"short_name": "潮目",
-			"unlock_level": 3,
-			"required_boat_rank": NO_BOAT_RANK,
-			"depth_range": [8.0, 16.0],
+	"outer_tide":
+	{
+		"id": "outer_tide",
+		"name": "港外・潮目",
+		"short_name": "潮目",
+		"unlock_level": 3,
+		"required_boat_rank": NO_BOAT_RANK,
+		"depth_range": [8.0, 16.0],
 		"description": "潮通しのよい外側。横走りする魚の反応が多い。",
-		"common_modifier": 0.65,
-		"featured_fish": ["saba", "suzuki", "kamasu", "tachiuo"],
-		"recommended_baits": ["小魚", "オキアミ"],
+		"common_modifier": 0.62,
+		"featured_fish": ["saba", "suzuki", "kamasu", "sawara", "datsu", "suma"],
+		"recommended_baits": ["小魚", "大型ルアー", "オキアミ"],
 		"boss_spot": false,
-		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "saba", "suzuki", "kamasu", "tachiuo", "kanpachi", "katsuo"],
-		"fish_weight_modifiers": {"saba": 2.1, "suzuki": 2.0, "kamasu": 2.4, "tachiuo": 2.0, "kanpachi": 0.8, "katsuo": 0.7},
+		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "saba", "suzuki", "kamasu", "tachiuo", "sawara", "datsu", "hirasouda", "suma"],
+		"fish_weight_modifiers": {"saba": 1.9, "suzuki": 1.7, "kamasu": 2.1, "tachiuo": 1.7, "sawara": 1.4, "datsu": 1.6, "hirasouda": 1.4, "suma": 1.1},
 	},
-		"south_reef":
-		{
-			"id": "south_reef",
-			"name": "南の岩礁",
-			"short_name": "南岩礁",
-			"unlock_level": 5,
-			"required_boat_rank": 1,
-			"depth_range": [12.0, 21.0],
+	"south_reef":
+	{
+		"id": "south_reef",
+		"name": "南の岩礁",
+		"short_name": "南岩礁",
+		"unlock_level": 5,
+		"required_boat_rank": 1,
+		"depth_range": [12.0, 21.0],
 		"description": "南側の根とサンゴ帯。色鮮やかな岩礁魚と大物の気配がある。",
-		"common_modifier": 0.55,
-		"featured_fish": ["akahata", "fuefukidai", "aobudai", "kue"],
-		"recommended_baits": ["オキアミ", "小魚", "貝"],
+		"common_modifier": 0.35,
+		"featured_fish": ["madai", "akahata", "fuefukidai", "aobudai", "kue", "meichidai"],
+		"recommended_baits": ["オキアミ", "小魚", "貝", "岩ガニ"],
 		"boss_spot": false,
-		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "madai", "ishidai", "akahata", "fuefukidai", "aobudai", "kue", "hiramasa"],
-		"fish_weight_modifiers": {"madai": 1.4, "ishidai": 1.4, "akahata": 2.2, "fuefukidai": 2.2, "aobudai": 2.2, "kue": 1.8, "hiramasa": 0.8},
+		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "madai", "akahata", "fuefukidai", "aobudai", "kue", "ojisan", "takabe", "ira", "meichidai"],
+		"fish_weight_modifiers": {"madai": 1.3, "akahata": 1.8, "fuefukidai": 1.8, "aobudai": 1.8, "kue": 1.2, "ojisan": 1.6, "takabe": 1.7, "ira": 1.4, "meichidai": 1.1},
 	},
-		"bluewater_route":
-		{
-			"id": "bluewater_route",
-			"name": "外海・回遊ルート",
-			"short_name": "外海",
-			"unlock_level": 6,
-			"required_boat_rank": 2,
-			"depth_range": [10.0, 20.0],
+	"bluewater_route":
+	{
+		"id": "bluewater_route",
+		"name": "外海・回遊ルート",
+		"short_name": "外海",
+		"unlock_level": 6,
+		"required_boat_rank": 2,
+		"depth_range": [10.0, 20.0],
 		"description": "外海へ続く潮筋。青物や表層を走る魚を狙う。",
-		"common_modifier": 0.50,
-		"featured_fish": ["kanpachi", "buri", "katsuo", "shiira", "hiramasa"],
-		"recommended_baits": ["小魚", "大型ルアー"],
+		"common_modifier": 0.22,
+		"featured_fish": ["kanpachi", "buri", "katsuo", "shiira", "hiramasa", "shimaaji"],
+		"recommended_baits": ["小魚", "大型ルアー", "オキアミ"],
 		"boss_spot": false,
-		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "saba", "suzuki", "kamasu", "tachiuo", "kanpachi", "buri", "katsuo", "shiira", "hiramasa", "rouninaji"],
-		"fish_weight_modifiers": {"saba": 0.9, "suzuki": 0.8, "kamasu": 0.8, "tachiuo": 0.9, "kanpachi": 3.0, "buri": 3.0, "katsuo": 3.0, "shiira": 3.0, "hiramasa": 2.2, "rouninaji": 0.9},
+		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "kanpachi", "buri", "katsuo", "shiira", "hiramasa", "shimaaji", "tsumuburi", "gingameaji", "kaiwari"],
+		"fish_weight_modifiers": {"kanpachi": 2.2, "buri": 2.1, "katsuo": 2.0, "shiira": 2.0, "hiramasa": 1.6, "shimaaji": 1.2, "tsumuburi": 1.0, "gingameaji": 1.0, "kaiwari": 1.4},
 	},
-		"deep_ocean":
-		{
-			"id": "deep_ocean",
-			"name": "外洋の深場",
-			"short_name": "外洋",
-			"unlock_level": 9,
-			"required_boat_rank": 3,
-			"depth_range": [15.0, 25.0],
+	"deep_ocean":
+	{
+		"id": "deep_ocean",
+		"name": "外洋の深場",
+		"short_name": "外洋",
+		"unlock_level": 9,
+		"required_boat_rank": 3,
+		"depth_range": [15.0, 25.0],
 		"description": "外洋の深い潮目。終盤の大物を低確率で狙う。",
-		"common_modifier": 0.45,
-		"featured_fish": ["rouninaji", "kajiki", "kue", "hiramasa"],
-		"recommended_baits": ["小魚", "大型ルアー"],
+		"common_modifier": 0.10,
+		"featured_fish": ["rouninaji", "kajiki", "kihada", "akamutsu", "kinmedai", "ara"],
+		"recommended_baits": ["小魚", "大型ルアー", "貝"],
 		"boss_spot": false,
-		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "madai", "tachiuo", "kanpachi", "buri", "kue", "hiramasa", "rouninaji", "kajiki"],
-		"fish_weight_modifiers": {"madai": 0.9, "tachiuo": 0.8, "kanpachi": 1.0, "buri": 1.0, "kue": 1.8, "hiramasa": 1.8, "rouninaji": 2.8, "kajiki": 3.5},
+		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "rouninaji", "kajiki", "kihada", "binnaga", "mebachi", "akamutsu", "kinmedai", "ara", "medai"],
+		"fish_weight_modifiers": {"rouninaji": 0.6, "kajiki": 0.8, "kihada": 0.8, "binnaga": 0.7, "mebachi": 0.8, "akamutsu": 0.7, "kinmedai": 0.7, "ara": 0.7, "medai": 0.7},
 	},
-		"harbor_boulder":
-		{
-			"id": "harbor_boulder",
-			"name": "港の大岩",
-			"short_name": "大岩",
-			"unlock_level": BOSS_UNLOCK_LEVEL,
-			"required_boat_rank": NO_BOAT_RANK,
-			"depth_range": [16.0, 22.0],
+	"harbor_boulder":
+	{
+		"id": "harbor_boulder",
+		"name": "港の大岩",
+		"short_name": "大岩",
+		"unlock_level": BOSS_UNLOCK_LEVEL,
+		"required_boat_rank": NO_BOAT_RANK,
+		"depth_range": [16.0, 22.0],
 		"description": "港口の大岩周辺。港のぬしに挑む専用ポイント。",
 		"common_modifier": 0.0,
 		"featured_fish": ["boss_kurodai"],
@@ -1051,12 +1076,16 @@ const FISHING_ENVIRONMENTS: Dictionary = {
 		"wind_label": "風 弱",
 		"surface_bgm_key": "calm",
 		"weight": 0.30,
-		"fish_weight_modifiers": {
-			"aji": 1.15,
-			"iwashi": 1.15,
-			"shirogisu": 1.10,
-			"isaki": 1.08,
-		},
+			"fish_weight_modifiers": {
+				"aji": 1.15,
+				"iwashi": 1.15,
+				"shirogisu": 1.10,
+				"isaki": 1.08,
+				"sappa": 1.10,
+				"mahaze": 1.08,
+				"sayori": 1.12,
+				"takabe": 1.10,
+			},
 	},
 	"sunny_windy":
 	{
@@ -1067,12 +1096,17 @@ const FISHING_ENVIRONMENTS: Dictionary = {
 		"wind_label": "風 強",
 		"surface_bgm_key": "windy",
 		"weight": 0.10,
-		"fish_weight_modifiers": {
-			"saba": 1.25,
-			"kamasu": 1.25,
-			"tachiuo": 1.18,
-			"shiira": 1.15,
-		},
+			"fish_weight_modifiers": {
+				"saba": 1.25,
+				"kamasu": 1.25,
+				"tachiuo": 1.18,
+				"shiira": 1.15,
+				"sawara": 1.28,
+				"datsu": 1.18,
+				"hirasouda": 1.22,
+				"suma": 1.18,
+				"tsumuburi": 1.12,
+			},
 	},
 	"partly_cloudy":
 	{
@@ -1083,13 +1117,18 @@ const FISHING_ENVIRONMENTS: Dictionary = {
 		"wind_label": "風 弱",
 		"surface_bgm_key": "calm",
 		"weight": 0.22,
-		"fish_weight_modifiers": {
-			"mejina": 1.12,
-			"isaki": 1.15,
-			"kawahagi": 1.12,
-			"madai": 1.10,
-			"bora": 1.08,
-		},
+			"fish_weight_modifiers": {
+				"mejina": 1.12,
+				"isaki": 1.15,
+				"kawahagi": 1.12,
+				"madai": 1.10,
+				"bora": 1.08,
+				"umitanago": 1.12,
+				"konoshiro": 1.10,
+				"meichidai": 1.12,
+				"shimaaji": 1.10,
+				"kaiwari": 1.12,
+			},
 	},
 	"cloudy":
 	{
@@ -1100,13 +1139,18 @@ const FISHING_ENVIRONMENTS: Dictionary = {
 		"wind_label": "風 弱",
 		"surface_bgm_key": "calm",
 		"weight": 0.18,
-		"fish_weight_modifiers": {
-			"kasago": 1.20,
-			"mebaru": 1.35,
-			"ainame": 1.25,
-			"suzuki": 1.35,
-			"ishidai": 1.15,
-		},
+			"fish_weight_modifiers": {
+				"kasago": 1.20,
+				"mebaru": 1.35,
+				"ainame": 1.25,
+				"suzuki": 1.35,
+				"ishidai": 1.15,
+				"maanago": 1.25,
+				"kurosoi": 1.35,
+				"murasoi": 1.25,
+				"takenokomebaru": 1.20,
+				"oomonhata": 1.12,
+			},
 	},
 	"rain":
 	{
@@ -1117,14 +1161,19 @@ const FISHING_ENVIRONMENTS: Dictionary = {
 		"wind_label": "風 強",
 		"surface_bgm_key": "windy",
 		"weight": 0.12,
-		"fish_weight_modifiers": {
-			"suzuki": 1.80,
-			"mebaru": 1.45,
-			"kasago": 1.25,
-			"bora": 1.25,
-			"tachiuo": 1.20,
-			"kue": 1.12,
-		},
+			"fish_weight_modifiers": {
+				"suzuki": 1.80,
+				"mebaru": 1.45,
+				"kasago": 1.25,
+				"bora": 1.25,
+				"tachiuo": 1.20,
+				"kue": 1.12,
+				"maanago": 1.35,
+				"kurosoi": 1.25,
+				"sawara": 1.20,
+				"akamutsu": 1.18,
+				"ara": 1.12,
+			},
 	},
 	"fog":
 	{
@@ -1135,26 +1184,33 @@ const FISHING_ENVIRONMENTS: Dictionary = {
 		"wind_label": "風 弱",
 		"surface_bgm_key": "calm",
 		"weight": 0.08,
-		"fish_weight_modifiers": {
-			"hirame": 1.25,
-			"kochi": 1.20,
-			"akahata": 1.25,
-			"kue": 1.35,
-			"rouninaji": 1.25,
-			"kajiki": 1.20,
-			"hiramasa": 1.18,
-		},
+			"fish_weight_modifiers": {
+				"hirame": 1.25,
+				"kochi": 1.20,
+				"akahata": 1.25,
+				"kue": 1.35,
+				"rouninaji": 1.25,
+				"kajiki": 1.20,
+				"hiramasa": 1.18,
+				"makogarei": 1.22,
+				"ishigarei": 1.18,
+				"shitabirame": 1.16,
+				"onikasago": 1.15,
+				"kinmedai": 1.25,
+				"medai": 1.18,
+			},
 	},
 }
 
 const RECIPES: Dictionary = {
 	"salt_grill":
-	{
-		"id": "salt_grill",
-		"name": "塩焼き",
-		"unlock_level": 1,
-		"exp_multiplier": 1.0,
-		"allowed_fish": ["aji", "mejina", "kasago", "isaki", "saba", "suzuki", "madai", "hirame", "kawahagi", "iwashi", "shirogisu", "mebaru", "ainame", "bora", "kamasu", "kochi", "tachiuo", "ishidai", "akahata", "fuefukidai", "aobudai", "kanpachi", "buri", "katsuo", "shiira", "kue", "hiramasa", "rouninaji", "kajiki", "boss_kurodai"],
+		{
+			"id": "salt_grill",
+			"name": "塩焼き",
+			"unlock_level": 1,
+			"exp_multiplier": 1.0,
+			"allow_all_fish": true,
+			"allowed_fish": ["aji", "mejina", "kasago", "isaki", "saba", "suzuki", "madai", "hirame", "kawahagi", "iwashi", "shirogisu", "mebaru", "ainame", "bora", "kamasu", "kochi", "tachiuo", "ishidai", "akahata", "fuefukidai", "aobudai", "kanpachi", "buri", "katsuo", "shiira", "kue", "hiramasa", "rouninaji", "kajiki", "boss_kurodai"],
 		"description": "素材の味を活かす基本料理。",
 		"buff_stat": "max_energy",
 		"buff_value": 0.05,
@@ -1185,12 +1241,13 @@ const RECIPES: Dictionary = {
 		"buff_text": "次の釣行で安全テンション域 +5%",
 	},
 	"soup":
-	{
-		"id": "soup",
-		"name": "つみれ汁",
-		"unlock_level": 4,
-		"exp_multiplier": 1.5,
-		"allowed_fish": ["aji", "mejina", "kasago", "isaki", "saba", "suzuki", "madai", "hirame", "kawahagi", "iwashi", "shirogisu", "mebaru", "ainame", "bora", "kamasu", "kochi", "tachiuo", "ishidai", "akahata", "fuefukidai", "aobudai", "kanpachi", "buri", "katsuo", "shiira", "kue", "hiramasa", "rouninaji", "kajiki", "boss_kurodai"],
+		{
+			"id": "soup",
+			"name": "つみれ汁",
+			"unlock_level": 4,
+			"exp_multiplier": 1.5,
+			"allow_all_fish": true,
+			"allowed_fish": ["aji", "mejina", "kasago", "isaki", "saba", "suzuki", "madai", "hirame", "kawahagi", "iwashi", "shirogisu", "mebaru", "ainame", "bora", "kamasu", "kochi", "tachiuo", "ishidai", "akahata", "fuefukidai", "aobudai", "kanpachi", "buri", "katsuo", "shiira", "kue", "hiramasa", "rouninaji", "kajiki", "boss_kurodai"],
 		"description": "身体が温まる汁物。体力回復が速くなる。",
 		"buff_stat": "energy_regen",
 		"buff_value": 0.18,
@@ -1377,6 +1434,7 @@ const BOATS: Dictionary = {
 }
 
 var _rng := RandomNumberGenerator.new()
+var _fish_expansion_cache: Dictionary = {}
 
 
 func _ready() -> void:
@@ -1385,7 +1443,10 @@ func _ready() -> void:
 
 func get_fish(fish_id: String) -> Dictionary:
 	if not FISH.has(fish_id):
-		return {}
+		var expansion := _expansion_fish()
+		if not expansion.has(fish_id):
+			return {}
+		return Dictionary(expansion[fish_id]).duplicate(true)
 	return FISH[fish_id].duplicate(true)
 
 
@@ -1426,7 +1487,10 @@ func roll_fishing_environment() -> Dictionary:
 func get_recipe(recipe_id: String) -> Dictionary:
 	if not RECIPES.has(recipe_id):
 		return {}
-	return RECIPES[recipe_id].duplicate(true)
+	var recipe: Dictionary = RECIPES[recipe_id].duplicate(true)
+	if bool(recipe.get("allow_all_fish", false)):
+		recipe["allowed_fish"] = get_all_fish_ids()
+	return recipe
 
 
 func get_rod(rod_id: String) -> Dictionary:
@@ -1451,6 +1515,16 @@ func get_all_fish_ids() -> Array[String]:
 	var ids: Array[String] = []
 	for fish_id in FISH.keys():
 		ids.append(String(fish_id))
+	for fish_id in _expansion_fish().keys():
+		ids.append(String(fish_id))
+	ids.sort_custom(
+		func(a: String, b: String) -> bool:
+			var number_a := _fish_no_sort_number(a)
+			var number_b := _fish_no_sort_number(b)
+			if number_a == number_b:
+				return a < b
+			return number_a < number_b
+	)
 	return ids
 
 
@@ -1607,10 +1681,22 @@ func get_accessible_fishing_spot_ids(player_level: int, owned_boat_ids: Array) -
 	return ids
 
 
+func _expansion_fish() -> Dictionary:
+	if _fish_expansion_cache.is_empty():
+		_fish_expansion_cache = FishExpansionData.all_fish()
+	return _fish_expansion_cache
+
+
+func _fish_no_sort_number(fish_id: String) -> int:
+	var fish_no := String(get_fish(fish_id).get("fish_no", ""))
+	var digits := fish_no.replace("No.", "").strip_edges()
+	return int(digits)
+
+
 func get_recipes_for_fish(fish_id: String, player_level: int) -> Array[Dictionary]:
 	var results: Array[Dictionary] = []
 	for recipe_id in RECIPES.keys():
-		var recipe: Dictionary = RECIPES[recipe_id]
+		var recipe := get_recipe(String(recipe_id))
 		if int(recipe["unlock_level"]) > player_level:
 			continue
 		if fish_id not in recipe["allowed_fish"]:
@@ -1645,9 +1731,8 @@ func encounter_weights(
 		not environment_id.strip_edges().is_empty()
 		and not bool(requested_spot.get("boss_spot", false))
 	)
-	for fish_id_variant in FISH.keys():
-		var fish_id := String(fish_id_variant)
-		var fish: Dictionary = FISH[fish_id]
+	for fish_id in get_all_fish_ids():
+		var fish := get_fish(fish_id)
 		if bool(fish.get("boss", false)):
 			continue
 		if int(fish.get("min_level", 1)) > player_level:

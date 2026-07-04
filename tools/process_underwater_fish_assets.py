@@ -143,6 +143,46 @@ FISH_ART_SOURCES = {
         "source": "expansion_2",
         "contact_crop": (520, 1240, 1015, 1515),
     },
+    "mahaze": {"template": "kochi", "tint": "#b78a55", "tint_strength": 0.32, "scale_x": 0.72, "scale_y": 0.86, "markings": "sand_mottle"},
+    "umitanago": {"template": "mejina", "tint": "#91a8ad", "tint_strength": 0.28, "scale_x": 0.82, "scale_y": 0.86, "markings": "soft_lateral"},
+    "sappa": {"template": "iwashi", "tint": "#c9d6da", "tint_strength": 0.30, "scale_x": 0.64, "scale_y": 0.72, "markings": "clean_silver"},
+    "konoshiro": {"template": "iwashi", "tint": "#aebabe", "tint_strength": 0.24, "scale_x": 0.84, "scale_y": 0.88, "markings": "dark_spots"},
+    "sayori": {"template": "kamasu", "tint": "#c4dfe2", "tint_strength": 0.30, "scale_x": 1.08, "scale_y": 0.62, "markings": "needle_line"},
+    "maanago": {"template": "tachiuo", "tint": "#6e5840", "tint_strength": 0.72, "scale_x": 1.05, "scale_y": 0.54, "markings": "eel_spots"},
+    "kyusen": {"template": "aobudai", "tint": "#82ad67", "tint_strength": 0.48, "scale_x": 0.58, "scale_y": 0.58, "markings": "wrasse_bands"},
+    "nenbutsudai": {"template": "akahata", "tint": "#c96a54", "tint_strength": 0.50, "scale_x": 0.56, "scale_y": 0.58, "markings": "soft_lateral"},
+    "makogarei": {"template": "hirame", "tint": "#8e7350", "tint_strength": 0.42, "scale_x": 0.82, "scale_y": 0.82, "markings": "sand_mottle"},
+    "ishigarei": {"template": "hirame", "tint": "#746f59", "tint_strength": 0.50, "scale_x": 0.92, "scale_y": 0.88, "markings": "dark_spots"},
+    "shitabirame": {"template": "hirame", "tint": "#a08362", "tint_strength": 0.58, "scale_x": 0.70, "scale_y": 0.46, "markings": "sand_mottle"},
+    "houbou": {"template": "akahata", "tint": "#c75b42", "tint_strength": 0.44, "scale_x": 0.88, "scale_y": 0.84, "markings": "fin_glow"},
+    "kanagashira": {"template": "kasago", "tint": "#c16442", "tint_strength": 0.44, "scale_x": 0.64, "scale_y": 0.68, "markings": "fin_glow"},
+    "megochi": {"template": "kochi", "tint": "#907556", "tint_strength": 0.34, "scale_x": 0.58, "scale_y": 0.58, "markings": "sand_mottle"},
+    "ishigakidai": {"template": "ishidai", "tint": "#6a6656", "tint_strength": 0.36, "scale_x": 0.92, "scale_y": 0.94, "markings": "dark_spots"},
+    "kurosoi": {"template": "mebaru", "tint": "#3e4039", "tint_strength": 0.70, "scale_x": 0.86, "scale_y": 0.90, "markings": "dark_spots"},
+    "murasoi": {"template": "kasago", "tint": "#5d4a37", "tint_strength": 0.62, "scale_x": 0.72, "scale_y": 0.72, "markings": "sand_mottle"},
+    "takenokomebaru": {"template": "mebaru", "tint": "#7b5a34", "tint_strength": 0.58, "scale_x": 0.90, "scale_y": 0.86, "markings": "dark_spots"},
+    "oomonhata": {"template": "akahata", "tint": "#98683d", "tint_strength": 0.38, "scale_x": 1.02, "scale_y": 0.96, "markings": "dark_spots"},
+    "onikasago": {"template": "kasago", "tint": "#b34838", "tint_strength": 0.46, "scale_x": 0.90, "scale_y": 0.92, "markings": "fin_glow"},
+    "kobudai": {"template": "aobudai", "tint": "#797160", "tint_strength": 0.46, "scale_x": 1.12, "scale_y": 1.06, "markings": "kobudai_head"},
+    "sawara": {"template": "kamasu", "tint": "#8fa9ad", "tint_strength": 0.28, "scale_x": 1.18, "scale_y": 0.76, "markings": "dark_spots"},
+    "datsu": {"template": "kamasu", "tint": "#9db8b8", "tint_strength": 0.36, "scale_x": 1.18, "scale_y": 0.54, "markings": "needle_line"},
+    "hirasouda": {"template": "katsuo", "tint": "#4b6179", "tint_strength": 0.32, "scale_x": 0.86, "scale_y": 0.84, "markings": "pelagic_stripes"},
+    "suma": {"template": "katsuo", "tint": "#3e536e", "tint_strength": 0.38, "scale_x": 0.94, "scale_y": 0.88, "markings": "pelagic_stripes"},
+    "ojisan": {"template": "fuefukidai", "tint": "#b06b48", "tint_strength": 0.44, "scale_x": 0.70, "scale_y": 0.72, "markings": "soft_lateral"},
+    "takabe": {"template": "isaki", "tint": "#83a967", "tint_strength": 0.42, "scale_x": 0.70, "scale_y": 0.68, "markings": "yellow_lateral"},
+    "ira": {"template": "aobudai", "tint": "#b98566", "tint_strength": 0.42, "scale_x": 0.90, "scale_y": 0.92, "markings": "wrasse_bands"},
+    "meichidai": {"template": "madai", "tint": "#bc7f58", "tint_strength": 0.30, "scale_x": 0.86, "scale_y": 0.86, "markings": "soft_lateral"},
+    "shimaaji": {"template": "rouninaji", "tint": "#93a0a5", "tint_strength": 0.24, "scale_x": 0.90, "scale_y": 0.90, "markings": "yellow_lateral"},
+    "tsumuburi": {"template": "hiramasa", "tint": "#4f8c86", "tint_strength": 0.34, "scale_x": 1.05, "scale_y": 0.90, "markings": "yellow_lateral"},
+    "gingameaji": {"template": "rouninaji", "tint": "#788a91", "tint_strength": 0.34, "scale_x": 0.96, "scale_y": 0.96, "markings": "clean_silver"},
+    "kaiwari": {"template": "rouninaji", "tint": "#b2babe", "tint_strength": 0.32, "scale_x": 0.62, "scale_y": 0.72, "markings": "yellow_lateral"},
+    "kihada": {"template": "katsuo", "tint": "#3b6d88", "tint_strength": 0.34, "scale_x": 1.18, "scale_y": 1.04, "markings": "yellow_lateral"},
+    "binnaga": {"template": "katsuo", "tint": "#5a7787", "tint_strength": 0.32, "scale_x": 1.08, "scale_y": 0.98, "markings": "long_fin"},
+    "mebachi": {"template": "katsuo", "tint": "#394f67", "tint_strength": 0.42, "scale_x": 1.22, "scale_y": 1.06, "markings": "pelagic_stripes"},
+    "akamutsu": {"template": "madai", "tint": "#b4413a", "tint_strength": 0.52, "scale_x": 0.78, "scale_y": 0.82, "markings": "deep_red"},
+    "kinmedai": {"template": "madai", "tint": "#c33f3d", "tint_strength": 0.58, "scale_x": 0.86, "scale_y": 0.84, "markings": "deep_red"},
+    "ara": {"template": "kue", "tint": "#7a5f48", "tint_strength": 0.36, "scale_x": 1.12, "scale_y": 1.02, "markings": "dark_spots"},
+    "medai": {"template": "rouninaji", "tint": "#768689", "tint_strength": 0.42, "scale_x": 0.86, "scale_y": 0.96, "markings": "clean_silver"},
 }
 
 FISH_CONTACT_SOURCES = {
@@ -555,6 +595,13 @@ def _fish_source_image(fish_id: str, spec: dict[str, object], current_kurodai_sh
     individual_source = FISH_SOURCE_ASSET_DIR / f"{fish_id}_final_art_source.png"
     if individual_source.exists():
         return Image.open(individual_source).convert("RGBA")
+    template_id = spec.get("template")
+    if template_id:
+        template_key = str(template_id)
+        if template_key not in FISH_ART_SOURCES:
+            raise RuntimeError(f"Unknown fish art template {template_key} for {fish_id}")
+        template_source = _fish_source_image(template_key, FISH_ART_SOURCES[template_key], current_kurodai_sheet)
+        return _variant_source_from_template(template_source, spec)
     contact_source = FISH_CONTACT_SOURCES.get(str(spec.get("source", "base")), FISH_CONTACT_SOURCE)
     if not contact_source.exists():
         raise FileNotFoundError(
@@ -564,6 +611,85 @@ def _fish_source_image(fish_id: str, spec: dict[str, object], current_kurodai_sh
     if crop_box is None:
         raise RuntimeError(f"Missing contact_crop for fish asset {fish_id}")
     return Image.open(contact_source).convert("RGBA").crop(tuple(crop_box))
+
+
+def _hex_to_rgb(hex_value: str) -> tuple[int, int, int]:
+    value = hex_value.strip().lstrip("#")
+    return (int(value[0:2], 16), int(value[2:4], 16), int(value[4:6], 16))
+
+
+def _variant_source_from_template(template_source: Image.Image, spec: dict[str, object]) -> Image.Image:
+    fish = _magenta_removed(template_source)
+    fish = fish.crop(_content_bbox(fish))
+    scale_x = float(spec.get("scale_x", 1.0))
+    scale_y = float(spec.get("scale_y", 1.0))
+    target_w = max(32, round(fish.width * scale_x))
+    target_h = max(32, round(fish.height * scale_y))
+    fish = fish.resize((target_w, target_h), Image.Resampling.LANCZOS)
+    fish = _tint_variant(fish, str(spec.get("tint", "#ffffff")), float(spec.get("tint_strength", 0.0)))
+    fish = _add_variant_markings(fish, str(spec.get("markings", "")))
+
+    canvas_w = max(520, fish.width + 120)
+    canvas_h = max(260, fish.height + 120)
+    canvas = Image.new("RGBA", (canvas_w, canvas_h), (255, 0, 255, 255))
+    canvas.alpha_composite(fish, ((canvas_w - fish.width) // 2, (canvas_h - fish.height) // 2))
+    return canvas
+
+
+def _tint_variant(fish: Image.Image, tint_hex: str, strength: float) -> Image.Image:
+    strength = max(0.0, min(1.0, strength))
+    if strength <= 0.0:
+        return fish
+    alpha = fish.getchannel("A")
+    rgb = fish.convert("RGB")
+    rgb = ImageEnhance.Color(rgb).enhance(0.92 + strength * 0.35)
+    rgb = ImageEnhance.Contrast(rgb).enhance(1.03)
+    gray = ImageOps.grayscale(rgb)
+    tint = _hex_to_rgb(tint_hex)
+    dark = tuple(max(0, int(channel * 0.34)) for channel in tint)
+    light = tuple(min(255, int(channel * 1.34 + 38)) for channel in tint)
+    colored = ImageOps.colorize(gray, black=dark, white=light).convert("RGB")
+    blended = Image.blend(rgb, colored, strength)
+    out = blended.convert("RGBA")
+    out.putalpha(alpha)
+    return out
+
+
+def _add_variant_markings(fish: Image.Image, markings: str) -> Image.Image:
+    if not markings:
+        return fish
+    out = fish.copy()
+    alpha = out.getchannel("A")
+    overlay = Image.new("RGBA", out.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+    w, h = out.size
+    if markings in {"dark_spots", "sand_mottle", "eel_spots"}:
+        count = 28 if markings != "eel_spots" else 42
+        color = (30, 24, 18, 60 if markings != "sand_mottle" else 38)
+        for index in range(count):
+            x = int(w * (0.12 + ((index * 37) % 76) / 100.0))
+            y = int(h * (0.28 + ((index * 19) % 38) / 100.0))
+            r = 3 + (index % 5)
+            draw.ellipse((x - r, y - r, x + r, y + r), fill=color)
+    if markings in {"wrasse_bands", "pelagic_stripes"}:
+        color = (22, 36, 48, 58)
+        for index in range(5):
+            x = int(w * (0.18 + index * 0.12))
+            draw.line((x, int(h * 0.18), x + int(w * 0.05), int(h * 0.78)), fill=color, width=max(2, w // 120))
+    if markings in {"soft_lateral", "needle_line", "yellow_lateral", "clean_silver", "long_fin"}:
+        color = (235, 204, 74, 92) if markings == "yellow_lateral" else (230, 242, 246, 72)
+        y = int(h * (0.48 if markings != "needle_line" else 0.42))
+        draw.line((int(w * 0.10), y, int(w * 0.92), y - int(h * 0.03)), fill=color, width=max(2, h // 24))
+    if markings in {"fin_glow", "deep_red"}:
+        color = (245, 96, 48, 54)
+        draw.ellipse((int(w * 0.08), int(h * 0.55), int(w * 0.45), int(h * 0.92)), fill=color)
+    if markings == "kobudai_head":
+        color = (238, 222, 176, 58)
+        draw.ellipse((int(w * 0.60), int(h * 0.10), int(w * 0.88), int(h * 0.48)), fill=color)
+
+    overlay.putalpha(ImageChops.multiply(overlay.getchannel("A"), alpha))
+    out.alpha_composite(overlay)
+    return out
 
 
 def create_fish_variant_assets(current_kurodai_sheet: Image.Image, fish_id: str, spec: dict[str, object]) -> None:

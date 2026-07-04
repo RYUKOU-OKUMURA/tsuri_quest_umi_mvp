@@ -89,18 +89,18 @@ func _audit_fish_scroll() -> void:
 	var screen := await _mount_cooking_screen()
 	await _tick()
 	var scroll := _find_named(screen, "FishListScroll") as ScrollContainer
-	var target := _find_named(screen, "FishRowSuzuki") as Control
+	var target := _find_named(screen, "FishRow_medai") as Control
 	if scroll == null:
 		_failures.append("FISH_SCROLL: missing named control 'FishListScroll'.")
 	elif scroll.get_v_scroll_bar().max_value <= scroll.get_v_scroll_bar().page + TOLERANCE:
-		_failures.append("FISH_SCROLL: fish list should be vertically scrollable with 9 owned fish.")
+		_failures.append("FISH_SCROLL: fish list should be vertically scrollable with 70 owned fish.")
 	elif scroll.get_h_scroll_bar().max_value > scroll.get_h_scroll_bar().page + TOLERANCE:
 		_failures.append("FISH_SCROLL: fish list should not require horizontal scrolling.")
 	if target == null:
 		_failures.append("FISH_SCROLL: missing fish row beyond the first six owned rows.")
 	var row_count := _count_fish_rows(screen)
-	if row_count < 9:
-		_failures.append("FISH_SCROLL: expected at least 9 fish rows, got %d." % row_count)
+	if row_count < 70:
+		_failures.append("FISH_SCROLL: expected at least 70 fish rows, got %d." % row_count)
 	if scroll != null and target != null:
 		_expect_visible_fish_rows_fit_width(scroll, "FISH_SCROLL_TOP")
 		scroll.scroll_vertical = int(scroll.get_v_scroll_bar().max_value)
@@ -567,9 +567,8 @@ func _seed_select_state() -> void:
 
 func _seed_many_fish_state() -> void:
 	_seed_select_state()
-	PlayerProgress.inventory["mejina"] = 1
-	PlayerProgress.inventory["isaki"] = 1
-	PlayerProgress.inventory["suzuki"] = 1
+	for fish_id in GameData.get_all_fish_ids():
+		PlayerProgress.inventory[fish_id] = 1
 
 
 func _seed_after_meal_state() -> void:

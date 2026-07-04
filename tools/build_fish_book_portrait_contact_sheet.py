@@ -19,6 +19,7 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = Path(__file__).resolve().parents[1]
 FISH_DIR = ROOT / "assets" / "showcase" / "fish"
 GAME_DATA = ROOT / "src" / "autoload" / "game_data.gd"
+FISH_EXPANSION_DATA = ROOT / "src" / "autoload" / "fish_expansion_data.gd"
 REFERENCE = ROOT / "reference" / "07_fish_book_mockup.png"
 OUT = Path("/tmp/tsuri_fish_book_portrait_contact_sheet.png")
 FONT_BOLD = ROOT / "assets" / "fonts" / "line_seed" / "LINESeedJP_A_TTF_Bd.ttf"
@@ -68,6 +69,17 @@ def _read_fish_entries() -> list[FishEntry]:
         name = _extract_string(block, "name", fish_id)
         asset_id = "kurodai" if fish_id == "boss_kurodai" else fish_id
         entries.append(FishEntry(fish_id, asset_id, fish_no, name))
+    if FISH_EXPANSION_DATA.exists():
+        expansion_text = FISH_EXPANSION_DATA.read_text(encoding="utf-8")
+        row_pattern = re.compile(r'\{"id"\s*:\s*"([^"]+)".*?\}', re.DOTALL)
+        for match in row_pattern.finditer(expansion_text):
+            block = match.group(0)
+            fish_id = match.group(1)
+            fish_no = _extract_string(block, "fish_no", "No.---")
+            if fish_no == "No.---":
+                continue
+            name = _extract_string(block, "name", fish_id)
+            entries.append(FishEntry(fish_id, fish_id, fish_no, name))
     entries.sort(key=lambda entry: entry.fish_no)
     return entries
 
