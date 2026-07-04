@@ -64,6 +64,26 @@ PRESETS = {
             "out": Path("/tmp/tsuri_tackle_shop_rig_compare.png"),
         },
     ],
+    "market": [
+        {
+            "id": "FISH_MARKET_SELECT",
+            "reference": ROOT / "reference" / "10_fish_market_mockup.png",
+            "capture": Path("/tmp/tsuri_market_select.png"),
+            "out": Path("/tmp/tsuri_market_select_compare.png"),
+        },
+        {
+            "id": "FISH_MARKET_SOLD",
+            "reference": ROOT / "reference" / "10_fish_market_mockup.png",
+            "capture": Path("/tmp/tsuri_market_sold.png"),
+            "out": Path("/tmp/tsuri_market_sold_compare.png"),
+        },
+        {
+            "id": "FISH_MARKET_EMPTY",
+            "reference": ROOT / "reference" / "10_fish_market_mockup.png",
+            "capture": Path("/tmp/tsuri_market_empty.png"),
+            "out": Path("/tmp/tsuri_market_empty_compare.png"),
+        },
+    ],
 }
 
 

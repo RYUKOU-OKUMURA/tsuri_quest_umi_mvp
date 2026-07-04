@@ -131,6 +131,62 @@ func sell_fish(fish_id: String, amount: int) -> Dictionary:
 	return {"ok": true, "income": income, "amount": amount}
 
 
+func sell_fish_batch(orders: Dictionary) -> Dictionary:
+	var normalized: Dictionary = {}
+	var sold: Dictionary = {}
+	var income := 0
+	var total_amount := 0
+
+	for key in orders.keys():
+		var fish_id := String(key)
+		var amount := int(orders[key])
+		if amount <= 0:
+			continue
+		var fish := GameData.get_fish(fish_id)
+		var current := fish_count(fish_id)
+		if fish.is_empty() or current < amount:
+			return {
+				"ok": false,
+				"income": 0,
+				"total_amount": 0,
+				"sold": {},
+				"message": "売却できる魚が足りません。",
+			}
+		normalized[fish_id] = amount
+		income += int(fish["sell_price"]) * amount
+		total_amount += amount
+
+	if normalized.is_empty():
+		return {
+			"ok": false,
+			"income": 0,
+			"total_amount": 0,
+			"sold": {},
+			"message": "売る魚を選んでください。",
+		}
+
+	for fish_id in normalized.keys():
+		var amount := int(normalized[fish_id])
+		var fish := GameData.get_fish(fish_id)
+		var item_income := int(fish["sell_price"]) * amount
+		inventory[fish_id] = fish_count(fish_id) - amount
+		sold[fish_id] = {
+			"amount": amount,
+			"income": item_income,
+		}
+
+	money += income
+	save_game()
+	progress_changed.emit()
+	return {
+		"ok": true,
+		"income": income,
+		"total_amount": total_amount,
+		"sold": sold,
+		"message": "%d匹売って、%d Gを受け取った。" % [total_amount, income],
+	}
+
+
 func cook_and_eat(fish_id: String, recipe_id: String) -> Dictionary:
 	var fish := GameData.get_fish(fish_id)
 	var recipe := GameData.get_recipe(recipe_id)
