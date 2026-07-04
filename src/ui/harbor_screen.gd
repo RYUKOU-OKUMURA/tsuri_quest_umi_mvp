@@ -1,7 +1,6 @@
 extends ScreenBase
 
 const HarborBackdropScript = preload("res://src/ui/components/harbor_backdrop.gd")
-const GameFontsScript = preload("res://src/ui/game_fonts.gd")
 const FightFishAssets = preload("res://src/ui/fight_fish_assets.gd")
 
 const HARBOR_TOP_FRAME_PATH := "res://assets/showcase/harbor/harbor_top_frame.png"
@@ -354,23 +353,7 @@ func _harbor_label(
 	outline := 0,
 	outline_color := Color("#07131d")
 ) -> Label:
-	var label := Label.new()
-	label.text = text
-	label.add_theme_font_size_override("font_size", font_size)
-	label.add_theme_color_override("font_color", color)
-	if outline > 0:
-		label.add_theme_color_override("font_outline_color", outline_color)
-		label.add_theme_constant_override("outline_size", outline)
-		label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.26))
-		label.add_theme_constant_override("shadow_offset_x", 1)
-		label.add_theme_constant_override("shadow_offset_y", 1)
-		label.add_theme_constant_override("shadow_outline_size", 1)
-	var fallback := get_theme_default_font()
-	label.add_theme_font_override("font", GameFontsScript.bold(fallback) if bold else GameFontsScript.regular(fallback))
-	label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	label.clip_text = true
-	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	return label
+	return make_screen_label(text, font_size, color, bold, outline, outline_color, Color(0.0, 0.0, 0.0, 0.26))
 
 
 func _apply_facility_button_skin(button: Button, primary: bool) -> void:

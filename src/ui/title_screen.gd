@@ -1,7 +1,6 @@
 extends ScreenBase
 
 const TitleBackdropScript = preload("res://src/ui/components/title_backdrop.gd")
-const GameFontsScript = preload("res://src/ui/game_fonts.gd")
 const FightFishAssets = preload("res://src/ui/fight_fish_assets.gd")
 
 const TITLE_LOGO_FRAME_PATH := "res://assets/showcase/title/title_logo_frame.png"

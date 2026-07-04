@@ -1,6 +1,6 @@
 # リファクタ作戦台帳
 
-最終更新: 2026-07-05 / 状態: R0/R2/R3/R6/R7/R8 完了。次候補は R4（UI共通基盤）、R5/R1（画面単位 uplift + Palette 移行の同時実施）、cooking_reward_panel 分割
+最終更新: 2026-07-05 / 状態: R0/R2/R3/R4/R6/R7/R8 完了。R9（cooking_reward_panel 分割）は第1段（Visual抽出）完了。次候補は R9 第2段（状態別セクション分割）、R5/R1（画面単位 uplift + Palette 移行の同時実施）
 
 Fable オーケストレーターが本ファイルを正本としてスライス順・状態・ベースラインを管理する。
 Composer ワーカーは個別 brief のみ受け取り、本ファイルの更新はオーケストレーターが行う。
@@ -53,10 +53,11 @@ done
 | R1 | palette 外ハードコード色の洗い出しと修正 | R0 | Composer | `rg` 監査 green、validate + 触った画面 smoke | pending（洗い出しのみ完了: 約932件/22ファイル。機械置換の見た目退行リスクが高く、freeze済み画面のvisual QA前提で画面単位に分割して実施する） |
 | R2 | showcase 素材参照違反の修正 | R0 | Composer×画面 | `audit_showcase_asset_refs.py` green | **done（監査の結果、現状違反ゼロ。作業不要）** |
 | R3 | autoload / core の pure ロジック境界抽出 | R0, Fable 設計 | Composer | 振る舞い不変、該当 smoke green | **done (2026-07-05)** `game_data.gd`（1828行）を `game_catalog_data.gd`（constテーブル15個・約1430行）と `game_data.gd`（ルール定数+エイリアス+ロジック・約430行）に分離。公開APIはconstエイリアスで不変。7テーブルの JSON md5 前後一致で証明 |
-| R4 | UI 共通基盤（ScreenBase 等）の整理 | R3, Fable 設計 | Composer | Fable 承認済み設計どおり、全 smoke green | pending |
+| R4 | UI 共通基盤（ScreenBase 等）の整理 | R3, Fable 設計 | Composer | Fable 承認済み設計どおり、全 smoke green | **done (2026-07-05)** `ScreenBase.make_screen_label` を新設し、`_harbor_label` / `_shipyard_label` / `_book_label` / `_status_label` / `_market_label` を1行委譲に統合（呼び出し約120箇所は無変更）。画面固有の shadow/outline 色は引数渡しで screen_base への新規hex持ち込みなし。`GameFontsScript` preload を ScreenBase へ昇格し、継承7画面の重複 const を削除。全10 smoke + validate green |
 | R5 | 画面別 UI uplift | R4 | Composer×画面 | 各 `skills/ui-screen-uplift/` + visual QA | pending |
 | R6 | 調理フロー4ファイルの重複抽出（定数・StyleBoxヘルパ・皿テクスチャ解決→CookingAssets） | R0 | Composer | behavior-preserving、cooking_flow smoke + visual QA 画像一致、validate green | **done (2026-07-05)** 新規 `src/ui/components/cooking_assets.gd`。STATUS スクショはピクセル一致。RESULT/EXP/LEVELUP は元コードからキャプチャ非決定（アニメーション）のため cmp は参考値、visual QA passed |
 | R7 | 画面横断の重複ヘルパ統合と不要コード削除（_format_money 8重複、_load_texture_if_exists、ScreenBase未使用API、extends表記統一） | R0 | Composer | behavior-preserving、全 smoke + validate green | **done (2026-07-05)** `ScreenBase.format_money` / `_anchored_control` / `_place_control` へ統合。見送り: `_last_sfx_path`（smoke が参照）、`shipyard._format_money`（`maxi` で挙動差）、独自ロジック入り `_load_texture_if_exists` 9ファイル |
+| R9 | cooking_reward_panel（3,396行）の behavior-preserving 分割 | R8（決定的QAを退行判定に使用） | Composer | 各段で cooking visual QA 連続キャプチャが分割前と cmp 完全一致、cooking_flow smoke + validate green | **第1段 done (2026-07-05)** 内部Visualクラス17個（純描画・panel非依存）を新規 `src/ui/components/cooking_reward_visuals.gd`（1,297行）へ純移動し、panel 側は const エイリアスで参照不変（2,119行に減）。移動塊は空行差以外完全一致を diff で確認。素材監査 allowlist に抽出先を登録。6キャプチャがベースライン cmp 全一致。第2段（状態別セクション分割: ステータスストリップ / 報酬グリッド等）は pending |
 | R8 | QA決定性（`TSURI_QA_DETERMINISTIC=1` で調理visual QAをピクセル決定的に）+ cooking_flow_smoke の ok 出力 | R0 | Composer | 連続2回実行で全状態 cmp 一致、フラグOFF時のパス不変 | **done (2026-07-05)** 原因は Tween入退場・Juicer trauma/hit_stop・GaugeBar の `_process` 補間。ガードは `ScreenBase.is_qa_deterministic()` に集約。オーケストレーターが独立に2回実行し6キャプチャ全一致を追認済み |
 
 **fan-out 向き**: R0、R1（ファイル単位）、R2（画面単位）、R5（画面単位・並列可）、R6/R7（ファイル集合が素で並列可）  
@@ -64,7 +65,7 @@ done
 
 ### 監査で確認したが今回見送った項目（2026-07-05）
 
-- ラベル生成ラッパー統合（`_harbor_label` / `_shipyard_label` / `_book_label` 等）: フォントAA方針は 2026-07-05 に `game_fonts.gd`（AA有効）へ統一決定済み（docs/19 §4.2、`fight_fonts.gd` 削除）。ラッパー統合自体は R4（UI共通基盤整理）で実施可能になった
+- ~~ラベル生成ラッパー統合（`_harbor_label` / `_shipyard_label` / `_book_label` 等）~~: R4 として 2026-07-05 実施済み
 - BGM 二重実装（`main.gd` の opening BGM と `ScreenBase.play_screen_bgm`）: main.gd は ScreenBase 非継承で境界設計が必要。Fable 単体向き
 - `PlayerProgress` の emit-only シグナル（`progress_changed` 等）: 拡張点として温存。削除しない判断
 - `fight_hud` 等 fight 系コンポーネントの hex 色: R1 へ

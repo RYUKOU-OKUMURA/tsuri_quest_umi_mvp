@@ -1,7 +1,5 @@
 extends ScreenBase
 
-const GameFontsScript = preload("res://src/ui/game_fonts.gd")
-
 const SHIPYARD_BG_PATH := "res://assets/showcase/shipyard/shipyard_purchase_bg.png"
 const OFFSHORE_SPOT_TOTAL := 3
 
@@ -521,24 +519,7 @@ func _shipyard_label(
 	outline := 0,
 	outline_color := Color("#07131d")
 ) -> Label:
-	var label := Label.new()
-	label.text = text
-	label.add_theme_font_size_override("font_size", font_size)
-	label.add_theme_color_override("font_color", color)
-	if outline > 0:
-		label.add_theme_color_override("font_outline_color", outline_color)
-		label.add_theme_constant_override("outline_size", outline)
-		label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.28))
-		label.add_theme_constant_override("shadow_offset_x", 1)
-		label.add_theme_constant_override("shadow_offset_y", 1)
-		label.add_theme_constant_override("shadow_outline_size", 1)
-	var fallback := get_theme_default_font()
-	label.add_theme_font_override("font", GameFontsScript.bold(fallback) if bold else GameFontsScript.regular(fallback))
-	label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	label.clip_text = true
-	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return label
+	return make_screen_label(text, font_size, color, bold, outline, outline_color, Color(0.0, 0.0, 0.0, 0.28), true)
 
 
 func _format_money(value: int) -> String:

@@ -1,7 +1,5 @@
 extends ScreenBase
 
-const GameFontsScript = preload("res://src/ui/game_fonts.gd")
-
 const ROD_BACKPLATE_PATH := "res://assets/showcase/tackle_shop/shop_rod_backplate.png"
 const RIG_BACKPLATE_PATH := "res://assets/showcase/tackle_shop/shop_rig_backplate.png"
 const ITEM_ICON_SHEET_PATH := "res://assets/showcase/tackle_shop/shop_item_icon_sheet.png"

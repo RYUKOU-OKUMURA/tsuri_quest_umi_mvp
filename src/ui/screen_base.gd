@@ -2,6 +2,7 @@ class_name ScreenBase
 extends Control
 
 const ShowcaseAssetsScript = preload("res://src/ui/showcase_assets.gd")
+const GameFontsScript = preload("res://src/ui/game_fonts.gd")
 
 static var _qa_deterministic: Variant = null
 
@@ -205,6 +206,40 @@ func make_shadow_label(
 	label.add_theme_constant_override("shadow_offset_x", shadow_offset)
 	label.add_theme_constant_override("shadow_offset_y", shadow_offset)
 	label.add_theme_constant_override("shadow_outline_size", shadow_outline)
+	return label
+
+
+# 画面見出し・行ラベル用の共通生成。旧 _harbor_label / _shipyard_label / _book_label /
+# _status_label / _market_label の実体。shadow_color.a が 0 なら影を付けない。
+func make_screen_label(
+	text: String,
+	font_size: int,
+	color: Color,
+	bold := false,
+	outline := 0,
+	outline_color: Color = Palette.TEXT_OUTLINE_DARK,
+	shadow_color: Color = Palette.SHADOW,
+	ignore_mouse := false
+) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_color_override("font_color", color)
+	if outline > 0:
+		label.add_theme_color_override("font_outline_color", outline_color)
+		label.add_theme_constant_override("outline_size", outline)
+		if shadow_color.a > 0.0:
+			label.add_theme_color_override("font_shadow_color", shadow_color)
+			label.add_theme_constant_override("shadow_offset_x", 1)
+			label.add_theme_constant_override("shadow_offset_y", 1)
+			label.add_theme_constant_override("shadow_outline_size", 1)
+	var fallback := get_theme_default_font()
+	label.add_theme_font_override("font", GameFontsScript.bold(fallback) if bold else GameFontsScript.regular(fallback))
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	label.clip_text = true
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	if ignore_mouse:
+		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return label
 
 

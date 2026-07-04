@@ -1,7 +1,6 @@
 extends ScreenBase
 
 const FightFishAssets = preload("res://src/ui/fight_fish_assets.gd")
-const GameFontsScript = preload("res://src/ui/game_fonts.gd")
 const GaugeBarScript = preload("res://src/ui/components/gauge_bar.gd")
 const HarborBackdropScript = preload("res://src/ui/components/harbor_backdrop.gd")
 const PlayerStatusBarScript = preload("res://src/ui/components/player_status_bar.gd")
@@ -591,22 +590,7 @@ func _add_button_icon(button: Button, path: String, primary: bool) -> void:
 
 
 func _status_label(text: String, font_size: int, color: Color, bold := false, outline := 0) -> Label:
-	var label := Label.new()
-	label.text = text
-	label.add_theme_font_size_override("font_size", font_size)
-	label.add_theme_color_override("font_color", color)
-	label.add_theme_font_override("font", GameFontsScript.bold(get_theme_default_font()) if bold else GameFontsScript.regular(get_theme_default_font()))
-	if outline > 0:
-		label.add_theme_color_override("font_outline_color", Palette.TEXT_OUTLINE_DARK)
-		label.add_theme_constant_override("outline_size", outline)
-		label.add_theme_color_override("font_shadow_color", Palette.SHADOW)
-		label.add_theme_constant_override("shadow_offset_x", 1)
-		label.add_theme_constant_override("shadow_offset_y", 1)
-		label.add_theme_constant_override("shadow_outline_size", 1)
-	label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	label.clip_text = true
-	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	return label
+	return make_screen_label(text, font_size, color, bold, outline)
 
 
 func _section_icon(index: int) -> String:

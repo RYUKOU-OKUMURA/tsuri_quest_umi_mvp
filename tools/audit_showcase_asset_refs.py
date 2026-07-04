@@ -36,6 +36,8 @@ EXPLICIT_OWNERS: dict[Path, set[str]] = {
     Path("src/ui/cooking_screen.gd"): {"cooking", "common"},
     Path("src/ui/components/cooking_status_panel.gd"): {"cooking"},
     Path("src/ui/components/cooking_reward_panel.gd"): {"cooking"},
+    # cooking_reward_panel から抽出した描画専用 Visual クラス集（所有素材は同じ cooking）
+    Path("src/ui/components/cooking_reward_visuals.gd"): {"cooking"},
     Path("src/ui/components/level_up_panel.gd"): {"cooking"},
     Path("src/ui/fish_book_screen.gd"): {"fish_book", "common"},
     Path("src/ui/market_screen.gd"): {"fish_market", "common"},

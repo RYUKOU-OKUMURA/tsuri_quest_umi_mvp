@@ -1,6 +1,5 @@
 extends ScreenBase
 
-const GameFontsScript = preload("res://src/ui/game_fonts.gd")
 const PlayerStatusBarScript = preload("res://src/ui/components/player_status_bar.gd")
 const FightFishAssets = preload("res://src/ui/fight_fish_assets.gd")
 
@@ -704,14 +703,9 @@ func _has_last_fish_warning() -> bool:
 
 
 func _market_label(text: String, font_size: int, color: Color, outline: int = 0) -> Label:
-	var label := make_label(text, font_size, color, outline, Palette.TEXT_OUTLINE_DARK)
+	var label := make_screen_label(text, font_size, color, true, outline, Palette.TEXT_OUTLINE_DARK, Color(0.0, 0.0, 0.0, 0.0), true)
 	label.z_index = 30
-	label.add_theme_font_override("font", GameFontsScript.bold(get_theme_default_font()))
-	label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	label.clip_text = true
-	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return label
 
 
