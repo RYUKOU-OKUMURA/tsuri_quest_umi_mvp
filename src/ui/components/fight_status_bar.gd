@@ -6,17 +6,27 @@ extends Control
 const GameFontsScript = preload("res://src/ui/game_fonts.gd")
 const FRAME_PATH := "res://assets/showcase/underwater/top_status_frame.png"
 const TOP_ICON_SHEET_PATH := "res://assets/showcase/underwater/top_status_icon_sheet.png"
+const WEATHER_ICON_SHEET_PATH := "res://assets/showcase/underwater/weather_status_icon_sheet.png"
 const ICON_SHEET_PATH := "res://assets/showcase/underwater/fight_icon_sheet.png"
 const ICON_TIME := 0
 const ICON_WEATHER := 1
 const ICON_WIND := 2
 const ICON_COIN := 3
+const WEATHER_ICON_COUNT := 5
+const WEATHER_ICON_INDEX := {
+	"sunny": 0,
+	"partly_cloudy": 1,
+	"cloudy": 2,
+	"rain": 3,
+	"fog": 4,
+}
 
 var simulator: FishingSimulator
 var trip_stats: Dictionary = {}
 
 var _frame: Texture2D
 var _top_icons: Texture2D
+var _weather_icons: Texture2D
 var _icons: Texture2D
 
 
@@ -34,6 +44,8 @@ func _ready() -> void:
 		_frame = load(FRAME_PATH) as Texture2D
 	if ResourceLoader.exists(TOP_ICON_SHEET_PATH):
 		_top_icons = load(TOP_ICON_SHEET_PATH) as Texture2D
+	if ResourceLoader.exists(WEATHER_ICON_SHEET_PATH):
+		_weather_icons = load(WEATHER_ICON_SHEET_PATH) as Texture2D
 	if ResourceLoader.exists(ICON_SHEET_PATH):
 		_icons = load(ICON_SHEET_PATH) as Texture2D
 
@@ -57,7 +69,7 @@ func _draw() -> void:
 	var regular_font := GameFontsScript.regular(get_theme_default_font())
 	var slots := _slot_rects(rect)
 	_draw_status_icon(slots[0], ICON_TIME)
-	_draw_status_icon(slots[1], ICON_WEATHER)
+	_draw_weather_status_icon(slots[1])
 	_draw_status_icon(slots[2], ICON_COIN)
 	_draw_status_slot(font, regular_font, slots[0], "AM", "08:47", false)
 	_draw_status_slot(font, regular_font, slots[1], _weather_label(), _wind_label(), false)
@@ -159,6 +171,20 @@ func _draw_status_icon(rect: Rect2, icon_index: int) -> void:
 	_draw_top_sheet_icon(icon_index, icon_rect, Color(1.0, 1.0, 1.0, 0.96))
 
 
+func _draw_weather_status_icon(rect: Rect2) -> void:
+	var icon_size := clampf(rect.size.y * 0.64, 38.0, 44.0)
+	var icon_rect := Rect2(
+		rect.position + Vector2(10.0, (rect.size.y - icon_size) * 0.5 + 1.0),
+		Vector2(icon_size, icon_size)
+	)
+	if _weather_icons == null:
+		_draw_top_sheet_icon(ICON_WEATHER, icon_rect, Color(1.0, 1.0, 1.0, 0.96))
+		return
+	var cell_w := float(_weather_icons.get_width()) / float(WEATHER_ICON_COUNT)
+	var src := Rect2(float(_weather_icon_index()) * cell_w, 0.0, cell_w, float(_weather_icons.get_height()))
+	draw_texture_rect_region(_weather_icons, icon_rect, src, Color(1.0, 1.0, 1.0, 0.96))
+
+
 func _draw_top_sheet_icon(icon_index: int, target: Rect2, modulate: Color = Color.WHITE) -> void:
 	if _top_icons != null:
 		var cell_w := float(_top_icons.get_width()) / 4.0
@@ -226,6 +252,20 @@ func _format_money(value: int) -> String:
 		result = raw[index] + result
 		count += 1
 	return result
+
+
+func _weather_id() -> String:
+	var weather_id := String(trip_stats.get("weather_id", "sunny"))
+	if weather_id.strip_edges().is_empty():
+		return "sunny"
+	return weather_id
+
+
+func _weather_icon_index() -> int:
+	var weather_id := _weather_id()
+	if not WEATHER_ICON_INDEX.has(weather_id):
+		return WEATHER_ICON_INDEX["sunny"]
+	return int(WEATHER_ICON_INDEX[weather_id])
 
 
 func _weather_label() -> String:
