@@ -84,6 +84,7 @@ Cursor 常時ルール: `.cursor/rules/orchestration.mdc`
 ./tools/cooking_visual_qa.sh       # 調理フローの比較スクショ再生成
 ./tools/fish_book_visual_qa.sh     # 魚図鑑の比較スクショ再生成
 ./tools/fishing_spot_map_visual_qa.sh # 釣り場マップの比較スクショ再生成
+./tools/save_system_verify.sh # セーブ保護（原子的書き込み・バックアップ復元・サンドボックス）の回帰テスト
 ```
 
 `validate_project.sh` は `tools/audit_showcase_asset_refs.py` を含み、`src/ui` からの素材所有違反（他画面フォルダの直接参照、魚素材の直接参照など）を検出する。例外が必要な場合は、監査ツール内の明示allowlistに理由コメントを残す。

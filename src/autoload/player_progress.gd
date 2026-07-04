@@ -6,6 +6,9 @@ signal fish_caught(fish_id: String, size_cm: float)
 signal dish_eaten(recipe_id: String, gained_exp: int)
 
 const SAVE_PATH := "user://tsuri_quest_save.json"
+const SAVE_BACKUP_PATH := "user://tsuri_quest_save.json.bak"
+const SAVE_TMP_PATH := "user://tsuri_quest_save.json.tmp"
+const SAVE_VERSION := 1
 const EXP_REQUIREMENTS: Array[int] = [0, 60, 85, 115, 150, 190, 235, 285, 340, 400, 0]
 
 var level: int = 1
@@ -24,9 +27,32 @@ var owned_boats: Array[String] = []
 var pending_buff: Dictionary = {}
 var play_seconds: float = 0.0
 
+# smoke / preview / audit（res://tools/ 配下のシーン起動）から本番セーブを守るフラグ。
+# true の間はディスクへの読み書きを一切行わない。
+var _sandbox_mode := false
+
 
 func _ready() -> void:
+	_sandbox_mode = _detect_sandbox_mode()
+	if _sandbox_mode:
+		print("PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）")
+		return
 	load_game()
+
+
+func _detect_sandbox_mode() -> bool:
+	if OS.get_environment("TSURI_QA_SANDBOX") == "1":
+		return true
+	# シェル経由でも エディタの「シーンを実行」でも、起動シーンはコマンドライン引数に載る
+	for arg_variant in OS.get_cmdline_args():
+		var arg := String(arg_variant)
+		if arg.ends_with(".tscn") and arg.contains("tools/"):
+			return true
+	return false
+
+
+func is_sandbox_mode() -> bool:
+	return _sandbox_mode
 
 
 func _process(delta: float) -> void:
@@ -34,7 +60,7 @@ func _process(delta: float) -> void:
 
 
 func has_save_file() -> bool:
-	return FileAccess.file_exists(SAVE_PATH)
+	return FileAccess.file_exists(SAVE_PATH) or FileAccess.file_exists(SAVE_BACKUP_PATH)
 
 
 func reset_game() -> void:
@@ -384,8 +410,10 @@ func begin_fishing_trip() -> Dictionary:
 
 
 func save_game() -> void:
+	if _sandbox_mode:
+		return
 	var data := {
-		"version": 1,
+		"version": SAVE_VERSION,
 		"level": level,
 		"exp": exp,
 		"money": money,
@@ -402,25 +430,63 @@ func save_game() -> void:
 		"pending_buff": pending_buff,
 		"play_seconds": play_seconds,
 	}
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
-	if file == null:
-		push_warning("セーブファイルを開けませんでした: %s" % SAVE_PATH)
+	# 一時ファイルへ書き切ってから差し替える（書き込み途中のクラッシュで本体を壊さない）
+	var tmp_file := FileAccess.open(SAVE_TMP_PATH, FileAccess.WRITE)
+	if tmp_file == null:
+		push_warning("セーブファイルを開けませんでした: %s" % SAVE_TMP_PATH)
 		return
-	file.store_string(JSON.stringify(data, "\t"))
+	tmp_file.store_string(JSON.stringify(data, "\t"))
+	tmp_file.close()
+
+	# 直前の正常な本体を1世代バックアップとして残す
+	if FileAccess.file_exists(SAVE_PATH):
+		var backup_err := DirAccess.rename_absolute(SAVE_PATH, SAVE_BACKUP_PATH)
+		if backup_err != OK:
+			push_warning("セーブのバックアップ作成に失敗しました（コード: %d）" % backup_err)
+	var rename_err := DirAccess.rename_absolute(SAVE_TMP_PATH, SAVE_PATH)
+	if rename_err != OK:
+		push_warning("セーブファイルの差し替えに失敗しました（コード: %d）" % rename_err)
 
 
 func load_game() -> void:
-	if not FileAccess.file_exists(SAVE_PATH):
+	if _sandbox_mode:
 		return
-	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var data := _read_save_dictionary(SAVE_PATH)
+	if data.is_empty():
+		var backup := _read_save_dictionary(SAVE_BACKUP_PATH)
+		if backup.is_empty():
+			if FileAccess.file_exists(SAVE_PATH):
+				push_warning("セーブデータが壊れているため初期値を使用します。")
+			return
+		push_warning("セーブデータが壊れていたため、バックアップから復元します。")
+		data = backup
+	_apply_save_data(_migrate_save_data(data))
+
+
+func _read_save_dictionary(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return {}
+	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
-		return
+		return {}
 	var parsed = JSON.parse_string(file.get_as_text())
 	if typeof(parsed) != TYPE_DICTIONARY:
-		push_warning("セーブデータが壊れているため初期値を使用します。")
-		return
-	var data: Dictionary = parsed
-	_apply_save_data(data)
+		return {}
+	return parsed
+
+
+func _migrate_save_data(data: Dictionary) -> Dictionary:
+	var version := int(data.get("version", 0))
+	if version > SAVE_VERSION:
+		push_warning(
+			"新しいバージョンのセーブデータです（version %d > %d）。読み込みを試みます。"
+			% [version, SAVE_VERSION]
+		)
+		return data
+	# version が上がったらここに旧版→新版の変換を追加する。
+	# _apply_save_data() は欠損フィールドをデフォルト値で補完するため、
+	# フィールド追加だけの変更なら変換は不要。
+	return data
 
 
 func _apply_save_data(data: Dictionary) -> void:
