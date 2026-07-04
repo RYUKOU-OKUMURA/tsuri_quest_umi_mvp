@@ -19,18 +19,18 @@ UI作業のルール正本は `docs/19_ui_production_playbook.md`。本docはゲ
 
 | 項目 | 現状 |
 |---|---|
-| 魚データ | `GameData.FISH` に **30種**。各魚は `preferred_bait`（アミエビ/オキアミ/イソメ/貝/小魚/大型ルアー/岩ガニ 等）を既に持つが、**現在ゲームロジックからは未使用（表示のみ）** |
+| 魚データ | `GameData.FISH` に **30種**。各魚の `preferred_bait` は仕掛け補正の判定に使用中 |
 | 釣り場 | 8スポット。各スポットに `recommended_baits`（表示用）と `fish_weight_modifiers`（出現重み補正）あり |
-| 出現抽選 | `GameData.encounter_weights()` → `roll_normal_fish()`。軸は「レベル × 釣り場」の2軸のみ |
+| 出現抽選 | `GameData.encounter_weights()` → `roll_normal_fish()`。軸は「レベル × 釣り場 × 仕掛け」。ぬし専用ポイントでは仕掛け補正を掛けない |
 | 天気 | `FISHING_ENVIRONMENTS` に `sunny_calm` / `sunny_windy` の2種。**ラベルは両方「快晴」**（実質、風の強弱だけ）。釣行開始時に重み抽選。出現テーブルには未接続 |
-| 竿 | `RODS` 3本（入門/磯/外海）。ファイト性能補正のみ。仕掛けの概念はデータに存在しない |
-| 釣具店画面 | `src/ui/shop_screen.gd`。**簡易実装**（グラデ背景＋ItemList）。竿の購入・装備のみ |
+| 竿・仕掛け | `RODS` 5本、`RIGS` 6種。竿はファイト性能補正、仕掛けは出現重み補正と釣行前装備に接続済み |
+| 釣具店画面 | `src/ui/shop_screen.gd`。**P2実装完了**。PNGメインUIで竿5本・仕掛け6種の購入/装備、タブ切替、詳細表示を扱う |
 | 魚市場画面 | `src/ui/market_screen.gd`。**簡易実装**。売却は「1匹」「選択種を全部」の2択 |
 | 料理 | `RECIPES` 5種。`cook_and_eat()` で経験値＋次釣行バフ。**お金は一切発生しない** |
 | キャッチ結果 | **P0実装完了**。成功時は写真風の釣り上げ結果画面（`CatchFanfare`）を表示し、旧テキスト結果パネルは出さない。失敗時のみ既存の「逃げられた……」結果パネルを維持 |
 | 魚素材 | `assets/showcase/fish/` に `<id>_card_portrait.png` と `<id>_showcase_sheet.png` の2点セット×30種。`FightFishAssets` が命名規約で解決 |
-| 参照画像 | `reference/` に釣具店・魚市場のモックアップは**存在しない**（正式化の前提が未整備） |
-| セーブ | `PlayerProgress.save_game()/load_game()`。新フィールド追加時は読み込みデフォルト値の手当てが必要 |
+| 参照画像 | 釣具店は `reference/09_tackle_shop_rod_mockup.png` / `reference/09_tackle_shop_gear_mockup.png` を正規参照に設定済み。魚市場のモックアップは未整備 |
+| セーブ | `PlayerProgress.save_game()/load_game()`。仕掛けの `owned_rigs` / `equipped_rig_id` は旧セーブ読み込み時に `sabiki` で補完済み。新フィールド追加時は同様にデフォルト値の手当てが必要 |
 
 ---
 
@@ -51,8 +51,8 @@ UI作業のルール正本は `docs/19_ui_production_playbook.md`。本docはゲ
 | フェーズ | 内容 | 種別 | 規模感 |
 |---|---|---|---|
 | **P0** | キャッチ演出（ファンファーレ） | 演出 | **完了** |
-| **P1** | 仕掛けシステム：データモデル＋出現抽選への接続＋最小UI | システム | 中 |
-| **P2** | 釣具店画面の正式化（竿＋仕掛け販売） | UI正式化 | 中 |
+| **P1** | 仕掛けシステム：データモデル＋出現抽選への接続＋最小UI | システム | **完了** |
+| **P2** | 釣具店画面の正式化（竿＋仕掛け販売） | UI正式化 | **完了** |
 | **P3** | 天気パターン追加（雨・曇り等＋出現補正） | データ＋演出 | 中 |
 | **P4** | 魚 30種→50種 | データ＋素材 | 大 |
 | **P5** | 調理費用（料理を食べるのにお金を払う） | システム | 小 |
@@ -61,8 +61,8 @@ UI作業のルール正本は `docs/19_ui_production_playbook.md`。本docはゲ
 ### 順序の理由
 
 1. **P0を最初に置く理由**: 依存ゼロ・低リスクで、以降の全フェーズの手触り確認が楽しくなる。P1以降の検証プレイでも毎回目にする部分なので、投資対効果が最も早く回収される。
-2. **P1が土台**: 仕掛けがあって初めて (a) 釣具店に並べる商品ラインナップができ、(b)「狙う魚で仕掛けを変える」ゲーム性が生まれ、(c) 魚を増やしたときの出現条件の軸になる。魚データに `preferred_bait`、釣り場に `recommended_baits` が既にあるため、**データ設計の半分は済んでいる**。
-3. **P2はP1の直後**: 簡易shop画面のまま仕掛け選択UIを足すと二度手間になる。P1で最小UI（釣り場選択画面での仕掛け切替）だけ入れ、店構えの作り込みはP2でまとめて行う。
+2. **P1が土台だった理由**: 仕掛けが入ったことで (a) 釣具店に並べる商品ラインナップができ、(b)「狙う魚で仕掛けを変える」ゲーム性が生まれ、(c) 魚を増やしたときの出現条件の軸になった。魚データに `preferred_bait`、釣り場に `recommended_baits` が既にあったため、既存データを活かして完了できた。
+3. **P2をP1直後に置いた理由**: P1で仕掛けデータと購入/装備処理が固まったため、簡易shop画面への一時的な作り足しを長引かせず、竿＋仕掛けを扱う正式画面へ統合できた。
 4. **P3はP4より先**: 天気×仕掛け×釣り場の3軸が揃ってから魚を増やすほうが、20種の追加魚に「雨の日だけ」「サビキ限定」のような個性を配れる。軸がないまま50種にすると釣り場ごとの出現テーブルが薄まって単調になる。
 5. **P5→P6は経済バランスの調整期**: P5で調理が支出（調理費用）になり、収入源は市場売却に一本化される。「魚を売って得た金を、装備（竿・仕掛け・船）と食事（経験値・バフ）にどう配分するか」という経済ループが完成するので、P6の市場正式化と合わせて価格を一度に調整するのが安全。
 
@@ -116,75 +116,69 @@ UI作業のルール正本は `docs/19_ui_production_playbook.md`。本docはゲ
 
 ---
 
-### P1. 仕掛けシステム（狙う魚で仕掛けを変える）
+### P1. 仕掛けシステム（狙う魚で仕掛けを変える） — **実装完了（2026-07-03）**
 
 **ゴール**: プレイヤーが釣行前に仕掛けを選び、選択によって釣れる魚の傾向が変わる。
 
-**設計方針（提案）**
-- 仕掛けは**恒久装備**（竿と同じ買い切り・装備モデル）とする。消耗品（餌の個数管理）はインベントリUI・残数管理・釣行中の切れ対応が必要になりMVPの範囲を超えるため、次段階へ送る。
-- 既存の `preferred_bait` 値（7種: アミエビ/オキアミ/イソメ/貝/小魚/大型ルアー/岩ガニ）をそのまま「仕掛けが対応する餌カテゴリ」として使う。**魚データの改修は不要**。
-
-**データ追加**（`game_data.gd`）
-
-```gdscript
-const RIGS: Dictionary = {
-    "sabiki":   {"id": "sabiki",   "name": "サビキ仕掛け",   "price": 0,    "bait_types": ["アミエビ"],           "unlock_level": 1, "description": "小魚の群れを狙う入門仕掛け。"},
-    "uki":      {"id": "uki",      "name": "ウキ釣り仕掛け", "price": 400,  "bait_types": ["オキアミ"],           "unlock_level": 2, "description": "..."},
-    "chokusen": {"id": "chokusen", "name": "胴突き仕掛け",   "price": 600,  "bait_types": ["イソメ", "貝"],       "unlock_level": 2, "description": "底物を狙う。"},
-    "nomase":   {"id": "nomase",   "name": "泳がせ仕掛け",   "price": 1500, "bait_types": ["小魚"],               "unlock_level": 4, "description": "大物狙い。"},
-    "jigging":  {"id": "jigging",  "name": "ルアー・ジグ",   "price": 2200, "bait_types": ["大型ルアー"],         "unlock_level": 6, "description": "青物・回遊魚。"},
-    "kani":     {"id": "kani",     "name": "カニ餌仕掛け",   "price": 1000, "bait_types": ["岩ガニ"],             "unlock_level": 5, "description": "ぬし・石物用。"},
-}
-```
-
-**出現抽選への接続**（`encounter_weights()` 改修）
-- 仕掛けの `bait_types` に魚の `preferred_bait` が含まれる → 重み **×2.5**（マッチボーナス）
-- 含まれない → 重み **×0.4**（ゼロにはしない。「絶対に釣れない」は初心者に不親切で、抽選が空になる事故も防ぐ）
-- 係数は `docs/09_パラメータ調整表.md` に追記して調整対象とする
-- ぬし釣り場（`boss_spot`）は仕掛け補正の対象外（カニ餌装備を入場条件にするかは未決事項→§5）
-
-**PlayerProgress 追加**
-- `owned_rigs: Array[String]`（初期値 `["sabiki"]`）、`equipped_rig_id: String`
-- `buy_or_equip_rig()`（`buy_or_equip_rod()` と同型）
-- `save_game()/load_game()` に追加。**既存セーブ読込時のデフォルト補完を必ず入れる**
-
-**最小UI（このフェーズでは作り込まない）**
-- 釣り場選択画面（`fishing_spot_select_screen.gd`）に「装備中の仕掛け」表示＋切替ボタン（所持品のサイクル切替程度）
-- 釣り場の `recommended_baits` と装備仕掛けのマッチ状態を「◎おすすめ一致」等で表示
-- 購入は暫定で既存shop画面のItemListに追加（P2で正式化）
+**実装結果**
+- `GameData.RIGS` / `RIG_ORDER` / `DEFAULT_RIG_ID` を追加し、6種の仕掛け（サビキ、ウキ、胴突き、泳がせ、ルアー・ジグ、カニ餌）を買い切り装備として定義した。
+- `GameData.encounter_weights(player_level, spot_id, rig_id)` と `roll_normal_fish(..., rig_id)` に仕掛け補正を接続した。`preferred_bait` が装備仕掛けの `bait_types` に含まれる場合は **×2.5**、含まれない場合は **×0.4**。ぬし専用ポイントは補正対象外。
+- `PlayerProgress` に `owned_rigs` / `equipped_rig_id` / `buy_or_equip_rig()` を追加し、`save_game()` / `load_game()` で旧セーブは `sabiki` 所持・装備へ補完する。
+- `fishing_spot_select_screen.gd` に装備中の仕掛け表示と所持仕掛けの切替導線を追加し、釣行開始時の `trip_stats` と水中ファイトへ装備仕掛けを渡す。
+- `shop_screen.gd` 側にも仕掛けの購入/装備処理を接続し、P2の釣具店正式化の土台にした。
 
 **検証**
-- 出現監査smoke（`fishing_reveal_smoke` 系）に仕掛け別の抽選検証を追加: 各仕掛け×各釣り場で1000回ロールし、マッチ魚の出現率が上がることをassert
-- セーブ後方互換: 旧セーブ読み込みで `sabiki` 装備になること
+- `tools/fishing_spot_encounter_audit.gd` で仕掛けマスタ、全魚の `preferred_bait` カバー、通常ポイントの仕掛け補正、ぬし専用ポイントの補正無効を検証。
+- `tools/fishing_spot_select_smoke.gd` で所持仕掛け切替、釣行継続時の仕掛け反映、旧セーブ読み込み時の `sabiki` 補完を検証。
+- `docs/05_データ仕様.md` / `docs/09_パラメータ調整表.md` / `docs/15_fishing_spot_encounter_spec.md` に仕掛け仕様を反映済み。
 
-**完了条件**: 同じ釣り場で仕掛けを変えると体感で釣果が変わる。全釣り場×全仕掛けで抽選が空にならない。
+**完了条件**: **完了**。同じ釣り場で仕掛けを変えると釣果傾向が変わり、全釣り場×全仕掛けで抽選が空にならない。旧セーブは `sabiki` 装備で継続できる。
+
+**関連コミット**
+- `836f78b7` P1: 仕掛けデータと選択UIを釣行・ショップへ接続
 
 ---
 
-### P2. 釣具店画面の正式化
+### P2. 釣具店画面の正式化 — **実装完了（2026-07-04）**
 
 **ゴール**: 簡易実装の `shop_screen.gd` を、竿＋仕掛けを扱う本番品質の画面へ置き換える。
 
-**前提（先にやること）**
-- `reference/` に釣具店のモックアップ画像が**ない**。着手前に参照イメージ（例: `09_tackle_shop_mockup.png`）を用意する。これが完了判断の基準になる（docs/19原則）
-- 手順は `skills/ui-screen-build/SKILL.md`（簡易実装の正式化）に従う
-
-**画面構成案**
-- 店主エリア（背景1枚絵: 店内＋店主）＋ 商品タブ（竿 / 仕掛け）＋ 商品カードリスト ＋ 詳細・購入パネル
-- 竿タブ: 既存の性能表示（巻力/ライン限界/技量）を継承
-- 仕掛けタブ: 対応餌カテゴリと「この仕掛けで狙いやすい代表魚」（`preferred_bait` から逆引き）を表示
+**実装結果**
+- `reference/09_tackle_shop_rod_mockup.png` / `reference/09_tackle_shop_gear_mockup.png` を正規参照に設定し、店主なし・商品陳列主役の釣具店UIへ正式化した。
+- `shop_screen.gd` をPNG backplate + runtime文字/状態/クリック領域の構成に置き換え、竿/仕掛けタブ、商品カード、詳細紙面、購入/装備ボタン、港戻り導線を実装した。
+- 竿は5本、仕掛けは6種を扱い、所持/装備中/所持金不足/Lv不足をruntime表示で切り替える。仕掛け詳細では対応エサカテゴリと代表魚を表示する。
+- 1280x720の `TackleShopDesignCanvas` に素材・文字・透明Buttonを閉じ込め、広いviewportでも座標がずれないようにした。
 
 **素材**
-- `assets/showcase/tackle_shop/`（新設）: 店内背景、カウンター、商品カード枠
-- 汎用ボタン・カード枠は `assets/showcase/common/` の既存部品を優先。新規はまずcommon昇格を検討
-- 生成スクリプト `tools/generate_tackle_shop_assets.py`（新規）
+- `assets/showcase/tackle_shop/shop_rod_backplate.png`
+- `assets/showcase/tackle_shop/shop_rig_backplate.png`
+- `assets/showcase/tackle_shop/shop_item_icon_sheet.png`
+- `assets/showcase/tackle_shop/shop_bait_icon_sheet.png`
+- `assets/showcase/tackle_shop/shop_detail_item_sheet.png`
 
 **QA運用**
-- `docs/qa/tackle_shop_qa.md` 新設（freeze表・不採用リスト。書式は `docs/qa/README.md`）
-- visual QAスクリプト `tools/tackle_shop_visual_qa.sh`（新規）
-- `tools/audit_showcase_asset_refs.py` の所有ルールに新フォルダを追加
+- `docs/qa/tackle_shop_qa.md` にfreeze表・不採用リスト・微調整カウンタ・判断ログを記録済み。
+- visual QAスクリプト `tools/tackle_shop_visual_qa.sh` と比較画像生成を追加済み。
+- 証拠画像: `docs/qa/evidence/tackle_shop/2026-07-04_tackle_shop_rod_label_alignment_compare.png` / `2026-07-04_tackle_shop_rig_label_alignment_compare.png` / `2026-07-04_tackle_shop_rod_label_alignment_expanded.png` / `2026-07-04_tackle_shop_rig_label_alignment_expanded.png`
+- `tools/audit_showcase_asset_refs.py` の所有ルールに `assets/showcase/tackle_shop/` を追加済み。
 
-**完了条件**: docs/19 §のv1完了条件（実スクショ×参照画像の横並び比較で合格）。既存smoke＋購入フローの動作確認。
+**検証**
+- `./tools/tackle_shop_visual_qa.sh`
+- `godot --headless --path . res://tools/tackle_shop_smoke.tscn`
+- `godot --headless --path . res://tools/status_smoke.tscn`
+- `./tools/validate_project.sh`
+- Godot終了時に既存のObjectDB/resource警告あり。
+
+**完了条件**: **完了**。docs/19 §のv1完了条件（実スクショ×参照画像の横並び比較）を満たし、既存smoke＋購入/装備フローが動作する。
+
+**残ギャップ**
+- 詳細大絵は既存backplateからの透過切り抜き拡大でv1採用。看板品質へ上げる場合は、11商品分の専用高解像度詳細絵を将来の素材フェーズで作る。
+
+**関連コミット**
+- `f2e560ba` 釣具店画面をPNGメインUIに正式化
+- `736fef22` Update tackle shop assets and UI for no-shopkeeper version
+- `f8b3c7bf` Enhance tackle shop UI and functionality for expanded viewports
+- `ede4e534` Refine tackle shop UI layout and label positioning for improved readability
 
 ---
 
