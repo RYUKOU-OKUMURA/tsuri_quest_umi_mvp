@@ -21,8 +21,8 @@ UI作業のルール正本は `docs/19_ui_production_playbook.md`。本docはゲ
 |---|---|
 | 魚データ | `GameData.FISH` に **30種**。各魚の `preferred_bait` は仕掛け補正の判定に使用中 |
 | 釣り場 | 8スポット。各スポットに `recommended_baits`（表示用）と `fish_weight_modifiers`（出現重み補正）あり |
-| 出現抽選 | `GameData.encounter_weights()` → `roll_normal_fish()`。軸は「レベル × 釣り場 × 仕掛け」。ぬし専用ポイントでは仕掛け補正を掛けない |
-| 天気 | `FISHING_ENVIRONMENTS` に `sunny_calm` / `sunny_windy` の2種。**ラベルは両方「快晴」**（実質、風の強弱だけ）。釣行開始時に重み抽選。出現テーブルには未接続 |
+| 出現抽選 | `GameData.encounter_weights()` → `roll_normal_fish()`。軸は「レベル × 釣り場 × 仕掛け × 天候」。ぬし専用ポイントでは仕掛け補正と天候補正を掛けない |
+| 天気 | `FISHING_ENVIRONMENTS` に6環境（天気は `sunny / partly_cloudy / cloudy / rain / fog` の5系統）。釣行開始時に重み抽選し、`fish_weight_modifiers` で出現テーブルへ接続済み |
 | 竿・仕掛け | `RODS` 5本、`RIGS` 6種。竿はファイト性能補正、仕掛けは出現重み補正と釣行前装備に接続済み |
 | 釣具店画面 | `src/ui/shop_screen.gd`。**P2実装完了**。PNGメインUIで竿5本・仕掛け6種の購入/装備、タブ切替、詳細表示を扱う |
 | 魚市場画面 | `src/ui/market_screen.gd`。**簡易実装**。売却は「1匹」「選択種を全部」の2択 |
@@ -53,7 +53,7 @@ UI作業のルール正本は `docs/19_ui_production_playbook.md`。本docはゲ
 | **P0** | キャッチ演出（ファンファーレ） | 演出 | **完了** |
 | **P1** | 仕掛けシステム：データモデル＋出現抽選への接続＋最小UI | システム | **完了** |
 | **P2** | 釣具店画面の正式化（竿＋仕掛け販売） | UI正式化 | **完了** |
-| **P3** | 天気パターン追加（雨・曇り等＋出現補正） | データ＋演出 | 中 |
+| **P3** | 天気パターン追加（雨・曇り等＋出現補正） | データ＋演出 | **完了** |
 | **P4** | 魚 30種→50種 | データ＋素材 | 大 |
 | **P5** | 調理費用（料理を食べるのにお金を払う） | システム | 小 |
 | **P6** | 魚市場画面の正式化＋売却仕様拡張 | UI正式化 | 中 |
@@ -182,26 +182,42 @@ UI作業のルール正本は `docs/19_ui_production_playbook.md`。本docはゲ
 
 ---
 
-### P3. 天気パターン追加
+### P3. 天気パターン追加 — **実装完了（2026-07-04）**
 
-**ゴール**: 快晴のみ→ 複数天候（案: 快晴/晴れ時々曇り/曇り/小雨/霧）＋風の強弱の組み合わせにし、天候が釣果と画面の見た目に影響する。
+**ゴール**: 快晴のみ→ 複数天候（快晴/晴れ曇り/曇り/小雨/霧）＋風の強弱の組み合わせにし、天候が釣果と画面の見た目に影響する。
 
-**データ変更**（`FISHING_ENVIRONMENTS` 拡張）
-- 既存構造（`weather_id` / `weather_label` / `wind_id` / `weight` / `surface_bgm_key`）はそのまま使える。エントリを増やすだけ
-- 追加フィールド案: `fish_weight_modifiers: Dictionary`（環境→魚ID or レアリティ別の出現補正。例: 雨は `suzuki` ×1.8、曇りはレア全体×1.2）、`bite_window_modifier`（霧はアワセ猶予-10% など軽い難度差）
-- `encounter_weights()` に環境補正を乗算で追加（釣り場補正・仕掛け補正と同じ掛け算の枠組み）
+**実装結果**
+- `FISHING_ENVIRONMENTS` を6環境へ拡張した。天気系統は `sunny / partly_cloudy / cloudy / rain / fog` の5つで、`sunny_windy` は既存互換の快晴・風強枠として残した。
+- 各環境に `fish_weight_modifiers` を追加し、通常魚抽選の最終式を `魚weight × 釣り場補正 × 仕掛け補正 × 天候補正` に統一した。
+- `encounter_weights(player_level, spot_id, rig_id, environment_id)` と `roll_normal_fish(..., environment_id)` に後方互換ありで天候引数を追加した。
+- `FishingScreen` は `trip_stats.environment_id` を通常魚抽選へ渡す。釣行継続/釣り場変更では既存 `trip_stats` を保持するため、同じ釣行中の天気は変わらない。
+- `SurfaceCastView` は既存の状態別シーンPNGを描いた後、`trip_stats.weather_id` に応じて天候grade/overlayを重ねる。上部/右/下部UIのfreeze値は変更していない。
 
-**演出・UI**
-- 水面画面の背景を天候別に差し替え: `tools/generate_surface_showcase_assets.py` を拡張して天候バリアント生成（雨: 暗め＋雨脚レイヤー、曇り: 彩度低下版、霧: 白モヤオーバーレイ）
-- 釣り場選択画面・水面画面の天候表示（既に `weather_label` 表示があるため接続のみ）
-- 雨・霧のパーティクル/オーバーレイはruntime描画（`CanvasLayer` + `GPUParticles2D` or シェーダ）で軽く。作り込みすぎない
+**素材**
+- `assets/showcase/surface/surface_weather_contact_sheet.png`
+- `assets/showcase/surface/surface_weather_partly_cloudy_grade.png`
+- `assets/showcase/surface/surface_weather_cloudy_grade.png`
+- `assets/showcase/surface/surface_weather_rain_grade.png`
+- `assets/showcase/surface/surface_weather_rain_overlay.png`
+- `assets/showcase/surface/surface_weather_fog_grade.png`
+- `assets/showcase/surface/surface_weather_fog_overlay.png`
+
+**QA運用**
+- 水面READYの天気別preview/visual QAとして `tools/surface_weather_preview.tscn` / `tools/surface_weather_visual_qa.sh` を追加した。
+- 採用証跡: `docs/qa/evidence/underwater_fight/2026-07-04_surface_weather_asset_contact_sheet.png` / `docs/qa/evidence/underwater_fight/2026-07-04_surface_weather_ready_compare.png`
+- `docs/qa/underwater_fight_qa.md` にfreeze条件・判断ログを記録済み。
 
 **検証**
-- 環境抽選の重み合計・全環境が抽選され得ることのsmoke
-- 出現監査smokeに環境補正のケース追加
-- 天候別スクショをvisual QAへ
+- `tools/fishing_spot_encounter_audit.gd` に環境マスタ、天候補正倍率、全釣り場×全仕掛け×全天候の抽選可能性、ぬし専用ポイントの天候補正無効を追加。
+- `./tools/surface_weather_visual_qa.sh`
+- `godot --headless --path . --script res://tools/fishing_spot_encounter_audit.gd`
+- `./tools/fight_visual_qa.sh`
+- `./tools/validate_project.sh`
 
-**完了条件**: 釣行ごとに天候が変わり、見た目と釣果傾向の両方に差が出る。天候ラベルが全画面で正しく表示される。
+**完了条件**: **完了**。釣行ごとに天候が変わり、見た目と釣果傾向の両方に差が出る。天候ラベルは上部ステータスに表示され、天候別水面READYスクショで晴れ・曇り・雨・霧の差を確認できる。
+
+**残ギャップ**
+- 天候SE、時間帯、専用雨BGM、釣り場選択画面での事前予報UIは未実装。BGMは既存 `calm` / `windy` へフォールバックする。
 
 ---
 

@@ -359,6 +359,141 @@ def create_color_grade() -> None:
     save_image(canvas.finish(), OUT_DIR / "surface_color_grade.png")
 
 
+def _vertical_overlay(
+    top: tuple[int, int, int, int],
+    bottom: tuple[int, int, int, int],
+    seed: int,
+    noise: int = 0,
+) -> Image.Image:
+    rng = random.Random(seed)
+    image = Image.new("RGBA", (CANVAS_W, CANVAS_H), (0, 0, 0, 0))
+    pixels = image.load()
+    for y in range(CANVAS_H):
+        t = y / max(1, CANVAS_H - 1)
+        color = tuple(round(lerp(top[index], bottom[index], t)) for index in range(4))
+        for x in range(CANVAS_W):
+            delta = rng.randint(-noise, noise) if noise > 0 and (x + y) % 9 == 0 else 0
+            pixels[x, y] = (
+                max(0, min(255, color[0] + delta)),
+                max(0, min(255, color[1] + delta)),
+                max(0, min(255, color[2] + delta)),
+                color[3],
+            )
+    return image
+
+
+def _draw_weather_clouds(image: Image.Image, seed: int, density: int, alpha: int) -> None:
+    rng = random.Random(seed)
+    layer = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(layer, "RGBA")
+    for index in range(density):
+        cx = rng.randint(-40, CANVAS_W + 40)
+        cy = rng.randint(10, HORIZON_Y - 18)
+        sx = rng.randint(92, 190)
+        sy = rng.randint(22, 54)
+        a = max(22, alpha - index % 5 * 8)
+        draw.ellipse((cx - sx, cy - sy, cx + sx, cy + sy), fill=(230, 238, 238, a))
+        draw.ellipse((cx - sx * 0.45, cy - sy * 1.25, cx + sx * 0.55, cy + sy * 0.55), fill=(242, 246, 245, min(255, a + 16)))
+    layer = layer.filter(ImageFilter.GaussianBlur(7.5))
+    image.alpha_composite(layer)
+
+
+def _create_rain_overlay() -> Image.Image:
+    rng = random.Random(7311)
+    image = Image.new("RGBA", (CANVAS_W, CANVAS_H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image, "RGBA")
+    for index in range(170):
+        x = rng.randint(-40, CANVAS_W + 30)
+        y = rng.randint(0, CANVAS_H)
+        length = rng.randint(18, 38)
+        alpha = rng.randint(52, 112)
+        draw.line((x, y, x - length * 0.36, y + length), fill=(210, 234, 244, alpha), width=1)
+    for index in range(38):
+        x = rng.randint(22, CANVAS_W - 22)
+        y = rng.randint(HORIZON_Y + 26, CANVAS_H - 24)
+        rx = rng.randint(7, 22)
+        ry = max(2, round(rx * 0.28))
+        draw.ellipse((x - rx, y - ry, x + rx, y + ry), outline=(221, 246, 255, rng.randint(34, 88)), width=1)
+    return image.filter(ImageFilter.GaussianBlur(0.25))
+
+
+def _create_fog_overlay() -> Image.Image:
+    rng = random.Random(7507)
+    image = Image.new("RGBA", (CANVAS_W, CANVAS_H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image, "RGBA")
+    for index in range(15):
+        y = rng.randint(48, CANVAS_H - 42)
+        height = rng.randint(22, 56)
+        alpha = rng.randint(28, 74)
+        draw.ellipse((-180, y - height, CANVAS_W + 180, y + height), fill=(234, 242, 238, alpha))
+    draw.rectangle((0, 0, CANVAS_W, HORIZON_Y + 28), fill=(220, 231, 226, 38))
+    return image.filter(ImageFilter.GaussianBlur(13.0))
+
+
+def create_weather_assets() -> None:
+    partly = _vertical_overlay((60, 87, 102, 22), (5, 34, 58, 26), 7201, 2)
+    _draw_weather_clouds(partly, 7202, 7, 42)
+    save_image(partly, OUT_DIR / "surface_weather_partly_cloudy_grade.png")
+
+    cloudy = _vertical_overlay((72, 90, 99, 60), (7, 33, 54, 58), 7211, 2)
+    _draw_weather_clouds(cloudy, 7212, 12, 66)
+    save_image(cloudy, OUT_DIR / "surface_weather_cloudy_grade.png")
+
+    rain_grade = _vertical_overlay((24, 43, 61, 84), (0, 18, 38, 100), 7221, 2)
+    _draw_weather_clouds(rain_grade, 7222, 10, 78)
+    save_image(rain_grade, OUT_DIR / "surface_weather_rain_grade.png")
+    save_image(_create_rain_overlay(), OUT_DIR / "surface_weather_rain_overlay.png")
+
+    fog_grade = _vertical_overlay((214, 226, 218, 86), (195, 214, 211, 66), 7231, 1)
+    save_image(fog_grade.filter(ImageFilter.GaussianBlur(2.0)), OUT_DIR / "surface_weather_fog_grade.png")
+    save_image(_create_fog_overlay(), OUT_DIR / "surface_weather_fog_overlay.png")
+
+    _create_weather_contact_sheet()
+
+
+def _apply_weather_layers(base: Image.Image, weather_id: str) -> Image.Image:
+    image = base.copy()
+    layer_names: dict[str, list[str]] = {
+        "partly_cloudy": ["surface_weather_partly_cloudy_grade.png"],
+        "cloudy": ["surface_weather_cloudy_grade.png"],
+        "rain": ["surface_weather_rain_grade.png", "surface_weather_rain_overlay.png"],
+        "fog": ["surface_weather_fog_grade.png", "surface_weather_fog_overlay.png"],
+    }
+    for name in layer_names.get(weather_id, []):
+        path = OUT_DIR / name
+        if path.exists():
+            image.alpha_composite(Image.open(path).convert("RGBA"))
+    return image
+
+
+def _create_weather_contact_sheet() -> None:
+    ready_path = OUT_DIR / "surface_scene_ready.png"
+    if not ready_path.exists():
+        return
+    base = Image.open(ready_path).convert("RGBA")
+    variants = [
+        ("sunny", "sunny"),
+        ("partly_cloudy", "partly cloudy"),
+        ("cloudy", "cloudy"),
+        ("rain", "rain"),
+        ("fog", "fog"),
+    ]
+    thumb_w = 384
+    thumb_h = round(thumb_w * CANVAS_H / CANVAS_W)
+    label_h = 34
+    gutter = 16
+    sheet = Image.new("RGBA", (gutter + len(variants) * (thumb_w + gutter), thumb_h + label_h + gutter * 2), (10, 22, 34, 255))
+    draw = ImageDraw.Draw(sheet, "RGBA")
+    for index, (weather_id, label) in enumerate(variants):
+        preview = _apply_weather_layers(base, weather_id).resize((thumb_w, thumb_h), Image.Resampling.LANCZOS)
+        x = gutter + index * (thumb_w + gutter)
+        y = gutter + label_h
+        draw.text((x, gutter + 4), label, fill=(238, 232, 204, 255))
+        sheet.alpha_composite(preview, (x, y))
+        draw.rectangle((x, y, x + thumb_w - 1, y + thumb_h - 1), outline=(216, 172, 88, 255), width=2)
+    save_image(sheet, OUT_DIR / "surface_weather_contact_sheet.png")
+
+
 def draw_angler_common(canvas: HiCanvas, casting: bool) -> None:
     body_x = 194
     foot_y = 137
@@ -606,6 +741,7 @@ def main() -> None:
     create_fish_shadow()
     create_splash()
     create_scene_state_plates()
+    create_weather_assets()
 
 
 if __name__ == "__main__":

@@ -1,8 +1,8 @@
 # 水中ファイト画面 QA判断ログ
 
-最終更新: 2026-07-03 / 状態: **v1 showcase 合格・freeze中**（2026-06-26 判定）+ 写真風釣り上げ結果画面
+最終更新: 2026-07-04 / 状態: **v1 showcase 合格・freeze中**（2026-06-26 判定）+ 写真風釣り上げ結果画面 + 水面天候5系統
 参照画像: `reference/02_underwater_fight_mockup.png`
-QA更新コマンド: `./tools/fight_visual_qa.sh` / 釣り上げ結果確認: `godot --path . res://tools/catch_fanfare_preview.tscn`（通常魚確認は `TSURI_CATCH_FANFARE_FISH_ID=aji`）
+QA更新コマンド: `./tools/fight_visual_qa.sh` / 水面天候確認: `./tools/surface_weather_visual_qa.sh` / 釣り上げ結果確認: `godot --path . res://tools/catch_fanfare_preview.tscn`（通常魚確認は `TSURI_CATCH_FANFARE_FISH_ID=aji`）
 詳細な経過履歴: `docs/qa/archive/underwater_fight_design_qa_2026-06.md`（旧 `design-qa.md`）
 
 ## 1. freeze値（正本）
@@ -16,6 +16,15 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 | 背景ビルド | `tools/build_reference_underwater_background.py` の決定的パイプライン一式（全窓抽出＋広い被写体マスク＋エッジ安全クロップのみ） | `assets/showcase/underwater/underwater_battle_bg.png` | 明るさ・泡・床光・中央密度の再調整ループ禁止 |
 | ヘルパーオーバーレイ透過 | color grade 0.10 / seabed detail 0.22 | `src/ui/components/underwater_view.gd` | 旧ヘルパー層が中央を暗く覆うのを防ぐ採用値 |
 | テクスチャ配置 | top-biased cover `Vector2(0.5, 0.24)` | 同上 | 水面光を可視域に入れる |
+
+### 水面キャスト天候
+
+| 項目 | 値 | 場所 | 理由・備考 |
+|---|---|---|---|
+| 天気系統 | `sunny / partly_cloudy / cloudy / rain / fog`。`sunny_windy` は `weather_id=sunny` の風強互換枠 | `GameData.FISHING_ENVIRONMENTS` | 天気は5系統、環境は風違い込み6エントリ |
+| 描画方式 | 既存の状態別シーンPNGを描いた後、`trip_stats.weather_id` に応じてgrade/overlayを重ねる | `src/ui/components/surface_cast_view.gd` | 上部/右/下部HUDのfreeze値は動かさない |
+| 採用素材 | `surface_weather_partly_cloudy_grade.png` / `surface_weather_cloudy_grade.png` / `surface_weather_rain_grade.png` / `surface_weather_rain_overlay.png` / `surface_weather_fog_grade.png` / `surface_weather_fog_overlay.png` | `assets/showcase/surface/` | 状態別PNGを量産せず、overlay/grade方式で天候差を出す |
+| 検証画像 | `docs/qa/evidence/underwater_fight/2026-07-04_surface_weather_asset_contact_sheet.png` / `2026-07-04_surface_weather_ready_compare.png` | `tools/surface_weather_visual_qa.sh` | 晴れ・曇り・雨・霧の差、上部天候ラベルの見切れなしを確認 |
 
 ### 魚（クロダイ）
 
@@ -106,6 +115,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 | キャッチ演出・写真ベース | 1 | 右カード型の手描き分割素材をやめ、魚なし高品質ベース1枚＋既存魚ポートレート前面合成へ変更 | 採用 |
 | キャッチ演出・結果統合 | 1 | 成功時の旧白い結果ポップアップを廃止し、写真風画面の下部ボタンから「続けて釣る」「港へ戻る」を直接実行 | 採用 |
 | キャッチ結果・港ボタン位置 | 1 | 「港へ戻る」runtimeテキストがボタン枠より右へ寄っていたため、右ボタンスロットを30px左へ移動 | 採用 |
+| 水面天候overlay | 1 | 5天気の候補contact sheetから、状態別PNG量産ではなくgrade/overlay方式を採用 | 採用 |
 
 ## 4. 暫定判定・再検証TODO
 
@@ -116,7 +126,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 ## 5. 現在の残ギャップ
 
 - **P2**: 右パネル/HUD/上部の最終authored素材・専用タイポグラフィ品質が参照に未達。生成フレームの機械的な印象が残る。→ 対応は次フェーズ（下記）であり、フレーム素材のマイクロポリッシュ続行ではない。
-- **P3**: 魚のアニメ/接地の微ポリッシュ、背景中央の理想画質、ヒットバッジの最終合わせ。P3のみを理由に作業しない。
+- **残**: 魚のアニメ/接地の微ポリッシュ、背景中央の理想画質、ヒットバッジの最終合わせ。水面天候5系統は2026-07-04に採用済み。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
@@ -127,3 +137,4 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 - 2026-07-03: キャッチ演出を写真風ベース方式へ更新。`assets/showcase/underwater/catch_photo_base.png` を全面表示し、魚本体は `FightFishAssets.card_portrait_path()` の既存ポートレートを前面合成する。日本語テキストと魚はPNGへ焼き込まない。採用判断は `docs/qa/evidence/underwater_fight/2026-07-03_catch_photo_base_boss.png` と `docs/qa/evidence/underwater_fight/2026-07-03_catch_photo_base_aji.png`。既存の水中背景・HUD・上部・右サイドバー・成功後結果パネルのフローは変更していない。自動終了/スキップは `tools/catch_fanfare_smoke.tscn` で検証済み。
 - 2026-07-03: 成功時の旧白い結果ポップアップを廃止し、写真風釣り上げ画面を結果選択画面に統合。`CatchFanfare` は自動終了せず、`continue_requested` / `harbor_requested` で既存の次釣行・港遷移に接続する。魚位置を上げ、左情報枠を広げ、runtime文字にアウトラインと薄い紙色スクリムを追加。採用判断は `docs/qa/evidence/underwater_fight/2026-07-03_catch_result_photo_boss.png` と `docs/qa/evidence/underwater_fight/2026-07-03_catch_result_photo_aji.png`。新UX契約は `tools/catch_fanfare_smoke.tscn` で検証済み。
 - 2026-07-03: 写真風釣り上げ結果画面の「港へ戻る」ボタン位置を補正。右ボタンのruntimeテキスト領域を `x=704` から `x=674` へ移動し、ベース素材のボタン枠中心へ合わせた。採用判断は `docs/qa/evidence/underwater_fight/2026-07-03_catch_result_harbor_button_align.png`。
+- 2026-07-04: P3天気パターンとして水面READYの5天気差分を採用。`assets/showcase/surface/surface_weather_contact_sheet.png` で候補比較し、`SurfaceCastView` は既存状態別シーンPNGの上へ天候grade/overlayを重ねる方式にした。HUD/右サイドバー/上部ステータスのfreeze値は変更していない。採用判断は `docs/qa/evidence/underwater_fight/2026-07-04_surface_weather_asset_contact_sheet.png` と `docs/qa/evidence/underwater_fight/2026-07-04_surface_weather_ready_compare.png`。`./tools/surface_weather_visual_qa.sh` で晴れ・晴れ曇り・曇り・小雨・霧のREADY画面差分と天候ラベル見切れなしを確認済み。

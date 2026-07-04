@@ -479,7 +479,8 @@ func _prepare_new_attempt() -> void:
 		_current_fish = GameData.roll_normal_fish(
 			PlayerProgress.level,
 			_spot_id,
-			String(_trip_stats.get("rig_id", PlayerProgress.equipped_rig_id))
+			String(_trip_stats.get("rig_id", PlayerProgress.equipped_rig_id)),
+			String(_trip_stats.get("environment_id", GameData.DEFAULT_FISHING_ENVIRONMENT_ID))
 		)
 	_simulator.prepare(_current_fish, _trip_stats)
 	_view.bind_simulator(_simulator)

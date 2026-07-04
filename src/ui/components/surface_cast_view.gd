@@ -30,9 +30,20 @@ const SURFACE_SCENE_CASTING_PATH := "res://assets/showcase/surface/surface_scene
 const SURFACE_SCENE_WAITING_PATH := "res://assets/showcase/surface/surface_scene_waiting.png"
 const SURFACE_SCENE_APPROACH_PATH := "res://assets/showcase/surface/surface_scene_approach.png"
 const SURFACE_SCENE_BITE_PATH := "res://assets/showcase/surface/surface_scene_bite.png"
+const WEATHER_GRADE_PATHS := {
+	"partly_cloudy": "res://assets/showcase/surface/surface_weather_partly_cloudy_grade.png",
+	"cloudy": "res://assets/showcase/surface/surface_weather_cloudy_grade.png",
+	"rain": "res://assets/showcase/surface/surface_weather_rain_grade.png",
+	"fog": "res://assets/showcase/surface/surface_weather_fog_grade.png",
+}
+const WEATHER_OVERLAY_PATHS := {
+	"rain": "res://assets/showcase/surface/surface_weather_rain_overlay.png",
+	"fog": "res://assets/showcase/surface/surface_weather_fog_overlay.png",
+}
 
 var simulator: FishingSimulator
 var fish_data: Dictionary = {}
+var trip_stats: Dictionary = {}
 var _time: float = 0.0
 var _last_state: int = -1
 var _bobber_dip: float = 0.0
@@ -55,11 +66,14 @@ var _surface_scene_casting: Texture2D
 var _surface_scene_waiting: Texture2D
 var _surface_scene_approach: Texture2D
 var _surface_scene_bite: Texture2D
+var _weather_grades: Dictionary = {}
+var _weather_overlays: Dictionary = {}
 
 
 func bind_simulator(value: FishingSimulator) -> void:
 	simulator = value
 	fish_data = simulator.fish_data
+	trip_stats = simulator.player_stats.duplicate(true)
 	_last_state = -1
 	_bobber_dip = 0.0
 	_splash = 0.0
@@ -142,11 +156,21 @@ func _load_surface_assets() -> void:
 	_surface_scene_waiting = _load_texture_if_exists(SURFACE_SCENE_WAITING_PATH)
 	_surface_scene_approach = _load_texture_if_exists(SURFACE_SCENE_APPROACH_PATH)
 	_surface_scene_bite = _load_texture_if_exists(SURFACE_SCENE_BITE_PATH)
+	for weather_id in WEATHER_GRADE_PATHS.keys():
+		_weather_grades[weather_id] = _load_texture_if_exists(String(WEATHER_GRADE_PATHS[weather_id]))
+	for weather_id in WEATHER_OVERLAY_PATHS.keys():
+		_weather_overlays[weather_id] = _load_texture_if_exists(String(WEATHER_OVERLAY_PATHS[weather_id]))
 
 
 func _load_texture_if_exists(path: String) -> Texture2D:
-	if ResourceLoader.exists(path) or FileAccess.file_exists(path):
-		return load(path) as Texture2D
+	if ResourceLoader.exists(path):
+		var texture := load(path) as Texture2D
+		if texture != null:
+			return texture
+	if FileAccess.file_exists(path):
+		var image := Image.new()
+		if image.load(path) == OK:
+			return ImageTexture.create_from_image(image)
 	return null
 
 
@@ -163,16 +187,38 @@ func _draw_asset_scene() -> void:
 	_draw_asset_line_and_bobber(horizon)
 	if _surface_color_grade != null:
 		_draw_cover_texture(_surface_color_grade, rect, Color(1.0, 1.0, 1.0, 0.64), Vector2(0.5, 0.50))
+	_draw_weather_overlay(rect)
 	_draw_hit_flash()
 	_draw_frame()
 
 
 func _draw_state_plate_scene() -> void:
+	var rect := Rect2(Vector2.ZERO, size)
 	var texture := _surface_scene_texture_for_state()
-	_draw_cover_texture(texture, Rect2(Vector2.ZERO, size), Color.WHITE, Vector2(0.5, 0.50))
+	_draw_cover_texture(texture, rect, Color.WHITE, Vector2(0.5, 0.50))
+	_draw_weather_overlay(rect)
 	if _state() == FishingSimulator.State.BITE:
 		_draw_hit_flash()
 	_draw_frame()
+
+
+func _draw_weather_overlay(rect: Rect2) -> void:
+	var weather_id := _weather_id()
+	if weather_id == "sunny":
+		return
+	var grade := _weather_grades.get(weather_id, null) as Texture2D
+	if grade != null:
+		_draw_cover_texture(grade, rect, Color.WHITE, Vector2(0.5, 0.50))
+	var overlay := _weather_overlays.get(weather_id, null) as Texture2D
+	if overlay != null:
+		_draw_cover_texture(overlay, rect, Color.WHITE, Vector2(0.5, 0.50))
+
+
+func _weather_id() -> String:
+	var weather_id := String(trip_stats.get("weather_id", "sunny"))
+	if weather_id.strip_edges().is_empty():
+		return "sunny"
+	return weather_id
 
 
 func _surface_scene_texture_for_state() -> Texture2D:

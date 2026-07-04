@@ -9,11 +9,13 @@ func _initialize() -> void:
 	var game_data := GameDataScript.new()
 	var failures: Array[String] = []
 	_check_spot_master(game_data, failures)
+	_check_environment_master(game_data, failures)
 	_check_rig_master(game_data, failures)
 	_check_level_gates(game_data, failures)
 	_check_boat_gates(game_data, failures)
 	_check_expected_rates(game_data, failures)
 	_check_rig_encounter_modifiers(game_data, failures)
+	_check_environment_encounter_modifiers(game_data, failures)
 	_check_boss_challenge_rewards(game_data, failures)
 	_print_sample_summary(game_data)
 	if not failures.is_empty():
@@ -61,6 +63,43 @@ func _check_spot_master(game_data: Object, failures: Array[String]) -> void:
 			failures.append("%s has negative required_boat_rank" % spot_id)
 		if required_boat_rank > 0 and game_data.get_required_boat_for_rank(required_boat_rank).is_empty():
 			failures.append("%s requires missing boat rank %d" % [spot_id, required_boat_rank])
+
+
+func _check_environment_master(game_data: Object, failures: Array[String]) -> void:
+	var environment_ids: Array[String] = game_data.get_all_fishing_environment_ids()
+	if environment_ids.size() < 5:
+		failures.append("expected at least 5 fishing environments, got %d" % environment_ids.size())
+	if not environment_ids.has(game_data.DEFAULT_FISHING_ENVIRONMENT_ID):
+		failures.append("environment list missing default %s" % game_data.DEFAULT_FISHING_ENVIRONMENT_ID)
+	var weather_ids: Array[String] = []
+	var total_weight := 0.0
+	for environment_id in environment_ids:
+		var environment: Dictionary = game_data.get_fishing_environment(environment_id)
+		for key in ["id", "weather_id", "weather_label", "wind_id", "wind_label", "surface_bgm_key", "weight", "fish_weight_modifiers"]:
+			if not environment.has(key):
+				failures.append("%s missing environment key %s" % [environment_id, key])
+		var weather_id := String(environment.get("weather_id", ""))
+		if weather_id.is_empty():
+			failures.append("%s weather_id must not be empty" % environment_id)
+		elif weather_id not in weather_ids:
+			weather_ids.append(weather_id)
+		var weight := float(environment.get("weight", 0.0))
+		if weight <= 0.0:
+			failures.append("%s environment weight must be positive" % environment_id)
+		total_weight += maxf(0.0, weight)
+		var modifiers: Dictionary = environment.get("fish_weight_modifiers", {})
+		for fish_id_variant in modifiers.keys():
+			var fish_id := String(fish_id_variant)
+			if game_data.get_fish(fish_id).is_empty():
+				failures.append("%s modifies unknown fish %s" % [environment_id, fish_id])
+				continue
+			var modifier := float(modifiers[fish_id])
+			if modifier <= 0.0 or modifier > 1.8:
+				failures.append("%s fish=%s environment modifier %.2f outside 0..1.8" % [environment_id, fish_id, modifier])
+	if weather_ids.size() != 5:
+		failures.append("expected 5 weather ids, got %d: %s" % [weather_ids.size(), ", ".join(PackedStringArray(weather_ids))])
+	if total_weight <= 0.0:
+		failures.append("environment total weight must be positive")
 
 
 func _check_rig_master(game_data: Object, failures: Array[String]) -> void:
@@ -189,6 +228,30 @@ func _check_rig_encounter_modifiers(game_data: Object, failures: Array[String]) 
 					failures.append(
 						"%s rig=%s fish=%s expected %.3f got %.3f"
 						% [spot_id, rig_id, fish_id, expected, actual]
+					)
+
+
+func _check_environment_encounter_modifiers(game_data: Object, failures: Array[String]) -> void:
+	for spot_id in game_data.get_all_fishing_spot_ids():
+		var spot: Dictionary = game_data.get_fishing_spot(spot_id)
+		var baseline: Dictionary = game_data.encounter_weights(10, spot_id)
+		for environment_id in game_data.get_all_fishing_environment_ids():
+			var environment_weights: Dictionary = game_data.encounter_weights(10, spot_id, "", environment_id)
+			if bool(spot.get("boss_spot", false)):
+				if not _weights_equal(baseline, environment_weights):
+					failures.append("%s boss spot should ignore environment modifier for %s" % [spot_id, environment_id])
+				continue
+			if environment_weights.is_empty():
+				failures.append("%s environment=%s has no encounter weights" % [spot_id, environment_id])
+				continue
+			for fish_id_variant in baseline.keys():
+				var fish_id := String(fish_id_variant)
+				var expected := float(baseline[fish_id]) * float(game_data.fishing_environment_fish_modifier(environment_id, fish_id))
+				var actual := float(environment_weights.get(fish_id, -1.0))
+				if not _nearly_equal(actual, expected):
+					failures.append(
+						"%s environment=%s fish=%s expected %.3f got %.3f"
+						% [spot_id, environment_id, fish_id, expected, actual]
 					)
 
 

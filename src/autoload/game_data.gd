@@ -1032,6 +1032,14 @@ const FISHING_SPOTS: Dictionary = {
 }
 
 const DEFAULT_FISHING_ENVIRONMENT_ID := "sunny_calm"
+const FISHING_ENVIRONMENT_ORDER: Array[String] = [
+	"sunny_calm",
+	"sunny_windy",
+	"partly_cloudy",
+	"cloudy",
+	"rain",
+	"fog",
+]
 
 const FISHING_ENVIRONMENTS: Dictionary = {
 	"sunny_calm":
@@ -1042,7 +1050,13 @@ const FISHING_ENVIRONMENTS: Dictionary = {
 		"wind_id": "weak",
 		"wind_label": "風 弱",
 		"surface_bgm_key": "calm",
-		"weight": 0.70,
+		"weight": 0.30,
+		"fish_weight_modifiers": {
+			"aji": 1.15,
+			"iwashi": 1.15,
+			"shirogisu": 1.10,
+			"isaki": 1.08,
+		},
 	},
 	"sunny_windy":
 	{
@@ -1052,7 +1066,84 @@ const FISHING_ENVIRONMENTS: Dictionary = {
 		"wind_id": "strong",
 		"wind_label": "風 強",
 		"surface_bgm_key": "windy",
-		"weight": 0.30,
+		"weight": 0.10,
+		"fish_weight_modifiers": {
+			"saba": 1.25,
+			"kamasu": 1.25,
+			"tachiuo": 1.18,
+			"shiira": 1.15,
+		},
+	},
+	"partly_cloudy":
+	{
+		"id": "partly_cloudy",
+		"weather_id": "partly_cloudy",
+		"weather_label": "晴れ曇り",
+		"wind_id": "weak",
+		"wind_label": "風 弱",
+		"surface_bgm_key": "calm",
+		"weight": 0.22,
+		"fish_weight_modifiers": {
+			"mejina": 1.12,
+			"isaki": 1.15,
+			"kawahagi": 1.12,
+			"madai": 1.10,
+			"bora": 1.08,
+		},
+	},
+	"cloudy":
+	{
+		"id": "cloudy",
+		"weather_id": "cloudy",
+		"weather_label": "曇り",
+		"wind_id": "weak",
+		"wind_label": "風 弱",
+		"surface_bgm_key": "calm",
+		"weight": 0.18,
+		"fish_weight_modifiers": {
+			"kasago": 1.20,
+			"mebaru": 1.35,
+			"ainame": 1.25,
+			"suzuki": 1.35,
+			"ishidai": 1.15,
+		},
+	},
+	"rain":
+	{
+		"id": "rain",
+		"weather_id": "rain",
+		"weather_label": "小雨",
+		"wind_id": "strong",
+		"wind_label": "風 強",
+		"surface_bgm_key": "windy",
+		"weight": 0.12,
+		"fish_weight_modifiers": {
+			"suzuki": 1.80,
+			"mebaru": 1.45,
+			"kasago": 1.25,
+			"bora": 1.25,
+			"tachiuo": 1.20,
+			"kue": 1.12,
+		},
+	},
+	"fog":
+	{
+		"id": "fog",
+		"weather_id": "fog",
+		"weather_label": "霧",
+		"wind_id": "weak",
+		"wind_label": "風 弱",
+		"surface_bgm_key": "calm",
+		"weight": 0.08,
+		"fish_weight_modifiers": {
+			"hirame": 1.25,
+			"kochi": 1.20,
+			"akahata": 1.25,
+			"kue": 1.35,
+			"rouninaji": 1.25,
+			"kajiki": 1.20,
+			"hiramasa": 1.18,
+		},
 	},
 }
 
@@ -1317,14 +1408,14 @@ func get_fishing_environment(environment_id: String) -> Dictionary:
 
 func roll_fishing_environment() -> Dictionary:
 	var total_weight := 0.0
-	for environment_variant in FISHING_ENVIRONMENTS.values():
-		var environment: Dictionary = environment_variant
+	for environment_id in get_all_fishing_environment_ids():
+		var environment: Dictionary = FISHING_ENVIRONMENTS[environment_id]
 		total_weight += maxf(0.0, float(environment.get("weight", 1.0)))
 	if total_weight <= 0.0:
 		return get_fishing_environment(DEFAULT_FISHING_ENVIRONMENT_ID)
 	var target := _rng.randf_range(0.0, total_weight)
 	var current := 0.0
-	for environment_id in FISHING_ENVIRONMENTS.keys():
+	for environment_id in get_all_fishing_environment_ids():
 		var environment: Dictionary = FISHING_ENVIRONMENTS[environment_id]
 		current += maxf(0.0, float(environment.get("weight", 1.0)))
 		if target <= current:
@@ -1370,6 +1461,14 @@ func get_all_fishing_spot_ids() -> Array[String]:
 	return ids
 
 
+func get_all_fishing_environment_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for environment_id in FISHING_ENVIRONMENT_ORDER:
+		if FISHING_ENVIRONMENTS.has(environment_id):
+			ids.append(environment_id)
+	return ids
+
+
 func get_unlocked_fishing_spot_ids(player_level: int) -> Array[String]:
 	var ids: Array[String] = []
 	for spot_id in FISHING_SPOT_ORDER:
@@ -1411,6 +1510,13 @@ func rig_supports_bait(rig_id: String, bait_type: String) -> bool:
 	if bait_type.strip_edges().is_empty():
 		return false
 	return rig_bait_types(rig_id).has(bait_type)
+
+
+func fishing_environment_fish_modifier(environment_id: String, fish_id: String) -> float:
+	var fish := get_fish(fish_id)
+	if fish.is_empty():
+		return 1.0
+	return _environment_weight_modifier(fish_id, fish, environment_id)
 
 
 func get_all_boat_ids() -> Array[String]:
@@ -1520,7 +1626,8 @@ func get_recipes_for_fish(fish_id: String, player_level: int) -> Array[Dictionar
 func encounter_weights(
 	player_level: int,
 	spot_id: String = DEFAULT_FISHING_SPOT_ID,
-	rig_id: String = ""
+	rig_id: String = "",
+	environment_id: String = ""
 ) -> Dictionary:
 	var requested_spot_id := _resolved_spot_id(spot_id)
 	var requested_spot: Dictionary = FISHING_SPOTS[requested_spot_id]
@@ -1532,6 +1639,10 @@ func encounter_weights(
 	var common_modifier := float(spot.get("common_modifier", 1.0))
 	var apply_rig_modifier := (
 		not rig_id.strip_edges().is_empty()
+		and not bool(requested_spot.get("boss_spot", false))
+	)
+	var apply_environment_modifier := (
+		not environment_id.strip_edges().is_empty()
 		and not bool(requested_spot.get("boss_spot", false))
 	)
 	for fish_id_variant in FISH.keys():
@@ -1548,6 +1659,8 @@ func encounter_weights(
 			modifier = float(modifiers[fish_id])
 		if apply_rig_modifier:
 			modifier *= _rig_weight_modifier(fish, rig_id)
+		if apply_environment_modifier:
+			modifier *= _environment_weight_modifier(fish_id, fish, environment_id)
 		var weight := float(fish.get("weight", 0.0)) * maxf(0.0, modifier)
 		if weight <= 0.0:
 			continue
@@ -1558,9 +1671,10 @@ func encounter_weights(
 func roll_normal_fish(
 	player_level: int,
 	spot_id: String = DEFAULT_FISHING_SPOT_ID,
-	rig_id: String = ""
+	rig_id: String = "",
+	environment_id: String = ""
 ) -> Dictionary:
-	var weights := encounter_weights(player_level, spot_id, rig_id)
+	var weights := encounter_weights(player_level, spot_id, rig_id, environment_id)
 	var candidate_ids: Array[String] = []
 	var total_weight := 0.0
 	for fish_id_variant in weights.keys():
@@ -1616,3 +1730,13 @@ func _rig_weight_modifier(fish: Dictionary, rig_id: String) -> float:
 	if rig_supports_bait(rig_id, preferred_bait):
 		return RIG_MATCH_WEIGHT_MULTIPLIER
 	return RIG_MISMATCH_WEIGHT_MULTIPLIER
+
+
+func _environment_weight_modifier(fish_id: String, _fish: Dictionary, environment_id: String) -> float:
+	var environment := get_fishing_environment(environment_id)
+	if environment.is_empty():
+		return 1.0
+	var modifiers: Dictionary = environment.get("fish_weight_modifiers", {})
+	if not modifiers.has(fish_id):
+		return 1.0
+	return maxf(0.0, float(modifiers[fish_id]))
