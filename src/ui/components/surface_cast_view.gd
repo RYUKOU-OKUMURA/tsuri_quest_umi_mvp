@@ -204,11 +204,11 @@ func _draw_asset_scene() -> void:
 
 func _draw_state_plate_scene() -> void:
 	var rect := Rect2(Vector2.ZERO, size)
-	var weather_ready_texture := _ready_weather_scene_texture() if _state() == FishingSimulator.State.READY else null
-	var texture := weather_ready_texture if weather_ready_texture != null else _surface_scene_texture_for_state()
+	var weather_scene_texture := _weather_scene_texture_for_state()
+	var texture := weather_scene_texture if weather_scene_texture != null else _surface_scene_texture_for_state()
 	_draw_cover_texture(texture, rect, Color.WHITE, Vector2(0.5, 0.50))
-	if weather_ready_texture != null:
-		_draw_weather_effect_overlay(rect)
+	if weather_scene_texture != null:
+		_draw_weather_scene_state_effects(rect)
 	else:
 		_draw_weather_overlay(rect)
 	if _state() == FishingSimulator.State.BITE:
@@ -234,6 +234,17 @@ func _draw_weather_effect_overlay(rect: Rect2) -> void:
 		_draw_cover_texture(overlay, rect, Color.WHITE, Vector2(0.5, 0.50))
 
 
+func _draw_weather_scene_state_effects(rect: Rect2) -> void:
+	_draw_weather_effect_overlay(rect)
+	var state := _state()
+	if state == FishingSimulator.State.READY or state == FishingSimulator.State.CASTING:
+		return
+	var horizon := _asset_horizon()
+	_draw_asset_fish_shadow(horizon)
+	if state == FishingSimulator.State.BITE:
+		_draw_asset_bite_splash(_bobber_target_position(horizon))
+
+
 func _weather_id() -> String:
 	var weather_id := String(trip_stats.get("weather_id", "sunny"))
 	if weather_id.strip_edges().is_empty():
@@ -243,6 +254,17 @@ func _weather_id() -> String:
 
 func _ready_weather_scene_texture() -> Texture2D:
 	return _surface_scene_ready_weather.get(_weather_id(), null) as Texture2D
+
+
+func _weather_scene_texture_for_state() -> Texture2D:
+	var texture := _ready_weather_scene_texture()
+	if texture == null:
+		return null
+	if _state() == FishingSimulator.State.READY:
+		return texture
+	if _weather_id() == "sunny":
+		return null
+	return texture
 
 
 func _surface_scene_texture_for_state() -> Texture2D:

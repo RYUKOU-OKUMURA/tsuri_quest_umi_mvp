@@ -23,7 +23,13 @@ func _ready() -> void:
 
 	var screen := FishingScreen.new()
 	screen.theme = ThemeFactory.build_theme()
-	screen.configure({})
+	var config := {}
+	var environment_id := OS.get_environment("TSURI_SURFACE_STATE_ENVIRONMENT_ID")
+	if not environment_id.strip_edges().is_empty():
+		var environment := GameData.get_fishing_environment(environment_id)
+		config["continue_trip"] = true
+		config["trip_stats"] = _trip_stats_for_environment(environment)
+	screen.configure(config)
 	screen.size = Vector2(VW)
 	vp.add_child(screen)
 
@@ -57,6 +63,22 @@ func _ready() -> void:
 	print(OUT_APPROACH)
 	print(OUT_BITE)
 	get_tree().quit()
+
+
+func _trip_stats_for_environment(environment: Dictionary) -> Dictionary:
+	var stats := PlayerProgress.get_base_stats()
+	stats["meal_buff"] = {}
+	stats["environment_id"] = String(environment.get("id", GameData.DEFAULT_FISHING_ENVIRONMENT_ID))
+	stats["weather_id"] = String(environment.get("weather_id", "sunny"))
+	stats["weather_label"] = String(environment.get("weather_label", "快晴"))
+	stats["wind_id"] = String(environment.get("wind_id", "weak"))
+	stats["wind_label"] = String(environment.get("wind_label", "風 弱"))
+	stats["surface_bgm_key"] = String(environment.get("surface_bgm_key", "calm"))
+	var rig := GameData.get_rig(GameData.DEFAULT_RIG_ID)
+	stats["rig_id"] = GameData.DEFAULT_RIG_ID
+	stats["rig_name"] = String(rig.get("name", "サビキ仕掛け"))
+	stats["rig_bait_types"] = GameData.rig_bait_types(GameData.DEFAULT_RIG_ID)
+	return stats
 
 
 func _wait_until(screen: Node, target_state: int, timeout: float) -> void:
