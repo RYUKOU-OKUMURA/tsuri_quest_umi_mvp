@@ -12,21 +12,21 @@ const DEFAULT_RIG_ID := "sabiki"
 const RIG_MATCH_WEIGHT_MULTIPLIER := 2.5
 const RIG_MISMATCH_WEIGHT_MULTIPLIER := 0.4
 
-const BOSS_FIRST_CLEAR_REWARDS := GameCatalogData.BOSS_FIRST_CLEAR_REWARDS
-const FISH := GameCatalogData.FISH
-const COMMON_LOW_LEVEL_FISH_IDS := GameCatalogData.COMMON_LOW_LEVEL_FISH_IDS
-const NORMAL_FISHING_SPOT_IDS := GameCatalogData.NORMAL_FISHING_SPOT_IDS
-const FISHING_SPOT_ORDER := GameCatalogData.FISHING_SPOT_ORDER
-const FISHING_SPOTS := GameCatalogData.FISHING_SPOTS
-const FISHING_ENVIRONMENT_ORDER := GameCatalogData.FISHING_ENVIRONMENT_ORDER
-const FISHING_ENVIRONMENTS := GameCatalogData.FISHING_ENVIRONMENTS
-const RECIPES := GameCatalogData.RECIPES
-const ROD_ORDER := GameCatalogData.ROD_ORDER
-const RODS := GameCatalogData.RODS
-const RIG_ORDER := GameCatalogData.RIG_ORDER
-const RIGS := GameCatalogData.RIGS
-const BOAT_ORDER := GameCatalogData.BOAT_ORDER
-const BOATS := GameCatalogData.BOATS
+const BOSS_FIRST_CLEAR_REWARDS: Dictionary = GameCatalogData.BOSS_FIRST_CLEAR_REWARDS
+const FISH: Dictionary = GameCatalogData.FISH
+const COMMON_LOW_LEVEL_FISH_IDS: Array[String] = GameCatalogData.COMMON_LOW_LEVEL_FISH_IDS
+const NORMAL_FISHING_SPOT_IDS: Array[String] = GameCatalogData.NORMAL_FISHING_SPOT_IDS
+const FISHING_SPOT_ORDER: Array[String] = GameCatalogData.FISHING_SPOT_ORDER
+const FISHING_SPOTS: Dictionary = GameCatalogData.FISHING_SPOTS
+const FISHING_ENVIRONMENT_ORDER: Array[String] = GameCatalogData.FISHING_ENVIRONMENT_ORDER
+const FISHING_ENVIRONMENTS: Dictionary = GameCatalogData.FISHING_ENVIRONMENTS
+const RECIPES: Dictionary = GameCatalogData.RECIPES
+const ROD_ORDER: Array[String] = GameCatalogData.ROD_ORDER
+const RODS: Dictionary = GameCatalogData.RODS
+const RIG_ORDER: Array[String] = GameCatalogData.RIG_ORDER
+const RIGS: Dictionary = GameCatalogData.RIGS
+const BOAT_ORDER: Array[String] = GameCatalogData.BOAT_ORDER
+const BOATS: Dictionary = GameCatalogData.BOATS
 
 const DEFAULT_FISHING_ENVIRONMENT_ID := "sunny_calm"
 

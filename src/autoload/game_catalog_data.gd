@@ -1,4 +1,9 @@
 extends RefCounted
+## ゲームの静的データカタログ（魚・釣り場・環境・レシピ・装備・船）。
+# const テーブルのみを置き、ロジック関数は持たない。参照は GameData のエイリアス経由。
+# 注意: FISHING_SPOTS の "required_boat_rank": 0 は GameData.NO_BOAT_RANK、
+# harbor_boulder の "unlock_level": 5 は GameData.BOSS_UNLOCK_LEVEL と同値。
+# これらのルール定数を変える場合は本ファイルの該当値も揃えること。
 
 const BOSS_FIRST_CLEAR_REWARDS: Dictionary = {
 	"boss_kurodai":
