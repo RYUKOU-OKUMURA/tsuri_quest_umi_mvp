@@ -154,7 +154,7 @@ func make_root_margin(margin: int = 18) -> MarginContainer:
 	return root
 
 
-func make_label(
+static func make_label(
 	text: String,
 	font_size: int = 18,
 	color: Color = Palette.TEXT_DARK,
@@ -172,7 +172,7 @@ func make_label(
 	return label
 
 
-func make_body_label(
+static func make_body_label(
 	text: String,
 	font_size: int = 18,
 	color: Color = Palette.TEXT_DARK,
@@ -186,7 +186,7 @@ func make_body_label(
 
 
 # 落とし影付きラベル（明背景でタイトルを目立たせる）。
-func make_shadow_label(
+static func make_shadow_label(
 	text: String,
 	font_size: int = 18,
 	color: Color = Palette.TEXT_DARK,
