@@ -631,34 +631,60 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	detail_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(detail_panel)
 	var detail_layout := VBoxContainer.new()
-	detail_layout.add_theme_constant_override("separation", 3)
+	detail_layout.add_theme_constant_override("separation", 5)
 	detail_panel.add_child(detail_layout)
-	_dish_title = make_label(
+	var title_plate := _panel_box(
+		Palette.COOKING_DETAIL_ROW_FILL,
+		Palette.COOKING_DETAIL_ROW_BORDER,
+		Palette.COOKING_DETAIL_ROW_INNER,
+		3
+	)
+	title_plate.name = "SelectedDishTitlePlate"
+	title_plate.custom_minimum_size = Vector2(0.0, 68.0)
+	title_plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail_layout.add_child(title_plate)
+	var title_stack := VBoxContainer.new()
+	title_stack.add_theme_constant_override("separation", 0)
+	title_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	title_plate.add_child(title_stack)
+	_dish_title = make_shadow_label(
 		"料理を選んでください",
-		27,
+		31,
 		Palette.COOKING_DETAIL_TITLE_TEXT,
 		1,
 		Palette.COOKING_DETAIL_TITLE_OUTLINE
 	)
+	_dish_title.name = "SelectedDishTitle"
+	_dish_title.add_theme_font_override("font", GameFontsScript.extra_bold(get_theme_default_font()))
 	_dish_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_dish_title.custom_minimum_size = Vector2(0.0, 32.0)
-	detail_layout.add_child(_dish_title)
+	_dish_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_dish_title.custom_minimum_size = Vector2(0.0, 42.0)
+	_dish_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_dish_title.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_dish_title.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+	_dish_title.clip_text = false
+	title_stack.add_child(_dish_title)
 	_dish_subtitle = make_label("", 13, Palette.COOKING_DETAIL_SUBTITLE_TEXT)
+	_dish_subtitle.name = "SelectedDishSubtitle"
 	_dish_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_dish_subtitle.custom_minimum_size = Vector2(0.0, 16.0)
-	detail_layout.add_child(_dish_subtitle)
+	_dish_subtitle.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_dish_subtitle.custom_minimum_size = Vector2(0.0, 18.0)
+	_dish_subtitle.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_dish_subtitle.autowrap_mode = TextServer.AUTOWRAP_OFF
+	title_stack.add_child(_dish_subtitle)
 	var dish_frame := _panel_box(
 		Palette.COOKING_DETAIL_DISH_FRAME_FILL,
 		Palette.COOKING_DETAIL_DISH_FRAME_BORDER,
 		Palette.COOKING_DETAIL_PANEL_INNER,
 		4
 	)
-	dish_frame.custom_minimum_size = Vector2(0, 154)
+	dish_frame.custom_minimum_size = Vector2(0, 150)
 	dish_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_layout.add_child(dish_frame)
 	_dish_image = TextureRect.new()
 	_dish_image.name = "SelectedDishFeatureImage"
-	_dish_image.custom_minimum_size = Vector2(0, 144)
+	_dish_image.custom_minimum_size = Vector2(0, 140)
 	_dish_image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_dish_image.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_dish_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -712,7 +738,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 		5.0
 	)
 	action_panel.name = "CookActionRunway"
-	action_panel.custom_minimum_size = Vector2(0, 100)
+	action_panel.custom_minimum_size = Vector2(0, 96)
 	action_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_layout.add_child(action_panel)
 	var action_layout := VBoxContainer.new()

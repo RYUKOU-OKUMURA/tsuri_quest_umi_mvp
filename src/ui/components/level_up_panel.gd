@@ -472,7 +472,7 @@ func _build_screen() -> void:
 
 	_dialog = PanelContainer.new()
 	_dialog.name = "LevelUpDialog"
-	_dialog.custom_minimum_size = Vector2(1040.0, 520.0)
+	_dialog.custom_minimum_size = Vector2(1100.0, 590.0)
 	_dialog.add_theme_stylebox_override(
 		"panel",
 		_texture_style_box(
@@ -487,76 +487,93 @@ func _build_screen() -> void:
 
 	var box := VBoxContainer.new()
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_theme_constant_override("separation", 3)
+	box.add_theme_constant_override("separation", 4)
 	_dialog.add_child(box)
 
-	var title_band := HBoxContainer.new()
+	var title_band := _panel_box(
+		Palette.COOKING_LEVEL_SUMMARY_CARD_HEAD,
+		Palette.COOKING_LEVEL_MEDAL_EDGE,
+		Palette.GOLD_BRIGHT,
+		4
+	)
 	title_band.name = "LevelUpTitleBand"
-	title_band.alignment = BoxContainer.ALIGNMENT_CENTER
-	title_band.add_theme_constant_override("separation", 6)
-	title_band.custom_minimum_size = Vector2(940.0, 152.0)
+	title_band.custom_minimum_size = Vector2(1000.0, 172.0)
 	title_band.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(title_band)
+	var title_row := HBoxContainer.new()
+	title_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	title_row.add_theme_constant_override("separation", 8)
+	title_band.add_child(title_row)
 
 	var left_laurel := _level_asset_texture(
-		"LevelLaurelLeftAsset", LevelUpVisual.LAUREL_LEFT_ASSET, Vector2(142.0, 118.0)
+		"LevelLaurelLeftAsset", LevelUpVisual.LAUREL_LEFT_ASSET, Vector2(160.0, 136.0)
 	)
-	title_band.add_child(left_laurel)
+	title_row.add_child(left_laurel)
 
 	var title_stack := VBoxContainer.new()
 	title_stack.alignment = BoxContainer.ALIGNMENT_CENTER
 	title_stack.add_theme_constant_override("separation", 0)
-	title_stack.custom_minimum_size = Vector2(630.0, 148.0)
-	title_band.add_child(title_stack)
+	title_stack.custom_minimum_size = Vector2(650.0, 160.0)
+	title_row.add_child(title_stack)
 
 	var crown_visual := _level_asset_texture(
-		"LevelCrownAsset", LevelUpVisual.CROWN_ASSET, Vector2(214.0, 56.0)
+		"LevelCrownAsset", LevelUpVisual.CROWN_ASSET, Vector2(210.0, 44.0)
 	)
 	crown_visual.stretch_mode = TextureRect.STRETCH_SCALE
 	crown_visual.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	title_stack.add_child(crown_visual)
-	var crown_label := make_shadow_label("成長の証", 12, Palette.GOLD_BRIGHT, 2)
-	_set_label_min_height(crown_label, 12)
+	var crown_label := make_shadow_label("成長の証", 13, Palette.GOLD_BRIGHT, 2)
+	_set_label_min_height(crown_label, 13)
+	crown_label.custom_minimum_size.x = 180.0
 	crown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_stack.add_child(crown_label)
 
-	var title := make_label("LEVEL UP!", 34, Palette.GOLD_BRIGHT)
+	var title := make_shadow_label("LEVEL UP!", 64, Palette.GOLD_BRIGHT, 4, Palette.COOKING_LEVEL_DARK_INK)
 	title.name = "LevelUpTitle"
 	title.z_index = 2
-	_set_label_min_height(title, 34)
-	title.custom_minimum_size.y = maxf(title.custom_minimum_size.y, 56.0)
+	title.add_theme_font_override("font", GameFontsScript.extra_bold(get_theme_default_font()))
+	_set_label_min_height(title, 64)
+	title.custom_minimum_size = Vector2(650.0, maxf(title.custom_minimum_size.y, 92.0))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title.autowrap_mode = TextServer.AUTOWRAP_OFF
+	title.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+	title.clip_text = false
 	title_stack.add_child(title)
 
 	var right_laurel := _level_asset_texture(
-		"LevelLaurelRightAsset", LevelUpVisual.LAUREL_RIGHT_ASSET, Vector2(142.0, 118.0)
+		"LevelLaurelRightAsset", LevelUpVisual.LAUREL_RIGHT_ASSET, Vector2(160.0, 136.0)
 	)
-	title_band.add_child(right_laurel)
+	title_row.add_child(right_laurel)
 
-	_level_line = make_shadow_label("", 24, Palette.TEXT_BONE, 3)
+	_level_line = make_shadow_label("", 42, Palette.GOLD_BRIGHT, 4, Palette.COOKING_LEVEL_DARK_INK)
 	_level_line.name = "LevelUpLevelLine"
-	_set_label_min_height(_level_line, 24)
+	_level_line.add_theme_font_override("font", GameFontsScript.extra_bold(get_theme_default_font()))
+	_set_label_min_height(_level_line, 42)
+	_level_line.custom_minimum_size = Vector2(520.0, maxf(_level_line.custom_minimum_size.y, 58.0))
 	_level_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_level_line.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_level_line.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 	box.add_child(_level_line)
 
 	var source_line := make_label("食経験値が成長に変わった", 16, Palette.GAUGE_GREEN_HI)
 	source_line.name = "LevelUpSourceLine"
 	source_line.z_index = 2
 	_set_label_min_height(source_line, 16)
-	source_line.custom_minimum_size.y = maxf(source_line.custom_minimum_size.y, 24.0)
+	source_line.custom_minimum_size = Vector2(360.0, maxf(source_line.custom_minimum_size.y, 24.0))
 	source_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(source_line)
 
 	_stats_box = GridContainer.new()
 	_stats_box.columns = 2
 	_stats_box.add_theme_constant_override("h_separation", 10)
-	_stats_box.add_theme_constant_override("v_separation", 4)
-	_stats_box.custom_minimum_size = Vector2(830.0, 0.0)
+	_stats_box.add_theme_constant_override("v_separation", 5)
+	_stats_box.custom_minimum_size = Vector2(880.0, 0.0)
 	_stats_box.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(_stats_box)
 
 	_unlock_card = _panel_box(Palette.COOKING_LEVEL_SUMMARY_CARD_FILL, Palette.COOKING_LEVEL_MEDAL_LINE, Palette.GOLD_BRIGHT, 5)
-	_unlock_card.custom_minimum_size = Vector2(860.0, 132.0)
+	_unlock_card.custom_minimum_size = Vector2(900.0, 142.0)
 	_unlock_card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(_unlock_card)
 	var unlock_root := VBoxContainer.new()
@@ -568,7 +585,7 @@ func _build_screen() -> void:
 		"panel",
 		_style_box(Palette.COOKING_LEVEL_RIBBON_FILL, Palette.COOKING_LEVEL_RIBBON_BORDER, Palette.GOLD_BRIGHT, 3, 5)
 	)
-	_unlock_ribbon.custom_minimum_size = Vector2(0.0, 32.0)
+	_unlock_ribbon.custom_minimum_size = Vector2(0.0, 36.0)
 	unlock_root.add_child(_unlock_ribbon)
 	_unlock_ribbon_label = make_label("新たな釣り場が解放！", 22, Palette.COOKING_LEVEL_UNLOCK_TEXT)
 	_unlock_ribbon_label.name = "LevelUnlockRibbonLabel"
@@ -589,7 +606,7 @@ func _build_screen() -> void:
 	unlock_layout.add_theme_constant_override("separation", 10)
 	unlock_root.add_child(unlock_layout)
 	var unlock_icon := _medal_box()
-	unlock_icon.custom_minimum_size = Vector2(112.0, 0.0)
+	unlock_icon.custom_minimum_size = Vector2(126.0, 0.0)
 	unlock_layout.add_child(unlock_icon)
 	var unlock_text := VBoxContainer.new()
 	unlock_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -615,12 +632,12 @@ func _build_screen() -> void:
 	summary_cue.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	unlock_text.add_child(summary_cue)
 	var spot := _spot_thumbnail_box()
-	spot.custom_minimum_size = Vector2(210.0, 86.0)
+	spot.custom_minimum_size = Vector2(230.0, 92.0)
 	unlock_layout.add_child(spot)
 
-	_confirm_button = make_button("OK  成果確認へ", _close, 286.0, true)
+	_confirm_button = make_button("OK  成果確認へ", _close, 300.0, true)
 	_confirm_button.name = "LevelUpConfirmButton"
-	_confirm_button.custom_minimum_size = Vector2(286.0, 40.0)
+	_confirm_button.custom_minimum_size = Vector2(300.0, 42.0)
 	_confirm_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_apply_flow_button_style(_confirm_button)
 	_confirm_button.draw.connect(func() -> void: _draw_confirm_button_cue(_confirm_button))
@@ -640,14 +657,14 @@ func show_level_up(
 		_unlock_ribbon_visual.configure("新たな釣り場が解放！", 22, Palette.COOKING_LEVEL_UNLOCK_TEXT, Palette.COOKING_LEVEL_RIBBON_TEXT_SHADOW)
 		_unlock_tag.text = "挑戦解放"
 		_unlock_title.text = "港のぬしに挑戦できるようになった！"
-		_unlock_body.text = "食事でLv.%d到達。次の目標：港のぬし。港の大岩周辺で、本格ファイトが解放されます。" % GameData.BOSS_UNLOCK_LEVEL
+		_unlock_body.text = "Lv.%d到達。港の大岩周辺で、港のぬしに挑めます。" % GameData.BOSS_UNLOCK_LEVEL
 		_set_spot_copy("新釣り場", "港の大岩", "外洋への挑戦")
 	else:
 		_unlock_ribbon_label.text = "成長が進行！"
 		_unlock_ribbon_visual.configure("成長が進行！", 22, Palette.COOKING_LEVEL_UNLOCK_TEXT, Palette.COOKING_LEVEL_RIBBON_TEXT_SHADOW)
 		_unlock_tag.text = "能力上昇"
 		_unlock_title.text = "次の釣行へ向けて力がついた！"
-		_unlock_body.text = "Lv.%d到達。最大体力や技量が伸び、釣行の安定感が上がりました。ステータスで成長結果を確認しましょう。" % level_to
+		_unlock_body.text = "Lv.%d到達。能力が伸び、次の釣行が安定します。" % level_to
 		_set_spot_copy("成長記録", "次の釣行", "準備へ進む")
 	_present()
 
@@ -707,7 +724,7 @@ func _stat_row(row: Dictionary) -> PanelContainer:
 		"panel",
 		_style_box(Palette.COOKING_LEVEL_SUMMARY_CARD_HEAD, Palette.COOKING_LEVEL_BADGE_DARK, Palette.GOLD_DEEP, 3, 5)
 	)
-	panel.custom_minimum_size = Vector2(0.0, 46.0)
+	panel.custom_minimum_size = Vector2(0.0, 44.0)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var line := HBoxContainer.new()
 	line.add_theme_constant_override("separation", 6)
@@ -752,7 +769,7 @@ func _stat_row(row: Dictionary) -> PanelContainer:
 	var overlay := LevelStatTextVisual.new()
 	overlay.name = "LevelStatText%s" % _stat_row_suffix(String(row["icon"]))
 	overlay.z_index = 10
-	overlay.custom_minimum_size = Vector2(0.0, 46.0)
+	overlay.custom_minimum_size = Vector2(0.0, 44.0)
 	overlay.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	overlay.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	overlay.configure(String(row["name"]), "%s  ->  %s" % [old_text, new_text], gain.text, Palette.GAUGE_GREEN_HI)

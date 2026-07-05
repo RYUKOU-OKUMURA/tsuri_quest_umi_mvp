@@ -142,6 +142,10 @@ func _build_screen() -> void:
 	_scene_card.add_child(scene_box)
 	_scene_title = make_shadow_label("食べる", 27, Palette.GOLD_BRIGHT, 3)
 	_scene_title.name = "MealSceneTitle"
+	_scene_title.z_index = 8
+	_scene_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_scene_title.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_scene_title.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 	_set_label_min_height(_scene_title, 27)
 	_scene_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	scene_box.add_child(_scene_title)
@@ -228,11 +232,17 @@ func _build_screen() -> void:
 	banner_box.add_theme_constant_override("separation", 2)
 	_result_banner.add_child(banner_box)
 	_header_title = make_shadow_label("いただきます！", 32, Palette.COOKING_REWARD_BONUS_FLAG, 3)
+	_header_title.z_index = 8
+	_header_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_header_title.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_header_title.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 	_set_label_min_height(_header_title, 32)
 	_header_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_header_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	banner_box.add_child(_header_title)
 	_bridge_label = make_shadow_label("", 16, Palette.COOKING_REWARD_BRIDGE_TEXT, 1)
+	_bridge_label.z_index = 8
+	_bridge_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_set_label_min_height(_bridge_label, 16)
 	_bridge_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_bridge_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -336,14 +346,20 @@ func _build_screen() -> void:
 	_exp_focus_card.add_child(exp_focus_box)
 	var exp_focus_tag := make_shadow_label("食経験値", 22, Palette.TEXT_BONE, 3)
 	exp_focus_tag.name = "ExpFocusTag"
-	exp_focus_tag.z_index = 3
+	exp_focus_tag.z_index = 8
+	exp_focus_tag.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	exp_focus_tag.autowrap_mode = TextServer.AUTOWRAP_OFF
+	exp_focus_tag.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 	_set_label_min_height(exp_focus_tag, 22)
 	exp_focus_tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	exp_focus_tag.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	exp_focus_box.add_child(exp_focus_tag)
 	_exp_label = make_shadow_label("+0 EXP", 62, Palette.GOLD_BRIGHT, 7)
 	_exp_label.name = "ExpGainValue"
-	_exp_label.z_index = 3
+	_exp_label.z_index = 8
+	_exp_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_exp_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_exp_label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 	_set_label_min_height(_exp_label, 62)
 	_exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_exp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -355,7 +371,10 @@ func _build_screen() -> void:
 	exp_focus_box.add_child(_exp_bar)
 	_exp_progress_label = make_shadow_label("", 18, Palette.TEXT_BONE, 2)
 	_exp_progress_label.name = "ExpProgressText"
-	_exp_progress_label.z_index = 3
+	_exp_progress_label.z_index = 8
+	_exp_progress_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_exp_progress_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_exp_progress_label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 	_set_label_min_height(_exp_progress_label, 18)
 	_exp_progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_exp_progress_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -495,10 +514,10 @@ func show_reward(
 	if _dish_card_bridge != null:
 		_dish_card_bridge.visible = false
 	var dish_name := String(result.get("dish_name", "料理"))
-	_set_result_banner_height(92.0)
-	_set_header_title_font_size(30)
-	_set_bridge_font_size(14)
-	_set_exp_label_font_size(48)
+	_set_result_banner_height(104.0)
+	_set_header_title_font_size(34)
+	_set_bridge_font_size(16)
+	_set_exp_label_font_size(68)
 	_bridge_label.visible = true
 	_header_title.text = "食経験値が成長へ！" if leveled else "食経験値を獲得！"
 	_bridge_label.text = _growth_bridge_text(dish_name, leveled, level_before, level_after)
@@ -516,7 +535,7 @@ func show_reward(
 	_exp_trail_visual.visible = true
 	_exp_trail_visual.queue_redraw()
 	_set_confirm_button_emphasis(false)
-	_scene_caption.text = "%sから食経験値が流れ込む。" % dish_name
+	_scene_caption.text = "料理から食経験値が流れ込む。"
 	_scene_caption.visible = true
 	_scene_bonus_label.text = _meal_bonus_badge_text(result)
 	_scene_bonus_label.visible = true
@@ -540,17 +559,12 @@ func show_reward(
 		shown_max,
 	]
 	_exp_label.text = "+%d EXP" % int(result.get("total_exp", 0))
-	_exp_message_label.text = (
-		"体に力がみなぎってきた！\nLv.%dの成長が近づいた。"
-		% level_after
-		if leveled and level_after > 0
-		else "体に力がみなぎってきた！\n次の釣りも頑張れそうだ！"
-	)
+	_exp_message_label.text = "力がみなぎった！"
 	var buff := Dictionary(result.get("buff", {}))
 	_reward_cards.show_exp_gain(result, _buff_effect_text(buff))
 	_effect_name_label.text = String(buff.get("name", "次回効果"))
-	_effect_text_label.text = String(buff.get("text", "次の釣行で効果を得る"))
-	_effect_duration_label.text = "効果時間：1回の釣行で発動"
+	_effect_text_label.text = _compact_effect_preview_text(buff)
+	_effect_duration_label.text = "次回1回で発動"
 	_effect_preview_visual.queue_redraw()
 	if _exp_focus_burst_layer != null:
 		_exp_focus_burst_layer.queue_redraw()
@@ -594,6 +608,14 @@ func _buff_effect_text(buff: Dictionary) -> String:
 	if text.begins_with("次の釣行で"):
 		text = text.trim_prefix("次の釣行で")
 	return "%s / 1回の釣行で発動" % text
+
+
+func _compact_effect_preview_text(buff: Dictionary) -> String:
+	var text := String(buff.get("text", "効果を得る"))
+	if text.begins_with("次の釣行で"):
+		text = text.trim_prefix("次の釣行で")
+	text = text.replace("安全テンション域", "安全域")
+	return text.strip_edges()
 
 
 func _meal_buff_reward_text(buff: Dictionary) -> String:
@@ -1211,28 +1233,28 @@ func _apply_exp_gain_composition() -> void:
 	_set_dialog_reward_frame_style()
 	_set_result_banner_exp_gain_style()
 	if _scene_card != null:
-		_scene_card.custom_minimum_size = Vector2(340.0, 360.0)
+		_scene_card.custom_minimum_size = Vector2(294.0, 348.0)
 		_set_scene_card_exp_gain_style()
 	if _scene_title != null:
 		_scene_title.visible = true
 	if _scene_visual_stack != null:
-		_scene_visual_stack.custom_minimum_size = Vector2(0.0, 258.0)
+		_scene_visual_stack.custom_minimum_size = Vector2(0.0, 224.0)
 	if _scene_actor_panel != null:
 		_scene_actor_panel.visible = false
 	if _scene_table != null:
 		_scene_table.add_theme_constant_override("separation", 0)
 	if _scene_dish_image != null:
-		_scene_dish_image.custom_minimum_size = Vector2(306.0, 210.0)
+		_scene_dish_image.custom_minimum_size = Vector2(260.0, 178.0)
 	if _scene_caption != null:
 		_scene_caption.visible = true
 	if _scene_bonus_label != null:
 		_scene_bonus_label.visible = true
 	if _exp_focus_card != null:
-		_exp_focus_card.custom_minimum_size = Vector2(0.0, 306.0)
+		_exp_focus_card.custom_minimum_size = Vector2(0.0, 332.0)
 	if _exp_bar != null:
-		_exp_bar.custom_minimum_size = Vector2(0.0, 50.0)
+		_exp_bar.custom_minimum_size = Vector2(0.0, 60.0)
 	if _effect_preview_card != null:
-		_effect_preview_card.custom_minimum_size = Vector2(254.0, 360.0)
+		_effect_preview_card.custom_minimum_size = Vector2(224.0, 348.0)
 	if _meal_reward_cue != null:
 		_meal_reward_cue.visible = false
 		_meal_reward_cue.custom_minimum_size = Vector2(0.0, 0.0)
@@ -1254,7 +1276,7 @@ func _apply_exp_gain_composition() -> void:
 	if _dish_note_label != null:
 		_dish_note_label.visible = true
 	if _flow_row != null:
-		_flow_row.visible = true
+		_flow_row.visible = false
 		_flow_row.modulate.a = 0.18
 	_set_flow_row_compact(false)
 	if _confirm_button != null:
@@ -1392,6 +1414,10 @@ func _build_effect_preview_card(parent: HBoxContainer) -> void:
 	_effect_preview_card.add_child(box)
 
 	var title := make_shadow_label("次の釣行で効果！", 16, Palette.TEXT_BONE, 2)
+	title.z_index = 8
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.autowrap_mode = TextServer.AUTOWRAP_OFF
+	title.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 	_set_label_min_height(title, 16)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_color_override("font_color", Palette.TEXT_BONE)
@@ -1412,6 +1438,10 @@ func _build_effect_preview_card(parent: HBoxContainer) -> void:
 		2,
 		Palette.TEXT_BONE
 	)
+	_effect_name_label.z_index = 8
+	_effect_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_effect_name_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_effect_name_label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 	_set_label_min_height(_effect_name_label, 20)
 	_effect_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_effect_name_label)
@@ -1429,6 +1459,8 @@ func _build_effect_preview_card(parent: HBoxContainer) -> void:
 	_effect_text_label = make_shadow_label(
 		"", 13, Palette.COOKING_REWARD_DARK_TEXT, 1, Palette.TEXT_BONE
 	)
+	_effect_text_label.z_index = 8
+	_effect_text_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_set_label_min_height(_effect_text_label, 13, 2)
 	_effect_text_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_effect_text_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1437,6 +1469,8 @@ func _build_effect_preview_card(parent: HBoxContainer) -> void:
 	_effect_duration_label = make_shadow_label(
 		"", 12, Palette.COOKING_REWARD_EFFECT_DURATION_TEXT, 1, Palette.TEXT_BONE
 	)
+	_effect_duration_label.z_index = 8
+	_effect_duration_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_set_label_min_height(_effect_duration_label, 12)
 	_effect_duration_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_effect_duration_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

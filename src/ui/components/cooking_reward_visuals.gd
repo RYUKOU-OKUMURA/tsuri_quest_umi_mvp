@@ -719,13 +719,13 @@ class MealResultModeTabVisual:
 		var font := get_theme_default_font()
 		if font == null:
 			return
-		var plate := Rect2(Vector2(94.0, 6.0), Vector2(76.0, 28.0))
+		var plate := Rect2(Vector2(18.0, 6.0), Vector2(76.0, 28.0))
 		draw_rect(plate, Color(Palette.COOKING_REWARD_VISUAL_MODE_TAB_FILL, 0.92))
 		draw_rect(Rect2(plate.position + Vector2(2.0, 2.0), plate.size - Vector2(4.0, 4.0)), Color(Palette.COOKING_REWARD_VISUAL_MODE_TAB_INNER, 0.46))
 		draw_line(plate.position + Vector2(0.0, 1.0), plate.position + Vector2(plate.size.x, 1.0), Color(Palette.COOKING_REWARD_VISUAL_GOLD, 0.44), 1.5)
 		draw_line(plate.position + Vector2(0.0, plate.size.y - 1.0), plate.position + plate.size - Vector2(0.0, 1.0), Color(Palette.COOKING_REWARD_VISUAL_DARK_EDGE, 0.65), 1.5)
-		draw_line(Vector2(88.0, 8.0), Vector2(88.0, 31.0), Color(Palette.COOKING_REWARD_VISUAL_GOLD, 0.50), 1.5)
-		var baseline := Vector2(99.0, 27.0)
+		draw_line(Vector2(100.0, 8.0), Vector2(100.0, 31.0), Color(Palette.COOKING_REWARD_VISUAL_GOLD, 0.50), 1.5)
+		var baseline := Vector2(23.0, 27.0)
 		draw_string_outline(
 			font,
 			baseline,

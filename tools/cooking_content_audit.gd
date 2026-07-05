@@ -259,6 +259,9 @@ func _audit_cook_select() -> void:
 	_expect_named_node("COOK_SELECT", screen, "RecipeCard_PreviewMeuniere")
 	_expect_named_node("COOK_SELECT", screen, "RecipeBookButton")
 	_expect_named_node("COOK_SELECT", screen, "RecipeToDetailArrow")
+	_expect_named_node("COOK_SELECT", screen, "SelectedDishTitlePlate")
+	_expect_named_node("COOK_SELECT", screen, "SelectedDishTitle")
+	_expect_named_node("COOK_SELECT", screen, "SelectedDishSubtitle")
 	_expect_named_node("COOK_SELECT", screen, "CookDetailMaterialRow")
 	_expect_named_node("COOK_SELECT", screen, "CookDetailExpRow")
 	_expect_named_node("COOK_SELECT", screen, "CookDetailEffectRow")
@@ -318,17 +321,13 @@ func _audit_exp_gain() -> void:
 		screen,
 		[
 			"食経験値を獲得！",
-			"1 食事 完了",
-			"2 EXP 加算中",
-			"3 成長 進行中",
 			"アジの塩焼きの食経験値がたまり",
 			"アジの塩焼きを食べた！",
 			"次の釣行で効果！",
 			"EXP 80 / 150  ->  120 / 150",
 			"+40 EXP",
 			"初回ボーナス +20 EXP",
-			"次の釣行で最大体力 +5%",
-			"1回の釣行で発動",
+			"最大体力 +5%",
 			"プレイヤーLv.",
 			"Lv.4",
 			"120/150",
@@ -411,16 +410,13 @@ func _audit_exp_gain_level_up() -> void:
 		screen,
 		[
 			"食経験値が成長へ！",
-			"1 食事 完了",
-			"2 EXP 加算中",
-			"3 成長 解放",
 			"アジの塩焼きの食経験値が Lv.5 到達",
 			"アジの塩焼きを食べた！",
 			"次の釣行で効果！",
 			"EXP 130 / 150  ->  150 / 150",
 			"+40 EXP",
 			"初回ボーナス +20 EXP",
-			"1回の釣行で発動",
+			"最大体力 +5%",
 			"プレイヤーLv.",
 			"Lv.5",
 			"20/190",
@@ -617,8 +613,8 @@ func _audit_level_up() -> void:
 			"新たな釣り場が解放！",
 			"挑戦解放",
 			"港のぬしに挑戦できるようになった！",
-			"食事でLv.5到達",
-			"次の目標：港のぬし",
+			"Lv.5到達",
+			"港のぬしに挑めます",
 			"新釣り場",
 			"港の大岩",
 			"外洋への挑戦",
@@ -685,7 +681,8 @@ func _audit_status_summary() -> void:
 			"調理の成果を確認できます",
 			"Lv.5",
 			"20 / 190",
-			"次のレベルまで 170 EXP",
+			"次Lv",
+			"170 EXP",
 			"体力",
 			"攻撃力",
 			"防御力",
@@ -708,6 +705,7 @@ func _audit_status_summary() -> void:
 		]
 	)
 	_expect_named_node("STATUS_SUMMARY", status_panel, "StatusTitle")
+	_expect_named_node("STATUS_SUMMARY", status_panel, "StatusSubtitle")
 	_expect_named_node("STATUS_SUMMARY", status_panel, "StatusHeaderPlayerBadge")
 	_expect_named_node("STATUS_SUMMARY", status_panel, "StatusHeaderExpBox")
 	_expect_named_node("STATUS_SUMMARY", status_panel, "StatusHeaderLevel")
@@ -720,6 +718,15 @@ func _audit_status_summary() -> void:
 	_expect_named_node("STATUS_SUMMARY", status_panel, "StatusCardCooler")
 	_expect_named_node("STATUS_SUMMARY", status_panel, "StatusCardMoney")
 	_expect_named_node("STATUS_SUMMARY", status_panel, "StatusCardPlayTime")
+	_expect_named_node("STATUS_SUMMARY", status_panel, "StatusPlayerHero")
+	_expect_named_node("STATUS_SUMMARY", status_panel, "StatusPlayerPortrait")
+	_expect_named_node("STATUS_SUMMARY", status_panel, "StatusNextExpText")
+	_expect_named_node("STATUS_SUMMARY", status_panel, "StatusPlayerExpBar")
+	_expect_named_node("STATUS_SUMMARY", status_panel, "StatusStatRowEnergy")
+	_expect_named_node("STATUS_SUMMARY", status_panel, "StatusStatRowPower")
+	_expect_named_node("STATUS_SUMMARY", status_panel, "StatusStatRowDefense")
+	_expect_named_node("STATUS_SUMMARY", status_panel, "StatusStatRowSpeed")
+	_expect_named_node("STATUS_SUMMARY", status_panel, "StatusStatRowLuck")
 	_expect_texture_rect_path(
 		"STATUS_SUMMARY",
 		status_panel,

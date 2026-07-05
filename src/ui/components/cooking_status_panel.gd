@@ -544,17 +544,21 @@ func _build_header(parent: VBoxContainer) -> void:
 	row.add_child(title)
 
 	var subtitle := make_shadow_label("調理の成果を確認できます", 18, Palette.TEXT_BONE, 2)
+	subtitle.name = "StatusSubtitle"
+	subtitle.custom_minimum_size = Vector2(250.0, 42.0)
 	_set_label_min_height(subtitle, 18)
 	subtitle.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	subtitle.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	subtitle.autowrap_mode = TextServer.AUTOWRAP_OFF
+	subtitle.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 	row.add_child(subtitle)
 
 	var exp_box := _panel_box(Palette.COOKING_STATUS_PANEL_FILL, Palette.COOKING_STATUS_PANEL_BORDER_DARK, Palette.GOLD_DEEP, 3)
 	exp_box.name = "StatusHeaderExpBox"
-	exp_box.custom_minimum_size = Vector2(460.0, 0.0)
+	exp_box.custom_minimum_size = Vector2(540.0, 0.0)
 	row.add_child(exp_box)
 	var exp_row := HBoxContainer.new()
-	exp_row.add_theme_constant_override("separation", 10)
+	exp_row.add_theme_constant_override("separation", 8)
 	exp_box.add_child(exp_row)
 	var player_badge := HeaderPlayerBadgeVisual.new()
 	player_badge.name = "StatusHeaderPlayerBadge"
@@ -576,13 +580,14 @@ func _build_header(parent: VBoxContainer) -> void:
 	_header_exp_bar = GaugeBarScript.new()
 	_header_exp_bar.name = "StatusHeaderExpBar"
 	_header_exp_bar.show_value = false
-	_header_exp_bar.custom_minimum_size = Vector2(0.0, 20.0)
+	_header_exp_bar.custom_minimum_size = Vector2(170.0, 20.0)
 	_header_exp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_header_exp_bar.set_colors(Palette.GAUGE_CYAN, Palette.GAUGE_CYAN_HI)
 	exp_row.add_child(_header_exp_bar)
 	_header_exp_label = make_label("", 16, Palette.TEXT_BONE, 2, Palette.TEXT_OUTLINE_DARK)
 	_header_exp_label.name = "StatusHeaderExpValue"
-	_header_exp_label.custom_minimum_size = Vector2(92.0, 26.0)
+	_header_exp_label.custom_minimum_size = Vector2(120.0, 26.0)
+	_header_exp_label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 	_header_exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_header_exp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	exp_row.add_child(_header_exp_label)
@@ -609,23 +614,10 @@ func _build_cards(parent: VBoxContainer) -> void:
 
 func _build_player_card(parent: HBoxContainer) -> void:
 	var card := _status_card(parent, "プレイヤー")
-	var portrait := _portrait_box("PLAYER", Palette.GAUGE_CYAN_HI)
-	portrait.custom_minimum_size = Vector2(0.0, 126.0)
-	card.add_child(portrait)
-	_level_label = _value_plate(card, "", 20, Palette.TEXT_BONE, Palette.GAUGE_CYAN_HI)
-	_level_label.name = "StatusLevelValue"
-	_next_exp_label = make_label("", 16, Palette.COOKING_STATUS_EXP_TEXT, 1, Palette.COOKING_STATUS_TEXT_LIGHT_OUTLINE)
-	_set_label_min_height(_next_exp_label, 16)
-	_next_exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	card.add_child(_next_exp_label)
-	_exp_bar = GaugeBarScript.new()
-	_exp_bar.show_value = false
-	_exp_bar.custom_minimum_size = Vector2(0.0, 18.0)
-	_exp_bar.set_colors(Palette.GAUGE_CYAN, Palette.GAUGE_CYAN_HI)
-	card.add_child(_exp_bar)
+	_build_player_hero(card)
 	_stats_box = VBoxContainer.new()
 	_stats_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_stats_box.add_theme_constant_override("separation", 2)
+	_stats_box.add_theme_constant_override("separation", 4)
 	card.add_child(_stats_box)
 
 
@@ -635,7 +627,7 @@ func _build_meal_card(parent: HBoxContainer) -> void:
 	_meal_badge.name = "StatusMealBadge"
 	_meal_image = TextureRect.new()
 	_meal_image.name = "StatusMealDishImage"
-	_meal_image.custom_minimum_size = Vector2(0.0, 120.0)
+	_meal_image.custom_minimum_size = Vector2(0.0, 134.0)
 	_meal_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_meal_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	card.add_child(_meal_image)
@@ -650,7 +642,7 @@ func _build_meal_card(parent: HBoxContainer) -> void:
 func _build_cooler_card(parent: HBoxContainer) -> void:
 	var card := _status_card(parent, "クーラーボックス")
 	var visual := _portrait_box("COOLER", Palette.GAUGE_CYAN_HI)
-	visual.custom_minimum_size = Vector2(0.0, 130.0)
+	visual.custom_minimum_size = Vector2(0.0, 148.0)
 	card.add_child(visual)
 	_cooler_count_label = _value_plate(card, "", 20, Palette.TEXT_BONE, Palette.GAUGE_CYAN_HI)
 	_cooler_count_label.name = "StatusCoolerValue"
@@ -665,7 +657,7 @@ func _build_cooler_card(parent: HBoxContainer) -> void:
 func _build_money_card(parent: HBoxContainer) -> void:
 	var card := _status_card(parent, "所持金")
 	var visual := _portrait_box("GOLD", Palette.GOLD_BRIGHT)
-	visual.custom_minimum_size = Vector2(0.0, 130.0)
+	visual.custom_minimum_size = Vector2(0.0, 148.0)
 	card.add_child(visual)
 	_money_label = _value_plate(card, "", 20, Palette.TEXT_BONE, Palette.GOLD_BRIGHT)
 	_money_label.name = "StatusMoneyValue"
@@ -675,7 +667,7 @@ func _build_money_card(parent: HBoxContainer) -> void:
 func _build_play_card(parent: HBoxContainer) -> void:
 	var card := _status_card(parent, "プレイ時間")
 	var visual := _portrait_box("TIME", Palette.TEXT_BONE)
-	visual.custom_minimum_size = Vector2(0.0, 130.0)
+	visual.custom_minimum_size = Vector2(0.0, 148.0)
 	card.add_child(visual)
 	_play_label = _value_plate(card, "", 20, Palette.TEXT_BONE, Palette.GOLD_BRIGHT)
 	_play_label.name = "StatusPlayTimeValue"
@@ -728,7 +720,7 @@ func show_summary() -> void:
 		_exp_bar.max_value = maxf(1.0, float(next_exp))
 		_exp_bar.set_value(float(PlayerProgress.exp))
 		_header_exp_label.text = "%d / %d" % [PlayerProgress.exp, next_exp]
-		_next_exp_label.text = "次のレベルまで %d EXP" % maxi(0, next_exp - PlayerProgress.exp)
+		_next_exp_label.text = "次Lv\n%d EXP" % maxi(0, next_exp - PlayerProgress.exp)
 
 	_clear_container(_stats_box)
 	_stats_box.add_child(_stat_line("体力", "%d" % int(round(float(stats.get("max_energy", 0)))), Palette.GAUGE_RED_HI))
@@ -803,6 +795,70 @@ func _status_card(parent: HBoxContainer, title: String) -> VBoxContainer:
 	title_label.add_theme_color_override("font_shadow_color", Palette.COOKING_STATUS_TITLE_SHADOW)
 	title_band.add_child(title_label)
 	return box
+
+
+func _build_player_hero(parent: VBoxContainer) -> void:
+	var hero := _panel_box(
+		Palette.COOKING_STATUS_PANEL_FILL,
+		Palette.COOKING_STATUS_PANEL_BORDER_DARK,
+		Palette.GAUGE_CYAN_HI,
+		3
+	)
+	hero.name = "StatusPlayerHero"
+	hero.custom_minimum_size = Vector2(0.0, 154.0)
+	hero.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	parent.add_child(hero)
+
+	var row := HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", 10)
+	hero.add_child(row)
+
+	var portrait := _portrait_box("PLAYER", Palette.GAUGE_CYAN_HI)
+	portrait.custom_minimum_size = Vector2(96.0, 0.0)
+	portrait.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.add_child(portrait)
+
+	var stack := VBoxContainer.new()
+	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	stack.add_theme_constant_override("separation", 5)
+	row.add_child(stack)
+
+	_level_label = make_shadow_label("", 29, Palette.TEXT_BONE, 3)
+	_level_label.name = "StatusLevelValue"
+	_level_label.custom_minimum_size = Vector2(0.0, 40.0)
+	_level_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_level_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_level_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_level_label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+	stack.add_child(_level_label)
+
+	_next_exp_label = make_label(
+		"",
+		14,
+		Palette.COOKING_STATUS_EXP_TEXT,
+		1,
+		Palette.COOKING_STATUS_TEXT_LIGHT_OUTLINE
+	)
+	_next_exp_label.name = "StatusNextExpText"
+	_set_label_min_height(_next_exp_label, 14, 2)
+	_next_exp_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_next_exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_next_exp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_next_exp_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_next_exp_label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+	stack.add_child(_next_exp_label)
+
+	_exp_bar = GaugeBarScript.new()
+	_exp_bar.name = "StatusPlayerExpBar"
+	_exp_bar.show_value = false
+	_exp_bar.custom_minimum_size = Vector2(0.0, 22.0)
+	_exp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_exp_bar.set_colors(Palette.GAUGE_CYAN, Palette.GAUGE_CYAN_HI)
+	stack.add_child(_exp_bar)
 
 
 func _status_card_node_name(title: String) -> String:
@@ -958,25 +1014,50 @@ func _meal_note_box(parent: VBoxContainer, text: String) -> Label:
 
 
 func _stat_line(title: String, value: String, accent: Color) -> Control:
+	var panel := CookingAssets.panel_box(
+		Palette.COOKING_STATUS_NOTE_FILL,
+		Palette.COOKING_STATUS_STAT_BADGE_BORDER,
+		accent,
+		2,
+		7.0,
+		2.0,
+		0.18,
+		2,
+		1.0,
+		3
+	)
+	panel.name = "StatusStatRow%s" % _stat_icon_mode(title).capitalize()
+	panel.custom_minimum_size = Vector2(0.0, 34.0)
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
 	var row := HBoxContainer.new()
-	row.custom_minimum_size = Vector2(0.0, 28.0)
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	row.add_theme_constant_override("separation", 8)
+	panel.add_child(row)
+
 	var icon := StatIconVisual.new()
 	icon.configure(_stat_icon_mode(title), accent)
-	icon.custom_minimum_size = Vector2(32.0, 26.0)
+	icon.custom_minimum_size = Vector2(30.0, 0.0)
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(icon)
-	var name := make_label(title, 17, Palette.COOKING_STATUS_TEXT_DARK)
-	_set_label_min_height(name, 17)
+
+	var name := make_label(title, 16, Palette.COOKING_STATUS_TEXT_DARK, 1, Palette.COOKING_STATUS_TEXT_LIGHT_OUTLINE)
+	_set_label_min_height(name, 16)
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	name.autowrap_mode = TextServer.AUTOWRAP_OFF
+	name.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 	row.add_child(name)
+
 	var amount := make_label(value, 17, Palette.COOKING_STATUS_TEXT_DARK, 1, Palette.COOKING_STATUS_TEXT_LIGHT_OUTLINE)
-	amount.custom_minimum_size = Vector2(46.0, 28.0)
-	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	amount.custom_minimum_size = Vector2(52.0, 30.0)
+	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	amount.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	amount.autowrap_mode = TextServer.AUTOWRAP_OFF
+	amount.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 	row.add_child(amount)
-	return row
+	return panel
 
 
 func _stat_icon_mode(title: String) -> String:
