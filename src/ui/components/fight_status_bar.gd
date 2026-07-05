@@ -75,7 +75,10 @@ func _draw() -> void:
 	_draw_status_slot(font, regular_font, slots[1], _weather_label(), _wind_label(), false)
 	_draw_status_slot(font, regular_font, slots[2], "所持金", "%s G" % ScreenBase.format_money(PlayerProgress.money), false)
 	var depth := 0.0
-	if simulator != null:
+	var depth_range: Array = trip_stats.get("spot_depth_range", [])
+	if depth_range.size() >= 2:
+		depth = float(depth_range[1])
+	elif simulator != null:
 		depth = simulator.depth
 	_draw_status_slot(font, regular_font, slots[3], _spot_title(), "水深 %.1fm" % depth, true)
 

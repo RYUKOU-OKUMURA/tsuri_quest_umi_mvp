@@ -16,6 +16,12 @@ enum State {
 	ESCAPED,
 }
 
+const DEPTH_SURFACE_LIMIT := 1.2
+const DEPTH_RISE_BASE := 0.55
+const DEPTH_RISE_FATIGUE_GAIN := 1.35
+const DEPTH_DISTANCE_RATIO := 1.15
+const DEPTH_NEAR_OFFSET := 1.0
+
 var state: int = State.READY
 var fish_data: Dictionary = {}
 var player_stats: Dictionary = {}
@@ -30,6 +36,7 @@ var distance: float = 0.0
 var initial_distance: float = 1.0
 var depth: float = 0.0
 var initial_depth: float = 0.0
+var water_depth: float = 24.0
 var result_size_cm: float = 0.0
 
 var reeling: bool = false
@@ -64,12 +71,16 @@ func prepare(target_fish: Dictionary, stats: Dictionary) -> void:
 	player_energy = player_energy_max
 	initial_distance = maxf(10.0, float(fish_data.get("start_distance", 20.0)))
 	distance = initial_distance
-	initial_depth = maxf(2.0, float(fish_data.get("start_depth", 8.0)))
+	var depth_range: Array = player_stats.get("spot_depth_range", [])
+	water_depth = 24.0
+	if depth_range.size() >= 2:
+		water_depth = clampf(float(depth_range[1]), 4.0, 30.0)
+	initial_depth = clampf(float(fish_data.get("start_depth", 8.0)), 2.0, water_depth - 1.0)
 	depth = initial_depth
 	result_size_cm = 0.0
 	reeling = false
 	giving_line = false
-	visual_position = Vector2(0.26, clampf(depth / 25.0, 0.30, 0.78))
+	visual_position = Vector2(0.26, clampf(_depth_to_view_y(depth), 0.30, 0.78))
 	visual_direction = 1.0
 	action_name = "準備"
 	_set_message("E / Enterで仕掛けを投げよう。")
@@ -153,6 +164,10 @@ func distance_ratio() -> float:
 	return clampf(distance / initial_distance, 0.0, 1.5)
 
 
+func _depth_to_view_y(d: float) -> float:
+	return lerpf(0.26, 0.82, clampf(d / water_depth, 0.0, 1.0))
+
+
 func bite_time_left() -> float:
 	return maxf(0.0, _bite_timer)
 
@@ -186,7 +201,7 @@ func _tick_casting(delta: float) -> void:
 func _tick_waiting(delta: float) -> void:
 	_phase_timer -= delta
 	visual_position.x = 0.20 + sin(_visual_time * 0.8) * 0.025
-	visual_position.y = clampf(initial_depth / 25.0 + sin(_visual_time * 0.5) * 0.02, 0.30, 0.80)
+	visual_position.y = clampf(_depth_to_view_y(initial_depth) + sin(_visual_time * 0.5) * 0.02, 0.30, 0.80)
 	if _phase_timer <= 0.0:
 		_phase_timer = _rng.randf_range(1.0, 1.7)
 		action_name = "接近"
@@ -196,7 +211,7 @@ func _tick_waiting(delta: float) -> void:
 
 func _tick_approach(delta: float) -> void:
 	_phase_timer -= delta
-	var target := Vector2(0.61, clampf(initial_depth / 25.0, 0.32, 0.78))
+	var target := Vector2(0.61, clampf(_depth_to_view_y(initial_depth), 0.32, 0.78))
 	visual_position = visual_position.lerp(target, minf(1.0, delta * 1.4))
 	visual_direction = 1.0
 	if _phase_timer <= 0.0:
@@ -250,7 +265,10 @@ func _tick_fight(delta: float) -> void:
 
 	distance = clampf(distance, 0.0, initial_distance * 1.45)
 	tension = clampf(tension, 0.0, line_break_limit() + 0.15)
-	depth = clampf(depth, 2.0, 24.0)
+	if reeling:
+		depth -= DEPTH_RISE_BASE * (1.0 + DEPTH_RISE_FATIGUE_GAIN * (1.0 - stamina_ratio)) * delta
+	var depth_ceiling := maxf(DEPTH_SURFACE_LIMIT, minf(water_depth, distance * DEPTH_DISTANCE_RATIO + DEPTH_NEAR_OFFSET))
+	depth = clampf(depth, DEPTH_SURFACE_LIMIT, depth_ceiling)
 
 	if tension < 0.055:
 		_slack_timer += delta
@@ -326,7 +344,7 @@ func _update_visual_position(delta: float, fish_speed: float) -> void:
 	var wave_amp := _motion_value("wave_amp", 0.018)
 	var jitter := _motion_value("jitter", 0.0)
 	target_x += sin(_visual_time * wave_freq * 2.1) * jitter
-	var target_y := clampf(depth / 25.0 + _motion_value("depth_bias", 0.0), 0.22, 0.84)
+	var target_y := clampf(_depth_to_view_y(depth) + _motion_value("depth_bias", 0.0), 0.22, 0.84)
 	var wave := sin(_visual_time * wave_freq) * wave_amp
 	visual_position.x = lerpf(visual_position.x, target_x, minf(1.0, delta * 1.8))
 	visual_position.y = lerpf(visual_position.y, target_y + wave, minf(1.0, delta * 1.8))
