@@ -89,7 +89,7 @@ func _build_background() -> void:
 	move_child(bg, 0)
 
 	var shade := ColorRect.new()
-	shade.color = Color(0.02, 0.07, 0.10, 0.42)
+	shade.color = Palette.FISH_BOOK_BG_SCRIM
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(shade)
@@ -139,14 +139,14 @@ func _build_header(root: Control) -> void:
 	_place_control(progress_track, _found_progress_fill, 0.0, 0.0, 0.0, 1.0)
 	var progress_gloss := _label_plate(_alpha(Palette.PARCHMENT, 0.16))
 	_place_control(progress_track, progress_gloss, 0.0, 0.0, 1.0, 0.420)
-	_found_label = _book_label("発見済み 0/0", 22, Color("#fff2c6"), true, 2, Color("#07131d"))
+	_found_label = _book_label("発見済み 0/0", 22, Palette.FISH_BOOK_FOUND_TEXT, true, 2, Palette.FISH_BOOK_INK_OUTLINE)
 	_found_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_found_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(header, _found_label, 0.034, 0.230, 0.264, 0.770)
 
 	var sign := _texture_rect(FISH_BOOK_TITLE_SIGN_PATH)
 	_place_control(header, sign, 0.345, -0.045, 0.655, 1.020)
-	var title := _book_label("魚図鑑", 42, Color("#fff0aa"), true, 4, Color("#2a1608"))
+	var title := _book_label("魚図鑑", 42, Palette.FISH_BOOK_TITLE_TEXT, true, 4, Palette.FISH_BOOK_TITLE_OUTLINE)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(header, title, 0.385, 0.130, 0.615, 0.820)
@@ -171,7 +171,7 @@ func _build_book_grid(root: Control) -> void:
 	var page_surface := _label_plate(_alpha(Palette.PARCHMENT, 0.34))
 	_place_control(left, page_surface, 0.047, 0.105, 0.936, 0.970)
 	var page_wash := _paper_wash()
-	page_wash.modulate = Color(1.0, 0.965, 0.860, 0.46)
+	page_wash.modulate = Palette.FISH_BOOK_PAGE_WASH_TINT
 	_place_control(left, page_wash, 0.047, 0.105, 0.936, 0.970)
 	_add_left_page_guides(left)
 
@@ -230,29 +230,29 @@ func _build_detail_panel(root: Control) -> void:
 	_detail_no_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(detail, _detail_no_label, 0.098, 0.058, 0.308, 0.108)
 
-	_detail_name_label = _book_label("アジ", 36, Color("#2a1a0c"), true, 0)
+	_detail_name_label = _book_label("アジ", 36, Palette.FISH_BOOK_DETAIL_NAME, true, 0)
 	_detail_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_detail_name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(detail, _detail_name_label, 0.265, 0.068, 0.756, 0.150)
 
 	var detail_badge := _texture_rect(COMMON_BADGE_FRAME_PATH)
 	_place_control(detail, detail_badge, 0.760, 0.066, 0.940, 0.150)
-	_detail_rarity_label = _book_label("コモン", 16, Color.WHITE, true, 2, Color("#07131d"))
+	_detail_rarity_label = _book_label("コモン", 16, Palette.FISH_BOOK_BADGE_TEXT, true, 2, Palette.FISH_BOOK_INK_OUTLINE)
 	_detail_rarity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_detail_rarity_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(detail, _detail_rarity_label, 0.762, 0.072, 0.928, 0.145)
 
-	_detail_portrait_shadow = _portrait_rect(Color(0.18, 0.105, 0.040, 0.20))
+	_detail_portrait_shadow = _portrait_rect(Palette.FISH_BOOK_PORTRAIT_SHADOW_DETAIL)
 	_detail_portrait = _portrait_rect(_portrait_paper_tint())
 	var portrait_bg := ColorRect.new()
-	portrait_bg.color = Color("#f5e4ba", 0.84)
+	portrait_bg.color = Palette.FISH_BOOK_PORTRAIT_BG
 	portrait_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(detail, portrait_bg, 0.090, 0.155, 0.920, 0.505)
 	var portrait_paper := _texture_rect(COMMON_PARCHMENT_CARD_PATH)
-	portrait_paper.modulate = Color(1.0, 0.98, 0.88, 0.76)
+	portrait_paper.modulate = Palette.FISH_BOOK_PORTRAIT_CARD_TINT
 	_place_control(detail, portrait_paper, 0.078, 0.145, 0.935, 0.510)
-	_add_rule(detail, 0.095, 0.160, 0.915, Color("#7e5a2b", 0.45), 2.0)
-	_add_rule(detail, 0.095, 0.505, 0.915, Color("#7e5a2b", 0.35), 1.0)
+	_add_rule(detail, 0.095, 0.160, 0.915, _alpha(Palette.FISH_BOOK_RULE_INK, 0.45), 2.0)
+	_add_rule(detail, 0.095, 0.505, 0.915, _alpha(Palette.FISH_BOOK_RULE_INK, 0.35), 1.0)
 	var detail_portrait_clip := _portrait_clip()
 	_place_control(detail, detail_portrait_clip, 0.095, 0.175, 0.915, 0.490)
 	_add_specimen_rule(detail_portrait_clip, 0.030, 0.245, 0.970, 0.252, _alpha(Palette.GOLD_DEEP, 0.12))
@@ -296,7 +296,7 @@ func _build_detail_panel(root: Control) -> void:
 	_detail_best_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(detail, _detail_best_label, 0.662, 0.524, 0.895, 0.590)
 
-	_add_rule(detail, 0.095, 0.602, 0.910, Color("#7e5a2b", 0.30), 1.0)
+	_add_rule(detail, 0.095, 0.602, 0.910, _alpha(Palette.FISH_BOOK_RULE_INK, 0.30), 1.0)
 	_detail_habitat_label = _detail_row(detail, 0.620, "生息地")
 	_detail_bait_label = _detail_row(detail, 0.695, "好物")
 	_detail_behavior_label = _detail_row(detail, 0.770, "行動")
@@ -319,18 +319,18 @@ func _build_detail_panel(root: Control) -> void:
 
 func _detail_row(parent: Control, top: float, label_text: String) -> Label:
 	var row_frame := _texture_rect(COMMON_DETAIL_ROW_FRAME_PATH)
-	row_frame.modulate = Color(1.0, 1.0, 1.0, 0.40)
+	row_frame.modulate = Palette.FISH_BOOK_DETAIL_ROW_FRAME_TINT
 	_place_control(parent, row_frame, 0.082, top - 0.010, 0.918, top + 0.063)
 
-	var plate := _label_plate(Color("#6b4521"))
+	var plate := _label_plate(Palette.FISH_BOOK_LABEL_PLATE)
 	_place_control(parent, plate, 0.090, top, 0.235, top + 0.055)
 
-	var title := _book_label(label_text, 16, Color("#fff4ce"), true, 1, Color("#2a1608"))
+	var title := _book_label(label_text, 16, Palette.FISH_BOOK_DETAIL_ROW_TITLE, true, 1, Palette.FISH_BOOK_TITLE_OUTLINE)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(parent, title, 0.090, top, 0.235, top + 0.055)
 
-	var value := _book_label("", 16, Color("#3f2b17"), false, 0)
+	var value := _book_label("", 16, Palette.FISH_BOOK_DETAIL_ROW_VALUE, false, 0)
 	value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	value.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	value.vertical_alignment = VERTICAL_ALIGNMENT_TOP
@@ -448,21 +448,21 @@ func _make_fish_card(fish: Dictionary) -> Button:
 	portrait_field.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(button, portrait_field, 0.070, 0.190, 0.930, 0.615)
 
-	var no_plate := _label_plate(Color("#6b4521", 0.80) if discovered else _alpha(Palette.WOOD_DARK, 0.72))
+	var no_plate := _label_plate(_alpha(Palette.FISH_BOOK_LABEL_PLATE, 0.80) if discovered else _alpha(Palette.WOOD_DARK, 0.72))
 	no_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(button, no_plate, 0.055, 0.052, 0.300, 0.178)
 
-	var no_label := _book_label(String(fish.get("fish_no", "No.---")), 12, Palette.TEXT_BONE, true, 2, Color("#281607"))
+	var no_label := _book_label(String(fish.get("fish_no", "No.---")), 12, Palette.TEXT_BONE, true, 2, Palette.FISH_BOOK_NO_OUTLINE)
 	no_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	no_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	no_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(button, no_label, 0.055, 0.052, 0.390, 0.175)
 
 	var name_text := String(fish.get("name", fish_id)) if discovered else "？？？？？"
-	var name_color := Color("#3a230e")
+	var name_color := Palette.FISH_BOOK_CARD_NAME
 	if not discovered:
 		name_color = Palette.TEXT_OUTLINE_LIGHT
-	var name_label := _book_label(name_text, 16, name_color, true, 0, Color("#2b1708"))
+	var name_label := _book_label(name_text, 16, name_color, true, 0, Palette.FISH_BOOK_CARD_NAME_OUTLINE)
 	name_label.add_theme_font_size_override("font_size", _card_name_font_size(name_text))
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -476,7 +476,7 @@ func _make_fish_card(fish: Dictionary) -> Button:
 	_place_control(button, portrait_clip, 0.080, 0.198, 0.920, 0.602)
 	if discovered:
 		_add_portrait_underprint(portrait_clip, portrait_texture, 0.22, 0.006, 0.016)
-		var portrait_shadow := _portrait_rect(Color(0.18, 0.105, 0.040, 0.16))
+		var portrait_shadow := _portrait_rect(Palette.FISH_BOOK_PORTRAIT_SHADOW_CARD)
 		portrait_shadow.texture = portrait_texture
 		_place_control(portrait_clip, portrait_shadow, 0.014, 0.036, 1.014, 1.036)
 	_place_control(portrait_clip, portrait, 0.0, 0.0, 1.0, 1.0)
@@ -521,7 +521,7 @@ func _make_fish_card(fish: Dictionary) -> Button:
 	var badge_bg := _label_plate(_rarity_badge_color(rarity))
 	badge_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(button, badge_bg, 0.060, 0.610, 0.438, 0.765)
-	var rarity_label := _book_label(rarity, _rarity_font_size(rarity, false), Color.WHITE, true, 1, Color("#07131d"))
+	var rarity_label := _book_label(rarity, _rarity_font_size(rarity, false), Palette.FISH_BOOK_BADGE_TEXT, true, 1, Palette.FISH_BOOK_INK_OUTLINE)
 	rarity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	rarity_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	rarity_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -534,10 +534,10 @@ func _make_fish_card(fish: Dictionary) -> Button:
 	stat_strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(button, stat_strip, 0.070, 0.765, 0.930, 0.945)
 	var divider := ColorRect.new()
-	divider.color = Color("#7c592a", 0.34)
+	divider.color = _alpha(Palette.FISH_BOOK_CARD_DIVIDER, 0.34)
 	divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(button, divider, 0.080, 0.778, 0.920, 0.788)
-	var stat_color := Color("#2d1d0d")
+	var stat_color := Palette.FISH_BOOK_CARD_STAT_TEXT
 	var count_label := _book_label("釣果 %d匹" % count, 12, stat_color, true, 0)
 	count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	count_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -580,13 +580,13 @@ func _refresh_detail() -> void:
 	_detail_name_label.add_theme_font_size_override("font_size", _detail_name_font_size(_detail_name_label.text))
 	_detail_rarity_label.text = rarity if discovered else "未発見"
 	_detail_rarity_label.add_theme_font_size_override("font_size", _rarity_font_size(_detail_rarity_label.text, true))
-	_detail_rarity_label.add_theme_color_override("font_color", _rarity_text_color(rarity) if discovered else Color("#e8d0a0"))
+	_detail_rarity_label.add_theme_color_override("font_color", _rarity_text_color(rarity) if discovered else Palette.FISH_BOOK_UNDISCOVERED_RARITY)
 	var detail_texture := _fish_detail_portrait_texture(fish) if discovered else _fish_portrait_texture(fish, true)
 	_detail_portrait.texture = detail_texture
 	_detail_portrait_shadow.texture = detail_texture if discovered else null
 	for underprint in _detail_portrait_underprints:
 		underprint.texture = detail_texture if discovered else null
-	_detail_portrait.modulate = _portrait_paper_tint() if discovered else Color(0.04, 0.035, 0.03, 0.70)
+	_detail_portrait.modulate = _portrait_paper_tint() if discovered else Palette.FISH_BOOK_LOCKED_PORTRAIT
 
 	var count := int(PlayerProgress.caught_counts.get(fish_id, 0))
 	var best := float(PlayerProgress.best_sizes.get(fish_id, 0.0))
@@ -604,7 +604,7 @@ func _rebuild_spot_strip(spot_ids: Array) -> void:
 	for child in _detail_spots.get_children():
 		child.queue_free()
 	if spot_ids.is_empty():
-		var empty := _book_label("記録後に表示されます", 15, Color("#6b5331"), true, 0)
+		var empty := _book_label("記録後に表示されます", 15, Palette.FISH_BOOK_EMPTY_SPOT_TEXT, true, 0)
 		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		empty.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		_place_control(_detail_spots, empty, 0.0, 0.0, 1.0, 1.0)
@@ -626,7 +626,7 @@ func _rebuild_spot_strip(spot_ids: Array) -> void:
 
 		var thumb := _texture_rect("%s/%s.png" % [FISH_BOOK_THUMB_BASE_PATH, String(spot.get("id", ""))])
 		thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-		thumb.modulate = Color(1.0, 0.965, 0.860, 0.92)
+		thumb.modulate = Palette.FISH_BOOK_SPOT_THUMB_TINT
 		_place_control(card, thumb, 0.045, 0.055, 0.955, 0.680)
 
 		var thumb_wash := _label_plate(_alpha(Palette.PARCHMENT, 0.12))
@@ -734,7 +734,9 @@ func _fish_portrait_texture(fish: Dictionary, crop_to_fish := false) -> Texture2
 	var path := FightFishAssets.card_portrait_path(fish)
 	var texture := ShowcaseAssets.load_texture(path)
 	if texture == null:
-		texture = UITextures.get_fish_icon(Color.from_string(String(fish.get("color", "#8aa7b5")), Color("#8aa7b5")))
+		var fallback_color := Palette.FISH_BOOK_FISH_ICON_FALLBACK
+		var fallback_html := "#%s" % fallback_color.to_html(false)
+		texture = UITextures.get_fish_icon(Color.from_string(String(fish.get("color", fallback_html)), fallback_color))
 	if crop_to_fish:
 		return _cropped_portrait_texture(texture)
 	return texture
@@ -848,12 +850,12 @@ func _textured_button(text: String, callback: Callable, primary := false) -> But
 	button.pressed.connect(callback)
 	button.add_theme_font_override("font", GameFontsScript.extra_bold(get_theme_default_font()))
 	button.add_theme_font_size_override("font_size", 24 if primary else 21)
-	var font_color := Color("#fff8d8") if primary else Color("#2b1809")
+	var font_color := Palette.FISH_BOOK_PRIMARY_BUTTON_TEXT if primary else Palette.FISH_BOOK_BUTTON_TEXT
 	button.add_theme_color_override("font_color", font_color)
 	button.add_theme_color_override("font_hover_color", font_color)
 	button.add_theme_color_override("font_pressed_color", font_color)
-	button.add_theme_color_override("font_outline_color", Color("#2a1406") if primary else Color("#ffe5a6"))
-	button.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.35) if primary else Color(1.0, 0.86, 0.48, 0.28))
+	button.add_theme_color_override("font_outline_color", Palette.FISH_BOOK_PRIMARY_BUTTON_OUTLINE if primary else Palette.FISH_BOOK_BUTTON_OUTLINE)
+	button.add_theme_color_override("font_shadow_color", Palette.FISH_BOOK_PRIMARY_BUTTON_SHADOW if primary else Palette.FISH_BOOK_BUTTON_SHADOW)
 	button.add_theme_constant_override("outline_size", 3 if primary else 1)
 	button.add_theme_constant_override("shadow_offset_x", 1)
 	button.add_theme_constant_override("shadow_offset_y", 2)
@@ -872,7 +874,7 @@ func _add_button_icon(button: Button, texture: Texture2D, primary: bool) -> void
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	icon.modulate = Color(1.0, 0.94, 0.72, 0.95) if primary else Color(1.0, 0.96, 0.78, 0.85)
+	icon.modulate = Palette.FISH_BOOK_PRIMARY_ICON_TINT if primary else Palette.FISH_BOOK_ICON_TINT
 	if primary:
 		_place_control(button, icon, 0.055, 0.170, 0.240, 0.830)
 	else:
@@ -884,9 +886,9 @@ func _style_scrollbar(scroll: ScrollContainer) -> void:
 	if vbar == null:
 		return
 	vbar.custom_minimum_size = Vector2(10.0, 0.0)
-	var track := UITextures.flat_style(Color("#211407", 0.58), Color("#c28d2d", 0.48), 1, 5)
-	var grabber := UITextures.flat_style(Color("#d7a238"), Color("#4d2b0d"), 1, 5, true, 2)
-	var grabber_hot := UITextures.flat_style(Color("#ffd06b"), Color("#5b3210"), 1, 5, true, 2)
+	var track := UITextures.flat_style(_alpha(Palette.FISH_BOOK_SCROLL_TRACK_BG, 0.58), _alpha(Palette.FISH_BOOK_SCROLL_TRACK_BORDER, 0.48), 1, 5)
+	var grabber := UITextures.flat_style(Palette.FISH_BOOK_SCROLL_GRABBER, Palette.FISH_BOOK_SCROLL_GRABBER_BORDER, 1, 5, true, 2)
+	var grabber_hot := UITextures.flat_style(Palette.FISH_BOOK_SCROLL_GRABBER_HOT, Palette.FISH_BOOK_SCROLL_GRABBER_HOT_BORDER, 1, 5, true, 2)
 	vbar.add_theme_stylebox_override("scroll", track)
 	vbar.add_theme_stylebox_override("scroll_focus", track)
 	vbar.add_theme_stylebox_override("grabber", grabber)
@@ -896,10 +898,10 @@ func _style_scrollbar(scroll: ScrollContainer) -> void:
 
 func _header_chip(parent: Control, left: float, top: float, right: float, bottom: float, value: String, font_size := 17) -> Label:
 	var bg := ColorRect.new()
-	bg.color = Color(0.06, 0.035, 0.018, 0.62)
+	bg.color = Palette.FISH_BOOK_HEADER_CHIP_BG
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(parent, bg, left, top, right, bottom)
-	var label := _book_label(value, font_size, Color("#fff4c7"), true, 2, Color("#06131d"))
+	var label := _book_label(value, font_size, Palette.FISH_BOOK_HEADER_CHIP_TEXT, true, 2, Palette.FISH_BOOK_HEADER_CHIP_OUTLINE)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(parent, label, left + 0.006, top + 0.030, right - 0.006, bottom - 0.030)
@@ -912,9 +914,9 @@ func _book_label(
 	color: Color,
 	bold := false,
 	outline := 0,
-	outline_color := Color("#07131d")
+	outline_color := Palette.FISH_BOOK_INK_OUTLINE
 ) -> Label:
-	return make_screen_label(text, font_size, color, bold, outline, outline_color, Color(0.0, 0.0, 0.0, 0.25))
+	return make_screen_label(text, font_size, color, bold, outline, outline_color, Palette.FISH_BOOK_LABEL_SHADOW)
 
 
 func _silence_button_text(button: Button) -> void:
@@ -944,7 +946,7 @@ func _portrait_rect(tint: Color) -> TextureRect:
 
 
 func _portrait_paper_tint() -> Color:
-	return Color(1.0, 0.965, 0.880, 1.0)
+	return Palette.FISH_BOOK_PORTRAIT_PAPER_TINT
 
 
 func _add_portrait_underprint(

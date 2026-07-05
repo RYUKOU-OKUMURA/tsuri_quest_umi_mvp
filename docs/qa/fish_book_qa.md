@@ -1,6 +1,6 @@
 # 魚図鑑画面 QA判断ログ
 
-最終更新: 2026-07-03 / 状態: **v1.34 P2専用魚ポートレート素材ブリーフ追加・freeze中**
+最終更新: 2026-07-05 / 状態: **v1.35 Palette移行完了・P2専用魚ポートレート素材は新規候補待ち**
 参照画像: `reference/07_fish_book_mockup.png`
 QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
@@ -45,6 +45,7 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 |---|---|---|
 | 2026-06時点での新規PNG生成 | 構成・文字収まり・スクリムのみで v1.5 目標を達成できたため、その時点では生成に着手せず | 2026-06 |
 | カード高だけを112/124/132pxまで詰める案 | 一覧密度は上がるが、下部の釣果/最大サイズが窮屈になり、魚ポートレートも主役性が弱くなる。内部レイアウト再設計なしでは採用しない | 2026-07-03 |
+| 既存 `card_portrait` 系の単純差し替え | 2026-07-05 の contact sheet では、現行の左カードtight crop/右詳細高解像度cropを全画面で明確に上回らない。専用描き起こし候補が来るまでは採用しない | 2026-07-05 |
 
 ## 3. 微調整カウンタ
 
@@ -79,17 +80,18 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
 ## 4. 暫定判定・再検証TODO
 
-なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-03_portrait_asset_brief_current_compare.png`、`docs/qa/evidence/fish_book/2026-07-03_portrait_asset_brief_contact_sheet.png`、直前の実スクショ `docs/qa/evidence/fish_book/2026-07-03_portrait_ink_underprint_screen.png` に保存済み。
+なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-05_palette_gate_compare.png`、`docs/qa/evidence/fish_book/2026-07-05_portrait_contact_sheet.png` に保存済み。
 
 ## 5. 現在の残ギャップ
 
-- **P2**: 魚ポートレート素材そのものの専用描き起こし・魚ごとの見せ方、フォント全体方針は未着手。魚ポートレートは `docs/24_fish_book_portrait_asset_brief.md` に従い、`tools/build_fish_book_portrait_contact_sheet.py` で全魚の現行カードcrop/右詳細crop/既存 `card_portrait` を比較してから、1フェーズだけ選んで全画面比較で判定する。
+- **P2**: 魚ポートレート素材そのものの専用描き起こし・魚ごとの見せ方、フォント全体方針は未着手。2026-07-05 の contact sheet では既存素材の単純差し替えは現行に明確勝ちしないため、次は `docs/24_fish_book_portrait_asset_brief.md` に従った新規候補を1フェーズだけ作り、contact sheet→全画面比較で判定する。
 - 文字収まりの採用値（レアリティチップ幅・段階的フォント縮小）を、P1再発なしに動かさないこと。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-（現在作業中のフェーズなし）
+なし。2026-07-05 R5/R1魚図鑑スライスは完了（Palette移行 + 既存素材候補評価、素材採用なし）。
 
 ## 7. 判断ログ（直近パスのみ）
 
 - 2026-07-03: v1.34 P2専用魚ポートレート素材フェーズ設計。現行の画面座標、魚clip、crop、文字、台帳フレームは変更せず、残P2である魚ポートレート専用描き起こしの発注/採用条件を `docs/24_fish_book_portrait_asset_brief.md` として追加した。既存 `card_portrait` の単純差し替えでは全画面で明確に勝つ根拠が弱いため、次の実装は `aji` / `saba` / `kasago` などファーストビュー魚の専用候補を作り、contact sheet→全画面比較で採用判定する。判断根拠: `docs/qa/evidence/fish_book/2026-07-03_portrait_asset_brief_current_compare.png`、`docs/qa/evidence/fish_book/2026-07-03_portrait_asset_brief_contact_sheet.png`。検証: `git diff --check` exit 0、`python3 tools/build_fish_book_portrait_contact_sheet.py` exit 0、`./tools/fish_book_visual_qa.sh` exit 0、`fish_book_smoke: ok`、`./tools/validate_project.sh` exit 0（Godot終了時のObjectDB/resource警告あり）。
+- 2026-07-05: R5/R1魚図鑑スライス。`src/ui/fish_book_screen.gd` の hardcoded hex / 数値 `Color(...)` を表示色同値の `Palette.FISH_BOOK_*` へ移行し、`rg -n "#[0-9a-fA-F]{6}|Color\\([0-9]" src/ui/fish_book_screen.gd` が空であることを確認した。実スクショ比較でP1再発はなし。contact sheetでは既存 `card_portrait` 系が現行の左カードtight crop/右詳細高解像度cropを明確に上回らないため、素材採用は見送り、専用描き起こしP2は新規候補待ちとして継続。判断根拠: `docs/qa/evidence/fish_book/2026-07-05_palette_gate_compare.png`、`docs/qa/evidence/fish_book/2026-07-05_portrait_contact_sheet.png`。検証: `git diff --check` exit 0、contact sheet再生成 exit 0、`./tools/fish_book_visual_qa.sh` exit 0、`fish_book_smoke: ok`、`./tools/save_system_verify.sh` exit 0、`./tools/validate_project.sh` exit 0（Godot終了時のObjectDB Snapshots directory警告は既存ベースライン枠）。
