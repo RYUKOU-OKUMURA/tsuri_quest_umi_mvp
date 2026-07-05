@@ -398,7 +398,7 @@ func _draw_confetti(center: Vector2, index: int, alpha: float) -> void:
 	var color_options := [
 		Palette.GOLD_BRIGHT,
 		Palette.GAUGE_AMBER_HI,
-		Palette.RARITY_RARE_TEXT,
+		RarityStylesScript.text_color("レア"),
 		Palette.FOAM,
 	]
 	var color := Color(color_options[index % color_options.size()], 0.78 * alpha)

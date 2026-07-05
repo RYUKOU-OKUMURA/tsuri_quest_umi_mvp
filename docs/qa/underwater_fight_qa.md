@@ -1,6 +1,6 @@
 # 水中ファイト画面 QA判断ログ
 
-最終更新: 2026-07-04 / 状態: **v1 showcase 合格・freeze中**（2026-06-26 判定）+ 写真風釣り上げ結果画面 + 水面天候5系統
+最終更新: 2026-07-05 / 状態: **v1 showcase 合格・freeze中**（2026-06-26 判定）+ 写真風釣り上げ結果画面 + 水面天候5系統 + catch fanfare RarityStyles移行済み
 参照画像: `reference/02_underwater_fight_mockup.png`
 QA更新コマンド: `./tools/fight_visual_qa.sh` / 水面天候確認: `./tools/surface_weather_visual_qa.sh` / 釣り上げ結果確認: `godot --path . res://tools/catch_fanfare_preview.tscn`（通常魚確認は `TSURI_CATCH_FANFARE_FISH_ID=aji`）
 詳細な経過履歴: `docs/qa/archive/underwater_fight_design_qa_2026-06.md`（旧 `design-qa.md`）
@@ -80,6 +80,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 | 魚画像参照 | `FightFishAssets.card_portrait_path()` 経由 | `catch_fanfare.gd` | 魚素材所有ルールを維持。直接パス参照なし |
 | 音 | `AudioStreamGenerator` による短い合成ファンファーレ | `catch_fanfare.gd` | 専用SE素材がないため、P0ではruntime生成で効果音経路を成立させる |
 | 検証画像 | `docs/qa/evidence/underwater_fight/2026-07-03_catch_result_photo_boss.png` / `2026-07-03_catch_result_photo_aji.png` | `tools/catch_fanfare_preview.gd` | 通常起動キャプチャ。ぬし魚と通常魚で魚差し替え、ボタン統合、文字視認性を確認 |
+| レアリティ色責務 | `RarityStyles.text_color()` 経由 | `src/ui/components/catch_fanfare.gd` | レア紙吹雪色を含め、UI側で `Palette.RARITY_*` を直接参照しない |
 
 ### フォント
 
@@ -136,6 +137,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 
 ## 7. 判断ログ（直近パスのみ）
 
+- 2026-07-05: catch fanfareのレア紙吹雪色を `Palette.RARITY_RARE_TEXT` 直接参照から `RarityStylesScript.text_color("レア")` へ移行。表示色は同値で、レアリティ色責務を `src/ui/rarity_styles.gd` に閉じた。freeze値、素材、レイアウト、表示文言、日本語PNG焼き込みは変更なし。検証: `catch_fanfare_smoke.tscn`、`./tools/save_system_verify.sh`、`./tools/validate_project.sh` green。通常起動プレビュー証拠: `docs/qa/evidence/underwater_fight/2026-07-05_catch_fanfare_rarity_styles.png`。
 - 2026-07-03: キャッチ演出を写真風ベース方式へ更新。`assets/showcase/underwater/catch_photo_base.png` を全面表示し、魚本体は `FightFishAssets.card_portrait_path()` の既存ポートレートを前面合成する。日本語テキストと魚はPNGへ焼き込まない。採用判断は `docs/qa/evidence/underwater_fight/2026-07-03_catch_photo_base_boss.png` と `docs/qa/evidence/underwater_fight/2026-07-03_catch_photo_base_aji.png`。既存の水中背景・HUD・上部・右サイドバー・成功後結果パネルのフローは変更していない。自動終了/スキップは `tools/catch_fanfare_smoke.tscn` で検証済み。
 - 2026-07-03: 成功時の旧白い結果ポップアップを廃止し、写真風釣り上げ画面を結果選択画面に統合。`CatchFanfare` は自動終了せず、`continue_requested` / `harbor_requested` で既存の次釣行・港遷移に接続する。魚位置を上げ、左情報枠を広げ、runtime文字にアウトラインと薄い紙色スクリムを追加。採用判断は `docs/qa/evidence/underwater_fight/2026-07-03_catch_result_photo_boss.png` と `docs/qa/evidence/underwater_fight/2026-07-03_catch_result_photo_aji.png`。新UX契約は `tools/catch_fanfare_smoke.tscn` で検証済み。
 - 2026-07-04: 上部ステータスバーの天気アイコンが晴れ固定だった問題を修正。`weather_status_icon_sheet.png` を追加し、`FightStatusBar` が `trip_stats.weather_id` から `sunny / partly_cloudy / cloudy / rain / fog` の5種を選択する。水面・天気ラベル・風ラベルの既存挙動は変更なし。採用判断は `docs/qa/evidence/underwater_fight/2026-07-04_surface_weather_icon_compare.png` と `docs/qa/evidence/underwater_fight/2026-07-04_surface_weather_status_icon_compare.png`。
