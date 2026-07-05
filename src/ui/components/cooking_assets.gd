@@ -82,7 +82,7 @@ static func style_box(
 	sb.content_margin_top = content_y
 	sb.content_margin_right = content_x
 	sb.content_margin_bottom = content_y
-	sb.shadow_color = Color(0.0, 0.0, 0.0, shadow_alpha)
+	sb.shadow_color = Color(Color.BLACK, shadow_alpha)
 	sb.shadow_size = shadow_size
 	sb.shadow_offset = Vector2(0.0, shadow_offset_y)
 	sb.anti_aliasing = false
@@ -138,10 +138,30 @@ static func featured_dish_texture(recipe_id: String) -> Texture2D:
 static func apply_flow_button_style(
 	button: Button, content_x: float, expand_margin: float = 6.0
 ) -> void:
-	var normal_fallback := style_box(Color("#102f51"), Palette.GOLD_DEEP, Palette.GOLD_BRIGHT, 4, 6)
-	var hover_fallback := style_box(Color("#16436c"), Palette.GOLD_BRIGHT, Color("#fff0b2"), 4, 6)
-	var pressed_fallback := style_box(Color("#081a2d"), Color("#a06d28"), Palette.GOLD_DEEP, 4, 6)
-	var disabled_fallback := style_box(Color("#202a31"), Color("#71614a"), Color("#8c7b62"), 3, 6)
+	var normal_fallback := style_box(
+		Palette.COOKING_FLOW_BUTTON_NORMAL_FILL, Palette.GOLD_DEEP, Palette.GOLD_BRIGHT, 4, 6
+	)
+	var hover_fallback := style_box(
+		Palette.COOKING_FLOW_BUTTON_HOVER_FILL,
+		Palette.GOLD_BRIGHT,
+		Palette.COOKING_FLOW_BUTTON_HOVER_INNER,
+		4,
+		6
+	)
+	var pressed_fallback := style_box(
+		Palette.COOKING_FLOW_BUTTON_PRESSED_FILL,
+		Palette.COOKING_FLOW_BUTTON_PRESSED_BORDER,
+		Palette.GOLD_DEEP,
+		4,
+		6
+	)
+	var disabled_fallback := style_box(
+		Palette.COOKING_FLOW_BUTTON_DISABLED_FILL,
+		Palette.COOKING_FLOW_BUTTON_DISABLED_BORDER,
+		Palette.COOKING_FLOW_BUTTON_DISABLED_INNER,
+		3,
+		6
+	)
 	button.add_theme_stylebox_override(
 		"normal",
 		texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, normal_fallback, content_x, 8.0, expand_margin)
@@ -163,9 +183,9 @@ static func apply_flow_button_style(
 		texture_style_box(FLOW_ACTION_BUTTON_FRAME, 24, hover_fallback, content_x, 8.0, expand_margin)
 	)
 	button.add_theme_color_override("font_color", Palette.GOLD_BRIGHT)
-	button.add_theme_color_override("font_hover_color", Color("#fff1ba"))
-	button.add_theme_color_override("font_pressed_color", Color("#f0c06b"))
-	button.add_theme_color_override("font_disabled_color", Color("#b6a68d"))
+	button.add_theme_color_override("font_hover_color", Palette.COOKING_ACTION_BUTTON_HOVER_TEXT)
+	button.add_theme_color_override("font_pressed_color", Palette.COOKING_ACTION_BUTTON_PRESSED_TEXT)
+	button.add_theme_color_override("font_disabled_color", Palette.COOKING_ACTION_BUTTON_DISABLED_TEXT)
 
 
 static func compact_style_box(
@@ -180,7 +200,7 @@ static func compact_style_box(
 	sb.content_margin_top = 5.0
 	sb.content_margin_right = 8.0
 	sb.content_margin_bottom = 5.0
-	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.28)
+	sb.shadow_color = Color(Color.BLACK, 0.28)
 	sb.shadow_size = 3
 	sb.shadow_offset = Vector2(0.0, 1.0)
 	sb.anti_aliasing = false

@@ -55,12 +55,12 @@ func _build_top_bar(root: Control) -> void:
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	top.add_child(frame)
 
-	var location := _harbor_label("南の島・港", 32, Color("#fff0aa"), true, 4, Color("#1c1309"))
+	var location := _harbor_label("南の島・港", 32, Palette.HARBOR_LOCATION_TEXT, true, 4, Palette.HARBOR_LOCATION_OUTLINE)
 	location.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	location.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(top, location, 0.026, 0.15, 0.265, 0.67)
 
-	var context := _harbor_label("潮位：満ち始め　天候：快晴　風：弱", 15, Color("#d9f2ff"), false, 2, Color("#06131d"))
+	var context := _harbor_label("潮位：満ち始め　天候：快晴　風：弱", 15, Palette.HARBOR_CONTEXT_TEXT, false, 2, Palette.HARBOR_LABEL_OUTLINE)
 	context.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	context.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(top, context, 0.030, 0.62, 0.395, 0.92)
@@ -82,11 +82,11 @@ func _build_main_panel(root: Control) -> void:
 	_place_control(main, scene, 0.060, 0.068, 0.940, 0.432)
 
 	var scene_shadow := ColorRect.new()
-	scene_shadow.color = Color(0.0, 0.0, 0.0, 0.22)
+	scene_shadow.color = Palette.HARBOR_SCENE_SHADOW
 	scene_shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(main, scene_shadow, 0.060, 0.068, 0.940, 0.432)
 
-	var scene_title := _harbor_label("潮風が吹く、小さな漁港", 34, Color("#ffe59d"), true, 4, Color("#271708"))
+	var scene_title := _harbor_label("潮風が吹く、小さな漁港", 34, Palette.HARBOR_SCENE_TITLE, true, 4, Palette.HARBOR_SCENE_TITLE_OUTLINE)
 	scene_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	scene_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(main, scene_title, 0.090, 0.104, 0.910, 0.205)
@@ -94,10 +94,10 @@ func _build_main_panel(root: Control) -> void:
 	var scene_text := _harbor_label(
 		"沖では魚影が濃くなっている。\n釣った魚は市場で売るか、調理場で食べて成長できる。\n準備ができたら海へ出よう。",
 		17,
-		Color("#f2fbff"),
+		Palette.HARBOR_SCENE_TEXT,
 		false,
 		2,
-		Color("#071522")
+		Palette.HARBOR_SCENE_TEXT_OUTLINE
 	)
 	scene_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	scene_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -123,17 +123,17 @@ func _build_buff_card(main: Control) -> void:
 	var icon := _icon_rect(ICON_COOKING_PATH)
 	_place_control(card, icon, 0.030, 0.160, 0.118, 0.840)
 
-	var title := _harbor_label("次の釣行の食事効果", 15, Color("#765025"), true, 0)
+	var title := _harbor_label("次の釣行の食事効果", 15, Palette.HARBOR_PARCHMENT_TITLE, true, 0)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(card, title, 0.145, 0.100, 0.930, 0.365)
 
-	_buff_name_label = _harbor_label("", 20, Color("#2a2118"), true, 0)
+	_buff_name_label = _harbor_label("", 20, Palette.HARBOR_BUFF_NAME, true, 0)
 	_buff_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_buff_name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(card, _buff_name_label, 0.145, 0.345, 0.930, 0.635)
 
-	_buff_text_label = _harbor_label("", 15, Color("#4f3a21"), false, 0)
+	_buff_text_label = _harbor_label("", 15, Palette.HARBOR_BUFF_BODY, false, 0)
 	_buff_text_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_buff_text_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(card, _buff_text_label, 0.145, 0.625, 0.930, 0.900)
@@ -148,12 +148,12 @@ func _build_parchment_card(parent: Control, ratios: Rect2, title_text: String, b
 	var icon := _icon_rect(icon_path)
 	_place_control(card, icon, 0.030, 0.185, 0.112, 0.815)
 
-	var title := _harbor_label(title_text, 15, Color("#765025"), true, 0)
+	var title := _harbor_label(title_text, 15, Palette.HARBOR_PARCHMENT_TITLE, true, 0)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(card, title, 0.140, 0.100, 0.930, 0.375)
 
-	var body := _harbor_label(body_text, 19, Color("#243349"), true, 0)
+	var body := _harbor_label(body_text, 19, Palette.HARBOR_PARCHMENT_BODY, true, 0)
 	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	body.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(card, body, 0.140, 0.405, 0.930, 0.820)
@@ -165,7 +165,7 @@ func _build_facility_menu(root: Control) -> void:
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	menu.add_child(frame)
 
-	var header := _harbor_label("港の施設", 27, Color("#fff2c6"), true, 3, Color("#07131c"))
+	var header := _harbor_label("港の施設", 27, Palette.HARBOR_MENU_HEADER, true, 3, Palette.HARBOR_MENU_OUTLINE)
 	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	header.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(menu, header, 0.100, 0.030, 0.900, 0.120)
@@ -191,17 +191,17 @@ func _build_facility_detail_panel(parent: Control) -> void:
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_theme_stylebox_override(
 		"panel",
-		_make_flat_panel_style(Color(0.035, 0.155, 0.215, 0.88), Color(0.95, 0.74, 0.34, 0.66), 8, 2)
+		_make_flat_panel_style(Palette.HARBOR_DETAIL_PANEL_FILL, Palette.HARBOR_DETAIL_PANEL_BORDER, 8, 2)
 	)
 	_place_control(parent, panel, 0.088, 0.802, 0.912, 0.956)
 
-	_facility_detail_title_label = _harbor_label("", 15, Color("#fff2c6"), true, 2, Color("#07131c"))
+	_facility_detail_title_label = _harbor_label("", 15, Palette.HARBOR_MENU_HEADER, true, 2, Palette.HARBOR_MENU_OUTLINE)
 	_facility_detail_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_facility_detail_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_facility_detail_title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(panel, _facility_detail_title_label, 0.055, 0.100, 0.945, 0.430)
 
-	_facility_detail_body_label = _harbor_label("", 13, Color("#e9f8ff"), false, 1, Color("#06131d"))
+	_facility_detail_body_label = _harbor_label("", 13, Palette.HARBOR_DETAIL_BODY_TEXT, false, 1, Palette.HARBOR_LABEL_OUTLINE)
 	_facility_detail_body_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_facility_detail_body_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_facility_detail_body_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -232,7 +232,7 @@ func _build_facility_button(
 	accent.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	accent.add_theme_stylebox_override(
 		"panel",
-		_make_flat_panel_style(Color("#f2c85b") if primary else Color("#8e5a28"), Color.TRANSPARENT, 3, 0)
+		_make_flat_panel_style(Palette.HARBOR_FACILITY_ACCENT_PRIMARY if primary else Palette.HARBOR_FACILITY_ACCENT_SECONDARY, Color.TRANSPARENT, 3, 0)
 	)
 	_place_control(button, accent, 0.023, 0.230, 0.039, 0.770)
 
@@ -241,8 +241,8 @@ func _build_facility_button(
 	icon_plate.add_theme_stylebox_override(
 		"panel",
 		_make_flat_panel_style(
-			Color(0.02, 0.10, 0.13, 0.58) if primary else Color(0.98, 0.88, 0.62, 0.78),
-			Color(0.98, 0.76, 0.36, 0.56) if primary else Color(0.43, 0.27, 0.12, 0.42),
+			Palette.HARBOR_FACILITY_ICON_PRIMARY_FILL if primary else Palette.HARBOR_FACILITY_ICON_SECONDARY_FILL,
+			Palette.HARBOR_FACILITY_ICON_PRIMARY_BORDER if primary else Palette.HARBOR_FACILITY_ICON_SECONDARY_BORDER,
 			6,
 			1
 		)
@@ -250,10 +250,10 @@ func _build_facility_button(
 	_place_control(button, icon_plate, 0.055, 0.160, 0.165, 0.840)
 
 	var icon := _icon_rect(icon_path)
-	icon.modulate = Color(1.0, 1.0, 1.0, 0.96)
+	icon.modulate = Palette.HARBOR_ICON_MODULATE
 	_place_control(button, icon, 0.070, 0.210, 0.150, 0.790)
 
-	var title := _harbor_label(title_text, 21, Color("#fff4c9") if primary else Color("#20140b"), true, 2 if primary else 1, Color("#1b1209") if primary else Color("#fff8d8"))
+	var title := _harbor_label(title_text, 21, Palette.HARBOR_FACILITY_PRIMARY_TEXT if primary else Palette.HARBOR_FACILITY_SECONDARY_TEXT, true, 2 if primary else 1, Palette.HARBOR_FACILITY_PRIMARY_OUTLINE if primary else Palette.HARBOR_FACILITY_SECONDARY_OUTLINE)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -265,8 +265,8 @@ func _set_facility_detail(title_text: String, body_text: String, primary := fals
 		return
 	_facility_detail_title_label.text = title_text
 	_facility_detail_body_label.text = body_text
-	_facility_detail_title_label.add_theme_color_override("font_color", Color("#fff2c6") if primary else Color("#ffe8a0"))
-	_facility_detail_body_label.add_theme_color_override("font_color", Color("#e9f8ff") if primary else Color("#f7edce"))
+	_facility_detail_title_label.add_theme_color_override("font_color", Palette.HARBOR_MENU_HEADER if primary else Palette.HARBOR_DETAIL_TITLE_SECONDARY)
+	_facility_detail_body_label.add_theme_color_override("font_color", Palette.HARBOR_DETAIL_BODY_TEXT if primary else Palette.HARBOR_DETAIL_BODY_SECONDARY)
 
 
 func _build_footer(root: Control) -> void:
@@ -275,7 +275,7 @@ func _build_footer(root: Control) -> void:
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	footer.add_child(frame)
 
-	_status_label = _harbor_label("", 17, Color("#edf8ff"), false, 2, Color("#06131d"))
+	_status_label = _harbor_label("", 17, Palette.HARBOR_FOOTER_TEXT, false, 2, Palette.HARBOR_LABEL_OUTLINE)
 	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(footer, _status_label, 0.035, 0.050, 0.965, 0.950)
@@ -317,7 +317,7 @@ func _return_to_title() -> void:
 
 
 func _top_metric(parent: Control, left: float, top: float, right: float, bottom: float, value: String) -> Label:
-	var label := _harbor_label(value, 17, Color("#fff4c7"), true, 2, Color("#06131d"))
+	var label := _harbor_label(value, 17, Palette.HARBOR_TOP_METRIC_TEXT, true, 2, Palette.HARBOR_LABEL_OUTLINE)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(parent, label, left, top, right, bottom)
@@ -351,9 +351,9 @@ func _harbor_label(
 	color: Color,
 	bold := false,
 	outline := 0,
-	outline_color := Color("#07131d")
+	outline_color := Palette.HARBOR_LABEL_OUTLINE
 ) -> Label:
-	return make_screen_label(text, font_size, color, bold, outline, outline_color, Color(0.0, 0.0, 0.0, 0.26))
+	return make_screen_label(text, font_size, color, bold, outline, outline_color, Palette.HARBOR_LABEL_SHADOW)
 
 
 func _apply_facility_button_skin(button: Button, primary: bool) -> void:

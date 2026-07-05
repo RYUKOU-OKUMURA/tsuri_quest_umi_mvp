@@ -103,14 +103,14 @@ func _draw_status_slot(font: Font, regular_font: Font, rect: Rect2, title: Strin
 	var body_size := 24 if not dark else 20
 	if rect.size.x < 230.0:
 		body_size = 22
-	var title_color := Color("#6d4d25") if not dark else Palette.GOLD_BRIGHT
-	var body_color := Color("#21170f") if not dark else Color("#eaf6ff")
+	var title_color := Palette.FIGHT_STATUS_TITLE_TEXT if not dark else Palette.GOLD_BRIGHT
+	var body_color := Palette.FIGHT_STATUS_BODY_TEXT if not dark else Palette.FIGHT_STATUS_LIGHT_TEXT
 	var outline := 0 if not dark else 3
 	var title_y := rect.position.y + rect.size.y * 0.40
 	var body_y := rect.position.y + rect.size.y * 0.72
 	if not dark and title == "AM":
 		var am_y := rect.position.y + rect.size.y * 0.56
-		_draw_text_clipped(font, title, Vector2(text_x - 4.0, am_y), 16, Color("#21170f"), max_width, outline)
+		_draw_text_clipped(font, title, Vector2(text_x - 4.0, am_y), 16, Palette.FIGHT_STATUS_BODY_TEXT, max_width, outline)
 		_draw_text_clipped(font, body, Vector2(text_x + 31.0, am_y + 1.0), 24, body_color, max_width - 31.0, outline)
 		return
 	if not dark and body.begins_with("風"):
@@ -122,9 +122,9 @@ func _draw_status_slot(font: Font, regular_font: Font, rect: Rect2, title: Strin
 		_draw_top_sheet_icon(
 			ICON_WIND,
 			Rect2(Vector2(wind_x, rect.position.y + (rect.size.y - wind_icon_size) * 0.5 + 1.0), Vector2(wind_icon_size, wind_icon_size)),
-			Color(1.0, 1.0, 1.0, 0.92)
+			Palette.FIGHT_STATUS_ICON_MODULATE_SOFT
 		)
-		_draw_text_clipped(font, body, Vector2(wind_x + 26.0, inline_y), 19, Color("#12382c"), max_width - (wind_x - text_x) - 26.0, outline)
+		_draw_text_clipped(font, body, Vector2(wind_x + 26.0, inline_y), 19, Palette.FIGHT_STATUS_WIND_TEXT, max_width - (wind_x - text_x) - 26.0, outline)
 		return
 	if not dark and title == "所持金":
 		var amount_y := rect.position.y + rect.size.y * 0.57
@@ -156,8 +156,8 @@ func _draw_centered_dark_slot(font: Font, regular_font: Font, rect: Rect2, title
 	var total_width := label_width + gap + value_width
 	var baseline := rect.position.y + rect.size.y * 0.75
 	var x := rect.position.x + (rect.size.x - total_width) * 0.5
-	_draw_text_clipped(regular_font, label, Vector2(x, baseline), depth_label_size, Color("#d9ecff"), label_width + 2.0, 1)
-	_draw_text_clipped(font, depth_value, Vector2(x + label_width + gap, baseline), depth_value_size, Color("#eaf6ff"), value_width + 2.0, 1)
+	_draw_text_clipped(regular_font, label, Vector2(x, baseline), depth_label_size, Palette.FIGHT_STATUS_DEPTH_LABEL_TEXT, label_width + 2.0, 1)
+	_draw_text_clipped(font, depth_value, Vector2(x + label_width + gap, baseline), depth_value_size, Palette.FIGHT_STATUS_LIGHT_TEXT, value_width + 2.0, 1)
 
 
 func _draw_status_icon(rect: Rect2, icon_index: int) -> void:
@@ -168,7 +168,7 @@ func _draw_status_icon(rect: Rect2, icon_index: int) -> void:
 		rect.position + Vector2(10.0, (rect.size.y - icon_size) * 0.5 + 1.0),
 		Vector2(icon_size, icon_size)
 	)
-	_draw_top_sheet_icon(icon_index, icon_rect, Color(1.0, 1.0, 1.0, 0.96))
+	_draw_top_sheet_icon(icon_index, icon_rect, Palette.FIGHT_STATUS_ICON_MODULATE)
 
 
 func _draw_weather_status_icon(rect: Rect2) -> void:
@@ -178,11 +178,11 @@ func _draw_weather_status_icon(rect: Rect2) -> void:
 		Vector2(icon_size, icon_size)
 	)
 	if _weather_icons == null:
-		_draw_top_sheet_icon(ICON_WEATHER, icon_rect, Color(1.0, 1.0, 1.0, 0.96))
+		_draw_top_sheet_icon(ICON_WEATHER, icon_rect, Palette.FIGHT_STATUS_ICON_MODULATE)
 		return
 	var cell_w := float(_weather_icons.get_width()) / float(WEATHER_ICON_COUNT)
 	var src := Rect2(float(_weather_icon_index()) * cell_w, 0.0, cell_w, float(_weather_icons.get_height()))
-	draw_texture_rect_region(_weather_icons, icon_rect, src, Color(1.0, 1.0, 1.0, 0.96))
+	draw_texture_rect_region(_weather_icons, icon_rect, src, Palette.FIGHT_STATUS_ICON_MODULATE)
 
 
 func _draw_top_sheet_icon(icon_index: int, target: Rect2, modulate: Color = Color.WHITE) -> void:
@@ -224,7 +224,7 @@ func _draw_text_clipped(
 			max_width,
 			font_size,
 			outline,
-			Color(0.0, 0.0, 0.0, 0.7)
+			Palette.FIGHT_STATUS_TEXT_OUTLINE
 		)
 	draw_string(font, baseline, display, HORIZONTAL_ALIGNMENT_LEFT, max_width, font_size, color)
 
@@ -278,9 +278,9 @@ func _spot_title() -> String:
 
 
 func _draw_fallback_frame(rect: Rect2) -> void:
-	draw_rect(rect, Color("#071523"), true)
+	draw_rect(rect, Palette.FIGHT_STATUS_FALLBACK_DARK, true)
 	draw_rect(rect.grow(-2.0), Palette.GOLD_DEEP, false, 2.0)
 	for slot in _slot_rects(rect):
-		var fill := Palette.PARCHMENT if slot.position.x < rect.position.x + rect.size.x * 0.70 else Color("#102c4b")
+		var fill := Palette.PARCHMENT if slot.position.x < rect.position.x + rect.size.x * 0.70 else Palette.FIGHT_STATUS_FALLBACK_WATER
 		draw_rect(slot.grow(-3.0), fill, true)
 		draw_rect(slot.grow(-3.0), Palette.GOLD, false, 2.0)

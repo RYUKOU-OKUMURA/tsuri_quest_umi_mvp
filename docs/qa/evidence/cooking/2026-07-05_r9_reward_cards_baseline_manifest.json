@@ -1,0 +1,41 @@
+{
+	"captures": [
+		{
+			"capture": "/tmp/tsuri_cooking_select.png",
+			"height": 720,
+			"state": "COOK_SELECT",
+			"verified_state": "current_prep_summary",
+			"width": 1280
+		},
+		{
+			"capture": "/tmp/tsuri_cooking_result.png",
+			"height": 720,
+			"state": "MEAL_RESULT",
+			"verified_state": "MEAL_RESULT",
+			"width": 1280
+		},
+		{
+			"capture": "/tmp/tsuri_cooking_exp.png",
+			"height": 720,
+			"state": "EXP_GAIN",
+			"verified_state": "EXP_GAIN",
+			"width": 1280
+		},
+		{
+			"capture": "/tmp/tsuri_cooking_levelup.png",
+			"height": 720,
+			"state": "LEVEL_UP_OVERLAY",
+			"verified_state": "LEVEL_UP_OVERLAY",
+			"width": 1280
+		},
+		{
+			"capture": "/tmp/tsuri_cooking_status.png",
+			"height": 720,
+			"state": "STATUS_SUMMARY",
+			"verified_state": "STATUS_SUMMARY",
+			"width": 1280
+		}
+	],
+	"source": "tools/cooking_preview.gd",
+	"version": 1
+}

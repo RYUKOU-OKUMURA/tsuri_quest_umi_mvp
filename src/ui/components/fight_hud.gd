@@ -119,7 +119,7 @@ func _draw() -> void:
 	if _hud_frame != null:
 		draw_texture_rect(_hud_frame, rect, false, Color.WHITE)
 	else:
-		_draw_panel(rect, Color("#08223b"), Palette.GOLD_DEEP, Palette.GOLD)
+		_draw_panel(rect, Palette.FIGHT_HUD_FALLBACK_PANEL_FILL, Palette.GOLD_DEEP, Palette.GOLD)
 
 	var gap := 10.0
 	var top := Rect2(gap, gap, size.x - gap * 2.0, minf(92.0, size.y * 0.54))
@@ -144,7 +144,7 @@ func _draw() -> void:
 
 
 func _draw_tension(font: Font, rect: Rect2) -> void:
-	_draw_panel(rect, Color("#0b1828"), Color("#122f4f"), Palette.GOLD_DEEP)
+	_draw_panel(rect, Palette.FIGHT_HUD_PANEL_DARK_FILL, Palette.FIGHT_HUD_PANEL_DARK_BORDER, Palette.GOLD_DEEP)
 	var title_y := 25.0 if _hud_frame == null else 26.0
 	var bar_y := 42.0 if _hud_frame == null else 43.0
 	var icon_size := 34.0 if _hud_frame == null else 24.0
@@ -153,7 +153,7 @@ func _draw_tension(font: Font, rect: Rect2) -> void:
 	if _hud_frame != null and _tension_icon != null:
 		_draw_tension_texture_icon(tension_icon_rect)
 	else:
-		_draw_hud_icon(ICON_TENSION, tension_icon_rect, Color("#ff5b63"), Color(1.0, 1.0, 1.0, 0.86))
+		_draw_hud_icon(ICON_TENSION, tension_icon_rect, Palette.FIGHT_HUD_TENSION_ICON, Palette.FIGHT_STATUS_ICON_MODULATE_SOFT)
 	_draw_text(font, "テンション", rect.position + Vector2(48.0 if _hud_frame == null else 40.0, title_y), title_size, Palette.TEXT_BONE, 1 if _hud_frame != null else 3)
 	var ratio := 0.0
 	var safe_min := 0.30
@@ -166,14 +166,14 @@ func _draw_tension(font: Font, rect: Rect2) -> void:
 	_draw_segment_gauge(bar, ratio, safe_min, safe_max, true)
 	var label_size := 16 if _hud_frame == null else 14
 	var right_label_margin := 24.0 if _hud_frame == null else 34.0
-	_draw_text(font, "ゆるい", rect.position + Vector2(24.0, rect.size.y - 8.0), label_size, Color("#72f47d"), 1 if _hud_frame != null else 2)
+	_draw_text(font, "ゆるい", rect.position + Vector2(24.0, rect.size.y - 8.0), label_size, Palette.FIGHT_HUD_TENSION_LOOSE_TEXT, 1 if _hud_frame != null else 2)
 	var tight := "きつい"
 	var tight_w := font.get_string_size(tight, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
-	_draw_text(font, tight, rect.position + Vector2(rect.size.x - tight_w - right_label_margin, rect.size.y - 8.0), label_size, Color("#ff823e"), 1 if _hud_frame != null else 2)
+	_draw_text(font, tight, rect.position + Vector2(rect.size.x - tight_w - right_label_margin, rect.size.y - 8.0), label_size, Palette.FIGHT_HUD_TENSION_TIGHT_TEXT, 1 if _hud_frame != null else 2)
 
 
 func _draw_depth(font: Font, rect: Rect2) -> void:
-	_draw_panel(rect, Color("#0b355f"), Color("#08213c"), Palette.GOLD)
+	_draw_panel(rect, Palette.FIGHT_HUD_PANEL_BLUE_FILL, Palette.FIGHT_HUD_PANEL_BLUE_BORDER, Palette.GOLD)
 	var title_y := 22.0 if _hud_frame == null else 24.0
 	var title := "タナ（深さ）"
 	var title_size := 17 if _hud_frame == null else 15
@@ -186,15 +186,15 @@ func _draw_depth(font: Font, rect: Rect2) -> void:
 	var value := "%.1fm" % depth
 	var value_size := 34 if _hud_frame == null else 30
 	var value_w := font.get_string_size(value, HORIZONTAL_ALIGNMENT_LEFT, -1, value_size).x
-	_draw_text(font, value, rect.position + Vector2((text_center_w - value_w) * 0.5, 59.0 if _hud_frame == null else 63.0), value_size, Color("#eaf6ff"), 1 if _hud_frame != null else 4)
+	_draw_text(font, value, rect.position + Vector2((text_center_w - value_w) * 0.5, 59.0 if _hud_frame == null else 63.0), value_size, Palette.FIGHT_HUD_DEPTH_VALUE_TEXT, 1 if _hud_frame != null else 4)
 	var cx := rect.position.x + rect.size.x - (17.0 if _hud_frame != null else 22.0)
 	var arrow_radius := 11.0 if _hud_frame != null else 14.0
-	_draw_triangle(Vector2(cx, rect.position.y + 34.0), arrow_radius, Color("#29baf7"), true)
-	_draw_triangle(Vector2(cx, rect.position.y + 72.0), arrow_radius, Color("#ff6b3e"), false)
+	_draw_triangle(Vector2(cx, rect.position.y + 34.0), arrow_radius, Palette.FIGHT_HUD_DEPTH_UP_ARROW, true)
+	_draw_triangle(Vector2(cx, rect.position.y + 72.0), arrow_radius, Palette.FIGHT_HUD_DEPTH_DOWN_ARROW, false)
 
 
 func _draw_stamina(font: Font, rect: Rect2) -> void:
-	_draw_panel(rect, Color("#0b1828"), Color("#122f4f"), Palette.GOLD_DEEP)
+	_draw_panel(rect, Palette.FIGHT_HUD_PANEL_DARK_FILL, Palette.FIGHT_HUD_PANEL_DARK_BORDER, Palette.GOLD_DEEP)
 	var title_y := 25.0 if _hud_frame == null else 26.0
 	var bar_y := 42.0 if _hud_frame == null else 43.0
 	var icon_size := 34.0 if _hud_frame == null else 24.0
@@ -203,7 +203,7 @@ func _draw_stamina(font: Font, rect: Rect2) -> void:
 	if _hud_frame != null and _stamina_icon != null:
 		_draw_texture_icon(_stamina_icon, stamina_icon_rect)
 	else:
-		_draw_hud_icon(ICON_STAMINA, stamina_icon_rect, Color("#6cc8ff"), Color(1.0, 1.0, 1.0, 0.86))
+		_draw_hud_icon(ICON_STAMINA, stamina_icon_rect, Palette.FIGHT_HUD_STAMINA_ICON, Palette.FIGHT_STATUS_ICON_MODULATE_SOFT)
 	_draw_text(font, "魚の体力", rect.position + Vector2(48.0 if _hud_frame == null else 40.0, title_y), title_size, Palette.TEXT_BONE, 1 if _hud_frame != null else 3)
 	var ratio := 1.0
 	if simulator != null:
@@ -212,10 +212,10 @@ func _draw_stamina(font: Font, rect: Rect2) -> void:
 	_draw_segment_gauge(bar, ratio, 0.0, 1.0, false)
 	var label_size := 16 if _hud_frame == null else 14
 	var right_label_margin := 24.0 if _hud_frame == null else 34.0
-	_draw_text(font, "弱い", rect.position + Vector2(24.0, rect.size.y - 8.0), label_size, Color("#fff1c7"), 1 if _hud_frame != null else 2)
+	_draw_text(font, "弱い", rect.position + Vector2(24.0, rect.size.y - 8.0), label_size, Palette.TEXT_BONE, 1 if _hud_frame != null else 2)
 	var strong := "強い"
 	var strong_w := font.get_string_size(strong, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
-	_draw_text(font, strong, rect.position + Vector2(rect.size.x - strong_w - right_label_margin, rect.size.y - 8.0), label_size, Color("#fff1c7"), 1 if _hud_frame != null else 2)
+	_draw_text(font, strong, rect.position + Vector2(rect.size.x - strong_w - right_label_margin, rect.size.y - 8.0), label_size, Palette.TEXT_BONE, 1 if _hud_frame != null else 2)
 
 
 func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
@@ -244,7 +244,7 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 	_draw_panel(bait, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	var bait_text_x := 16.0
 	var bait_label_size := 17 if _hud_frame == null else 15
-	var bait_label_color := Color("#fff1cb") if _hud_frame != null else Color("#6a4c2b")
+	var bait_label_color := Palette.FIGHT_HUD_BAIT_LABEL_FRAME_TEXT if _hud_frame != null else Palette.FIGHT_HUD_BAIT_LABEL_FALLBACK_TEXT
 	var bait_label_outline := 1 if _hud_frame != null else 0
 	_draw_text(font, "使用中のエサ", bait.position + Vector2(bait_text_x, 19.0), bait_label_size, bait_label_color, bait_label_outline)
 	if _bait_icon != null:
@@ -259,8 +259,8 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 		)
 	else:
 		_draw_bait_icon(bait.position + Vector2(82.0 if _hud_frame == null else 95.0, bait.size.y * 0.62))
-	_draw_text(font, _rig_name_text(), bait.position + Vector2(116.0, bait.size.y * (0.56 if _hud_frame != null else 0.66)), 18 if _hud_frame != null else 19, Color("#2b2117"), 0)
-	_draw_text(font, _rig_bait_text(), bait.position + Vector2(116.0, bait.size.y * (0.74 if _hud_frame != null else 0.92)), 14 if _hud_frame != null else 16, Color("#2b2117"), 0)
+	_draw_text(font, _rig_name_text(), bait.position + Vector2(116.0, bait.size.y * (0.56 if _hud_frame != null else 0.66)), 18 if _hud_frame != null else 19, Palette.FIGHT_HUD_DARK_INK, 0)
+	_draw_text(font, _rig_bait_text(), bait.position + Vector2(116.0, bait.size.y * (0.74 if _hud_frame != null else 0.92)), 14 if _hud_frame != null else 16, Palette.FIGHT_HUD_DARK_INK, 0)
 
 	_draw_panel(hint, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
 	var hint_title := "操作のヒント"
@@ -269,10 +269,10 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 		var hint_title_w := font.get_string_size(hint_title, HORIZONTAL_ALIGNMENT_LEFT, -1, hint_title_size).x
 		_draw_text(font, hint_title, hint.position + Vector2((hint.size.x - hint_title_w) * 0.5, 21.0), hint_title_size, Palette.TEXT_BONE, 1)
 	else:
-		_draw_text(font, hint_title, hint.position + Vector2(18.0, 21.0), 18, Color("#6a4c2b"), 0)
+		_draw_text(font, hint_title, hint.position + Vector2(18.0, 21.0), 18, Palette.FIGHT_HUD_BAIT_LABEL_FALLBACK_TEXT, 0)
 	_draw_operation_hints(font, key_slots)
 
-	_draw_panel(menu, Color("#0b355f"), Color("#08213c"), Palette.GOLD)
+	_draw_panel(menu, Palette.FIGHT_HUD_PANEL_BLUE_FILL, Palette.FIGHT_HUD_PANEL_BLUE_BORDER, Palette.GOLD)
 	_draw_menu_button(_change_spot_rect)
 	_draw_menu_button(_harbor_rect)
 	if _hud_frame != null:
@@ -285,42 +285,42 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 
 func _draw_segment_gauge(rect: Rect2, ratio: float, safe_min: float, safe_max: float, warm: bool) -> void:
 	if _hud_frame == null:
-		draw_rect(rect.grow(3.0), Color(0.0, 0.0, 0.0, 0.35), true)
-		draw_rect(rect, Color("#07101b"), true)
-		draw_rect(rect, Color("#0f2a43"), false, 2.0)
+		draw_rect(rect.grow(3.0), Palette.FIGHT_HUD_GAUGE_BACK_SHADOW, true)
+		draw_rect(rect, Palette.FIGHT_HUD_GAUGE_TRACK_DARK, true)
+		draw_rect(rect, Palette.FIGHT_HUD_GAUGE_TRACK_BORDER, false, 2.0)
 	var segments := 18
 	var gap := 1.5 if _hud_frame != null else 2.0
 	var seg_w := (rect.size.x - gap * float(segments - 1)) / float(segments)
 	if _hud_frame != null:
-		draw_rect(rect.grow(2.0), Color(0.0, 0.0, 0.0, 0.15), true)
-		draw_rect(rect, Color("#050b12", 0.74), true)
+		draw_rect(rect.grow(2.0), Palette.FIGHT_HUD_GAUGE_FRAME_SHADOW, true)
+		draw_rect(rect, Color(Palette.FIGHT_HUD_GAUGE_FRAME_TRACK, 0.74), true)
 	for i in range(segments):
 		var start := float(i) / float(segments)
 		var filled := start < ratio
-		var color := Color("#071018")
+		var color := Palette.FIGHT_HUD_GAUGE_SEGMENT_EMPTY
 		if filled:
 			if warm:
-				color = Color("#25d755").lerp(Color("#f1d94f"), clampf(start / 0.55, 0.0, 1.0))
-				color = color.lerp(Color("#d95524"), clampf((start - 0.55) / 0.45, 0.0, 1.0))
+				color = Palette.FIGHT_HUD_GAUGE_SEGMENT_GREEN.lerp(Palette.FIGHT_HUD_GAUGE_SEGMENT_YELLOW, clampf(start / 0.55, 0.0, 1.0))
+				color = color.lerp(Palette.FIGHT_HUD_GAUGE_SEGMENT_RED, clampf((start - 0.55) / 0.45, 0.0, 1.0))
 			else:
-				color = Color("#21d34a").lerp(Color("#16c6b5"), start)
+				color = Palette.FIGHT_HUD_GAUGE_STAMINA_GREEN.lerp(Palette.FIGHT_HUD_GAUGE_STAMINA_CYAN, start)
 		var seg := Rect2(rect.position + Vector2(float(i) * (seg_w + gap), 2.0), Vector2(seg_w, rect.size.y - 4.0))
 		if _hud_frame != null:
 			var alpha := 0.94 if filled else 0.78
 			var seg_color := Color(color.r, color.g, color.b, alpha)
 			draw_rect(seg, seg_color, true)
-			draw_rect(Rect2(seg.position, Vector2(seg.size.x, maxf(1.0, seg.size.y * 0.22))), Color(1.0, 1.0, 1.0, 0.10 if filled else 0.018), true)
-			draw_rect(Rect2(Vector2(seg.position.x, seg.end.y - 2.0), Vector2(seg.size.x, 2.0)), Color(0.0, 0.0, 0.0, 0.16 if filled else 0.22), true)
+			draw_rect(Rect2(seg.position, Vector2(seg.size.x, maxf(1.0, seg.size.y * 0.22))), Color(Color.WHITE, 0.10 if filled else 0.018), true)
+			draw_rect(Rect2(Vector2(seg.position.x, seg.end.y - 2.0), Vector2(seg.size.x, 2.0)), Color(Color.BLACK, 0.16 if filled else 0.22), true)
 		else:
 			draw_rect(seg, color, true)
-			draw_rect(seg, Color(1.0, 1.0, 1.0, 0.13), false, 1.0)
+			draw_rect(seg, Color(Color.WHITE, 0.13), false, 1.0)
 	if warm:
 		for marker in [safe_min, safe_max]:
 			var tick_x := rect.position.x + rect.size.x * clampf(marker, 0.0, 1.0)
-			draw_line(Vector2(tick_x, rect.position.y + 2.0), Vector2(tick_x, rect.end.y - 2.0), Color(1.0, 1.0, 1.0, 0.18), 1.0)
+			draw_line(Vector2(tick_x, rect.position.y + 2.0), Vector2(tick_x, rect.end.y - 2.0), Color(Color.WHITE, 0.18), 1.0)
 		var x := rect.position.x + rect.size.x * clampf(ratio, 0.0, 1.0)
-		var marker_color := Color(1.0, 0.97, 0.84, 0.86)
-		draw_line(Vector2(x + 1.5, rect.position.y - 1.0), Vector2(x + 1.5, rect.end.y + 3.0), Color(0.0, 0.0, 0.0, 0.28), 2.0)
+		var marker_color := Color(Palette.TEXT_BONE, 0.86)
+		draw_line(Vector2(x + 1.5, rect.position.y - 1.0), Vector2(x + 1.5, rect.end.y + 3.0), Palette.FIGHT_SIDEBAR_PANEL_SHADOW, 2.0)
 		draw_line(Vector2(x, rect.position.y - 2.0), Vector2(x, rect.end.y + 3.0), marker_color, 1.5)
 		_draw_triangle(Vector2(x, rect.position.y - 7.0), 6.0, marker_color, false)
 
@@ -328,7 +328,7 @@ func _draw_segment_gauge(rect: Rect2, ratio: float, safe_min: float, safe_max: f
 func _draw_panel(rect: Rect2, fill: Color, border: Color, highlight: Color) -> void:
 	if _hud_frame != null:
 		return
-	draw_rect(rect, Color(0.0, 0.0, 0.0, 0.32), true)
+	draw_rect(rect, Palette.FIGHT_HUD_PANEL_SHADOW, true)
 	var body := rect.grow(-3.0)
 	draw_rect(body, fill, true)
 	draw_rect(body, border, false, 2.0)
@@ -344,26 +344,26 @@ func _draw_panel(rect: Rect2, fill: Color, border: Color, highlight: Color) -> v
 
 func _draw_menu_button(rect: Rect2) -> void:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#0e466f", 0.86) if _hud_frame != null else Color("#123f63")
-	style.border_color = Color("#d7b766", 0.88)
+	style.bg_color = Color(Palette.FIGHT_HUD_MENU_BUTTON_FRAME_FILL, 0.86) if _hud_frame != null else Palette.FIGHT_HUD_MENU_BUTTON_FILL
+	style.border_color = Color(Palette.FIGHT_HUD_MENU_BUTTON_BORDER, 0.88)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(4)
-	style.shadow_color = Color(0.0, 0.0, 0.0, 0.28)
+	style.shadow_color = Palette.FIGHT_SIDEBAR_PANEL_SHADOW
 	style.shadow_size = 2
 	draw_style_box(style, rect)
-	draw_line(rect.position + Vector2(7.0, 4.0), rect.position + Vector2(rect.size.x - 7.0, 4.0), Color(1.0, 1.0, 1.0, 0.12), 1.0)
+	draw_line(rect.position + Vector2(7.0, 4.0), rect.position + Vector2(rect.size.x - 7.0, 4.0), Color(Color.WHITE, 0.12), 1.0)
 
 
 func _draw_text(font: Font, text: String, baseline: Vector2, font_size: int, color: Color, outline: int) -> void:
 	if outline > 0:
-		draw_string_outline(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, outline, Color(0.0, 0.0, 0.0, 0.7))
+		draw_string_outline(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, outline, Palette.FIGHT_HUD_TEXT_OUTLINE)
 	draw_string(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
 
 
 func _draw_icon_badge(center: Vector2, color: Color) -> void:
-	draw_circle(center, 11.0, Color(0.0, 0.0, 0.0, 0.42))
+	draw_circle(center, 11.0, Palette.FIGHT_HUD_BADGE_SHADOW)
 	draw_circle(center, 8.0, color)
-	draw_circle(center + Vector2(-2.0, -2.0), 2.5, Color(1.0, 1.0, 1.0, 0.55))
+	draw_circle(center + Vector2(-2.0, -2.0), 2.5, Palette.FIGHT_HUD_BADGE_HIGHLIGHT)
 
 
 func _draw_hud_icon(icon_index: int, rect: Rect2, fallback_color: Color, modulate: Color = Color.WHITE) -> void:
@@ -425,10 +425,10 @@ func _draw_triangle(center: Vector2, radius: float, color: Color, up: bool) -> v
 
 
 func _draw_bait_icon(center: Vector2) -> void:
-	draw_arc(center, 18.0, -0.8, 2.7, 18, Color("#8d2e1e"), 6.0)
-	draw_circle(center + Vector2(-10.0, -5.0), 9.0, Color("#f08b42"))
-	draw_circle(center + Vector2(2.0, 3.0), 8.0, Color("#f3a04c"))
-	draw_circle(center + Vector2(-12.0, -8.0), 2.0, Color("#fff2ce"))
+	draw_arc(center, 18.0, -0.8, 2.7, 18, Palette.FIGHT_HUD_BAIT_ICON_DARK, 6.0)
+	draw_circle(center + Vector2(-10.0, -5.0), 9.0, Palette.FIGHT_HUD_BAIT_ICON_MID)
+	draw_circle(center + Vector2(2.0, 3.0), 8.0, Palette.FIGHT_HUD_BAIT_ICON_LIGHT)
+	draw_circle(center + Vector2(-12.0, -8.0), 2.0, Palette.FIGHT_HUD_BAIT_ICON_SHINE)
 
 
 func _draw_operation_hints(font: Font, key_slots: Array[Rect2]) -> void:
@@ -482,8 +482,8 @@ func _draw_keyboard_hint(
 	var label_size := 17 if _hud_frame != null else 16
 	if key == "E / Enter":
 		label_size = 16
-	var label_color := Color("#21170f") if enabled or accent else Color("#5c4b35", 0.78)
-	var note_color := Color("#3a2a18") if enabled or accent else Color("#6c5c43", 0.62)
+	var label_color := Palette.FIGHT_STATUS_BODY_TEXT if enabled or accent else Color(Palette.FIGHT_HUD_HINT_DISABLED_LABEL, 0.78)
+	var note_color := Palette.FIGHT_HUD_HINT_NOTE if enabled or accent else Color(Palette.FIGHT_HUD_HINT_DISABLED_NOTE, 0.62)
 	var label_x := key_rect.end.x + 6.0
 	var label_baseline := key_rect.position.y + 17.0
 	var label_w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
@@ -505,59 +505,59 @@ func _draw_keyboard_hint(
 
 func _draw_keyboard_key_cap(font: Font, key_rect: Rect2, key: String, active: bool, enabled: bool) -> void:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#223247", 0.92 if enabled else 0.45)
+	style.bg_color = Color(Palette.FIGHT_HUD_KEY_SPACE_FILL, 0.92 if enabled else 0.45)
 	if key == "Shift":
-		style.bg_color = Color("#2d342c", 0.92 if enabled else 0.45)
+		style.bg_color = Color(Palette.FIGHT_HUD_KEY_SHIFT_FILL, 0.92 if enabled else 0.45)
 	elif key == "E / Enter":
-		style.bg_color = Color("#4a2f2a", 0.96 if enabled else 0.48)
+		style.bg_color = Color(Palette.FIGHT_HUD_KEY_ENTER_FILL, 0.96 if enabled else 0.48)
 	if active:
 		style.bg_color = style.bg_color.lightened(0.18)
-	style.border_color = Color("#f0c66a", 0.86 if enabled else 0.36)
+	style.border_color = Color(Palette.FIGHT_HUD_KEY_BORDER, 0.86 if enabled else 0.36)
 	if active:
-		style.border_color = Color("#ffe38f")
+		style.border_color = Palette.FIGHT_HUD_KEY_BORDER_ACTIVE
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(5)
-	style.shadow_color = Color(0.0, 0.0, 0.0, 0.24 if enabled else 0.10)
+	style.shadow_color = Color(Color.BLACK, 0.24 if enabled else 0.10)
 	style.shadow_size = 1
 	draw_style_box(style, key_rect)
 	draw_line(
 		key_rect.position + Vector2(6.0, 4.0),
 		key_rect.position + Vector2(key_rect.size.x - 6.0, 4.0),
-		Color(1.0, 1.0, 1.0, 0.15 if enabled else 0.05),
+		Color(Color.WHITE, 0.15 if enabled else 0.05),
 		1.0
 	)
 	var key_size := 11 if key != "E / Enter" else 10
 	var key_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
-	var text_color := Color("#fff5d0") if enabled else Color("#fff5d0", 0.55)
+	var text_color := Palette.FIGHT_HUD_KEY_TEXT if enabled else Color(Palette.FIGHT_HUD_KEY_TEXT, 0.55)
 	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_w) * 0.5, 16.0), key_size, text_color, 1 if enabled else 0)
 
 
 func _draw_safe_zone_hint(font: Font, rect: Rect2) -> void:
 	var gauge := Rect2(rect.position + Vector2(6.0, 9.0), Vector2(58.0, 12.0))
-	draw_rect(gauge.grow(1.5), Color(0.0, 0.0, 0.0, 0.20), true)
-	draw_rect(gauge, Color("#09130d", 0.86), true)
+	draw_rect(gauge.grow(1.5), Color(Color.BLACK, 0.20), true)
+	draw_rect(gauge, Color(Palette.FIGHT_HUD_SAFE_GAUGE_TRACK, 0.86), true)
 	var segments := 5
 	var gap := 1.5
 	var seg_w := (gauge.size.x - gap * float(segments - 1)) / float(segments)
 	for i in range(segments):
 		var seg := Rect2(gauge.position + Vector2(float(i) * (seg_w + gap), 2.0), Vector2(seg_w, gauge.size.y - 4.0))
-		var color := Color("#1b3b2c")
+		var color := Palette.FIGHT_HUD_SAFE_GAUGE_FILL_DARK
 		if i >= 1 and i <= 3:
-			color = Color("#27c85f")
+			color = Palette.FIGHT_HUD_SAFE_GAUGE_FILL
 		draw_rect(seg, color, true)
-		draw_rect(Rect2(seg.position, Vector2(seg.size.x, 2.0)), Color(1.0, 1.0, 1.0, 0.08), true)
-	_draw_text(font, "安全域", rect.position + Vector2(72.0, 19.0), 16 if _hud_frame != null else 15, Color("#21170f"), 0)
+		draw_rect(Rect2(seg.position, Vector2(seg.size.x, 2.0)), Color(Color.WHITE, 0.08), true)
+	_draw_text(font, "安全域", rect.position + Vector2(72.0, 19.0), 16 if _hud_frame != null else 15, Palette.FIGHT_STATUS_BODY_TEXT, 0)
 	var note_font := GameFontsScript.regular(get_theme_default_font())
-	_draw_text(note_font, "緑ゲージを保つ", rect.position + Vector2(6.0, 40.0), 10 if _hud_frame != null else 11, Color("#3a2a18"), 0)
+	_draw_text(note_font, "緑ゲージを保つ", rect.position + Vector2(6.0, 40.0), 10 if _hud_frame != null else 11, Palette.FIGHT_HUD_HINT_NOTE, 0)
 
 
 func _draw_status_hint(font: Font, rect: Rect2, label: String, note: String) -> void:
 	var dot := rect.position + Vector2(14.0, 16.0)
-	draw_circle(dot + Vector2(1.0, 1.0), 5.0, Color(0.0, 0.0, 0.0, 0.18))
-	draw_circle(dot, 4.5, Color("#d7b766", 0.70))
-	_draw_text(font, label, rect.position + Vector2(26.0, 20.0), 16 if _hud_frame != null else 15, Color("#5c4b35", 0.86), 0)
+	draw_circle(dot + Vector2(1.0, 1.0), 5.0, Color(Color.BLACK, 0.18))
+	draw_circle(dot, 4.5, Color(Palette.FIGHT_HUD_STATUS_DOT, 0.70))
+	_draw_text(font, label, rect.position + Vector2(26.0, 20.0), 16 if _hud_frame != null else 15, Color(Palette.FIGHT_HUD_HINT_DISABLED_LABEL, 0.86), 0)
 	var note_font := GameFontsScript.regular(get_theme_default_font())
-	_draw_text(note_font, note, rect.position + Vector2(8.0, 40.0), 10 if _hud_frame != null else 11, Color("#6c5c43", 0.72), 0)
+	_draw_text(note_font, note, rect.position + Vector2(8.0, 40.0), 10 if _hud_frame != null else 11, Color(Palette.FIGHT_HUD_HINT_DISABLED_NOTE, 0.72), 0)
 
 
 func _keyboard_key_width(key: String) -> float:
@@ -607,13 +607,13 @@ func _is_giving_active() -> bool:
 
 func _draw_key_row(font: Font, pos: Vector2, key: String, label: String) -> void:
 	var key_rect := Rect2(pos + Vector2(0.0, -14.0), Vector2(28.0 if key.length() <= 1 else 46.0, 24.0))
-	draw_rect(key_rect, Color("#26344a"), true)
+	draw_rect(key_rect, Palette.FIGHT_HUD_KEY_ROW_FILL, true)
 	draw_rect(key_rect, Palette.GOLD, false, 1.0)
 	var key_size := 15
 	var key_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
 	_draw_text(font, key, key_rect.position + Vector2((key_rect.size.x - key_w) * 0.5, 17.0), key_size, Color.WHITE, 1)
 	var label_size := 14 if label.length() >= 6 else 16
-	_draw_text(font, label, pos + Vector2(key_rect.size.x + 8.0, 3.0), label_size, Color("#2b2117") if key != "+" and key != "-" else Palette.TEXT_BONE, 0 if key != "+" and key != "-" else 2)
+	_draw_text(font, label, pos + Vector2(key_rect.size.x + 8.0, 3.0), label_size, Palette.FIGHT_HUD_DARK_INK if key != "+" and key != "-" else Palette.TEXT_BONE, 0 if key != "+" and key != "-" else 2)
 
 
 func _draw_menu_row(font: Font, pos: Vector2, key: String, label: String) -> void:
@@ -622,13 +622,13 @@ func _draw_menu_row(font: Font, pos: Vector2, key: String, label: String) -> voi
 	if _hud_frame != null and key_texture != null:
 		_draw_texture_icon(key_texture, Rect2(center - Vector2(12.0, 12.0), Vector2(24.0, 24.0)))
 	else:
-		draw_circle(center + Vector2(1.5, 2.0), 11.5, Color(0.0, 0.0, 0.0, 0.28))
-		draw_circle(center, 10.0, Color("#f7e8c4"))
-		draw_circle(center, 10.0, Color("#b98a42"), false, 1.0)
-		draw_line(center + Vector2(-5.5, -5.5), center + Vector2(5.5, -5.5), Color(1.0, 1.0, 1.0, 0.36), 1.0)
+		draw_circle(center + Vector2(1.5, 2.0), 11.5, Palette.FIGHT_SIDEBAR_PANEL_SHADOW)
+		draw_circle(center, 10.0, Palette.FIGHT_HUD_MENU_KEY_FILL)
+		draw_circle(center, 10.0, Palette.FIGHT_HUD_MENU_KEY_BORDER, false, 1.0)
+		draw_line(center + Vector2(-5.5, -5.5), center + Vector2(5.5, -5.5), Palette.FIGHT_HUD_MENU_KEY_HIGHLIGHT, 1.0)
 		var key_size := 16
 		var key_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, key_size).x
-		_draw_text(font, key, Vector2(center.x - key_w * 0.5, center.y + 5.0), key_size, Color("#2b2117"), 0)
+		_draw_text(font, key, Vector2(center.x - key_w * 0.5, center.y + 5.0), key_size, Palette.FIGHT_HUD_DARK_INK, 0)
 	var label_size := 14 if label.length() >= 6 else 15
 	_draw_text(font, label, pos + Vector2(28.0, 4.0), label_size, Palette.TEXT_BONE, 1)
 

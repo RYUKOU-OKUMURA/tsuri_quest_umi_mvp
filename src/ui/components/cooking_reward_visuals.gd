@@ -23,32 +23,32 @@ class SceneActorVisual:
 		if USE_CUTOUT_TEXTURE_ASSETS and _draw_texture_asset(EATING_POSE):
 			return
 		var center := size * 0.5
-		draw_ellipse(center + Vector2(0.0, 62.0), 42.0, 8.0, Color(0.0, 0.0, 0.0, 0.28))
-		draw_rect(Rect2(center.x - 42.0, center.y + 8.0, 84.0, 50.0), Color("#17324d"))
-		draw_rect(Rect2(center.x - 42.0, center.y + 8.0, 84.0, 8.0), Color("#2c5f8c"))
-		draw_circle(center + Vector2(0.0, -22.0), 29.0, Color("#f2b889"))
-		draw_rect(Rect2(center.x - 31.0, center.y - 51.0, 62.0, 16.0), Color("#1d4771"))
-		draw_rect(Rect2(center.x - 22.0, center.y - 62.0, 44.0, 14.0), Color("#234f7c"))
-		draw_circle(center + Vector2(-11.0, -24.0), 3.0, Color("#1d160f"))
-		draw_circle(center + Vector2(11.0, -24.0), 3.0, Color("#1d160f"))
-		draw_arc(center + Vector2(0.0, -14.0), 11.0, 0.15, PI - 0.15, 12, Color("#6a2a1c"), 3.0)
-		draw_line(center + Vector2(-33.0, 6.0), center + Vector2(-58.0, 25.0), Color("#f2b889"), 8.0)
-		draw_line(center + Vector2(33.0, 6.0), center + Vector2(57.0, 25.0), Color("#f2b889"), 8.0)
-		draw_line(center + Vector2(-54.0, 18.0), center + Vector2(-11.0, -5.0), Color("#d9a45f"), 3.0)
-		draw_arc(center + Vector2(0.0, 36.0), 30.0, 0.0, PI, 22, Color("#fff4d4"), 5.0)
-		draw_arc(center + Vector2(0.0, 33.0), 25.0, 0.0, PI, 20, Color("#b35f25"), 5.0)
+		draw_ellipse(center + Vector2(0.0, 62.0), 42.0, 8.0, Palette.COOKING_REWARD_VISUAL_ACTOR_SHADOW)
+		draw_rect(Rect2(center.x - 42.0, center.y + 8.0, 84.0, 50.0), Palette.COOKING_REWARD_VISUAL_PLAYER_BODY)
+		draw_rect(Rect2(center.x - 42.0, center.y + 8.0, 84.0, 8.0), Palette.COOKING_REWARD_VISUAL_PLAYER_BODY_HI)
+		draw_circle(center + Vector2(0.0, -22.0), 29.0, Palette.COOKING_REWARD_VISUAL_SKIN)
+		draw_rect(Rect2(center.x - 31.0, center.y - 51.0, 62.0, 16.0), Palette.COOKING_REWARD_VISUAL_PLAYER_CAP)
+		draw_rect(Rect2(center.x - 22.0, center.y - 62.0, 44.0, 14.0), Palette.COOKING_REWARD_VISUAL_PLAYER_CAP_HI)
+		draw_circle(center + Vector2(-11.0, -24.0), 3.0, Palette.COOKING_REWARD_VISUAL_FACE_DARK)
+		draw_circle(center + Vector2(11.0, -24.0), 3.0, Palette.COOKING_REWARD_VISUAL_FACE_DARK)
+		draw_arc(center + Vector2(0.0, -14.0), 11.0, 0.15, PI - 0.15, 12, Palette.COOKING_REWARD_VISUAL_MOUTH, 3.0)
+		draw_line(center + Vector2(-33.0, 6.0), center + Vector2(-58.0, 25.0), Palette.COOKING_REWARD_VISUAL_SKIN, 8.0)
+		draw_line(center + Vector2(33.0, 6.0), center + Vector2(57.0, 25.0), Palette.COOKING_REWARD_VISUAL_SKIN, 8.0)
+		draw_line(center + Vector2(-54.0, 18.0), center + Vector2(-11.0, -5.0), Palette.COOKING_REWARD_VISUAL_CHOPSTICK, 3.0)
+		draw_arc(center + Vector2(0.0, 36.0), 30.0, 0.0, PI, 22, Palette.COOKING_REWARD_VISUAL_BONE, 5.0)
+		draw_arc(center + Vector2(0.0, 33.0), 25.0, 0.0, PI, 20, Palette.COOKING_REWARD_VISUAL_BOWL_RIM, 5.0)
 		for i in range(3):
 			var x := center.x - 18.0 + float(i) * 18.0
-			draw_arc(Vector2(x, center.y + 8.0), 14.0, -1.7, 0.9, 12, Color(1.0, 0.92, 0.70, 0.32), 2.0)
+			draw_arc(Vector2(x, center.y + 8.0), 14.0, -1.7, 0.9, 12, Palette.COOKING_REWARD_VISUAL_NOODLE_STEAM, 2.0)
 
 	func _draw_exp_power() -> void:
 		var center := size * 0.5
-		var cyan := Color("#6bf1ff")
-		var gold := Color("#ffe081")
-		var green := Color("#9cff6f")
-		draw_ellipse(center + Vector2(0.0, 63.0), 42.0, 7.0, Color(0.0, 0.0, 0.0, 0.28))
-		draw_arc(center + Vector2(0.0, 24.0), 32.0, 0.05, PI - 0.05, 24, Color("#fff4d4"), 5.0)
-		draw_arc(center + Vector2(0.0, 21.0), 26.0, 0.05, PI - 0.05, 22, Color("#b35f25"), 5.0)
+		var cyan := Palette.COOKING_REWARD_VISUAL_CYAN
+		var gold := Palette.COOKING_REWARD_VISUAL_GOLD
+		var green := Palette.COOKING_REWARD_VISUAL_EXP_GREEN
+		draw_ellipse(center + Vector2(0.0, 63.0), 42.0, 7.0, Palette.COOKING_REWARD_VISUAL_ACTOR_SHADOW)
+		draw_arc(center + Vector2(0.0, 24.0), 32.0, 0.05, PI - 0.05, 24, Palette.COOKING_REWARD_VISUAL_BONE, 5.0)
+		draw_arc(center + Vector2(0.0, 21.0), 26.0, 0.05, PI - 0.05, 22, Palette.COOKING_REWARD_VISUAL_BOWL_RIM, 5.0)
 		for i in range(6):
 			var angle := -2.45 + float(i) * 0.98
 			var from := center + Vector2(cos(angle), sin(angle)) * 21.0
@@ -56,8 +56,8 @@ class SceneActorVisual:
 			var color := cyan if i % 2 == 0 else green
 			color.a = 0.52
 			draw_line(from, to, color, 4.0)
-		draw_circle(center + Vector2(0.0, -23.0), 27.0, Color(0.05, 0.45, 0.32, 0.46))
-		draw_circle(center + Vector2(0.0, -23.0), 16.0, Color(0.42, 1.0, 0.70, 0.65))
+		draw_circle(center + Vector2(0.0, -23.0), 27.0, Palette.COOKING_REWARD_VISUAL_EXP_ORB)
+		draw_circle(center + Vector2(0.0, -23.0), 16.0, Palette.COOKING_REWARD_VISUAL_EXP_ORB_CORE)
 		for i in range(7):
 			var p := center + Vector2(-46.0 + float(i) * 15.0, -58.0 + float((i * 17) % 36))
 			draw_line(p + Vector2(-4.0, 0.0), p + Vector2(4.0, 0.0), gold, 2.0)
@@ -111,11 +111,11 @@ class MealTableSpreadVisual:
 			Vector2(size.x * 0.00, size.y * 0.55),
 			Vector2(size.x, size.y * 0.38)
 		)
-		draw_rect(table_rect, Color(0.26, 0.12, 0.04, 0.58))
+		draw_rect(table_rect, Palette.COOKING_REWARD_VISUAL_TABLE_FILL)
 		draw_line(
 			table_rect.position + Vector2(0.0, 4.0),
 			table_rect.position + Vector2(table_rect.size.x, 4.0),
-			Color(0.96, 0.70, 0.34, 0.34),
+			Palette.COOKING_REWARD_VISUAL_TABLE_EDGE,
 			2.0
 		)
 		for i in range(3):
@@ -123,10 +123,10 @@ class MealTableSpreadVisual:
 			draw_line(
 				Vector2(table_rect.position.x + 10.0, y),
 				Vector2(table_rect.end.x - 10.0, y + sin(float(i)) * 4.0),
-				Color(0.68, 0.36, 0.14, 0.18),
+				Palette.COOKING_REWARD_VISUAL_TABLE_RULE,
 				2.0
 		)
-		draw_ellipse(Vector2(size.x * 0.54, size.y * 0.77), size.x * 0.46, 18.0, Color(0.0, 0.0, 0.0, 0.28))
+		draw_ellipse(Vector2(size.x * 0.54, size.y * 0.77), size.x * 0.46, 18.0, Palette.COOKING_REWARD_VISUAL_ACTOR_SHADOW)
 		if not _draw_table_spread_asset():
 			if not _draw_dish_icon_spread():
 				_draw_feature_dish_on_table()
@@ -194,18 +194,18 @@ class MealTableSpreadVisual:
 		var body_center := rect.position + Vector2(rect.size.x * 0.46, rect.size.y * 0.42)
 		var body_rx := rect.size.x * 0.28
 		var body_ry := rect.size.y * 0.105
-		draw_ellipse(body_center + Vector2(0.0, 1.0), body_rx, body_ry, Color("#8f4b20"))
-		draw_ellipse(body_center + Vector2(-4.0, -1.0), body_rx * 0.82, body_ry * 0.62, Color("#c16a2b", 0.74))
+		draw_ellipse(body_center + Vector2(0.0, 1.0), body_rx, body_ry, Palette.COOKING_REWARD_VISUAL_GRILLED_BODY)
+		draw_ellipse(body_center + Vector2(-4.0, -1.0), body_rx * 0.82, body_ry * 0.62, Color(Palette.COOKING_REWARD_VISUAL_GRILLED_HI, 0.74))
 		for i in range(4):
 			var x := body_center.x - body_rx * 0.40 + float(i) * body_rx * 0.25
 			draw_line(
 				Vector2(x, body_center.y - body_ry * 0.86),
 				Vector2(x + body_rx * 0.12, body_center.y + body_ry * 0.80),
-				Color("#3b1c11", 0.78),
+				Color(Palette.COOKING_REWARD_VISUAL_GRILL_MARK, 0.78),
 				2.0
 			)
-		draw_circle(body_center + Vector2(-body_rx * 0.66, -body_ry * 0.12), 3.0, Color("#17110c"))
-		draw_circle(body_center + Vector2(-body_rx * 0.66, -body_ry * 0.12), 1.0, Color("#fff4d4"))
+		draw_circle(body_center + Vector2(-body_rx * 0.66, -body_ry * 0.12), 3.0, Palette.COOKING_REWARD_VISUAL_FISH_EYE)
+		draw_circle(body_center + Vector2(-body_rx * 0.66, -body_ry * 0.12), 1.0, Palette.COOKING_REWARD_VISUAL_BONE)
 		var tail_root := body_center + Vector2(body_rx * 0.95, 0.0)
 		draw_polygon(
 			PackedVector2Array(
@@ -216,7 +216,7 @@ class MealTableSpreadVisual:
 					tail_root + Vector2(rect.size.x * 0.18, rect.size.y * 0.18),
 				]
 			),
-			PackedColorArray([Color("#d7a13a"), Color("#d7a13a"), Color("#c38325"), Color("#c38325")])
+			PackedColorArray([Palette.COOKING_REWARD_VISUAL_FISH_TAIL_GOLD, Palette.COOKING_REWARD_VISUAL_FISH_TAIL_GOLD, Palette.COOKING_REWARD_VISUAL_FISH_TAIL_DARK, Palette.COOKING_REWARD_VISUAL_FISH_TAIL_DARK])
 		)
 
 	func _draw_feature_dish_on_table() -> void:
@@ -237,7 +237,7 @@ class MealTableSpreadVisual:
 
 	func _draw_dish_source() -> void:
 		var center := size * 0.5
-		draw_ellipse(center + Vector2(0.0, 40.0), size.x * 0.34, 10.0, Color(0.0, 0.0, 0.0, 0.26))
+		draw_ellipse(center + Vector2(0.0, 40.0), size.x * 0.34, 10.0, Palette.COOKING_REWARD_VISUAL_DISH_SHADOW)
 		if dish_texture != null:
 			var tex_size := Vector2(float(dish_texture.get_width()), float(dish_texture.get_height()))
 			if tex_size.x > 0.0 and tex_size.y > 0.0:
@@ -245,8 +245,8 @@ class MealTableSpreadVisual:
 				var draw_size := tex_size * scale
 				var rect := Rect2(Vector2((size.x - draw_size.x) * 0.5, (size.y - draw_size.y) * 0.52), draw_size)
 				draw_texture_rect(dish_texture, rect, false)
-		var cyan := Color("#6bf1ff")
-		var gold := Color("#ffe081")
+		var cyan := Palette.COOKING_REWARD_VISUAL_CYAN
+		var gold := Palette.COOKING_REWARD_VISUAL_GOLD
 		for i in range(5):
 			var angle := -2.45 + float(i) * 0.66
 			var from := center + Vector2(cos(angle), sin(angle)) * 30.0
@@ -261,9 +261,9 @@ class MealTableSpreadVisual:
 
 	func _draw_side_dishes() -> void:
 		var bowl_center := Vector2(size.x * 0.78, size.y * 0.72)
-		draw_ellipse(bowl_center + Vector2(0.0, 12.0), 30.0, 8.0, Color(0.0, 0.0, 0.0, 0.24))
-		draw_arc(bowl_center, 25.0, 0.0, PI, 24, Color("#f5e6c5"), 6.0)
-		draw_arc(bowl_center + Vector2(0.0, -3.0), 21.0, 0.0, PI, 24, Color("#8a3f18"), 6.0)
+		draw_ellipse(bowl_center + Vector2(0.0, 12.0), 30.0, 8.0, Palette.COOKING_REWARD_VISUAL_SOFT_SHADOW)
+		draw_arc(bowl_center, 25.0, 0.0, PI, 24, Palette.COOKING_REWARD_VISUAL_BOWL_FACE, 6.0)
+		draw_arc(bowl_center + Vector2(0.0, -3.0), 21.0, 0.0, PI, 24, Palette.COOKING_REWARD_VISUAL_BOWL_SOUP, 6.0)
 		for i in range(3):
 			var steam_x := bowl_center.x - 14.0 + float(i) * 12.0
 			draw_arc(
@@ -272,15 +272,15 @@ class MealTableSpreadVisual:
 				-1.55,
 				0.9,
 				12,
-				Color(1.0, 0.88, 0.58, 0.34),
+				Palette.COOKING_REWARD_VISUAL_SIDE_STEAM,
 				2.0
 			)
 		var cup_rect := Rect2(Vector2(size.x * 0.02, size.y * 0.61), Vector2(26.0, 42.0))
-		draw_rect(cup_rect, Color("#5d331a"))
-		draw_rect(Rect2(cup_rect.position, Vector2(cup_rect.size.x, 7.0)), Color("#8d5527"))
+		draw_rect(cup_rect, Palette.COOKING_REWARD_VISUAL_CUP_BODY)
+		draw_rect(Rect2(cup_rect.position, Vector2(cup_rect.size.x, 7.0)), Palette.COOKING_REWARD_VISUAL_CUP_RIM)
 
 	func _draw_meal_sparkles() -> void:
-		var gold := Color("#ffe081")
+		var gold := Palette.COOKING_REWARD_VISUAL_GOLD
 		for i in range(5):
 			var p := Vector2(
 				size.x * (0.10 + float((i * 19) % 72) / 100.0),
@@ -302,15 +302,15 @@ class MealSceneTableBridgeVisual:
 			return
 		var table_y := size.y * 0.57
 		var table_rect := Rect2(Vector2(0.0, table_y), Vector2(size.x, size.y - table_y))
-		draw_rect(table_rect, Color("#3a1a09", 0.34))
-		draw_rect(Rect2(Vector2(0.0, table_y), Vector2(size.x, size.y * 0.08)), Color("#d68633", 0.16))
-		draw_line(Vector2(0.0, table_y + 4.0), Vector2(size.x, table_y + 4.0), Color("#ffd18a", 0.38), 2.0)
+		draw_rect(table_rect, Color(Palette.COOKING_REWARD_VISUAL_TABLE_BRIDGE_DARK, 0.34))
+		draw_rect(Rect2(Vector2(0.0, table_y), Vector2(size.x, size.y * 0.08)), Color(Palette.COOKING_REWARD_VISUAL_TABLE_HIGHLIGHT, 0.16))
+		draw_line(Vector2(0.0, table_y + 4.0), Vector2(size.x, table_y + 4.0), Color(Palette.COOKING_REWARD_VISUAL_WARM_LIGHT, 0.38), 2.0)
 		for i in range(4):
 			var y := table_y + 24.0 + float(i) * 22.0
 			draw_line(
 				Vector2(14.0, y),
 				Vector2(size.x - 14.0, y + sin(float(i) * 1.7) * 4.0),
-				Color("#8f4b20", 0.20),
+				Color(Palette.COOKING_REWARD_VISUAL_GRILLED_BODY, 0.20),
 				2.0
 			)
 		_draw_window_to_table_light()
@@ -326,28 +326,28 @@ class MealSceneTableBridgeVisual:
 			runner,
 			PackedColorArray(
 				[
-					Color("#f0c07a", 0.13),
-					Color("#f0c07a", 0.10),
-					Color("#5c2f14", 0.13),
-					Color("#5c2f14", 0.16),
+					Color(Palette.COOKING_REWARD_VISUAL_TABLE_RUNNER_LIGHT, 0.13),
+					Color(Palette.COOKING_REWARD_VISUAL_TABLE_RUNNER_LIGHT, 0.10),
+					Color(Palette.COOKING_REWARD_VISUAL_TABLE_DEEP, 0.13),
+					Color(Palette.COOKING_REWARD_VISUAL_TABLE_DEEP, 0.16),
 				]
 			)
 		)
-		draw_ellipse(Vector2(size.x * 0.23, size.y * 0.83), size.x * 0.18, 13.0, Color(0.0, 0.0, 0.0, 0.24))
-		draw_ellipse(Vector2(size.x * 0.66, size.y * 0.78), size.x * 0.28, 18.0, Color(0.0, 0.0, 0.0, 0.22))
-		draw_circle(Vector2(size.x * 0.48, size.y * 0.55), size.x * 0.34, Color("#ffd18a", 0.06))
-		draw_ellipse(Vector2(size.x * 0.45, size.y * 0.77), size.x * 0.42, 30.0, Color("#ffb83d", 0.055))
+		draw_ellipse(Vector2(size.x * 0.23, size.y * 0.83), size.x * 0.18, 13.0, Palette.COOKING_REWARD_VISUAL_SOFT_SHADOW)
+		draw_ellipse(Vector2(size.x * 0.66, size.y * 0.78), size.x * 0.28, 18.0, Palette.COOKING_REWARD_VISUAL_MEAL_SOFT_SHADOW)
+		draw_circle(Vector2(size.x * 0.48, size.y * 0.55), size.x * 0.34, Color(Palette.COOKING_REWARD_VISUAL_WARM_LIGHT, 0.06))
+		draw_ellipse(Vector2(size.x * 0.45, size.y * 0.77), size.x * 0.42, 30.0, Color(Palette.COOKING_REWARD_VISUAL_AMBER, 0.055))
 		_draw_table_unity_glow()
 		draw_line(
 			Vector2(size.x * 0.05, size.y * 0.88),
 			Vector2(size.x * 0.93, size.y * 0.82),
-			Color("#ffd18a", 0.24),
+			Color(Palette.COOKING_REWARD_VISUAL_WARM_LIGHT, 0.24),
 			3.0
 		)
 		draw_line(
 			Vector2(size.x * 0.04, size.y * 0.91),
 			Vector2(size.x * 0.95, size.y * 0.86),
-			Color("#2a1208", 0.24),
+			Color(Palette.COOKING_REWARD_VISUAL_TABLE_LINE_DARK, 0.24),
 			5.0
 		)
 		_draw_shared_steam()
@@ -356,7 +356,7 @@ class MealSceneTableBridgeVisual:
 				size.x * (0.26 + float((i * 17) % 58) / 100.0),
 				size.y * (0.40 + float((i * 11) % 34) / 100.0)
 			)
-			var gold := Color("#ffe081", 0.40 if i % 2 == 0 else 0.26)
+			var gold := Color(Palette.COOKING_REWARD_VISUAL_GOLD, 0.40 if i % 2 == 0 else 0.26)
 			draw_line(p + Vector2(-3.0, 0.0), p + Vector2(3.0, 0.0), gold, 1.5)
 			draw_line(p + Vector2(0.0, -3.0), p + Vector2(0.0, 3.0), gold, 1.5)
 
@@ -373,25 +373,25 @@ class MealSceneTableBridgeVisual:
 			beam,
 			PackedColorArray(
 				[
-					Color("#fff1c7", 0.12),
-					Color("#fff1c7", 0.05),
-					Color("#ffb83d", 0.08),
-					Color("#ffb83d", 0.13),
+					Color(Palette.COOKING_REWARD_VISUAL_IVORY, 0.12),
+					Color(Palette.COOKING_REWARD_VISUAL_IVORY, 0.05),
+					Color(Palette.COOKING_REWARD_VISUAL_AMBER, 0.08),
+					Color(Palette.COOKING_REWARD_VISUAL_AMBER, 0.13),
 				]
 			)
 		)
-		draw_circle(Vector2(size.x * 0.42, size.y * 0.34), size.x * 0.30, Color("#ffe081", 0.040))
+		draw_circle(Vector2(size.x * 0.42, size.y * 0.34), size.x * 0.30, Color(Palette.COOKING_REWARD_VISUAL_GOLD, 0.040))
 		for i in range(3):
 			var x := size.x * (0.43 + float(i) * 0.12)
 			draw_line(
 				Vector2(x, size.y * 0.26),
 				Vector2(x - size.x * 0.16, size.y * 0.86),
-				Color("#fff1c7", 0.10 - float(i) * 0.018),
+				Color(Palette.COOKING_REWARD_VISUAL_IVORY, 0.10 - float(i) * 0.018),
 				2.0
 			)
 
 	func _draw_table_unity_glow() -> void:
-		var gold := Color("#ffd18a", 0.18)
+		var gold := Color(Palette.COOKING_REWARD_VISUAL_WARM_LIGHT, 0.18)
 		draw_line(
 			Vector2(size.x * 0.18, size.y * 0.72),
 			Vector2(size.x * 0.78, size.y * 0.69),
@@ -401,13 +401,13 @@ class MealSceneTableBridgeVisual:
 		draw_line(
 			Vector2(size.x * 0.27, size.y * 0.62),
 			Vector2(size.x * 0.72, size.y * 0.70),
-			Color("#fff1c7", 0.12),
+			Color(Palette.COOKING_REWARD_VISUAL_IVORY, 0.12),
 			3.0
 		)
-		draw_ellipse(Vector2(size.x * 0.54, size.y * 0.73), size.x * 0.35, 22.0, Color("#ffe081", 0.065))
+		draw_ellipse(Vector2(size.x * 0.54, size.y * 0.73), size.x * 0.35, 22.0, Color(Palette.COOKING_REWARD_VISUAL_GOLD, 0.065))
 
 	func _draw_shared_steam() -> void:
-		var steam := Color("#fff1c7", 0.20)
+		var steam := Color(Palette.COOKING_REWARD_VISUAL_IVORY, 0.20)
 		for i in range(5):
 			var x := size.x * (0.42 + float(i) * 0.075)
 			var y := size.y * (0.36 + float(i % 2) * 0.075)
@@ -432,15 +432,15 @@ class MealSceneForegroundGlowVisual:
 
 	func _draw_lantern_wash() -> void:
 		var lantern_center := Vector2(size.x * 0.13, size.y * 0.20)
-		draw_circle(lantern_center, size.x * 0.24, Color("#ffb83d", 0.060))
-		draw_circle(lantern_center + Vector2(size.x * 0.10, size.y * 0.06), size.x * 0.18, Color("#fff1c7", 0.040))
+		draw_circle(lantern_center, size.x * 0.24, Color(Palette.COOKING_REWARD_VISUAL_AMBER, 0.060))
+		draw_circle(lantern_center + Vector2(size.x * 0.10, size.y * 0.06), size.x * 0.18, Color(Palette.COOKING_REWARD_VISUAL_IVORY, 0.040))
 		for i in range(3):
 			var from := lantern_center + Vector2(float(i) * 18.0, 18.0)
 			var to := Vector2(size.x * (0.38 + float(i) * 0.12), size.y * 0.78)
-			draw_line(from, to, Color("#ffd18a", 0.060 - float(i) * 0.010), 8.0 - float(i) * 1.6)
+			draw_line(from, to, Color(Palette.COOKING_REWARD_VISUAL_WARM_LIGHT, 0.060 - float(i) * 0.010), 8.0 - float(i) * 1.6)
 
 	func _draw_actor_dish_rim_light() -> void:
-		var warm := Color("#ffd18a", 0.20)
+		var warm := Color(Palette.COOKING_REWARD_VISUAL_WARM_LIGHT, 0.20)
 		draw_line(
 			Vector2(size.x * 0.16, size.y * 0.70),
 			Vector2(size.x * 0.80, size.y * 0.66),
@@ -450,21 +450,21 @@ class MealSceneForegroundGlowVisual:
 		draw_line(
 			Vector2(size.x * 0.22, size.y * 0.78),
 			Vector2(size.x * 0.86, size.y * 0.75),
-			Color("#fff1c7", 0.12),
+			Color(Palette.COOKING_REWARD_VISUAL_IVORY, 0.12),
 			2.0
 		)
-		draw_ellipse(Vector2(size.x * 0.24, size.y * 0.51), size.x * 0.16, 24.0, Color("#ffb83d", 0.055))
-		draw_ellipse(Vector2(size.x * 0.62, size.y * 0.62), size.x * 0.23, 18.0, Color("#ffe081", 0.052))
+		draw_ellipse(Vector2(size.x * 0.24, size.y * 0.51), size.x * 0.16, 24.0, Color(Palette.COOKING_REWARD_VISUAL_AMBER, 0.055))
+		draw_ellipse(Vector2(size.x * 0.62, size.y * 0.62), size.x * 0.23, 18.0, Color(Palette.COOKING_REWARD_VISUAL_GOLD, 0.052))
 
 	func _draw_front_steam() -> void:
-		var steam := Color("#fff1c7", 0.16)
+		var steam := Color(Palette.COOKING_REWARD_VISUAL_IVORY, 0.16)
 		for i in range(4):
 			var x := size.x * (0.48 + float(i) * 0.08)
 			var y := size.y * (0.42 - float(i % 2) * 0.04)
 			var radius := 20.0 + float(i) * 4.0
 			steam.a = 0.18 - float(i) * 0.025
 			draw_arc(Vector2(x, y), radius, -1.62, 0.92, 18, steam, 2.0)
-		draw_arc(Vector2(size.x * 0.31, size.y * 0.48), 19.0, -1.8, 0.7, 16, Color("#fff1c7", 0.12), 1.8)
+		draw_arc(Vector2(size.x * 0.31, size.y * 0.48), 19.0, -1.8, 0.7, 16, Color(Palette.COOKING_REWARD_VISUAL_IVORY, 0.12), 1.8)
 
 	func _draw_meal_glints() -> void:
 		for i in range(7):
@@ -472,7 +472,7 @@ class MealSceneForegroundGlowVisual:
 				size.x * (0.20 + float((i * 23) % 65) / 100.0),
 				size.y * (0.20 + float((i * 17) % 58) / 100.0)
 			)
-			var color := Color("#ffe081", 0.36 if i % 2 == 0 else 0.22)
+			var color := Color(Palette.COOKING_REWARD_VISUAL_GOLD, 0.36 if i % 2 == 0 else 0.22)
 			var arm := 2.5 + float(i % 3)
 			draw_line(p + Vector2(-arm, 0.0), p + Vector2(arm, 0.0), color, 1.4)
 			draw_line(p + Vector2(0.0, -arm), p + Vector2(0.0, arm), color, 1.4)
@@ -488,14 +488,14 @@ class ExpMessagePortraitVisual:
 		if USE_CUTOUT_TEXTURE_ASSETS and _draw_texture_asset(EXP_POSE):
 			return
 		var center := size * 0.5
-		draw_ellipse(center + Vector2(0.0, 31.0), 33.0, 6.0, Color(0.0, 0.0, 0.0, 0.24))
-		draw_rect(Rect2(center.x - 28.0, center.y + 7.0, 56.0, 31.0), Color("#17324d"))
-		draw_circle(center + Vector2(0.0, -11.0), 21.0, Color("#f2b889"))
-		draw_rect(Rect2(center.x - 26.0, center.y - 32.0, 52.0, 11.0), Color("#1d4771"))
-		draw_circle(center + Vector2(-8.0, -12.0), 2.5, Color("#1d160f"))
-		draw_circle(center + Vector2(8.0, -12.0), 2.5, Color("#1d160f"))
-		draw_arc(center + Vector2(0.0, -5.0), 8.0, 0.10, PI - 0.10, 10, Color("#6a2a1c"), 2.5)
-		draw_arc(center + Vector2(0.0, 17.0), 16.0, 0.0, PI, 16, Color("#fff1c7"), 3.0)
+		draw_ellipse(center + Vector2(0.0, 31.0), 33.0, 6.0, Palette.COOKING_REWARD_VISUAL_SOFT_SHADOW)
+		draw_rect(Rect2(center.x - 28.0, center.y + 7.0, 56.0, 31.0), Palette.COOKING_REWARD_VISUAL_PLAYER_BODY)
+		draw_circle(center + Vector2(0.0, -11.0), 21.0, Palette.COOKING_REWARD_VISUAL_SKIN)
+		draw_rect(Rect2(center.x - 26.0, center.y - 32.0, 52.0, 11.0), Palette.COOKING_REWARD_VISUAL_PLAYER_CAP)
+		draw_circle(center + Vector2(-8.0, -12.0), 2.5, Palette.COOKING_REWARD_VISUAL_FACE_DARK)
+		draw_circle(center + Vector2(8.0, -12.0), 2.5, Palette.COOKING_REWARD_VISUAL_FACE_DARK)
+		draw_arc(center + Vector2(0.0, -5.0), 8.0, 0.10, PI - 0.10, 10, Palette.COOKING_REWARD_VISUAL_MOUTH, 2.5)
+		draw_arc(center + Vector2(0.0, 17.0), 16.0, 0.0, PI, 16, Palette.COOKING_REWARD_VISUAL_IVORY, 3.0)
 		for i in range(3):
 			var p := center + Vector2(31.0 + float(i) * 8.0, -24.0 + float(i % 2) * 9.0)
 			draw_line(p + Vector2(-4.0, 0.0), p + Vector2(4.0, 0.0), Palette.GOLD_BRIGHT, 2.0)
@@ -519,9 +519,9 @@ class ExpTrailVisual:
 	extends Control
 
 	func _draw() -> void:
-		var cyan := Color("#6bf1ff")
-		var gold := Color("#ffe081")
-		var green := Color("#9cff6f")
+		var cyan := Palette.COOKING_REWARD_VISUAL_CYAN
+		var gold := Palette.COOKING_REWARD_VISUAL_GOLD
+		var green := Palette.COOKING_REWARD_VISUAL_EXP_GREEN
 		for i in range(5):
 			var y := size.y * (0.24 + float(i) * 0.13)
 			var start := Vector2(2.0, y + sin(float(i)) * 8.0)
@@ -548,9 +548,9 @@ class MealResultRewardCueVisual:
 	extends Control
 
 	func _draw() -> void:
-		var gold := Color("#ffe081")
-		var amber := Color("#d7a456")
-		var glow := Color("#fff1c7")
+		var gold := Palette.COOKING_REWARD_VISUAL_GOLD
+		var amber := Palette.COOKING_REWARD_VISUAL_AMBER_DULL
+		var glow := Palette.COOKING_REWARD_VISUAL_IVORY
 		var y := size.y * 0.48
 		var row_left := size.x * 0.03
 		var row_right := size.x * 0.97
@@ -607,9 +607,9 @@ class MealResultBannerSparkVisual:
 	func _draw() -> void:
 		if size.x <= 0.0 or size.y <= 0.0:
 			return
-		var gold := Color("#ffe081")
-		var glow := Color("#fff1c7")
-		var ember := Color("#d7a456")
+		var gold := Palette.COOKING_REWARD_VISUAL_GOLD
+		var glow := Palette.COOKING_REWARD_VISUAL_IVORY
+		var ember := Palette.COOKING_REWARD_VISUAL_AMBER_DULL
 		_draw_corner_burst(Vector2(size.x * 0.15, size.y * 0.30), gold, 0.88)
 		_draw_corner_burst(Vector2(size.x * 0.72, size.y * 0.25), glow, 0.58)
 		_draw_corner_burst(Vector2(size.x * 0.88, size.y * 0.66), ember, 0.54)
@@ -670,17 +670,17 @@ class MealResultSplitTitleVisual:
 		var top_baseline := Vector2(text_rect.position.x, size.y * 0.42)
 		var bottom_baseline := Vector2(text_rect.position.x, size.y * 0.82)
 		var impact_center := Vector2(text_rect.position.x + text_rect.size.x * 0.50, bottom_baseline.y - float(bottom_size) * 0.34)
-		draw_ellipse(impact_center, text_rect.size.x * 0.24, size.y * 0.20, Color("#fff1c7", 0.22))
+		draw_ellipse(impact_center, text_rect.size.x * 0.24, size.y * 0.20, Color(Palette.COOKING_REWARD_VISUAL_IVORY, 0.22))
 		draw_line(
 			Vector2(text_rect.position.x + text_rect.size.x * 0.26, bottom_baseline.y + 4.0),
 			Vector2(text_rect.position.x + text_rect.size.x * 0.74, bottom_baseline.y + 4.0),
-			Color("#9b2f17", 0.34),
+			Color(Palette.COOKING_REWARD_VISUAL_RED_RIBBON, 0.34),
 			5.0
 		)
 		draw_line(
 			Vector2(text_rect.position.x + text_rect.size.x * 0.30, bottom_baseline.y + 8.0),
 			Vector2(text_rect.position.x + text_rect.size.x * 0.70, bottom_baseline.y + 8.0),
-			Color("#ffe081", 0.28),
+			Color(Palette.COOKING_REWARD_VISUAL_GOLD, 0.28),
 			2.0
 		)
 		draw_string_outline(
@@ -691,9 +691,9 @@ class MealResultSplitTitleVisual:
 			text_rect.size.x,
 			top_size,
 			5,
-			Color("#fff3d6", 0.82)
+			Color(Palette.COOKING_REWARD_VISUAL_TITLE_OUTLINE, 0.82)
 		)
-		draw_string(font, top_baseline, top, HORIZONTAL_ALIGNMENT_CENTER, text_rect.size.x, top_size, Color("#2a160c"))
+		draw_string(font, top_baseline, top, HORIZONTAL_ALIGNMENT_CENTER, text_rect.size.x, top_size, Palette.COOKING_REWARD_VISUAL_TITLE_TEXT_DARK)
 		draw_string_outline(
 			font,
 			bottom_baseline,
@@ -702,9 +702,9 @@ class MealResultSplitTitleVisual:
 			text_rect.size.x,
 			bottom_size,
 			6,
-			Color("#fff3d6", 0.88)
+			Color(Palette.COOKING_REWARD_VISUAL_TITLE_OUTLINE, 0.88)
 		)
-		draw_string(font, bottom_baseline, "食べた！", HORIZONTAL_ALIGNMENT_CENTER, text_rect.size.x, bottom_size, Color("#9b2f17"))
+		draw_string(font, bottom_baseline, "食べた！", HORIZONTAL_ALIGNMENT_CENTER, text_rect.size.x, bottom_size, Palette.COOKING_REWARD_VISUAL_RED_RIBBON)
 
 
 class MealResultModeTabVisual:
@@ -720,11 +720,11 @@ class MealResultModeTabVisual:
 		if font == null:
 			return
 		var plate := Rect2(Vector2(94.0, 6.0), Vector2(76.0, 28.0))
-		draw_rect(plate, Color("#082642", 0.92))
-		draw_rect(Rect2(plate.position + Vector2(2.0, 2.0), plate.size - Vector2(4.0, 4.0)), Color("#103a5e", 0.46))
-		draw_line(plate.position + Vector2(0.0, 1.0), plate.position + Vector2(plate.size.x, 1.0), Color("#ffe081", 0.44), 1.5)
-		draw_line(plate.position + Vector2(0.0, plate.size.y - 1.0), plate.position + plate.size - Vector2(0.0, 1.0), Color("#07121e", 0.65), 1.5)
-		draw_line(Vector2(88.0, 8.0), Vector2(88.0, 31.0), Color("#ffe081", 0.50), 1.5)
+		draw_rect(plate, Color(Palette.COOKING_REWARD_VISUAL_MODE_TAB_FILL, 0.92))
+		draw_rect(Rect2(plate.position + Vector2(2.0, 2.0), plate.size - Vector2(4.0, 4.0)), Color(Palette.COOKING_REWARD_VISUAL_MODE_TAB_INNER, 0.46))
+		draw_line(plate.position + Vector2(0.0, 1.0), plate.position + Vector2(plate.size.x, 1.0), Color(Palette.COOKING_REWARD_VISUAL_GOLD, 0.44), 1.5)
+		draw_line(plate.position + Vector2(0.0, plate.size.y - 1.0), plate.position + plate.size - Vector2(0.0, 1.0), Color(Palette.COOKING_REWARD_VISUAL_DARK_EDGE, 0.65), 1.5)
+		draw_line(Vector2(88.0, 8.0), Vector2(88.0, 31.0), Color(Palette.COOKING_REWARD_VISUAL_GOLD, 0.50), 1.5)
 		var baseline := Vector2(99.0, 27.0)
 		draw_string_outline(
 			font,
@@ -734,9 +734,9 @@ class MealResultModeTabVisual:
 			66.0,
 			19,
 			3,
-			Color(0.02, 0.04, 0.07, 0.78)
+			Palette.COOKING_REWARD_VISUAL_TEXT_OUTLINE_SHADOW
 		)
-		draw_string(font, baseline, "食べる", HORIZONTAL_ALIGNMENT_CENTER, 66.0, 19, Color("#fff1c7"))
+		draw_string(font, baseline, "食べる", HORIZONTAL_ALIGNMENT_CENTER, 66.0, 19, Palette.COOKING_REWARD_VISUAL_IVORY)
 
 
 class MealDishCardBridgeVisual:
@@ -748,26 +748,26 @@ class MealDishCardBridgeVisual:
 	func _draw() -> void:
 		if size.x <= 0.0 or size.y <= 0.0:
 			return
-		var gold := Color("#ffe081")
-		var warm := Color("#ffb83d")
-		var cyan := Color("#6bf1ff")
+		var gold := Palette.COOKING_REWARD_VISUAL_GOLD
+		var warm := Palette.COOKING_REWARD_VISUAL_AMBER
+		var cyan := Palette.COOKING_REWARD_VISUAL_CYAN
 		var dish_center := Vector2(size.x * 0.37, size.y * 0.55)
 		var text_center := Vector2(size.x * 0.79, size.y * 0.50)
 		_draw_dish_showcase_frame()
-		draw_ellipse(dish_center, size.x * 0.22, size.y * 0.36, Color("#ffd36a", 0.050))
-		draw_ellipse(text_center, size.x * 0.15, size.y * 0.30, Color("#6bf1ff", 0.026))
-		draw_line(Vector2(size.x * 0.64, 12.0), Vector2(size.x * 0.64, size.y - 12.0), Color("#d7a456", 0.12), 1.5)
+		draw_ellipse(dish_center, size.x * 0.22, size.y * 0.36, Color(Palette.COOKING_REWARD_VISUAL_PEAK_GLOW, 0.050))
+		draw_ellipse(text_center, size.x * 0.15, size.y * 0.30, Color(Palette.COOKING_REWARD_VISUAL_CYAN, 0.026))
+		draw_line(Vector2(size.x * 0.64, 12.0), Vector2(size.x * 0.64, size.y - 12.0), Color(Palette.COOKING_REWARD_VISUAL_AMBER_DULL, 0.12), 1.5)
 		_draw_dish_name_plate()
 		draw_line(
 			Vector2(size.x * 0.46, size.y * 0.45),
 			Vector2(size.x * 0.84, size.y * 0.34),
-			Color("#ffb83d", 0.10),
+			Color(Palette.COOKING_REWARD_VISUAL_AMBER, 0.10),
 			7.0
 		)
 		draw_line(
 			Vector2(size.x * 0.47, size.y * 0.48),
 			Vector2(size.x * 0.82, size.y * 0.39),
-			Color("#ffe081", 0.26),
+			Color(Palette.COOKING_REWARD_VISUAL_GOLD, 0.26),
 			2.0
 		)
 		for i in range(3):
@@ -796,16 +796,16 @@ class MealDishCardBridgeVisual:
 			Vector2(size.x * 0.030, size.y * 0.080),
 			Vector2(size.x * 0.610, size.y * 0.830)
 		)
-		draw_rect(Rect2(frame.position + Vector2(0.0, 5.0), frame.size), Color("#020a12", 0.28))
-		draw_rect(frame, Color("#07121e", 0.16))
-		draw_line(frame.position + Vector2(12.0, 5.0), frame.position + Vector2(frame.size.x - 12.0, 5.0), Color("#ffe081", 0.24), 2.0)
+		draw_rect(Rect2(frame.position + Vector2(0.0, 5.0), frame.size), Color(Palette.COOKING_REWARD_VISUAL_DEEP_SHADOW, 0.28))
+		draw_rect(frame, Color(Palette.COOKING_REWARD_VISUAL_DARK_EDGE, 0.16))
+		draw_line(frame.position + Vector2(12.0, 5.0), frame.position + Vector2(frame.size.x - 12.0, 5.0), Color(Palette.COOKING_REWARD_VISUAL_GOLD, 0.24), 2.0)
 		draw_line(
 			frame.position + Vector2(12.0, frame.size.y - 6.0),
 			frame.position + Vector2(frame.size.x - 12.0, frame.size.y - 6.0),
-			Color("#07121e", 0.50),
+			Color(Palette.COOKING_REWARD_VISUAL_DARK_EDGE, 0.50),
 			3.0
 		)
-		draw_ellipse(frame.get_center() + Vector2(4.0, frame.size.y * 0.20), frame.size.x * 0.38, frame.size.y * 0.16, Color("#ffb83d", 0.08))
+		draw_ellipse(frame.get_center() + Vector2(4.0, frame.size.y * 0.20), frame.size.x * 0.38, frame.size.y * 0.16, Color(Palette.COOKING_REWARD_VISUAL_AMBER, 0.08))
 		for corner in [
 			frame.position + Vector2(10.0, 10.0),
 			frame.position + Vector2(frame.size.x - 10.0, 10.0),
@@ -814,7 +814,7 @@ class MealDishCardBridgeVisual:
 		]:
 			var x_dir := -1.0 if corner.x > frame.get_center().x else 1.0
 			var y_dir := -1.0 if corner.y > frame.get_center().y else 1.0
-			var gold := Color("#ffe081", 0.42)
+			var gold := Color(Palette.COOKING_REWARD_VISUAL_GOLD, 0.42)
 			draw_line(corner, corner + Vector2(18.0 * x_dir, 0.0), gold, 1.5)
 			draw_line(corner, corner + Vector2(0.0, 14.0 * y_dir), gold, 1.5)
 
@@ -823,26 +823,26 @@ class MealDishCardBridgeVisual:
 			Vector2(size.x * 0.665, size.y * 0.31),
 			Vector2(size.x * 0.285, size.y * 0.44)
 		)
-		var shadow := Color("#020a12", 0.42)
+		var shadow := Color(Palette.COOKING_REWARD_VISUAL_DEEP_SHADOW, 0.42)
 		draw_rect(Rect2(plate.position + Vector2(0.0, 5.0), plate.size), shadow)
-		draw_rect(plate, Color("#071726", 0.72))
-		draw_rect(Rect2(plate.position + Vector2(3.0, 3.0), plate.size - Vector2(6.0, 6.0)), Color("#12334f", 0.34))
-		draw_ellipse(plate.get_center() + Vector2(0.0, -2.0), plate.size.x * 0.44, plate.size.y * 0.25, Color("#fff1c7", 0.06))
-		draw_line(plate.position + Vector2(8.0, 3.0), plate.position + Vector2(plate.size.x - 8.0, 3.0), Color("#ffe081", 0.42), 2.0)
+		draw_rect(plate, Color(Palette.COOKING_REWARD_VISUAL_NAME_PLATE_FILL, 0.72))
+		draw_rect(Rect2(plate.position + Vector2(3.0, 3.0), plate.size - Vector2(6.0, 6.0)), Color(Palette.COOKING_REWARD_VISUAL_NAME_PLATE_INNER, 0.34))
+		draw_ellipse(plate.get_center() + Vector2(0.0, -2.0), plate.size.x * 0.44, plate.size.y * 0.25, Color(Palette.COOKING_REWARD_VISUAL_IVORY, 0.06))
+		draw_line(plate.position + Vector2(8.0, 3.0), plate.position + Vector2(plate.size.x - 8.0, 3.0), Color(Palette.COOKING_REWARD_VISUAL_GOLD, 0.42), 2.0)
 		draw_line(
 			plate.position + Vector2(9.0, plate.size.y - 4.0),
 			plate.position + Vector2(plate.size.x - 9.0, plate.size.y - 4.0),
-			Color("#07121e", 0.60),
+			Color(Palette.COOKING_REWARD_VISUAL_DARK_EDGE, 0.60),
 			2.0
 		)
-		var accent := Color("#ffb83d", 0.20)
+		var accent := Color(Palette.COOKING_REWARD_VISUAL_AMBER, 0.20)
 		draw_line(
 			Vector2(plate.position.x - size.x * 0.06, plate.position.y + plate.size.y * 0.54),
 			Vector2(plate.position.x + plate.size.x * 0.42, plate.position.y + plate.size.y * 0.32),
 			accent,
 			6.0
 		)
-		var gold := Color("#ffe081", 0.54)
+		var gold := Color(Palette.COOKING_REWARD_VISUAL_GOLD, 0.54)
 		var corner_offsets: Array[float] = [0.0, plate.size.x - 16.0]
 		for offset: float in corner_offsets:
 			var x: float = plate.position.x + offset
@@ -872,17 +872,17 @@ class FlowConnectorVisual:
 		var center_y := size.y * 0.5
 		var start := Vector2(4.0, center_y)
 		var end := Vector2(size.x - 8.0, center_y)
-		var color := Color("#46566d")
-		var glow := Color("#46566d")
+		var color := Palette.COOKING_REWARD_VISUAL_CONNECTOR_IDLE
+		var glow := Palette.COOKING_REWARD_VISUAL_CONNECTOR_IDLE
 		var active := false
 		match mode:
 			"meal_to_exp":
 				color = Palette.GOLD_BRIGHT
-				glow = Color("#fff1c7")
+				glow = Palette.COOKING_REWARD_VISUAL_IVORY
 				active = true
 			"exp_to_growth":
 				color = Palette.GAUGE_CYAN_HI
-				glow = Color("#c9fbff")
+				glow = Palette.COOKING_REWARD_VISUAL_CYAN_GLOW
 				active = true
 			"growth_unlock":
 				color = Palette.GAUGE_RED_HI
@@ -937,7 +937,7 @@ class RewardIconVisual:
 	const USE_CUTOUT_TEXTURE_ASSETS := false
 
 	var mode := "exp"
-	var accent := Color("#6bf1ff")
+	var accent := Palette.COOKING_REWARD_VISUAL_CYAN
 
 	func configure(next_mode: String, next_accent: Color) -> void:
 		mode = next_mode
@@ -989,15 +989,15 @@ class RewardIconVisual:
 
 	func _draw_exp() -> void:
 		var center := size * 0.5
-		draw_rect(Rect2(center.x - 15.0, center.y - 12.0, 30.0, 24.0), Color("#17324d"))
-		draw_rect(Rect2(center.x - 12.0, center.y - 9.0, 24.0, 18.0), Color("#fff1c7"))
+		draw_rect(Rect2(center.x - 15.0, center.y - 12.0, 30.0, 24.0), Palette.COOKING_REWARD_VISUAL_PLAYER_BODY)
+		draw_rect(Rect2(center.x - 12.0, center.y - 9.0, 24.0, 18.0), Palette.COOKING_REWARD_VISUAL_IVORY)
 		draw_line(center + Vector2(-8.0, 0.0), center + Vector2(8.0, 0.0), accent, 3.0)
 		draw_line(center + Vector2(0.0, -8.0), center + Vector2(0.0, 8.0), accent, 3.0)
-		draw_circle(center + Vector2(13.0, -10.0), 4.0, Color("#ffe081"))
+		draw_circle(center + Vector2(13.0, -10.0), 4.0, Palette.COOKING_REWARD_VISUAL_GOLD)
 
 	func _draw_bonus() -> void:
 		var center := size * 0.5
-		draw_rect(Rect2(center.x - 4.0, center.y - 15.0, 8.0, 28.0), Color("#9b2f17"))
+		draw_rect(Rect2(center.x - 4.0, center.y - 15.0, 8.0, 28.0), Palette.COOKING_REWARD_VISUAL_RED_RIBBON)
 		draw_polygon(
 			PackedVector2Array(
 				[
@@ -1008,8 +1008,8 @@ class RewardIconVisual:
 			),
 			PackedColorArray([accent, accent, accent])
 		)
-		draw_arc(center + Vector2(-8.0, 13.0), 14.0, PI, TAU, 20, Color("#fff1c7"), 5.0)
-		draw_arc(center + Vector2(8.0, 13.0), 14.0, PI, TAU, 20, Color("#fff1c7"), 5.0)
+		draw_arc(center + Vector2(-8.0, 13.0), 14.0, PI, TAU, 20, Palette.COOKING_REWARD_VISUAL_IVORY, 5.0)
+		draw_arc(center + Vector2(8.0, 13.0), 14.0, PI, TAU, 20, Palette.COOKING_REWARD_VISUAL_IVORY, 5.0)
 
 	func _draw_total() -> void:
 		var center := size * 0.5
@@ -1022,11 +1022,11 @@ class RewardIconVisual:
 		for _i in range(points.size()):
 			colors.append(accent)
 		draw_polygon(points, colors)
-		draw_arc(center, 17.0, 0.0, TAU, 32, Color("#7b4b20"), 2.0)
+		draw_arc(center, 17.0, 0.0, TAU, 32, Palette.COOKING_REWARD_VISUAL_MEDAL_EDGE, 2.0)
 
 	func _draw_buff() -> void:
 		var center := size * 0.5
-		draw_ellipse(center + Vector2(-4.0, 2.0), 16.0, 10.0, Color("#235f33"))
+		draw_ellipse(center + Vector2(-4.0, 2.0), 16.0, 10.0, Palette.COOKING_REWARD_VISUAL_BUFF_LEAF_DARK)
 		draw_polygon(
 			PackedVector2Array(
 				[
@@ -1037,7 +1037,7 @@ class RewardIconVisual:
 			),
 			PackedColorArray([accent, accent, accent])
 		)
-		draw_line(center + Vector2(-16.0, 8.0), center + Vector2(18.0, -6.0), Color("#fff1c7"), 2.0)
+		draw_line(center + Vector2(-16.0, 8.0), center + Vector2(18.0, -6.0), Palette.COOKING_REWARD_VISUAL_IVORY, 2.0)
 
 	func _draw_growth() -> void:
 		var center := size * 0.5
@@ -1052,7 +1052,7 @@ class RewardIconVisual:
 			),
 			PackedColorArray([accent, accent, accent])
 		)
-		draw_arc(center + Vector2(0.0, 8.0), 16.0, 0.0, TAU, 24, Color("#ffe081"), 2.0)
+		draw_arc(center + Vector2(0.0, 8.0), 16.0, 0.0, TAU, 24, Palette.COOKING_REWARD_VISUAL_GOLD, 2.0)
 
 
 class RewardTotalPeakGlowVisual:
@@ -1065,8 +1065,8 @@ class RewardTotalPeakGlowVisual:
 		if size.x <= 0.0 or size.y <= 0.0:
 			return
 		var center := Vector2(size.x * 0.50, size.y * 0.66)
-		var gold := Color("#ffe081")
-		var hot := Color("#ffb83d")
+		var gold := Palette.COOKING_REWARD_VISUAL_GOLD
+		var hot := Palette.COOKING_REWARD_VISUAL_AMBER
 		_draw_card_rays(center, hot)
 		for i in range(3):
 			var alpha := 0.12 - float(i) * 0.025
@@ -1074,7 +1074,7 @@ class RewardTotalPeakGlowVisual:
 				center + Vector2(0.0, 8.0),
 				size.x * (0.30 + float(i) * 0.07),
 				20.0 + float(i) * 8.0,
-				Color("#ffd36a", alpha)
+				Color(Palette.COOKING_REWARD_VISUAL_PEAK_GLOW, alpha)
 			)
 		for i in range(9):
 			var p := Vector2(
@@ -1104,7 +1104,7 @@ class RewardValuePlateVisual:
 	extends Control
 
 	var mode := "exp"
-	var accent := Color("#6bf1ff")
+	var accent := Palette.COOKING_REWARD_VISUAL_CYAN
 
 	func configure(next_mode: String, next_accent: Color) -> void:
 		mode = next_mode
@@ -1125,13 +1125,13 @@ class RewardValuePlateVisual:
 		glow.a = 0.22 if mode == "total" else 0.14
 		var rim := accent
 		rim.a = 0.55 if mode == "total" else 0.36
-		draw_rect(rect, Color("#03111d", 0.72))
+		draw_rect(rect, Color(Palette.COOKING_REWARD_VISUAL_PLATE_DARK, 0.72))
 		draw_rect(Rect2(rect.position + Vector2(3.0, 3.0), rect.size - Vector2(6.0, 6.0)), glow)
 		draw_line(rect.position, rect.position + Vector2(rect.size.x, 0.0), rim, 2.0)
 		draw_line(
 			rect.position + Vector2(0.0, rect.size.y),
 			rect.position + rect.size,
-			Color("#07121e", 0.70),
+			Color(Palette.COOKING_REWARD_VISUAL_DARK_EDGE, 0.70),
 			2.0
 		)
 		if mode == "total":
@@ -1140,35 +1140,35 @@ class RewardValuePlateVisual:
 				var a := TAU * float(i) / 10.0
 				var from := center + Vector2(cos(a), sin(a)) * 14.0
 				var to := center + Vector2(cos(a), sin(a)) * 82.0
-				var ray := Color("#ffb83d", 0.13)
+				var ray := Color(Palette.COOKING_REWARD_VISUAL_AMBER, 0.13)
 				draw_line(from, to, ray, 2.0)
 
 	func _draw_buff_plate(rect: Rect2) -> void:
 		var green := accent
-		var gold := Color("#ffe081")
-		var cyan := Color("#6bf1ff")
-		draw_rect(rect, Color("#03111d", 0.74))
-		draw_rect(Rect2(rect.position + Vector2(3.0, 3.0), rect.size - Vector2(6.0, 6.0)), Color("#0d2c26", 0.70))
+		var gold := Palette.COOKING_REWARD_VISUAL_GOLD
+		var cyan := Palette.COOKING_REWARD_VISUAL_CYAN
+		draw_rect(rect, Color(Palette.COOKING_REWARD_VISUAL_PLATE_DARK, 0.74))
+		draw_rect(Rect2(rect.position + Vector2(3.0, 3.0), rect.size - Vector2(6.0, 6.0)), Color(Palette.COOKING_REWARD_VISUAL_EFFECT_CARD_INNER, 0.70))
 		green.a = 0.52
 		draw_line(rect.position + Vector2(2.0, 0.0), rect.position + Vector2(rect.size.x - 2.0, 0.0), green, 2.4)
 		draw_line(
 			rect.position + Vector2(2.0, rect.size.y),
 			rect.position + Vector2(rect.size.x - 2.0, rect.size.y),
-			Color("#07121e", 0.78),
+			Color(Palette.COOKING_REWARD_VISUAL_DARK_EDGE, 0.78),
 			2.0
 		)
 		var medal_center := rect.position + Vector2(37.0, rect.size.y * 0.50)
-		draw_circle(medal_center, 27.0, Color("#07121e", 0.84))
-		draw_circle(medal_center, 23.0, Color("#173b28", 0.86))
+		draw_circle(medal_center, 27.0, Color(Palette.COOKING_REWARD_VISUAL_DARK_EDGE, 0.84))
+		draw_circle(medal_center, 23.0, Color(Palette.COOKING_REWARD_VISUAL_BUFF_FIELD, 0.86))
 		gold.a = 0.32
 		draw_arc(medal_center, 24.0, 0.0, TAU, 36, gold, 2.0)
 		green.a = 0.18
 		draw_circle(medal_center, 17.0, green)
 		var lane := Rect2(rect.position + Vector2(74.0, 10.0), Vector2(maxf(16.0, rect.size.x - 86.0), rect.size.y - 20.0))
-		draw_rect(lane, Color("#09201f", 0.58))
+		draw_rect(lane, Color(Palette.COOKING_REWARD_VISUAL_BUFF_LANE, 0.58))
 		cyan.a = 0.16
 		draw_line(lane.position, lane.position + Vector2(lane.size.x, lane.size.y * 0.38), cyan, 2.0)
-		draw_line(lane.position + Vector2(0.0, lane.size.y), lane.position + Vector2(lane.size.x, lane.size.y * 0.66), Color("#8ee65a", 0.14), 2.0)
+		draw_line(lane.position + Vector2(0.0, lane.size.y), lane.position + Vector2(lane.size.x, lane.size.y * 0.66), Color(Palette.COOKING_REWARD_VISUAL_BUFF_GREEN, 0.14), 2.0)
 		for i in range(4):
 			var p := lane.position + Vector2(lane.size.x * (0.18 + float(i) * 0.20), lane.size.y * (0.28 + float(i % 2) * 0.36))
 			var spark := gold if i % 2 == 0 else green
@@ -1185,11 +1185,11 @@ class RewardBuffSignalVisual:
 
 	func _draw() -> void:
 		var center := size * 0.5
-		var green := Color("#75d653")
-		var cyan := Color("#6bf1ff")
-		var gold := Color("#ffe081")
-		draw_circle(center + Vector2(-2.0, 0.0), 18.0, Color("#173b28"))
-		draw_circle(center + Vector2(-2.0, 0.0), 14.0, Color("#2f7a45"))
+		var green := Palette.COOKING_REWARD_VISUAL_BUFF_GREEN_HI
+		var cyan := Palette.COOKING_REWARD_VISUAL_CYAN
+		var gold := Palette.COOKING_REWARD_VISUAL_GOLD
+		draw_circle(center + Vector2(-2.0, 0.0), 18.0, Palette.COOKING_REWARD_VISUAL_BUFF_FIELD)
+		draw_circle(center + Vector2(-2.0, 0.0), 14.0, Palette.COOKING_REWARD_VISUAL_BUFF_MEDAL_INNER)
 		var fish := PackedVector2Array(
 			[
 				center + Vector2(-14.0, -1.0),
@@ -1211,9 +1211,9 @@ class RewardBuffSignalVisual:
 					center + Vector2(10.0, 4.0),
 				]
 			),
-			Color("#2e86b5")
+			Palette.COOKING_REWARD_VISUAL_FISH_BLUE
 		)
-		draw_circle(center + Vector2(-9.0, -2.0), 2.0, Color("#0a1723"))
+		draw_circle(center + Vector2(-9.0, -2.0), 2.0, Palette.COOKING_REWARD_VISUAL_EYE_DARK)
 		for x in [-24.0, 23.0]:
 			draw_line(center + Vector2(x, 19.0), center + Vector2(x, -16.0), green, 4.0)
 			draw_polygon(
@@ -1242,10 +1242,10 @@ class EffectPreviewVisual:
 		if USE_CUTOUT_TEXTURE_ASSETS and _draw_texture_asset():
 			return
 		var center := size * 0.5
-		var green := Color("#8ee65a")
-		var cyan := Color("#6bf1ff")
-		var gold := Color("#ffe081")
-		draw_rect(Rect2(8.0, 8.0, size.x - 16.0, size.y - 16.0), Color("#113b27"))
+		var green := Palette.COOKING_REWARD_VISUAL_BUFF_GREEN
+		var cyan := Palette.COOKING_REWARD_VISUAL_CYAN
+		var gold := Palette.COOKING_REWARD_VISUAL_GOLD
+		draw_rect(Rect2(8.0, 8.0, size.x - 16.0, size.y - 16.0), Palette.COOKING_REWARD_VISUAL_BUFF_TILE_FILL)
 		for i in range(10):
 			var a := TAU * float(i) / 10.0
 			var from := center + Vector2(cos(a), sin(a)) * 14.0
@@ -1253,7 +1253,7 @@ class EffectPreviewVisual:
 			var color := green if i % 2 == 0 else gold
 			color.a = 0.34
 			draw_line(from, to, color, 3.0)
-		draw_ellipse(center + Vector2(-12.0, 2.0), 46.0, 20.0, Color("#2a76a7"))
+		draw_ellipse(center + Vector2(-12.0, 2.0), 46.0, 20.0, Palette.COOKING_REWARD_VISUAL_COOLER_BLUE)
 		draw_polygon(
 			PackedVector2Array(
 				[
@@ -1264,8 +1264,8 @@ class EffectPreviewVisual:
 			),
 			PackedColorArray([cyan, cyan, cyan])
 		)
-		draw_circle(center + Vector2(-34.0, -5.0), 4.0, Color("#0a1723"))
-		draw_line(center + Vector2(-40.0, 13.0), center + Vector2(20.0, 13.0), Color("#fff1c7"), 3.0)
+		draw_circle(center + Vector2(-34.0, -5.0), 4.0, Palette.COOKING_REWARD_VISUAL_EYE_DARK)
+		draw_line(center + Vector2(-40.0, 13.0), center + Vector2(20.0, 13.0), Palette.COOKING_REWARD_VISUAL_IVORY, 3.0)
 		for x in [-26.0, 18.0]:
 			draw_line(center + Vector2(x, 54.0), center + Vector2(x, 24.0), green, 6.0)
 			draw_polygon(

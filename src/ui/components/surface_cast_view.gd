@@ -4,18 +4,18 @@ extends Control
 # FIGHT 以降は fishing_screen が underwater_view とのクロスフェードを担当し、
 # 本ビューは modulate.a を下げて退場する（自身は visible 制御せず modulate のみ）。
 
-const SEA_LIGHT := Color("#22b7df")
-const SEA_MAIN := Color("#1286c7")
-const SEA_DEEP_CAST := Color("#075789")
-const SKY_HIGH := Color("#64c9f4")
-const SKY_LOW := Color("#d7f7ff")
-const CLOUD_SHADOW := Color("#bde9f6")
-const ISLAND_GREEN := Color("#257843")
-const ISLAND_DARK := Color("#15512f")
-const DOCK_DARK := Color("#4d2b14")
-const DOCK_MID := Color("#8b5527")
-const DOCK_HI := Color("#d29b4a")
-const LINE_COLOR := Color(1.0, 1.0, 1.0, 0.82)
+const SEA_LIGHT := Palette.SURFACE_SEA_LIGHT
+const SEA_MAIN := Palette.SURFACE_SEA_MAIN
+const SEA_DEEP_CAST := Palette.SURFACE_SEA_DEEP_CAST
+const SKY_HIGH := Palette.SURFACE_SKY_HIGH
+const SKY_LOW := Palette.SURFACE_SKY_LOW
+const CLOUD_SHADOW := Palette.SURFACE_CLOUD_SHADOW
+const ISLAND_GREEN := Palette.SURFACE_ISLAND_GREEN
+const ISLAND_DARK := Palette.SURFACE_ISLAND_DARK
+const DOCK_DARK := Palette.SURFACE_DOCK_DARK
+const DOCK_MID := Palette.SURFACE_DOCK_MID
+const DOCK_HI := Palette.SURFACE_DOCK_HI
+const LINE_COLOR := Palette.SURFACE_LINE_COLOR
 const SURFACE_BG_PATH := "res://assets/showcase/surface/surface_cast_bg.png"
 const SURFACE_COLOR_GRADE_PATH := "res://assets/showcase/surface/surface_color_grade.png"
 const SURFACE_DOCK_FOREGROUND_PATH := "res://assets/showcase/surface/surface_dock_foreground.png"
@@ -192,11 +192,11 @@ func _draw_asset_scene() -> void:
 	if _surface_dock_foreground != null:
 		_draw_cover_texture(_surface_dock_foreground, rect, Color.WHITE, Vector2(0.5, 0.50))
 	if _surface_ambience != null:
-		_draw_cover_texture(_surface_ambience, rect, Color(1.0, 1.0, 1.0, 0.62), Vector2(0.5, 0.50))
+		_draw_cover_texture(_surface_ambience, rect, Palette.SURFACE_AMBIENCE_MODULATE, Vector2(0.5, 0.50))
 	_draw_asset_angler()
 	_draw_asset_line_and_bobber(horizon)
 	if _surface_color_grade != null:
-		_draw_cover_texture(_surface_color_grade, rect, Color(1.0, 1.0, 1.0, 0.64), Vector2(0.5, 0.50))
+		_draw_cover_texture(_surface_color_grade, rect, Palette.SURFACE_COLOR_GRADE_MODULATE, Vector2(0.5, 0.50))
 	_draw_weather_overlay(rect)
 	_draw_hit_flash()
 	_draw_frame()
@@ -331,10 +331,10 @@ func _draw_asset_fish_shadow(horizon: float) -> void:
 	var draw_w := size.x * (0.145 + _approach_glow * 0.034)
 	var draw_h := draw_w * (_surface_fish_shadow.get_height() / float(_surface_fish_shadow.get_width()))
 	var dst := Rect2(Vector2(fish_x - draw_w * 0.50, fish_y - draw_h * 0.50), Vector2(draw_w, draw_h))
-	draw_texture_rect(_surface_fish_shadow, dst, false, Color(1.0, 1.0, 1.0, alpha))
+	draw_texture_rect(_surface_fish_shadow, dst, false, Color(Color.WHITE, alpha))
 	if state == FishingSimulator.State.APPROACH or state == FishingSimulator.State.BITE:
 		var wake := Vector2(fish_x, fish_y).lerp(bobber + Vector2(-8.0, 12.0), 0.62)
-		_draw_ellipse_outline(wake, size.x * 0.042, size.y * 0.011, Color(1.0, 1.0, 1.0, 0.18 + _approach_glow * 0.14), 34, 1.5)
+		_draw_ellipse_outline(wake, size.x * 0.042, size.y * 0.011, Color(Color.WHITE, 0.18 + _approach_glow * 0.14), 34, 1.5)
 
 
 func _draw_asset_angler() -> void:
@@ -353,7 +353,7 @@ func _draw_asset_line_and_bobber(horizon: float) -> void:
 	var bobber := _bobber_position(horizon, rod_tip)
 	var target := _bobber_target_position(horizon)
 	var mid := Vector2((rod_tip.x + bobber.x) * 0.5, (rod_tip.y + bobber.y) * 0.5 + size.y * 0.040 + _bobber_dip * size.y * 0.028)
-	draw_polyline(PackedVector2Array([rod_tip + Vector2(0.8, 0.8), mid + Vector2(0.8, 0.8), bobber + Vector2(0.8, 0.8)]), Color(0.02, 0.08, 0.12, 0.22), 2.2, false)
+	draw_polyline(PackedVector2Array([rod_tip + Vector2(0.8, 0.8), mid + Vector2(0.8, 0.8), bobber + Vector2(0.8, 0.8)]), Palette.SURFACE_ASSET_LINE_SHADOW, 2.2, false)
 	draw_polyline(PackedVector2Array([rod_tip, mid, bobber]), LINE_COLOR, 1.5, false)
 
 	if _cast_flight <= 0.42:
@@ -383,7 +383,7 @@ func _draw_asset_bite_splash(center: Vector2) -> void:
 	var draw_w := size.x * (0.145 + (1.0 - clampf(_splash, 0.0, 1.0)) * 0.040)
 	var draw_h := draw_w * (_surface_splash.get_height() / float(_surface_splash.get_width()))
 	var dst := Rect2(center - Vector2(draw_w * 0.50, draw_h * 0.63), Vector2(draw_w, draw_h))
-	draw_texture_rect(_surface_splash, dst, false, Color(1.0, 1.0, 1.0, clampf(burst, 0.0, 1.0)))
+	draw_texture_rect(_surface_splash, dst, false, Color(Color.WHITE, clampf(burst, 0.0, 1.0)))
 
 
 func _angler_rect() -> Rect2:
@@ -414,10 +414,10 @@ func _draw_sky(horizon: float) -> void:
 		var a := float(i) * TAU / 9.0 + 0.18
 		var from := sun + Vector2(cos(a), sin(a)) * 34.0
 		var to := sun + Vector2(cos(a), sin(a)) * (78.0 + float(i % 3) * 14.0)
-		draw_line(from, to, Color(1.0, 0.96, 0.72, 0.18), 3.0)
-	draw_circle(sun, 52.0, Color(1.0, 0.96, 0.70, 0.12))
-	draw_circle(sun, 29.0, Color("#fff4a8"))
-	draw_circle(sun + Vector2(-7.0, -8.0), 14.0, Color(1.0, 1.0, 1.0, 0.50))
+		draw_line(from, to, Color(Palette.SURFACE_SUN_RAY, 0.18), 3.0)
+	draw_circle(sun, 52.0, Color(Palette.SURFACE_SUN_RAY, 0.12))
+	draw_circle(sun, 29.0, Palette.SURFACE_SUN_CORE)
+	draw_circle(sun + Vector2(-7.0, -8.0), 14.0, Color(Color.WHITE, 0.50))
 
 	_draw_pixel_cloud(Vector2(size.x * 0.17 + sin(_time * 0.18) * 6.0, horizon * 0.28), 1.15)
 	_draw_pixel_cloud(Vector2(size.x * 0.31 + sin(_time * 0.16 + 2.0) * 4.0, horizon * 0.44), 0.62)
@@ -447,12 +447,12 @@ func _draw_pixel_cloud(center: Vector2, scale_value: float) -> void:
 			float(p[3]) * unit
 		)
 		draw_rect(Rect2(rect.position + Vector2(0.0, unit * 0.34), rect.size), CLOUD_SHADOW, true)
-		draw_rect(rect, Color(1.0, 1.0, 1.0, 0.94), true)
-	draw_rect(Rect2(center.x - unit * 1.5, center.y + unit * 1.5, unit * 7.0, unit * 0.55), Color(1.0, 1.0, 1.0, 0.48), true)
+		draw_rect(rect, Color(Color.WHITE, 0.94), true)
+	draw_rect(Rect2(center.x - unit * 1.5, center.y + unit * 1.5, unit * 7.0, unit * 0.55), Color(Color.WHITE, 0.48), true)
 
 
 func _draw_bird(pos: Vector2, scale_value: float) -> void:
-	var c := Color("#1a4050", 0.70)
+	var c := Color(Palette.SURFACE_BIRD, 0.70)
 	draw_line(pos + Vector2(-7.0, 0.0) * scale_value, pos, c, 2.0)
 	draw_line(pos, pos + Vector2(7.0, -1.5) * scale_value, c, 2.0)
 
@@ -486,16 +486,16 @@ func _draw_far_islands(horizon: float) -> void:
 		Vector2(size.x, horizon - 30.0),
 		Vector2(size.x, right_base),
 	])
-	draw_colored_polygon(right, Color("#17634a"))
-	draw_line(Vector2(0.0, horizon), Vector2(size.x, horizon), Color(1.0, 1.0, 1.0, 0.58), 2.0)
+	draw_colored_polygon(right, Palette.SURFACE_ISLAND_RIGHT)
+	draw_line(Vector2(0.0, horizon), Vector2(size.x, horizon), Color(Color.WHITE, 0.58), 2.0)
 
 
 func _draw_palm(base: Vector2, scale_value: float) -> void:
-	draw_line(base, base + Vector2(5.0, -28.0) * scale_value, Color("#75491f"), 3.0 * scale_value)
+	draw_line(base, base + Vector2(5.0, -28.0) * scale_value, Palette.SURFACE_PALM_TRUNK, 3.0 * scale_value)
 	var top := base + Vector2(5.0, -28.0) * scale_value
 	for i in range(5):
 		var a := -2.75 + float(i) * 0.62
-		draw_line(top, top + Vector2(cos(a), sin(a)) * 22.0 * scale_value, Color("#0f5f34"), 3.0 * scale_value)
+		draw_line(top, top + Vector2(cos(a), sin(a)) * 22.0 * scale_value, Palette.SURFACE_PALM_LEAF, 3.0 * scale_value)
 
 
 func _draw_sea(horizon: float) -> void:
@@ -506,7 +506,7 @@ func _draw_sea(horizon: float) -> void:
 		var col := SEA_LIGHT.lerp(SEA_MAIN, minf(t * 1.15, 1.0)).lerp(SEA_DEEP_CAST, maxf(0.0, t - 0.42))
 		var h := sea_h / float(bands) + 1.0
 		draw_rect(Rect2(0.0, horizon + i * (sea_h / float(bands)), size.x, h), col)
-	draw_rect(Rect2(0.0, horizon - 2.0, size.x, 4.0), Color(1.0, 1.0, 1.0, 0.50))
+	draw_rect(Rect2(0.0, horizon - 2.0, size.x, 4.0), Color(Color.WHITE, 0.50))
 
 	var sun_x := size.x * 0.79
 	for i in range(18):
@@ -514,7 +514,7 @@ func _draw_sea(horizon: float) -> void:
 		var y := horizon + 10.0 + sea_h * 0.012 * float(i) + sea_h * t * 0.34
 		var half := 28.0 + t * 132.0
 		var alpha := 0.24 * (1.0 - t)
-		draw_line(Vector2(sun_x - half, y), Vector2(sun_x + half, y), Color(1.0, 1.0, 1.0, alpha), 2.0)
+		draw_line(Vector2(sun_x - half, y), Vector2(sun_x + half, y), Color(Color.WHITE, alpha), 2.0)
 
 	for i in range(42):
 		var lane := i % 9
@@ -522,13 +522,13 @@ func _draw_sea(horizon: float) -> void:
 		var x := fmod(float(i) * 83.0 + _time * (16.0 + float(i % 4) * 5.0), size.x + 90.0) - 45.0
 		var w := 20.0 + float(i % 5) * 12.0
 		var alpha: float = 0.10 + 0.10 * abs(sin(_time * 1.4 + float(i)))
-		draw_line(Vector2(x, y), Vector2(x + w, y), Color(1.0, 1.0, 1.0, alpha), 2.0)
+		draw_line(Vector2(x, y), Vector2(x + w, y), Color(Color.WHITE, alpha), 2.0)
 
 	for i in range(22):
 		var sx := fmod(float(i) * 127.0 + _time * 20.0, size.x)
 		var sy := horizon + 18.0 + float((i * 11) % 100) / 100.0 * sea_h * 0.46
 		var tw: float = 0.45 + 0.55 * abs(sin(_time * 2.4 + float(i)))
-		draw_rect(Rect2(roundf(sx), roundf(sy), 3.0, 2.0), Color(1.0, 1.0, 1.0, 0.58 * tw), true)
+		draw_rect(Rect2(roundf(sx), roundf(sy), 3.0, 2.0), Color(Color.WHITE, 0.58 * tw), true)
 
 
 func _draw_fish_shadow(horizon: float) -> void:
@@ -545,19 +545,19 @@ func _draw_fish_shadow(horizon: float) -> void:
 	var fish_y := horizon + water_h * (0.30 + 0.18 * clampf(simulator.visual_position.y, 0.0, 1.0))
 	var alpha := 0.10 + _approach_glow * 0.25
 	var center := Vector2(fish_x, fish_y)
-	_draw_ellipse(center, 45.0, 14.0, Color("#062c3d", alpha), 36)
+	_draw_ellipse(center, 45.0, 14.0, Color(Palette.SURFACE_FISH_SHADOW, alpha), 36)
 	var tail := PackedVector2Array([
 		center + Vector2(-35.0, 0.0),
 		center + Vector2(-63.0, -17.0),
 		center + Vector2(-59.0, 15.0),
 	])
-	draw_colored_polygon(tail, Color("#062c3d", alpha * 0.86))
+	draw_colored_polygon(tail, Color(Palette.SURFACE_FISH_SHADOW, alpha * 0.86))
 	for i in range(3):
 		var bubble := center + Vector2(-72.0 - float(i) * 11.0 + sin(_time * 2.0 + i) * 4.0, -20.0 + float(i) * 11.0)
-		draw_circle(bubble, 2.3 + float(i) * 0.6, Color(1.0, 1.0, 1.0, _approach_glow * 0.35))
+		draw_circle(bubble, 2.3 + float(i) * 0.6, Color(Color.WHITE, _approach_glow * 0.35))
 	if state == FishingSimulator.State.APPROACH or state == FishingSimulator.State.BITE:
 		var lead := center.lerp(bobber + Vector2(-8.0, 18.0), 0.55)
-		draw_line(lead + Vector2(-18.0, 0.0), lead + Vector2(18.0, 0.0), Color(1.0, 1.0, 1.0, 0.16 + _approach_glow * 0.13), 2.0)
+		draw_line(lead + Vector2(-18.0, 0.0), lead + Vector2(18.0, 0.0), Color(Color.WHITE, 0.16 + _approach_glow * 0.13), 2.0)
 
 
 func _draw_dock() -> void:
@@ -583,7 +583,7 @@ func _draw_dock() -> void:
 	for i in range(8):
 		var y := top + 10.0 + float(i) * 21.0
 		var left_x := lerpf(size.x * 0.64, size.x * 0.69, float(i) / 8.0)
-		draw_line(Vector2(left_x, y), Vector2(size.x, y - 4.0), Color("#6f3d1c"), 2.0)
+		draw_line(Vector2(left_x, y), Vector2(size.x, y - 4.0), Palette.SURFACE_DOCK_PLANK_LINE, 2.0)
 
 	for i in range(5):
 		var x := size.x * (0.67 + float(i) * 0.075)
@@ -591,7 +591,7 @@ func _draw_dock() -> void:
 	for i in range(3):
 		var px := size.x * (0.71 + float(i) * 0.11)
 		draw_rect(Rect2(px, top + 28.0, 12.0, size.y - top), DOCK_DARK, true)
-		draw_rect(Rect2(px + 1.0, top + 28.0, 3.0, size.y - top), Color("#a06a31", 0.65), true)
+		draw_rect(Rect2(px + 1.0, top + 28.0, 3.0, size.y - top), Color(Palette.SURFACE_DOCK_POST_HI, 0.65), true)
 
 	_draw_dock_props(Vector2(size.x * 0.88, top + 32.0))
 
@@ -599,42 +599,42 @@ func _draw_dock() -> void:
 func _draw_post(base: Vector2, scale_value: float) -> void:
 	draw_rect(Rect2(base.x - 6.0 * scale_value, base.y - 46.0 * scale_value, 12.0 * scale_value, 54.0 * scale_value), DOCK_DARK, true)
 	draw_rect(Rect2(base.x - 3.0 * scale_value, base.y - 44.0 * scale_value, 4.0 * scale_value, 48.0 * scale_value), DOCK_HI, true)
-	draw_circle(base + Vector2(0.0, -49.0) * scale_value, 8.0 * scale_value, Color("#b77b34"))
-	draw_circle(base + Vector2(-2.0, -52.0) * scale_value, 3.0 * scale_value, Color("#f0c36c"))
+	draw_circle(base + Vector2(0.0, -49.0) * scale_value, 8.0 * scale_value, Palette.SURFACE_DOCK_POST_TOP)
+	draw_circle(base + Vector2(-2.0, -52.0) * scale_value, 3.0 * scale_value, Palette.SURFACE_DOCK_POST_GLOW)
 
 
 func _draw_dock_props(base: Vector2) -> void:
-	draw_circle(base + Vector2(0.0, 8.0), 15.0, Color("#533018"))
-	draw_circle(base + Vector2(0.0, 8.0), 10.0, Color("#9b642d"))
-	draw_rect(Rect2(base.x - 18.0, base.y - 22.0, 36.0, 30.0), Color("#7b491f"), true)
-	draw_rect(Rect2(base.x - 15.0, base.y - 19.0, 30.0, 6.0), Color("#c68a3d"), true)
+	draw_circle(base + Vector2(0.0, 8.0), 15.0, Palette.SURFACE_PROP_BARREL_DARK)
+	draw_circle(base + Vector2(0.0, 8.0), 10.0, Palette.SURFACE_PROP_BARREL_MID)
+	draw_rect(Rect2(base.x - 18.0, base.y - 22.0, 36.0, 30.0), Palette.SURFACE_PROP_CRATE, true)
+	draw_rect(Rect2(base.x - 15.0, base.y - 19.0, 30.0, 6.0), Palette.SURFACE_PROP_CRATE_HI, true)
 	for i in range(3):
-		draw_arc(base + Vector2(-54.0 + float(i) * 5.0, 18.0 + float(i) * 2.0), 15.0 + float(i) * 4.0, -0.2, TAU - 0.2, 24, Color("#3a2715"), 3.0)
+		draw_arc(base + Vector2(-54.0 + float(i) * 5.0, 18.0 + float(i) * 2.0), 15.0 + float(i) * 4.0, -0.2, TAU - 0.2, 24, Palette.SURFACE_PROP_ROPE, 3.0)
 
 
 func _draw_angler() -> void:
 	var base_y := roundf(size.y * 0.69)
 	var p := Vector2(size.x * 0.72, base_y - 2.0)
-	_draw_ellipse(p + Vector2(0.0, 5.0), 23.0, 6.0, Color(0.0, 0.0, 0.0, 0.28))
+	_draw_ellipse(p + Vector2(0.0, 5.0), 23.0, 6.0, Palette.SURFACE_ANGLER_SHADOW)
 
 	var bob := sin(_time * 3.0) * 1.2
 	var body := p + Vector2(0.0, bob)
-	draw_rect(Rect2(body.x - 9.0, body.y - 35.0, 18.0, 28.0), Color("#244a63"), true)
-	draw_rect(Rect2(body.x - 9.0, body.y - 35.0, 18.0, 6.0), Color("#2f6f91"), true)
-	draw_rect(Rect2(body.x - 12.0, body.y - 10.0, 9.0, 18.0), Color("#202f3b"), true)
-	draw_rect(Rect2(body.x + 3.0, body.y - 10.0, 9.0, 18.0), Color("#202f3b"), true)
-	draw_circle(body + Vector2(0.0, -44.0), 10.5, Color("#e7b689"))
-	draw_rect(Rect2(body.x - 7.0, body.y - 52.0, 14.0, 6.0), Color("#6b3a1e"), true)
-	draw_rect(Rect2(body.x - 3.0, body.y - 43.0, 2.0, 2.0), Color("#101018"), true)
-	draw_rect(Rect2(body.x + 5.0, body.y - 43.0, 2.0, 2.0), Color("#101018"), true)
+	draw_rect(Rect2(body.x - 9.0, body.y - 35.0, 18.0, 28.0), Palette.SURFACE_ANGLER_BODY, true)
+	draw_rect(Rect2(body.x - 9.0, body.y - 35.0, 18.0, 6.0), Palette.SURFACE_ANGLER_VEST, true)
+	draw_rect(Rect2(body.x - 12.0, body.y - 10.0, 9.0, 18.0), Palette.SURFACE_ANGLER_LEG, true)
+	draw_rect(Rect2(body.x + 3.0, body.y - 10.0, 9.0, 18.0), Palette.SURFACE_ANGLER_LEG, true)
+	draw_circle(body + Vector2(0.0, -44.0), 10.5, Palette.SURFACE_ANGLER_SKIN)
+	draw_rect(Rect2(body.x - 7.0, body.y - 52.0, 14.0, 6.0), Palette.SURFACE_ANGLER_HAIR, true)
+	draw_rect(Rect2(body.x - 3.0, body.y - 43.0, 2.0, 2.0), Palette.SURFACE_ANGLER_EYE, true)
+	draw_rect(Rect2(body.x + 5.0, body.y - 43.0, 2.0, 2.0), Palette.SURFACE_ANGLER_EYE, true)
 
 	var rod_base := body + Vector2(-7.0, -29.0)
 	var rod_tip := _rod_tip()
-	draw_line(body + Vector2(-9.0, -28.0), rod_base + Vector2(-13.0, -12.0), Color("#e7b689"), 5.0)
-	draw_line(rod_base + Vector2(-13.0, -12.0), rod_base + Vector2(-35.0, -28.0), Color("#e7b689"), 4.0)
-	draw_polyline(PackedVector2Array([rod_base, body + Vector2(-31.0, -45.0), rod_tip]), Color("#5a3418"), 4.0, false)
-	draw_polyline(PackedVector2Array([rod_base + Vector2(1.0, -1.0), body + Vector2(-31.0, -46.0), rod_tip]), Color("#d39a42"), 1.5, false)
-	draw_circle(rod_tip, 2.4, Color("#27170b"))
+	draw_line(body + Vector2(-9.0, -28.0), rod_base + Vector2(-13.0, -12.0), Palette.SURFACE_ANGLER_SKIN, 5.0)
+	draw_line(rod_base + Vector2(-13.0, -12.0), rod_base + Vector2(-35.0, -28.0), Palette.SURFACE_ANGLER_SKIN, 4.0)
+	draw_polyline(PackedVector2Array([rod_base, body + Vector2(-31.0, -45.0), rod_tip]), Palette.SURFACE_ROD_DARK, 4.0, false)
+	draw_polyline(PackedVector2Array([rod_base + Vector2(1.0, -1.0), body + Vector2(-31.0, -46.0), rod_tip]), Palette.SURFACE_ROD_HI, 1.5, false)
+	draw_circle(rod_tip, 2.4, Palette.SURFACE_ROD_TIP)
 
 
 func _draw_line_and_bobber(horizon: float) -> void:
@@ -674,11 +674,11 @@ func _bobber_position(horizon: float, rod_tip: Vector2) -> Vector2:
 
 
 func _draw_bobber(pos: Vector2) -> void:
-	draw_line(pos + Vector2(0.0, -18.0), pos + Vector2(0.0, 11.0), Color("#54311a", 0.85), 1.3)
-	draw_circle(pos + Vector2(0.0, 5.0), 7.0, Color("#c33428"))
-	draw_circle(pos + Vector2(0.0, 0.0), 6.2, Color("#fff1b7"))
-	draw_rect(Rect2(pos.x - 3.0, pos.y + 1.0, 6.0, 7.0), Color("#e0422e"), true)
-	draw_circle(pos + Vector2(-2.0, -2.0), 2.2, Color(1.0, 1.0, 1.0, 0.76))
+	draw_line(pos + Vector2(0.0, -18.0), pos + Vector2(0.0, 11.0), Color(Palette.SURFACE_BOBBER_STEM, 0.85), 1.3)
+	draw_circle(pos + Vector2(0.0, 5.0), 7.0, Palette.SURFACE_BOBBER_RED)
+	draw_circle(pos + Vector2(0.0, 0.0), 6.2, Palette.SURFACE_BOBBER_WHITE)
+	draw_rect(Rect2(pos.x - 3.0, pos.y + 1.0, 6.0, 7.0), Palette.SURFACE_BOBBER_RED_HI, true)
+	draw_circle(pos + Vector2(-2.0, -2.0), 2.2, Color(Color.WHITE, 0.76))
 
 
 func _draw_bobber_ripples(center: Vector2, horizon: float) -> void:
@@ -688,9 +688,9 @@ func _draw_bobber_ripples(center: Vector2, horizon: float) -> void:
 		var rx := 12.0 + phase * (34.0 + water_scale * 18.0)
 		var ry := 4.0 + phase * 10.0
 		var alpha := (1.0 - phase) * 0.34
-		_draw_ellipse_outline(center + Vector2(0.0, 4.0), rx, ry, Color(1.0, 1.0, 1.0, alpha), 32, 1.4)
+		_draw_ellipse_outline(center + Vector2(0.0, 4.0), rx, ry, Color(Color.WHITE, alpha), 32, 1.4)
 	if _cast_flight > 0.0:
-		_draw_ellipse_outline(center + Vector2(0.0, 4.0), 44.0 * (1.0 - _cast_flight), 12.0 * (1.0 - _cast_flight), Color(1.0, 1.0, 1.0, 0.42 * (1.0 - _cast_flight)), 32, 1.8)
+		_draw_ellipse_outline(center + Vector2(0.0, 4.0), 44.0 * (1.0 - _cast_flight), 12.0 * (1.0 - _cast_flight), Color(Color.WHITE, 0.42 * (1.0 - _cast_flight)), 32, 1.8)
 
 
 func _draw_bite_splash(center: Vector2, _horizon: float) -> void:
@@ -698,18 +698,18 @@ func _draw_bite_splash(center: Vector2, _horizon: float) -> void:
 	if _state() == FishingSimulator.State.BITE:
 		burst = maxf(burst, 0.38 + 0.18 * sin(_time * 18.0))
 	var ring_scale := 1.0 - clampf(_splash, 0.0, 1.0)
-	_draw_ellipse_outline(center + Vector2(0.0, 8.0), 23.0 + ring_scale * 38.0, 7.0 + ring_scale * 13.0, Color(1.0, 1.0, 1.0, 0.45 * burst), 36, 2.0)
+	_draw_ellipse_outline(center + Vector2(0.0, 8.0), 23.0 + ring_scale * 38.0, 7.0 + ring_scale * 13.0, Color(Color.WHITE, 0.45 * burst), 36, 2.0)
 	for i in range(13):
 		var ang := -PI * 0.5 + (float(i) / 12.0 - 0.5) * PI * 1.10
 		var r := (1.0 - _splash) * 38.0 + 6.0 + float(i % 3) * 3.0
 		var sp := center + Vector2(cos(ang), sin(ang)) * r
-		draw_circle(sp, 2.2 + float(i % 2), Color(1.0, 1.0, 1.0, 0.72 * burst))
+		draw_circle(sp, 2.2 + float(i % 2), Color(Color.WHITE, 0.72 * burst))
 
 
 func _draw_hit_flash() -> void:
 	if _hit_flash <= 0.0:
 		return
-	draw_rect(Rect2(Vector2.ZERO, size), Color(1.0, 0.96, 0.72, 0.10 * _hit_flash), true)
+	draw_rect(Rect2(Vector2.ZERO, size), Color(Palette.SURFACE_SUN_RAY, 0.10 * _hit_flash), true)
 
 
 func _draw_ellipse(center: Vector2, rx: float, ry: float, color: Color, points := 28) -> void:
@@ -739,6 +739,6 @@ func _state() -> int:
 
 
 func _draw_frame() -> void:
-	draw_rect(Rect2(Vector2.ZERO, size), Color("#072235"), false, 3.0)
-	draw_rect(Rect2(5.0, 5.0, size.x - 10.0, size.y - 10.0), Color("#5dbde2", 0.44), false, 1.0)
-	draw_rect(Rect2(10.0, 10.0, size.x - 20.0, size.y - 20.0), Color(0.0, 0.03, 0.08, 0.18), false, 1.0)
+	draw_rect(Rect2(Vector2.ZERO, size), Palette.SURFACE_FRAME_DARK, false, 3.0)
+	draw_rect(Rect2(5.0, 5.0, size.x - 10.0, size.y - 10.0), Color(Palette.SURFACE_FRAME_BLUE, 0.44), false, 1.0)
+	draw_rect(Rect2(10.0, 10.0, size.x - 20.0, size.y - 20.0), Palette.SURFACE_FRAME_INNER, false, 1.0)

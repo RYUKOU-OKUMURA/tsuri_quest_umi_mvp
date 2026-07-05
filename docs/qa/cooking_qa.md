@@ -1,6 +1,6 @@
 # 調理場 QA判断ログ
 
-最終更新: 2026-07-05 / 状態: 調理場cooking_screen R1完了 / COOK_SELECT仕上げ点検完了 / MEAL_RESULT / EXP_GAIN / LEVEL_UP_OVERLAY / STATUS_SUMMARY reference-uplift完了
+最終更新: 2026-07-05 / 状態: 調理場cooking_screen R1完了 / RF1調理コンポーネント Palette移行完了 / COOK_SELECT仕上げ点検完了 / MEAL_RESULT / EXP_GAIN / LEVEL_UP_OVERLAY / STATUS_SUMMARY reference-uplift完了
 参照画像: reference/cooking_flow/01_cook_select_concept.png, reference/cooking_flow/02_meal_result_concept.png, reference/cooking_flow/03_exp_gain_concept.png, reference/cooking_flow/04_level_up_overlay_concept.png, reference/cooking_flow/05_status_summary_concept.png
 QA更新コマンド: ./tools/cooking_visual_qa.sh
 
@@ -35,7 +35,8 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 ## 5. 現在の残ギャップ
 
 - R5: ユーザー指定の調理フロー残り4状態（MEAL_RESULT / EXP_GAIN / LEVEL_UP_OVERLAY / STATUS_SUMMARY）はreference-uplift完了。残る画面別R5は、次の対象選定時に `docs/19` §8.5 と各画面QAログから判断する。
-- R1温存: レアリティ表示の `RarityStyles` 横展開は未実施。調理場 `src/ui/cooking_screen.gd` のR1完了により、残件は台帳に残したまま一旦停止。
+- R1全体: 最終リファクタRF1/RF2/RF3完了により、`src/ui/**/*.gd` は `palette.gd` を除くraw color監査で `files 0 / matches 0`。証跡は `docs/qa/evidence/refactor/2026-07-05_final_r1_raw_color_audit.txt`。
+- R1 RF1: `src/ui/components/cooking_assets.gd` / `cooking_reward_status_strip.gd` / `cooking_reward_cards.gd` / `cooking_reward_panel.gd` / `level_up_panel.gd` / `cooking_reward_visuals.gd` / `cooking_status_panel.gd` はraw color監査0件。調理コンポーネントのR1は完了済み。
 - R1: `src/ui/cooking_screen.gd` は `Color(` 直書きゼロ。COOK_SELECT左魚リスト周辺は `Palette.COOKING_FISH_*`、見出しリボン周辺は `Palette.COOKING_SECTION_RIBBON_*`、料理カード/中央料理グリッド外枠周辺は `Palette.COOKING_RECIPE_*`、下部バー周辺は `Palette.COOKING_PREP_*`、右詳細パネルactive runtime色は `Palette.COOKING_DETAIL_*`、調理ボタン周辺は `Palette.COOKING_ACTION_*`、料理図鑑ボタン周辺は `Palette.COOKING_RECIPE_BOOK_BUTTON_*`、小アイコン/アクションキュー周辺は `Palette.COOKING_SMALL_ICON_*` / `Palette.COOKING_ACTION_CUE_*`、結果サマリーカード周辺は `Palette.COOKING_SUMMARY_CARD_*` / `Palette.COOKING_RESULT_TITLE_OUTLINE`、背景fallback/glazeは `Palette.COOKING_BG_*` へ移行済み。未使用detail helper由来のhexは削除済み。
 - 監査: `tools/cooking_layout_audit.tscn` / `tools/cooking_content_audit.tscn` / `./tools/cooking_visual_qa.sh` はgreen。visual QAは状態間キャプチャ重複のfail guard追加済み。
 
@@ -44,6 +45,50 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 なし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-05: `RF1 complete reward visuals/status palette pass` 完了。調理報酬Visual群とSTATUS_SUMMARYのactive runtime色をPalette用途名へ移行し、RF1を閉じた。
+
+- 選定理由: RF1-C後の最後の調理コンポーネント残件が `cooking_reward_visuals.gd` 179件と `cooking_status_panel.gd` 114件に集約され、調理5状態のvisual QAで表示同値退行を確認できるため。
+- 変えたもの: `cooking_reward_visuals.gd` の人物/食卓/料理/湯気/グロー/報酬アイコン/値プレート/効果プレビュー色を `Palette.COOKING_REWARD_VISUAL_*` へ、`cooking_status_panel.gd` の背景/5カード/小アイコン/ヘッダー/フッター/注記色を `Palette.COOKING_STATUS_*` へ移行。
+- 変えていないもの: §1 freeze値、調理/EXP/レベルアップ進行ロジック、レイアウト値、素材、表示文言、日本語PNG焼き込み、R5 reference-uplift済み構成。
+- Palette: 新規 `Palette.COOKING_REWARD_VISUAL_*` / `Palette.COOKING_STATUS_*` を追加。理由は調理報酬VisualとSTATUS_SUMMARY固有の色責務を、表示同値のままPalette正本へ移すため。
+- 証拠画像: `docs/qa/evidence/cooking/2026-07-05_rf1_complete_palette_select.png`, `docs/qa/evidence/cooking/2026-07-05_rf1_complete_palette_result.png`, `docs/qa/evidence/cooking/2026-07-05_rf1_complete_palette_exp.png`, `docs/qa/evidence/cooking/2026-07-05_rf1_complete_palette_levelup.png`, `docs/qa/evidence/cooking/2026-07-05_rf1_complete_palette_status.png`, `docs/qa/evidence/cooking/2026-07-05_rf1_complete_palette_report.html`
+- 判定: RF1対象7ファイルのraw color監査は0件。実スクショ5状態とcontent/layout/input/flow検証でP1なし。これは参照upliftではなくR1表示同値移行なので、cmp一致は完了条件にしていない。
+- 検証: `./tools/cooking_visual_qa.sh`、`./tools/cooking_verify.sh`、`./tools/save_system_verify.sh`、`./tools/validate_project.sh` green。`save_system_verify.sh` のJSON警告と `validate_project.sh` のObjectDB/resource警告はベースライン既知。
+- 固定条件: 調理報酬Visualの色は `COOKING_REWARD_VISUAL_*`、STATUS_SUMMARYの色は `COOKING_STATUS_*` として扱い、今後の調理コンポーネント編集でraw colorを戻さない。
+
+2026-07-05: `RF1-C level-up panel palette pass` 完了。レベルアップoverlayのactive runtime色をPalette用途名へ移行した。
+
+- 選定理由: RF1-B後の残件から `level_up_panel.gd` は単独で87件を閉じられ、LEVEL_UP_OVERLAY状態を含む調理5状態のvisual QAで表示同値退行を確認できるため。
+- 変えたもの: 王冠/ラウレル、メダル/リボン、釣り場サムネ、ステータスバッジ、解放カード、導線ミニカード、ディム/文字影のruntime色を `Palette.COOKING_LEVEL_*` へ移行。
+- 変えていないもの: §1 freeze値、調理/EXP/レベルアップ進行ロジック、レイアウト値、素材、表示文言、日本語PNG焼き込み、R5 reference-uplift済み構成。
+- Palette: 新規 `Palette.COOKING_LEVEL_*` を追加。理由はレベルアップoverlay固有の祝祭/解放/ステータス色責務を、表示同値のままPalette正本へ移すため。
+- 証拠画像: `docs/qa/evidence/cooking/2026-07-05_rf1c_level_up_palette_select.png`, `docs/qa/evidence/cooking/2026-07-05_rf1c_level_up_palette_result.png`, `docs/qa/evidence/cooking/2026-07-05_rf1c_level_up_palette_exp.png`, `docs/qa/evidence/cooking/2026-07-05_rf1c_level_up_palette_levelup.png`, `docs/qa/evidence/cooking/2026-07-05_rf1c_level_up_palette_status.png`, `docs/qa/evidence/cooking/2026-07-05_rf1c_level_up_palette_report.html`
+- 判定: `src/ui/components/level_up_panel.gd` のraw color監査は0件。実スクショ5状態とcontent/layout/input/flow検証でP1なし。これは参照upliftではなくR1表示同値移行なので、cmp一致は完了条件にしていない。
+- 検証: `./tools/cooking_visual_qa.sh`、`./tools/cooking_verify.sh`、`./tools/save_system_verify.sh`、`./tools/validate_project.sh` green。`save_system_verify.sh` のJSON警告と `validate_project.sh` のObjectDB/resource警告はベースライン既知。
+- 固定条件: レベルアップoverlayのruntime色は `COOKING_LEVEL_*` 系として扱い、次スライスは `cooking_status_panel.gd` / `cooking_reward_visuals.gd` のどちらかを単独で進める。
+
+2026-07-05: `RF1-B reward panel palette pass` 完了。調理報酬オーバーレイ本体のactive runtime色をPalette用途名へ移行した。
+
+- 選定理由: RF1-A後の残件から `cooking_reward_panel.gd` は単独で70件を閉じられ、MEAL_RESULT / EXP_GAIN / STATUS_SUMMARYの報酬オーバーレイ表示同値をvisual QAで検証できるため。
+- 変えたもの: 報酬オーバーレイの暗幕、シーンカード、バナー/料理カード/EXPフレームfallback、フローステップ、OKボタン導線アイコン、EXP/効果プレビューカードのruntime色を `Palette.COOKING_REWARD_*` へ移行。
+- 変えていないもの: §1 freeze値、調理/EXP/レベルアップ進行ロジック、レイアウト値、素材、表示文言、日本語PNG焼き込み、R5 reference-uplift済み構成。
+- Palette: 新規 `Palette.COOKING_REWARD_OVERLAY_DIM` / `SCENE_CARD_FILL` / `DIALOG_FILL` / `PARCHMENT_FILL` / `FLOW_*` / `BUTTON_*` / `EFFECT_*` などを追加。理由は報酬オーバーレイ本体の色責務を、表示同値のままPalette正本へ移すため。
+- 証拠画像: `docs/qa/evidence/cooking/2026-07-05_rf1b_reward_panel_palette_select.png`, `docs/qa/evidence/cooking/2026-07-05_rf1b_reward_panel_palette_result.png`, `docs/qa/evidence/cooking/2026-07-05_rf1b_reward_panel_palette_exp.png`, `docs/qa/evidence/cooking/2026-07-05_rf1b_reward_panel_palette_levelup.png`, `docs/qa/evidence/cooking/2026-07-05_rf1b_reward_panel_palette_status.png`, `docs/qa/evidence/cooking/2026-07-05_rf1b_reward_panel_palette_report.html`
+- 判定: `src/ui/components/cooking_reward_panel.gd` のraw color監査は0件。実スクショ5状態とcontent/layout/input/flow検証でP1なし。これは参照upliftではなくR1表示同値移行なので、cmp一致は完了条件にしていない。
+- 検証: `./tools/cooking_visual_qa.sh`、`./tools/cooking_verify.sh`、`./tools/save_system_verify.sh`、`./tools/validate_project.sh` green。`save_system_verify.sh` のJSON警告と `validate_project.sh` のObjectDB/resource警告はベースライン既知。
+- 固定条件: 調理報酬オーバーレイ本体の色は `COOKING_REWARD_*` 系として扱い、次スライスは `level_up_panel.gd` / `cooking_status_panel.gd` / `cooking_reward_visuals.gd` のどれかを単独で進める。
+
+2026-07-05: `RF1-A reward cards palette pass` 完了。調理報酬カード群と下部ステータスストリップのactive runtime色をPalette用途名へ移行した。
+
+- 選定理由: 当時の全体リファクタ棚卸しでR1が未完条件として残り、RF1のうち `cooking_assets.gd` / `cooking_reward_status_strip.gd` / `cooking_reward_cards.gd` は独立して小さく切れるため。
+- 変えたもの: `CookingAssets.apply_flow_button_style` のfallback button色、報酬カード/報酬グリッド/下部ステータスストリップの枠・発光・アクセント・modulate色を `Palette.COOKING_FLOW_BUTTON_*` / `Palette.COOKING_REWARD_*` へ移行。
+- 変えていないもの: §1 freeze値、調理/EXP/レベルアップ進行ロジック、レイアウト値、素材、表示文言、日本語PNG焼き込み、R5 reference-uplift済み構成。
+- Palette: 新規 `Palette.COOKING_FLOW_BUTTON_*` / `Palette.COOKING_REWARD_*` を追加。理由はRF1調理報酬系コンポーネントの色責務を、表示同値のままPalette正本へ移すため。
+- 証拠画像: `docs/qa/evidence/cooking/2026-07-05_rf1a_reward_palette_select.png`, `docs/qa/evidence/cooking/2026-07-05_rf1a_reward_palette_result.png`, `docs/qa/evidence/cooking/2026-07-05_rf1a_reward_palette_exp.png`, `docs/qa/evidence/cooking/2026-07-05_rf1a_reward_palette_levelup.png`, `docs/qa/evidence/cooking/2026-07-05_rf1a_reward_palette_status.png`, `docs/qa/evidence/cooking/2026-07-05_rf1a_reward_palette_report.html`
+- 判定: 対象3ファイルのraw color監査は0件。実スクショ5状態とcontent/layout/input/flow検証でP1なし。これは参照upliftではなくR1表示同値移行なので、cmp一致は完了条件にしていない。
+- 検証: `./tools/cooking_visual_qa.sh`、`./tools/cooking_verify.sh`、`cooking_content_audit.tscn`、`cooking_layout_audit.tscn`、`cooking_flow_smoke.tscn` green。
+- 固定条件: 調理報酬カードと報酬ステータスストリップの色は `COOKING_REWARD_*` 系として扱い、次スライスは `cooking_reward_panel.gd` / `level_up_panel.gd` / `cooking_status_panel.gd` / `cooking_reward_visuals.gd` のどれかを単独で進める。
 
 2026-07-05: `STATUS_SUMMARY reference-uplift` 完了。`reference/cooking_flow/05_status_summary_concept.png` へ向けて、5カードの独立画面感と主値の読みを強めた。
 
@@ -288,7 +333,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 
 - 変えたもの: `src/ui/cooking_screen.gd` のCOOK_SELECTヘッダーと下部準備バー。古い構成を正としていた `tools/cooking_content_audit.gd` / `tools/cooking_layout_audit.gd` のCOOK_SELECT契約。
 - 変えていないもの: 料理カード、魚行、詳細カード、報酬オーバーレイ、ステータス詳細オーバーレイ、素材差し替え、`RarityStyles` 横展開、調理場全体の最終アート品質。
-- Palette: 今回触ったヘッダーfallback色を `Palette.COOKING_TITLE_FALLBACK_BG` / `Palette.COOKING_WOOD_BORDER` / `Palette.COOKING_GOLD_TRIM` へ表示同値で移した。`cooking_screen.gd` 全体のR1は未完。
+- Palette: 今回触ったヘッダーfallback色を `Palette.COOKING_TITLE_FALLBACK_BG` / `Palette.COOKING_WOOD_BORDER` / `Palette.COOKING_GOLD_TRIM` へ表示同値で移した。当時の `cooking_screen.gd` 全体R1は未完だったが、後続スライスで完了済み。
 - 証拠画像: `docs/qa/evidence/cooking/2026-07-05_status_dedupe_before_after_select.png`, `docs/qa/evidence/cooking/2026-07-05_status_dedupe_select.png`, `docs/qa/evidence/cooking/2026-07-05_status_dedupe_report.html`
 - 判定: COOK_SELECTで上部 `PlayerStatusBar` に Lv/装備/所持金がまとまり、下部は「効果中の料理」「クーラーボックス」「詳細」に整理。実スクショで重複Lv/EXP・所持金カードの撤去とP1なしを確認。
 - 検証: `./tools/cooking_visual_qa.sh`、`cooking_flow_smoke`、全UI smoke、`./tools/save_system_verify.sh`、`./tools/validate_project.sh`、`tools/cooking_content_audit.tscn` green。`tools/cooking_layout_audit.tscn` は既存の報酬/ステータス詳細ラベル高さ検出で失敗するが、今回追加/撤去したCOOK_SELECT契約のgrep確認では失敗なし。

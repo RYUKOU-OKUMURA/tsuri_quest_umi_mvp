@@ -86,14 +86,19 @@ func apply_meal_reward_hierarchy() -> void:
 	_set_reward_label_style(_bonus_label, 34, Palette.GOLD_BRIGHT, 4)
 	_set_reward_label_style(_total_label, 48, Palette.GOLD_BRIGHT, 6)
 	_set_reward_label_style(_buff_label, 18, Palette.GAUGE_GREEN_HI, 3)
-	_set_reward_card_modulate(_base_label, Color(0.92, 0.96, 1.0, 0.92))
-	_set_reward_card_modulate(_bonus_label, Color(1.0, 0.96, 0.86, 0.94))
-	_set_reward_card_modulate(_total_label, Color(1.0, 0.98, 0.86, 1.0))
-	_set_reward_card_modulate(_buff_label, Color(0.90, 1.0, 0.88, 1.0))
+	_set_reward_card_modulate(_base_label, Palette.COOKING_REWARD_CARD_BASE_MODULATE)
+	_set_reward_card_modulate(_bonus_label, Palette.COOKING_REWARD_CARD_BONUS_MODULATE)
+	_set_reward_card_modulate(_total_label, Palette.COOKING_REWARD_CARD_TOTAL_MODULATE)
+	_set_reward_card_modulate(_buff_label, Palette.COOKING_REWARD_CARD_BUFF_MODULATE)
 
 
 func _build_cards() -> void:
-	_exp_card = CookingAssets.panel_box(Color("#0f2238"), Color("#07121e"), Palette.GOLD_DEEP, 5)
+	_exp_card = CookingAssets.panel_box(
+		Palette.COOKING_REWARD_PANEL_FILL,
+		Palette.COOKING_REWARD_CARD_FRAME_BORDER,
+		Palette.GOLD_DEEP,
+		5
+	)
 	_exp_card.custom_minimum_size = Vector2(280.0, 112.0)
 	_exp_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_child(_exp_card)
@@ -118,14 +123,25 @@ func _build_cards() -> void:
 
 
 func _reward_line(title: String, icon_mode: String, accent: Color) -> Label:
-	var card := CookingAssets.compact_panel_box(Color("#f2e4c2"), Color("#60401f"), Color("#d7a456"), 4)
+	var card := CookingAssets.compact_panel_box(
+		Palette.COOKING_SUMMARY_CARD_FILL,
+		Palette.COOKING_SUMMARY_CARD_BORDER,
+		Palette.COOKING_SUMMARY_CARD_INNER,
+		4
+	)
 	card.name = _reward_card_node_name(icon_mode)
 	card.add_theme_stylebox_override(
 		"panel",
 		CookingAssets.texture_style_box(
 			CookingAssets.REWARD_CARD_FRAME,
 			22,
-			CookingAssets.compact_style_box(Color("#0d2338"), Color("#07121e"), Palette.GOLD_DEEP, 4, 5),
+			CookingAssets.compact_style_box(
+				Palette.COOKING_REWARD_CARD_FRAME_FILL,
+				Palette.COOKING_REWARD_CARD_FRAME_BORDER,
+				Palette.GOLD_DEEP,
+				4,
+				5
+			),
 			8.0,
 			5.0
 		)
@@ -224,15 +240,25 @@ func _draw_reward_grid_backdrop() -> void:
 	var top := 4.0
 	var bottom := s.y - 4.0
 	var band := Rect2(Vector2(4.0, top), Vector2(s.x - 8.0, maxf(0.0, bottom - top)))
-	draw_rect(band, Color("#061726", 0.16))
-	draw_line(Vector2(16.0, top + 4.0), Vector2(s.x - 16.0, top + 4.0), Color("#ffe081", 0.22), 2.0)
-	draw_line(Vector2(16.0, bottom - 2.0), Vector2(s.x - 16.0, bottom - 2.0), Color("#d7a456", 0.16), 2.0)
+	draw_rect(band, Color(Palette.COOKING_REWARD_GRID_BACKDROP, 0.16))
+	draw_line(
+		Vector2(16.0, top + 4.0),
+		Vector2(s.x - 16.0, top + 4.0),
+		Color(Palette.COOKING_REWARD_ACCENT_BONUS, 0.22),
+		2.0
+	)
+	draw_line(
+		Vector2(16.0, bottom - 2.0),
+		Vector2(s.x - 16.0, bottom - 2.0),
+		Color(Palette.COOKING_REWARD_ACCENT_FALLBACK, 0.16),
+		2.0
+	)
 	for i in range(6):
 		var p := Vector2(
 			s.x * (0.08 + float(i) * 0.17),
 			top + 10.0 + float(i % 2) * 12.0
 		)
-		var sparkle := Color("#ffe081", 0.25 if i % 2 == 0 else 0.14)
+		var sparkle := Color(Palette.COOKING_REWARD_ACCENT_BONUS, 0.25 if i % 2 == 0 else 0.14)
 		draw_line(p + Vector2(-3.0, 0.0), p + Vector2(3.0, 0.0), sparkle, 1.3)
 		draw_line(p + Vector2(0.0, -3.0), p + Vector2(0.0, 3.0), sparkle, 1.3)
 
@@ -262,7 +288,7 @@ func _draw_reward_award_well(card: Control, icon_mode: String) -> void:
 	var s := card.size
 	var accent := _reward_card_draw_accent(icon_mode)
 	var well := Rect2(Vector2(13.0, 45.0), Vector2(maxf(12.0, s.x - 26.0), maxf(24.0, s.y - 58.0)))
-	card.draw_rect(well, Color("#03111d", 0.28))
+	card.draw_rect(well, Color(Palette.COOKING_REWARD_DEEP_INK, 0.28))
 	var fill := accent
 	fill.a = 0.10 if icon_mode == "total" else 0.07
 	card.draw_rect(Rect2(well.position + Vector2(4.0, 4.0), well.size - Vector2(8.0, 8.0)), fill)
@@ -272,26 +298,34 @@ func _draw_reward_award_well(card: Control, icon_mode: String) -> void:
 	card.draw_line(
 		well.position + Vector2(6.0, well.size.y - 1.0),
 		well.position + Vector2(well.size.x - 6.0, well.size.y - 1.0),
-		Color("#07121e", 0.68),
+		Color(Palette.COOKING_REWARD_CARD_FRAME_BORDER, 0.68),
 		2.0
 	)
 	if icon_mode == "total":
-		card.draw_ellipse(well.get_center(), well.size.x * 0.34, well.size.y * 0.40, Color("#ffb83d", 0.12))
+		card.draw_ellipse(
+			well.get_center(),
+			well.size.x * 0.34,
+			well.size.y * 0.40,
+			Color(Palette.COOKING_REWARD_ACCENT_TOTAL, 0.12)
+		)
 
 
 func _draw_reward_header_ribbon(card: Control, icon_mode: String) -> void:
 	var s := card.size
 	var accent := _reward_card_draw_accent(icon_mode)
 	var ribbon := Rect2(Vector2(13.0, 8.0), Vector2(maxf(12.0, s.x - 26.0), 30.0))
-	card.draw_rect(ribbon, Color("#03111d", 0.78))
-	card.draw_rect(Rect2(ribbon.position + Vector2(3.0, 3.0), ribbon.size - Vector2(6.0, 6.0)), Color("#0d2338", 0.54))
+	card.draw_rect(ribbon, Color(Palette.COOKING_REWARD_DEEP_INK, 0.78))
+	card.draw_rect(
+		Rect2(ribbon.position + Vector2(3.0, 3.0), ribbon.size - Vector2(6.0, 6.0)),
+		Color(Palette.COOKING_REWARD_CARD_FRAME_FILL, 0.54)
+	)
 	var top_line := accent
 	top_line.a = 0.62 if icon_mode == "total" else 0.46
 	card.draw_line(ribbon.position + Vector2(5.0, 2.0), ribbon.position + Vector2(ribbon.size.x - 5.0, 2.0), top_line, 2.0)
 	card.draw_line(
 		ribbon.position + Vector2(5.0, ribbon.size.y - 2.0),
 		ribbon.position + Vector2(ribbon.size.x - 5.0, ribbon.size.y - 2.0),
-		Color("#07121e", 0.82),
+		Color(Palette.COOKING_REWARD_CARD_FRAME_BORDER, 0.82),
 		2.0
 	)
 	for side in [-1.0, 1.0]:
@@ -312,32 +346,42 @@ func _draw_reward_header_ribbon(card: Control, icon_mode: String) -> void:
 		slash.a = 0.28
 		card.draw_line(Vector2(x, ribbon.position.y + 6.0), Vector2(x - 8.0, ribbon.end.y - 6.0), slash, 1.4)
 	if icon_mode == "total":
-		var glow := Color("#ffb83d", 0.16)
+		var glow := Color(Palette.COOKING_REWARD_ACCENT_TOTAL, 0.16)
 		card.draw_ellipse(ribbon.get_center() + Vector2(0.0, 2.0), ribbon.size.x * 0.28, 10.0, glow)
 
 
 func _reward_card_draw_accent(icon_mode: String) -> Color:
 	match icon_mode:
 		"exp":
-			return Color("#6bf1ff")
+			return Palette.COOKING_REWARD_ACCENT_EXP
 		"bonus":
-			return Color("#ffe081")
+			return Palette.COOKING_REWARD_ACCENT_BONUS
 		"total":
-			return Color("#ffb83d")
+			return Palette.COOKING_REWARD_ACCENT_TOTAL
 		"buff":
-			return Color("#8ee65a")
+			return Palette.COOKING_REWARD_ACCENT_BUFF
 		"growth":
-			return Color("#ff6f78")
+			return Palette.COOKING_REWARD_ACCENT_GROWTH
 		_:
-			return Color("#d7a456")
+			return Palette.COOKING_REWARD_ACCENT_FALLBACK
 
 
 func _draw_reward_exp_backdrop(card: Control, center: Vector2) -> void:
-	var cyan := Color("#6bf1ff", 0.18)
-	var green := Color("#9cff6f", 0.20)
-	card.draw_ellipse(center + Vector2(0.0, 22.0), 66.0, 12.0, Color(0.0, 0.0, 0.0, 0.16))
-	card.draw_arc(center + Vector2(0.0, 8.0), 30.0, 0.0, PI, 28, Color("#fff1c7", 0.72), 7.0)
-	card.draw_arc(center + Vector2(0.0, 5.0), 24.0, 0.0, PI, 24, Color("#b35f25", 0.74), 7.0)
+	var cyan := Color(Palette.COOKING_REWARD_ACCENT_EXP, 0.18)
+	var green := Color(Palette.COOKING_REWARD_ACCENT_EXP_GREEN, 0.20)
+	card.draw_ellipse(center + Vector2(0.0, 22.0), 66.0, 12.0, Color(Color.BLACK, 0.16))
+	card.draw_arc(
+		center + Vector2(0.0, 8.0), 30.0, 0.0, PI, 28, Color(Palette.TEXT_BONE, 0.72), 7.0
+	)
+	card.draw_arc(
+		center + Vector2(0.0, 5.0),
+		24.0,
+		0.0,
+		PI,
+		24,
+		Color(Palette.COOKING_SMALL_ICON_MEAL_FILL, 0.74),
+		7.0
+	)
 	for x in [-35.0, 35.0]:
 		card.draw_line(center + Vector2(x, 14.0), center + Vector2(x, -22.0), green, 5.0)
 		card.draw_polygon(
@@ -357,10 +401,13 @@ func _draw_reward_exp_backdrop(card: Control, center: Vector2) -> void:
 
 
 func _draw_reward_bonus_backdrop(card: Control, center: Vector2) -> void:
-	var gold := Color("#ffe081", 0.22)
-	var red := Color("#9b2f17", 0.48)
-	card.draw_ellipse(center + Vector2(0.0, 23.0), 64.0, 11.0, Color(0.0, 0.0, 0.0, 0.15))
-	card.draw_rect(Rect2(center.x - 44.0, center.y + 4.0, 88.0, 18.0), Color("#8a4a20", 0.42))
+	var gold := Color(Palette.COOKING_REWARD_ACCENT_BONUS, 0.22)
+	var red := Color(Palette.COOKING_REWARD_BONUS_FLAG, 0.48)
+	card.draw_ellipse(center + Vector2(0.0, 23.0), 64.0, 11.0, Color(Color.BLACK, 0.15))
+	card.draw_rect(
+		Rect2(center.x - 44.0, center.y + 4.0, 88.0, 18.0),
+		Color(Palette.COOKING_REWARD_BONUS_TABLE, 0.42)
+	)
 	card.draw_rect(Rect2(center.x - 5.0, center.y - 30.0, 10.0, 40.0), red)
 	card.draw_polygon(
 		PackedVector2Array(
@@ -373,12 +420,14 @@ func _draw_reward_bonus_backdrop(card: Control, center: Vector2) -> void:
 		PackedColorArray([gold, gold, gold])
 	)
 	for x in [-30.0, 0.0, 30.0]:
-		card.draw_arc(center + Vector2(x, 7.0), 18.0, PI, TAU, 18, Color("#fff1c7", 0.72), 7.0)
+		card.draw_arc(
+			center + Vector2(x, 7.0), 18.0, PI, TAU, 18, Color(Palette.TEXT_BONE, 0.72), 7.0
+		)
 
 
 func _draw_reward_total_backdrop(card: Control, center: Vector2) -> void:
-	var gold := Color("#ffe081", 0.28)
-	var hot := Color("#ffb83d", 0.22)
+	var gold := Color(Palette.COOKING_REWARD_ACCENT_BONUS, 0.28)
+	var hot := Color(Palette.COOKING_REWARD_ACCENT_TOTAL, 0.22)
 	for i in range(16):
 		var a := TAU * float(i) / 16.0
 		var inner := center + Vector2(cos(a), sin(a)) * 18.0
@@ -393,14 +442,16 @@ func _draw_reward_total_backdrop(card: Control, center: Vector2) -> void:
 	for _i in range(points.size()):
 		colors.append(gold)
 	card.draw_polygon(points, colors)
-	card.draw_circle(center, 13.0, Color("#fff1c7", 0.22))
+	card.draw_circle(center, 13.0, Color(Palette.TEXT_BONE, 0.22))
 
 
 func _draw_reward_buff_backdrop(card: Control, center: Vector2) -> void:
-	var green := Color("#8ee65a", 0.23)
-	var cyan := Color("#6bf1ff", 0.22)
-	card.draw_circle(center + Vector2(-20.0, 4.0), 32.0, Color("#173b28", 0.46))
-	card.draw_circle(center + Vector2(-20.0, 4.0), 24.0, Color("#2f7a45", 0.44))
+	var green := Color(Palette.COOKING_REWARD_ACCENT_BUFF, 0.23)
+	var cyan := Color(Palette.COOKING_REWARD_ACCENT_EXP, 0.22)
+	card.draw_circle(center + Vector2(-20.0, 4.0), 32.0, Color(Palette.COOKING_REWARD_BUFF_FIELD, 0.46))
+	card.draw_circle(
+		center + Vector2(-20.0, 4.0), 24.0, Color(Palette.COOKING_SMALL_ICON_BUFF_BACKING, 0.44)
+	)
 	var fish := PackedVector2Array(
 		[
 			center + Vector2(-45.0, 1.0),
@@ -422,7 +473,7 @@ func _draw_reward_buff_backdrop(card: Control, center: Vector2) -> void:
 				center + Vector2(5.0, 8.0),
 			]
 		),
-		Color("#4fb2dc", 0.22)
+		Color(Palette.COOKING_REWARD_BUFF_FISH_TAIL, 0.22)
 	)
 	for x in [34.0, 54.0]:
 		card.draw_line(center + Vector2(x, 24.0), center + Vector2(x, -24.0), green, 5.0)
@@ -439,8 +490,8 @@ func _draw_reward_buff_backdrop(card: Control, center: Vector2) -> void:
 
 
 func _draw_reward_growth_backdrop(card: Control, center: Vector2) -> void:
-	var red := Color("#ff6f78", 0.24)
-	var gold := Color("#ffe081", 0.22)
+	var red := Color(Palette.COOKING_REWARD_ACCENT_GROWTH, 0.24)
+	var gold := Color(Palette.COOKING_REWARD_ACCENT_BONUS, 0.22)
 	card.draw_line(center + Vector2(0.0, 34.0), center + Vector2(0.0, -34.0), red, 9.0)
 	card.draw_polygon(
 		PackedVector2Array(

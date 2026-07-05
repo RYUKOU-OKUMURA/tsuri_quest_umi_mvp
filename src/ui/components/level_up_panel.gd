@@ -62,8 +62,8 @@ class LevelUpVisual:
 
 	func _draw_crown() -> void:
 		var center := size * 0.5
-		var gold := Color("#ffe081")
-		var deep := Color("#8b5515")
+		var gold := Palette.COOKING_LEVEL_CROWN_GOLD
+		var deep := Palette.COOKING_LEVEL_CROWN_DEEP
 		var points := PackedVector2Array(
 			[
 				center + Vector2(-58.0, 10.0),
@@ -79,13 +79,13 @@ class LevelUpVisual:
 		fill_points.append(center + Vector2(48.0, 26.0))
 		fill_points.append(center + Vector2(-48.0, 26.0))
 		draw_polygon(fill_points, PackedColorArray([deep, deep, deep, deep, deep, deep, deep, deep, deep]))
-		draw_polyline(points, Color("#4c2b0b"), 9.0)
+		draw_polyline(points, Palette.COOKING_LEVEL_DARK_INK, 9.0)
 		draw_polyline(points, gold, 4.0)
-		draw_rect(Rect2(center.x - 54.0, center.y + 10.0, 108.0, 18.0), Color("#4c2b0b"))
+		draw_rect(Rect2(center.x - 54.0, center.y + 10.0, 108.0, 18.0), Palette.COOKING_LEVEL_DARK_INK)
 		draw_rect(Rect2(center.x - 48.0, center.y + 12.0, 96.0, 12.0), gold)
 		for i in range(points.size()):
 			var p := points[i]
-			draw_circle(p, 7.0, Color("#fff1c7"))
+			draw_circle(p, 7.0, Palette.COOKING_LEVEL_IVORY)
 			draw_circle(p, 4.0, Palette.GAUGE_RED_HI if i % 2 == 0 else Palette.GAUGE_CYAN_HI)
 		for i in range(5):
 			var x := center.x - 32.0 + float(i) * 16.0
@@ -93,7 +93,7 @@ class LevelUpVisual:
 
 	func _draw_laurel(direction: float) -> void:
 		var center := size * 0.5
-		var stem := Color("#8b5515")
+		var stem := Palette.COOKING_LEVEL_CROWN_DEEP
 		var leaf := Palette.GOLD_BRIGHT
 		var points := PackedVector2Array()
 		for i in range(9):
@@ -109,9 +109,9 @@ class LevelUpVisual:
 			var inward := Vector2(-direction * 6.0, -5.0)
 			draw_polygon(
 				PackedVector2Array([p, p + outward, p + inward]),
-				PackedColorArray([leaf, leaf, Color("#fff1c7")])
+				PackedColorArray([leaf, leaf, Palette.COOKING_LEVEL_IVORY])
 			)
-			draw_line(p, p + outward * 0.72, Color("#fff1c7"), 1.0)
+			draw_line(p, p + outward * 0.72, Palette.COOKING_LEVEL_IVORY, 1.0)
 
 	func _draw_medal() -> void:
 		var center := size * 0.5
@@ -125,19 +125,19 @@ class LevelUpVisual:
 					center + Vector2(-14.0, -16.0),
 				]
 			),
-			PackedColorArray([Color("#8d2430"), Color("#8d2430"), Color("#8d2430"), Color("#5a1f26"), Color("#5a1f26")])
+			PackedColorArray([Palette.COOKING_LEVEL_RIBBON_FILL, Palette.COOKING_LEVEL_RIBBON_FILL, Palette.COOKING_LEVEL_RIBBON_FILL, Palette.COOKING_LEVEL_RIBBON_DEEP, Palette.COOKING_LEVEL_RIBBON_DEEP])
 		)
-		draw_circle(center, 48.0, Color("#4c2b0b"))
-		draw_circle(center, 42.0, Color("#7b4b20"))
-		draw_circle(center, 34.0, Color("#d8a13a"))
-		draw_circle(center, 25.0, Color("#fff1c7"))
+		draw_circle(center, 48.0, Palette.COOKING_LEVEL_DARK_INK)
+		draw_circle(center, 42.0, Palette.COOKING_LEVEL_MEDAL_EDGE)
+		draw_circle(center, 34.0, Palette.COOKING_LEVEL_MEDAL_GOLD)
+		draw_circle(center, 25.0, Palette.COOKING_LEVEL_IVORY)
 		for i in range(14):
 			var a := TAU * float(i) / 14.0
 			var from := center + Vector2(cos(a), sin(a)) * 36.0
 			var to := center + Vector2(cos(a), sin(a)) * 48.0
-			draw_line(from, to, Color("#ffe081"), 3.0)
-		draw_arc(center, 42.0, 0.0, TAU, 48, Color("#ffe081"), 3.0)
-		draw_ellipse(center + Vector2(-2.0, 0.0), 20.0, 11.0, Color("#3d5360"))
+			draw_line(from, to, Palette.COOKING_LEVEL_CROWN_GOLD, 3.0)
+		draw_arc(center, 42.0, 0.0, TAU, 48, Palette.COOKING_LEVEL_CROWN_GOLD, 3.0)
+		draw_ellipse(center + Vector2(-2.0, 0.0), 20.0, 11.0, Palette.COOKING_LEVEL_MEDAL_FISH)
 		draw_polygon(
 			PackedVector2Array(
 				[
@@ -146,15 +146,15 @@ class LevelUpVisual:
 					center + Vector2(34.0, 10.0),
 				]
 			),
-			PackedColorArray([Color("#3d5360"), Color("#3d5360"), Color("#3d5360")])
+			PackedColorArray([Palette.COOKING_LEVEL_MEDAL_FISH, Palette.COOKING_LEVEL_MEDAL_FISH, Palette.COOKING_LEVEL_MEDAL_FISH])
 		)
-		draw_circle(center + Vector2(-13.0, -2.0), 3.0, Color("#fff1c7"))
-		draw_line(center + Vector2(-12.0, 19.0), center + Vector2(14.0, 19.0), Color("#70451f"), 3.0)
+		draw_circle(center + Vector2(-13.0, -2.0), 3.0, Palette.COOKING_LEVEL_IVORY)
+		draw_line(center + Vector2(-12.0, 19.0), center + Vector2(14.0, 19.0), Palette.COOKING_LEVEL_MEDAL_LINE, 3.0)
 
 	func _draw_spot() -> void:
-		draw_rect(Rect2(Vector2.ZERO, size), Color("#0d5f8e"))
-		draw_rect(Rect2(0.0, 0.0, size.x, size.y * 0.42), Color("#7bc9f5"))
-		draw_rect(Rect2(0.0, size.y * 0.55, size.x, size.y * 0.45), Color("#124f7d"))
+		draw_rect(Rect2(Vector2.ZERO, size), Palette.COOKING_LEVEL_SPOT_SEA)
+		draw_rect(Rect2(0.0, 0.0, size.x, size.y * 0.42), Palette.COOKING_LEVEL_SPOT_SKY)
+		draw_rect(Rect2(0.0, size.y * 0.55, size.x, size.y * 0.45), Palette.COOKING_LEVEL_SPOT_WATER)
 		draw_polygon(
 			PackedVector2Array(
 				[
@@ -163,14 +163,14 @@ class LevelUpVisual:
 					Vector2(size.x * 0.26, size.y * 0.74),
 				]
 			),
-			PackedColorArray([Color("#6f6a56"), Color("#6f6a56"), Color("#6f6a56")])
+			PackedColorArray([Palette.COOKING_LEVEL_SPOT_ROCK, Palette.COOKING_LEVEL_SPOT_ROCK, Palette.COOKING_LEVEL_SPOT_ROCK])
 		)
-		draw_rect(Rect2(size.x * 0.70, size.y * 0.26, 18.0, size.y * 0.42), Color("#fff1c7"))
-		draw_rect(Rect2(size.x * 0.67, size.y * 0.22, 24.0, 10.0), Color("#1f3654"))
-		draw_circle(Vector2(size.x * 0.79, size.y * 0.20), 5.0, Color("#ffe081"))
+		draw_rect(Rect2(size.x * 0.70, size.y * 0.26, 18.0, size.y * 0.42), Palette.COOKING_LEVEL_IVORY)
+		draw_rect(Rect2(size.x * 0.67, size.y * 0.22, 24.0, 10.0), Palette.COOKING_LEVEL_SPOT_LIGHTHOUSE)
+		draw_circle(Vector2(size.x * 0.79, size.y * 0.20), 5.0, Palette.COOKING_LEVEL_CROWN_GOLD)
 		for i in range(3):
 			var y := size.y * 0.70 + float(i) * 10.0
-			draw_line(Vector2(12.0, y), Vector2(size.x - 12.0, y - 6.0), Color(1.0, 1.0, 1.0, 0.28), 2.0)
+			draw_line(Vector2(12.0, y), Vector2(size.x - 12.0, y - 6.0), Palette.COOKING_LEVEL_SPOT_WAKE, 2.0)
 
 
 class LevelStatIconVisual:
@@ -198,10 +198,10 @@ class LevelStatIconVisual:
 
 	func _draw_badge() -> void:
 		var center := size * 0.5
-		draw_circle(center, 23.0, Color("#07121e"))
+		draw_circle(center, 23.0, Palette.COOKING_LEVEL_BADGE_DARK)
 		draw_circle(center, 20.0, accent.darkened(0.20))
 		draw_arc(center, 21.0, 0.0, TAU, 36, Palette.GOLD_BRIGHT, 2.0)
-		draw_circle(center + Vector2(-6.0, -7.0), 5.0, Color(1.0, 1.0, 1.0, 0.12))
+		draw_circle(center + Vector2(-6.0, -7.0), 5.0, Palette.COOKING_LEVEL_BADGE_SHINE)
 
 	func _draw_heart() -> void:
 		var center := size * 0.5
@@ -223,7 +223,7 @@ class LevelStatIconVisual:
 		var center := size * 0.5
 		var color := Palette.GAUGE_CYAN_HI
 		draw_arc(center, 14.0, 0.0, TAU, 30, color, 4.0)
-		draw_circle(center, 5.0, Color("#fff1c7"))
+		draw_circle(center, 5.0, Palette.COOKING_LEVEL_IVORY)
 		for i in range(4):
 			var a := TAU * float(i) / 4.0 + 0.35
 			draw_line(center, center + Vector2(cos(a), sin(a)) * 15.0, color, 3.0)
@@ -243,12 +243,12 @@ class LevelStatIconVisual:
 			),
 			PackedColorArray([color, color, color])
 		)
-		draw_line(center + Vector2(-15.0, 5.0), center + Vector2(-3.0, 16.0), Color("#fff1c7"), 3.0)
-		draw_circle(center + Vector2(-13.0, 13.0), 3.0, Color("#7b4b20"))
+		draw_line(center + Vector2(-15.0, 5.0), center + Vector2(-3.0, 16.0), Palette.COOKING_LEVEL_IVORY, 3.0)
+		draw_circle(center + Vector2(-13.0, 13.0), 3.0, Palette.COOKING_LEVEL_MEDAL_EDGE)
 
 	func _draw_target() -> void:
 		var center := size * 0.5
-		var color := Color("#d9b7ff")
+		var color := Palette.COOKING_LEVEL_FOCUS_ACCENT
 		draw_arc(center, 15.0, 0.0, TAU, 30, color, 3.0)
 		draw_arc(center, 8.0, 0.0, TAU, 24, color, 2.0)
 		draw_line(center + Vector2(-17.0, 0.0), center + Vector2(17.0, 0.0), color, 3.0)
@@ -262,7 +262,7 @@ class LevelCenteredTextVisual:
 	var text := ""
 	var font_size := 18
 	var text_color := Palette.TEXT_BONE
-	var shadow_color := Color(0.0, 0.0, 0.0, 0.58)
+	var shadow_color := Palette.COOKING_LEVEL_TEXT_SHADOW
 
 	func configure(next_text: String, next_font_size: int, next_color: Color, next_shadow: Color) -> void:
 		text = next_text
@@ -325,7 +325,7 @@ class LevelStatTextVisual:
 		if font == null:
 			return
 		var baseline_y := size.y * 0.5 + 7.0
-		var shadow := Color(0.0, 0.0, 0.0, 0.54)
+		var shadow := Palette.COOKING_LEVEL_STAT_TEXT_SHADOW
 		_draw_text(font, Vector2(62.0, baseline_y), name_text, 17, Palette.TEXT_BONE, shadow, HORIZONTAL_ALIGNMENT_LEFT, 108.0)
 		_draw_text(
 			font,
@@ -377,7 +377,7 @@ class LevelToSummaryCueVisual:
 		var start_x := 10.0
 		var end_x := w - 14.0
 		var gold := Palette.GOLD_BRIGHT
-		var glow := Color("#fff1c7")
+		var glow := Palette.COOKING_LEVEL_IVORY
 		glow.a = 0.24
 		draw_line(Vector2(start_x, cy), Vector2(end_x, cy), glow, 7.0)
 		draw_line(Vector2(start_x, cy), Vector2(end_x, cy), gold, 2.0)
@@ -399,9 +399,9 @@ class LevelToSummaryCueVisual:
 
 	func _draw_summary_card(center: Vector2, index: int) -> void:
 		var rect := Rect2(center.x - 14.0, center.y - 12.0, 28.0, 24.0)
-		draw_rect(rect.grow(2.0), Color("#07121e"))
-		draw_rect(rect, Color("#f2e4c2"))
-		draw_line(rect.position + Vector2(2.0, 4.0), rect.position + Vector2(rect.size.x - 2.0, 4.0), Color("#17324d"), 4.0)
+		draw_rect(rect.grow(2.0), Palette.COOKING_LEVEL_BADGE_DARK)
+		draw_rect(rect, Palette.COOKING_LEVEL_SUMMARY_CARD_FILL)
+		draw_line(rect.position + Vector2(2.0, 4.0), rect.position + Vector2(rect.size.x - 2.0, 4.0), Palette.COOKING_LEVEL_SUMMARY_CARD_HEAD, 4.0)
 		match index:
 			0:
 				_draw_mini_player(center)
@@ -415,26 +415,26 @@ class LevelToSummaryCueVisual:
 				_draw_mini_clock(center)
 
 	func _draw_mini_player(center: Vector2) -> void:
-		draw_circle(center + Vector2(0.0, -2.0), 5.0, Color("#f2b889"))
-		draw_rect(Rect2(center.x - 7.0, center.y + 4.0, 14.0, 6.0), Color("#1d4771"))
+		draw_circle(center + Vector2(0.0, -2.0), 5.0, Palette.COOKING_LEVEL_MINI_PLAYER_SKIN)
+		draw_rect(Rect2(center.x - 7.0, center.y + 4.0, 14.0, 6.0), Palette.COOKING_LEVEL_MINI_PLAYER_BODY)
 
 	func _draw_mini_meal(center: Vector2) -> void:
-		draw_arc(center + Vector2(0.0, 5.0), 8.0, 0.0, PI, 12, Color("#9b4f22"), 3.0)
-		draw_arc(center + Vector2(0.0, 2.0), 6.0, 0.0, PI, 10, Color("#fff1c7"), 2.0)
+		draw_arc(center + Vector2(0.0, 5.0), 8.0, 0.0, PI, 12, Palette.COOKING_LEVEL_MINI_MEAL_FILL, 3.0)
+		draw_arc(center + Vector2(0.0, 2.0), 6.0, 0.0, PI, 10, Palette.COOKING_LEVEL_IVORY, 2.0)
 
 	func _draw_mini_cooler(center: Vector2) -> void:
-		draw_rect(Rect2(center.x - 8.0, center.y - 2.0, 16.0, 10.0), Color("#1b5d8d"))
-		draw_rect(Rect2(center.x - 8.0, center.y - 2.0, 16.0, 3.0), Color("#eef4fa"))
+		draw_rect(Rect2(center.x - 8.0, center.y - 2.0, 16.0, 10.0), Palette.COOKING_LEVEL_MINI_COOLER_BODY)
+		draw_rect(Rect2(center.x - 8.0, center.y - 2.0, 16.0, 3.0), Palette.COOKING_LEVEL_MINI_COOLER_LID)
 
 	func _draw_mini_coin(center: Vector2) -> void:
 		draw_circle(center + Vector2(-3.0, 2.0), 6.0, Palette.GOLD_BRIGHT)
-		draw_circle(center + Vector2(4.0, -1.0), 5.0, Color("#d8a13a"))
+		draw_circle(center + Vector2(4.0, -1.0), 5.0, Palette.COOKING_LEVEL_MEDAL_GOLD)
 
 	func _draw_mini_clock(center: Vector2) -> void:
-		draw_circle(center, 7.0, Color("#fff1c7"))
-		draw_arc(center, 7.0, 0.0, TAU, 18, Color("#70451f"), 1.5)
-		draw_line(center, center + Vector2(0.0, -5.0), Color("#70451f"), 1.5)
-		draw_line(center, center + Vector2(4.0, 2.0), Color("#70451f"), 1.5)
+		draw_circle(center, 7.0, Palette.COOKING_LEVEL_IVORY)
+		draw_arc(center, 7.0, 0.0, TAU, 18, Palette.COOKING_LEVEL_MEDAL_LINE, 1.5)
+		draw_line(center, center + Vector2(0.0, -5.0), Palette.COOKING_LEVEL_MEDAL_LINE, 1.5)
+		draw_line(center, center + Vector2(4.0, 2.0), Palette.COOKING_LEVEL_MEDAL_LINE, 1.5)
 
 
 var _dialog: PanelContainer
@@ -458,7 +458,7 @@ func _build_screen() -> void:
 
 	var dim := ColorRect.new()
 	dim.name = "LevelUpDimmer"
-	dim.color = Color(0.0, 0.0, 0.0, 0.58)
+	dim.color = Palette.COOKING_LEVEL_DIM
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	dim.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(dim)
@@ -478,7 +478,7 @@ func _build_screen() -> void:
 		_texture_style_box(
 			LEVEL_UP_FRAME,
 			36,
-			_style_box(Color("#10233a"), Color("#7b4b20"), Palette.GOLD_BRIGHT, 6, 8),
+			_style_box(Palette.COOKING_LEVEL_DIALOG_FILL, Palette.COOKING_LEVEL_MEDAL_EDGE, Palette.GOLD_BRIGHT, 6, 8),
 			22.0,
 			8.0
 		)
@@ -555,7 +555,7 @@ func _build_screen() -> void:
 	_stats_box.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(_stats_box)
 
-	_unlock_card = _panel_box(Color("#f2e4c2"), Color("#70451f"), Palette.GOLD_BRIGHT, 5)
+	_unlock_card = _panel_box(Palette.COOKING_LEVEL_SUMMARY_CARD_FILL, Palette.COOKING_LEVEL_MEDAL_LINE, Palette.GOLD_BRIGHT, 5)
 	_unlock_card.custom_minimum_size = Vector2(860.0, 132.0)
 	_unlock_card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(_unlock_card)
@@ -566,11 +566,11 @@ func _build_screen() -> void:
 	_unlock_ribbon.name = "LevelUnlockRibbonAsset"
 	_unlock_ribbon.add_theme_stylebox_override(
 		"panel",
-		_style_box(Color("#8d2430"), Color("#4c111a"), Palette.GOLD_BRIGHT, 3, 5)
+		_style_box(Palette.COOKING_LEVEL_RIBBON_FILL, Palette.COOKING_LEVEL_RIBBON_BORDER, Palette.GOLD_BRIGHT, 3, 5)
 	)
 	_unlock_ribbon.custom_minimum_size = Vector2(0.0, 32.0)
 	unlock_root.add_child(_unlock_ribbon)
-	_unlock_ribbon_label = make_label("新たな釣り場が解放！", 22, Color("#fff4d4"))
+	_unlock_ribbon_label = make_label("新たな釣り場が解放！", 22, Palette.COOKING_LEVEL_UNLOCK_TEXT)
 	_unlock_ribbon_label.name = "LevelUnlockRibbonLabel"
 	_unlock_ribbon_label.z_index = 2
 	_set_label_min_height(_unlock_ribbon_label, 22)
@@ -582,7 +582,7 @@ func _build_screen() -> void:
 	_unlock_ribbon_visual.z_index = 10
 	_unlock_ribbon_visual.custom_minimum_size = Vector2(0.0, 36.0)
 	_unlock_ribbon_visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_unlock_ribbon_visual.configure("新たな釣り場が解放！", 22, Color("#fff4d4"), Color(0.0, 0.0, 0.0, 0.62))
+	_unlock_ribbon_visual.configure("新たな釣り場が解放！", 22, Palette.COOKING_LEVEL_UNLOCK_TEXT, Palette.COOKING_LEVEL_RIBBON_TEXT_SHADOW)
 	_unlock_ribbon.add_child(_unlock_ribbon_visual)
 
 	var unlock_layout := HBoxContainer.new()
@@ -599,12 +599,12 @@ func _build_screen() -> void:
 	_unlock_tag.z_index = 2
 	_set_label_min_height(_unlock_tag, 14)
 	unlock_text.add_child(_unlock_tag)
-	_unlock_title = make_label("", 24, Color("#8d2430"))
+	_unlock_title = make_label("", 24, Palette.COOKING_LEVEL_RIBBON_FILL)
 	_unlock_title.name = "LevelUnlockTitle"
 	_unlock_title.z_index = 2
 	_set_label_min_height(_unlock_title, 24)
 	unlock_text.add_child(_unlock_title)
-	_unlock_body = make_label("", 14, Color("#4d3924"))
+	_unlock_body = make_label("", 14, Palette.COOKING_LEVEL_UNLOCK_BODY)
 	_unlock_body.name = "LevelUnlockBody"
 	_set_label_min_height(_unlock_body, 14, 2)
 	_unlock_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -637,14 +637,14 @@ func show_level_up(
 	)
 	if boss_unlocked:
 		_unlock_ribbon_label.text = "新たな釣り場が解放！"
-		_unlock_ribbon_visual.configure("新たな釣り場が解放！", 22, Color("#fff4d4"), Color(0.0, 0.0, 0.0, 0.62))
+		_unlock_ribbon_visual.configure("新たな釣り場が解放！", 22, Palette.COOKING_LEVEL_UNLOCK_TEXT, Palette.COOKING_LEVEL_RIBBON_TEXT_SHADOW)
 		_unlock_tag.text = "挑戦解放"
 		_unlock_title.text = "港のぬしに挑戦できるようになった！"
 		_unlock_body.text = "食事でLv.%d到達。次の目標：港のぬし。港の大岩周辺で、本格ファイトが解放されます。" % GameData.BOSS_UNLOCK_LEVEL
 		_set_spot_copy("新釣り場", "港の大岩", "外洋への挑戦")
 	else:
 		_unlock_ribbon_label.text = "成長が進行！"
-		_unlock_ribbon_visual.configure("成長が進行！", 22, Color("#fff4d4"), Color(0.0, 0.0, 0.0, 0.62))
+		_unlock_ribbon_visual.configure("成長が進行！", 22, Palette.COOKING_LEVEL_UNLOCK_TEXT, Palette.COOKING_LEVEL_RIBBON_TEXT_SHADOW)
 		_unlock_tag.text = "能力上昇"
 		_unlock_title.text = "次の釣行へ向けて力がついた！"
 		_unlock_body.text = "Lv.%d到達。最大体力や技量が伸び、釣行の安定感が上がりました。ステータスで成長結果を確認しましょう。" % level_to
@@ -690,7 +690,7 @@ func _rebuild_stats(old_stats: Dictionary, new_stats: Dictionary) -> void:
 			"old": int(old_stats.get("focus", 0)),
 			"new": int(new_stats.get("focus", 0)),
 			"fmt": "%d",
-			"color": Color("#d9b7ff"),
+			"color": Palette.COOKING_LEVEL_FOCUS_ACCENT,
 		},
 	]
 	for row in rows:
@@ -705,7 +705,7 @@ func _stat_row(row: Dictionary) -> PanelContainer:
 	panel.name = _stat_row_node_name(String(row["icon"]))
 	panel.add_theme_stylebox_override(
 		"panel",
-		_style_box(Color("#17324d"), Color("#07121e"), Palette.GOLD_DEEP, 3, 5)
+		_style_box(Palette.COOKING_LEVEL_SUMMARY_CARD_HEAD, Palette.COOKING_LEVEL_BADGE_DARK, Palette.GOLD_DEEP, 3, 5)
 	)
 	panel.custom_minimum_size = Vector2(0.0, 46.0)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -800,7 +800,7 @@ func _badge_box(text: String, fill: Color, text_color: Color) -> PanelContainer:
 	var badge := PanelContainer.new()
 	badge.add_theme_stylebox_override(
 		"panel",
-		_style_box(fill.darkened(0.18), Color("#07121e"), Palette.GOLD_BRIGHT, 2, 4)
+		_style_box(fill.darkened(0.18), Palette.COOKING_LEVEL_BADGE_DARK, Palette.GOLD_BRIGHT, 2, 4)
 	)
 	var label := make_shadow_label(text, 17, text_color, 2)
 	label.custom_minimum_size = Vector2(54.0, 24.0)
@@ -812,7 +812,7 @@ func _badge_box(text: String, fill: Color, text_color: Color) -> PanelContainer:
 
 
 func _medal_box() -> PanelContainer:
-	var medal := _panel_box(Color("#6a4515"), Color("#2d1a09"), Palette.GOLD_BRIGHT, 4)
+	var medal := _panel_box(Palette.COOKING_LEVEL_MEDAL_BOX_FILL, Palette.COOKING_LEVEL_MEDAL_BOX_BORDER, Palette.GOLD_BRIGHT, 4)
 	var visual := _level_asset_texture(
 		"LevelUnlockMedallionAsset", LevelUpVisual.UNLOCK_MEDALLION_ASSET, Vector2(96.0, 78.0)
 	)
@@ -823,7 +823,7 @@ func _medal_box() -> PanelContainer:
 
 
 func _spot_thumbnail_box() -> PanelContainer:
-	var panel := _panel_box(Color("#0b3c62"), Color("#07121e"), Palette.GOLD_BRIGHT, 4)
+	var panel := _panel_box(Palette.COOKING_LEVEL_SPOT_PANEL_FILL, Palette.COOKING_LEVEL_BADGE_DARK, Palette.GOLD_BRIGHT, 4)
 	var box := VBoxContainer.new()
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.add_theme_constant_override("separation", 1)
@@ -928,7 +928,7 @@ func _add_confetti_layer() -> void:
 				Palette.GAUGE_RED_HI,
 				Palette.GAUGE_CYAN_HI,
 				Palette.GAUGE_GREEN_HI,
-				Color("#d9b7ff"),
+				Palette.COOKING_LEVEL_FOCUS_ACCENT,
 			]
 			for i in range(46):
 				var x := 82.0 + float((i * 143) % 1120)
@@ -996,8 +996,8 @@ func _draw_confirm_button_cue(button: Button) -> void:
 	var h := maxf(button.size.y, 1.0)
 	var center_y := h * 0.5
 	var gold := Palette.GOLD_BRIGHT
-	var ink := Color("#4c2b0b")
-	var glow := Color("#fff1c7")
+	var ink := Palette.COOKING_LEVEL_DARK_INK
+	var glow := Palette.COOKING_LEVEL_IVORY
 	glow.a = 0.24
 
 	var crown_center := Vector2(24.0, center_y)
@@ -1034,11 +1034,11 @@ func _draw_confirm_button_cue(button: Button) -> void:
 
 	var card := Rect2(82.0, center_y - 8.0, 12.0, 16.0)
 	button.draw_rect(card.grow(1.5), ink)
-	button.draw_rect(card, Color("#f2e4c2"))
+	button.draw_rect(card, Palette.COOKING_LEVEL_SUMMARY_CARD_FILL)
 	button.draw_line(
 		card.position + Vector2(1.0, 3.0),
 		card.position + Vector2(card.size.x - 1.0, 3.0),
-		Color("#17324d"),
+		Palette.COOKING_LEVEL_SUMMARY_CARD_HEAD,
 		2.0
 	)
 	button.draw_circle(card.position + Vector2(6.0, 10.0), 3.5, gold)

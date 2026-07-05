@@ -32,7 +32,7 @@ func _draw() -> void:
 	else:
 		_draw_fallback_gradient()
 	if _title_ambience != null:
-		_draw_cover_texture(_title_ambience, rect, Color(1.0, 1.0, 1.0, 0.22), Vector2(0.5, 0.55))
+		_draw_cover_texture(_title_ambience, rect, Palette.TITLE_BACKDROP_AMBIENCE_MODULATE, Vector2(0.5, 0.55))
 	_draw_surface_glints()
 	_draw_bubbles()
 	_draw_drifting_fish()
@@ -77,7 +77,7 @@ func _draw_surface_glints() -> void:
 		var y := surface_y + sin(_time * 0.85 + float(index) * 0.58) * 8.0
 		var length := 28.0 + float(index % 4) * 13.0
 		var alpha := 0.16 + 0.08 * sin(_time * 1.7 + float(index))
-		draw_line(Vector2(x, y), Vector2(x + length, y + sin(_time + index) * 2.0), Color(1.0, 0.96, 0.72, alpha), 2.0)
+		draw_line(Vector2(x, y), Vector2(x + length, y + sin(_time + index) * 2.0), Color(Palette.TITLE_BACKDROP_GLINT, alpha), 2.0)
 
 	for ray in range(7):
 		var x := size.x * (0.10 + float(ray) * 0.13)
@@ -90,7 +90,7 @@ func _draw_surface_glints() -> void:
 				Vector2(x + 22.0 + sway, size.y * 0.92),
 			]
 		)
-		draw_colored_polygon(points, Color(0.75, 0.98, 1.0, 0.055))
+		draw_colored_polygon(points, Palette.TITLE_BACKDROP_RAY)
 
 
 func _draw_bubbles() -> void:
@@ -105,9 +105,9 @@ func _draw_bubbles() -> void:
 			var x := base_x + sin(_time * 0.45 + float(index) * 0.73) * (7.0 + column * 1.5)
 			var radius := 1.8 + float(index % 4) * 0.8
 			var alpha := 0.18 + float(index % 3) * 0.035
-			draw_arc(Vector2(x, y), radius, 0.0, TAU, 12, Color(0.84, 0.98, 1.0, alpha), 1.0)
+			draw_arc(Vector2(x, y), radius, 0.0, TAU, 12, Color(Palette.TITLE_BACKDROP_BUBBLE, alpha), 1.0)
 			if radius > 2.7:
-				draw_circle(Vector2(x - radius * 0.30, y - radius * 0.30), 0.6, Color(1.0, 1.0, 1.0, alpha * 0.62))
+				draw_circle(Vector2(x - radius * 0.30, y - radius * 0.30), 0.6, Color(Color.WHITE, alpha * 0.62))
 
 
 func _draw_drifting_fish() -> void:
@@ -117,7 +117,7 @@ func _draw_drifting_fish() -> void:
 		var y := size.y * (0.53 + float(row) * 0.09) + sin(_time * 0.55 + float(index)) * 5.0
 		var scale := 0.55 + float(index % 4) * 0.10
 		var alpha := 0.10 + float(row) * 0.025
-		_draw_small_fish(Vector2(x, y), scale, Color(0.0, 0.12, 0.18, alpha))
+		_draw_small_fish(Vector2(x, y), scale, Color(Palette.TITLE_BACKDROP_FISH, alpha))
 
 
 func _draw_small_fish(pos: Vector2, scale: float, color: Color) -> void:
@@ -146,5 +146,5 @@ func _draw_small_fish(pos: Vector2, scale: float, color: Color) -> void:
 
 
 func _draw_edge_frame() -> void:
-	draw_rect(Rect2(Vector2.ZERO, size), Color(0.0, 0.05, 0.10, 0.36), false, 6.0)
-	draw_line(Vector2(0.0, 2.0), Vector2(size.x, 2.0), Color(1.0, 0.90, 0.55, 0.16), 2.0)
+	draw_rect(Rect2(Vector2.ZERO, size), Palette.TITLE_BACKDROP_FRAME, false, 6.0)
+	draw_line(Vector2(0.0, 2.0), Vector2(size.x, 2.0), Palette.TITLE_BACKDROP_TOP_LINE, 2.0)

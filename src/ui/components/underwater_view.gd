@@ -121,19 +121,19 @@ func _draw_showcase_background() -> void:
 	var water_window_align := Vector2(0.5, 0.24)
 	_draw_cover_texture(_showcase_bg, showcase_rect, Color.WHITE, water_window_align)
 	if _showcase_color_grade != null:
-		_draw_cover_texture(_showcase_color_grade, showcase_rect, Color(1.0, 1.0, 1.0, 0.10), water_window_align)
+		_draw_cover_texture(_showcase_color_grade, showcase_rect, Palette.UNDERWATER_SHOWCASE_GRADE_MODULATE, water_window_align)
 	if _showcase_seabed_detail != null:
-		_draw_cover_texture(_showcase_seabed_detail, showcase_rect, Color(1.0, 1.0, 1.0, 0.22), water_window_align)
+		_draw_cover_texture(_showcase_seabed_detail, showcase_rect, Palette.UNDERWATER_SHOWCASE_SEABED_MODULATE, water_window_align)
 	# 背景PNGに重ねる軽い水中の揺らぎ。主素材を邪魔しない密度に抑える。
 	for index in range(6):
 		var y := size.y * (0.12 + float(index) * 0.085)
 		var x := fmod(_time * (8.0 + index) + float(index) * 121.0, size.x + 90.0) - 45.0
-		draw_line(Vector2(x, y), Vector2(x + 34.0, y + sin(_time + index) * 2.0), Color(0.74, 0.94, 1.0, 0.13), 2.0)
+		draw_line(Vector2(x, y), Vector2(x + 34.0, y + sin(_time + index) * 2.0), Palette.UNDERWATER_SHOWCASE_LIGHT_STREAK, 2.0)
 
 
 func _draw_showcase_ambience() -> void:
 	if _showcase_fg_ambience != null:
-		_draw_cover_texture(_showcase_fg_ambience, Rect2(Vector2.ZERO, size), Color(1.0, 1.0, 1.0, 0.72), Vector2(0.5, 0.24))
+		_draw_cover_texture(_showcase_fg_ambience, Rect2(Vector2.ZERO, size), Palette.UNDERWATER_SHOWCASE_AMBIENCE_MODULATE, Vector2(0.5, 0.24))
 	else:
 		_draw_showcase_fish_schools()
 		_draw_showcase_bubble_columns()
@@ -151,7 +151,7 @@ func _draw_showcase_fish_schools() -> void:
 			continue
 		var scale_value := 0.42 + float((index + row) % 4) * 0.08
 		var alpha := 0.16 + float(row) * 0.035
-		_draw_small_fish(Vector2(x, y), scale_value, Color(0.01, 0.12, 0.22, alpha))
+		_draw_small_fish(Vector2(x, y), scale_value, Color(Palette.UNDERWATER_SMALL_FISH_SHADOW, alpha))
 
 
 func _draw_showcase_bubble_columns() -> void:
@@ -164,9 +164,9 @@ func _draw_showcase_bubble_columns() -> void:
 			var x: float = base_x + sin(_time * 0.45 + float(index) * 0.8 + float(column)) * (9.0 + float(column % 2) * 5.0)
 			var radius := 1.6 + float((index + column) % 4) * 0.75
 			var alpha := 0.22 + float(index % 3) * 0.045
-			draw_arc(Vector2(x, y), radius, 0.0, TAU, 12, Color(0.78, 0.96, 1.0, alpha), 1.0)
+			draw_arc(Vector2(x, y), radius, 0.0, TAU, 12, Color(Palette.UNDERWATER_BUBBLE, alpha), 1.0)
 			if radius > 2.4:
-				draw_circle(Vector2(x - radius * 0.30, y - radius * 0.30), 0.65, Color(1.0, 1.0, 1.0, alpha * 0.75))
+				draw_circle(Vector2(x - radius * 0.30, y - radius * 0.30), 0.65, Color(Color.WHITE, alpha * 0.75))
 
 
 func _draw_showcase_light_specks() -> void:
@@ -175,9 +175,9 @@ func _draw_showcase_light_specks() -> void:
 		var y := size.y * 0.10 + fmod(float(index * 53 + 11) + _time * (4.0 + float(index % 5)), size.y * 0.66)
 		var pulse := 0.5 + 0.5 * sin(_time * 1.7 + float(index) * 0.9)
 		var alpha := 0.08 + pulse * 0.11
-		draw_circle(Vector2(x, y), 0.75 + float(index % 3) * 0.25, Color(0.84, 0.98, 1.0, alpha))
+		draw_circle(Vector2(x, y), 0.75 + float(index % 3) * 0.25, Color(Palette.UNDERWATER_LIGHT_SPECK, alpha))
 		if index % 9 == 0:
-			draw_line(Vector2(x - 2.0, y), Vector2(x + 2.0, y), Color(0.90, 1.0, 1.0, alpha * 0.8), 1.0)
+			draw_line(Vector2(x - 2.0, y), Vector2(x + 2.0, y), Color(Palette.UNDERWATER_LIGHT_LINE, alpha * 0.8), 1.0)
 
 
 func _draw_cover_texture(texture: Texture2D, target_rect: Rect2, modulate: Color, align := Vector2(0.5, 0.5)) -> void:
@@ -207,7 +207,7 @@ func _draw_water_background() -> void:
 		var strip_height := size.y / float(strips)
 		draw_rect(Rect2(0.0, index * strip_height, size.x, strip_height + 1.0), strip_color)
 
-	var ray_color := Color(0.82, 0.97, 1.0, 0.15)
+	var ray_color := Palette.UNDERWATER_RAY
 	for index in range(7):
 		var x := size.x * (0.10 + float(index) * 0.18)
 		var sway := sin(_time * 0.35 + float(index)) * 22.0
@@ -221,23 +221,23 @@ func _draw_water_background() -> void:
 		)
 		draw_colored_polygon(points, ray_color)
 
-	draw_line(Vector2(0.0, 3.0), Vector2(size.x, 3.0), Color(0.88, 0.98, 1.0, 0.72), 3.0)
+	draw_line(Vector2(0.0, 3.0), Vector2(size.x, 3.0), Palette.UNDERWATER_SURFACE_LINE, 3.0)
 	for index in range(9):
 		var wave_y := 8.0 + float(index % 3) * 4.0
 		var wave_x := float(index) * size.x / 8.0 + sin(_time + index) * 6.0
 		draw_line(
 			Vector2(wave_x - 20.0, wave_y),
 			Vector2(wave_x + 20.0, wave_y),
-			Color(0.78, 0.95, 1.0, 0.28),
+			Palette.UNDERWATER_SURFACE_WAVE,
 			2.0
 		)
 
 
 func _draw_depth_scale() -> void:
 	var panel_width := 44.0
-	var panel_color := Color(0.02, 0.08, 0.16, 0.24)
+	var panel_color := Palette.UNDERWATER_DEPTH_PANEL
 	draw_rect(Rect2(0.0, 0.0, panel_width, size.y), panel_color)
-	var divider_color := Color(0.55, 0.82, 0.95, 0.18)
+	var divider_color := Palette.UNDERWATER_DEPTH_DIVIDER
 	draw_line(Vector2(panel_width, 0.0), Vector2(panel_width, size.y), divider_color, 1.0)
 
 	var font := GameFontsScript.regular(get_theme_default_font())
@@ -250,7 +250,7 @@ func _draw_depth_scale() -> void:
 			continue
 		var y := lerpf(28.0, size.y * 0.82, float(depth_mark) / max_depth)
 		draw_line(
-			Vector2(8.0, y), Vector2(panel_width - 7.0, y), Color(0.65, 0.86, 0.98, 0.18), 1.0
+			Vector2(8.0, y), Vector2(panel_width - 7.0, y), Palette.UNDERWATER_DEPTH_TICK, 1.0
 		)
 		draw_string(
 			font,
@@ -259,15 +259,15 @@ func _draw_depth_scale() -> void:
 			HORIZONTAL_ALIGNMENT_LEFT,
 			int(panel_width - 10.0),
 			font_size,
-			Color(0.82, 0.94, 1.0, 0.58)
+			Palette.UNDERWATER_DEPTH_TEXT
 		)
 
 	if simulator != null and simulator.state == FishingSimulator.State.FIGHT:
 		var current_y := lerpf(28.0, size.y * 0.82, clampf(simulator.depth / max_depth, 0.0, 1.0))
 		var marker := Vector2(panel_width - 8.0, current_y)
-		draw_circle(marker, 7.0, Color(1.0, 0.80, 0.40, 0.18))
-		draw_circle(marker, 3.8, Color("#ffd37a"))
-		draw_circle(marker, 1.8, Color("#fff3cf"))
+		draw_circle(marker, 7.0, Palette.UNDERWATER_DEPTH_MARKER_GLOW)
+		draw_circle(marker, 3.8, Palette.UNDERWATER_DEPTH_MARKER)
+		draw_circle(marker, 1.8, Palette.UNDERWATER_DEPTH_MARKER_CORE)
 		draw_string(
 			font,
 			Vector2(8.0, current_y + 4.0),
@@ -275,7 +275,7 @@ func _draw_depth_scale() -> void:
 			HORIZONTAL_ALIGNMENT_LEFT,
 			int(panel_width - 10.0),
 			font_size,
-			Color("#ffe7a8", 0.78)
+			Color(Palette.UNDERWATER_DEPTH_CURRENT_TEXT, 0.78)
 		)
 
 
@@ -299,7 +299,7 @@ func _draw_seabed() -> void:
 		var px := fmod(float(index * 107 + 31), maxf(1.0, size.x))
 		var py := base_y + 16.0 + float((index * 19) % 45)
 		var radius := 3.0 + float(index % 4)
-		draw_circle(Vector2(px, py), radius, Color("#6a806e"))
+		draw_circle(Vector2(px, py), radius, Palette.UNDERWATER_SEABED_ROCK)
 
 	_draw_rock(Vector2(size.x * 0.08, base_y - 4.0), 48.0)
 	_draw_rock(Vector2(size.x * 0.93, base_y + 4.0), 62.0)
@@ -310,17 +310,17 @@ func _draw_seabed() -> void:
 		var height := 25.0 + float((index * 13) % 34)
 		var sway := sin(_time * 1.4 + float(index)) * 4.0
 		draw_line(
-			Vector2(x, base_y + 10.0), Vector2(x + sway, base_y - height), Color("#2d816c"), 4.0
+			Vector2(x, base_y + 10.0), Vector2(x + sway, base_y - height), Palette.UNDERWATER_SEABED_WEED, 4.0
 		)
 
 
 func _draw_rock(center: Vector2, radius: float) -> void:
-	draw_circle(center, radius, Color("#31525e"))
-	draw_circle(center + Vector2(-radius * 0.18, -radius * 0.18), radius * 0.72, Color("#456c71"))
+	draw_circle(center, radius, Palette.UNDERWATER_ROCK_DARK)
+	draw_circle(center + Vector2(-radius * 0.18, -radius * 0.18), radius * 0.72, Palette.UNDERWATER_ROCK_LIGHT)
 	draw_circle(
 		center + Vector2(-radius * 0.28, -radius * 0.28),
 		radius * 0.30,
-		Color(0.45, 0.72, 0.70, 0.30)
+		Palette.UNDERWATER_ROCK_HIGHLIGHT
 	)
 
 
@@ -333,7 +333,7 @@ func _draw_background_fish() -> void:
 		if base_x < 62.0:
 			continue
 		var scale_value := 0.55 + float(index % 3) * 0.18
-		_draw_small_fish(Vector2(base_x, y), scale_value, Color(0.02, 0.17, 0.28, 0.38))
+		_draw_small_fish(Vector2(base_x, y), scale_value, Palette.UNDERWATER_BACKGROUND_FISH)
 
 
 func _draw_small_fish(center: Vector2, scale_value: float, color: Color) -> void:
@@ -355,7 +355,7 @@ func _draw_bubbles() -> void:
 		x += sin(_time * 0.7 + float(index)) * 9.0
 		var y := size.y - fmod(_time * speed + float(index * 37), size.y + 30.0)
 		var radius := 1.5 + float(index % 4)
-		draw_arc(Vector2(x, y), radius, 0.0, TAU, 12, Color(0.75, 0.95, 1.0, 0.42), 1.2)
+		draw_arc(Vector2(x, y), radius, 0.0, TAU, 12, Palette.UNDERWATER_BUBBLE_OUTLINE, 1.2)
 
 
 func _draw_line_and_bait() -> void:
@@ -384,9 +384,9 @@ func _draw_fishing_line(line_origin: Vector2, bait_position: Vector2) -> void:
 	var sag := clampf((bait_position.y - line_origin.y) * 0.035, 4.0, 18.0)
 	var mid := line_origin.lerp(bait_position, 0.58) + Vector2(0.0, sag + sin(_time * 1.8) * 1.4)
 	var points := PackedVector2Array([line_origin, mid, bait_position])
-	draw_polyline(points, Color(0.05, 0.14, 0.20, 0.22), 3.1, false)
-	draw_polyline(points, Color(0.92, 0.98, 1.0, 0.72), 1.55, false)
-	draw_polyline(points, Color(1.0, 1.0, 1.0, 0.32), 0.75, false)
+	draw_polyline(points, Palette.UNDERWATER_LINE_SHADOW, 3.1, false)
+	draw_polyline(points, Palette.UNDERWATER_LINE_MAIN, 1.55, false)
+	draw_polyline(points, Palette.UNDERWATER_LINE_HI, 0.75, false)
 
 
 func _draw_lure_overlay() -> void:
@@ -398,9 +398,9 @@ func _draw_lure_at(bait_position: Vector2) -> void:
 	if _showcase_lure != null:
 		_draw_showcase_lure(bait_position)
 	else:
-		draw_circle(bait_position, 6.0, Color("#e88b35"))
-		draw_circle(bait_position + Vector2(3.0, -2.0), 2.0, Color("#ffd37a"))
-		draw_arc(bait_position + Vector2(7.0, 5.0), 7.0, 0.2, 2.4, 12, Color("#d8e7ef"), 2.0)
+		draw_circle(bait_position, 6.0, Palette.UNDERWATER_LURE_BODY)
+		draw_circle(bait_position + Vector2(3.0, -2.0), 2.0, Palette.UNDERWATER_DEPTH_MARKER)
+		draw_arc(bait_position + Vector2(7.0, 5.0), 7.0, 0.2, 2.4, 12, Palette.UNDERWATER_LURE_HOOK, 2.0)
 
 
 func _draw_showcase_lure(bait_position: Vector2) -> void:
@@ -430,7 +430,7 @@ func _draw_target_fish() -> void:
 	if _showcase_fish_sheet != null:
 		_draw_showcase_target_fish(center, scale_value, direction)
 		return
-	var body_color := Color.from_string(String(fish_data.get("color", "#8aa7b5")), Color("#8aa7b5"))
+	var body_color := Color.from_string(String(fish_data.get("color", Palette.UNDERWATER_FISH_FALLBACK.to_html(false))), Palette.UNDERWATER_FISH_FALLBACK)
 	var light_color := body_color.lightened(0.28)
 	var dark_color := body_color.darkened(0.34)
 	var darker_color := body_color.darkened(0.55)
@@ -441,7 +441,7 @@ func _draw_target_fish() -> void:
 
 	# テンション圏のオーラ
 	if simulator.state == FishingSimulator.State.FIGHT:
-		draw_circle(center, 94.0 * scale_value, Color(0.45, 0.88, 1.0, 0.10))
+		draw_circle(center, 94.0 * scale_value, Palette.UNDERWATER_FIGHT_AURA)
 
 	# 尾びれ・背びれは胴体の奥に
 	var tail_base := center + Vector2(-72.0 * direction * scale_value, 0.0)
@@ -528,12 +528,12 @@ func _draw_target_fish() -> void:
 
 	# 目（強調ハイライト付き）
 	var eye_position := center + Vector2(48.0 * direction, -10.0) * scale_value
-	draw_circle(eye_position, 8.0 * scale_value, Color("#fff4cf"))
-	draw_circle(eye_position, 6.0 * scale_value, Color("#23120a"))
+	draw_circle(eye_position, 8.0 * scale_value, Palette.UNDERWATER_FISH_EYE)
+	draw_circle(eye_position, 6.0 * scale_value, Palette.UNDERWATER_FISH_PUPIL)
 	draw_circle(
 		eye_position + Vector2(-2.2 * direction, -2.2) * scale_value,
 		2.0 * scale_value,
-		Color("#ffffff")
+		Color.WHITE
 	)
 
 	# 口
@@ -546,14 +546,14 @@ func _draw_target_fish() -> void:
 				mouth_start + Vector2(14.0 * direction, 1.0) * scale_value,
 			]
 		),
-		Color("#152631"),
+		Palette.UNDERWATER_FISH_MOUTH,
 		2.4 * scale_value,
 		false
 	)
 
 	# ヒットフラッシュ（アワセ時など）
 	if _fish_flash > 0.0:
-		_draw_ellipse(center, rx, ry, Color(1.0, 1.0, 1.0, _fish_flash * 0.6))
+		_draw_ellipse(center, rx, ry, Color(Color.WHITE, _fish_flash * 0.6))
 
 
 func _draw_showcase_target_fish(center: Vector2, scale_value: float, direction: float) -> void:
@@ -564,12 +564,12 @@ func _draw_showcase_target_fish(center: Vector2, scale_value: float, direction: 
 	var src := Rect2(frame_w * float(frame_index), 0.0, frame_w, frame_h)
 	var dst := Rect2(-draw_size * 0.5, draw_size)
 
-	_draw_ellipse(center + Vector2(0.0, draw_size.y * 0.35), draw_size.x * 0.30, draw_size.y * 0.066, Color(0.0, 0.0, 0.0, 0.072), 28)
+	_draw_ellipse(center + Vector2(0.0, draw_size.y * 0.35), draw_size.x * 0.30, draw_size.y * 0.066, Palette.UNDERWATER_SHOWCASE_FISH_SHADOW, 28)
 
 	draw_set_transform(Juicer.get_offset() + center, 0.0, Vector2(direction, 1.0))
 	draw_texture_rect_region(_showcase_fish_sheet, dst, src, Color.WHITE)
 	if _fish_flash > 0.0:
-		draw_texture_rect_region(_showcase_fish_sheet, dst, src, Color(1.0, 1.0, 1.0, _fish_flash * 0.10))
+		draw_texture_rect_region(_showcase_fish_sheet, dst, src, Color(Color.WHITE, _fish_flash * 0.10))
 	draw_set_transform(Juicer.get_offset())
 
 
@@ -639,22 +639,22 @@ func _draw_hit_burst() -> void:
 		var badge_scale := clampf(size.x / 1320.0, 0.50, 0.58)
 		var badge_draw_size := badge_size * badge_scale
 		var badge_rect := Rect2(burst_center - badge_draw_size * 0.5, badge_draw_size)
-		draw_texture_rect(_showcase_hit_badge_full, badge_rect, false, Color(1.0, 1.0, 1.0, alpha))
+		draw_texture_rect(_showcase_hit_badge_full, badge_rect, false, Color(Color.WHITE, alpha))
 		return
 	if _showcase_hit_burst != null:
 		var tex_size := _showcase_hit_burst.get_size()
 		var scale := clampf(size.x / 1320.0, 0.50, 0.58)
 		var draw_size := tex_size * scale
 		var draw_rect := Rect2(burst_center - draw_size * 0.5, draw_size)
-		draw_texture_rect(_showcase_hit_burst, draw_rect, false, Color(1.0, 1.0, 1.0, alpha))
+		draw_texture_rect(_showcase_hit_burst, draw_rect, false, Color(Color.WHITE, alpha))
 	var font := GameFontsScript.extra_bold(get_theme_default_font())
 	var text := "ヒット！"
 	var font_size := int(clampf(size.y * 0.108, 38.0, 52.0))
 	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
 	var pos := burst_center + Vector2(-text_width * 0.5, font_size * 0.10)
-	draw_string_outline(font, pos + Vector2(2.5, 3.5), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 5, Color(0.0, 0.0, 0.0, 0.38))
-	draw_string_outline(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 5, Color("#6a2b08"))
-	draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color("#ffe36e"))
+	draw_string_outline(font, pos + Vector2(2.5, 3.5), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 5, Palette.UNDERWATER_HIT_SHADOW)
+	draw_string_outline(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 5, Palette.UNDERWATER_HIT_OUTLINE)
+	draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Palette.UNDERWATER_HIT_TEXT)
 
 
 func _draw_fight_overlay() -> void:
@@ -671,10 +671,10 @@ func _draw_fight_overlay() -> void:
 	var meter_rect := Rect2(76.0, size.y - 22.0, meter_width, 4.0)
 	if _meter_track == null:
 		_meter_track = StyleBoxFlat.new()
-		_meter_track.bg_color = Color(0.02, 0.08, 0.14, 0.14)
+		_meter_track.bg_color = Palette.UNDERWATER_DISTANCE_TRACK
 		_meter_track.set_corner_radius_all(2)
 		_meter_fill = StyleBoxFlat.new()
-		_meter_fill.bg_color = Color(0.52, 0.94, 1.0, 0.17)
+		_meter_fill.bg_color = Palette.UNDERWATER_DISTANCE_FILL
 		_meter_fill.set_corner_radius_all(2)
 	draw_style_box(_meter_track, meter_rect)
 	if distance_ratio > 0.0:
@@ -682,15 +682,15 @@ func _draw_fight_overlay() -> void:
 		draw_style_box(_meter_fill, fill_rect)
 		draw_rect(
 			Rect2(fill_rect.position.x + 2.0, fill_rect.position.y + 1.0, maxf(0.0, fill_rect.size.x - 4.0), 1.0),
-			Color(1.0, 1.0, 1.0, 0.075),
+			Color(Color.WHITE, 0.075),
 			false
 		)
 	var label_pos := Vector2(76.0, size.y - 27.0)
-	draw_string_outline(font, label_pos, "距離 %.1fm" % simulator.distance, HORIZONTAL_ALIGNMENT_LEFT, int(meter_rect.size.x), 9, 1, Color(0.0, 0.0, 0.0, 0.20))
-	draw_string(font, label_pos, "距離 %.1fm" % simulator.distance, HORIZONTAL_ALIGNMENT_LEFT, int(meter_rect.size.x), 9, Color(0.86, 0.96, 1.0, 0.32))
+	draw_string_outline(font, label_pos, "距離 %.1fm" % simulator.distance, HORIZONTAL_ALIGNMENT_LEFT, int(meter_rect.size.x), 9, 1, Palette.UNDERWATER_DISTANCE_TEXT_SHADOW)
+	draw_string(font, label_pos, "距離 %.1fm" % simulator.distance, HORIZONTAL_ALIGNMENT_LEFT, int(meter_rect.size.x), 9, Palette.UNDERWATER_DISTANCE_TEXT)
 
 
 func _draw_frame() -> void:
-	draw_rect(Rect2(0.0, 0.0, size.x, size.y), Color(0.0, 0.04, 0.09, 0.09), false, 1.0)
+	draw_rect(Rect2(0.0, 0.0, size.x, size.y), Palette.UNDERWATER_FRAME_OUTER, false, 1.0)
 	var inner_rect := Rect2(2.0, 2.0, maxf(0.0, size.x - 4.0), maxf(0.0, size.y - 4.0))
-	draw_rect(inner_rect, Color(0.55, 0.80, 0.92, 0.045), false, 1.0)
+	draw_rect(inner_rect, Palette.UNDERWATER_FRAME_INNER, false, 1.0)

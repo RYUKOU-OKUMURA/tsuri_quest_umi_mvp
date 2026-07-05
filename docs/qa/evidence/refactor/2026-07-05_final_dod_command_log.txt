@@ -1,0 +1,326 @@
+Final DoD log started: 2026-07-05 19:41:31 JST
+
+==> R1 raw color audit
+files 0 matches 0
+
+==> Palette duplicate const audit
+duplicate constants 0
+
+==> git diff --check
+
+==> /Applications/Godot.app/Contents/MacOS/Godot --headless --path . res://tools/fishing_reveal_smoke.tscn
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+fishing_reveal_smoke: ok
+
+==> /Applications/Godot.app/Contents/MacOS/Godot --headless --path . res://tools/fishing_harbor_return_smoke.tscn
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+fishing_harbor_return_smoke: ok
+WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2535)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+
+==> /Applications/Godot.app/Contents/MacOS/Godot --headless --path . res://tools/fishing_spot_select_smoke.tscn
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+fishing_spot_select_smoke: ok
+WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2535)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+
+==> /Applications/Godot.app/Contents/MacOS/Godot --headless --path . res://tools/shipyard_smoke.tscn
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+shipyard_smoke: ok
+
+==> /Applications/Godot.app/Contents/MacOS/Godot --headless --path . res://tools/tackle_shop_smoke.tscn
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+tackle_shop_smoke: ok
+
+==> /Applications/Godot.app/Contents/MacOS/Godot --headless --path . res://tools/market_smoke.tscn
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+market_smoke: ok
+
+==> /Applications/Godot.app/Contents/MacOS/Godot --headless --path . res://tools/cooking_flow_smoke.tscn
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+cooking_flow_smoke: ok
+
+==> /Applications/Godot.app/Contents/MacOS/Godot --headless --path . res://tools/fish_book_smoke.tscn
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+fish_book_smoke: ok
+
+==> /Applications/Godot.app/Contents/MacOS/Godot --headless --path . res://tools/status_smoke.tscn
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+status_smoke: ok
+
+==> /Applications/Godot.app/Contents/MacOS/Godot --headless --path . res://tools/catch_fanfare_smoke.tscn
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+catch_fanfare_smoke: ok
+WARNING: 6 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2535)
+ERROR: 2 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+
+==> ./tools/cooking_verify.sh
+==> res://tools/cooking_content_audit.tscn
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+Cooking content audit passed for 5 states plus level-up EXP subcase.
+==> res://tools/cooking_layout_audit.tscn
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+Cooking layout audit passed for 5 states plus level-up EXP subcase at 1280x720.
+==> res://tools/cooking_input_audit.tscn
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+Cooking input audit passed for recipe and fish card child hit targets.
+==> res://tools/cooking_flow_smoke.tscn
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+cooking_flow_smoke: ok
+Cooking showcase verification passed.
+
+==> /Applications/Godot.app/Contents/MacOS/Godot --headless --path . res://tools/cooking_content_audit.tscn
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+Cooking content audit passed for 5 states plus level-up EXP subcase.
+
+==> /Applications/Godot.app/Contents/MacOS/Godot --headless --path . res://tools/cooking_layout_audit.tscn
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+Cooking layout audit passed for 5 states plus level-up EXP subcase at 1280x720.
+
+==> ./tools/fight_visual_qa.sh
+==> Build deterministic static fight comparisons
+/tmp/tsuri_sidebar_static_compare.png
+/tmp/tsuri_hud_static_compare.png
+/tmp/tsuri_top_status_static_compare.png
+/tmp/tsuri_full_static_compare.png
+/tmp/tsuri_fishing_fight_static.png
+/tmp/tsuri_fish_asset_contact.png
+==> Build side-by-side QA outputs
+current capture source: /tmp/tsuri_fishing_fight_static.png
+/tmp/tsuri_fight_compare.png
+/tmp/tsuri_frame_focus_compare.png
+/tmp/tsuri_fish_hit_focus.png
+current capture source: /tmp/tsuri_fishing_fight_static.png
+/tmp/tsuri_fight_compare.html
+==> Fight visual QA outputs
+/tmp/tsuri_sidebar_static_compare.png
+/tmp/tsuri_hud_static_compare.png
+/tmp/tsuri_top_status_static_compare.png
+/tmp/tsuri_full_static_compare.png
+/tmp/tsuri_fish_asset_contact.png
+/tmp/tsuri_fight_compare.png
+/tmp/tsuri_fight_compare.html
+
+==> ./tools/surface_weather_visual_qa.sh
+==> Capture surface weather previews
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+OpenGL API 4.1 Metal - 90.5 - Compatibility - Using Device: Apple - Apple M2
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+surface_weather_preview: ok
+==> Build surface weather comparison
+Surface weather visual QA outputs:
+/tmp/tsuri_surface_weather_sunny.png
+/tmp/tsuri_surface_weather_partly_cloudy.png
+/tmp/tsuri_surface_weather_cloudy.png
+/tmp/tsuri_surface_weather_rain.png
+/tmp/tsuri_surface_weather_fog.png
+/tmp/tsuri_surface_weather_compare.png
+
+==> ./tools/cooking_visual_qa.sh
+==> Capture cooking reference states
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+OpenGL API 4.1 Metal - 90.5 - Compatibility - Using Device: Apple - Apple M2
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+==> Check cooking captures and refresh report
+/tmp/tsuri_cooking_reference_report.html
+Cooking visual QA report: /tmp/tsuri_cooking_reference_report.html
+Cooking visual QA passed.
+
+==> ./tools/fish_book_visual_qa.sh
+==> Capture fish book preview
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+OpenGL API 4.1 Metal - 90.5 - Compatibility - Using Device: Apple - Apple M2
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+fish_book_preview: wrote /tmp/tsuri_fish_book.png
+==> Build fish book side-by-side QA output
+/tmp/tsuri_fish_book_compare.png
+Fish book visual QA output:
+/tmp/tsuri_fish_book.png
+/tmp/tsuri_fish_book_compare.png
+
+==> ./tools/fishing_spot_map_visual_qa.sh
+==> Capture fishing spot map previews
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+OpenGL API 4.1 Metal - 90.5 - Compatibility - Using Device: Apple - Apple M2
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+fishing_spot_map_preview:
+/tmp/tsuri_fishing_spot_map.png
+/tmp/tsuri_fishing_spot_map_continue.png
+==> Build fishing spot map side-by-side QA outputs
+/tmp/tsuri_fishing_spot_map_compare.png
+/tmp/tsuri_fishing_spot_map_continue_compare.png
+Fishing spot map visual QA outputs:
+/tmp/tsuri_fishing_spot_map.png
+/tmp/tsuri_fishing_spot_map_continue.png
+/tmp/tsuri_fishing_spot_map_compare.png
+/tmp/tsuri_fishing_spot_map_continue_compare.png
+
+==> ./tools/tackle_shop_visual_qa.sh
+==> Capture tackle shop previews
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+OpenGL API 4.1 Metal - 90.5 - Compatibility - Using Device: Apple - Apple M2
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+tackle_shop_preview:
+/tmp/tsuri_tackle_shop_rod.png
+/tmp/tsuri_tackle_shop_rig.png
+/tmp/tsuri_tackle_shop_rod_expanded.png
+/tmp/tsuri_tackle_shop_rig_expanded.png
+==> Build tackle shop side-by-side QA outputs
+/tmp/tsuri_tackle_shop_rod_compare.png
+/tmp/tsuri_tackle_shop_rig_compare.png
+Tackle shop visual QA outputs:
+/tmp/tsuri_tackle_shop_rod.png
+/tmp/tsuri_tackle_shop_rig.png
+/tmp/tsuri_tackle_shop_rod_expanded.png
+/tmp/tsuri_tackle_shop_rig_expanded.png
+/tmp/tsuri_tackle_shop_rod_compare.png
+/tmp/tsuri_tackle_shop_rig_compare.png
+
+==> ./tools/market_visual_qa.sh
+==> Capture market previews
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+OpenGL API 4.1 Metal - 90.5 - Compatibility - Using Device: Apple - Apple M2
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+market_preview:
+/tmp/tsuri_market_select.png
+/tmp/tsuri_market_confirm.png
+/tmp/tsuri_market_sold.png
+/tmp/tsuri_market_empty.png
+==> Build market side-by-side QA outputs
+/tmp/tsuri_market_select_compare.png
+/tmp/tsuri_market_confirm_compare.png
+/tmp/tsuri_market_sold_compare.png
+/tmp/tsuri_market_empty_compare.png
+Market visual QA outputs:
+/tmp/tsuri_market_select.png
+/tmp/tsuri_market_confirm.png
+/tmp/tsuri_market_sold.png
+/tmp/tsuri_market_empty.png
+/tmp/tsuri_market_select_compare.png
+/tmp/tsuri_market_confirm_compare.png
+/tmp/tsuri_market_sold_compare.png
+/tmp/tsuri_market_empty_compare.png
+
+==> ./tools/status_visual_qa.sh
+==> Capture status preview
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+OpenGL API 4.1 Metal - 90.5 - Compatibility - Using Device: Apple - Apple M2
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+==> Build status side-by-side QA output
+/tmp/tsuri_status_compare.png
+Status visual QA output:
+/tmp/tsuri_status.png
+/tmp/tsuri_status_compare.png
+
+==> ./tools/save_system_verify.sh
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+
+PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）
+ERROR: Parse JSON failed. Error at line 0: Expected key
+   at: parse_string (core/io/json.cpp:629)
+   GDScript backtrace (most recent call first):
+       [0] _read_save_dictionary (res://src/autoload/player_progress.gd:472)
+       [1] load_game (res://src/autoload/player_progress.gd:454)
+       [2] _ready (res://tools/save_system_smoke.gd:56)
+WARNING: セーブデータが壊れていたため、バックアップから復元します。
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] load_game (res://src/autoload/player_progress.gd:461)
+         [1] _ready (res://tools/save_system_smoke.gd:56)
+ERROR: Parse JSON failed. Error at line 0: Expected key
+   at: parse_string (core/io/json.cpp:629)
+   GDScript backtrace (most recent call first):
+       [0] _read_save_dictionary (res://src/autoload/player_progress.gd:472)
+       [1] load_game (res://src/autoload/player_progress.gd:454)
+       [2] _ready (res://tools/save_system_smoke.gd:63)
+WARNING: セーブデータが壊れているため初期値を使用します。
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] load_game (res://src/autoload/player_progress.gd:459)
+         [1] _ready (res://tools/save_system_smoke.gd:63)
+WARNING: 新しいバージョンのセーブデータです（version 99 > 1）。読み込みを試みます。
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] _migrate_save_data (res://src/autoload/player_progress.gd:481)
+         [1] load_game (res://src/autoload/player_progress.gd:463)
+         [2] _ready (res://tools/save_system_smoke.gd:71)
+save_system_smoke: ok
+Save system verification passed.
+
+==> ./tools/validate_project.sh
+showcase asset reference audit passed.
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+
+ERROR: Could not create ObjectDB Snapshots directory: user://Users/ryukouokumura/Desktop/tsuri_quest_umi_mvp
+   at: _get_and_create_snapshot_storage_dir (modules/objectdb_profiler/editor/objectdb_profiler_panel.cpp:162)
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Started プロジェクトの初期化 (5 steps)[39m[0m
+[   0% ] [90m[1mfirst_scan_filesystem[22m | ファイル構造をスキャン中...[39m[0m
+[  16% ] [90m[1mfirst_scan_filesystem[22m | グローバルクラス名を読み込み中...[39m[0m
+[  33% ] [90m[1mfirst_scan_filesystem[22m | GDExtensionを検証中...[39m[0m
+[  50% ] [90m[1mfirst_scan_filesystem[22m | 自動読み込みスクリプトを作成中...[39m[0m
+[  66% ] [90m[1mfirst_scan_filesystem[22m | プラグインを初期化中...[39m[0m
+[  83% ] [90m[1mfirst_scan_filesystem[22m | ファイルスキャンを開始...[39m[0m
+[92m[ DONE ][39m [1mfirst_scan_filesystem[22m
+[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Started エディターの読み込み (5 steps)[39m[0m
+[   0% ] [90m[1mloading_editor_layout[22m | エディターレイアウトを読み込み中...[39m[0m
+[  16% ] [90m[1mloading_editor_layout[22m | ドックを読み込み中...[39m[0m
+[  33% ] [90m[1mloading_editor_layout[22m | シーンを再オープン中...[39m[0m
+[  50% ] [90m[1mloading_editor_layout[22m | 中央エディターを読み込み中...[39m[0m
+[  66% ] [90m[1mloading_editor_layout[22m | プラグインのウィンドウレイアウトを読み込み中...[39m[0m
+[  83% ] [90m[1mloading_editor_layout[22m | エディターレイアウトの準備完了。[39m[0m
+[92m[ DONE ][39m [1mloading_editor_layout[22m
+[0m
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+
+WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2535)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+
+Final DoD log finished: 2026-07-05 19:42:44 JST

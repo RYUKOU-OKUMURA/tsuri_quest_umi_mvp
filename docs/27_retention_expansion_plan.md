@@ -25,7 +25,7 @@ MVP完了（docs/24 の P0〜P6 拡張含む）を前提に、「また遊ぶ理
 関連ドキュメント:
 
 - `docs/24_gameplay_expansion_plan.md` — 第1次拡張（完了）。本docは様式と横断事項を踏襲する
-- `docs/26_refactor_orchestration_plan.md` — 進行中リファクタ。**着手前の干渉チェック対象（§6.1）**
+- `docs/26_refactor_orchestration_plan.md` — 最終リファクタ台帳。**着手前の干渉チェック対象（§6.1）**
 - `docs/19_ui_production_playbook.md` — UI作業のルール正本。新画面・演出のUI品質判断はすべてこちらに従う
 
 ---
@@ -44,7 +44,7 @@ MVP完了（docs/24 の P0〜P6 拡張含む）を前提に、「また遊ぶ理
 | 釣り場 | 8スポット（通常7＋ぬしポイント1）。`unlock_level` と `required_boat_rank` で解放制御 | 危険海域・隠し釣り場・川エリアは同じ辞書に追加する |
 | セーブ | 新フィールドは旧セーブ読み込み時のデフォルト補完が必要（`owned_rigs` 前例）。原子的書き込み・バックアップ・サンドボックスは `save_system_verify.sh` で回帰テスト可能 | 全フェーズの横断事項（§6.3） |
 | キャッチ演出 | `CatchFanfare`（写真風の釣り上げ結果画面）稼働中 | 記録更新演出（E1）はここに差し込む |
-| リファクタ | docs/26 の R1（palette移行・画面単位）と R5（画面uplift）が進行中。R9 第3段が pending | 同一ファイルを触るフェーズは干渉チェック必須（§6.1） |
+| リファクタ | docs/26 の最終リファクタは完了。`src/ui` のR1 raw color監査は `palette.gd` 除外で0件、RF1〜RF5も完了済み | 以後は拡張フェーズごとにdocs/26の最終DoDを基準線として干渉チェックする（§6.1） |
 
 ---
 
@@ -132,7 +132,7 @@ MVP完了（docs/24 の P0〜P6 拡張含む）を前提に、「また遊ぶ理
 - **接続点**: `game_catalog_data.gd`（FISHING_SPOTS）、`encounter_weights()`、`fish_book_screen.gd`、`PlayerProgress`
 - **実装前の条件**:
   1. **Fable 単体の設計判断が先**: ヌシを「魚IDの別個体（`boss` フラグ流用）」とするか「既存魚のサイズ超過個体」とするか。図鑑上の扱い（§7-4）とセットで決める
-  2. `fish_book_screen.gd` は docs/26 R5 の次対象（魚図鑑uplift）に選定済み。**R5魚図鑑スライスの完了を待ってから**図鑑側の改修に入る
+  2. 魚図鑑R5/R1は2026-07-05時点で完了済み。ヌシ表示に入る前に、`docs/qa/fish_book_qa.md` のfreeze表とP2専用魚ポートレート素材待ちだけを再確認する
   3. `docs/qa/fish_book_qa.md` の freeze 値に抵触しないこと（金枠は追加要素であり freeze 値の変更ではない、を確認）。フッターへの「ヌシ」タブ追加はタブ列レイアウトを触るため、freeze 表との照合を先に行い、抵触するならタブ追加の可否を Fable が判断する
 - **DoD**: ヌシ出現条件のユニット的検証（headless で抽選監査。`fishing_reveal_smoke` 方式）+ `fish_book_smoke` + 図鑑 visual QA + validate green
 
@@ -246,7 +246,7 @@ MVP完了（docs/24 の P0〜P6 拡張含む）を前提に、「また遊ぶ理
 
 各フェーズ着手前に、オーケストレーター（Fable）が以下を確認する:
 
-1. **リファクタ干渉チェック**: `docs/26_refactor_orchestration_plan.md` の進行中スライス（現在 R1画面単位 / R5 / R9第3段）と触るファイルが重ならないこと。重なる場合はどちらかを先に完了させる。**本拡張とリファクタを同一ファイルで並走させない**
+1. **リファクタ干渉チェック**: `docs/26_refactor_orchestration_plan.md` の最終DoDがgreenであることを基準線にする。今後あらためてリファクタスライスを起こす場合は、拡張フェーズと同一ファイルで並走させず、どちらかを先に完了させる。
 2. **ベースライン green**: `./tools/validate_project.sh` + docs/26 §Smoke 一覧が全通過している状態から始める
 3. **セーブ互換**: 新フィールドはロード時デフォルト補完（`owned_rigs` 前例に倣う）。セーブを触るフェーズは `./tools/save_system_verify.sh` をDoDに含める
 4. **UI工程の遵守**: 新画面は `skills/ui-screen-build/`、既存画面の改修は `skills/ui-screen-uplift/` に従う。freeze 値（`docs/qa/<screen>_qa.md`）は動かさない。日本語テキストのPNG焼き込み禁止

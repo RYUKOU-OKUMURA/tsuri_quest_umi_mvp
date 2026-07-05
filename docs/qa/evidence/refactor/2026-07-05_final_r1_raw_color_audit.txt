@@ -1,0 +1,4 @@
+2026-07-05 final R1 raw color audit
+scope: src/ui/**/*.gd excluding src/ui/palette.gd
+pattern: Color("#..."), Color(numeric...), direct #hex
+files 0 matches 0

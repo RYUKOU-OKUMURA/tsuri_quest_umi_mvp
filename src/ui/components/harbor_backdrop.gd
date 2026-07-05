@@ -63,7 +63,7 @@ func _draw_fallback_gradient() -> void:
 	var strips := 28
 	for index in range(strips):
 		var ratio := float(index) / float(strips - 1)
-		var color := Color("#91d7ed").lerp(Color("#064064"), ratio)
+		var color := Palette.HARBOR_BACKDROP_SKY_TOP.lerp(Palette.HARBOR_BACKDROP_SEA_DEEP, ratio)
 		draw_rect(Rect2(0.0, size.y * ratio, size.x, size.y / strips + 1.0), color)
 
 
@@ -74,7 +74,7 @@ func _draw_sun_glints() -> void:
 		var y := water_y + sin(_time * 0.75 + float(index) * 0.67) * 14.0 + float(index % 3) * 10.0
 		var length := 34.0 + float(index % 5) * 18.0
 		var alpha := 0.12 + 0.07 * sin(_time * 1.2 + float(index))
-		draw_line(Vector2(x, y), Vector2(x + length, y + 2.0), Color(1.0, 0.92, 0.58, alpha), 2.0)
+		draw_line(Vector2(x, y), Vector2(x + length, y + 2.0), Color(Palette.HARBOR_BACKDROP_GLINT, alpha), 2.0)
 
 
 func _draw_harbor_air() -> void:
@@ -82,13 +82,13 @@ func _draw_harbor_air() -> void:
 		var x := fmod(float(index * 211) - _time * (10.0 + float(index % 3) * 2.0), size.x + 120.0) - 60.0
 		var y := size.y * (0.18 + float(index % 3) * 0.055) + sin(_time * 0.32 + float(index)) * 4.0
 		var scale := 0.65 + float(index % 4) * 0.14
-		_draw_gull(Vector2(x, y), scale, Color(0.04, 0.13, 0.19, 0.20))
+		_draw_gull(Vector2(x, y), scale, Palette.HARBOR_BACKDROP_GULL)
 
 	for index in range(9):
 		var base_x := size.x * (0.18 + float(index) * 0.083)
 		var y := size.y * (0.54 + float(index % 4) * 0.045)
 		var pulse := 0.35 + 0.25 * sin(_time * 1.1 + float(index))
-		draw_circle(Vector2(base_x, y), 1.4 + pulse, Color(1.0, 0.94, 0.62, 0.18))
+		draw_circle(Vector2(base_x, y), 1.4 + pulse, Palette.HARBOR_BACKDROP_AIR)
 
 
 func _draw_gull(pos: Vector2, scale: float, color: Color) -> void:
@@ -97,5 +97,5 @@ func _draw_gull(pos: Vector2, scale: float, color: Color) -> void:
 
 
 func _draw_edge_frame() -> void:
-	draw_rect(Rect2(Vector2.ZERO, size), Color(0.0, 0.05, 0.10, 0.28), false, 6.0)
-	draw_line(Vector2(0.0, 2.0), Vector2(size.x, 2.0), Color(1.0, 0.90, 0.55, 0.15), 2.0)
+	draw_rect(Rect2(Vector2.ZERO, size), Palette.HARBOR_BACKDROP_FRAME, false, 6.0)
+	draw_line(Vector2(0.0, 2.0), Vector2(size.x, 2.0), Palette.HARBOR_BACKDROP_TOP_LINE, 2.0)

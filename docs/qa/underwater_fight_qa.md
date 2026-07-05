@@ -122,8 +122,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 
 ## 4. 暫定判定・再検証TODO
 
-- [ ] サンドボックス環境で非headlessのGodotプレビューがクラッシュし、headless `SubViewport` キャプチャも不可のため、v1判定の一部は静的合成ボード（`tools/build_fight_*_static_compare.py`）による**暫定**。通常キャプチャ復旧後に `./tools/fight_visual_qa.sh` で実スクショ比較を再生成し、`/tmp/tsuri_fight_compare.png`・`/tmp/tsuri_frame_focus_compare.png`・サイドバー魚カードのフォーカス比較を再判定する。
-- [ ] fight系フォントAA無効のランタイム文字品質は、実ディスプレイでのキャプチャ確認待ち（静的ボードはPILテキストのためAAの実挙動を反映しない）。
+- [ ] **P2/環境依存**: ランタイムの水中ファイト実スクショは環境依存で不安定なため、v1判定の一部は静的合成ボード（`tools/build_fight_*_static_compare.py`）を証跡として採用する。2026-07-05に `./tools/fight_visual_qa.sh` を再実行し、静的比較は `docs/qa/evidence/underwater_fight/2026-07-05_fight_static_qa_compare.png` / `2026-07-05_fight_frame_focus_compare.png` / `2026-07-05_fight_hit_focus.png` / `2026-07-05_fight_sidebar_static_compare.png` / `2026-07-05_fight_hud_static_compare.png` / `2026-07-05_fight_top_status_static_compare.png` / `2026-07-05_fight_full_static_compare.png` へ永続化済み。通常キャプチャ復旧後にランタイム実スクショで再判定するが、これは最終リファクタ完了ブロッカーではない。
 - 注: 2026-06-26 パスの証拠画像は `/tmp` のみに残され失われた。以後の採用判断では `docs/qa/evidence/underwater_fight/` へのコピーを必須とする。
 
 ## 5. 現在の残ギャップ
@@ -138,6 +137,8 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 ## 7. 判断ログ（直近パスのみ）
 
 - 2026-07-05: catch fanfareのレア紙吹雪色を `Palette.RARITY_RARE_TEXT` 直接参照から `RarityStylesScript.text_color("レア")` へ移行。表示色は同値で、レアリティ色責務を `src/ui/rarity_styles.gd` に閉じた。freeze値、素材、レイアウト、表示文言、日本語PNG焼き込みは変更なし。検証: `catch_fanfare_smoke.tscn`、`./tools/save_system_verify.sh`、`./tools/validate_project.sh` green。通常起動プレビュー証拠: `docs/qa/evidence/underwater_fight/2026-07-05_catch_fanfare_rarity_styles.png`。
+- 2026-07-05: RF2 Palette移行完了。`fight_hud.gd` / `surface_cast_view.gd` / `fight_sidebar.gd` / `underwater_view.gd` / `fight_status_bar.gd` / `fishing_screen.gd` / `catch_fanfare.gd` の生色を `Palette.FIGHT_*` / `Palette.SURFACE_*` / `Palette.UNDERWATER_*` / `Palette.CATCH_*` 等へ移行し、対象7ファイルraw color監査0件。freeze値、素材所有、レイアウト、表示文言、日本語PNG焼き込みは変更なし。検証: `fight_visual_qa.sh`、`surface_weather_visual_qa.sh`、`fishing_reveal_smoke.tscn`、`fishing_harbor_return_smoke.tscn`、`catch_fanfare_smoke.tscn`、`save_system_verify.sh`、`validate_project.sh` green。証拠: `docs/qa/evidence/underwater_fight/2026-07-05_rf2_palette_fight_compare.png`, `2026-07-05_rf2_palette_surface_weather_compare.png`, `2026-07-05_rf2_palette_catch_fanfare.png`。
+- 2026-07-05: RF5棚卸しとして `./tools/fight_visual_qa.sh` を再実行し、静的比較を永続証拠へコピー。フォントAA待ちTODOは、`game_fonts.gd` AA有効統一と旧 `fight_fonts.gd` 削除により解消済みとして削除した。ランタイム実スクショ再判定は引き続きTODOに残す。
 - 2026-07-03: キャッチ演出を写真風ベース方式へ更新。`assets/showcase/underwater/catch_photo_base.png` を全面表示し、魚本体は `FightFishAssets.card_portrait_path()` の既存ポートレートを前面合成する。日本語テキストと魚はPNGへ焼き込まない。採用判断は `docs/qa/evidence/underwater_fight/2026-07-03_catch_photo_base_boss.png` と `docs/qa/evidence/underwater_fight/2026-07-03_catch_photo_base_aji.png`。既存の水中背景・HUD・上部・右サイドバー・成功後結果パネルのフローは変更していない。自動終了/スキップは `tools/catch_fanfare_smoke.tscn` で検証済み。
 - 2026-07-03: 成功時の旧白い結果ポップアップを廃止し、写真風釣り上げ画面を結果選択画面に統合。`CatchFanfare` は自動終了せず、`continue_requested` / `harbor_requested` で既存の次釣行・港遷移に接続する。魚位置を上げ、左情報枠を広げ、runtime文字にアウトラインと薄い紙色スクリムを追加。採用判断は `docs/qa/evidence/underwater_fight/2026-07-03_catch_result_photo_boss.png` と `docs/qa/evidence/underwater_fight/2026-07-03_catch_result_photo_aji.png`。新UX契約は `tools/catch_fanfare_smoke.tscn` で検証済み。
 - 2026-07-04: 上部ステータスバーの天気アイコンが晴れ固定だった問題を修正。`weather_status_icon_sheet.png` を追加し、`FightStatusBar` が `trip_stats.weather_id` から `sunny / partly_cloudy / cloudy / rain / fog` の5種を選択する。水面・天気ラベル・風ラベルの既存挙動は変更なし。採用判断は `docs/qa/evidence/underwater_fight/2026-07-04_surface_weather_icon_compare.png` と `docs/qa/evidence/underwater_fight/2026-07-04_surface_weather_status_icon_compare.png`。

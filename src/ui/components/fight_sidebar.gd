@@ -136,12 +136,12 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 		var title_plaque := Rect2(inner.position + Vector2(7.0, 8.0), Vector2(inner.size.x - 14.0, 28.0))
 		var rarity_rect := Rect2(inner.position + Vector2(inner.size.x - 58.0, 11.0), Vector2(48.0, 20.0))
 		var name_rect := Rect2(title_plaque.position + Vector2(62.0, 0.0), Vector2(rarity_rect.position.x - title_plaque.position.x - 72.0, title_plaque.size.y))
-		draw_line(Vector2(title_plaque.position.x + 8.0, title_plaque.end.y + 3.0), Vector2(title_plaque.end.x - 8.0, title_plaque.end.y + 3.0), Color("#c9b486", 0.62), 1.0)
-		_draw_text(font, no_text, inner.position + Vector2(17.0, 27.0), 14, Color("#665d50"), 0)
+		draw_line(Vector2(title_plaque.position.x + 8.0, title_plaque.end.y + 3.0), Vector2(title_plaque.end.x - 8.0, title_plaque.end.y + 3.0), Color(Palette.FIGHT_SIDEBAR_RULE_FAINT, 0.62), 1.0)
+		_draw_text(font, no_text, inner.position + Vector2(17.0, 27.0), 14, Palette.FIGHT_SIDEBAR_MUTED_TEXT, 0)
 		_draw_centered_baseline_text(font, _display_fish_name(fish_name), name_rect, inner.position.y + 28.0, 20, Palette.TEXT_DARK, 0)
 		_draw_rarity_tag(font, rarity_rect, rarity)
 	else:
-		_draw_text(font, no_text, inner.position + Vector2(0.0, 26.0), 14, Color("#6b6153"), 0)
+		_draw_text(font, no_text, inner.position + Vector2(0.0, 26.0), 14, Palette.FIGHT_SIDEBAR_MUTED_LABEL, 0)
 		_draw_text(font, _display_fish_name(fish_name), inner.position + Vector2(74.0, 28.0), 20, Palette.TEXT_DARK, 0)
 		_draw_rarity_tag(font, Rect2(inner.position + Vector2(inner.size.x - 52.0, 8.0), Vector2(48.0, 22.0)), rarity)
 
@@ -154,14 +154,14 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	)
 	_draw_fish_portrait(fish_rect)
 	var divider_y := fish_rect.end.y + (3.0 if _sidebar_frame != null else 6.0)
-	draw_line(Vector2(inner.position.x + 8.0, divider_y), Vector2(inner.end.x - 8.0, divider_y), Color("#c9b486"), 1.0)
+	draw_line(Vector2(inner.position.x + 8.0, divider_y), Vector2(inner.end.x - 8.0, divider_y), Palette.FIGHT_SIDEBAR_RULE_FAINT, 1.0)
 	var estimate := (float(fish_data.get("size_min", 0.0)) + float(fish_data.get("size_max", 0.0))) * 0.5
 	if compact_card:
 		_draw_estimate_line(font, estimate, Rect2(inner.position.x, divider_y + 7.0, inner.size.x, 32.0))
 	else:
-		_draw_centered_text(font, "推定 %.1f cm" % estimate, Rect2(inner.position.x, divider_y + 8.0, inner.size.x, 30.0), 23, Color("#2b2117"), 0)
+		_draw_centered_text(font, "推定 %.1f cm" % estimate, Rect2(inner.position.x, divider_y + 8.0, inner.size.x, 30.0), 23, Palette.FIGHT_SIDEBAR_DARK_INK, 0)
 	var desc_y := divider_y + (52.0 if compact_card else 44.0)
-	draw_line(Vector2(inner.position.x + 8.0, desc_y - 12.0), Vector2(inner.end.x - 8.0, desc_y - 12.0), Color("#d6c299"), 1.0)
+	draw_line(Vector2(inner.position.x + 8.0, desc_y - 12.0), Vector2(inner.end.x - 8.0, desc_y - 12.0), Palette.FIGHT_SIDEBAR_SECTION_RULE, 1.0)
 	var detail_gap := 16.0 if compact_card else 21.0
 	var detail_font := GameFontsScript.regular(get_theme_default_font())
 	var behavior := String(fish_data.get("behavior", "ラインを見ながら、テンションを保とう。"))
@@ -183,8 +183,8 @@ func _draw_unknown_fish_card(font: Font, rect: Rect2) -> void:
 	var title_plaque := Rect2(inner.position + Vector2(7.0, 8.0), Vector2(inner.size.x - 14.0, 28.0))
 	var state_rect := Rect2(inner.position + Vector2(inner.size.x - 74.0, 11.0), Vector2(64.0, 20.0))
 	var title_rect := Rect2(title_plaque.position + Vector2(62.0, 0.0), Vector2(state_rect.position.x - title_plaque.position.x - 72.0, title_plaque.size.y))
-	draw_line(Vector2(title_plaque.position.x + 8.0, title_plaque.end.y + 3.0), Vector2(title_plaque.end.x - 8.0, title_plaque.end.y + 3.0), Color("#c9b486", 0.62), 1.0)
-	_draw_text(font, "魚影", inner.position + Vector2(17.0, 27.0), 14, Color("#665d50"), 0)
+	draw_line(Vector2(title_plaque.position.x + 8.0, title_plaque.end.y + 3.0), Vector2(title_plaque.end.x - 8.0, title_plaque.end.y + 3.0), Color(Palette.FIGHT_SIDEBAR_RULE_FAINT, 0.62), 1.0)
+	_draw_text(font, "魚影", inner.position + Vector2(17.0, 27.0), 14, Palette.FIGHT_SIDEBAR_MUTED_TEXT, 0)
 	_draw_centered_baseline_text(font, "未確認の魚影", title_rect, inner.position.y + 28.0, 19, Palette.TEXT_DARK, 0)
 	_draw_unknown_state_tag(font, state_rect, _unknown_short_status())
 
@@ -197,25 +197,25 @@ func _draw_unknown_fish_card(font: Font, rect: Rect2) -> void:
 	)
 	_draw_unknown_signal_art(font, signal_rect)
 	var divider_y := signal_rect.end.y + (3.0 if _sidebar_frame != null else 6.0)
-	draw_line(Vector2(inner.position.x + 8.0, divider_y), Vector2(inner.end.x - 8.0, divider_y), Color("#c9b486"), 1.0)
+	draw_line(Vector2(inner.position.x + 8.0, divider_y), Vector2(inner.end.x - 8.0, divider_y), Palette.FIGHT_SIDEBAR_RULE_FAINT, 1.0)
 	_draw_unknown_reaction_line(font, Rect2(inner.position.x, divider_y + 7.0, inner.size.x, 32.0))
 	var desc_y := divider_y + (37.0 if compact_card else 36.0)
-	draw_line(Vector2(inner.position.x + 8.0, desc_y - 12.0), Vector2(inner.end.x - 8.0, desc_y - 12.0), Color("#d6c299"), 1.0)
-	_draw_wrapped(regular_font, _unknown_description(), Vector2(inner.position.x + 15.0, desc_y), inner.size.x - 26.0, 13, Color("#1b1109"), 1, 15.0)
+	draw_line(Vector2(inner.position.x + 8.0, desc_y - 12.0), Vector2(inner.end.x - 8.0, desc_y - 12.0), Palette.FIGHT_SIDEBAR_SECTION_RULE, 1.0)
+	_draw_wrapped(regular_font, _unknown_description(), Vector2(inner.position.x + 15.0, desc_y), inner.size.x - 26.0, 13, Palette.FIGHT_SIDEBAR_BODY_INK, 1, 15.0)
 	_draw_detail_line(regular_font, "釣り場：%s" % _target_mode_text(), Vector2(inner.position.x + 15.0, desc_y + 22.0), inner.size.x - 26.0)
 	_draw_detail_line(regular_font, "タナ：%s / エサ：%s" % [_current_depth_text(), _bait_text()], Vector2(inner.position.x + 15.0, desc_y + 38.0), inner.size.x - 26.0)
 
 
 func _draw_unknown_signal_art(font: Font, rect: Rect2) -> void:
 	var paper_glow := Rect2(rect.position + Vector2(4.0, 5.0), rect.size - Vector2(8.0, 10.0))
-	draw_rect(paper_glow, Color("#e6d5ad", 0.18), true)
-	draw_rect(paper_glow, Color("#a97a37", 0.14), false, 1.0)
+	draw_rect(paper_glow, Color(Palette.FIGHT_SIDEBAR_UNKNOWN_PAPER_GLOW, 0.18), true)
+	draw_rect(paper_glow, Color(Palette.FIGHT_SIDEBAR_UNKNOWN_PAPER_BORDER, 0.14), false, 1.0)
 	for index in range(5):
 		var y := paper_glow.position.y + paper_glow.size.y * (0.16 + float(index) * 0.17)
 		draw_line(
 			Vector2(paper_glow.position.x + 12.0, y),
 			Vector2(paper_glow.end.x - 12.0, y + sin(float(index) * 1.6) * 2.0),
-			Color("#8b744b", 0.10),
+			Color(Palette.FIGHT_SIDEBAR_UNKNOWN_PAPER_RULE, 0.10),
 			1.0
 		)
 	var center := paper_glow.position + paper_glow.size * Vector2(0.50, 0.48)
@@ -225,25 +225,25 @@ func _draw_unknown_signal_art(font: Font, rect: Rect2) -> void:
 	for index in range(4):
 		var radius := (22.0 + float(index) * 18.0) * (0.94 + pulse * 0.06)
 		var alpha := 0.20 - float(index) * 0.035
-		draw_arc(center, radius, 0.0, TAU, 48, Color("#207f9a", alpha), 1.3)
-	draw_line(center + Vector2(-78.0, 0.0), center + Vector2(78.0, 0.0), Color("#1b6b83", 0.20), 1.0)
-	draw_line(center + Vector2(0.0, -46.0), center + Vector2(0.0, 46.0), Color("#1b6b83", 0.16), 1.0)
+		draw_arc(center, radius, 0.0, TAU, 48, Color(Palette.FIGHT_SIDEBAR_SIGNAL_CYAN, alpha), 1.3)
+	draw_line(center + Vector2(-78.0, 0.0), center + Vector2(78.0, 0.0), Color(Palette.FIGHT_SIDEBAR_SIGNAL_RULE, 0.20), 1.0)
+	draw_line(center + Vector2(0.0, -46.0), center + Vector2(0.0, 46.0), Color(Palette.FIGHT_SIDEBAR_SIGNAL_RULE, 0.16), 1.0)
 	var shadow_center := center + Vector2(sin(Time.get_ticks_msec() / 420.0) * 4.0, 5.0)
-	_draw_ellipse(shadow_center, rect.size.x * 0.18, rect.size.y * 0.11, Color("#122f3a", 0.28), 36)
+	_draw_ellipse(shadow_center, rect.size.x * 0.18, rect.size.y * 0.11, Color(Palette.FIGHT_SIDEBAR_SIGNAL_SHADOW, 0.28), 36)
 	var tail := PackedVector2Array([
 		shadow_center + Vector2(-rect.size.x * 0.13, 0.0),
 		shadow_center + Vector2(-rect.size.x * 0.22, -rect.size.y * 0.09),
 		shadow_center + Vector2(-rect.size.x * 0.22, rect.size.y * 0.09),
 	])
-	draw_colored_polygon(tail, Color("#102a33", 0.24))
+	draw_colored_polygon(tail, Color(Palette.FIGHT_SIDEBAR_SIGNAL_TAIL, 0.24))
 	var lure := center + Vector2(rect.size.x * 0.20, -rect.size.y * 0.11)
-	draw_line(lure + Vector2(0.0, -40.0), lure, Color("#4d6c72", 0.35), 1.1)
-	draw_circle(lure, 5.0, Color("#c0783e", 0.82))
-	draw_circle(lure + Vector2(2.0, -1.5), 1.8, Color("#ffe0a2", 0.82))
+	draw_line(lure + Vector2(0.0, -40.0), lure, Color(Palette.FIGHT_SIDEBAR_SIGNAL_LINE, 0.35), 1.1)
+	draw_circle(lure, 5.0, Color(Palette.FIGHT_SIDEBAR_LURE_ORANGE, 0.82))
+	draw_circle(lure + Vector2(2.0, -1.5), 1.8, Color(Palette.FIGHT_SIDEBAR_LURE_HIGHLIGHT, 0.82))
 	var status := _unknown_reaction_label()
 	var status_size := 17
 	var status_width := font.get_string_size(status, HORIZONTAL_ALIGNMENT_LEFT, -1, status_size).x
-	_draw_text(font, status, Vector2(center.x - status_width * 0.5, paper_glow.end.y - 10.0), status_size, Color("#31404a"), 0)
+	_draw_text(font, status, Vector2(center.x - status_width * 0.5, paper_glow.end.y - 10.0), status_size, Palette.FIGHT_SIDEBAR_UNKNOWN_STATUS_TEXT, 0)
 
 
 func _draw_unknown_reaction_line(font: Font, rect: Rect2) -> void:
@@ -258,28 +258,28 @@ func _draw_unknown_reaction_line(font: Font, rect: Rect2) -> void:
 	var total_w := label_w + gap + value_w
 	var x := rect.position.x + (rect.size.x - total_w) * 0.5
 	var baseline := rect.position.y + 24.0
-	_draw_text(regular_font, label, Vector2(x, baseline - 1.0), label_size, Color("#3f2f22"), 0)
+	_draw_text(regular_font, label, Vector2(x, baseline - 1.0), label_size, Palette.FIGHT_SIDEBAR_ESTIMATE_LABEL, 0)
 	x += label_w + gap
 	_draw_text(font, value, Vector2(x, baseline), value_size, _unknown_reaction_color(), 0)
 
 
 func _draw_unknown_state_tag(font: Font, rect: Rect2, text: String) -> void:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#3f6f78")
-	style.border_color = Color("#a6d6d9")
+	style.bg_color = Palette.FIGHT_SIDEBAR_UNKNOWN_TAG_FILL
+	style.border_color = Palette.FIGHT_SIDEBAR_UNKNOWN_TAG_BORDER
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(3)
-	style.shadow_color = Color(0.06, 0.12, 0.14, 0.25)
+	style.shadow_color = Palette.FIGHT_SIDEBAR_UNKNOWN_TAG_SHADOW
 	style.shadow_size = 1
 	draw_style_box(style, rect)
-	draw_line(rect.position + Vector2(4.0, 3.0), Vector2(rect.end.x - 4.0, rect.position.y + 3.0), Color(1.0, 1.0, 1.0, 0.30), 1.0)
+	draw_line(rect.position + Vector2(4.0, 3.0), Vector2(rect.end.x - 4.0, rect.position.y + 3.0), Color(Color.WHITE, 0.30), 1.0)
 	var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
 	_draw_text(font, text, rect.position + Vector2((rect.size.x - text_width) * 0.5, 16.0), 12, Color.WHITE, 1)
 
 
 
 func _draw_action_card(font: Font, rect: Rect2) -> void:
-	_draw_panel(rect, Color("#0d3a62"), Palette.GOLD, Palette.GOLD_BRIGHT)
+	_draw_panel(rect, Palette.FIGHT_SIDEBAR_ACTION_CARD_FILL, Palette.GOLD, Palette.GOLD_BRIGHT)
 	var title_x := 16.0
 	if _sidebar_frame != null:
 		_draw_action_header_icon(Rect2(rect.position + Vector2(14.0, 6.0), Vector2(22.0, 22.0)))
@@ -290,7 +290,7 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 	if _sidebar_frame != null:
 		body = Rect2(rect.position + Vector2(8.5, rect.size.y * 0.170), rect.size - Vector2(17.0, rect.size.y * 0.205))
 	else:
-		_draw_panel(body, Color("#f3e8cd"), Palette.WOOD_DARK, Palette.GOLD)
+		_draw_panel(body, Palette.FIGHT_SIDEBAR_ACTION_BODY_FILL, Palette.WOOD_DARK, Palette.GOLD)
 	var action := "待機"
 	var message := "ラインを見ながら、テンションを保とう。"
 	if simulator != null:
@@ -306,7 +306,7 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 		icon_size = 78.0
 		text_x = 90.0
 	_draw_action_icon(body.position + Vector2(42.0, body.size.y * 0.57), icon_size)
-	_draw_text(font, "%s！" % action, body.position + Vector2(text_x, 31.0), 21 if _sidebar_frame != null else 20, Color("#22180f"), 0)
+	_draw_text(font, "%s！" % action, body.position + Vector2(text_x, 31.0), 21 if _sidebar_frame != null else 20, Palette.FIGHT_SIDEBAR_ACTION_TEXT, 0)
 	if _sidebar_frame != null:
 		_draw_action_message(font, message, body.position + Vector2(text_x, 49.0), body.size.x - text_x - 4.0)
 	else:
@@ -314,7 +314,7 @@ func _draw_action_card(font: Font, rect: Rect2) -> void:
 
 
 func _draw_tackle_card(font: Font, rect: Rect2) -> void:
-	_draw_panel(rect, Color("#0d3a62"), Palette.GOLD, Palette.GOLD_BRIGHT)
+	_draw_panel(rect, Palette.FIGHT_SIDEBAR_ACTION_CARD_FILL, Palette.GOLD, Palette.GOLD_BRIGHT)
 	_draw_text(font, "タックル", rect.position + Vector2(14.0, 24.0), 18, Palette.TEXT_BONE, 1 if _sidebar_frame != null else 3)
 	var body := Rect2(rect.position + Vector2(10.0, 32.0), rect.size - Vector2(20.0, 38.0))
 	if _sidebar_frame != null:
@@ -345,10 +345,10 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 	var tackle_font_size := 13 if _sidebar_frame != null else 12
 	var tackle_line_gap := 13.6 if _sidebar_frame != null else 16.0
 	var tackle_font := GameFontsScript.regular(get_theme_default_font()) if _sidebar_frame != null else font
-	var tackle_text_color := Color("#1d1209") if _sidebar_frame != null else Palette.TEXT_DARK
+	var tackle_text_color := Palette.FIGHT_HUD_DARK_INK if _sidebar_frame != null else Palette.TEXT_DARK
 	for i in range(lines.size()):
 		var line_font := GameFontsScript.bold(tackle_font) if _sidebar_frame != null and i == 0 else tackle_font
-		var line_color := Color("#160d07") if _sidebar_frame != null and i == 0 else tackle_text_color
+		var line_color := Palette.FIGHT_HUD_DARK_INK if _sidebar_frame != null and i == 0 else tackle_text_color
 		_draw_wrapped(line_font, lines[i], body.position + text_offset + Vector2(0.0, float(i) * tackle_line_gap), text_width, tackle_font_size, line_color, 1, tackle_font_size + 2.0)
 	if _tackle_card_icon != null or _icons != null:
 		var icon_rect := Rect2(body.end - Vector2(122.0, 90.0), Vector2(118.0, 86.0)) if _sidebar_frame != null else Rect2(body.end - Vector2(50.0, 50.0), Vector2(40.0, 40.0))
@@ -360,7 +360,7 @@ func _draw_tackle_card(font: Font, rect: Rect2) -> void:
 func _draw_panel(rect: Rect2, fill: Color, border: Color, highlight: Color) -> void:
 	if _sidebar_frame != null:
 		return
-	draw_rect(rect, Color(0.0, 0.0, 0.0, 0.28), true)
+	draw_rect(rect, Palette.FIGHT_SIDEBAR_PANEL_SHADOW, true)
 	draw_rect(rect.grow(-3.0), fill, true)
 	draw_rect(rect.grow(-3.0), border, false, 2.0)
 	draw_rect(rect.grow(-6.0), Color(highlight.r, highlight.g, highlight.b, 0.55), false, 1.0)
@@ -375,7 +375,7 @@ func _draw_panel(rect: Rect2, fill: Color, border: Color, highlight: Color) -> v
 
 func _draw_text(font: Font, text: String, baseline: Vector2, font_size: int, color: Color, outline: int) -> void:
 	if outline > 0:
-		draw_string_outline(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, outline, Color(0.0, 0.0, 0.0, 0.65))
+		draw_string_outline(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, outline, Palette.FIGHT_SIDEBAR_TEXT_OUTLINE)
 	draw_string(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
 
 
@@ -404,11 +404,11 @@ func _draw_estimate_line(font: Font, value: float, rect: Rect2) -> void:
 	var total_w := label_w + gap + number_w + unit_w
 	var x := rect.position.x + (rect.size.x - total_w) * 0.5
 	var baseline := rect.position.y + 25.0
-	_draw_text(regular_font, label, Vector2(x, baseline - 1.0), label_size, Color("#3f2f22"), 0)
+	_draw_text(regular_font, label, Vector2(x, baseline - 1.0), label_size, Palette.FIGHT_SIDEBAR_ESTIMATE_LABEL, 0)
 	x += label_w + gap
-	_draw_text(font, number, Vector2(x, baseline), number_size, Color("#21170f"), 0)
+	_draw_text(font, number, Vector2(x, baseline), number_size, Palette.FIGHT_STATUS_BODY_TEXT, 0)
 	x += number_w
-	_draw_text(regular_font, unit, Vector2(x, baseline - 1.0), unit_size, Color("#3f2f22"), 0)
+	_draw_text(regular_font, unit, Vector2(x, baseline - 1.0), unit_size, Palette.FIGHT_SIDEBAR_ESTIMATE_LABEL, 0)
 
 
 func _draw_wrapped(
@@ -458,24 +458,24 @@ func _draw_action_message(font: Font, text: String, pos: Vector2, max_width: flo
 
 
 func _draw_bullet(font: Font, text: String, pos: Vector2, max_width: float) -> void:
-	draw_circle(pos + Vector2(2.0, -3.0), 4.0, Color("#49c75a"))
+	draw_circle(pos + Vector2(2.0, -3.0), 4.0, Palette.FIGHT_SIDEBAR_BULLET)
 	_draw_wrapped(font, text, pos + Vector2(14.0, -15.0), max_width - 14.0, 13, Palette.TEXT_DARK, 1)
 
 
 func _draw_info_paragraph(font: Font, text: String, pos: Vector2, max_width: float) -> void:
 	var font_size := 14
 	var gap := 16.0 if _sidebar_frame != null else float(font_size + 3)
-	_draw_wrapped(font, text, pos, max_width, font_size, Color("#1b1109"), 2, gap)
+	_draw_wrapped(font, text, pos, max_width, font_size, Palette.FIGHT_SIDEBAR_BODY_INK, 2, gap)
 
 
 func _draw_detail_line(font: Font, text: String, pos: Vector2, max_width: float) -> void:
-	draw_circle(pos + Vector2(3.0, 10.0), 4.4 if _sidebar_frame != null else 4.3, Color("#3fbd50"))
+	draw_circle(pos + Vector2(3.0, 10.0), 4.4 if _sidebar_frame != null else 4.3, Palette.FIGHT_SIDEBAR_DETAIL_BULLET)
 	var font_size := 14
 	if _sidebar_frame != null:
 		font_size = 14
 	elif max_width < 260.0:
 		font_size = 13
-	_draw_wrapped(font, text, pos + Vector2(15.0, -1.0), max_width - 15.0, font_size, Color("#1b1109"), 1)
+	_draw_wrapped(font, text, pos + Vector2(15.0, -1.0), max_width - 15.0, font_size, Palette.FIGHT_SIDEBAR_BODY_INK, 1)
 
 
 func _fish_is_revealed() -> bool:
@@ -524,16 +524,16 @@ func _unknown_reaction_label() -> String:
 
 func _unknown_reaction_color() -> Color:
 	if simulator == null:
-		return Color("#31525e")
+		return Palette.FIGHT_SIDEBAR_REACTION_IDLE
 	match simulator.state:
 		FishingSimulator.State.BITE:
-			return Color("#b45122")
+			return Palette.FIGHT_SIDEBAR_REACTION_BITE
 		FishingSimulator.State.APPROACH:
-			return Color("#1f7a6f")
+			return Palette.FIGHT_SIDEBAR_REACTION_APPROACH
 		FishingSimulator.State.ESCAPED:
-			return Color("#68727a")
+			return Palette.FIGHT_SIDEBAR_REACTION_ESCAPED
 		_:
-			return Color("#31525e")
+			return Palette.FIGHT_SIDEBAR_REACTION_IDLE
 
 
 func _unknown_description() -> String:
@@ -636,11 +636,11 @@ func _draw_rarity_tag(font: Font, rect: Rect2, rarity: String) -> void:
 	style.border_color = RarityStylesScript.border_color(rarity)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(3)
-	style.shadow_color = Color(0.18, 0.07, 0.12, 0.28)
+	style.shadow_color = Palette.FIGHT_SIDEBAR_RARITY_SHADOW
 	style.shadow_size = 1
 	draw_style_box(style, rect)
-	draw_line(rect.position + Vector2(4.0, 3.0), Vector2(rect.end.x - 4.0, rect.position.y + 3.0), Color(1.0, 0.88, 0.96, 0.35), 1.0)
-	draw_line(rect.position + Vector2(4.0, rect.size.y - 3.0), Vector2(rect.end.x - 4.0, rect.end.y - 3.0), Color(0.32, 0.12, 0.22, 0.45), 1.0)
+	draw_line(rect.position + Vector2(4.0, 3.0), Vector2(rect.end.x - 4.0, rect.position.y + 3.0), Palette.FIGHT_SIDEBAR_RARITY_TOP_HI, 1.0)
+	draw_line(rect.position + Vector2(4.0, rect.size.y - 3.0), Vector2(rect.end.x - 4.0, rect.end.y - 3.0), Palette.FIGHT_SIDEBAR_RARITY_BOTTOM_SHADE, 1.0)
 	var text_width := font.get_string_size(rarity, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
 	_draw_text(font, rarity, rect.position + Vector2((rect.size.x - text_width) * 0.5, 17.0), 13, Color.WHITE, 1)
 
@@ -658,7 +658,7 @@ func _draw_fish_portrait(rect: Rect2) -> void:
 		draw_texture_rect(_fish_card_portrait, draw_rect, false, Color.WHITE)
 		return
 	if _fish_sheet == null:
-		var color := Color.from_string(String(fish_data.get("color", "#394956")), Color("#394956"))
+		var color := Color.from_string(String(fish_data.get("color", Palette.FIGHT_SIDEBAR_FISH_FALLBACK.to_html(false))), Palette.FIGHT_SIDEBAR_FISH_FALLBACK)
 		draw_texture_rect(UITextures.get_fish_icon(color), rect, false)
 		return
 	var frame_w := float(_fish_sheet.get_width()) / float(FISH_FRAME_COUNT)
@@ -678,7 +678,7 @@ func _draw_action_icon(center: Vector2, size_value: float = 58.0) -> void:
 	if _icons != null:
 		_draw_sheet_icon(ICON_ACTION, Rect2(center - Vector2(size_value, size_value) * 0.5, Vector2(size_value, size_value)))
 		return
-	draw_arc(center, 26.0, -2.7, -0.5, 16, Color("#22354a"), 2.0)
+	draw_arc(center, 26.0, -2.7, -0.5, 16, Palette.FIGHT_SIDEBAR_ACTION_ICON_STROKE, 2.0)
 	draw_polygon(
 		PackedVector2Array([
 			center + Vector2(-7.0, 0.0),
@@ -686,7 +686,7 @@ func _draw_action_icon(center: Vector2, size_value: float = 58.0) -> void:
 			center + Vector2(22.0, 0.0),
 			center + Vector2(14.0, 8.0),
 		]),
-		PackedColorArray([Color("#174f7a")])
+		PackedColorArray([Palette.FIGHT_SIDEBAR_ACTION_ICON_BODY])
 	)
 	draw_polygon(
 		PackedVector2Array([
@@ -694,11 +694,11 @@ func _draw_action_icon(center: Vector2, size_value: float = 58.0) -> void:
 			center + Vector2(-19.0, -9.0),
 			center + Vector2(-19.0, 9.0),
 		]),
-		PackedColorArray([Color("#0d3a62")])
+		PackedColorArray([Palette.FIGHT_SIDEBAR_ACTION_CARD_FILL])
 	)
 	for i in range(3):
 		var splash := center + Vector2(-18.0 + float(i) * 12.0, 30.0 + float(i % 2) * 4.0)
-		draw_line(splash + Vector2(-6.0, 0.0), splash + Vector2(6.0, 0.0), Color("#35aee0"), 2.0)
+		draw_line(splash + Vector2(-6.0, 0.0), splash + Vector2(6.0, 0.0), Palette.FIGHT_SIDEBAR_ACTION_ICON_SPLASH, 2.0)
 
 
 func _draw_action_header_icon(rect: Rect2) -> void:
@@ -710,9 +710,9 @@ func _draw_action_header_icon(rect: Rect2) -> void:
 
 
 func _draw_simple_rod(base: Vector2) -> void:
-	draw_line(base + Vector2(-46.0, 22.0), base + Vector2(4.0, -42.0), Color("#2b2117"), 4.0)
+	draw_line(base + Vector2(-46.0, 22.0), base + Vector2(4.0, -42.0), Palette.FIGHT_SIDEBAR_DARK_INK, 4.0)
 	draw_line(base + Vector2(-43.0, 20.0), base + Vector2(1.0, -39.0), Palette.GOLD_BRIGHT, 1.0)
-	draw_circle(base + Vector2(-18.0, 8.0), 9.0, Color("#22354a"))
+	draw_circle(base + Vector2(-18.0, 8.0), 9.0, Palette.FIGHT_SIDEBAR_ACTION_ICON_STROKE)
 	draw_circle(base + Vector2(-18.0, 8.0), 5.0, Palette.GOLD)
 
 

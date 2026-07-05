@@ -13,33 +13,33 @@ class StatusBackdropVisual:
 	extends Control
 
 	func _draw() -> void:
-		var sky := Color("#8bd3f7")
-		var sea := Color("#126998")
-		var wood := Color("#4a2c18")
-		var wall := Color("#6a4a2b")
+		var sky := Palette.COOKING_STATUS_BG_SKY
+		var sea := Palette.COOKING_STATUS_BG_SEA
+		var wood := Palette.COOKING_STATUS_BG_WOOD
+		var wall := Palette.COOKING_STATUS_BG_WALL
 		draw_rect(Rect2(0.0, 78.0, size.x * 0.46, 180.0), sky)
 		draw_rect(Rect2(0.0, 174.0, size.x * 0.46, 84.0), sea)
 		for i in range(5):
 			var x := 34.0 + float(i) * 104.0
-			draw_rect(Rect2(x, 150.0 - float(i % 2) * 22.0, 24.0, 78.0), Color("#75533a"))
-			draw_rect(Rect2(x - 24.0, 222.0, 86.0, 13.0), Color("#3b2618"))
+			draw_rect(Rect2(x, 150.0 - float(i % 2) * 22.0, 24.0, 78.0), Palette.COOKING_STATUS_BG_PIER_POST)
+			draw_rect(Rect2(x - 24.0, 222.0, 86.0, 13.0), Palette.COOKING_STATUS_BG_PIER_DECK)
 		for i in range(7):
 			var p := Vector2(78.0 + float(i) * 74.0, 112.0 + float(i % 3) * 11.0)
-			draw_arc(p, 13.0, 0.15, PI - 0.15, 10, Color(1.0, 1.0, 1.0, 0.54), 2.0)
-		draw_rect(Rect2(size.x * 0.46, 78.0, size.x * 0.54, 180.0), Color("#332015"))
+			draw_arc(p, 13.0, 0.15, PI - 0.15, 10, Palette.COOKING_STATUS_BG_BIRD_WAKE, 2.0)
+		draw_rect(Rect2(size.x * 0.46, 78.0, size.x * 0.54, 180.0), Palette.COOKING_STATUS_BG_INTERIOR_WALL)
 		for i in range(7):
 			var x := size.x * 0.49 + float(i) * 78.0
 			draw_rect(Rect2(x, 100.0 + float(i % 2) * 16.0, 48.0, 80.0), wall)
 			draw_rect(Rect2(x - 8.0, 94.0 + float(i % 2) * 16.0, 64.0, 10.0), wood)
 		for i in range(4):
 			var x := size.x * 0.63 + float(i) * 92.0
-			draw_line(Vector2(x, 88.0), Vector2(x, 154.0), Color("#18110c"), 4.0)
-			draw_arc(Vector2(x, 167.0), 22.0, 0.0, PI, 20, Color("#19110c"), 5.0)
+			draw_line(Vector2(x, 88.0), Vector2(x, 154.0), Palette.COOKING_STATUS_BG_RAFTER, 4.0)
+			draw_arc(Vector2(x, 167.0), 22.0, 0.0, PI, 20, Palette.COOKING_STATUS_BG_ARCH, 5.0)
 		var lamp := Vector2(size.x - 116.0, 148.0)
-		draw_line(lamp + Vector2(0.0, -76.0), lamp + Vector2(0.0, -20.0), Color("#20140b"), 4.0)
-		draw_circle(lamp, 31.0, Color(1.0, 0.72, 0.25, 0.34))
-		draw_circle(lamp, 17.0, Color(1.0, 0.82, 0.38, 0.62))
-		draw_rect(Rect2(0.0, 258.0, size.x, size.y - 258.0), Color(0.03, 0.10, 0.18, 0.42))
+		draw_line(lamp + Vector2(0.0, -76.0), lamp + Vector2(0.0, -20.0), Palette.COOKING_STATUS_BG_LAMP_CORD, 4.0)
+		draw_circle(lamp, 31.0, Palette.COOKING_STATUS_BG_LAMP_GLOW)
+		draw_circle(lamp, 17.0, Palette.COOKING_STATUS_BG_LAMP_CORE)
+		draw_rect(Rect2(0.0, 258.0, size.x, size.y - 258.0), Palette.COOKING_STATUS_BG_FLOOR_WASH)
 
 
 class StatusIconVisual:
@@ -120,17 +120,17 @@ class StatusIconVisual:
 		if USE_CUTOUT_TEXTURE_ASSETS and _draw_texture_asset(PLAYER_PORTRAIT):
 			return
 		var center := size * 0.5
-		draw_ellipse(center + Vector2(0.0, 45.0), 48.0, 10.0, Color(0.0, 0.0, 0.0, 0.25))
-		draw_rect(Rect2(center.x - 45.0, center.y + 5.0, 90.0, 48.0), Color("#17324d"))
-		draw_rect(Rect2(center.x - 45.0, center.y + 5.0, 90.0, 9.0), Color("#2c5f8c"))
-		draw_circle(center + Vector2(0.0, -22.0), 34.0, Color("#f2b889"))
-		draw_rect(Rect2(center.x - 37.0, center.y - 58.0, 74.0, 17.0), Color("#1d4771"))
-		draw_rect(Rect2(center.x - 26.0, center.y - 72.0, 52.0, 15.0), Color("#234f7c"))
-		draw_circle(center + Vector2(-13.0, -24.0), 3.0, Color("#1d160f"))
-		draw_circle(center + Vector2(13.0, -24.0), 3.0, Color("#1d160f"))
-		draw_arc(center + Vector2(0.0, -12.0), 13.0, 0.12, PI - 0.12, 14, Color("#6a2a1c"), 3.0)
-		draw_line(center + Vector2(-28.0, -1.0), center + Vector2(-45.0, 36.0), Color("#234f7c"), 8.0)
-		draw_line(center + Vector2(28.0, -1.0), center + Vector2(45.0, 36.0), Color("#234f7c"), 8.0)
+		draw_ellipse(center + Vector2(0.0, 45.0), 48.0, 10.0, Palette.COOKING_STATUS_ICON_SHADOW)
+		draw_rect(Rect2(center.x - 45.0, center.y + 5.0, 90.0, 48.0), Palette.COOKING_STATUS_ICON_BODY)
+		draw_rect(Rect2(center.x - 45.0, center.y + 5.0, 90.0, 9.0), Palette.COOKING_STATUS_ICON_BODY_HI)
+		draw_circle(center + Vector2(0.0, -22.0), 34.0, Palette.COOKING_STATUS_ICON_SKIN)
+		draw_rect(Rect2(center.x - 37.0, center.y - 58.0, 74.0, 17.0), Palette.COOKING_STATUS_ICON_CAP)
+		draw_rect(Rect2(center.x - 26.0, center.y - 72.0, 52.0, 15.0), Palette.COOKING_STATUS_ICON_CAP_HI)
+		draw_circle(center + Vector2(-13.0, -24.0), 3.0, Palette.COOKING_STATUS_ICON_FACE)
+		draw_circle(center + Vector2(13.0, -24.0), 3.0, Palette.COOKING_STATUS_ICON_FACE)
+		draw_arc(center + Vector2(0.0, -12.0), 13.0, 0.12, PI - 0.12, 14, Palette.COOKING_STATUS_ICON_MOUTH, 3.0)
+		draw_line(center + Vector2(-28.0, -1.0), center + Vector2(-45.0, 36.0), Palette.COOKING_STATUS_ICON_CAP_HI, 8.0)
+		draw_line(center + Vector2(28.0, -1.0), center + Vector2(45.0, 36.0), Palette.COOKING_STATUS_ICON_CAP_HI, 8.0)
 
 	func _draw_texture_asset(path: String) -> bool:
 		var tex := load(path) as Texture2D
@@ -147,46 +147,46 @@ class StatusIconVisual:
 
 	func _draw_ready() -> void:
 		_draw_player()
-		var rod_color := Color("#c9944d")
+		var rod_color := Palette.COOKING_STATUS_ICON_ROD
 		var base := size * 0.5 + Vector2(42.0, 42.0)
 		draw_line(base, base + Vector2(32.0, -92.0), rod_color, 3.0)
-		draw_arc(base + Vector2(44.0, -92.0), 18.0, PI * 0.1, PI * 1.35, 16, Color("#fff1c7"), 2.0)
+		draw_arc(base + Vector2(44.0, -92.0), 18.0, PI * 0.1, PI * 1.35, 16, Palette.COOKING_STATUS_ICON_IVORY, 2.0)
 
 	func _draw_cooler() -> void:
 		var center := size * 0.5
-		draw_ellipse(center + Vector2(0.0, 52.0), 58.0, 10.0, Color(0.0, 0.0, 0.0, 0.25))
-		draw_rect(Rect2(center.x - 58.0, center.y - 10.0, 116.0, 70.0), Color("#1b5d8d"))
-		draw_rect(Rect2(center.x - 58.0, center.y - 10.0, 116.0, 17.0), Color("#eef4fa"))
-		draw_rect(Rect2(center.x - 42.0, center.y - 30.0, 84.0, 22.0), Color("#d7e3ef"))
-		draw_line(center + Vector2(-42.0, -19.0), center + Vector2(42.0, -19.0), Color("#6b8298"), 4.0)
-		draw_rect(Rect2(center.x - 21.0, center.y + 12.0, 42.0, 19.0), Color("#f0f6fb"))
-		draw_line(center + Vector2(-12.0, 47.0), center + Vector2(12.0, 47.0), Color("#083354"), 3.0)
+		draw_ellipse(center + Vector2(0.0, 52.0), 58.0, 10.0, Palette.COOKING_STATUS_ICON_SHADOW)
+		draw_rect(Rect2(center.x - 58.0, center.y - 10.0, 116.0, 70.0), Palette.COOKING_STATUS_COOLER_BODY)
+		draw_rect(Rect2(center.x - 58.0, center.y - 10.0, 116.0, 17.0), Palette.COOKING_STATUS_COOLER_LID)
+		draw_rect(Rect2(center.x - 42.0, center.y - 30.0, 84.0, 22.0), Palette.COOKING_STATUS_COOLER_TOP)
+		draw_line(center + Vector2(-42.0, -19.0), center + Vector2(42.0, -19.0), Palette.COOKING_STATUS_COOLER_HANDLE, 4.0)
+		draw_rect(Rect2(center.x - 21.0, center.y + 12.0, 42.0, 19.0), Palette.COOKING_STATUS_COOLER_LABEL)
+		draw_line(center + Vector2(-12.0, 47.0), center + Vector2(12.0, 47.0), Palette.COOKING_STATUS_COOLER_DETAIL, 3.0)
 		for i in range(4):
-			draw_ellipse(center + Vector2(-34.0 + float(i) * 23.0, 2.0), 14.0, 5.0, Color("#b7c2c9"))
+			draw_ellipse(center + Vector2(-34.0 + float(i) * 23.0, 2.0), 14.0, 5.0, Palette.COOKING_STATUS_COOLER_FISH)
 
 	func _draw_gold() -> void:
 		var center := size * 0.5
-		draw_ellipse(center + Vector2(0.0, 56.0), 62.0, 10.0, Color(0.0, 0.0, 0.0, 0.22))
+		draw_ellipse(center + Vector2(0.0, 56.0), 62.0, 10.0, Palette.COOKING_STATUS_ICON_SOFT_SHADOW)
 		for i in range(10):
 			var x := center.x - 46.0 + float((i * 23) % 92)
 			var y := center.y + 32.0 - float(i / 3) * 16.0
-			draw_circle(Vector2(x, y), 15.0, Color("#d9941f"))
-			draw_circle(Vector2(x - 2.0, y - 3.0), 11.0, Color("#ffd86b"))
-			draw_arc(Vector2(x, y), 12.0, 0.0, TAU, 18, Color("#8b5515"), 2.0)
-		draw_rect(Rect2(center.x + 22.0, center.y - 12.0, 46.0, 58.0), Color("#7b4b20"))
-		draw_rect(Rect2(center.x + 15.0, center.y - 18.0, 60.0, 13.0), Color("#b97a31"))
+			draw_circle(Vector2(x, y), 15.0, Palette.COOKING_STATUS_MONEY_COIN)
+			draw_circle(Vector2(x - 2.0, y - 3.0), 11.0, Palette.COOKING_STATUS_MONEY_COIN_HI)
+			draw_arc(Vector2(x, y), 12.0, 0.0, TAU, 18, Palette.COOKING_STATUS_MONEY_COIN_EDGE, 2.0)
+		draw_rect(Rect2(center.x + 22.0, center.y - 12.0, 46.0, 58.0), Palette.COOKING_STATUS_MONEY_BAG)
+		draw_rect(Rect2(center.x + 15.0, center.y - 18.0, 60.0, 13.0), Palette.COOKING_STATUS_MONEY_BAG_LIP)
 
 	func _draw_clock() -> void:
 		var center := size * 0.5
-		draw_ellipse(center + Vector2(0.0, 56.0), 52.0, 9.0, Color(0.0, 0.0, 0.0, 0.22))
-		draw_circle(center + Vector2(0.0, 4.0), 54.0, Color("#c59035"))
-		draw_circle(center + Vector2(0.0, 4.0), 46.0, Color("#fff1cf"))
-		draw_arc(center + Vector2(0.0, 4.0), 47.0, 0.0, TAU, 42, Color("#5b3516"), 3.0)
-		draw_line(center + Vector2(0.0, 4.0), center + Vector2(0.0, -27.0), Color("#2a2118"), 4.0)
-		draw_line(center + Vector2(0.0, 4.0), center + Vector2(26.0, 20.0), Color("#2a2118"), 4.0)
-		draw_circle(center + Vector2(0.0, 4.0), 5.0, Color("#2a2118"))
-		draw_arc(center + Vector2(-33.0, -48.0), 16.0, PI * 0.2, PI * 1.35, 14, Color("#c59035"), 5.0)
-		draw_arc(center + Vector2(33.0, -48.0), 16.0, PI * -0.35, PI * 0.8, 14, Color("#c59035"), 5.0)
+		draw_ellipse(center + Vector2(0.0, 56.0), 52.0, 9.0, Palette.COOKING_STATUS_ICON_SOFT_SHADOW)
+		draw_circle(center + Vector2(0.0, 4.0), 54.0, Palette.COOKING_STATUS_CLOCK_RIM)
+		draw_circle(center + Vector2(0.0, 4.0), 46.0, Palette.COOKING_STATUS_CLOCK_FACE)
+		draw_arc(center + Vector2(0.0, 4.0), 47.0, 0.0, TAU, 42, Palette.COOKING_STATUS_CLOCK_LINE, 3.0)
+		draw_line(center + Vector2(0.0, 4.0), center + Vector2(0.0, -27.0), Palette.COOKING_STATUS_TEXT_DARK, 4.0)
+		draw_line(center + Vector2(0.0, 4.0), center + Vector2(26.0, 20.0), Palette.COOKING_STATUS_TEXT_DARK, 4.0)
+		draw_circle(center + Vector2(0.0, 4.0), 5.0, Palette.COOKING_STATUS_TEXT_DARK)
+		draw_arc(center + Vector2(-33.0, -48.0), 16.0, PI * 0.2, PI * 1.35, 14, Palette.COOKING_STATUS_CLOCK_RIM, 5.0)
+		draw_arc(center + Vector2(33.0, -48.0), 16.0, PI * -0.35, PI * 0.8, 14, Palette.COOKING_STATUS_CLOCK_RIM, 5.0)
 
 
 class StatIconVisual:
@@ -216,20 +216,20 @@ class StatIconVisual:
 
 	func _draw_badge() -> void:
 		var rect := Rect2(Vector2(1.0, 1.0), size - Vector2(2.0, 2.0))
-		draw_rect(rect, Color("#fff1cf"))
-		draw_rect(Rect2(rect.position, Vector2(rect.size.x, 3.0)), Color("#f4d18f"))
-		draw_line(rect.position, rect.position + Vector2(rect.size.x, 0.0), Color("#b5813a"), 1.0)
-		draw_line(rect.position, rect.position + Vector2(0.0, rect.size.y), Color("#b5813a"), 1.0)
+		draw_rect(rect, Palette.COOKING_STATUS_STAT_BADGE_FILL)
+		draw_rect(Rect2(rect.position, Vector2(rect.size.x, 3.0)), Palette.COOKING_STATUS_STAT_BADGE_TOP)
+		draw_line(rect.position, rect.position + Vector2(rect.size.x, 0.0), Palette.COOKING_STATUS_STAT_BADGE_BORDER, 1.0)
+		draw_line(rect.position, rect.position + Vector2(0.0, rect.size.y), Palette.COOKING_STATUS_STAT_BADGE_BORDER, 1.0)
 		draw_line(
 			rect.position + Vector2(rect.size.x, 0.0),
 			rect.position + rect.size,
-			Color("#b5813a"),
+			Palette.COOKING_STATUS_STAT_BADGE_BORDER,
 			1.0
 		)
 		draw_line(
 			rect.position + Vector2(0.0, rect.size.y),
 			rect.position + rect.size,
-			Color("#b5813a"),
+			Palette.COOKING_STATUS_STAT_BADGE_BORDER,
 			1.0
 		)
 
@@ -262,8 +262,8 @@ class StatIconVisual:
 			),
 			PackedColorArray([accent, accent, accent])
 		)
-		draw_line(center + Vector2(-13.0, 6.0), center + Vector2(-2.0, 16.0), Color("#fff1c7"), 3.0)
-		draw_circle(center + Vector2(-12.0, 13.0), 3.0, Color("#7b4b20"))
+		draw_line(center + Vector2(-13.0, 6.0), center + Vector2(-2.0, 16.0), Palette.COOKING_STATUS_ICON_IVORY, 3.0)
+		draw_circle(center + Vector2(-12.0, 13.0), 3.0, Palette.COOKING_STATUS_ICON_HANDLE_DARK)
 
 	func _draw_shield() -> void:
 		var center := size * 0.5
@@ -278,8 +278,8 @@ class StatIconVisual:
 			]
 		)
 		draw_polygon(points, PackedColorArray([accent, accent, accent, accent, accent, accent]))
-		draw_line(center + Vector2(0.0, -11.0), center + Vector2(0.0, 11.0), Color("#fff1c7"), 2.0)
-		draw_arc(center, 15.0, 0.0, TAU, 26, Color("#5b3516"), 2.0)
+		draw_line(center + Vector2(0.0, -11.0), center + Vector2(0.0, 11.0), Palette.COOKING_STATUS_ICON_IVORY, 2.0)
+		draw_arc(center, 15.0, 0.0, TAU, 26, Palette.COOKING_STATUS_CLOCK_LINE, 2.0)
 
 	func _draw_boot() -> void:
 		var center := size * 0.5
@@ -297,8 +297,8 @@ class StatIconVisual:
 			),
 			PackedColorArray([accent, accent, accent, accent, accent, accent, accent])
 		)
-		draw_line(center + Vector2(-8.0, 14.0), center + Vector2(14.0, 14.0), Color("#5b3516"), 3.0)
-		draw_line(center + Vector2(-7.0, -5.0), center + Vector2(3.0, -5.0), Color("#fff1c7"), 2.0)
+		draw_line(center + Vector2(-8.0, 14.0), center + Vector2(14.0, 14.0), Palette.COOKING_STATUS_CLOCK_LINE, 3.0)
+		draw_line(center + Vector2(-7.0, -5.0), center + Vector2(3.0, -5.0), Palette.COOKING_STATUS_ICON_IVORY, 2.0)
 
 	func _draw_clover() -> void:
 		var center := size * 0.5
@@ -306,7 +306,7 @@ class StatIconVisual:
 		draw_circle(center + Vector2(7.0, -5.0), 7.0, accent)
 		draw_circle(center + Vector2(-5.0, 8.0), 7.0, accent)
 		draw_circle(center + Vector2(5.0, 8.0), 7.0, accent)
-		draw_line(center + Vector2(5.0, 12.0), center + Vector2(15.0, 18.0), Color("#235f33"), 3.0)
+		draw_line(center + Vector2(5.0, 12.0), center + Vector2(15.0, 18.0), Palette.COOKING_STATUS_STAT_STEM, 3.0)
 
 
 class HeaderMarkVisual:
@@ -327,8 +327,8 @@ class HeaderMarkVisual:
 	func _draw_wheel() -> void:
 		var center := size * 0.5
 		var gold := Palette.GOLD_BRIGHT
-		draw_circle(center, 25.0, Color("#4c2b0b"))
-		draw_circle(center, 20.0, Color("#10283f"))
+		draw_circle(center, 25.0, Palette.COOKING_STATUS_HEADER_MARK_DARK)
+		draw_circle(center, 20.0, Palette.COOKING_STATUS_PANEL_FILL)
 		draw_arc(center, 24.0, 0.0, TAU, 36, gold, 3.0)
 		draw_arc(center, 10.0, 0.0, TAU, 24, gold, 3.0)
 		for i in range(8):
@@ -375,15 +375,15 @@ class HeaderPlayerBadgeVisual:
 
 	func _draw() -> void:
 		var center := size * 0.5
-		draw_rect(Rect2(2.0, 2.0, size.x - 4.0, size.y - 4.0), Color("#07121e"))
-		draw_rect(Rect2(5.0, 5.0, size.x - 10.0, size.y - 10.0), Color("#f2e4c2"))
-		draw_circle(center + Vector2(0.0, 4.0), 17.0, Color("#f2b889"))
-		draw_rect(Rect2(center.x - 20.0, center.y - 17.0, 40.0, 9.0), Color("#1d4771"))
-		draw_rect(Rect2(center.x - 15.0, center.y - 25.0, 30.0, 10.0), Color("#234f7c"))
-		draw_circle(center + Vector2(-6.0, 3.0), 2.0, Color("#1d160f"))
-		draw_circle(center + Vector2(6.0, 3.0), 2.0, Color("#1d160f"))
-		draw_arc(center + Vector2(0.0, 9.0), 7.0, 0.12, PI - 0.12, 10, Color("#6a2a1c"), 2.0)
-		draw_rect(Rect2(center.x - 16.0, center.y + 21.0, 32.0, 9.0), Color("#17324d"))
+		draw_rect(Rect2(2.0, 2.0, size.x - 4.0, size.y - 4.0), Palette.COOKING_STATUS_PANEL_BORDER_DARK)
+		draw_rect(Rect2(5.0, 5.0, size.x - 10.0, size.y - 10.0), Palette.COOKING_STATUS_CARD_FILL)
+		draw_circle(center + Vector2(0.0, 4.0), 17.0, Palette.COOKING_STATUS_ICON_SKIN)
+		draw_rect(Rect2(center.x - 20.0, center.y - 17.0, 40.0, 9.0), Palette.COOKING_STATUS_ICON_CAP)
+		draw_rect(Rect2(center.x - 15.0, center.y - 25.0, 30.0, 10.0), Palette.COOKING_STATUS_ICON_CAP_HI)
+		draw_circle(center + Vector2(-6.0, 3.0), 2.0, Palette.COOKING_STATUS_ICON_FACE)
+		draw_circle(center + Vector2(6.0, 3.0), 2.0, Palette.COOKING_STATUS_ICON_FACE)
+		draw_arc(center + Vector2(0.0, 9.0), 7.0, 0.12, PI - 0.12, 10, Palette.COOKING_STATUS_ICON_MOUTH, 2.0)
+		draw_rect(Rect2(center.x - 16.0, center.y + 21.0, 32.0, 9.0), Palette.COOKING_STATUS_ICON_BODY)
 		draw_line(Vector2(6.0, 6.0), Vector2(size.x - 6.0, 6.0), Palette.GOLD_BRIGHT, 2.0)
 		draw_line(Vector2(6.0, size.y - 6.0), Vector2(size.x - 6.0, size.y - 6.0), Palette.GOLD_BRIGHT, 2.0)
 
@@ -397,8 +397,8 @@ class MealEffectCueVisual:
 	func _draw() -> void:
 		var center := size * 0.5
 		var badge := Rect2(Vector2(2.0, 4.0), size - Vector2(4.0, 8.0))
-		draw_rect(badge, Color("#123924"))
-		draw_rect(Rect2(badge.position + Vector2(3.0, 3.0), badge.size - Vector2(6.0, 6.0)), Color("#1e6a3a"))
+		draw_rect(badge, Palette.COOKING_STATUS_MEAL_BADGE_FILL)
+		draw_rect(Rect2(badge.position + Vector2(3.0, 3.0), badge.size - Vector2(6.0, 6.0)), Palette.COOKING_STATUS_MEAL_BADGE_INNER)
 		draw_line(badge.position, badge.position + Vector2(badge.size.x, 0.0), Palette.GOLD_BRIGHT, 2.0)
 		draw_line(
 			badge.position + Vector2(0.0, badge.size.y),
@@ -406,7 +406,7 @@ class MealEffectCueVisual:
 			Palette.GOLD_BRIGHT,
 			2.0
 		)
-		var blade := Color("#dff8ff")
+		var blade := Palette.COOKING_STATUS_MEAL_BLADE
 		draw_line(center + Vector2(-8.0, 10.0), center + Vector2(8.0, -12.0), blade, 4.0)
 		draw_polygon(
 			PackedVector2Array(
@@ -418,12 +418,12 @@ class MealEffectCueVisual:
 			),
 			PackedColorArray([blade, blade, blade])
 		)
-		draw_line(center + Vector2(-13.0, 4.0), center + Vector2(-2.0, 15.0), Color("#ffe5a3"), 3.0)
-		draw_circle(center + Vector2(-12.0, 13.0), 3.0, Color("#7b4b20"))
+		draw_line(center + Vector2(-13.0, 4.0), center + Vector2(-2.0, 15.0), Palette.COOKING_STATUS_MEAL_HILT, 3.0)
+		draw_circle(center + Vector2(-12.0, 13.0), 3.0, Palette.COOKING_STATUS_ICON_HANDLE_DARK)
 		for i in range(3):
 			var x := center.x + 2.0 + float(i) * 8.0
 			var y := center.y + 11.0 - float(i) * 8.0
-			draw_line(Vector2(x, y + 8.0), Vector2(x, y - 7.0), Color("#a8f2a5"), 3.0)
+			draw_line(Vector2(x, y + 8.0), Vector2(x, y - 7.0), Palette.COOKING_STATUS_MEAL_ARROW, 3.0)
 			draw_polygon(
 				PackedVector2Array(
 					[
@@ -432,7 +432,7 @@ class MealEffectCueVisual:
 						Vector2(x + 5.0, y - 4.0),
 					]
 				),
-				PackedColorArray([Color("#a8f2a5"), Color("#a8f2a5"), Color("#a8f2a5")])
+				PackedColorArray([Palette.COOKING_STATUS_MEAL_ARROW, Palette.COOKING_STATUS_MEAL_ARROW, Palette.COOKING_STATUS_MEAL_ARROW])
 			)
 
 
@@ -505,7 +505,7 @@ func _add_status_background() -> void:
 		bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(bg)
 	else:
-		add_gradient_background(Color("#17314c"), Color("#071322"))
+		add_gradient_background(Palette.COOKING_STATUS_BG_FALLBACK_TOP, Palette.COOKING_STATUS_BG_FALLBACK_BOTTOM)
 
 	if not ResourceLoader.exists(STATUS_SUMMARY_BG):
 		var scene := StatusBackdropVisual.new()
@@ -515,14 +515,14 @@ func _add_status_background() -> void:
 		scene.queue_redraw()
 
 	var wash := ColorRect.new()
-	wash.color = Color(0.02, 0.06, 0.11, 0.24)
+	wash.color = Palette.COOKING_STATUS_BG_WASH
 	wash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(wash)
 
 
 func _build_header(parent: VBoxContainer) -> void:
-	var header := _panel_box(Color("#0a2744"), Color("#06111e"), Palette.GOLD_BRIGHT, 5)
+	var header := _panel_box(Palette.COOKING_STATUS_HEADER_FILL, Palette.COOKING_STATUS_PANEL_BORDER, Palette.GOLD_BRIGHT, 5)
 	_header_panel = header
 	header.custom_minimum_size = Vector2(0.0, 68.0)
 	header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -549,7 +549,7 @@ func _build_header(parent: VBoxContainer) -> void:
 	subtitle.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(subtitle)
 
-	var exp_box := _panel_box(Color("#10283f"), Color("#07121e"), Palette.GOLD_DEEP, 3)
+	var exp_box := _panel_box(Palette.COOKING_STATUS_PANEL_FILL, Palette.COOKING_STATUS_PANEL_BORDER_DARK, Palette.GOLD_DEEP, 3)
 	exp_box.name = "StatusHeaderExpBox"
 	exp_box.custom_minimum_size = Vector2(460.0, 0.0)
 	row.add_child(exp_box)
@@ -614,7 +614,7 @@ func _build_player_card(parent: HBoxContainer) -> void:
 	card.add_child(portrait)
 	_level_label = _value_plate(card, "", 20, Palette.TEXT_BONE, Palette.GAUGE_CYAN_HI)
 	_level_label.name = "StatusLevelValue"
-	_next_exp_label = make_label("", 16, Color("#24486a"), 1, Color("#fff4d4"))
+	_next_exp_label = make_label("", 16, Palette.COOKING_STATUS_EXP_TEXT, 1, Palette.COOKING_STATUS_TEXT_LIGHT_OUTLINE)
 	_set_label_min_height(_next_exp_label, 16)
 	_next_exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	card.add_child(_next_exp_label)
@@ -683,7 +683,7 @@ func _build_play_card(parent: HBoxContainer) -> void:
 
 
 func _build_footer(parent: VBoxContainer) -> void:
-	var footer := _panel_box(Color("#08213a"), Color("#06111e"), Palette.GOLD_DEEP, 4)
+	var footer := _panel_box(Palette.COOKING_STATUS_FOOTER_FILL, Palette.COOKING_STATUS_PANEL_BORDER, Palette.GOLD_DEEP, 4)
 	_footer_panel = footer
 	footer.custom_minimum_size = Vector2(0.0, 72.0)
 	footer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -734,7 +734,7 @@ func show_summary() -> void:
 	_stats_box.add_child(_stat_line("体力", "%d" % int(round(float(stats.get("max_energy", 0)))), Palette.GAUGE_RED_HI))
 	_stats_box.add_child(_stat_line("攻撃力", "%.1f" % float(stats.get("reel_power", 0)), Palette.GAUGE_CYAN_HI))
 	_stats_box.add_child(_stat_line("防御力", "%d" % int(stats.get("technique", 0)), Palette.GOLD_BRIGHT))
-	_stats_box.add_child(_stat_line("素早さ", "%d" % int(stats.get("focus", 0)), Color("#b98cff")))
+	_stats_box.add_child(_stat_line("素早さ", "%d" % int(stats.get("focus", 0)), Palette.COOKING_STATUS_FOCUS_ACCENT))
 	_stats_box.add_child(_stat_line("運", "%d" % (PlayerProgress.level + _owned_fish_kinds() + 5), Palette.GAUGE_GREEN_HI))
 
 	if PlayerProgress.pending_buff.is_empty():
@@ -768,7 +768,7 @@ func _status_card(parent: HBoxContainer, title: String) -> VBoxContainer:
 	var panel := _texture_panel_box(
 		STATUS_CARD_FRAME,
 		24,
-		_style_box(Color("#f2e4c2"), Color("#60401f"), Palette.GOLD_BRIGHT, 5, 5),
+		_style_box(Palette.COOKING_STATUS_CARD_FILL, Palette.COOKING_STATUS_CARD_BORDER, Palette.GOLD_BRIGHT, 5, 5),
 		14.0,
 		12.0
 	)
@@ -788,7 +788,7 @@ func _status_card(parent: HBoxContainer, title: String) -> VBoxContainer:
 	var title_band := _texture_panel_box(
 		CookingAssets.FLOW_ACTION_BUTTON_FRAME,
 		24,
-		_style_box(Color("#102f51"), Palette.GOLD_DEEP, Palette.GOLD_BRIGHT, 4, 4),
+		_style_box(Palette.COOKING_STATUS_TITLE_BAND_FILL, Palette.GOLD_DEEP, Palette.GOLD_BRIGHT, 4, 4),
 		20.0,
 		5.0
 	)
@@ -800,7 +800,7 @@ func _status_card(parent: HBoxContainer, title: String) -> VBoxContainer:
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title_label.custom_minimum_size = Vector2(0.0, 38.0)
-	title_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.7))
+	title_label.add_theme_color_override("font_shadow_color", Palette.COOKING_STATUS_TITLE_SHADOW)
 	title_band.add_child(title_label)
 	return box
 
@@ -822,10 +822,10 @@ func _status_card_node_name(title: String) -> String:
 
 
 func _portrait_box(text: String, accent: Color) -> PanelContainer:
-	var panel := _panel_box(Color("#10283f"), Color("#07121e"), accent, 3)
+	var panel := _panel_box(Palette.COOKING_STATUS_PANEL_FILL, Palette.COOKING_STATUS_PANEL_BORDER_DARK, accent, 3)
 	panel.add_theme_stylebox_override(
 		"panel",
-		_style_box(Color("#0c263f"), Color("#07121e"), accent, 3, 4, 10.0, 8.0)
+		_style_box(Palette.COOKING_STATUS_PORTRAIT_PANEL_FILL, Palette.COOKING_STATUS_PANEL_BORDER_DARK, accent, 3, 4, 10.0, 8.0)
 	)
 	var visual := _status_texture_visual(text)
 	if visual == null:
@@ -881,11 +881,11 @@ func _status_visual_name(text: String) -> String:
 
 
 func _note_box(parent: VBoxContainer, text: String) -> Label:
-	var panel := _panel_box(Color("#fff1cf"), Color("#b5813a"), Color("#e0b667"), 2)
+	var panel := _panel_box(Palette.COOKING_STATUS_NOTE_FILL, Palette.COOKING_STATUS_STAT_BADGE_BORDER, Palette.COOKING_STATUS_NOTE_INNER, 2)
 	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	panel.custom_minimum_size = Vector2(0.0, 76.0)
 	parent.add_child(panel)
-	var label := make_label(text, 15, Color("#3f2d1a"))
+	var label := make_label(text, 15, Palette.COOKING_STATUS_NOTE_TEXT)
 	_set_label_min_height(label, 15, 2)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -929,7 +929,7 @@ func _value_plate(
 
 
 func _meal_note_box(parent: VBoxContainer, text: String) -> Label:
-	var panel := _panel_box(Color("#fff1cf"), Color("#b5813a"), Color("#e0b667"), 2)
+	var panel := _panel_box(Palette.COOKING_STATUS_NOTE_FILL, Palette.COOKING_STATUS_STAT_BADGE_BORDER, Palette.COOKING_STATUS_NOTE_INNER, 2)
 	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	panel.custom_minimum_size = Vector2(0.0, 78.0)
 	parent.add_child(panel)
@@ -946,7 +946,7 @@ func _meal_note_box(parent: VBoxContainer, text: String) -> Label:
 	cue.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	row.add_child(cue)
 
-	var label := make_label(text, 15, Color("#3f2d1a"))
+	var label := make_label(text, 15, Palette.COOKING_STATUS_NOTE_TEXT)
 	_set_label_min_height(label, 15, 2)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -966,12 +966,12 @@ func _stat_line(title: String, value: String, accent: Color) -> Control:
 	icon.custom_minimum_size = Vector2(32.0, 26.0)
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(icon)
-	var name := make_label(title, 17, Color("#2a2118"))
+	var name := make_label(title, 17, Palette.COOKING_STATUS_TEXT_DARK)
 	_set_label_min_height(name, 17)
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(name)
-	var amount := make_label(value, 17, Color("#2a2118"), 1, Color("#fff4d4"))
+	var amount := make_label(value, 17, Palette.COOKING_STATUS_TEXT_DARK, 1, Palette.COOKING_STATUS_TEXT_LIGHT_OUTLINE)
 	amount.custom_minimum_size = Vector2(46.0, 28.0)
 	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	amount.vertical_alignment = VERTICAL_ALIGNMENT_CENTER

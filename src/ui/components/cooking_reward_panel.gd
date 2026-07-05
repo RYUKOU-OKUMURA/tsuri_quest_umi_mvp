@@ -93,7 +93,7 @@ func _build_screen() -> void:
 	_add_meal_scene_background()
 
 	var dim := ColorRect.new()
-	dim.color = Color(0.0, 0.0, 0.0, 0.38)
+	dim.color = Palette.COOKING_REWARD_OVERLAY_DIM
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	dim.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(dim)
@@ -129,7 +129,12 @@ func _build_screen() -> void:
 	hero.add_theme_constant_override("separation", 12)
 	root.add_child(hero)
 
-	_scene_card = _panel_box(Color(0.10, 0.06, 0.03, 0.72), Color("#5e391a"), Palette.GOLD_BRIGHT, 5)
+	_scene_card = _panel_box(
+		Palette.COOKING_REWARD_SCENE_CARD_FILL,
+		Palette.COOKING_REWARD_FRAME_BORDER,
+		Palette.GOLD_BRIGHT,
+		5
+	)
 	_scene_card.custom_minimum_size = Vector2(438.0, 244.0)
 	hero.add_child(_scene_card)
 	var scene_box := VBoxContainer.new()
@@ -222,12 +227,12 @@ func _build_screen() -> void:
 	banner_box.alignment = BoxContainer.ALIGNMENT_CENTER
 	banner_box.add_theme_constant_override("separation", 2)
 	_result_banner.add_child(banner_box)
-	_header_title = make_shadow_label("いただきます！", 32, Color("#9b2f17"), 3)
+	_header_title = make_shadow_label("いただきます！", 32, Palette.COOKING_REWARD_BONUS_FLAG, 3)
 	_set_label_min_height(_header_title, 32)
 	_header_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_header_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	banner_box.add_child(_header_title)
-	_bridge_label = make_shadow_label("", 16, Color("#4f3b25"), 1)
+	_bridge_label = make_shadow_label("", 16, Palette.COOKING_REWARD_BRIDGE_TEXT, 1)
 	_set_label_min_height(_bridge_label, 16)
 	_bridge_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_bridge_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -251,7 +256,13 @@ func _build_screen() -> void:
 		_texture_style_box(
 			MEAL_DISH_CARD_FRAME,
 			24,
-			_style_box(Color("#0f2238"), Color("#07121e"), Palette.GOLD_DEEP, 5, 5),
+			_style_box(
+				Palette.COOKING_REWARD_PANEL_FILL,
+				Palette.COOKING_REWARD_CARD_FRAME_BORDER,
+				Palette.GOLD_DEEP,
+				5,
+				5
+			),
 			14.0,
 			8.0
 		)
@@ -299,7 +310,13 @@ func _build_screen() -> void:
 		_texture_style_box(
 			EXP_BURST_FRAME,
 			28,
-			_style_box(Color("#071e34"), Color("#07121e"), Palette.GAUGE_CYAN_HI, 5, 5),
+			_style_box(
+				Palette.COOKING_REWARD_EXP_FRAME_FILL,
+				Palette.COOKING_REWARD_CARD_FRAME_BORDER,
+				Palette.GAUGE_CYAN_HI,
+				5,
+				5
+			),
 			18.0,
 			8.0
 		)
@@ -402,7 +419,7 @@ func show_meal_result(result: Dictionary) -> void:
 	_set_bridge_font_size(12)
 	_set_exp_label_font_size(56)
 	_header_title.text = "%sを食べた！" % dish_name
-	_header_title.modulate = Color(1.0, 1.0, 1.0, 0.0)
+	_header_title.modulate = Color(Color.WHITE, 0.0)
 	_bridge_label.text = ""
 	_bridge_label.visible = false
 	if _meal_banner_spark != null:
@@ -596,11 +613,19 @@ func _meal_bonus_badge_text(result: Dictionary) -> String:
 func _draw_confirm_button_cue(button: Button) -> void:
 	var center := Vector2(32.0, button.size.y * 0.5)
 	var active := not button.disabled
-	var gold := Palette.GOLD_BRIGHT if active else Color("#8b7654")
-	var ink := Color("#3b2515") if active else Color("#665847")
-	var cyan := Palette.GAUGE_CYAN_HI if active else Color("#607077")
-	var red := Palette.GAUGE_RED_HI if active else Color("#775a58")
-	var glow := Color(1.0, 0.82, 0.25, 0.36) if active else Color(0.42, 0.36, 0.30, 0.22)
+	var gold := Palette.GOLD_BRIGHT if active else Palette.COOKING_REWARD_BUTTON_DISABLED_GOLD
+	var ink := (
+		Palette.COOKING_REWARD_BUTTON_ACTIVE_INK
+		if active
+		else Palette.COOKING_REWARD_BUTTON_DISABLED_INK
+	)
+	var cyan := Palette.GAUGE_CYAN_HI if active else Palette.COOKING_REWARD_BUTTON_DISABLED_CYAN
+	var red := Palette.GAUGE_RED_HI if active else Palette.COOKING_REWARD_BUTTON_DISABLED_RED
+	var glow := (
+		Palette.COOKING_REWARD_BUTTON_ACTIVE_GLOW
+		if active
+		else Palette.COOKING_REWARD_BUTTON_DISABLED_GLOW
+	)
 	button.draw_circle(center, 22.0, glow)
 	match _preview_state:
 		"MEAL_RESULT":
@@ -621,7 +646,9 @@ func _set_confirm_button_emphasis(is_meal_result: bool) -> void:
 		return
 	_confirm_button.add_theme_font_size_override("font_size", 18 if is_meal_result else 15)
 	_confirm_button.add_theme_constant_override("outline_size", 3 if is_meal_result else 2)
-	_confirm_button.add_theme_color_override("font_outline_color", Color("#07121e"))
+	_confirm_button.add_theme_color_override(
+		"font_outline_color", Palette.COOKING_REWARD_CARD_FRAME_BORDER
+	)
 
 
 func _draw_meal_confirm_runway(button: Button, gold: Color, cyan: Color) -> void:
@@ -634,16 +661,41 @@ func _draw_meal_confirm_runway(button: Button, gold: Color, cyan: Color) -> void
 	var right := w - 44.0
 	button.draw_rect(
 		Rect2(Vector2(left - 5.0, h * 0.23), Vector2(maxf(0.0, right - left + 6.0), h * 0.54)),
-		Color("#061522", 0.22)
+		Color(Palette.COOKING_REWARD_DARK_BACKDROP, 0.22)
 	)
-	button.draw_line(Vector2(left + 18.0, mid_y - 14.0), Vector2(right - 40.0, mid_y - 14.0), Color("#ffe081", 0.18), 2.0)
-	button.draw_line(Vector2(left + 18.0, mid_y + 14.0), Vector2(right - 40.0, mid_y + 14.0), Color("#6bf1ff", 0.12), 2.0)
+	button.draw_line(
+		Vector2(left + 18.0, mid_y - 14.0),
+		Vector2(right - 40.0, mid_y - 14.0),
+		Color(Palette.COOKING_REWARD_ACCENT_BONUS, 0.18),
+		2.0
+	)
+	button.draw_line(
+		Vector2(left + 18.0, mid_y + 14.0),
+		Vector2(right - 40.0, mid_y + 14.0),
+		Color(Palette.COOKING_REWARD_ACCENT_EXP, 0.12),
+		2.0
+	)
 	var rail := gold
 	rail.a = 0.42
 	button.draw_line(Vector2(left, 8.0), Vector2(right, 8.0), rail, 1.6)
-	button.draw_line(Vector2(left, h - 8.0), Vector2(right, h - 8.0), Color("#d7a456", 0.24), 1.6)
-	button.draw_line(Vector2(left + 6.0, mid_y), Vector2(right - 24.0, mid_y), Color("#ffe081", 0.26), 6.0)
-	button.draw_line(Vector2(left + 6.0, mid_y), Vector2(right - 24.0, mid_y), Color("#6bf1ff", 0.24), 1.8)
+	button.draw_line(
+		Vector2(left, h - 8.0),
+		Vector2(right, h - 8.0),
+		Color(Palette.COOKING_REWARD_ACCENT_FALLBACK, 0.24),
+		1.6
+	)
+	button.draw_line(
+		Vector2(left + 6.0, mid_y),
+		Vector2(right - 24.0, mid_y),
+		Color(Palette.COOKING_REWARD_ACCENT_BONUS, 0.26),
+		6.0
+	)
+	button.draw_line(
+		Vector2(left + 6.0, mid_y),
+		Vector2(right - 24.0, mid_y),
+		Color(Palette.COOKING_REWARD_ACCENT_EXP, 0.24),
+		1.8
+	)
 	for i in range(4):
 		var x := left + 42.0 + float(i) * ((right - left - 110.0) / 3.0)
 		var drop := gold if i % 2 == 0 else cyan
@@ -673,8 +725,8 @@ func _draw_meal_confirm_runway(button: Button, gold: Color, cyan: Color) -> void
 			arrow
 		)
 	var orb_center := Vector2(w - 30.0, mid_y)
-	button.draw_circle(orb_center, 12.0, Color("#07121e", 0.58))
-	button.draw_circle(orb_center, 8.0, Color("#0f5d76", 0.72))
+	button.draw_circle(orb_center, 12.0, Color(Palette.COOKING_REWARD_CARD_FRAME_BORDER, 0.58))
+	button.draw_circle(orb_center, 8.0, Color(Palette.COOKING_REWARD_EXP_ORB_FILL, 0.72))
 	var orb := cyan
 	orb.a = 0.86
 	button.draw_circle(orb_center, 4.5, orb)
@@ -689,11 +741,27 @@ func _draw_meal_confirm_runway(button: Button, gold: Color, cyan: Color) -> void
 func _draw_button_meal_to_exp(
 	button: Button, center: Vector2, ink: Color, gold: Color, cyan: Color
 ) -> void:
-	button.draw_arc(center + Vector2(-7.0, 6.0), 13.0, 0.0, PI, 18, Color("#fff1cf"), 5.0)
+	button.draw_arc(
+		center + Vector2(-7.0, 6.0),
+		13.0,
+		0.0,
+		PI,
+		18,
+		Palette.COOKING_REWARD_IVORY_FILL,
+		5.0
+	)
 	button.draw_arc(center + Vector2(-7.0, 2.0), 10.0, 0.0, PI, 16, gold, 4.0)
 	for i in range(2):
 		var x := center.x - 15.0 + float(i) * 9.0
-		button.draw_arc(Vector2(x, center.y - 12.0), 6.0, -1.5, 0.9, 8, Color(1.0, 0.93, 0.68, 0.55), 2.0)
+		button.draw_arc(
+			Vector2(x, center.y - 12.0),
+			6.0,
+			-1.5,
+			0.9,
+			8,
+			Palette.COOKING_REWARD_BUTTON_STEAM,
+			2.0
+		)
 	button.draw_line(center + Vector2(10.0, 0.0), center + Vector2(34.0, 0.0), gold, 3.0)
 	button.draw_colored_polygon(
 		PackedVector2Array(
@@ -705,7 +773,7 @@ func _draw_button_meal_to_exp(
 		),
 		gold
 	)
-	button.draw_circle(center + Vector2(57.0, 0.0), 12.0, Color("#0f5d76"))
+	button.draw_circle(center + Vector2(57.0, 0.0), 12.0, Palette.COOKING_REWARD_EXP_ORB_FILL)
 	button.draw_circle(center + Vector2(57.0, 0.0), 7.0, cyan)
 	button.draw_line(center + Vector2(51.0, 0.0), center + Vector2(63.0, 0.0), ink, 2.0)
 
@@ -713,7 +781,7 @@ func _draw_button_meal_to_exp(
 func _draw_button_exp_to_level(
 	button: Button, center: Vector2, ink: Color, gold: Color, red: Color
 ) -> void:
-	button.draw_circle(center + Vector2(-7.0, 0.0), 13.0, Color("#0f5d76"))
+	button.draw_circle(center + Vector2(-7.0, 0.0), 13.0, Palette.COOKING_REWARD_EXP_ORB_FILL)
 	button.draw_circle(center + Vector2(-7.0, 0.0), 7.0, Palette.GAUGE_CYAN_HI)
 	button.draw_line(center + Vector2(9.0, 0.0), center + Vector2(34.0, 0.0), gold, 3.0)
 	button.draw_colored_polygon(
@@ -741,7 +809,7 @@ func _draw_button_exp_to_level(
 func _draw_button_exp_to_summary(
 	button: Button, center: Vector2, ink: Color, gold: Color, cyan: Color
 ) -> void:
-	button.draw_circle(center + Vector2(-9.0, 0.0), 12.0, Color("#0f5d76"))
+	button.draw_circle(center + Vector2(-9.0, 0.0), 12.0, Palette.COOKING_REWARD_EXP_ORB_FILL)
 	button.draw_circle(center + Vector2(-9.0, 0.0), 7.0, cyan)
 	button.draw_line(center + Vector2(8.0, 0.0), center + Vector2(30.0, 0.0), gold, 3.0)
 	button.draw_colored_polygon(
@@ -757,7 +825,7 @@ func _draw_button_exp_to_summary(
 	for i in range(3):
 		var x := center.x + 48.0 + float(i) * 11.0
 		var rect := Rect2(x, center.y - 10.0 + float(i % 2) * 3.0, 9.0, 18.0)
-		button.draw_rect(rect, Color("#fff1cf"))
+		button.draw_rect(rect, Palette.COOKING_REWARD_IVORY_FILL)
 		button.draw_rect(Rect2(rect.position, Vector2(rect.size.x, 3.0)), gold)
 		button.draw_line(rect.position, rect.position + Vector2(rect.size.x, 0.0), ink, 1.0)
 		button.draw_line(rect.position, rect.position + Vector2(0.0, rect.size.y), ink, 1.0)
@@ -835,7 +903,7 @@ func _add_reward_ambient_layer() -> void:
 	add_child(ambient)
 	ambient.draw.connect(
 		func() -> void:
-			var steam := Color("#fff1c7")
+			var steam := Palette.TEXT_BONE
 			var spark := Palette.GOLD_BRIGHT
 			for i in range(6):
 				var x := 250.0 + float(i) * 154.0
@@ -870,7 +938,12 @@ func preview_state() -> String:
 
 
 func _add_flow_step(parent: HBoxContainer, text: String) -> void:
-	var card := _panel_box(Color("#17324d"), Color("#07121e"), Palette.GOLD_DEEP, 3)
+	var card := _panel_box(
+		Palette.COOKING_REWARD_FLOW_IDLE_FILL,
+		Palette.COOKING_REWARD_CARD_FRAME_BORDER,
+		Palette.GOLD_DEEP,
+		3
+	)
 	card.name = "FlowStep_%d" % _flow_step_cards.size()
 	card.custom_minimum_size = Vector2(138.0, 22.0)
 	parent.add_child(card)
@@ -906,21 +979,51 @@ func _set_flow_row_compact(compact: bool) -> void:
 
 
 func _refresh_flow_steps(leveled: bool) -> void:
-	_set_flow_step(0, "1 食事 完了", Color("#f2e4c2"), Palette.GOLD_BRIGHT, Color("#2a2118"))
-	_set_flow_step(1, "2 EXP 加算中", Color("#14385a"), Palette.GAUGE_CYAN_HI, Palette.TEXT_BONE)
+	_set_flow_step(
+		0,
+		"1 食事 完了",
+		Palette.COOKING_REWARD_PARCHMENT_FILL,
+		Palette.GOLD_BRIGHT,
+		Palette.COOKING_REWARD_DARK_TEXT
+	)
+	_set_flow_step(
+		1,
+		"2 EXP 加算中",
+		Palette.COOKING_REWARD_FLOW_EXP_FILL,
+		Palette.GAUGE_CYAN_HI,
+		Palette.TEXT_BONE
+	)
 	_set_flow_connector(0, "meal_to_exp")
 	if leveled:
-		_set_flow_step(2, "3 成長 解放", Color("#5a1f26"), Palette.GAUGE_RED_HI, Palette.GOLD_BRIGHT)
+		_set_flow_step(
+			2,
+			"3 成長 解放",
+			Palette.COOKING_REWARD_FLOW_GROWTH_FILL,
+			Palette.GAUGE_RED_HI,
+			Palette.GOLD_BRIGHT
+		)
 		_set_flow_connector(1, "growth_unlock")
 	else:
-		_set_flow_step(2, "3 成長 進行中", Color("#17324d"), Palette.GOLD_DEEP, Palette.TEXT_BONE)
+		_set_flow_step(
+			2,
+			"3 成長 進行中",
+			Palette.COOKING_REWARD_FLOW_IDLE_FILL,
+			Palette.GOLD_DEEP,
+			Palette.TEXT_BONE
+		)
 		_set_flow_connector(1, "exp_to_growth")
 
 
 func _refresh_meal_steps() -> void:
-	_set_flow_step(0, "食事 完了", Color("#f2e4c2"), Palette.GOLD_BRIGHT, Color("#2a2118"))
-	_set_flow_step(1, "EXPへ", Color("#17324d"), Palette.GOLD_DEEP, Palette.TEXT_BONE)
-	_set_flow_step(2, "成長", Color("#17324d"), Palette.GOLD_DEEP, Palette.TEXT_BONE)
+	_set_flow_step(
+		0,
+		"食事 完了",
+		Palette.COOKING_REWARD_PARCHMENT_FILL,
+		Palette.GOLD_BRIGHT,
+		Palette.COOKING_REWARD_DARK_TEXT
+	)
+	_set_flow_step(1, "EXPへ", Palette.COOKING_REWARD_FLOW_IDLE_FILL, Palette.GOLD_DEEP, Palette.TEXT_BONE)
+	_set_flow_step(2, "成長", Palette.COOKING_REWARD_FLOW_IDLE_FILL, Palette.GOLD_DEEP, Palette.TEXT_BONE)
 	_set_flow_connector(0, "meal_to_exp")
 	_set_flow_connector(1, "idle")
 
@@ -944,7 +1047,7 @@ func _set_flow_connector(index: int, mode: String) -> void:
 func _scene_actor_box() -> PanelContainer:
 	var panel := PanelContainer.new()
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.0, 0.0, 0.0, 0.0)
+	sb.bg_color = Color.TRANSPARENT
 	sb.set_border_width_all(0)
 	sb.content_margin_left = 0.0
 	sb.content_margin_top = 0.0
@@ -1004,7 +1107,7 @@ func _set_scene_backdrop(path: String, alpha: float, keep_table_visible: bool) -
 		if tex != null:
 			_scene_result_image.texture = tex
 		_scene_result_image.visible = true
-		_scene_result_image.modulate = Color(1.0, 1.0, 1.0, alpha)
+		_scene_result_image.modulate = Color(Color.WHITE, alpha)
 	if _scene_table != null:
 		_scene_table.modulate.a = _meal_scene_foreground_alpha() if keep_table_visible else 0.0
 	if _scene_table_bridge != null:
@@ -1194,7 +1297,13 @@ func _reward_dialog_frame_style() -> StyleBox:
 	return _texture_style_box(
 		MEAL_RESULT_FRAME,
 		34,
-		_style_box(Color("#10283f"), Color("#5e391a"), Palette.GOLD_BRIGHT, 6, 8),
+		_style_box(
+			Palette.COOKING_REWARD_DIALOG_FILL,
+			Palette.COOKING_REWARD_FRAME_BORDER,
+			Palette.GOLD_BRIGHT,
+			6,
+			8
+		),
 		18.0,
 		2.0
 	)
@@ -1216,7 +1325,13 @@ func _meal_result_banner_style() -> StyleBox:
 	return _texture_style_box(
 		MEAL_BANNER_FRAME,
 		24,
-		_style_box(Color("#f2e4c2"), Color("#5e391a"), Palette.GOLD_BRIGHT, 5, 5),
+		_style_box(
+			Palette.COOKING_REWARD_PARCHMENT_FILL,
+			Palette.COOKING_REWARD_FRAME_BORDER,
+			Palette.GOLD_BRIGHT,
+			5,
+			5
+		),
 		18.0,
 		6.0
 	)
@@ -1226,15 +1341,15 @@ func _set_scene_card_meal_result_style() -> void:
 	if _scene_card == null:
 		return
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.0, 0.0, 0.0, 0.0)
-	sb.border_color = Color("#ffe081", 0.06)
+	sb.bg_color = Color.TRANSPARENT
+	sb.border_color = Color(Palette.COOKING_REWARD_ACCENT_BONUS, 0.06)
 	sb.set_border_width_all(1)
 	sb.set_corner_radius_all(3)
 	sb.content_margin_left = 1.0
 	sb.content_margin_top = 1.0
 	sb.content_margin_right = 1.0
 	sb.content_margin_bottom = 1.0
-	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.0)
+	sb.shadow_color = Color.TRANSPARENT
 	sb.shadow_size = 0
 	sb.shadow_offset = Vector2.ZERO
 	sb.anti_aliasing = false
@@ -1246,7 +1361,13 @@ func _set_scene_card_exp_gain_style() -> void:
 		return
 	_scene_card.add_theme_stylebox_override(
 		"panel",
-		_style_box(Color(0.10, 0.06, 0.03, 0.72), Color("#5e391a"), Palette.GOLD_BRIGHT, 5, 5)
+		_style_box(
+			Palette.COOKING_REWARD_SCENE_CARD_FILL,
+			Palette.COOKING_REWARD_FRAME_BORDER,
+			Palette.GOLD_BRIGHT,
+			5,
+			5
+		)
 	)
 
 
@@ -1255,7 +1376,12 @@ func _set_status_strip_emphasis(is_primary: bool) -> void:
 
 
 func _build_effect_preview_card(parent: HBoxContainer) -> void:
-	_effect_preview_card = _compact_panel_box(Color("#f2e4c2"), Color("#274b2f"), Color("#8ee65a"), 4)
+	_effect_preview_card = _compact_panel_box(
+		Palette.COOKING_REWARD_PARCHMENT_FILL,
+		Palette.COOKING_REWARD_EFFECT_BORDER,
+		Palette.COOKING_REWARD_ACCENT_BUFF,
+		4
+	)
 	_effect_preview_card.custom_minimum_size = Vector2(252.0, 208.0)
 	_effect_preview_card.visible = false
 	parent.add_child(_effect_preview_card)
@@ -1265,16 +1391,27 @@ func _build_effect_preview_card(parent: HBoxContainer) -> void:
 	box.add_theme_constant_override("separation", 2)
 	_effect_preview_card.add_child(box)
 
-	var title := make_shadow_label("次の釣行で効果！", 16, Color("#fff1c7"), 2)
+	var title := make_shadow_label("次の釣行で効果！", 16, Palette.TEXT_BONE, 2)
 	_set_label_min_height(title, 16)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_color_override("font_color", Palette.TEXT_BONE)
-	var title_panel := _compact_panel_box(Color("#173b28"), Color("#07121e"), Palette.GAUGE_GREEN_HI, 3)
+	var title_panel := _compact_panel_box(
+		Palette.COOKING_REWARD_BUFF_FIELD,
+		Palette.COOKING_REWARD_CARD_FRAME_BORDER,
+		Palette.GAUGE_GREEN_HI,
+		3
+	)
 	title_panel.custom_minimum_size = Vector2(0.0, 28.0)
 	title_panel.add_child(title)
 	box.add_child(title_panel)
 
-	_effect_name_label = make_shadow_label("次回効果", 20, Color("#1f6b32"), 2, Color("#fff1c7"))
+	_effect_name_label = make_shadow_label(
+		"次回効果",
+		20,
+		Palette.COOKING_REWARD_EFFECT_NAME_TEXT,
+		2,
+		Palette.TEXT_BONE
+	)
 	_set_label_min_height(_effect_name_label, 20)
 	_effect_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_effect_name_label)
@@ -1289,13 +1426,17 @@ func _build_effect_preview_card(parent: HBoxContainer) -> void:
 	_effect_preview_visual.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	box.add_child(_effect_preview_visual)
 
-	_effect_text_label = make_shadow_label("", 13, Color("#2a2118"), 1, Color("#fff1c7"))
+	_effect_text_label = make_shadow_label(
+		"", 13, Palette.COOKING_REWARD_DARK_TEXT, 1, Palette.TEXT_BONE
+	)
 	_set_label_min_height(_effect_text_label, 13, 2)
 	_effect_text_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_effect_text_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_effect_text_label)
 
-	_effect_duration_label = make_shadow_label("", 12, Color("#235f33"), 1, Color("#fff1c7"))
+	_effect_duration_label = make_shadow_label(
+		"", 12, Palette.COOKING_REWARD_EFFECT_DURATION_TEXT, 1, Palette.TEXT_BONE
+	)
 	_set_label_min_height(_effect_duration_label, 12)
 	_effect_duration_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_effect_duration_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1392,15 +1533,33 @@ func _apply_close_cue() -> void:
 	match _preview_state:
 		"MEAL_RESULT":
 			_bridge_label.text = "食経験値へ移ります。料理の力をゲージに送ります。"
-			_set_flow_step(1, "2 EXP 起動", Color("#14385a"), Palette.GAUGE_CYAN_HI, Palette.TEXT_BONE)
+			_set_flow_step(
+				1,
+				"2 EXP 起動",
+				Palette.COOKING_REWARD_FLOW_EXP_FILL,
+				Palette.GAUGE_CYAN_HI,
+				Palette.TEXT_BONE
+			)
 			_confirm_button.text = "食経験値へ移動中"
 		"EXP_GAIN_LEVELUP":
 			_bridge_label.text = "成長結果を開きます。"
-			_set_flow_step(2, "3 成長 表示", Color("#5a1f26"), Palette.GAUGE_RED_HI, Palette.GOLD_BRIGHT)
+			_set_flow_step(
+				2,
+				"3 成長 表示",
+				Palette.COOKING_REWARD_FLOW_GROWTH_FILL,
+				Palette.GAUGE_RED_HI,
+				Palette.GOLD_BRIGHT
+			)
 			_confirm_button.text = "成長を表示中"
 		"EXP_GAIN":
 			_bridge_label.text = "食事効果と経験値を保存して、現在の準備へ戻ります。"
-			_set_flow_step(2, "3 成長 保存", Color("#17324d"), Palette.GAUGE_CYAN_HI, Palette.TEXT_BONE)
+			_set_flow_step(
+				2,
+				"3 成長 保存",
+				Palette.COOKING_REWARD_FLOW_IDLE_FILL,
+				Palette.GAUGE_CYAN_HI,
+				Palette.TEXT_BONE
+			)
 			_confirm_button.text = "準備へ戻っています"
 		_:
 			pass

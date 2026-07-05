@@ -150,7 +150,7 @@ func _build_nodes() -> void:
 	_fish_card.add_child(_fish_texture)
 
 	_flash = ColorRect.new()
-	_flash.color = Color(1.0, 1.0, 1.0, 0.0)
+	_flash.color = Palette.CATCH_FLASH_CLEAR
 	_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_flash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
@@ -267,23 +267,23 @@ func _bonus_text() -> String:
 
 
 func _prepare_intro_state() -> void:
-	_flash.color = Color(1.0, 1.0, 1.0, 0.92)
+	_flash.color = Palette.CATCH_FLASH_BRIGHT
 	_banner.position = _banner_target_position
 	_banner.scale = Vector2(0.72, 0.72)
-	_banner.modulate = Color(1.0, 1.0, 1.0, 0.0)
+	_banner.modulate = Palette.CATCH_FLASH_CLEAR
 	_info_panel.position = _info_target_position + Vector2(-72.0, 18.0)
 	_info_panel.scale = Vector2(0.96, 0.96)
-	_info_panel.modulate = Color(1.0, 1.0, 1.0, 0.0)
+	_info_panel.modulate = Palette.CATCH_FLASH_CLEAR
 	_bonus_panel.position = _bonus_target_position + Vector2(58.0, 16.0)
 	_bonus_panel.scale = Vector2(0.96, 0.96)
-	_bonus_panel.modulate = Color(1.0, 1.0, 1.0, 0.0)
+	_bonus_panel.modulate = Palette.CATCH_FLASH_CLEAR
 	_fish_card.position = _fish_card_target_position + Vector2(128.0, 20.0)
 	_fish_card.scale = Vector2(0.92, 0.92)
-	_fish_card.modulate = Color(1.0, 1.0, 1.0, 0.0)
+	_fish_card.modulate = Palette.CATCH_FLASH_CLEAR
 	_continue_button.position = _continue_target_position
-	_continue_button.modulate = Color(1.0, 1.0, 1.0, 0.0)
+	_continue_button.modulate = Palette.CATCH_FLASH_CLEAR
 	_harbor_button.position = _harbor_target_position
-	_harbor_button.modulate = Color(1.0, 1.0, 1.0, 0.0)
+	_harbor_button.modulate = Palette.CATCH_FLASH_CLEAR
 
 
 func _start_animation() -> void:

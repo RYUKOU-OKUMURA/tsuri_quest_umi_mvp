@@ -1,7 +1,7 @@
 # 28. 「港へ戻る」ボタン配置統一 実装指示書
 
 Date: 2026-07-05
-状態: 未着手（Codex 実装用）
+状態: 完了（2026-07-05）
 発端: 画面ごとに「港へ戻る」の位置がバラバラで、プレイヤーが毎回ボタンを探す必要がある。
 
 ## 結論（規約）
@@ -21,8 +21,8 @@ Date: 2026-07-05
 | 釣具屋 | 右下 `Rect2(958, 650, 196, 44)` | `src/ui/shop_screen.gd:319` | 規約準拠。freeze済み（`docs/qa/tackle_shop_qa.md`「下部右」）。**触らない** |
 | 釣り場マップ | 右側詳細パネル最下段 | `src/ui/fishing_spot_select_screen.gd:362` | 規約準拠（右下領域）。ボタン高さ50pxはfreeze。触らない |
 | 調理（結果） | フッター右端 | `src/ui/components/cooking_status_panel.gd:705` | 規約準拠。触らない |
-| **魚市場** | **左下** `RETURN_RECT = Rect2(52, 666, 132, 40)` | `src/ui/market_screen.gd:33` / `:371` | **移動対象（スライス1）** |
-| **造船所** | **左下** アンカー `0.018–0.152 × 0.912–0.976` | `src/ui/shipyard_screen.gd:263` | **移動対象（スライス2）** |
+| 魚市場 | 右下 `RETURN_RECT = Rect2(1066, 670, 132, 40)` | `src/ui/market_screen.gd:33` / `:371` | 完了（スライス1） |
+| 造船所 | 右下 アンカー `0.842–0.976 × 0.912–0.976` | `src/ui/shipyard_screen.gd:263` | 完了（スライス2） |
 | 釣り中 | HUDメニュー＋確認オーバーレイ | `src/ui/fishing_screen.gd` / `components/fight_hud.gd` | **対象外**。釣行中断は確認ダイアログ必須のため別系統が正 |
 
 ## スコープ外（やらないこと）
@@ -142,3 +142,10 @@ _place_control(root, back, 0.842, 0.912, 0.976, 0.976)
 2. `docs/19_ui_production_playbook.md` のスタイルガイドへ規約を1行追記する:
    「港へ戻る導線は画面右下に置く（規約。詳細と経緯は docs/28）」
 3. 本書の「状態:」を「完了（YYYY-MM-DD）」へ更新する
+
+## 実施結果（2026-07-05）
+
+- スライス1（魚市場）: `RETURN_RECT = Rect2(1066.0, 670.0, 132.0, 40.0)` を採用。4状態で右下の「港へ戻る」が「まとめて売る」・カート枠・確認オーバーレイと重ならないことを確認。証拠: `docs/qa/evidence/fish_market/2026-07-05_return_right_select_compare.png`、`2026-07-05_return_right_confirm_compare.png`、`2026-07-05_return_right_sold_compare.png`、`2026-07-05_return_right_empty_compare.png`。
+- スライス2（造船所）: `_place_control(root, back, 0.842, 0.912, 0.976, 0.976)` を採用。右下の「港へ戻る」が航路パネル・ロックラベル・フッター説明文と重ならないことを確認。証拠: `docs/qa/evidence/shipyard/2026-07-05_return_right_preview.png`。
+- `docs/19_ui_production_playbook.md` へ右下規約を追記。
+- 検証: `./tools/market_visual_qa.sh`、`market_smoke.tscn`、`shipyard_smoke.tscn` green。headless `shipyard_preview.tscn` はViewport texture取得不可のため通常起動で証拠取得。

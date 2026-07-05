@@ -59,27 +59,27 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _build_top_bar(root: Control) -> void:
-	var place_label := _shipyard_label("船着き場", 20, Color("#fff0c2"), true, 3)
+	var place_label := _shipyard_label("船着き場", 20, Palette.SHIPYARD_TOP_TEXT, true, 3)
 	place_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	place_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(root, place_label, 0.072, 0.014, 0.178, 0.063)
 
-	_top_level_label = _shipyard_label("", 19, Color("#fff0c2"), true, 3)
+	_top_level_label = _shipyard_label("", 19, Palette.SHIPYARD_TOP_TEXT, true, 3)
 	_top_level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_top_level_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(root, _top_level_label, 0.222, 0.014, 0.274, 0.063)
 
-	_top_money_label = _shipyard_label("", 19, Color("#fff0c2"), true, 3)
+	_top_money_label = _shipyard_label("", 19, Palette.SHIPYARD_TOP_TEXT, true, 3)
 	_top_money_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_top_money_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(root, _top_money_label, 0.374, 0.014, 0.488, 0.063)
 
-	_top_boat_label = _shipyard_label("", 17, Color("#fff0c2"), true, 3)
+	_top_boat_label = _shipyard_label("", 17, Palette.SHIPYARD_TOP_TEXT, true, 3)
 	_top_boat_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_top_boat_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(root, _top_boat_label, 0.565, 0.014, 0.652, 0.063)
 
-	_top_rank_label = _shipyard_label("", 17, Color("#fff0c2"), true, 3)
+	_top_rank_label = _shipyard_label("", 17, Palette.SHIPYARD_TOP_TEXT, true, 3)
 	_top_rank_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_top_rank_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(root, _top_rank_label, 0.906, 0.014, 0.965, 0.063)
@@ -110,10 +110,10 @@ func _build_boat_cards(root: Control) -> void:
 
 		var status_plate := Panel.new()
 		status_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		status_plate.add_theme_stylebox_override("panel", _status_badge_style(Color("#12344e"), Color("#d7b46a")))
+		status_plate.add_theme_stylebox_override("panel", _status_badge_style(Palette.SHIPYARD_BADGE_FILL, Palette.SHIPYARD_BADGE_BORDER))
 		_place_control(holder, status_plate, 0.355, 0.052, 0.600, 0.172)
 
-		var status := _shipyard_label("", 11, Color("#fff6cf"), true, 1, Color("#102033"))
+		var status := _shipyard_label("", 11, Palette.SHIPYARD_BADGE_TEXT, true, 1, Palette.SHIPYARD_BADGE_TEXT_OUTLINE)
 		status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		status.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		_place_control(holder, status, 0.362, 0.055, 0.592, 0.168)
@@ -121,10 +121,10 @@ func _build_boat_cards(root: Control) -> void:
 
 		var price_plate := Panel.new()
 		price_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		price_plate.add_theme_stylebox_override("panel", _status_badge_style(Color("#f3dfaa"), Color("#59320e")))
+		price_plate.add_theme_stylebox_override("panel", _status_badge_style(Palette.SHIPYARD_PRICE_PLATE_FILL, Palette.SHIPYARD_PRICE_PLATE_BORDER))
 		_place_control(holder, price_plate, 0.615, 0.052, 0.930, 0.172)
 
-		var price := _shipyard_label("", 13, Color("#4c2c0d"), true, 0)
+		var price := _shipyard_label("", 13, Palette.SHIPYARD_PRICE_TEXT, true, 0)
 		price.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		price.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		_place_control(holder, price, 0.628, 0.055, 0.915, 0.168)
@@ -132,22 +132,22 @@ func _build_boat_cards(root: Control) -> void:
 
 		var name_plate := Panel.new()
 		name_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		name_plate.add_theme_stylebox_override("panel", _status_badge_style(Color("#08263c", 0.92), Color("#e7bd68")))
+		name_plate.add_theme_stylebox_override("panel", _status_badge_style(Color(Palette.SHIPYARD_NAME_PLATE_FILL, 0.92), Palette.SHIPYARD_NAME_PLATE_BORDER))
 		_place_control(holder, name_plate, 0.120, 0.705, 0.885, 0.840)
 
-		var name := _shipyard_label("", 17, Color("#fff2be"), true, 2, Color("#07131d"))
+		var name := _shipyard_label("", 17, Palette.SHIPYARD_NAME_TEXT, true, 2, Palette.SHIPYARD_LABEL_OUTLINE)
 		name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		_place_control(holder, name, 0.145, 0.706, 0.860, 0.836)
 		_boat_card_labels[boat_id] = name
 
-		var rank := _shipyard_label("", 12, Color("#3b2b17"), true, 0)
+		var rank := _shipyard_label("", 12, Palette.SHIPYARD_CARD_META_TEXT, true, 0)
 		rank.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		rank.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		_place_control(holder, rank, 0.115, 0.846, 0.305, 0.938)
 		_boat_card_rank_labels[boat_id] = rank
 
-		var range := _shipyard_label("", 12, Color("#3b2b17"), true, 0)
+		var range := _shipyard_label("", 12, Palette.SHIPYARD_CARD_META_TEXT, true, 0)
 		range.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		range.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		_place_control(holder, range, 0.315, 0.846, 0.890, 0.938)
@@ -159,52 +159,52 @@ func _build_boat_cards(root: Control) -> void:
 
 
 func _build_center_detail(root: Control) -> void:
-	_title_label = _shipyard_label("船着き場", 32, Color("#5b3716"), true, 0)
+	_title_label = _shipyard_label("船着き場", 32, Palette.SHIPYARD_TITLE_TEXT, true, 0)
 	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(root, _title_label, 0.362, 0.138, 0.635, 0.202)
 
 	var detail_band := Panel.new()
 	detail_band.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	detail_band.add_theme_stylebox_override("panel", _status_badge_style(Color("#08263c", 0.94), Color("#e0b760")))
+	detail_band.add_theme_stylebox_override("panel", _status_badge_style(Color(Palette.SHIPYARD_NAME_PLATE_FILL, 0.94), Palette.SHIPYARD_DETAIL_BAND_BORDER))
 	_place_control(root, detail_band, 0.318, 0.640, 0.650, 0.696)
 
 	var detail_status_plate := Panel.new()
 	detail_status_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	detail_status_plate.add_theme_stylebox_override("panel", _status_badge_style(Color("#12344e", 0.92), Color("#d7b46a")))
+	detail_status_plate.add_theme_stylebox_override("panel", _status_badge_style(Color(Palette.SHIPYARD_BADGE_FILL, 0.92), Palette.SHIPYARD_BADGE_BORDER))
 	_place_control(root, detail_status_plate, 0.322, 0.602, 0.442, 0.637)
 
-	_detail_status_label = _shipyard_label("", 13, Color("#fff3c3"), true, 1, Color("#07131d"))
+	_detail_status_label = _shipyard_label("", 13, Palette.SHIPYARD_DETAIL_TEXT, true, 1, Palette.SHIPYARD_LABEL_OUTLINE)
 	_detail_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_detail_status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(root, _detail_status_label, 0.323, 0.604, 0.440, 0.635)
 
-	_detail_name_label = _shipyard_label("", 20, Color("#fff3c3"), true, 2)
+	_detail_name_label = _shipyard_label("", 20, Palette.SHIPYARD_DETAIL_TEXT, true, 2)
 	_detail_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_detail_name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(root, _detail_name_label, 0.333, 0.646, 0.503, 0.688)
 
-	_detail_rank_label = _shipyard_label("", 15, Color("#463018"), true, 0)
+	_detail_rank_label = _shipyard_label("", 15, Palette.SHIPYARD_DETAIL_META_TEXT, true, 0)
 	_detail_rank_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_detail_rank_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(root, _detail_rank_label, 0.363, 0.721, 0.421, 0.752)
 
-	_detail_unlock_label = _shipyard_label("", 15, Color("#463018"), true, 0)
+	_detail_unlock_label = _shipyard_label("", 15, Palette.SHIPYARD_DETAIL_META_TEXT, true, 0)
 	_detail_unlock_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_detail_unlock_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(root, _detail_unlock_label, 0.476, 0.721, 0.534, 0.752)
 
-	_detail_type_label = _shipyard_label("", 15, Color("#463018"), true, 0)
+	_detail_type_label = _shipyard_label("", 15, Palette.SHIPYARD_DETAIL_META_TEXT, true, 0)
 	_detail_type_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_detail_type_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(root, _detail_type_label, 0.592, 0.721, 0.648, 0.752)
 
-	_price_label = _shipyard_label("", 20, Color("#fff0c2"), true, 3)
+	_price_label = _shipyard_label("", 20, Palette.SHIPYARD_TOP_TEXT, true, 3)
 	_price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_price_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(root, _price_label, 0.354, 0.800, 0.466, 0.855)
 
-	_shortage_label = _shipyard_label("", 13, Color("#ffdca8"), true, 1, Color("#07131d"))
+	_shortage_label = _shipyard_label("", 13, Palette.SHIPYARD_SHORTAGE_TEXT, true, 1, Palette.SHIPYARD_LABEL_OUTLINE)
 	_shortage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_shortage_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(root, _shortage_label, 0.354, 0.858, 0.474, 0.888)
@@ -213,19 +213,19 @@ func _build_center_detail(root: Control) -> void:
 	_buy_button.set_meta("shipyard_buy_button", true)
 	_place_control(root, _buy_button, 0.545, 0.794, 0.654, 0.862)
 
-	_detail_range_label = _shipyard_label("", 15, Color("#fff2bd"), true, 1, Color("#07131d"))
+	_detail_range_label = _shipyard_label("", 15, Palette.SHIPYARD_DETAIL_RANGE_TEXT, true, 1, Palette.SHIPYARD_LABEL_OUTLINE)
 	_detail_range_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_detail_range_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(root, _detail_range_label, 0.493, 0.646, 0.640, 0.688)
 
 
 func _build_route_panel(root: Control) -> void:
-	_route_title_label = _shipyard_label("", 19, Color("#3b2b17"), true, 0)
+	_route_title_label = _shipyard_label("", 19, Palette.SHIPYARD_CARD_META_TEXT, true, 0)
 	_route_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_route_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(root, _route_title_label, 0.746, 0.140, 0.956, 0.184)
 
-	_route_hint_label = _shipyard_label("", 14, Color("#fff0c2"), true, 2)
+	_route_hint_label = _shipyard_label("", 14, Palette.SHIPYARD_TOP_TEXT, true, 2)
 	_route_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_route_hint_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_route_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -233,25 +233,25 @@ func _build_route_panel(root: Control) -> void:
 
 	var current_plate := Panel.new()
 	current_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	current_plate.add_theme_stylebox_override("panel", _status_badge_style(Color("#08263c", 0.92), Color("#6bcff2")))
+	current_plate.add_theme_stylebox_override("panel", _status_badge_style(Color(Palette.SHIPYARD_NAME_PLATE_FILL, 0.92), Palette.SHIPYARD_ROUTE_CURRENT_BORDER))
 	_place_control(root, current_plate, 0.758, 0.824, 0.874, 0.858)
 
 	var after_plate := Panel.new()
 	after_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	after_plate.add_theme_stylebox_override("panel", _status_badge_style(Color("#2e2415", 0.92), Color("#e0b760")))
+	after_plate.add_theme_stylebox_override("panel", _status_badge_style(Color(Palette.SHIPYARD_ROUTE_AFTER_FILL, 0.92), Palette.SHIPYARD_DETAIL_BAND_BORDER))
 	_place_control(root, after_plate, 0.889, 0.824, 0.965, 0.858)
 
-	_route_status_label = _shipyard_label("", 13, Color("#e9fbff"), true, 1, Color("#07131d"))
+	_route_status_label = _shipyard_label("", 13, Palette.SHIPYARD_ROUTE_CURRENT_TEXT, true, 1, Palette.SHIPYARD_LABEL_OUTLINE)
 	_route_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_route_status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(root, _route_status_label, 0.759, 0.825, 0.873, 0.856)
 
-	_route_after_label = _shipyard_label("", 13, Color("#fff2bd"), true, 1, Color("#07131d"))
+	_route_after_label = _shipyard_label("", 13, Palette.SHIPYARD_DETAIL_RANGE_TEXT, true, 1, Palette.SHIPYARD_LABEL_OUTLINE)
 	_route_after_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_route_after_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(root, _route_after_label, 0.890, 0.825, 0.964, 0.856)
 
-	_route_locked_label = _shipyard_label("", 15, Color("#fff0c2"), true, 2)
+	_route_locked_label = _shipyard_label("", 15, Palette.SHIPYARD_TOP_TEXT, true, 2)
 	_route_locked_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_route_locked_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(root, _route_locked_label, 0.898, 0.857, 0.976, 0.895)
@@ -260,9 +260,9 @@ func _build_route_panel(root: Control) -> void:
 func _build_footer(root: Control) -> void:
 	var back := _image_text_button("港へ戻る", func() -> void: navigate("harbor"), 20)
 	back.set_meta("shipyard_return", true)
-	_place_control(root, back, 0.018, 0.912, 0.152, 0.976)
+	_place_control(root, back, 0.842, 0.912, 0.976, 0.976)
 
-	_footer_label = _shipyard_label("", 18, Color("#563a1c"), true, 0)
+	_footer_label = _shipyard_label("", 18, Palette.SHIPYARD_FOOTER_TEXT, true, 0)
 	_footer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_footer_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_footer_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -401,11 +401,11 @@ func _boat_compact_range_text(rank: int) -> String:
 
 func _boat_status_color(boat_id: String) -> Color:
 	if PlayerProgress.has_boat(boat_id):
-		return Color("#bfffd0")
+		return Palette.SHIPYARD_STATUS_OWNED_TEXT
 	var boat := GameData.get_boat(boat_id)
 	if PlayerProgress.money >= int(boat.get("price", 0)):
-		return Color("#fff0a6")
-	return Color("#ffd0bc")
+		return Palette.SHIPYARD_STATUS_READY_TEXT
+	return Palette.SHIPYARD_STATUS_SHORTAGE_TEXT
 
 
 func _boat_access_spot_names(rank: int) -> Array[String]:
@@ -469,11 +469,11 @@ func _image_text_button(text: String, callback: Callable, font_size: int) -> But
 	button.text = text
 	button.add_theme_font_override("font", GameFontsScript.bold(get_theme_default_font()))
 	button.add_theme_font_size_override("font_size", font_size)
-	button.add_theme_color_override("font_color", Color("#fff4c7"))
+	button.add_theme_color_override("font_color", Palette.SHIPYARD_BUTTON_TEXT)
 	button.add_theme_color_override("font_hover_color", Color.WHITE)
-	button.add_theme_color_override("font_pressed_color", Color("#ffe17d"))
-	button.add_theme_color_override("font_disabled_color", Color("#d1c4a7"))
-	button.add_theme_color_override("font_outline_color", Color("#07131d"))
+	button.add_theme_color_override("font_pressed_color", Palette.SHIPYARD_BUTTON_PRESSED_TEXT)
+	button.add_theme_color_override("font_disabled_color", Palette.SHIPYARD_BUTTON_DISABLED_TEXT)
+	button.add_theme_color_override("font_outline_color", Palette.SHIPYARD_LABEL_OUTLINE)
 	button.add_theme_constant_override("outline_size", 3)
 	return button
 
@@ -485,11 +485,11 @@ func _apply_empty_button_style(button: Button) -> void:
 
 func _selection_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.2, 0.95, 1.0, 0.03)
-	style.border_color = Color("#5cf3ff")
+	style.bg_color = Palette.SHIPYARD_SELECTION_FILL
+	style.border_color = Palette.SHIPYARD_SELECTION_BORDER
 	style.set_border_width_all(3)
 	style.set_corner_radius_all(4)
-	style.shadow_color = Color("#1cdcff", 0.28)
+	style.shadow_color = Color(Palette.SHIPYARD_SELECTION_SHADOW, 0.28)
 	style.shadow_size = 6
 	style.shadow_offset = Vector2.ZERO
 	return style
@@ -505,7 +505,7 @@ func _status_badge_style(fill: Color, border: Color) -> StyleBoxFlat:
 	style.content_margin_top = 2.0
 	style.content_margin_right = 6.0
 	style.content_margin_bottom = 2.0
-	style.shadow_color = Color(0.0, 0.0, 0.0, 0.26)
+	style.shadow_color = Palette.SHIPYARD_STYLE_SHADOW
 	style.shadow_size = 3
 	style.shadow_offset = Vector2(0.0, 1.0)
 	return style
@@ -517,9 +517,9 @@ func _shipyard_label(
 	color: Color,
 	bold := false,
 	outline := 0,
-	outline_color := Color("#07131d")
+	outline_color := Palette.SHIPYARD_LABEL_OUTLINE
 ) -> Label:
-	return make_screen_label(text, font_size, color, bold, outline, outline_color, Color(0.0, 0.0, 0.0, 0.28), true)
+	return make_screen_label(text, font_size, color, bold, outline, outline_color, Palette.SHIPYARD_LABEL_SHADOW, true)
 
 
 func _format_money(value: int) -> String:

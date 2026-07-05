@@ -42,21 +42,21 @@ func _build_logo(root: Control) -> void:
 	logo_frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	logo_layer.add_child(logo_frame)
 
-	var title := make_shadow_label("釣りクエスト", 66, Color("#fff0a9"), 7, Color("#2b1308"), Color(0.0, 0.0, 0.0, 0.74))
+	var title := make_shadow_label("釣りクエスト", 66, Palette.TITLE_LOGO_TEXT, 7, Palette.TITLE_LOGO_OUTLINE, Palette.TITLE_LOGO_SHADOW)
 	_apply_title_font(title, true)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_place_control(logo_layer, title, 0.12, 0.18, 0.88, 0.49)
 
-	var subtitle := make_shadow_label("海釣り編", 30, Color("#9de9ff"), 4, Color("#062a40"), Color(0.0, 0.0, 0.0, 0.58))
+	var subtitle := make_shadow_label("海釣り編", 30, Palette.TITLE_SUBTITLE_TEXT, 4, Palette.TITLE_SUBTITLE_OUTLINE, Palette.TITLE_SUBTITLE_SHADOW)
 	_apply_title_font(subtitle, true)
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	subtitle.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_place_control(logo_layer, subtitle, 0.18, 0.50, 0.82, 0.67)
 
-	var concept := make_shadow_label("港で支度し、釣って、料理して、強くなる。", 18, Color("#fff7d4"), 2, Color("#061624"), Color(0.0, 0.0, 0.0, 0.46))
+	var concept := make_shadow_label("港で支度し、釣って、料理して、強くなる。", 18, Palette.TITLE_CONCEPT_TEXT, 2, Palette.TITLE_CONCEPT_OUTLINE, Palette.TITLE_CONCEPT_SHADOW)
 	_apply_title_font(concept, false)
 	concept.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	concept.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -76,13 +76,13 @@ func _build_fish_feature(root: Control) -> void:
 		fish.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		fish.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		fish.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-		fish.modulate = Color(1.0, 1.0, 1.0, 0.92)
+		fish.modulate = Palette.TITLE_FEATURE_FISH_MODULATE
 		fish.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		fish.offset_top = -18.0
 		fish.offset_bottom = -18.0
 		feature.add_child(fish)
 
-	var caption := make_shadow_label("次の大物が、海の底で待っている。", 18, Color("#fff5c5"), 2, Color("#071420"), Color(0.0, 0.0, 0.0, 0.54))
+	var caption := make_shadow_label("次の大物が、海の底で待っている。", 18, Palette.TITLE_FEATURE_CAPTION, 2, Palette.TITLE_FEATURE_OUTLINE, Palette.TITLE_FEATURE_SHADOW)
 	_apply_title_font(caption, false)
 	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	caption.anchor_left = 0.0
@@ -111,7 +111,7 @@ func _build_menu(root: Control) -> void:
 		bait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 		_place_control(menu, bait, 0.285, 0.075, 0.355, 0.175)
 
-	var header := make_shadow_label("冒険の開始", 24, Palette.TEXT_BONE, 2, Color("#06121c"), Color(0.0, 0.0, 0.0, 0.42))
+	var header := make_shadow_label("冒険の開始", 24, Palette.TEXT_BONE, 2, Palette.TITLE_MENU_OUTLINE, Palette.TITLE_MENU_SHADOW)
 	_apply_title_font(header, true)
 	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	header.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -120,7 +120,7 @@ func _build_menu(root: Control) -> void:
 	_place_control(menu, header, 0.13, 0.070, 0.91, 0.185)
 
 	var has_save := PlayerProgress.has_save_file()
-	var save_status := make_label("セーブデータ  %s" % ("あり" if has_save else "なし"), 15, Color("#4f361b"))
+	var save_status := make_label("セーブデータ  %s" % ("あり" if has_save else "なし"), 15, Palette.TITLE_SAVE_STATUS)
 	_apply_title_font(save_status, false)
 	save_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	save_status.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -147,7 +147,7 @@ func _build_menu(root: Control) -> void:
 
 
 func _build_version(root: Control) -> void:
-	var version_label := make_shadow_label("MVP Prototype v0.1 / Godot 4.7", 14, Color("#d7eef6"), 1, Color("#03101c"), Color(0.0, 0.0, 0.0, 0.42))
+	var version_label := make_shadow_label("MVP Prototype v0.1 / Godot 4.7", 14, Palette.TITLE_VERSION_TEXT, 1, Palette.TITLE_VERSION_OUTLINE, Palette.TITLE_MENU_SHADOW)
 	_apply_title_font(version_label, false)
 	version_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	version_label.anchor_left = 0.550
@@ -208,11 +208,11 @@ func _apply_title_button_skin(button: Button, primary: bool) -> void:
 	button.add_theme_stylebox_override("pressed", pressed)
 	button.add_theme_stylebox_override("disabled", disabled)
 	button.add_theme_font_override("font", GameFontsScript.bold(get_theme_default_font()))
-	button.add_theme_color_override("font_color", Color("#fff4ca"))
+	button.add_theme_color_override("font_color", Palette.TITLE_BUTTON_TEXT)
 	button.add_theme_color_override("font_hover_color", Color.WHITE)
 	button.add_theme_color_override("font_pressed_color", Palette.GOLD_BRIGHT)
-	button.add_theme_color_override("font_disabled_color", Color("#d1c8b6"))
-	button.add_theme_color_override("font_outline_color", Color("#2a1608"))
+	button.add_theme_color_override("font_disabled_color", Palette.TITLE_BUTTON_DISABLED_TEXT)
+	button.add_theme_color_override("font_outline_color", Palette.TITLE_BUTTON_OUTLINE)
 	button.add_theme_constant_override("outline_size", 2)
 	button.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	button.clip_text = true

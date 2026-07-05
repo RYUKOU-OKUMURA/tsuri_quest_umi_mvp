@@ -94,7 +94,7 @@ func _draw_icon(icon_index: int, rect: Rect2) -> void:
 	if _icons != null:
 		var cell_w := float(_icons.get_width()) / 3.0
 		var src := Rect2(float(icon_index) * cell_w, 0.0, cell_w, float(_icons.get_height()))
-		draw_texture_rect_region(_icons, rect, src, Color(1.0, 1.0, 1.0, 0.95))
+		draw_texture_rect_region(_icons, rect, src, Palette.PLAYER_STATUS_ICON_MODULATE)
 		return
 	draw_circle(rect.get_center(), minf(rect.size.x, rect.size.y) * 0.42, Palette.GOLD)
 

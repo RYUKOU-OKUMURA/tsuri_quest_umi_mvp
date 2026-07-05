@@ -55,7 +55,7 @@ var _quit_target := "harbor"
 
 
 func _build_screen() -> void:
-	add_gradient_background(Color("#0c243a"), Color("#04101e"))
+	add_gradient_background(Palette.FISHING_BG_TOP, Palette.FISHING_BG_BOTTOM)
 	_resolve_selected_spot()
 	_resolve_trip_stats()
 	_apply_spot_to_trip_stats()
@@ -122,7 +122,7 @@ func _build_screen() -> void:
 	_message_panel.offset_right = 0.0
 	_message_panel.offset_bottom = -12.0
 	message_layer.add_child(_message_panel)
-	_message_label = make_body_label("", 18, Color("#fff0b5"), 2, Color("#0a1622"))
+	_message_label = make_body_label("", 18, Palette.FISHING_MESSAGE_TEXT, 2, Palette.FISHING_MESSAGE_OUTLINE)
 	_message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_message_panel.add_child(_message_label)
@@ -152,7 +152,7 @@ func _build_screen() -> void:
 	info_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	info_box.add_theme_constant_override("separation", 6)
 	info_panel.add_child(info_box)
-	_info_title_label = make_label("釣り場", 24, Color("#22354a"))
+	_info_title_label = make_label("釣り場", 24, Palette.FISHING_SPOT_TITLE_TEXT)
 	_info_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	info_box.add_child(_info_title_label)
 
@@ -315,7 +315,7 @@ func _rig_summary_text() -> String:
 
 func _create_result_overlay() -> void:
 	_result_overlay = ColorRect.new()
-	_result_overlay.color = Color(0.0, 0.0, 0.0, 0.72)
+	_result_overlay.color = Palette.FISHING_RESULT_OVERLAY_DIM
 	_result_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_result_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	_result_overlay.visible = false
@@ -332,7 +332,7 @@ func _create_result_overlay() -> void:
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.add_theme_constant_override("separation", 14)
 	panel.add_child(box)
-	_result_title = make_label("", 36, Color("#7b431e"))
+	_result_title = make_label("", 36, Palette.FISHING_RESULT_TITLE_TEXT)
 	_result_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_result_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(_result_title)
@@ -355,7 +355,7 @@ func _create_result_overlay() -> void:
 
 func _create_quit_overlay() -> void:
 	_quit_overlay = ColorRect.new()
-	_quit_overlay.color = Color(0.0, 0.0, 0.0, 0.66)
+	_quit_overlay.color = Palette.FISHING_QUIT_OVERLAY_DIM
 	_quit_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_quit_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	_quit_overlay.visible = false
@@ -373,7 +373,7 @@ func _create_quit_overlay() -> void:
 	box.add_theme_constant_override("separation", 16)
 	panel.add_child(box)
 
-	_quit_title = make_label("港へ戻る", 32, Color("#7b431e"))
+	_quit_title = make_label("港へ戻る", 32, Palette.FISHING_RESULT_TITLE_TEXT)
 	_quit_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_quit_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(_quit_title)

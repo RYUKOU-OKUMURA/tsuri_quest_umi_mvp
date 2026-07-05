@@ -33,11 +33,21 @@ func _draw() -> void:
 		return
 	var rect := Rect2(Vector2(0.0, 2.0), Vector2(size.x, size.y - 4.0))
 	var base_alpha := 0.15 if _secondary else 0.09
-	draw_rect(rect, Color("#061522", base_alpha))
+	draw_rect(rect, Color(Palette.COOKING_REWARD_DARK_BACKDROP, base_alpha))
 	var top_alpha := 0.13 if _secondary else 0.18
-	draw_line(Vector2(20.0, 5.0), Vector2(size.x - 20.0, 5.0), Color("#ffe081", top_alpha), 2.0)
+	draw_line(
+		Vector2(20.0, 5.0),
+		Vector2(size.x - 20.0, 5.0),
+		Color(Palette.COOKING_REWARD_ACCENT_BONUS, top_alpha),
+		2.0
+	)
 	if _secondary:
-		draw_line(Vector2(34.0, size.y - 5.0), Vector2(size.x - 34.0, size.y - 5.0), Color("#07121e", 0.30), 2.0)
+		draw_line(
+			Vector2(34.0, size.y - 5.0),
+			Vector2(size.x - 34.0, size.y - 5.0),
+			Color(Palette.COOKING_REWARD_CARD_FRAME_BORDER, 0.30),
+			2.0
+		)
 
 
 func set_secondary(value: bool) -> void:
@@ -50,7 +60,7 @@ func set_secondary(value: bool) -> void:
 
 
 func set_emphasis(is_primary: bool) -> void:
-	var tint := Color.WHITE if is_primary else Color(0.82, 0.90, 1.0, 0.86)
+	var tint := Color.WHITE if is_primary else Palette.COOKING_REWARD_STATUS_SECONDARY_TINT
 	custom_minimum_size = Vector2(0.0, 62.0 if is_primary else 56.0)
 	queue_redraw()
 	for label in [_status_level_label, _status_meal_label, _status_cooler_label, _status_money_label]:
@@ -98,7 +108,13 @@ func _status_strip_card(
 		CookingAssets.texture_style_box(
 			CookingAssets.REWARD_CARD_FRAME,
 			24,
-			CookingAssets.compact_style_box(Color("#0d2338"), Color("#07121e"), Palette.GOLD_DEEP, 3, 4),
+			CookingAssets.compact_style_box(
+				Palette.COOKING_REWARD_CARD_FRAME_FILL,
+				Palette.COOKING_REWARD_CARD_FRAME_BORDER,
+				Palette.GOLD_DEEP,
+				3,
+				4
+			),
 			8.0,
 			5.0
 		)
@@ -167,7 +183,12 @@ func _status_strip_card(
 
 
 func _status_icon_shell(icon_mode: String, accent: Color) -> PanelContainer:
-	var shell := CookingAssets.compact_panel_box(Color("#071a2b"), Color("#06111e"), accent, 2)
+	var shell := CookingAssets.compact_panel_box(
+		Palette.COOKING_REWARD_ICON_SHELL_FILL,
+		Palette.COOKING_REWARD_ICON_SHELL_BORDER,
+		accent,
+		2
+	)
 	shell.custom_minimum_size = Vector2(54.0, 0.0)
 	shell.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var icon := TextureRect.new()
@@ -256,7 +277,7 @@ func _draw_status_card_backdrop(card: Control, icon_mode: String, accent: Color)
 	var glow := accent
 	glow.a = 0.10 * alpha_scale
 	card.draw_rect(Rect2(Vector2(10.0, rect.size.y - 15.0), Vector2(rect.size.x - 20.0, 5.0)), glow)
-	var shine := Color("#fff4c9", 0.11 * alpha_scale)
+	var shine := Color(Palette.COOKING_REWARD_SHINE, 0.11 * alpha_scale)
 	card.draw_line(Vector2(14.0, 12.0), Vector2(rect.size.x - 18.0, 8.0), shine, 2.0)
 	if not _secondary:
 		for i in range(3):
@@ -268,13 +289,32 @@ func _draw_status_card_backdrop(card: Control, icon_mode: String, accent: Color)
 	if icon_mode == "money":
 		for i in range(3):
 			var x := rect.size.x - 34.0 + float(i) * 7.0
-			card.draw_circle(Vector2(x, rect.size.y - 15.0), 5.0, Color("#d9a33a", 0.28 * alpha_scale))
+			card.draw_circle(
+				Vector2(x, rect.size.y - 15.0),
+				5.0,
+				Color(Palette.COOKING_REWARD_MONEY_COIN, 0.28 * alpha_scale)
+			)
 	elif icon_mode == "cooler":
-		card.draw_rect(Rect2(rect.size.x - 50.0, rect.size.y - 18.0, 34.0, 5.0), Color("#6bf1ff", 0.18 * alpha_scale))
+		card.draw_rect(
+			Rect2(rect.size.x - 50.0, rect.size.y - 18.0, 34.0, 5.0),
+			Color(Palette.COOKING_REWARD_ACCENT_EXP, 0.18 * alpha_scale)
+		)
 	elif icon_mode == "meal":
-		card.draw_arc(Vector2(rect.size.x - 32.0, rect.size.y - 13.0), 13.0, 0.0, PI, 16, Color("#fff1c7", 0.28 * alpha_scale), 3.0)
+		card.draw_arc(
+			Vector2(rect.size.x - 32.0, rect.size.y - 13.0),
+			13.0,
+			0.0,
+			PI,
+			16,
+			Color(Palette.TEXT_BONE, 0.28 * alpha_scale),
+			3.0
+		)
 	else:
-		card.draw_circle(Vector2(rect.size.x - 30.0, rect.size.y - 15.0), 8.0, Color("#6bf1ff", 0.16 * alpha_scale))
+		card.draw_circle(
+			Vector2(rect.size.x - 30.0, rect.size.y - 15.0),
+			8.0,
+			Color(Palette.COOKING_REWARD_ACCENT_EXP, 0.16 * alpha_scale)
+		)
 
 
 func _total_fish_count() -> int:
