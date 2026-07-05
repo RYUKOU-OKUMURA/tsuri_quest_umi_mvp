@@ -2106,7 +2106,13 @@ func _section_ribbon(text: String, icon_mode: String, node_name: String) -> Pane
 	var ribbon := _texture_panel_box(
 		COOKING_SECTION_RIBBON,
 		28,
-		_style_box(Color("#143553"), Color("#3b2515"), Palette.GOLD_DEEP, 4, 5),
+		_style_box(
+			Palette.COOKING_SECTION_RIBBON_FILL,
+			Palette.COOKING_SECTION_RIBBON_BORDER,
+			Palette.GOLD_DEEP,
+			4,
+			5
+		),
 		18.0,
 		5.0
 	)
