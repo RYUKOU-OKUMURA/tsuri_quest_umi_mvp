@@ -1,6 +1,6 @@
 # 釣り場マップ画面 QA判断ログ
 
-最終更新: 2026-07-03 / 状態: **アップリフト進行中のfreeze値あり**（2026-06〜07 判定。旧 `design-qa.md` からの分離移行）
+最終更新: 2026-07-05 / 状態: **アップリフト進行中のfreeze値あり**（詳細行P1再発修正済み）
 参照画像: `reference/` 内の釣り場マップモック
 QA更新コマンド: `./tools/fishing_spot_map_visual_qa.sh`
 
@@ -11,6 +11,7 @@ QA更新コマンド: `./tools/fishing_spot_map_visual_qa.sh`
 | 詳細枠アンカー方式 | `DETAIL_FRAME_SOURCE_SIZE = 520x760`。枠PNG座標系から各子要素をアンカー配置 | `src/ui/fishing_spot_select_screen.gd` ＋ `map_detail_frame.png` | 枠の非等倍スケールでVBoxピクセル積みが焼き込みウェルとズレる問題の恒久対応 |
 | ウェル座標（PNG座標） | タイトル (44,31)-(476,91) / 解放条件 (44,88)-(476,112) / サムネ (44,112)-(476,269) / 説明 (44,287)-(476,354) / 行エリア (44,366)-(476,560) / 主アクション (38,597)-(482,669) / 戻る (38,675)-(482,752) | 同上 | |
 | `狙い` 行 | 4魚を2行・省略なしで表示（専用の大きい行スロット） | 同上 | P1（省略）解消の採用値 |
+| 詳細`エサ`/`仕掛け`行 | エサ行は餌リストのみを13px単行表示、仕掛け行は`仕掛け名 / 一致・ふつう`の短縮表記。対応餌リストは重複表示しない | `src/ui/fishing_spot_select_screen.gd` | エサ・仕掛け値の省略表示P1再発を防ぐ |
 | `港へ戻る` ボタン | 高さ50px維持 | `ScreenBase.make_return_button()` 経由 | 共通枠PNGがラベルを潰さない高さ |
 | 釣り場サムネイル | 8枚とも Codex App 生成の俯瞰/三分の二マップアート調。ソースは `tools/source_assets/fishing_spot_thumbs/*.png`、`assets/showcase/fishing_spots/thumbs/*.png` へ 420x184 正規化 | `assets/showcase/fishing_spots/thumbs/` | 焼き込みテキスト・UI枠・ロック標識・ランタイム状態なし。`harbor_pier`=港の情景 / `outer_tide`=潮目 / `deep_ocean`=カケアガリ / `harbor_boulder`=大岩 が判別性の核 |
 | 共通アクションボタン枠 | 静かなネイビー/ゴールド版 `action_button_frame.png`（中央メダリオン・斜線装飾なし） | `assets/showcase/common/action_button_frame.png` | `ScreenBase.make_return_button()` 契約は維持 |
@@ -30,7 +31,7 @@ QA更新コマンド: `./tools/fishing_spot_map_visual_qa.sh`
 
 ## 4. 暫定判定・再検証TODO
 
-- 注: これまでの証拠画像（`/tmp/tsuri_fishing_spot_map_compare.png` 等）は `/tmp` のみで失われた。次回作業時に `./tools/fishing_spot_map_visual_qa.sh` で再生成し、以後は `docs/qa/evidence/fishing_spot_map/` へコピーする。
+（なし。2026-07-05 に通常/釣行継続の比較画像を再生成し、`docs/qa/evidence/fishing_spot_map/` へ保存済み）
 
 ## 5. 現在の残ギャップ
 
@@ -38,8 +39,8 @@ QA更新コマンド: `./tools/fishing_spot_map_visual_qa.sh`
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-（現在作業中のフェーズなし）
+（現在作業中のフェーズなし。2026-07-05 のP1修正では、詳細エサ/仕掛け行の文字設計、対象2ファイルのPalette移行、smoke契約のみを動かし、`DETAIL_FRAME_SOURCE_SIZE`、ウェル座標、`狙い`行、戻るボタン高さ、サムネイル素材、航路/マーカー座標は触っていない）
 
 ## 7. 判断ログ（直近パスのみ）
 
-- 2026-06〜07: P1レイアウト（`狙い` 省略・`港へ戻る` ラベル潰れ）を解消し、詳細枠をPNG座標アンカー方式へ移行。サムネ8枚を写真調→マップアート調の2段階で全数置換（各サムネの判別性向上を全画面比較で確認、この置換での不採用候補なし）。証拠は `./tools/fishing_spot_map_visual_qa.sh` の通常比較＋釣行継続比較の2枚で判定。
+- 2026-07-05: R5/R1スライス。通常/釣行継続の現状比較で、右詳細の`エサ`行と`仕掛け`行に省略表示が出るP1再発を確認。エサ行は餌リストだけを単行表示し、相性は仕掛け行へ`サビキ / ふつう`・`ちょい投げ / 一致`の短縮表記で移した。`src/ui/fishing_spot_select_screen.gd` と `src/ui/components/fishing_spot_map_view.gd` の釣り場マップ画面固有hexは `Palette.MAP_*` へ移行し、表示色の実値は維持した。判断根拠: `docs/qa/evidence/fishing_spot_map/2026-07-05_detail_text_p1_fix_compare.png`、`docs/qa/evidence/fishing_spot_map/2026-07-05_detail_text_p1_fix_continue_compare.png`。

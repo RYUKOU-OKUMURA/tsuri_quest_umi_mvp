@@ -59,7 +59,7 @@ var _footer_icon_sheet: Texture2D
 func _build_screen() -> void:
 	_resolve_route_state()
 	_load_assets()
-	add_gradient_background(Color("#08223a"), Color("#030d18"))
+	add_gradient_background(Palette.MAP_BG_TOP, Palette.MAP_BG_BOTTOM)
 
 	var root := make_root_margin(10)
 	var layout := VBoxContainer.new()
@@ -153,7 +153,7 @@ func _build_header(parent: Control) -> void:
 		title_plate.add_theme_stylebox_override("panel", _header_title_plate_style())
 		panel.add_child(title_plate)
 
-	var title := make_shadow_label("釣り場を選ぶ", 38, Color("#241107"), 2, Color("#f5d98d"), Color("#6a3d18"))
+	var title := make_shadow_label("釣り場を選ぶ", 38, Palette.MAP_TITLE_INK, 2, Palette.MAP_TITLE_GOLD, Palette.MAP_TITLE_OUTLINE)
 	title.z_index = 20
 	title.position = Vector2(142.0, 10.0)
 	title.size = Vector2(320.0, 66.0)
@@ -183,7 +183,7 @@ func _add_header_status(parent: Control, rect: Rect2, caption: String, value: St
 	layout.add_theme_constant_override("separation", 0)
 	box.add_child(layout)
 
-	var caption_label := make_label(caption, 11, Color("#b8c4cf"), 1, Palette.TEXT_OUTLINE_DARK)
+	var caption_label := make_label(caption, 11, Palette.MAP_STATUS_MUTED, 1, Palette.TEXT_OUTLINE_DARK)
 	caption_label.custom_minimum_size = Vector2(0.0, 18.0)
 	caption_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	caption_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -192,7 +192,7 @@ func _add_header_status(parent: Control, rect: Rect2, caption: String, value: St
 
 	var rule := ColorRect.new()
 	rule.custom_minimum_size = Vector2(0.0, 1.0)
-	rule.color = Color("#d4a85b", 0.42)
+	rule.color = Color(Palette.MAP_RULE_GOLD, 0.42)
 	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layout.add_child(rule)
 
@@ -218,8 +218,8 @@ func _add_rivet(parent: Control, position: Vector2) -> void:
 
 func _rivet_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#614224", 0.96)
-	style.border_color = Color("#e8c176", 0.72)
+	style.bg_color = Color(Palette.MAP_RIVET_FILL, 0.96)
+	style.border_color = Color(Palette.MAP_RIVET_EDGE, 0.72)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(4)
 	return style
@@ -227,15 +227,15 @@ func _rivet_style() -> StyleBoxFlat:
 
 func _header_title_plate_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#d7b36d", 0.94)
-	style.border_color = Color("#8a5728", 0.92)
+	style.bg_color = Color(Palette.MAP_TITLE_PLATE, 0.94)
+	style.border_color = Color(Palette.MAP_TITLE_PLATE_BORDER, 0.92)
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(6)
 	style.content_margin_left = 18
 	style.content_margin_right = 18
 	style.content_margin_top = 6
 	style.content_margin_bottom = 5
-	style.shadow_color = Color(0.0, 0.0, 0.0, 0.30)
+	style.shadow_color = Color(Color.BLACK, 0.30)
 	style.shadow_size = 4
 	style.shadow_offset = Vector2(2.0, 2.0)
 	return style
@@ -243,15 +243,15 @@ func _header_title_plate_style() -> StyleBoxFlat:
 
 func _header_status_group_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#041b2e", 0.36)
-	style.border_color = Color("#d0a65a", 0.46)
+	style.bg_color = Color(Palette.MAP_HEADER_BACKDROP, 0.36)
+	style.border_color = Color(Palette.MAP_FOOTER_SECONDARY_BORDER, 0.46)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(5)
 	style.content_margin_left = 0
 	style.content_margin_right = 0
 	style.content_margin_top = 0
 	style.content_margin_bottom = 0
-	style.shadow_color = Color(0.0, 0.0, 0.0, 0.16)
+	style.shadow_color = Color(Color.BLACK, 0.16)
 	style.shadow_size = 2
 	style.shadow_offset = Vector2(1.0, 1.0)
 	return style
@@ -259,15 +259,15 @@ func _header_status_group_style() -> StyleBoxFlat:
 
 func _header_status_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#052d49", 0.88)
-	style.border_color = Color("#d1a458", 0.80)
+	style.bg_color = Color(Palette.MAP_HEADER_STATUS_BG, 0.88)
+	style.border_color = Color(Palette.MAP_HEADER_STATUS_BORDER, 0.80)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(4)
 	style.content_margin_left = 12
 	style.content_margin_right = 12
 	style.content_margin_top = 3
 	style.content_margin_bottom = 4
-	style.shadow_color = Color(0.0, 0.0, 0.0, 0.20)
+	style.shadow_color = Color(Color.BLACK, 0.20)
 	style.shadow_size = 2
 	style.shadow_offset = Vector2(1.0, 1.0)
 	return style
@@ -307,7 +307,7 @@ func _build_detail_panel(parent: Control) -> void:
 		panel.add_child(frame)
 	else:
 		var fallback := ColorRect.new()
-		fallback.color = Color("#ead3a0")
+		fallback.color = Palette.MAP_DETAIL_FALLBACK
 		fallback.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		fallback.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		panel.add_child(fallback)
@@ -338,7 +338,7 @@ func _build_detail_panel(parent: Control) -> void:
 	_detail_thumbnail.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	thumb_clip.add_child(_detail_thumbnail)
 
-	_detail_description_label = make_label("", 12, Color("#2f2114"))
+	_detail_description_label = make_label("", 12, Palette.MAP_DETAIL_TEXT)
 	_detail_description_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_detail_description_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_detail_description_label.clip_text = true
@@ -348,7 +348,7 @@ func _build_detail_panel(parent: Control) -> void:
 	_apply_detail_frame_rect(_detail_row_panel(_detail_depth_value_label), Rect2(44.0, 366.0, 432.0, 46.0))
 	_detail_fish_value_label = _make_detail_row(panel, 1, "狙い", 58.0, true, 14)
 	_apply_detail_frame_rect(_detail_row_panel(_detail_fish_value_label), Rect2(44.0, 415.0, 432.0, 96.0))
-	_detail_bait_value_label = _make_detail_row(panel, 2, "エサ", 32.0)
+	_detail_bait_value_label = _make_detail_row(panel, 2, "エサ", 32.0, false, 13)
 	_apply_detail_frame_rect(_detail_row_panel(_detail_bait_value_label), Rect2(44.0, 514.0, 432.0, 46.0))
 
 	_make_rig_control_row(panel)
@@ -394,7 +394,7 @@ func _apply_button_style(button: Button, normal: StyleBox, hover: StyleBox, pres
 
 func _detail_primary_button_style(hovered: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#073a5b", 0.98) if not hovered else Color("#0b4a70", 1.0)
+	style.bg_color = Color(Palette.MAP_ACTION_BG, 0.98) if not hovered else Color(Palette.MAP_ACTION_HOVER, 1.0)
 	style.border_color = Palette.GOLD_BRIGHT
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(4)
@@ -402,7 +402,7 @@ func _detail_primary_button_style(hovered: bool) -> StyleBoxFlat:
 	style.content_margin_right = 18
 	style.content_margin_top = 7
 	style.content_margin_bottom = 7
-	style.shadow_color = Color(0.0, 0.0, 0.0, 0.28)
+	style.shadow_color = Color(Color.BLACK, 0.28)
 	style.shadow_size = 4
 	style.shadow_offset = Vector2(0.0, 2.0)
 	return style
@@ -410,7 +410,7 @@ func _detail_primary_button_style(hovered: bool) -> StyleBoxFlat:
 
 func _detail_primary_button_pressed_style() -> StyleBoxFlat:
 	var style := _detail_primary_button_style(false)
-	style.bg_color = Color("#052d49", 1.0)
+	style.bg_color = Color(Palette.MAP_HEADER_STATUS_BG, 1.0)
 	style.shadow_size = 1
 	style.shadow_offset = Vector2(0.0, 1.0)
 	return style
@@ -418,15 +418,15 @@ func _detail_primary_button_pressed_style() -> StyleBoxFlat:
 
 func _detail_secondary_button_style(hovered: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#d9bf83", 0.98) if not hovered else Color("#ead49a", 1.0)
-	style.border_color = Color("#8b5a25", 0.94)
+	style.bg_color = Color(Palette.MAP_SECONDARY_BG, 0.98) if not hovered else Color(Palette.MAP_SECONDARY_HOVER, 1.0)
+	style.border_color = Color(Palette.MAP_SECONDARY_BORDER, 0.94)
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(4)
 	style.content_margin_left = 18
 	style.content_margin_right = 18
 	style.content_margin_top = 6
 	style.content_margin_bottom = 6
-	style.shadow_color = Color(0.0, 0.0, 0.0, 0.22)
+	style.shadow_color = Color(Color.BLACK, 0.22)
 	style.shadow_size = 3
 	style.shadow_offset = Vector2(0.0, 2.0)
 	return style
@@ -434,7 +434,7 @@ func _detail_secondary_button_style(hovered: bool) -> StyleBoxFlat:
 
 func _detail_secondary_button_pressed_style() -> StyleBoxFlat:
 	var style := _detail_secondary_button_style(false)
-	style.bg_color = Color("#b98749", 0.98)
+	style.bg_color = Color(Palette.MAP_SECONDARY_PRESSED, 0.98)
 	style.shadow_size = 1
 	style.shadow_offset = Vector2(0.0, 1.0)
 	return style
@@ -469,14 +469,14 @@ func _make_detail_row(
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(icon)
 
-	var title_label := make_label(title, 16, Color("#6e4a24"))
+	var title_label := make_label(title, 16, Palette.MAP_DETAIL_ROW_TITLE)
 	title_label.custom_minimum_size = Vector2(46.0, 0.0)
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(title_label)
 
-	var value_label := make_label("", value_font_size, Color("#1b1008"))
+	var value_label := make_label("", value_font_size, Palette.MAP_DETAIL_VALUE)
 	value_label.custom_minimum_size = Vector2(0.0, 40.0 if multiline_value else 0.0)
 	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -504,14 +504,14 @@ func _make_rig_control_row(parent: Control) -> void:
 	row.add_theme_constant_override("separation", 8)
 	panel.add_child(row)
 
-	var title_label := make_label("仕掛け", 16, Color("#6e4a24"))
+	var title_label := make_label("仕掛け", 16, Palette.MAP_DETAIL_ROW_TITLE)
 	title_label.custom_minimum_size = Vector2(60.0, 0.0)
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(title_label)
 
-	_detail_rig_value_label = make_label("", 15, Color("#1b1008"))
+	_detail_rig_value_label = make_label("", 13, Palette.MAP_DETAIL_VALUE)
 	_detail_rig_value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_detail_rig_value_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_detail_rig_value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -532,8 +532,8 @@ func _make_rig_control_row(parent: Control) -> void:
 
 func _detail_row_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#ead8ad", 0.72)
-	style.border_color = Color("#876036", 0.18)
+	style.bg_color = Color(Palette.MAP_DETAIL_ROW_BG, 0.72)
+	style.border_color = Color(Palette.MAP_DETAIL_ROW_BORDER, 0.18)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(4)
 	style.content_margin_left = 9
@@ -559,7 +559,7 @@ func _build_footer(parent: Control) -> void:
 		panel.add_child(frame)
 	else:
 		var fallback := ColorRect.new()
-		fallback.color = Color("#082842")
+		fallback.color = Palette.MAP_FOOTER_BG
 		fallback.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		fallback.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		panel.add_child(fallback)
@@ -575,7 +575,7 @@ func _build_footer(parent: Control) -> void:
 	progress_panel.add_theme_stylebox_override("panel", _footer_info_panel_style())
 	panel.add_child(progress_panel)
 
-	var progress_title := make_label("達成度", 15, Color("#f3dca5"), 1, Palette.TEXT_OUTLINE_DARK)
+	var progress_title := make_label("達成度", 15, Palette.MAP_FOOTER_TEXT, 1, Palette.TEXT_OUTLINE_DARK)
 	progress_title.position = Vector2(282.0, 30.0)
 	progress_title.size = Vector2(82.0, 20.0)
 	progress_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -589,7 +589,7 @@ func _build_footer(parent: Control) -> void:
 	panel.add_child(_footer_completion_value_label)
 
 	_footer_completion_back = ColorRect.new()
-	_footer_completion_back.color = Color("#1a2020", 0.92)
+	_footer_completion_back.color = Color(Palette.MAP_PROGRESS_TRACK, 0.92)
 	_footer_completion_back.position = Vector2(282.0, 60.0)
 	_footer_completion_back.size = Vector2(180.0, 9.0)
 	_footer_completion_back.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -628,7 +628,7 @@ func _build_footer(parent: Control) -> void:
 	hint_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(hint_icon)
 
-	_message_label = make_label("", 15, Color("#f8e3ae"), 1, Palette.TEXT_OUTLINE_DARK)
+	_message_label = make_label("", 15, Palette.MAP_FOOTER_MESSAGE, 1, Palette.TEXT_OUTLINE_DARK)
 	_message_label.position = Vector2(628.0, 28.0)
 	_message_label.size = Vector2(420.0, 24.0)
 	_message_label.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -637,7 +637,7 @@ func _build_footer(parent: Control) -> void:
 	_message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	panel.add_child(_message_label)
 
-	_message_detail_label = make_label("", 15, Color("#f8e3ae"), 1, Palette.TEXT_OUTLINE_DARK)
+	_message_detail_label = make_label("", 15, Palette.MAP_FOOTER_MESSAGE, 1, Palette.TEXT_OUTLINE_DARK)
 	_message_detail_label.position = Vector2(628.0, 52.0)
 	_message_detail_label.size = Vector2(420.0, 24.0)
 	_message_detail_label.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -656,9 +656,9 @@ func _make_footer_button(text: String, icon: Texture2D, callback: Callable, prim
 	var button := Button.new()
 	button.text = ""
 	button.alignment = HORIZONTAL_ALIGNMENT_CENTER
-	button.add_theme_color_override("font_color", Palette.TEXT_BONE if primary else Color("#2c1b0f"))
-	button.add_theme_color_override("font_hover_color", Palette.TEXT_BONE if primary else Color("#241308"))
-	button.add_theme_color_override("font_pressed_color", Palette.TEXT_BONE if primary else Color("#241308"))
+	button.add_theme_color_override("font_color", Palette.TEXT_BONE if primary else Palette.MAP_BUTTON_TEXT_DARK)
+	button.add_theme_color_override("font_hover_color", Palette.TEXT_BONE if primary else Palette.MAP_BUTTON_TEXT_PRESSED)
+	button.add_theme_color_override("font_pressed_color", Palette.TEXT_BONE if primary else Palette.MAP_BUTTON_TEXT_PRESSED)
 	_apply_button_style(button, _footer_button_style(primary, false), _footer_button_style(primary, true), _footer_button_pressed_style(primary))
 	button.pressed.connect(callback)
 
@@ -693,18 +693,18 @@ func _make_footer_button(text: String, icon: Texture2D, callback: Callable, prim
 func _footer_button_style(primary: bool, hovered: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	if primary:
-		style.bg_color = Color("#073957", 0.98) if not hovered else Color("#0a4a70", 1.0)
+		style.bg_color = Color(Palette.MAP_FOOTER_PRIMARY_BG, 0.98) if not hovered else Color(Palette.MAP_FOOTER_PRIMARY_HOVER, 1.0)
 		style.border_color = Palette.GOLD_BRIGHT
 	else:
-		style.bg_color = Color("#282a27", 0.98) if not hovered else Color("#373a35", 1.0)
-		style.border_color = Color("#d0a65a", 0.96)
+		style.bg_color = Color(Palette.MAP_FOOTER_SECONDARY_BG, 0.98) if not hovered else Color(Palette.MAP_FOOTER_SECONDARY_HOVER, 1.0)
+		style.border_color = Color(Palette.MAP_FOOTER_SECONDARY_BORDER, 0.96)
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(4)
 	style.content_margin_left = 16
 	style.content_margin_right = 14
 	style.content_margin_top = 6
 	style.content_margin_bottom = 6
-	style.shadow_color = Color(0.0, 0.0, 0.0, 0.26)
+	style.shadow_color = Color(Color.BLACK, 0.26)
 	style.shadow_size = 4
 	style.shadow_offset = Vector2(0.0, 2.0)
 	return style
@@ -712,7 +712,7 @@ func _footer_button_style(primary: bool, hovered: bool) -> StyleBoxFlat:
 
 func _footer_button_pressed_style(primary: bool) -> StyleBoxFlat:
 	var style := _footer_button_style(primary, false)
-	style.bg_color = Color("#052b43", 0.98) if primary else Color("#1e201e", 0.98)
+	style.bg_color = Color(Palette.MAP_FOOTER_PRIMARY_PRESSED, 0.98) if primary else Color(Palette.MAP_FOOTER_SECONDARY_PRESSED, 0.98)
 	style.shadow_size = 1
 	style.shadow_offset = Vector2(0.0, 1.0)
 	return style
@@ -720,8 +720,8 @@ func _footer_button_pressed_style(primary: bool) -> StyleBoxFlat:
 
 func _footer_info_panel_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#062d46", 0.96)
-	style.border_color = Color("#d6aa5a", 0.76)
+	style.bg_color = Color(Palette.MAP_FOOTER_INFO_BG, 0.96)
+	style.border_color = Color(Palette.MAP_FOOTER_INFO_BORDER, 0.76)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(4)
 	style.content_margin_left = 12
@@ -749,8 +749,8 @@ func _show_menu_hint() -> void:
 
 func _memo_line_style(primary: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#073753", 0.96) if primary else Color("#062f49", 0.92)
-	style.border_color = Color("#d0a65a", 0.45 if primary else 0.24)
+	style.bg_color = Color(Palette.MAP_MEMO_PRIMARY_BG, 0.96) if primary else Color(Palette.MAP_MEMO_SECONDARY_BG, 0.92)
+	style.border_color = Color(Palette.MAP_FOOTER_SECONDARY_BORDER, 0.45 if primary else 0.24)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(4)
 	style.content_margin_left = 9
@@ -762,8 +762,8 @@ func _memo_line_style(primary: bool) -> StyleBoxFlat:
 
 func _memo_frame_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#e7d4aa", 0.66)
-	style.border_color = Color("#d0a65a", 0.50)
+	style.bg_color = Color(Palette.MAP_MEMO_FRAME_BG, 0.66)
+	style.border_color = Color(Palette.MAP_FOOTER_SECONDARY_BORDER, 0.50)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(4)
 	style.content_margin_left = 0
@@ -780,7 +780,7 @@ func _make_ledger_header_chip(parent: Control, width: float, strong: bool) -> La
 	chip.add_theme_stylebox_override("panel", _ledger_header_chip_style(strong))
 	parent.add_child(chip)
 
-	var label := make_label("", 11, Palette.GOLD_BRIGHT if strong else Color("#e4d1a2"), 1, Palette.TEXT_OUTLINE_DARK)
+	var label := make_label("", 11, Palette.GOLD_BRIGHT if strong else Palette.MAP_LEDGER_LABEL_DIM, 1, Palette.TEXT_OUTLINE_DARK)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -793,8 +793,8 @@ func _make_ledger_header_chip(parent: Control, width: float, strong: bool) -> La
 
 func _ledger_header_chip_style(strong: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#0b405f", 0.96) if strong else Color("#133f50", 0.72)
-	style.border_color = Color("#efca6e", 0.72) if strong else Color("#c99d54", 0.36)
+	style.bg_color = Color(Palette.MAP_LEDGER_STRONG_BG, 0.96) if strong else Color(Palette.MAP_LEDGER_WEAK_BG, 0.72)
+	style.border_color = Color(Palette.MAP_LEDGER_STRONG_BORDER, 0.72) if strong else Color(Palette.MAP_LEDGER_WEAK_BORDER, 0.36)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(3)
 	style.content_margin_left = 7
@@ -806,8 +806,8 @@ func _ledger_header_chip_style(strong: bool) -> StyleBoxFlat:
 
 func _ledger_header_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#073957", 0.94)
-	style.border_color = Color("#d0a65a", 0.52)
+	style.bg_color = Color(Palette.MAP_FOOTER_PRIMARY_BG, 0.94)
+	style.border_color = Color(Palette.MAP_FOOTER_SECONDARY_BORDER, 0.52)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(4)
 	style.content_margin_left = 10
@@ -819,8 +819,8 @@ func _ledger_header_style() -> StyleBoxFlat:
 
 func _ledger_body_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#e7d4aa", 0.78)
-	style.border_color = Color("#d0a65a", 0.42)
+	style.bg_color = Color(Palette.MAP_MEMO_FRAME_BG, 0.78)
+	style.border_color = Color(Palette.MAP_FOOTER_SECONDARY_BORDER, 0.42)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(4)
 	style.content_margin_left = 0
@@ -832,8 +832,8 @@ func _ledger_body_style() -> StyleBoxFlat:
 
 func _memo_header_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#073957", 0.94)
-	style.border_color = Color("#d0a65a", 0.48)
+	style.bg_color = Color(Palette.MAP_FOOTER_PRIMARY_BG, 0.94)
+	style.border_color = Color(Palette.MAP_FOOTER_SECONDARY_BORDER, 0.48)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(4)
 	style.content_margin_left = 8
@@ -865,16 +865,16 @@ func _make_completion_entry(spot: Dictionary) -> Control:
 
 	_add_completion_slot_fallback(entry, unlocked, selected)
 
-	var title_color := Color("#1d140b") if unlocked else Color("#5c554a")
+	var title_color := Palette.MAP_ENTRY_TITLE if unlocked else Palette.MAP_ENTRY_TITLE_LOCKED
 	var title := _card_label(String(spot.get("short_name", spot.get("name", spot_id))), 12, title_color, 0)
 	title.position = Vector2(12.0, 4.0)
 	title.size = Vector2(112.0, 15.0)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	entry.add_child(title)
 
-	var badge_color := Color("#7b4c15") if unlocked else Color("#6b5740")
+	var badge_color := Palette.MAP_ENTRY_BADGE if unlocked else Palette.MAP_ENTRY_BADGE_LOCKED
 	if selected and unlocked:
-		badge_color = Color("#4f3518")
+		badge_color = Palette.MAP_ENTRY_BADGE_SELECTED
 	var badge := _card_label(_completion_badge_text(spot, unlocked, completion), 11, badge_color, 0)
 	badge.position = Vector2(158.0, 4.0)
 	badge.size = Vector2(48.0, 15.0)
@@ -882,7 +882,7 @@ func _make_completion_entry(spot: Dictionary) -> Control:
 	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	entry.add_child(badge)
 
-	var body_color := Color("#23170d") if unlocked else Color("#4f4941")
+	var body_color := Palette.MAP_ENTRY_BODY if unlocked else Palette.MAP_ENTRY_BODY_LOCKED
 	var summary_text := _completion_summary_text(spot, unlocked, completion)
 	var summary := _card_label(summary_text, 11, body_color)
 	summary.position = Vector2(12.0, 24.0)
@@ -902,15 +902,15 @@ func _add_completion_slot_fallback(parent: Control, unlocked: bool, selected: bo
 	parent.add_child(frame)
 
 	var body := ColorRect.new()
-	body.color = Color("#f5e5bc", 0.16) if unlocked else Color("#5d605a", 0.16)
+	body.color = Color(Palette.MAP_ENTRY_BODY_UNLOCKED_WASH, 0.16) if unlocked else Color(Palette.MAP_ENTRY_BODY_LOCKED_WASH, 0.16)
 	if selected and unlocked:
-		body.color = Color("#ffe070", 0.11)
+		body.color = Color(Palette.MAP_ENTRY_SELECTED_WASH, 0.11)
 	body.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	body.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(body)
 
 	var top_rule := ColorRect.new()
-	top_rule.color = Color("#073957", 0.58) if unlocked else Color("#4b514f", 0.42)
+	top_rule.color = Color(Palette.MAP_FOOTER_PRIMARY_BG, 0.58) if unlocked else Color(Palette.MAP_ENTRY_LOCKED_RULE, 0.42)
 	if selected and unlocked:
 		top_rule.color = Palette.GOLD_BRIGHT
 	top_rule.anchor_left = 0.0
@@ -925,7 +925,7 @@ func _add_completion_slot_fallback(parent: Control, unlocked: bool, selected: bo
 	parent.add_child(top_rule)
 
 	var rule := ColorRect.new()
-	rule.color = Color("#7d5831", 0.35)
+	rule.color = Color(Palette.MAP_ENTRY_BOTTOM_RULE, 0.35)
 	rule.anchor_left = 0.0
 	rule.anchor_top = 1.0
 	rule.anchor_right = 1.0
@@ -954,11 +954,11 @@ func _add_completion_slot_fallback(parent: Control, unlocked: bool, selected: bo
 
 func _completion_entry_style(unlocked: bool, selected: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#ead5a7", 0.04) if unlocked else Color("#4f514d", 0.08)
-	style.border_color = Color("#6d4b28", 0.24) if unlocked else Color("#4d463d", 0.20)
+	style.bg_color = Color(Palette.MAP_ENTRY_BG, 0.04) if unlocked else Color(Palette.MAP_ENTRY_BG_LOCKED, 0.08)
+	style.border_color = Color(Palette.MAP_ENTRY_BORDER, 0.24) if unlocked else Color(Palette.MAP_ENTRY_BORDER_LOCKED, 0.20)
 	if selected and unlocked:
-		style.bg_color = Color("#f3cf66", 0.10)
-		style.border_color = Color("#f4cf72", 0.86)
+		style.bg_color = Color(Palette.MAP_ENTRY_SELECTED_BG, 0.10)
+		style.border_color = Color(Palette.MAP_ENTRY_SELECTED_BORDER, 0.86)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(2)
 	style.content_margin_left = 0
@@ -979,23 +979,23 @@ func _add_completion_marks(parent: Control, unlocked: bool, caught: int, total: 
 		mark.position = Vector2(start_x + float(index) * 8.0, y)
 		mark.size = Vector2(5.0, 5.0)
 		var filled := unlocked and index < caught
-		mark.color = Color("#d89132") if filled else Color("#82796b", 0.55)
+		mark.color = Palette.MAP_MARK_FILLED if filled else Color(Palette.MAP_MARK_EMPTY, 0.55)
 		if not unlocked:
-			mark.color = Color("#6f6a61", 0.50)
+			mark.color = Color(Palette.MAP_MARK_LOCKED, 0.50)
 		mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		parent.add_child(mark)
 
 
 func _add_completion_bar(parent: Control, unlocked: bool, selected: bool, ratio: float) -> void:
 	var back := ColorRect.new()
-	back.color = Color("#5c5143", 0.52) if unlocked else Color("#736d63", 0.44)
+	back.color = Color(Palette.MAP_BAR_BACK, 0.52) if unlocked else Color(Palette.MAP_BAR_BACK_LOCKED, 0.44)
 	back.position = Vector2(104.0, 31.0)
 	back.size = Vector2(100.0, 5.0)
 	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(back)
 
 	var fill := ColorRect.new()
-	fill.color = Palette.GOLD_BRIGHT if selected else Color("#d39135")
+	fill.color = Palette.GOLD_BRIGHT if selected else Palette.MAP_BAR_FILL
 	fill.position = back.position
 	fill.size = Vector2(back.size.x * clampf(ratio, 0.0, 1.0), back.size.y)
 	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1070,18 +1070,18 @@ func _refresh_detail() -> void:
 	_detail_title_label.add_theme_font_size_override("font_size", 22 if _detail_title_label.text.length() >= 9 else 24)
 	if accessible:
 		_detail_unlock_label.text = "解放済み　%s" % ("ぬし専用" if boss_spot else "通常ポイント")
-		_detail_unlock_label.add_theme_color_override("font_color", Color("#f2cf7d") if not boss_spot else Color("#ffb58d"))
+		_detail_unlock_label.add_theme_color_override("font_color", Palette.MAP_UNLOCK_OK if not boss_spot else Palette.MAP_UNLOCK_BOSS)
 	else:
 		_detail_unlock_label.text = String(access.get("message", "出航不可"))
-		_detail_unlock_label.add_theme_color_override("font_color", Color("#ffb0a0"))
+		_detail_unlock_label.add_theme_color_override("font_color", Palette.MAP_UNLOCK_LOCKED)
 	if _detail_thumbnail != null:
 		_detail_thumbnail.texture = _thumbnail_for_spot(_selected_spot_id)
 	_detail_description_label.text = String(spot.get("description", ""))
 	_detail_depth_value_label.text = _depth_range_text(spot)
 	_detail_fish_value_label.text = _featured_fish_text(spot, 4, 2)
-	_detail_bait_value_label.text = _bait_text_with_match(spot)
+	_detail_bait_value_label.text = _bait_text(spot)
 	if _detail_rig_value_label != null:
-		_detail_rig_value_label.text = _equipped_rig_text()
+		_detail_rig_value_label.text = _equipped_rig_text(spot)
 	if _rig_cycle_button != null:
 		var owned_rig_ids := _valid_owned_rig_ids()
 		_rig_cycle_button.disabled = owned_rig_ids.size() <= 1
@@ -1169,22 +1169,15 @@ func _bait_text(spot: Dictionary) -> String:
 	return "、".join(PackedStringArray(baits))
 
 
-func _bait_text_with_match(spot: Dictionary) -> String:
-	var base := _bait_text(spot)
-	var match_text := "◎おすすめ一致" if _rig_matches_spot(spot) else "相性ふつう"
-	if base.strip_edges().is_empty():
-		return match_text
-	return "%s　%s" % [base, match_text]
-
-
-func _equipped_rig_text() -> String:
+func _equipped_rig_text(spot: Dictionary) -> String:
 	var rig := GameData.get_rig(PlayerProgress.equipped_rig_id)
 	if rig.is_empty():
-		return "サビキ仕掛け"
-	var bait_types: Array[String] = []
-	for bait_variant in Array(rig.get("bait_types", [])):
-		bait_types.append(String(bait_variant))
-	return "%s / %s" % [String(rig.get("name", "サビキ仕掛け")), "、".join(PackedStringArray(bait_types))]
+		return "サビキ / ふつう"
+	var rig_name := String(rig.get("name", "サビキ仕掛け"))
+	if rig_name.ends_with("仕掛け"):
+		rig_name = rig_name.trim_suffix("仕掛け")
+	var match_text := "一致" if _rig_matches_spot(spot) else "ふつう"
+	return "%s / %s" % [rig_name, match_text]
 
 
 func _cycle_owned_rig() -> void:

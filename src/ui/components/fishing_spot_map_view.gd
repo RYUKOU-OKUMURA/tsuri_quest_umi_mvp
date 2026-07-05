@@ -148,25 +148,25 @@ func _draw() -> void:
 	var rect := Rect2(Vector2.ZERO, size)
 	if rect.size.x <= 0.0 or rect.size.y <= 0.0:
 		return
-	draw_rect(rect, Color("#04111f"), true)
+	draw_rect(rect, Palette.MAP_CANVAS_BG, true)
 	var map_rect := _content_rect()
 	if _map_bg != null:
 		draw_texture_rect_region(_map_bg, map_rect, _texture_source_region(_map_bg), Color.WHITE)
 	else:
-		draw_rect(map_rect, Color("#0b4564"), true)
+		draw_rect(map_rect, Palette.MAP_CANVAS_FALLBACK, true)
 	if _map_grade != null:
-		draw_texture_rect_region(_map_grade, map_rect, _texture_source_region(_map_grade), Color(1.0, 1.0, 1.0, 0.70))
+		draw_texture_rect_region(_map_grade, map_rect, _texture_source_region(_map_grade), Color(Color.WHITE, 0.70))
 	_draw_chart_overlay(map_rect)
 	_draw_depth_contours(map_rect)
 	_draw_environment_symbols(map_rect)
 	_draw_routes(map_rect)
 	_draw_markers(map_rect)
 	_draw_edge_shade(map_rect)
-	draw_rect(map_rect, Color(0.94, 0.78, 0.38, 0.52), false, 2.0)
+	draw_rect(map_rect, Color(Palette.MAP_CHART_BORDER, 0.52), false, 2.0)
 
 
 func _draw_chart_overlay(map_rect: Rect2) -> void:
-	var grid_color := Color("#f6d682", 0.075)
+	var grid_color := Color(Palette.MAP_GRID, 0.075)
 	for index in range(1, 8):
 		var x := map_rect.position.x + map_rect.size.x * float(index) / 8.0
 		draw_line(Vector2(x, map_rect.position.y + 8.0), Vector2(x, map_rect.end.y - 8.0), grid_color, 1.0)
@@ -174,7 +174,7 @@ func _draw_chart_overlay(map_rect: Rect2) -> void:
 		var y := map_rect.position.y + map_rect.size.y * float(index) / 5.0
 		draw_line(Vector2(map_rect.position.x + 8.0, y), Vector2(map_rect.end.x - 8.0, y), grid_color, 1.0)
 
-	var tick_color := Color("#f8dea0", 0.30)
+	var tick_color := Color(Palette.MAP_TICK, 0.30)
 	for index in range(0, 17):
 		var x := map_rect.position.x + map_rect.size.x * float(index) / 16.0
 		draw_line(Vector2(x, map_rect.position.y), Vector2(x, map_rect.position.y + 9.0), tick_color, 1.0)
@@ -186,17 +186,17 @@ func _draw_chart_overlay(map_rect: Rect2) -> void:
 
 	var rose_center := map_rect.position + Vector2(map_rect.size.x * 0.895, map_rect.size.y * 0.155)
 	var rose_r := clampf(map_rect.size.x * 0.043, 28.0, 42.0)
-	draw_circle(rose_center, rose_r, Color("#031321", 0.24))
-	draw_circle(rose_center, rose_r, Color("#f7dfa0", 0.28), false, 1.5)
-	draw_line(rose_center + Vector2(0.0, -rose_r * 0.90), rose_center + Vector2(0.0, rose_r * 0.90), Color("#f7dfa0", 0.36), 1.4)
-	draw_line(rose_center + Vector2(-rose_r * 0.90, 0.0), rose_center + Vector2(rose_r * 0.90, 0.0), Color("#f7dfa0", 0.30), 1.2)
+	draw_circle(rose_center, rose_r, Color(Palette.MAP_COMPASS_WASH, 0.24))
+	draw_circle(rose_center, rose_r, Color(Palette.MAP_COMPASS_GOLD, 0.28), false, 1.5)
+	draw_line(rose_center + Vector2(0.0, -rose_r * 0.90), rose_center + Vector2(0.0, rose_r * 0.90), Color(Palette.MAP_COMPASS_GOLD, 0.36), 1.4)
+	draw_line(rose_center + Vector2(-rose_r * 0.90, 0.0), rose_center + Vector2(rose_r * 0.90, 0.0), Color(Palette.MAP_COMPASS_GOLD, 0.30), 1.2)
 	draw_colored_polygon(
 		PackedVector2Array([
 			rose_center + Vector2(0.0, -rose_r * 0.82),
 			rose_center + Vector2(-rose_r * 0.16, -rose_r * 0.10),
 			rose_center + Vector2(rose_r * 0.16, -rose_r * 0.10),
 		]),
-		Color("#ffdf74", 0.50)
+		Color(Palette.MAP_COMPASS_NORTH, 0.50)
 	)
 	draw_colored_polygon(
 		PackedVector2Array([
@@ -204,22 +204,22 @@ func _draw_chart_overlay(map_rect: Rect2) -> void:
 			rose_center + Vector2(-rose_r * 0.14, rose_r * 0.10),
 			rose_center + Vector2(rose_r * 0.14, rose_r * 0.10),
 		]),
-		Color("#99d8ee", 0.35)
+		Color(Palette.MAP_COMPASS_SOUTH, 0.35)
 	)
 
 
 func _draw_edge_shade(map_rect: Rect2) -> void:
 	var edge := 26.0
-	draw_rect(Rect2(map_rect.position, Vector2(map_rect.size.x, edge)), Color("#020914", 0.22), true)
-	draw_rect(Rect2(Vector2(map_rect.position.x, map_rect.end.y - edge), Vector2(map_rect.size.x, edge)), Color("#020914", 0.24), true)
-	draw_rect(Rect2(map_rect.position, Vector2(edge, map_rect.size.y)), Color("#020914", 0.20), true)
-	draw_rect(Rect2(Vector2(map_rect.end.x - edge, map_rect.position.y), Vector2(edge, map_rect.size.y)), Color("#020914", 0.20), true)
+	draw_rect(Rect2(map_rect.position, Vector2(map_rect.size.x, edge)), Color(Palette.MAP_OVERLAY_DARK, 0.22), true)
+	draw_rect(Rect2(Vector2(map_rect.position.x, map_rect.end.y - edge), Vector2(map_rect.size.x, edge)), Color(Palette.MAP_OVERLAY_DARK, 0.24), true)
+	draw_rect(Rect2(map_rect.position, Vector2(edge, map_rect.size.y)), Color(Palette.MAP_OVERLAY_DARK, 0.20), true)
+	draw_rect(Rect2(Vector2(map_rect.end.x - edge, map_rect.position.y), Vector2(edge, map_rect.size.y)), Color(Palette.MAP_OVERLAY_DARK, 0.20), true)
 
 
 func _draw_depth_contours(map_rect: Rect2) -> void:
-	var shallow := Color("#f8deb0", 0.20)
-	var reef := Color("#c8f2df", 0.16)
-	var ocean := Color("#89c8e8", 0.12)
+	var shallow := Color(Palette.MAP_CONTOUR_SHALLOW, 0.20)
+	var reef := Color(Palette.MAP_CONTOUR_REEF, 0.16)
+	var ocean := Color(Palette.MAP_CONTOUR_OCEAN, 0.12)
 	_draw_contour(
 		map_rect,
 		[
@@ -244,7 +244,7 @@ func _draw_depth_contours(map_rect: Rect2) -> void:
 			Vector2(0.275, 0.515),
 			Vector2(0.175, 0.470),
 		],
-		Color("#fff0b0", 0.16),
+		Color(Palette.MAP_CONTOUR_INNER, 0.16),
 		1.0
 	)
 	_draw_contour(
@@ -304,7 +304,7 @@ func _draw_environment_symbols(map_rect: Rect2) -> void:
 			Vector2(0.705, 0.215),
 			Vector2(0.768, 0.330),
 		],
-		Color("#bfeaff", 0.23),
+		Color(Palette.MAP_CURRENT_BLUE, 0.23),
 		1.6
 	)
 	_draw_tide_stream(
@@ -315,7 +315,7 @@ func _draw_environment_symbols(map_rect: Rect2) -> void:
 			Vector2(0.765, 0.650),
 			Vector2(0.840, 0.780),
 		],
-		Color("#f7d979", 0.26),
+		Color(Palette.MAP_CURRENT_GOLD, 0.26),
 		1.8
 	)
 	_draw_tide_stream(
@@ -326,16 +326,16 @@ func _draw_environment_symbols(map_rect: Rect2) -> void:
 			Vector2(0.395, 0.675),
 			Vector2(0.462, 0.590),
 		],
-		Color("#c5f7dc", 0.18),
+		Color(Palette.MAP_CURRENT_GREEN, 0.18),
 		1.2
 	)
-	_draw_reef_marks(map_rect, [Vector2(0.260, 0.700), Vector2(0.315, 0.755), Vector2(0.370, 0.715)], Color("#e5f4c7", 0.30))
-	_draw_reef_marks(map_rect, [Vector2(0.430, 0.465), Vector2(0.480, 0.520), Vector2(0.405, 0.590)], Color("#f6e7ba", 0.28))
-	_draw_depth_label(font, map_rect, "5m", Vector2(0.270, 0.245), Color("#fff0b0", 0.35))
-	_draw_depth_label(font, map_rect, "10m", Vector2(0.540, 0.340), Color("#d8f2ff", 0.28))
-	_draw_depth_label(font, map_rect, "20m", Vector2(0.750, 0.455), Color("#d8f2ff", 0.28))
-	_draw_depth_label(font, map_rect, "潮流", Vector2(0.690, 0.235), Color("#d8f2ff", 0.32))
-	_draw_depth_label(font, map_rect, "岩礁帯", Vector2(0.325, 0.815), Color("#eef6c2", 0.30))
+	_draw_reef_marks(map_rect, [Vector2(0.260, 0.700), Vector2(0.315, 0.755), Vector2(0.370, 0.715)], Color(Palette.MAP_REEF_MARK, 0.30))
+	_draw_reef_marks(map_rect, [Vector2(0.430, 0.465), Vector2(0.480, 0.520), Vector2(0.405, 0.590)], Color(Palette.MAP_REEF_MARK_WARM, 0.28))
+	_draw_depth_label(font, map_rect, "5m", Vector2(0.270, 0.245), Color(Palette.MAP_CONTOUR_INNER, 0.35))
+	_draw_depth_label(font, map_rect, "10m", Vector2(0.540, 0.340), Color(Palette.MAP_DEPTH_LABEL, 0.28))
+	_draw_depth_label(font, map_rect, "20m", Vector2(0.750, 0.455), Color(Palette.MAP_DEPTH_LABEL, 0.28))
+	_draw_depth_label(font, map_rect, "潮流", Vector2(0.690, 0.235), Color(Palette.MAP_DEPTH_LABEL, 0.32))
+	_draw_depth_label(font, map_rect, "岩礁帯", Vector2(0.325, 0.815), Color(Palette.MAP_DEPTH_LABEL_REEF, 0.30))
 
 
 func _draw_tide_stream(map_rect: Rect2, normalized_points: Array, color: Color, width: float) -> void:
@@ -344,7 +344,7 @@ func _draw_tide_stream(map_rect: Rect2, normalized_points: Array, color: Color, 
 		points.append(_map_normalized_point(map_rect, point))
 	if points.size() < 2:
 		return
-	draw_polyline(points, Color(0.0, 0.0, 0.0, color.a * 0.28), width + 2.0, false)
+	draw_polyline(points, Color(Color.BLACK, color.a * 0.28), width + 2.0, false)
 	draw_polyline(points, color, width, false)
 	for index in range(points.size() - 1):
 		var from_point := points[index]
@@ -372,8 +372,8 @@ func _draw_reef_marks(map_rect: Rect2, normalized_points: Array, color: Color) -
 		var center := _map_normalized_point(map_rect, point)
 		var size_a := 7.0
 		var size_b := 4.0
-		draw_line(center + Vector2(-size_a, -size_b), center + Vector2(size_a, size_b), Color(0.0, 0.0, 0.0, color.a * 0.35), 2.1)
-		draw_line(center + Vector2(-size_a, size_b), center + Vector2(size_a, -size_b), Color(0.0, 0.0, 0.0, color.a * 0.35), 2.1)
+		draw_line(center + Vector2(-size_a, -size_b), center + Vector2(size_a, size_b), Color(Color.BLACK, color.a * 0.35), 2.1)
+		draw_line(center + Vector2(-size_a, size_b), center + Vector2(size_a, -size_b), Color(Color.BLACK, color.a * 0.35), 2.1)
 		draw_line(center + Vector2(-size_a, -size_b), center + Vector2(size_a, size_b), color, 1.0)
 		draw_line(center + Vector2(-size_a, size_b), center + Vector2(size_a, -size_b), color, 1.0)
 
@@ -383,7 +383,7 @@ func _draw_depth_label(font: Font, map_rect: Rect2, text: String, normalized: Ve
 	var text_size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
 	var pos := _map_normalized_point(map_rect, normalized)
 	var baseline := pos + Vector2(-text_size.x * 0.5, text_size.y * 0.35)
-	draw_string_outline(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 2, Color(0.0, 0.0, 0.0, color.a * 0.45))
+	draw_string_outline(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 2, Color(Color.BLACK, color.a * 0.45))
 	draw_string(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
 
 
@@ -403,13 +403,13 @@ func _draw_routes(map_rect: Rect2) -> void:
 			GameData.is_fishing_spot_unlocked(from_id, player_level)
 			and GameData.is_fishing_spot_unlocked(to_id, player_level)
 		)
-		var color := Color("#ffe070", 0.88) if selected_route else Color("#f6e5b0", 0.34)
+		var color := Color(Palette.MAP_ROUTE_SELECTED, 0.88) if selected_route else Color(Palette.MAP_ROUTE_IDLE, 0.34)
 		if not both_unlocked and not selected_route:
-			color = Color("#a99c87", 0.28)
+			color = Color(Palette.MAP_ROUTE_LOCKED, 0.28)
 		var width := 3.2 if selected_route else 1.7
 		if selected_route:
 			var pulse := 0.5 + 0.5 * sin(_animation_time * TAU * 0.72)
-			draw_line(from_point, to_point, Color("#ffe070", 0.12 + pulse * 0.06), width + 8.0)
+			draw_line(from_point, to_point, Color(Palette.MAP_ROUTE_SELECTED, 0.12 + pulse * 0.06), width + 8.0)
 			_draw_route_bearing_marks(from_point, to_point, pulse)
 		_draw_dotted_line(from_point, to_point, color, width, 13.0, 10.0)
 
@@ -439,7 +439,7 @@ func _draw_route_bearing_marks(from_point: Vector2, to_point: Vector2, pulse: fl
 		draw_line(
 			center - normal * 6.5,
 			center + normal * 6.5,
-			Color("#fff0a0", 0.30 + pulse * 0.10),
+			Color(Palette.MAP_ROUTE_BEARING, 0.30 + pulse * 0.10),
 			1.2
 		)
 
@@ -477,9 +477,9 @@ func _draw_markers(map_rect: Rect2) -> void:
 func _draw_selected_marker_ping(center: Vector2, marker_size: float) -> void:
 	var pulse := 0.5 + 0.5 * sin(_animation_time * TAU * 0.86)
 	var radius := marker_size * (0.50 + pulse * 0.08)
-	draw_circle(center, radius, Color("#fff2a8", 0.14 + pulse * 0.09), false, 3.0)
-	draw_circle(center, marker_size * 0.68, Color("#ffe06d", 0.16), false, 1.8)
-	draw_circle(center, marker_size * 0.82, Color("#fff2a8", 0.08), false, 1.1)
+	draw_circle(center, radius, Color(Palette.MAP_PING_GLOW, 0.14 + pulse * 0.09), false, 3.0)
+	draw_circle(center, marker_size * 0.68, Color(Palette.MAP_PING_RING, 0.16), false, 1.8)
+	draw_circle(center, marker_size * 0.82, Color(Palette.MAP_PING_GLOW, 0.08), false, 1.1)
 	var spin := fmod(_animation_time * 1.35, TAU)
 	for offset in [0.0, PI]:
 		draw_arc(
@@ -488,14 +488,14 @@ func _draw_selected_marker_ping(center: Vector2, marker_size: float) -> void:
 			spin + offset,
 			spin + offset + PI * 0.46,
 			18,
-			Color("#fff3b5", 0.38),
+			Color(Palette.MAP_PING_ARC, 0.38),
 			1.8,
 			true
 		)
 	var tick := marker_size * 0.93
 	var tick_inner := marker_size * 0.76
 	for direction in [Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT]:
-		draw_line(center + direction * tick_inner, center + direction * tick, Color("#ffe070", 0.30), 1.3)
+		draw_line(center + direction * tick_inner, center + direction * tick, Color(Palette.MAP_ROUTE_SELECTED, 0.30), 1.3)
 
 
 func _draw_spot_marker(spot_id: String, marker_row: int, fallback_marker_index: int, target: Rect2) -> void:
@@ -515,7 +515,7 @@ func _draw_spot_marker(spot_id: String, marker_row: int, fallback_marker_index: 
 
 func _draw_marker(marker_index: int, target: Rect2) -> void:
 	if _marker_sheet == null:
-		draw_circle(target.get_center(), target.size.x * 0.42, Color("#0b4a70"))
+		draw_circle(target.get_center(), target.size.x * 0.42, Palette.MAP_ACTION_HOVER)
 		draw_circle(target.get_center(), target.size.x * 0.42, Palette.GOLD, false, 2.0)
 		return
 	var src := Rect2(Vector2(MARKER_CELL_SIZE * float(marker_index), 0.0), Vector2(MARKER_CELL_SIZE, MARKER_CELL_SIZE))
@@ -550,30 +550,30 @@ func _draw_spot_chip(
 	chip_pos.x = clampf(chip_pos.x, map_rect.position.x + 8.0, map_rect.end.x - chip_w - 8.0)
 	chip_pos.y = clampf(chip_pos.y, map_rect.position.y + 8.0, map_rect.end.y - chip_h - 8.0)
 	var chip_rect := Rect2(chip_pos, Vector2(chip_w, chip_h))
-	var fill := Color("#f0d79a", 0.92) if unlocked else Color("#b9afa0", 0.84)
-	var border := Color("#ffd967", 0.92) if selected else Color("#5e3a1c", 0.76)
+	var fill := Color(Palette.MAP_CHIP_FILL, 0.92) if unlocked else Color(Palette.MAP_CHIP_FILL_LOCKED, 0.84)
+	var border := Color(Palette.MAP_CHIP_BORDER_SELECTED, 0.92) if selected else Color(Palette.MAP_CHIP_BORDER, 0.76)
 	if boss_spot and unlocked:
-		border = Color("#d9764d", 0.98)
+		border = Color(Palette.MAP_CHIP_BORDER_BOSS, 0.98)
 	_draw_spot_chip_leader(center, chip_rect, selected, unlocked)
-	draw_rect(chip_rect.grow(2.0), Color(0.0, 0.0, 0.0, 0.25), true)
+	draw_rect(chip_rect.grow(2.0), Color(Color.BLACK, 0.25), true)
 	draw_rect(chip_rect, fill, true)
-	draw_line(chip_rect.position + Vector2(4.0, 4.0), chip_rect.position + Vector2(chip_rect.size.x - 4.0, 4.0), Color("#fff1bf", 0.42), 1.0)
-	draw_line(chip_rect.position + Vector2(4.0, chip_rect.size.y - 4.0), chip_rect.position + Vector2(chip_rect.size.x - 4.0, chip_rect.size.y - 4.0), Color("#8b5b2b", 0.20), 1.0)
+	draw_line(chip_rect.position + Vector2(4.0, 4.0), chip_rect.position + Vector2(chip_rect.size.x - 4.0, 4.0), Color(Palette.MAP_CHIP_HIGHLIGHT, 0.42), 1.0)
+	draw_line(chip_rect.position + Vector2(4.0, chip_rect.size.y - 4.0), chip_rect.position + Vector2(chip_rect.size.x - 4.0, chip_rect.size.y - 4.0), Color(Palette.MAP_CHIP_SHADOW_LINE, 0.20), 1.0)
 	for corner in [
 		chip_rect.position + Vector2(4.0, 4.0),
 		Vector2(chip_rect.end.x - 4.0, chip_rect.position.y + 4.0),
 		Vector2(chip_rect.position.x + 4.0, chip_rect.end.y - 4.0),
 		chip_rect.end - Vector2(4.0, 4.0),
 	]:
-		draw_circle(corner, 1.6, Color("#6f4824", 0.42))
+		draw_circle(corner, 1.6, Color(Palette.MAP_CHIP_RIVET, 0.42))
 	draw_rect(chip_rect, border, false, 1.4 if not selected else 1.8)
 	if selected:
-		draw_rect(chip_rect.grow(3.0), Color("#ffe070", 0.13), false, 1.0)
+		draw_rect(chip_rect.grow(3.0), Color(Palette.MAP_ROUTE_SELECTED, 0.13), false, 1.0)
 	var name_pos := chip_rect.position + Vector2((chip_rect.size.x - name_w) * 0.5, 21.0)
-	_draw_text(font, name, name_pos, font_size, Color("#24170d") if unlocked else Color("#554b42"), 1)
+	_draw_text(font, name, name_pos, font_size, Palette.MAP_CHIP_TEXT if unlocked else Palette.MAP_CHIP_TEXT_LOCKED, 1)
 	if not unlocked or boss_spot:
 		var extra_pos := chip_rect.position + Vector2((chip_rect.size.x - extra_w) * 0.5, 36.0)
-		_draw_text(font, extra, extra_pos, 12, Color("#842a24") if not unlocked else Color("#6d2a1d"), 0)
+		_draw_text(font, extra, extra_pos, 12, Palette.MAP_CHIP_LOCKED_TEXT if not unlocked else Palette.MAP_CHIP_BOSS_TEXT, 0)
 
 
 func _draw_spot_chip_leader(center: Vector2, chip_rect: Rect2, selected: bool, unlocked: bool) -> void:
@@ -591,10 +591,10 @@ func _draw_spot_chip_leader(center: Vector2, chip_rect: Rect2, selected: bool, u
 		edge.x = chip_rect.end.x
 	else:
 		edge = chip_rect.get_center()
-	var line_color := Color("#ffe8a0", 0.50 if unlocked else 0.28)
+	var line_color := Color(Palette.MAP_CHIP_LEADER, 0.50 if unlocked else 0.28)
 	if selected:
-		line_color = Color("#ffe070", 0.70)
-	draw_line(center, edge, Color(0.0, 0.0, 0.0, line_color.a * 0.45), 3.0)
+		line_color = Color(Palette.MAP_ROUTE_SELECTED, 0.70)
+	draw_line(center, edge, Color(Color.BLACK, line_color.a * 0.45), 3.0)
 	draw_line(center, edge, line_color, 1.2 if not selected else 1.6)
 
 
@@ -607,7 +607,7 @@ func _draw_dotted_line(from_point: Vector2, to_point: Vector2, color: Color, wid
 	var cursor := 0.0
 	while cursor < length:
 		var end_cursor := minf(cursor + dash, length)
-		draw_line(from_point + direction * cursor, from_point + direction * end_cursor, Color(0.0, 0.0, 0.0, color.a * 0.34), width + 2.0)
+		draw_line(from_point + direction * cursor, from_point + direction * end_cursor, Color(Color.BLACK, color.a * 0.34), width + 2.0)
 		draw_line(from_point + direction * cursor, from_point + direction * end_cursor, color, width)
 		cursor += dash + gap
 
@@ -667,7 +667,7 @@ func _texture_source_region(texture: Texture2D) -> Rect2:
 
 func _draw_text(font: Font, text: String, baseline: Vector2, font_size: int, color: Color, outline: int) -> void:
 	if outline > 0:
-		draw_string_outline(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, outline, Color(0.0, 0.0, 0.0, 0.62))
+		draw_string_outline(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, outline, Color(Color.BLACK, 0.62))
 	draw_string(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
 
 
