@@ -800,7 +800,7 @@ func _build_result_summary(layout: VBoxContainer) -> void:
 	title_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	title_slot.add_child(title_icon)
 	_result_title_icon = title_icon
-	_result_title = make_shadow_label("", 15, Palette.TEXT_BONE, 2, Color("#2b2117"))
+	_result_title = make_shadow_label("", 15, Palette.TEXT_BONE, 2, Palette.COOKING_RESULT_TITLE_OUTLINE)
 	_result_title.name = "CurrentPrepTitle"
 	_result_title.custom_minimum_size = Vector2(0.0, 0.0)
 	_result_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -2136,7 +2136,12 @@ func _section_ribbon(text: String, icon_mode: String, node_name: String) -> Pane
 
 
 func _summary_card(title: String, value: String, accent: Color, icon_mode := "book") -> PanelContainer:
-	var card := _panel_box(Color("#f2e4c2"), Color("#60401f"), Color("#d7a456"), 5)
+	var card := _panel_box(
+		Palette.COOKING_SUMMARY_CARD_FILL,
+		Palette.COOKING_SUMMARY_CARD_BORDER,
+		Palette.COOKING_SUMMARY_CARD_INNER,
+		5
+	)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.custom_minimum_size = Vector2(0, 42)
 	var row := HBoxContainer.new()
@@ -2147,10 +2152,10 @@ func _summary_card(title: String, value: String, accent: Color, icon_mode := "bo
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_theme_constant_override("separation", 0)
 	row.add_child(box)
-	var title_label := make_label(title, 13, Color("#614525"))
+	var title_label := make_label(title, 13, Palette.COOKING_SUMMARY_CARD_TITLE_TEXT)
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title_label)
-	var value_label := make_label(value, 14, accent, 1, Color("#1d160f"))
+	var value_label := make_label(value, 14, accent, 1, Palette.COOKING_SUMMARY_CARD_VALUE_OUTLINE)
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	value_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
