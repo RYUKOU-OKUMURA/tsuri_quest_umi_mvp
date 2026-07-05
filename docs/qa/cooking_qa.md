@@ -1,6 +1,6 @@
 # 調理場 QA判断ログ
 
-最終更新: 2026-07-05 / 状態: 調理場cooking_screen R1完了 / 共有GaugeBar R1確認済み
+最終更新: 2026-07-05 / 状態: 調理場cooking_screen R1完了 / COOK_SELECT仕上げ点検完了 / 残り4状態reference-upliftへ移行
 参照画像: reference/cooking_flow/01_cook_select_concept.png, reference/cooking_flow/02_meal_result_concept.png, reference/cooking_flow/03_exp_gain_concept.png, reference/cooking_flow/04_level_up_overlay_concept.png, reference/cooking_flow/05_status_summary_concept.png
 QA更新コマンド: ./tools/cooking_visual_qa.sh
 
@@ -21,6 +21,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 
 | パラメータ | 回数 | 直近の変更内容 | 状態 |
 |---|---|---|---|
+| COOK_SELECT 料理カードタイトル帯 | 1 | 最新比較で枠ノッチとタイトル文字の干渉を確認し、runtimeタイトルをアウトラインなし太字・帯内下寄せへ調整 | 完了 |
 | COOK_SELECT 料理カード星ランク表示 | 1 | Label幅中央寄せを試したが実スクショで星文字が弱く、runtimeポリゴン描画 `RecipeStarRank` へ切替 | 完了 |
 
 ## 4. 暫定判定・再検証TODO
@@ -29,7 +30,8 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 
 ## 5. 現在の残ギャップ
 
-- P2: レアリティ表示の `RarityStyles` 横展開は未実施。
+- P2: MEAL_RESULT / EXP_GAIN / LEVEL_UP_OVERLAY / STATUS_SUMMARY は参照uplift未実施。ユーザー指定の優先順どおり1状態1スライスで進める。
+- R1温存: レアリティ表示の `RarityStyles` 横展開は未実施。調理場 `src/ui/cooking_screen.gd` のR1完了により、残件は台帳に残したまま一旦停止。
 - R1: `src/ui/cooking_screen.gd` は `Color(` 直書きゼロ。COOK_SELECT左魚リスト周辺は `Palette.COOKING_FISH_*`、見出しリボン周辺は `Palette.COOKING_SECTION_RIBBON_*`、料理カード/中央料理グリッド外枠周辺は `Palette.COOKING_RECIPE_*`、下部バー周辺は `Palette.COOKING_PREP_*`、右詳細パネルactive runtime色は `Palette.COOKING_DETAIL_*`、調理ボタン周辺は `Palette.COOKING_ACTION_*`、料理図鑑ボタン周辺は `Palette.COOKING_RECIPE_BOOK_BUTTON_*`、小アイコン/アクションキュー周辺は `Palette.COOKING_SMALL_ICON_*` / `Palette.COOKING_ACTION_CUE_*`、結果サマリーカード周辺は `Palette.COOKING_SUMMARY_CARD_*` / `Palette.COOKING_RESULT_TITLE_OUTLINE`、背景fallback/glazeは `Palette.COOKING_BG_*` へ移行済み。未使用detail helper由来のhexは削除済み。
 - 監査: `tools/cooking_layout_audit.tscn` / `tools/cooking_content_audit.tscn` / `./tools/cooking_visual_qa.sh` はgreen。visual QAは状態間キャプチャ重複のfail guard追加済み。
 
@@ -38,6 +40,17 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 なし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-05: `COOK_SELECT finish precision pass` 完了。最新COOK_SELECTスクショと `reference/cooking_flow/01_cook_select_concept.png` の横並びで、指定3点を点検した。
+
+- 選定理由: R1色移行を一旦停止し、残り4状態reference-upliftへ進む前に、COOK_SELECTの料理カードタイトル帯、右詳細3行、下部4区画の仕上げ精度を確認するため。
+- 変えたもの: 料理カードタイトルを共通 `_recipe_card_title_slot` で生成し、アウトラインなし太字・帯内下寄せ・左右余白付きに変更。実カードとプレビューカードで同じ処理に統一。
+- 変えていないもの: §1 freeze値、料理カード枠素材、皿画像、星ランク、素材フッター、右詳細行素材、下部4区画、背景、調理/EXP/レベルアップ進行ロジック、日本語PNG焼き込み。
+- 微調整カウンタ: `COOK_SELECT 料理カードタイトル帯` 1回。1回目で改善が見えたため素材再生成には進まない。
+- 証拠画像: `docs/qa/evidence/cooking/2026-07-05_select_precision_before_after_ref.png`, `docs/qa/evidence/cooking/2026-07-05_select_precision_title_crop.png`, `docs/qa/evidence/cooking/2026-07-05_select_precision_select.png`, `docs/qa/evidence/cooking/2026-07-05_select_precision_report.html`
+- 判定: beforeではタイトル文字が白アウトラインでにじみ、上枠ノッチと干渉して読みにくかった。afterでは濃色太字がタイトル帯内に収まり、参照のカード見出しに近づいた。右詳細3行の `12 / 1`、`初回 +20 EXP`、`1回` は値プレート内に収まり、下部4区画も見切れなし。cmp一致は判定に使っていない。
+- 検証: `./tools/cooking_visual_qa.sh`、`cooking_layout_audit.tscn`、`cooking_content_audit.tscn`、`cooking_flow_smoke`、`./tools/save_system_verify.sh`、`./tools/validate_project.sh` green。`save_system_verify.sh` のJSON警告と `validate_project.sh` のObjectDB/resource警告はベースライン既知。
+- 固定条件: COOK_SELECT料理カードタイトルはruntime描画のまま、アウトラインなし太字・帯内下寄せを現行基準とする。次スライスはMEAL_RESULTへ進める。
 
 2026-07-05: `shared GaugeBar palette R1 pass` 完了。調理フローで使う共有ゲージの描画色をPalette用途名へ移行した。
 

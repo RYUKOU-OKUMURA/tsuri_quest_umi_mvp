@@ -1212,6 +1212,36 @@ func _dish_display_name(fish_name: String, recipe_id: String, recipe_name: Strin
 	return "%sの%s" % [fish_name, recipe_name]
 
 
+func _recipe_card_title_slot(title_text: String, node_name: String) -> MarginContainer:
+	var slot := MarginContainer.new()
+	slot.custom_minimum_size = Vector2(0.0, 31.0)
+	slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slot.add_theme_constant_override("margin_left", 8)
+	slot.add_theme_constant_override("margin_top", 6)
+	slot.add_theme_constant_override("margin_right", 8)
+	slot.add_theme_constant_override("margin_bottom", 1)
+	var title_font_size := 12 if title_text.length() <= 7 else 11
+	var title := make_screen_label(
+		title_text,
+		title_font_size,
+		Palette.COOKING_RECIPE_TITLE_TEXT,
+		true,
+		0,
+		Palette.COOKING_RECIPE_TITLE_OUTLINE,
+		Color.TRANSPARENT,
+		true
+	)
+	title.name = node_name
+	title.custom_minimum_size = Vector2(0.0, 24.0)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title.autowrap_mode = TextServer.AUTOWRAP_OFF
+	title.clip_text = true
+	slot.add_child(title)
+	return slot
+
+
 func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> PanelContainer:
 	var recipe_id := String(recipe.get("id", ""))
 	var card := PanelContainer.new()
@@ -1230,22 +1260,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	box.add_theme_constant_override("separation", 2)
 	card.add_child(box)
 	var title_text := _recipe_card_title_text(recipe, locked, unavailable)
-	var title_font_size := 13 if title_text.length() <= 7 else 12
-	var title := make_shadow_label(
-		title_text,
-		title_font_size,
-		Palette.COOKING_RECIPE_TITLE_TEXT,
-		1,
-		Palette.COOKING_RECIPE_TITLE_OUTLINE
-	)
-	title.name = "RecipeTitle_%s" % recipe_id
-	title.custom_minimum_size = Vector2(0.0, 31.0)
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	title.autowrap_mode = TextServer.AUTOWRAP_OFF
-	title.clip_text = true
-	box.add_child(title)
+	box.add_child(_recipe_card_title_slot(title_text, "RecipeTitle_%s" % recipe_id))
 	var image := _recipe_card_dish_image(recipe_id, locked or unavailable)
 	box.add_child(image)
 	var stars := RecipeStarRank.new()
@@ -1314,21 +1329,7 @@ func _make_recipe_preview_card() -> PanelContainer:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
 	card.add_child(box)
-	var title := make_shadow_label(
-		"ヒラメのムニエル",
-		12,
-		Palette.COOKING_RECIPE_TITLE_TEXT,
-		1,
-		Palette.COOKING_RECIPE_TITLE_OUTLINE
-	)
-	title.name = "RecipeTitle_PreviewMeuniere"
-	title.custom_minimum_size = Vector2(0.0, 31.0)
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	title.autowrap_mode = TextServer.AUTOWRAP_OFF
-	title.clip_text = true
-	box.add_child(title)
+	box.add_child(_recipe_card_title_slot("ヒラメのムニエル", "RecipeTitle_PreviewMeuniere"))
 	var image := _recipe_card_dish_image("PreviewMeuniere", true, _featured_dish_texture("fry"))
 	box.add_child(image)
 	var stars := RecipeStarRank.new()
