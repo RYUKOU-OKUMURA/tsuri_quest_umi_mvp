@@ -1635,21 +1635,30 @@ def level_crown_asset() -> None:
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     shadow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow, "RGBA")
-    sd.polygon([(28, 64), (52, 24), (78, 48), (110, 12), (142, 48), (168, 24), (192, 64), (180, 84), (40, 84)], fill=(0, 0, 0, 130))
+    sd.polygon([(22, 66), (48, 18), (76, 45), (110, 6), (144, 45), (172, 18), (198, 66), (184, 88), (36, 88)], fill=(0, 0, 0, 150))
     shadow = shadow.filter(ImageFilter.GaussianBlur(4))
     img.alpha_composite(shadow)
     draw = ImageDraw.Draw(img, "RGBA")
 
-    base = [(28, 62), (52, 22), (78, 48), (110, 10), (142, 48), (168, 22), (192, 62), (178, 84), (42, 84)]
+    for angle in range(200, 342, 18):
+        rad = math.radians(angle)
+        x0 = 110 + math.cos(rad) * 28
+        y0 = 58 + math.sin(rad) * 20
+        x1 = 110 + math.cos(rad) * 108
+        y1 = 58 + math.sin(rad) * 70
+        draw.line((x0, y0, x1, y1), fill=(255, 224, 129, 72), width=3)
+
+    base = [(22, 64), (48, 18), (76, 45), (110, 6), (144, 45), (172, 18), (198, 64), (184, 88), (36, 88)]
     draw.polygon(base, fill=(112, 65, 13, 255), outline=(46, 29, 8, 255))
-    inner = [(39, 58), (56, 33), (82, 58), (110, 22), (138, 58), (164, 33), (181, 58), (169, 76), (51, 76)]
+    inner = [(35, 59), (54, 30), (82, 58), (110, 18), (138, 58), (166, 30), (185, 59), (171, 79), (49, 79)]
     draw.polygon(inner, fill=(255, 219, 86, 255), outline=(126, 74, 18, 255))
-    draw.rectangle((47, 64, 173, 82), fill=(255, 226, 106, 255), outline=(72, 42, 10, 255), width=3)
-    for x, y, col in [(52, 22, rgba("ff5f6d")), (110, 10, rgba("fff1c7")), (168, 22, rgba("6bf1ff"))]:
-        draw.ellipse((x - 8, y - 8, x + 8, y + 8), fill=col, outline=(72, 42, 10, 255), width=2)
-    for x in range(64, 158, 23):
-        draw.line((x, 66, x + 8, 78), fill=(126, 74, 18, 145), width=2)
-    draw.arc((26, 16, 194, 116), 198, 342, fill=(255, 244, 188, 105), width=3)
+    draw.rectangle((43, 66, 177, 86), fill=(255, 226, 106, 255), outline=(72, 42, 10, 255), width=3)
+    for x, y, col in [(48, 18, rgba("ff5f6d")), (110, 6, rgba("fff1c7")), (172, 18, rgba("6bf1ff"))]:
+        draw.ellipse((x - 10, y - 10, x + 10, y + 10), fill=col, outline=(72, 42, 10, 255), width=2)
+        draw.ellipse((x - 4, y - 4, x + 4, y + 4), fill=(255, 255, 255, 170))
+    for x in range(60, 164, 21):
+        draw.line((x, 67, x + 10, 82), fill=(126, 74, 18, 145), width=2)
+    draw.arc((18, 4, 202, 118), 198, 342, fill=(255, 244, 188, 132), width=4)
     save(img, "level_crown.png")
 
 
@@ -1664,14 +1673,14 @@ def level_laurel_asset(name: str, direction: int) -> None:
         x = 72 + direction * (34 - math.sin(t * math.pi) * 30)
         points.append((x, y))
     draw.line(points, fill=(106, 69, 18, 255), width=6, joint="curve")
-    draw.line(points, fill=(255, 219, 86, 210), width=2, joint="curve")
+    draw.line(points, fill=(255, 230, 116, 230), width=3, joint="curve")
     for i, (x, y) in enumerate(points):
         leaf_len = 26 + (i % 3) * 3
         outward = (direction * leaf_len, -10)
         inward = (-direction * 8, -7)
         leaf = [(x, y), (x + outward[0], y + outward[1]), (x + inward[0], y + inward[1])]
-        draw.polygon(leaf, fill=(238, 181, 62, 255), outline=(107, 67, 18, 210))
-        draw.line((x, y, x + outward[0] * 0.72, y + outward[1] * 0.72), fill=(255, 246, 188, 180), width=2)
+        draw.polygon(leaf, fill=(255, 203, 74, 255), outline=(107, 67, 18, 225))
+        draw.line((x, y, x + outward[0] * 0.72, y + outward[1] * 0.72), fill=(255, 250, 202, 210), width=2)
     save(img, name)
 
 

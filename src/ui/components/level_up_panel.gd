@@ -472,7 +472,7 @@ func _build_screen() -> void:
 
 	_dialog = PanelContainer.new()
 	_dialog.name = "LevelUpDialog"
-	_dialog.custom_minimum_size = Vector2(1010.0, 500.0)
+	_dialog.custom_minimum_size = Vector2(1040.0, 520.0)
 	_dialog.add_theme_stylebox_override(
 		"panel",
 		_texture_style_box(
@@ -494,23 +494,23 @@ func _build_screen() -> void:
 	title_band.name = "LevelUpTitleBand"
 	title_band.alignment = BoxContainer.ALIGNMENT_CENTER
 	title_band.add_theme_constant_override("separation", 6)
-	title_band.custom_minimum_size = Vector2(900.0, 136.0)
+	title_band.custom_minimum_size = Vector2(940.0, 152.0)
 	title_band.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(title_band)
 
 	var left_laurel := _level_asset_texture(
-		"LevelLaurelLeftAsset", LevelUpVisual.LAUREL_LEFT_ASSET, Vector2(118.0, 88.0)
+		"LevelLaurelLeftAsset", LevelUpVisual.LAUREL_LEFT_ASSET, Vector2(142.0, 118.0)
 	)
 	title_band.add_child(left_laurel)
 
 	var title_stack := VBoxContainer.new()
 	title_stack.alignment = BoxContainer.ALIGNMENT_CENTER
 	title_stack.add_theme_constant_override("separation", 0)
-	title_stack.custom_minimum_size = Vector2(600.0, 132.0)
+	title_stack.custom_minimum_size = Vector2(630.0, 148.0)
 	title_band.add_child(title_stack)
 
 	var crown_visual := _level_asset_texture(
-		"LevelCrownAsset", LevelUpVisual.CROWN_ASSET, Vector2(190.0, 36.0)
+		"LevelCrownAsset", LevelUpVisual.CROWN_ASSET, Vector2(214.0, 56.0)
 	)
 	crown_visual.stretch_mode = TextureRect.STRETCH_SCALE
 	crown_visual.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -529,7 +529,7 @@ func _build_screen() -> void:
 	title_stack.add_child(title)
 
 	var right_laurel := _level_asset_texture(
-		"LevelLaurelRightAsset", LevelUpVisual.LAUREL_RIGHT_ASSET, Vector2(118.0, 88.0)
+		"LevelLaurelRightAsset", LevelUpVisual.LAUREL_RIGHT_ASSET, Vector2(142.0, 118.0)
 	)
 	title_band.add_child(right_laurel)
 
