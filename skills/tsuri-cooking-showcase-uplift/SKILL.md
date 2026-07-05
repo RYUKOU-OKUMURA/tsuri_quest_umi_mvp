@@ -108,7 +108,8 @@ Use this extraction as the first comparison baseline. Refine it only after inspe
    Use `python3 tools/cooking_visual_qa_check.py` as the strict gate once captures exist. In environments where captures cannot be produced, `python3 tools/cooking_visual_qa_check.py --allow-missing` verifies references and refreshes the report while preserving the screenshot blocker.
    `tools/cooking_visual_qa.sh` performs this sequence as one command; if preview capture fails, it still refreshes the report with explicit missing-capture diagnostics and exits nonzero.
 
-5. Decompose the state reference into asset slots.
+5. Decompose the state reference into asset slots, and source each slot through the correct pipeline (docs/19 §3.4).
+   Geometric parts (frames, bands, 9-slice, gauge shells, chips) may be procedural PIL output from `tools/generate_cooking_showcase_assets.py`. Organic one-off art (backgrounds, character art, dish/fish art, crown/laurel/medallion motifs, burst/confetti FX) must come from AI image generation driven by a docs/12-style brief with the reference image as the style anchor, then pass the §3.3 unification step. Do not author organic motifs as PIL drawings and adopt them as candidates; if image generation is unavailable, file the slot as a pending-asset P2 in `docs/qa/cooking_qa.md` instead of counting a procedural stand-in as progress.
    Prefer dedicated cooking assets under `assets/showcase/cooking/` for:
    - warm kitchen or meal-scene background
    - fish list icons
@@ -143,7 +144,10 @@ Use this extraction as the first comparison baseline. Refine it only after inspe
    - typography, spacing, and small icon polish
    - animation/juice after static composition reads well
 
-10. Record QA after each pass.
+10. Judge adoption by reference distance, not by beating your own previous state (docs/19 §5-11..13).
+   Adoption needs both "clearly better than before" and "the targeted gap visibly shrinks toward the matching `reference/cooking_flow/*_concept.png` in a shrunken thumbnail side-by-side". A "moved forward but still far from the reference" verdict is allowed at most 3 consecutive passes for the same state/gap family; after that, stop iterating and escalate to composition rework or the AI-generated asset pipeline. Runtime-drawn decoration additions (washes, rules, shadows, StyleBoxFlat layers) count toward a per-screen cumulative decoration-pass cap of 3, even under new names.
+
+11. Record QA after each pass.
    Keep notes in `docs/qa/cooking_qa.md` (create it from the `docs/qa/README.md` template if missing; write in Japanese). Mark findings as P1/P2/P3, overwrite the freeze table instead of appending, and record rejected candidates in the dedicated list. Copy the decisive comparison screenshots into `docs/qa/evidence/cooking/` with date-prefixed names — `/tmp` captures are lost between sessions. If a region is "good enough for this pass", freeze it.
 
 ## Acceptance Gate
@@ -163,6 +167,9 @@ Before considering a pass complete:
 ## Hard Rules
 
 - Do not treat low-quality generated or procedural placeholder art as final.
+- Do not author organic one-off art (backgrounds, characters, dishes, crowns/laurels, burst FX) as procedural PIL drawings and adopt them; those slots require the AI image generation pipeline (docs/19 §3.4).
+- Do not adopt passes on "better than before" alone; the targeted reference gap must visibly shrink in a thumbnail side-by-side (docs/19 §5-11).
+- Do not issue "moved forward but still short of the reference" more than 3 consecutive passes for the same gap family; escalate instead (docs/19 §5-12).
 - Do not create new concept images when the required state references already exist in `reference/cooking_flow/`.
 - Do not keep polishing a weak stock-widget layout when the real gap is missing assets or composition.
 - Do not change cooking progression logic unless the user asked for behavior changes.
