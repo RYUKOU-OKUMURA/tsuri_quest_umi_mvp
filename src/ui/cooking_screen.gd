@@ -83,35 +83,35 @@ class CookingSmallIcon:
 
 	func _draw_player() -> void:
 		var center := size * 0.5
-		draw_circle(center + Vector2(0.0, -7.0), 15.0, Color("#f2b889"))
-		draw_rect(Rect2(center.x - 18.0, center.y + 8.0, 36.0, 22.0), Color("#17324d"))
-		draw_rect(Rect2(center.x - 18.0, center.y - 24.0, 36.0, 9.0), Color("#234f7c"))
-		draw_circle(center + Vector2(-6.0, -8.0), 2.0, Color("#1d160f"))
-		draw_circle(center + Vector2(6.0, -8.0), 2.0, Color("#1d160f"))
+		draw_circle(center + Vector2(0.0, -7.0), 15.0, Palette.COOKING_SMALL_ICON_SKIN)
+		draw_rect(Rect2(center.x - 18.0, center.y + 8.0, 36.0, 22.0), Palette.COOKING_SMALL_ICON_BODY)
+		draw_rect(Rect2(center.x - 18.0, center.y - 24.0, 36.0, 9.0), Palette.COOKING_SMALL_ICON_CAP)
+		draw_circle(center + Vector2(-6.0, -8.0), 2.0, Palette.COOKING_SMALL_ICON_INK)
+		draw_circle(center + Vector2(6.0, -8.0), 2.0, Palette.COOKING_SMALL_ICON_INK)
 
 	func _draw_player_mini() -> void:
 		var center := size * 0.5
 		var scale_value: float = minf(size.x, size.y) / 28.0
 		draw_rect(
 			Rect2(center.x - 10.0 * scale_value, center.y + 3.0 * scale_value, 20.0 * scale_value, 11.0 * scale_value),
-			Color("#17324d")
+			Palette.COOKING_SMALL_ICON_BODY
 		)
-		draw_circle(center + Vector2(0.0, -4.0 * scale_value), 7.2 * scale_value, Color("#f2b889"))
+		draw_circle(center + Vector2(0.0, -4.0 * scale_value), 7.2 * scale_value, Palette.COOKING_SMALL_ICON_SKIN)
 		draw_rect(
 			Rect2(center.x - 10.0 * scale_value, center.y - 13.0 * scale_value, 20.0 * scale_value, 5.0 * scale_value),
-			Color("#234f7c")
+			Palette.COOKING_SMALL_ICON_CAP
 		)
-		draw_circle(center + Vector2(-3.0 * scale_value, -4.5 * scale_value), 1.2 * scale_value, Color("#1d160f"))
-		draw_circle(center + Vector2(3.0 * scale_value, -4.5 * scale_value), 1.2 * scale_value, Color("#1d160f"))
+		draw_circle(center + Vector2(-3.0 * scale_value, -4.5 * scale_value), 1.2 * scale_value, Palette.COOKING_SMALL_ICON_INK)
+		draw_circle(center + Vector2(3.0 * scale_value, -4.5 * scale_value), 1.2 * scale_value, Palette.COOKING_SMALL_ICON_INK)
 
 	func _draw_meal_mini() -> void:
 		var center := size * 0.5
 		var scale_value: float = minf(size.x, size.y) / 28.0
-		draw_arc(center + Vector2(0.0, 5.0 * scale_value), 10.0 * scale_value, 0.0, PI, 18, Color("#fff1cf"), 3.0 * scale_value)
-		draw_arc(center + Vector2(0.0, 3.0 * scale_value), 8.0 * scale_value, 0.0, PI, 16, Color("#b35f25"), 2.5 * scale_value)
+		draw_arc(center + Vector2(0.0, 5.0 * scale_value), 10.0 * scale_value, 0.0, PI, 18, Palette.COOKING_SMALL_ICON_MEAL_RIM, 3.0 * scale_value)
+		draw_arc(center + Vector2(0.0, 3.0 * scale_value), 8.0 * scale_value, 0.0, PI, 16, Palette.COOKING_SMALL_ICON_MEAL_FILL, 2.5 * scale_value)
 		for i in range(3):
 			var x := center.x - 7.0 * scale_value + float(i) * 7.0 * scale_value
-			draw_arc(Vector2(x, center.y - 7.0 * scale_value), 4.0 * scale_value, -1.6, 0.9, 8, Color(1.0, 0.92, 0.70, 0.36), 1.2 * scale_value)
+			draw_arc(Vector2(x, center.y - 7.0 * scale_value), 4.0 * scale_value, -1.6, 0.9, 8, Palette.COOKING_SMALL_ICON_STEAM_MINI, 1.2 * scale_value)
 
 	func _draw_fish_mini() -> void:
 		var center := size * 0.5
@@ -126,7 +126,7 @@ class CookingSmallIcon:
 				center + Vector2(-4.0, 5.5) * scale_value,
 			]
 		)
-		draw_colored_polygon(body, Color("#3e86b5"))
+		draw_colored_polygon(body, Palette.COOKING_SMALL_ICON_FISH_BODY)
 		draw_colored_polygon(
 			PackedVector2Array(
 				[
@@ -137,47 +137,47 @@ class CookingSmallIcon:
 					center + Vector2(9.0, 2.5) * scale_value,
 				]
 			),
-			Color("#24638e")
+			Palette.COOKING_SMALL_ICON_FISH_TAIL_MINI
 		)
-		draw_circle(center + Vector2(-6.0, -1.0) * scale_value, 1.3 * scale_value, Color("#06111e"))
+		draw_circle(center + Vector2(-6.0, -1.0) * scale_value, 1.3 * scale_value, Palette.COOKING_SMALL_ICON_FISH_EYE_MINI)
 
 	func _draw_coin_mini() -> void:
 		var center := size * 0.5
 		var scale_value: float = minf(size.x, size.y) / 28.0
 		for i in range(3):
 			var offset := Vector2(float(i) * 4.4 - 4.4, float(i % 2) * 3.0) * scale_value
-			draw_circle(center + offset, 6.5 * scale_value, Color("#9b641e"))
+			draw_circle(center + offset, 6.5 * scale_value, Palette.COOKING_SMALL_ICON_COIN_SHADOW)
 			draw_circle(center + offset + Vector2(-1.0, -1.0) * scale_value, 4.8 * scale_value, Palette.GOLD_BRIGHT)
-			draw_arc(center + offset, 4.8 * scale_value, 0.0, TAU, 14, Color("#70451f"), 1.2 * scale_value)
+			draw_arc(center + offset, 4.8 * scale_value, 0.0, TAU, 14, Palette.COOKING_SMALL_ICON_COIN_STROKE, 1.2 * scale_value)
 
 	func _draw_coin() -> void:
 		var center := size * 0.5
 		for i in range(3):
 			var offset := Vector2(float(i) * 7.0 - 7.0, float(i % 2) * 5.0)
-			draw_circle(center + offset, 14.0, Color("#9b641e"))
+			draw_circle(center + offset, 14.0, Palette.COOKING_SMALL_ICON_COIN_SHADOW)
 			draw_circle(center + offset + Vector2(-2.0, -2.0), 10.0, Palette.GOLD_BRIGHT)
-			draw_arc(center + offset, 10.0, 0.0, TAU, 18, Color("#70451f"), 2.0)
+			draw_arc(center + offset, 10.0, 0.0, TAU, 18, Palette.COOKING_SMALL_ICON_COIN_STROKE, 2.0)
 
 	func _draw_meal() -> void:
 		var center := size * 0.5
-		draw_arc(center + Vector2(0.0, 12.0), 21.0, 0.0, PI, 24, Color("#fff1cf"), 6.0)
-		draw_arc(center + Vector2(0.0, 8.0), 17.0, 0.0, PI, 22, Color("#b35f25"), 5.0)
+		draw_arc(center + Vector2(0.0, 12.0), 21.0, 0.0, PI, 24, Palette.COOKING_SMALL_ICON_MEAL_RIM, 6.0)
+		draw_arc(center + Vector2(0.0, 8.0), 17.0, 0.0, PI, 22, Palette.COOKING_SMALL_ICON_MEAL_FILL, 5.0)
 		for i in range(3):
 			var x := center.x - 12.0 + float(i) * 12.0
-			draw_arc(Vector2(x, center.y - 13.0), 8.0, -1.6, 0.9, 10, Color(1.0, 0.92, 0.70, 0.34), 2.0)
+			draw_arc(Vector2(x, center.y - 13.0), 8.0, -1.6, 0.9, 10, Palette.COOKING_SMALL_ICON_STEAM, 2.0)
 
 	func _draw_cooler() -> void:
 		var center := size * 0.5
-		draw_rect(Rect2(center.x - 22.0, center.y - 6.0, 44.0, 28.0), Color("#1b5d8d"))
-		draw_rect(Rect2(center.x - 22.0, center.y - 6.0, 44.0, 7.0), Color("#eef4fa"))
-		draw_rect(Rect2(center.x - 16.0, center.y - 18.0, 32.0, 10.0), Color("#d7e3ef"))
-		draw_line(center + Vector2(-10.0, 11.0), center + Vector2(10.0, 11.0), Color("#f0f6fb"), 3.0)
+		draw_rect(Rect2(center.x - 22.0, center.y - 6.0, 44.0, 28.0), Palette.COOKING_SMALL_ICON_COOLER_BODY)
+		draw_rect(Rect2(center.x - 22.0, center.y - 6.0, 44.0, 7.0), Palette.COOKING_SMALL_ICON_COOLER_LID)
+		draw_rect(Rect2(center.x - 16.0, center.y - 18.0, 32.0, 10.0), Palette.COOKING_SMALL_ICON_COOLER_HANDLE)
+		draw_line(center + Vector2(-10.0, 11.0), center + Vector2(10.0, 11.0), Palette.COOKING_SMALL_ICON_COOLER_HIGHLIGHT, 3.0)
 
 	func _draw_book() -> void:
 		var center := size * 0.5
-		draw_rect(Rect2(center.x - 18.0, center.y - 18.0, 36.0, 36.0), Color("#17324d"))
-		draw_rect(Rect2(center.x - 14.0, center.y - 14.0, 28.0, 28.0), Color("#f2e4c2"))
-		draw_line(center + Vector2(0.0, -14.0), center + Vector2(0.0, 14.0), Color("#8b5b2c"), 2.0)
+		draw_rect(Rect2(center.x - 18.0, center.y - 18.0, 36.0, 36.0), Palette.COOKING_SMALL_ICON_BODY)
+		draw_rect(Rect2(center.x - 14.0, center.y - 14.0, 28.0, 28.0), Palette.COOKING_SMALL_ICON_BOOK_PAGE)
+		draw_line(center + Vector2(0.0, -14.0), center + Vector2(0.0, 14.0), Palette.COOKING_SMALL_ICON_BOOK_RULE, 2.0)
 		draw_line(center + Vector2(-10.0, -4.0), center + Vector2(-3.0, -4.0), accent, 2.0)
 		draw_line(center + Vector2(4.0, 5.0), center + Vector2(11.0, 5.0), accent, 2.0)
 
@@ -193,7 +193,7 @@ class CookingSmallIcon:
 				center + Vector2(-8.0, 11.0),
 			]
 		)
-		draw_colored_polygon(body, Color("#3e86b5"))
+		draw_colored_polygon(body, Palette.COOKING_SMALL_ICON_FISH_BODY)
 		draw_colored_polygon(
 			PackedVector2Array(
 				[
@@ -204,27 +204,27 @@ class CookingSmallIcon:
 					center + Vector2(18.0, 5.0),
 				]
 			),
-			Color("#275d86")
+			Palette.COOKING_SMALL_ICON_FISH_TAIL
 		)
-		draw_line(center + Vector2(-9.0, -7.0), center + Vector2(13.0, -2.0), Color("#d6eef4"), 2.0)
-		draw_circle(center + Vector2(-16.0, -2.0), 2.2, Color("#1d160f"))
+		draw_line(center + Vector2(-9.0, -7.0), center + Vector2(13.0, -2.0), Palette.COOKING_SMALL_ICON_FISH_HIGHLIGHT, 2.0)
+		draw_circle(center + Vector2(-16.0, -2.0), 2.2, Palette.COOKING_SMALL_ICON_INK)
 
 	func _draw_exp() -> void:
 		var center := size * 0.5
-		draw_circle(center, 19.0, Color("#0f5d76"))
+		draw_circle(center, 19.0, Palette.COOKING_SMALL_ICON_EXP_BACKING)
 		draw_circle(center, 13.0, accent)
 		for i in range(8):
 			var angle := TAU * float(i) / 8.0
 			var from := center + Vector2(cos(angle), sin(angle)) * 21.0
 			var to := center + Vector2(cos(angle), sin(angle)) * 28.0
-			draw_line(from, to, Color("#fff2b8"), 2.0)
-		draw_circle(center, 5.0, Color("#fff2b8"))
+			draw_line(from, to, Palette.COOKING_SMALL_ICON_EXP_RAY, 2.0)
+		draw_circle(center, 5.0, Palette.COOKING_SMALL_ICON_EXP_RAY)
 
 	func _draw_buff() -> void:
 		var center := size * 0.5
-		draw_circle(center, 19.0, Color("#2f7a45"))
-		draw_arc(center + Vector2(-3.0, 2.0), 13.0, -0.2, 2.8, 20, Color("#f8f0cf"), 4.0)
-		draw_line(center + Vector2(-8.0, 3.0), center + Vector2(-16.0, -4.0), Color("#f8f0cf"), 4.0)
+		draw_circle(center, 19.0, Palette.COOKING_SMALL_ICON_BUFF_BACKING)
+		draw_arc(center + Vector2(-3.0, 2.0), 13.0, -0.2, 2.8, 20, Palette.COOKING_SMALL_ICON_BUFF_MARK, 4.0)
+		draw_line(center + Vector2(-8.0, 3.0), center + Vector2(-16.0, -4.0), Palette.COOKING_SMALL_ICON_BUFF_MARK, 4.0)
 		draw_circle(center + Vector2(11.0, -11.0), 4.0, accent)
 
 	func _draw_fire() -> void:
@@ -239,7 +239,7 @@ class CookingSmallIcon:
 				center + Vector2(-15.0, -4.0),
 			]
 		)
-		draw_colored_polygon(flame, Color("#cf5c26"))
+		draw_colored_polygon(flame, Palette.COOKING_SMALL_ICON_FIRE_FLAME)
 		draw_colored_polygon(
 			PackedVector2Array(
 				[
@@ -264,7 +264,7 @@ class CookActionCueVisual:
 
 	func set_available(next_available: bool) -> void:
 		available = next_available
-		modulate = Color.WHITE if available else Color(0.62, 0.58, 0.50, 0.72)
+		modulate = Color.WHITE if available else Palette.COOKING_ACTION_CUE_DISABLED_MODULATE
 		queue_redraw()
 
 	func _draw() -> void:
@@ -273,8 +273,8 @@ class CookActionCueVisual:
 		var cy := h * 0.55
 		var left := 8.0
 		var right := w - 18.0
-		var rail := Color(1.0, 0.78, 0.28, 0.56) if available else Color(0.52, 0.45, 0.36, 0.42)
-		var glow := Color(1.0, 0.95, 0.66, 0.34) if available else Color(0.58, 0.52, 0.42, 0.24)
+		var rail := Palette.COOKING_ACTION_CUE_RAIL if available else Palette.COOKING_ACTION_CUE_DISABLED_RAIL
+		var glow := Palette.COOKING_ACTION_CUE_GLOW if available else Palette.COOKING_ACTION_CUE_DISABLED_GLOW
 		draw_line(Vector2(left, cy), Vector2(right, cy), glow, 5.0)
 		draw_line(Vector2(left, cy), Vector2(right, cy), rail, 2.0)
 		draw_colored_polygon(
@@ -313,7 +313,7 @@ class CookActionCueVisual:
 		draw_colored_polygon(_oval_points(origin + Vector2(0.0, 9.5), 20.0, 5.5, 20), ink)
 		draw_colored_polygon(
 			_oval_points(origin + Vector2(0.0, 8.5), 16.0, 3.5, 20),
-			Color("#fff0c7") if available else Color("#a69478")
+			Palette.COOKING_ACTION_CUE_PLATE_FILL if available else Palette.COOKING_ACTION_CUE_PLATE_DISABLED_FILL
 		)
 		draw_colored_polygon(
 			PackedVector2Array(
