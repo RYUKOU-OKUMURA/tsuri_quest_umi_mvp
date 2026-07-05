@@ -72,6 +72,12 @@ PRESETS = {
             "out": Path("/tmp/tsuri_market_select_compare.png"),
         },
         {
+            "id": "FISH_MARKET_CONFIRM",
+            "reference": ROOT / "reference" / "10_fish_market_mockup.png",
+            "capture": Path("/tmp/tsuri_market_confirm.png"),
+            "out": Path("/tmp/tsuri_market_confirm_compare.png"),
+        },
+        {
             "id": "FISH_MARKET_SOLD",
             "reference": ROOT / "reference" / "10_fish_market_mockup.png",
             "capture": Path("/tmp/tsuri_market_sold.png"),

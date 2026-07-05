@@ -6,6 +6,7 @@ const FightFishAssets = preload("res://src/ui/fight_fish_assets.gd")
 const BACKPLATE_PATH := "res://assets/showcase/fish_market/fish_market_backplate.png"
 const DESIGN_SIZE := Vector2(1280.0, 720.0)
 const VISIBLE_ROW_COUNT := 7
+const CONFIRM_OVERLAY_Z := 100
 
 const TITLE_RECT := Rect2(150.0, 30.0, 170.0, 52.0)
 const STATUS_RECT := Rect2(384.0, 25.0, 810.0, 58.0)
@@ -376,6 +377,7 @@ func _build_cart(parent: Control) -> void:
 func _build_confirm_overlay(parent: Control) -> void:
 	_confirm_overlay = Control.new()
 	_confirm_overlay.name = "MarketConfirmOverlay"
+	_confirm_overlay.z_index = CONFIRM_OVERLAY_Z
 	_confirm_overlay.visible = false
 	_confirm_overlay.position = Vector2.ZERO
 	_confirm_overlay.size = DESIGN_SIZE
@@ -391,17 +393,19 @@ func _build_confirm_overlay(parent: Control) -> void:
 	var panel := PanelContainer.new()
 	panel.position = Vector2(360.0, 190.0)
 	panel.size = Vector2(560.0, 300.0)
-	panel.add_theme_stylebox_override("panel", _panel_style(Palette.DARK_PANEL, Palette.GOLD, 3, 8))
+	var confirm_style := _panel_style(Palette.DARK_PANEL, Palette.GOLD, 3, 8)
+	confirm_style.bg_color = Palette.DARK_PANEL
+	panel.add_theme_stylebox_override("panel", confirm_style)
 	_confirm_overlay.add_child(panel)
 
 	_confirm_title_label = _market_label("売却確認", 28, Palette.GOLD_BRIGHT, 2)
 	_confirm_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_place(_confirm_overlay, _confirm_title_label, Rect2(396.0, 214.0, 488.0, 42.0))
 
-	_confirm_body_label = _market_label("", 20, Palette.TEXT_BONE, 1)
+	_confirm_body_label = _market_label("", 18, Palette.TEXT_BONE, 1)
 	_confirm_body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_confirm_body_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place(_confirm_overlay, _confirm_body_label, Rect2(410.0, 268.0, 460.0, 116.0))
+	_place(_confirm_overlay, _confirm_body_label, Rect2(410.0, 262.0, 460.0, 136.0))
 
 	_confirm_cancel_button = _market_button("戻る", _hide_confirm_overlay, false, 18)
 	_confirm_cancel_button.name = "MarketConfirmCancelButton"
@@ -640,7 +644,7 @@ func _show_confirm_overlay() -> void:
 		ScreenBase.format_money(int(summary["income"])),
 	]
 	if _has_last_fish_warning():
-		body += "\n\n選んだ中に最後の1匹が含まれています。料理素材としては残りません。"
+		body += "\n最後の1匹を含みます。料理素材には残りません。"
 	_confirm_body_label.text = body
 	_confirm_overlay.visible = true
 

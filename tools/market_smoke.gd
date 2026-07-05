@@ -37,6 +37,7 @@ func _ready() -> void:
 	_screen._set_quantity("saba", 2)
 	_screen._show_confirm_overlay()
 	_expect(_screen._confirm_overlay.visible, "confirm overlay should open for selected fish")
+	_expect(_screen._confirm_overlay.z_index > _screen._detail_body_label.z_index, "confirm overlay should draw above market detail labels")
 	_expect(String(_screen._confirm_body_label.text).contains("最後の1匹"), "last-fish warning should be shown")
 	_screen._confirm_sell()
 	_expect_eq(PlayerProgress.fish_count("aji"), 1, "batch sell should subtract aji")

@@ -20,9 +20,11 @@ fi
 mkdir -p "$GODOT_HOME"
 rm -f \
   /tmp/tsuri_market_select.png \
+  /tmp/tsuri_market_confirm.png \
   /tmp/tsuri_market_sold.png \
   /tmp/tsuri_market_empty.png \
   /tmp/tsuri_market_select_compare.png \
+  /tmp/tsuri_market_confirm_compare.png \
   /tmp/tsuri_market_sold_compare.png \
   /tmp/tsuri_market_empty_compare.png
 
@@ -35,6 +37,7 @@ from PIL import Image
 
 for path in [
     Path("/tmp/tsuri_market_select.png"),
+    Path("/tmp/tsuri_market_confirm.png"),
     Path("/tmp/tsuri_market_sold.png"),
     Path("/tmp/tsuri_market_empty.png"),
 ]:
@@ -51,8 +54,10 @@ python3 "$ROOT/tools/build_screen_visual_comparison.py" market
 
 echo "Market visual QA outputs:"
 echo "/tmp/tsuri_market_select.png"
+echo "/tmp/tsuri_market_confirm.png"
 echo "/tmp/tsuri_market_sold.png"
 echo "/tmp/tsuri_market_empty.png"
 echo "/tmp/tsuri_market_select_compare.png"
+echo "/tmp/tsuri_market_confirm_compare.png"
 echo "/tmp/tsuri_market_sold_compare.png"
 echo "/tmp/tsuri_market_empty_compare.png"
