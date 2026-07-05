@@ -31,11 +31,13 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 	await _await_capture_ready(vp)
-	if not _save_viewport(vp, OUT_SELECT):
+	if not await _save_viewport(vp, OUT_SELECT):
 		get_tree().quit(1)
 		return
 	_record_capture("COOK_SELECT", OUT_SELECT, "current_prep_summary")
-	_save_viewport(vp, OUT_ALL)
+	if not await _save_viewport(vp, OUT_ALL):
+		get_tree().quit(1)
+		return
 
 	screen.queue_free()
 	vp.queue_free()
@@ -54,7 +56,7 @@ func _ready() -> void:
 	if not _expect_reward_state(screen, "MEAL_RESULT", "MEAL_RESULT capture"):
 		get_tree().quit(1)
 		return
-	if not _save_viewport(vp, OUT_RESULT):
+	if not await _save_viewport(vp, OUT_RESULT):
 		get_tree().quit(1)
 		return
 	_record_capture("MEAL_RESULT", OUT_RESULT, "MEAL_RESULT")
@@ -73,7 +75,7 @@ func _ready() -> void:
 	if not _expect_reward_state(screen, "EXP_GAIN", "EXP_GAIN capture"):
 		get_tree().quit(1)
 		return
-	if not _save_viewport(vp, OUT_EXP):
+	if not await _save_viewport(vp, OUT_EXP):
 		get_tree().quit(1)
 		return
 	_record_capture("EXP_GAIN", OUT_EXP, "EXP_GAIN")
@@ -117,7 +119,7 @@ func _ready() -> void:
 			"LevelUnlockBody",
 		]
 	)
-	if not _save_viewport(vp, OUT_LEVELUP):
+	if not await _save_viewport(vp, OUT_LEVELUP):
 		get_tree().quit(1)
 		return
 	_record_capture("LEVEL_UP_OVERLAY", OUT_LEVELUP, "LEVEL_UP_OVERLAY")
@@ -136,7 +138,7 @@ func _ready() -> void:
 	if not _expect_status_overlay(screen, "STATUS_SUMMARY capture"):
 		get_tree().quit(1)
 		return
-	if not _save_viewport(vp, OUT_STATUS):
+	if not await _save_viewport(vp, OUT_STATUS):
 		get_tree().quit(1)
 		return
 	_record_capture("STATUS_SUMMARY", OUT_STATUS, "STATUS_SUMMARY")
@@ -337,7 +339,14 @@ func _fake_boss_unlock_result() -> Dictionary:
 
 
 func _save_viewport(vp: SubViewport, path: String) -> bool:
-	var img := vp.get_texture().get_image()
+	var img: Image = null
+	for _attempt in range(8):
+		vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+		await get_tree().process_frame
+		img = vp.get_texture().get_image()
+		if _image_has_visible_pixels(img):
+			img.save_png(path)
+			return true
 	if img == null:
 		push_error(
 			(
@@ -358,8 +367,26 @@ func _save_viewport(vp: SubViewport, path: String) -> bool:
 			% path
 		)
 		return false
-	img.save_png(path)
-	return true
+	push_error("SubViewport capture stayed transparent for %s after waiting for redraw." % path)
+	return false
+
+
+func _image_has_visible_pixels(img: Image) -> bool:
+	if img == null or img.is_empty():
+		return false
+	var max_x := maxi(0, img.get_width() - 1)
+	var max_y := maxi(0, img.get_height() - 1)
+	var points := [
+		Vector2i(max_x / 2, max_y / 2),
+		Vector2i(max_x / 4, max_y / 4),
+		Vector2i(max_x * 3 / 4, max_y / 4),
+		Vector2i(max_x / 4, max_y * 3 / 4),
+		Vector2i(max_x * 3 / 4, max_y * 3 / 4),
+	]
+	for point in points:
+		if img.get_pixelv(point).a > 0.01:
+			return true
+	return false
 
 
 func _reset_manifest() -> void:
