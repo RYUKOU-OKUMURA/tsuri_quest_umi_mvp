@@ -820,32 +820,6 @@ func _build_result_summary(layout: VBoxContainer) -> void:
 	result_layout.add_child(_status_button)
 
 
-func _add_detail_tile(
-	parent: Container, title: String, value: String, icon_mode: String, accent: Color
-) -> Label:
-	var tile := _panel_box(Color("#fff0cf"), Color("#8b5b2c"), Color("#e6b561"), 3)
-	tile.custom_minimum_size = Vector2(0, 32)
-	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	parent.add_child(tile)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	tile.add_child(row)
-	row.add_child(_small_icon(icon_mode, accent, Vector2(30.0, 0.0)))
-	var title_label := make_label(title, 13, Color("#6a4a2b"))
-	title_label.custom_minimum_size = Vector2(88, 0)
-	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	row.add_child(title_label)
-	var value_label := make_label(value, 17, Color("#2a2118"), 1, Color("#fff2cf"))
-	value_label.custom_minimum_size = Vector2(0, 24)
-	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	value_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	value_label.clip_text = true
-	row.add_child(value_label)
-	return value_label
-
-
 func _add_detail_story_row(
 	parent: Container,
 	node_name: String,
@@ -952,57 +926,6 @@ func _add_detail_story_row(
 	secondary.clip_text = true
 	secondary_badge.add_child(secondary)
 	return [primary, secondary]
-
-
-func _add_detail_pair_tile(
-	parent: Container,
-	left_title: String,
-	right_title: String,
-	left_icon: String,
-	right_icon: String,
-	left_accent: Color,
-	right_accent: Color
-) -> Array:
-	var tile := _panel_box(Color("#fff0cf"), Color("#8b5b2c"), Color("#e6b561"), 3)
-	tile.custom_minimum_size = Vector2(0, 36)
-	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	parent.add_child(tile)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	tile.add_child(row)
-
-	var left_value := _add_detail_pair_cell(row, left_title, left_icon, left_accent)
-	var divider := ColorRect.new()
-	divider.color = Color(0.545, 0.357, 0.173, 0.35)
-	divider.custom_minimum_size = Vector2(2, 0)
-	row.add_child(divider)
-	var right_value := _add_detail_pair_cell(row, right_title, right_icon, right_accent)
-	return [left_value, right_value]
-
-
-func _add_detail_pair_cell(
-	parent: HBoxContainer, title: String, icon_mode: String, accent: Color
-) -> Label:
-	var cell := HBoxContainer.new()
-	cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	cell.add_theme_constant_override("separation", 5)
-	parent.add_child(cell)
-	cell.add_child(_small_icon(icon_mode, accent, Vector2(26.0, 0.0)))
-	var box := VBoxContainer.new()
-	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	box.add_theme_constant_override("separation", 0)
-	cell.add_child(box)
-	var title_label := make_label(title, 12, Color("#6a4a2b"))
-	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(title_label)
-	var value_label := make_label("", 16, Color("#2a2118"), 1, Color("#fff2cf"))
-	value_label.custom_minimum_size = Vector2(0, 22)
-	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	value_label.clip_text = true
-	box.add_child(value_label)
-	return value_label
 
 
 func _refresh_all() -> void:
