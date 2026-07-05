@@ -1,6 +1,6 @@
 # 調理場 QA判断ログ
 
-最終更新: 2026-07-05 / 状態: 調理場cooking_screen R1完了 / COOK_SELECT仕上げ点検完了 / MEAL_RESULT reference-uplift完了 / 次はEXP_GAIN
+最終更新: 2026-07-05 / 状態: 調理場cooking_screen R1完了 / COOK_SELECT仕上げ点検完了 / MEAL_RESULT / EXP_GAIN reference-uplift完了 / 次はLEVEL_UP_OVERLAY
 参照画像: reference/cooking_flow/01_cook_select_concept.png, reference/cooking_flow/02_meal_result_concept.png, reference/cooking_flow/03_exp_gain_concept.png, reference/cooking_flow/04_level_up_overlay_concept.png, reference/cooking_flow/05_status_summary_concept.png
 QA更新コマンド: ./tools/cooking_visual_qa.sh
 
@@ -21,6 +21,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 
 | パラメータ | 回数 | 直近の変更内容 | 状態 |
 |---|---|---|---|
+| EXP_GAIN 中央演出/ステップ行 | 4 | `exp_burst_frame.png` 候補を生成。透明外枠/見出し拡大は可読性が落ちたため不採用、最終的にステップ行はcontent契約上visibleのままalpha 0.18で抑制 | 完了 |
 | MEAL_RESULT 料理カード/外枠構成 | 2 | 料理カード素材候補の広い料理窓に合わせて配分を試し、1回目は料理名が狭くなったため、2回目で画像幅/文字サイズとMEAL_RESULT専用透明外枠を採用 | 完了 |
 | COOK_SELECT 料理カードタイトル帯 | 1 | 最新比較で枠ノッチとタイトル文字の干渉を確認し、runtimeタイトルをアウトラインなし太字・帯内下寄せへ調整 | 完了 |
 | COOK_SELECT 料理カード星ランク表示 | 1 | Label幅中央寄せを試したが実スクショで星文字が弱く、runtimeポリゴン描画 `RecipeStarRank` へ切替 | 完了 |
@@ -31,7 +32,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 
 ## 5. 現在の残ギャップ
 
-- P2: EXP_GAIN / LEVEL_UP_OVERLAY / STATUS_SUMMARY は参照uplift未実施。ユーザー指定の優先順どおり1状態1スライスで進める。
+- P2: LEVEL_UP_OVERLAY / STATUS_SUMMARY は参照uplift未実施。ユーザー指定の優先順どおり1状態1スライスで進める。
 - R1温存: レアリティ表示の `RarityStyles` 横展開は未実施。調理場 `src/ui/cooking_screen.gd` のR1完了により、残件は台帳に残したまま一旦停止。
 - R1: `src/ui/cooking_screen.gd` は `Color(` 直書きゼロ。COOK_SELECT左魚リスト周辺は `Palette.COOKING_FISH_*`、見出しリボン周辺は `Palette.COOKING_SECTION_RIBBON_*`、料理カード/中央料理グリッド外枠周辺は `Palette.COOKING_RECIPE_*`、下部バー周辺は `Palette.COOKING_PREP_*`、右詳細パネルactive runtime色は `Palette.COOKING_DETAIL_*`、調理ボタン周辺は `Palette.COOKING_ACTION_*`、料理図鑑ボタン周辺は `Palette.COOKING_RECIPE_BOOK_BUTTON_*`、小アイコン/アクションキュー周辺は `Palette.COOKING_SMALL_ICON_*` / `Palette.COOKING_ACTION_CUE_*`、結果サマリーカード周辺は `Palette.COOKING_SUMMARY_CARD_*` / `Palette.COOKING_RESULT_TITLE_OUTLINE`、背景fallback/glazeは `Palette.COOKING_BG_*` へ移行済み。未使用detail helper由来のhexは削除済み。
 - 監査: `tools/cooking_layout_audit.tscn` / `tools/cooking_content_audit.tscn` / `./tools/cooking_visual_qa.sh` はgreen。visual QAは状態間キャプチャ重複のfail guard追加済み。
@@ -41,6 +42,18 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 なし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-05: `EXP_GAIN reference-uplift` 完了。`reference/cooking_flow/03_exp_gain_concept.png` へ向けて、中央EXP演出を主役に寄せた。
+
+- 選定理由: MEAL_RESULT完了後、ユーザー指定の優先順で次がEXP_GAINだったため。before比較では上部ステップ行と旧EXPフレームが強く、参照の巨大 `+EXP` / 中央ゲージの報酬ビートより進行UI感が勝っていた。
+- 変えたもの: `tools/generate_cooking_showcase_assets.py` の `exp_burst_frame()` から `assets/showcase/cooking/exp_burst_frame.png` 候補を生成し、中央フレームの光量・ゲージ台座・粒子を強化。EXP_GAIN時のステップ行はcontent audit契約上visibleのまま、alpha 0.18で背景側へ退かせた。
+- 変えていないもの: §1 freeze値、調理/EXP/レベルアップ進行ロジック、COOK_SELECT、MEAL_RESULT、LEVEL_UP_OVERLAY、STATUS_SUMMARY、R1残件、日本語PNG焼き込み。
+- 素材候補: `exp_burst_frame.png` 候補を採用。透明外枠化と見出し拡大は `+EXP` / 見出しの可読性が落ちたため不採用。最終候補は、参照ほどの巨大タイトルには届かないが、beforeより中央ゲージの発光と専用EXP状態の読みが強いと判断。
+- 微調整カウンタ: `EXP_GAIN 中央演出/ステップ行` 4回。3回目で表示契約を満たす改善に戻し、4回目の見出し拡大は不採用として戻した。追加の数px調整は行わず、残る巨大タイトル差分は次回以降の構造/素材フェーズへ送る。
+- 証拠画像: `docs/qa/evidence/cooking/2026-07-05_exp_gain_before_after_ref.png`, `docs/qa/evidence/cooking/2026-07-05_exp_gain_focus.png`, `docs/qa/evidence/cooking/2026-07-05_exp_gain_exp.png`, `docs/qa/evidence/cooking/2026-07-05_exp_gain_report.html`
+- 判定: afterでは上部ステップ行が主導線から退き、中央EXPカードの光とゲージ台座が強くなった。参照の巨大 `+60 EXP` ほどの迫力は残課題だが、EXP獲得専用状態へ前進したと第三者に判別できる。cmp一致は判定に使っていない。
+- 検証: `./tools/cooking_visual_qa.sh`、`cooking_layout_audit.tscn`、`cooking_content_audit.tscn`、`cooking_flow_smoke`、`./tools/save_system_verify.sh`、`./tools/validate_project.sh` green。`save_system_verify.sh` のJSON警告と `validate_project.sh` のObjectDB/resource警告はベースライン既知。
+- 固定条件: EXP_GAINのステップ行はcontent audit契約上visibleを維持するが、主役は中央EXP演出とする。次スライスはLEVEL_UP_OVERLAYへ進める。
 
 2026-07-05: `MEAL_RESULT reference-uplift` 完了。`reference/cooking_flow/02_meal_result_concept.png` へ向けて、食事結果がフォームではなくpayoff状態に見えるように調整した。
 

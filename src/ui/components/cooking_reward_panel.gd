@@ -211,16 +211,7 @@ func _build_screen() -> void:
 
 	_result_banner = PanelContainer.new()
 	_result_banner.custom_minimum_size = Vector2(0.0, 96.0)
-	_result_banner.add_theme_stylebox_override(
-		"panel",
-		_texture_style_box(
-			MEAL_BANNER_FRAME,
-			24,
-			_style_box(Color("#f2e4c2"), Color("#5e391a"), Palette.GOLD_BRIGHT, 5, 5),
-			18.0,
-			6.0
-		)
-	)
+	_set_result_banner_meal_style()
 	right.add_child(_result_banner)
 	_meal_banner_spark = MealResultBannerSparkVisual.new()
 	_meal_banner_spark.name = "MealResultBannerSpark"
@@ -1055,6 +1046,7 @@ func _set_result_banner_height(height: float) -> void:
 
 func _apply_meal_result_composition() -> void:
 	_set_dialog_meal_result_style()
+	_set_result_banner_meal_style()
 	if _scene_card != null:
 		_scene_card.custom_minimum_size = Vector2(446.0, 328.0)
 		_set_scene_card_meal_result_style()
@@ -1114,6 +1106,7 @@ func _apply_meal_result_composition() -> void:
 
 func _apply_exp_gain_composition() -> void:
 	_set_dialog_reward_frame_style()
+	_set_result_banner_exp_gain_style()
 	if _scene_card != null:
 		_scene_card.custom_minimum_size = Vector2(340.0, 360.0)
 		_set_scene_card_exp_gain_style()
@@ -1133,6 +1126,8 @@ func _apply_exp_gain_composition() -> void:
 		_scene_bonus_label.visible = true
 	if _exp_focus_card != null:
 		_exp_focus_card.custom_minimum_size = Vector2(0.0, 306.0)
+	if _exp_bar != null:
+		_exp_bar.custom_minimum_size = Vector2(0.0, 50.0)
 	if _effect_preview_card != null:
 		_effect_preview_card.custom_minimum_size = Vector2(254.0, 360.0)
 	if _meal_reward_cue != null:
@@ -1157,7 +1152,7 @@ func _apply_exp_gain_composition() -> void:
 		_dish_note_label.visible = true
 	if _flow_row != null:
 		_flow_row.visible = true
-		_flow_row.modulate.a = 1.0
+		_flow_row.modulate.a = 0.18
 	_set_flow_row_compact(false)
 	if _confirm_button != null:
 		_confirm_button.custom_minimum_size = Vector2(318.0, 40.0)
@@ -1169,26 +1164,30 @@ func _apply_exp_gain_composition() -> void:
 func _set_dialog_meal_result_style() -> void:
 	if _dialog == null:
 		return
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color.TRANSPARENT
-	sb.border_color = Color.TRANSPARENT
-	sb.set_border_width_all(0)
-	sb.set_corner_radius_all(0)
-	sb.content_margin_left = 4.0
-	sb.content_margin_top = 0.0
-	sb.content_margin_right = 4.0
-	sb.content_margin_bottom = 3.0
-	sb.shadow_color = Color.TRANSPARENT
-	sb.shadow_size = 0
-	sb.shadow_offset = Vector2.ZERO
-	sb.anti_aliasing = false
-	_dialog.add_theme_stylebox_override("panel", sb)
+	_dialog.add_theme_stylebox_override("panel", _transparent_dialog_style(4.0, 0.0, 4.0, 3.0))
 
 
 func _set_dialog_reward_frame_style() -> void:
 	if _dialog == null:
 		return
 	_dialog.add_theme_stylebox_override("panel", _reward_dialog_frame_style())
+
+
+func _transparent_dialog_style(left: float, top: float, right: float, bottom: float) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color.TRANSPARENT
+	sb.border_color = Color.TRANSPARENT
+	sb.set_border_width_all(0)
+	sb.set_corner_radius_all(0)
+	sb.content_margin_left = left
+	sb.content_margin_top = top
+	sb.content_margin_right = right
+	sb.content_margin_bottom = bottom
+	sb.shadow_color = Color.TRANSPARENT
+	sb.shadow_size = 0
+	sb.shadow_offset = Vector2.ZERO
+	sb.anti_aliasing = false
+	return sb
 
 
 func _reward_dialog_frame_style() -> StyleBox:
@@ -1198,6 +1197,28 @@ func _reward_dialog_frame_style() -> StyleBox:
 		_style_box(Color("#10283f"), Color("#5e391a"), Palette.GOLD_BRIGHT, 6, 8),
 		18.0,
 		2.0
+	)
+
+
+func _set_result_banner_meal_style() -> void:
+	if _result_banner == null:
+		return
+	_result_banner.add_theme_stylebox_override("panel", _meal_result_banner_style())
+
+
+func _set_result_banner_exp_gain_style() -> void:
+	if _result_banner == null:
+		return
+	_result_banner.add_theme_stylebox_override("panel", _meal_result_banner_style())
+
+
+func _meal_result_banner_style() -> StyleBox:
+	return _texture_style_box(
+		MEAL_BANNER_FRAME,
+		24,
+		_style_box(Color("#f2e4c2"), Color("#5e391a"), Palette.GOLD_BRIGHT, 5, 5),
+		18.0,
+		6.0
 	)
 
 

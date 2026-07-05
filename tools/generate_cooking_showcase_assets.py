@@ -1575,58 +1575,58 @@ def exp_burst_frame() -> None:
 
     bg = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     bd = ImageDraw.Draw(bg, "RGBA")
-    for y in range(h):
-        t = y / max(1, h - 1)
-        top = (7, 28, 52)
-        bot = (12, 55, 82)
-        col = tuple(int(top[i] * (1 - t) + bot[i] * t) for i in range(3))
-        bd.line((0, y, w, y), fill=(*col, 245))
+    center = (w // 2, h // 2 - 20)
+    for r in range(380, 24, -16):
+        a = int(96 * (1 - r / 380) ** 1.8)
+        bd.ellipse((center[0] - r, center[1] - r, center[0] + r, center[1] + r), fill=(255, 204, 78, a))
+    for r in range(230, 18, -16):
+        a = int(64 * (1 - r / 230) ** 1.45)
+        bd.ellipse((center[0] - r, center[1] - r, center[0] + r, center[1] + r), outline=(90, 238, 255, a), width=7)
     mask = Image.new("L", (w, h), 0)
     md = ImageDraw.Draw(mask)
-    md.rounded_rectangle((8, 8, w - 10, h - 14), radius=14, fill=255)
+    md.rounded_rectangle((4, 4, w - 6, h - 8), radius=12, fill=255)
     img.alpha_composite(bg)
     img.putalpha(mask)
     draw = ImageDraw.Draw(img, "RGBA")
 
-    center = (w // 2, h // 2 - 12)
-    for i in range(44):
-        angle = math.tau * i / 44
+    for i in range(56):
+        angle = math.tau * i / 56
         inner = 20 + (i % 3) * 5
-        outer = 360 + (i % 4) * 18
-        color = (255, 224, 129, 54) if i % 2 == 0 else (107, 241, 255, 36)
+        outer = 390 + (i % 5) * 18
+        color = (255, 224, 129, 78) if i % 2 == 0 else (107, 241, 255, 48)
         x0 = center[0] + math.cos(angle) * inner
         y0 = center[1] + math.sin(angle) * inner
         x1 = center[0] + math.cos(angle) * outer
         y1 = center[1] + math.sin(angle) * outer
         draw.line((x0, y0, x1, y1), fill=color, width=5 if i % 2 == 0 else 3)
 
-    for r in range(150, 12, -10):
-        a = int(70 * (1 - r / 150) ** 1.6)
+    for r in range(180, 18, -12):
+        a = int(82 * (1 - r / 180) ** 1.65)
         draw.ellipse((center[0] - r, center[1] - r, center[0] + r, center[1] + r), fill=(255, 222, 112, a))
-    draw.ellipse((center[0] - 54, center[1] - 54, center[0] + 54, center[1] + 54), outline=(255, 240, 172, 110), width=3)
+    draw.ellipse((center[0] - 76, center[1] - 60, center[0] + 76, center[1] + 60), outline=(255, 240, 172, 132), width=3)
 
     # Gauge pedestal and cyan flash trails.
     for i in range(6):
-        width = w - 170 - i * 46
-        y = 134 + i * 5
+        width = w - 114 - i * 52
+        y = 142 + i * 5
         draw.rounded_rectangle(
             ((w - width) // 2, y, (w + width) // 2, y + 13),
             radius=7,
-            fill=(68, 229, 255, max(18, 70 - i * 9)),
+            fill=(68, 229, 255, max(22, 92 - i * 10)),
         )
-    draw.rounded_rectangle((96, 150, w - 96, 190), radius=18, fill=(5, 14, 25, 160), outline=(107, 241, 255, 120), width=3)
-    draw.rounded_rectangle((116, 160, w - 116, 178), radius=9, fill=(30, 107, 148, 150))
+    draw.rounded_rectangle((62, 152, w - 62, 194), radius=20, fill=(3, 12, 24, 172), outline=(107, 241, 255, 152), width=3)
+    draw.rounded_rectangle((86, 164, w - 86, 181), radius=9, fill=(30, 128, 172, 168))
 
-    for i in range(34):
+    for i in range(46):
         x = 48 + (i * 113) % (w - 96)
         y = 32 + (i * 47) % (h - 78)
         r = 2 + i % 4
-        color = (255, 224, 129, 150) if i % 3 else (107, 241, 255, 135)
+        color = (255, 224, 129, 172) if i % 3 else (107, 241, 255, 148)
         draw.line((x - r, y, x + r, y), fill=color, width=2)
         draw.line((x, y - r, x, y + r), fill=color, width=2)
 
-    draw.rounded_rectangle((8, 8, w - 10, h - 14), radius=14, outline=(255, 224, 129, 170), width=4)
-    draw.rounded_rectangle((20, 20, w - 22, h - 26), radius=10, outline=(107, 241, 255, 82), width=2)
+    draw.line((28, 22, w - 28, 22), fill=(255, 224, 129, 118), width=3)
+    draw.line((40, h - 24, w - 40, h - 24), fill=(107, 241, 255, 96), width=3)
     save(img, "exp_burst_frame.png")
 
 
