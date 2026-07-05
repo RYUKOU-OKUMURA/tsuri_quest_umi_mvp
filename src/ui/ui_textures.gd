@@ -28,7 +28,7 @@ static func get_fish_icon(color: Color) -> ImageTexture:
 	if _icon_cache.has(color):
 		return _icon_cache[color]
 	var img := Image.create_empty(64, 36, false, Image.FORMAT_RGBA8)
-	img.fill(Color(0.0, 0.0, 0.0, 0.0))
+	img.fill(Color.TRANSPARENT)
 	var dark := color.darkened(0.42)
 	var light := color.lightened(0.32)
 	_fill_ellipse(img, 10, 18, 6, 13, dark)   # 尾（縦長）
@@ -36,9 +36,9 @@ static func get_fish_icon(color: Color) -> ImageTexture:
 	_fill_ellipse(img, 36, 18, 26, 12, color) # 胴
 	_fill_ellipse(img, 32, 6, 6, 4, dark)     # 背びれ
 	_fill_ellipse(img, 38, 23, 18, 4, Color(light.r, light.g, light.b, 0.55))  # 腹ハイライト
-	_set_px(img, 50, 14, Color(1.0, 1.0, 1.0, 1.0))
-	_set_px(img, 51, 14, Color(1.0, 1.0, 1.0, 1.0))
-	_set_px(img, 50, 15, Color(0.05, 0.05, 0.05, 1.0))
+	_set_px(img, 50, 14, Color.WHITE)
+	_set_px(img, 51, 14, Color.WHITE)
+	_set_px(img, 50, 15, Palette.UI_FISH_ICON_EYE_DARK)
 	var tex := ImageTexture.create_from_image(img)
 	_icon_cache[color] = tex
 	return tex

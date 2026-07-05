@@ -43,6 +43,9 @@ const THEME_BUTTON_DISABLED_TEXT := Color("#d0cbc1")
 const THEME_PANEL_SHADOW := Color(0.0, 0.0, 0.0, 0.28)
 const THEME_BUTTON_SHADOW := Color(0.0, 0.0, 0.0, 0.24)
 
+# --- 共通proceduralアイコン ---
+const UI_FISH_ICON_EYE_DARK := Color(0.05, 0.05, 0.05, 1.0)
+
 # --- 金 ---
 const GOLD := Color("#e1bd72")
 const GOLD_BRIGHT := Color("#ffe7a8")
