@@ -473,7 +473,7 @@ func _add_cooking_background() -> void:
 		add_child(bg)
 		move_child(bg, 0)
 	else:
-		add_gradient_background(Color("#2a2418"), Color("#14110b"))
+		add_gradient_background(Palette.COOKING_BG_FALLBACK_TOP, Palette.COOKING_BG_FALLBACK_BOTTOM)
 
 	var glaze := ColorRect.new()
 	glaze.color = Palette.COOKING_BG_GLAZE
@@ -1261,7 +1261,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	material_icon.custom_minimum_size = Vector2(68.0, 22.0)
 	material_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	material_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	material_icon.modulate = Color(0.88, 0.80, 0.66, 0.96) if locked or unavailable else Color.WHITE
+	material_icon.modulate = Palette.COOKING_RECIPE_MATERIAL_MUTED_MODULATE if locked or unavailable else Color.WHITE
 	material_row.add_child(material_icon)
 	var footer_text := _recipe_card_status_text(recipe, locked, unavailable)
 	var footer: Label = null
@@ -1294,7 +1294,7 @@ func _make_recipe_preview_card() -> PanelContainer:
 	card.name = "RecipeCard_PreviewMeuniere"
 	card.custom_minimum_size = Vector2(132, 196)
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	card.self_modulate = Color(0.92, 0.86, 0.74, 1.0)
+	card.self_modulate = Palette.COOKING_RECIPE_CARD_PREVIEW_MODULATE
 	card.add_theme_stylebox_override(
 		"panel",
 		_texture_style_box(
@@ -1344,7 +1344,7 @@ func _make_recipe_preview_card() -> PanelContainer:
 	icon.custom_minimum_size = Vector2(68.0, 22.0)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.modulate = Color(0.88, 0.80, 0.66, 0.96)
+	icon.modulate = Palette.COOKING_RECIPE_MATERIAL_MUTED_MODULATE
 	material_row.add_child(icon)
 	var footer := make_label(
 		"Lv.6",
@@ -1390,7 +1390,7 @@ func _recipe_card_dish_image(
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	image.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-	image.modulate = Color(0.82, 0.76, 0.64, 0.94) if muted else Color.WHITE
+	image.modulate = Palette.COOKING_RECIPE_DISH_MUTED_MODULATE if muted else Color.WHITE
 	thumb.add_child(image)
 	return thumb
 
@@ -1482,9 +1482,9 @@ func _refresh_recipe_card_styles() -> void:
 		var inner := Palette.COOKING_RECIPE_CARD_SELECTED_INNER if selected else Palette.COOKING_RECIPE_CARD_INNER
 		var tint := Color.WHITE
 		if locked:
-			tint = Color(0.86, 0.80, 0.68, 1.0)
+			tint = Palette.COOKING_RECIPE_CARD_LOCKED_MODULATE
 		elif unavailable:
-			tint = Color(0.90, 0.84, 0.72, 1.0)
+			tint = Palette.COOKING_RECIPE_CARD_UNAVAILABLE_MODULATE
 		card.self_modulate = tint
 		card.add_theme_stylebox_override(
 			"panel",

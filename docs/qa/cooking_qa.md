@@ -1,6 +1,6 @@
 # 調理場 QA判断ログ
 
-最終更新: 2026-07-05 / 状態: 調理場未使用detail helper削除完了
+最終更新: 2026-07-05 / 状態: 調理場cooking_screen R1完了
 参照画像: reference/cooking_flow/01_cook_select_concept.png, reference/cooking_flow/02_meal_result_concept.png, reference/cooking_flow/03_exp_gain_concept.png, reference/cooking_flow/04_level_up_overlay_concept.png, reference/cooking_flow/05_status_summary_concept.png
 QA更新コマンド: ./tools/cooking_visual_qa.sh
 
@@ -30,7 +30,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 ## 5. 現在の残ギャップ
 
 - P2: レアリティ表示の `RarityStyles` 横展開は未実施。
-- R1: `src/ui/cooking_screen.gd` の画面固有ハードコード色は、背景fallback以外を処理済み。今回触った左魚リスト周辺のruntime色は `Palette.COOKING_FISH_*`、見出しリボン周辺は `Palette.COOKING_SECTION_RIBBON_*`、料理カード/中央料理グリッド外枠周辺は `Palette.COOKING_RECIPE_*`、下部バー周辺は `Palette.COOKING_PREP_*`、右詳細パネルactive runtime色は `Palette.COOKING_DETAIL_*`、調理ボタン周辺は `Palette.COOKING_ACTION_*`、料理図鑑ボタン周辺は `Palette.COOKING_RECIPE_BOOK_BUTTON_*`、小アイコン/アクションキュー周辺は `Palette.COOKING_SMALL_ICON_*` / `Palette.COOKING_ACTION_CUE_*`、結果サマリーカード周辺は `Palette.COOKING_SUMMARY_CARD_*` / `Palette.COOKING_RESULT_TITLE_OUTLINE`、背景glazeは `Palette.COOKING_BG_GLAZE` へ移行済み。未使用detail helper由来のhexは削除済み。残りは背景fallbackのPalette移行。
+- R1: `src/ui/cooking_screen.gd` は `Color(` 直書きゼロ。COOK_SELECT左魚リスト周辺は `Palette.COOKING_FISH_*`、見出しリボン周辺は `Palette.COOKING_SECTION_RIBBON_*`、料理カード/中央料理グリッド外枠周辺は `Palette.COOKING_RECIPE_*`、下部バー周辺は `Palette.COOKING_PREP_*`、右詳細パネルactive runtime色は `Palette.COOKING_DETAIL_*`、調理ボタン周辺は `Palette.COOKING_ACTION_*`、料理図鑑ボタン周辺は `Palette.COOKING_RECIPE_BOOK_BUTTON_*`、小アイコン/アクションキュー周辺は `Palette.COOKING_SMALL_ICON_*` / `Palette.COOKING_ACTION_CUE_*`、結果サマリーカード周辺は `Palette.COOKING_SUMMARY_CARD_*` / `Palette.COOKING_RESULT_TITLE_OUTLINE`、背景fallback/glazeは `Palette.COOKING_BG_*` へ移行済み。未使用detail helper由来のhexは削除済み。
 - 監査: `tools/cooking_layout_audit.tscn` / `tools/cooking_content_audit.tscn` / `./tools/cooking_visual_qa.sh` はgreen。visual QAは状態間キャプチャ重複のfail guard追加済み。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
@@ -38,6 +38,17 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 なし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-05: `cooking_screen final palette R1 pass` 完了。背景fallbackと料理カードtintの残色をPalette用途名へ移行し、`src/ui/cooking_screen.gd` の `Color(` 直書きをゼロにした。
+
+- 選定理由: 未使用detail helper削除後も背景fallbackと料理カード/素材/皿画像tintに `Color(...)` の直書きが残っており、調理場画面全体のR1完了を阻んでいたため。
+- 変えたもの: 背景fallback top/bottom、料理カードlocked/unavailable/preview modulate、料理素材アイコンmuted modulate、皿画像muted modulate。
+- 変えていないもの: §1 freeze値、レイアウト値、素材、表示文言、COOK_SELECT構成、調理報酬オーバーレイ、日本語PNG焼き込み。
+- Palette: 新規 `Palette.COOKING_BG_FALLBACK_*` / `Palette.COOKING_RECIPE_*_MODULATE` を追加。理由は調理場画面スクリプト内の最後の直書き色を、表示同値のままPalette正本へ移すため。
+- 証拠画像: `docs/qa/evidence/cooking/2026-07-05_background_fallback_palette_select.png`, `docs/qa/evidence/cooking/2026-07-05_background_fallback_palette_report.html`
+- 判定: `rg -n "Color\\(" src/ui/cooking_screen.gd` 該当ゼロ。実スクショでCOOK_SELECT料理カード、背景、右詳細パネルにP1なし。これは参照upliftではなくR1表示同値移行なので、cmp一致は完了条件にしていない。
+- 検証: `./tools/cooking_visual_qa.sh`、`tools/cooking_content_audit.tscn`、`tools/cooking_layout_audit.tscn`、`cooking_flow_smoke`、`./tools/save_system_verify.sh`、`./tools/validate_project.sh` green。`validate_project.sh` の ObjectDB/resource 警告はベースライン既知。
+- 固定条件: 調理場画面のruntime色は `Palette.COOKING_*` 系で扱い、次回以降 `src/ui/cooking_screen.gd` へ新規 `Color(...)` を戻さない。
 
 2026-07-05: `unused detail helper cleanup` 完了。右詳細旧helperを削除し、未使用コード由来の直書き色を消した。
 
