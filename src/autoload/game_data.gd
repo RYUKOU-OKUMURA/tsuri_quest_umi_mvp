@@ -29,6 +29,7 @@ const BOAT_ORDER: Array[String] = GameCatalogData.BOAT_ORDER
 const BOATS: Dictionary = GameCatalogData.BOATS
 
 const DEFAULT_FISHING_ENVIRONMENT_ID := "sunny_calm"
+const SIZE_ROLL_EXPONENT_DEFAULT := 2.1
 
 
 var _rng := RandomNumberGenerator.new()
@@ -378,7 +379,9 @@ func roll_normal_fish(
 
 
 func roll_fish_size(fish: Dictionary) -> float:
-	return snappedf(_rng.randf_range(float(fish["size_min"]), float(fish["size_max"])), 0.1)
+	var exponent := float(fish.get("size_bias", SIZE_ROLL_EXPONENT_DEFAULT))
+	var t := pow(_rng.randf(), exponent)
+	return snappedf(lerpf(float(fish["size_min"]), float(fish["size_max"]), t), 0.1)
 
 
 func recipe_exp(fish_id: String, recipe_id: String) -> int:
