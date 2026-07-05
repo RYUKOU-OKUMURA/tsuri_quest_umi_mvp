@@ -1,6 +1,6 @@
 # 調理場 QA判断ログ
 
-最終更新: 2026-07-05 / 状態: COOK_SELECT 料理カード reference-uplift 完了
+最終更新: 2026-07-05 / 状態: COOK_SELECT 下部バー reference-uplift 完了
 参照画像: reference/cooking_flow/01_cook_select_concept.png, reference/cooking_flow/02_meal_result_concept.png, reference/cooking_flow/03_exp_gain_concept.png, reference/cooking_flow/04_level_up_overlay_concept.png, reference/cooking_flow/05_status_summary_concept.png
 QA更新コマンド: ./tools/cooking_visual_qa.sh
 
@@ -30,7 +30,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 ## 5. 現在の残ギャップ
 
 - P2: レアリティ表示の `RarityStyles` 横展開は未実施。
-- R1: `src/ui/cooking_screen.gd` の画面固有ハードコード色は大半が未移行。今回触った料理カード周辺のruntime色は `Palette.COOKING_RECIPE_*` へ移行済み。残りは次の調理場直接編集スライスで継続する。
+- R1: `src/ui/cooking_screen.gd` の画面固有ハードコード色は大半が未移行。今回触った料理カード周辺のruntime色は `Palette.COOKING_RECIPE_*`、下部バー周辺のruntime色は `Palette.COOKING_PREP_*` へ移行済み。残りは次の調理場直接編集スライスで継続する。
 - 監査: `tools/cooking_layout_audit.tscn` / `tools/cooking_content_audit.tscn` / `./tools/cooking_visual_qa.sh` はgreen。visual QAは状態間キャプチャ重複のfail guard追加済み。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
@@ -38,6 +38,19 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 なし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-05: `COOK_SELECT prep bar reference-uplift` 完了。下部バーを参照の4区画構成へ寄せ、下部バー素材候補を採用した。
+
+- 選定理由: 料理カード完了後のafterでも下部は「現在の準備 / 効果中の料理 / クーラーボックス / 詳細」に留まり、参照の「プレイヤーLv / 効果中の料理 / クーラーボックス / 所持金」4区画の装飾フレーム構成へ未到達だったため。
+- 変えたもの: 下部バー枠2枚（バー/カード）、COOK_SELECT下部4区画、COOK_SELECTではタイトルスロット/詳細ボタンを非表示にする状態制御、下部バー周辺のPalette定数、`tools/cooking_content_audit.gd` / `tools/cooking_layout_audit.gd` のCOOK_SELECT契約。
+- 変えていないもの: §1 freeze値、料理カード、魚リスト、右詳細パネル、背景/左右余白、ヘッダー `PlayerStatusBar`、調理報酬オーバーレイ、日本語PNG焼き込み。
+- 素材候補: `tools/generate_cooking_showcase_assets.py` で4区画トレイと下部カード枠候補を生成し採用。候補は4つの情報スロットと縦セパレータが読め、beforeより参照の下部バー構成へ近づいたため。
+- 判断更新: 以前の「下部準備バーへLv/所持金カードを戻さない」は退行ゼロ/重複解消フェーズの暫定条件だった。今回のreference-upliftでは参照構成を優先し、4区画として小さく整理できたため再導入を採用した。
+- Palette: 新規 `Palette.COOKING_PREP_*` を追加。理由は下部バー/カード/タイトル/値のruntime色を、今回触った行から用途名定数へ移すため。
+- 証拠画像: `docs/qa/evidence/cooking/2026-07-05_prep_bar_before_after_ref.png`, `docs/qa/evidence/cooking/2026-07-05_prep_bar_select.png`, `docs/qa/evidence/cooking/2026-07-05_prep_bar_report.html`
+- 判定: afterではプレイヤーLv、効果中の料理、クーラーボックス、所持金が装飾枠で区切られ、参照の下部4区画へ前進した。所持金は `1,250 G` 表記へ合わせ、テキストの見切れなしを実スクショで確認した。cmp一致は判定に使っていない。
+- 検証: `./tools/cooking_visual_qa.sh`、`tools/cooking_content_audit.tscn`、`tools/cooking_layout_audit.tscn`、`cooking_flow_smoke`、`./tools/save_system_verify.sh`、`./tools/validate_project.sh` green。`validate_project.sh` の ObjectDB/resource 警告はベースライン既知。
+- 固定条件: COOK_SELECT下部バーは4区画構成を正とする。ヘッダー `PlayerStatusBar` は維持し、次スライスは右詳細パネルへ進める。
 
 2026-07-05: `COOK_SELECT recipe card reference-uplift` 完了。料理カードを参照の3段構成へ寄せ、カード枠素材候補を採用した。
 

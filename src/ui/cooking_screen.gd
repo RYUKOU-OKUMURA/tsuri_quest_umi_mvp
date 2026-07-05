@@ -427,6 +427,7 @@ var _overwrite_note: Label
 var _cook_action_cue: CookActionCueVisual
 var _cook_button: Button
 var _result_panel: PanelContainer
+var _result_title_slot: HBoxContainer
 var _result_title: Label
 var _result_title_lead: Control
 var _result_title_icon: Control
@@ -717,7 +718,13 @@ func _build_result_summary(layout: VBoxContainer) -> void:
 	var result_panel := _texture_panel_box(
 		PREP_SUMMARY_BAR_FRAME,
 		18,
-		_style_box(Color("#e6d2a5"), Color("#5e391a"), Color("#e3b15e"), 6, 5),
+		_style_box(
+			Palette.COOKING_PREP_BAR_FILL,
+			Palette.COOKING_PREP_BAR_BORDER,
+			Palette.COOKING_PREP_BAR_INNER,
+			6,
+			5
+		),
 		12.0,
 		6.0
 	)
@@ -734,6 +741,7 @@ func _build_result_summary(layout: VBoxContainer) -> void:
 	title_slot.custom_minimum_size = Vector2(184.0, 0.0)
 	title_slot.add_theme_constant_override("separation", 4)
 	result_layout.add_child(title_slot)
+	_result_title_slot = title_slot
 	var title_lead := Control.new()
 	title_lead.name = "CurrentPrepTitleLead"
 	title_lead.custom_minimum_size = Vector2(14.0, 0.0)
@@ -760,6 +768,7 @@ func _build_result_summary(layout: VBoxContainer) -> void:
 	_status_button = make_button("詳細", _show_status_overlay, 100, false)
 	_status_button.name = "CurrentPrepDetailButton"
 	_status_button.custom_minimum_size = Vector2(72, 52)
+	_status_button.visible = false
 	result_layout.add_child(_status_button)
 
 
@@ -1734,10 +1743,14 @@ func preview_show_status_overlay() -> void:
 func _show_error_result(message: String) -> void:
 	_flow_state = FlowState.MEAL_RESULT
 	_set_result_summary_compact(false)
+	if _result_title_slot != null:
+		_result_title_slot.visible = true
 	if _result_title_icon != null:
 		_result_title_icon.visible = false
 	if _result_title_lead != null:
 		_result_title_lead.visible = false
+	if _status_button != null:
+		_status_button.visible = false
 	_result_title.text = "調理できませんでした"
 	_clear_container(_result_body)
 	_result_body.add_child(_summary_card("確認", message, Palette.GAUGE_RED_HI))
@@ -1747,12 +1760,25 @@ func _show_status_summary() -> void:
 	if _flow_state != FlowState.COOK_SELECT:
 		_flow_state = FlowState.COOK_SELECT
 	_set_result_summary_compact(false)
+	if _result_title_slot != null:
+		_result_title_slot.visible = false
 	if _result_title_icon != null:
 		_result_title_icon.visible = true
 	if _result_title_lead != null:
 		_result_title_lead.visible = true
+	if _status_button != null:
+		_status_button.visible = false
 	_result_title.text = "現在の準備"
 	_clear_container(_result_body)
+	_result_body.add_child(
+		_prep_summary_card(
+			"プレイヤーLv",
+			"Lv.%d" % PlayerProgress.level,
+			Palette.GOLD_BRIGHT,
+			"player_mini",
+			"PrepSummaryCardLevel"
+		)
+	)
 	_result_body.add_child(
 		_prep_summary_card(
 			"効果中の料理",
@@ -1769,6 +1795,15 @@ func _show_status_summary() -> void:
 			Palette.GAUGE_CYAN_HI,
 			"fish_mini",
 			"PrepSummaryCardFish"
+		)
+	)
+	_result_body.add_child(
+		_prep_summary_card(
+			"所持金",
+			"%s G" % format_money(PlayerProgress.money),
+			Palette.GOLD_BRIGHT,
+			"coin_mini",
+			"PrepSummaryCardMoney"
 		)
 	)
 
@@ -1791,10 +1826,14 @@ func _current_meal_summary_text() -> String:
 func _show_meal_result(result: Dictionary, leveled: bool) -> void:
 	_flow_state = FlowState.MEAL_RESULT if not leveled else FlowState.EXP_GAIN
 	_set_result_summary_compact(false)
+	if _result_title_slot != null:
+		_result_title_slot.visible = true
 	if _result_title_icon != null:
 		_result_title_icon.visible = false
 	if _result_title_lead != null:
 		_result_title_lead.visible = false
+	if _status_button != null:
+		_status_button.visible = false
 	_result_title.text = "%sを食べた！" % String(result.get("dish_name", "料理"))
 	_clear_container(_result_body)
 	_result_body.add_child(
@@ -1979,7 +2018,13 @@ func _prep_summary_card(
 	var card := _texture_panel_box(
 		PREP_SUMMARY_CARD_FRAME,
 		12,
-		_style_box(Color("#f0dfb8"), Color("#8b5b2c"), Color("#d7a456"), 3, 5),
+		_style_box(
+			Palette.COOKING_PREP_CARD_FILL,
+			Palette.COOKING_PREP_CARD_BORDER,
+			Palette.COOKING_PREP_CARD_INNER,
+			3,
+			5
+		),
 		16.0,
 		3.0
 	)
@@ -1998,7 +2043,13 @@ func _prep_summary_card(
 	text_box.add_theme_constant_override("separation", 0)
 	row.add_child(text_box)
 	var title_size := 13 if title.length() >= 7 else 14
-	var title_label := make_shadow_label(title, title_size, Color("#2b2117"), 1, Color("#fff2ca"))
+	var title_label := make_shadow_label(
+		title,
+		title_size,
+		Palette.COOKING_PREP_TITLE_TEXT,
+		1,
+		Palette.COOKING_PREP_TITLE_OUTLINE
+	)
 	title_label.custom_minimum_size = Vector2(0.0, 21.0)
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -2006,7 +2057,13 @@ func _prep_summary_card(
 	title_label.clip_text = true
 	text_box.add_child(title_label)
 	var value_size := 15 if title == "効果中の料理" else 17 if value.length() >= 9 else 20
-	var value_label := make_shadow_label(value, value_size, Color("#1f160f"), 1, Color("#fff5cf"))
+	var value_label := make_shadow_label(
+		value,
+		value_size,
+		Palette.COOKING_PREP_VALUE_TEXT,
+		1,
+		Palette.COOKING_PREP_VALUE_OUTLINE
+	)
 	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

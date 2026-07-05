@@ -919,21 +919,31 @@ def prep_summary_bar_frame() -> None:
     w, h = 1280, 92
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img, "RGBA")
-    draw.rectangle((0, 0, w, h), fill=(42, 24, 12, 244))
-    paper = reference_paper_texture((w - 18, h - 18), "ead6ad", 187, (74, 670, 1168, 720), 0.36, 6.0)
+    draw.rectangle((0, 0, w, h), fill=(40, 23, 11, 246))
+    paper = reference_paper_texture((w - 18, h - 18), "ead6ad", 187, (74, 670, 1168, 720), 0.40, 6.0)
     paste_rounded(img, paper, (4, 7, w - 6, h - 8), 6, 246)
     draw = ImageDraw.Draw(img, "RGBA")
 
-    # Full-width current-prep tray. It should read as the bottom anchor of the
-    # cook-select scene, not as a generic status table.
+    # Four-slot bottom tray: player level, active meal, cooler, and money.
+    # Runtime text/icons sit on top; the PNG only supplies the compartments.
     draw.rounded_rectangle((3, 6, w - 7, h - 8), radius=6, outline=(67, 38, 16, 255), width=5)
-    draw.line((22, 17, w - 22, 17), fill=(255, 210, 89, 96), width=2)
-    draw.line((22, h - 19, w - 22, h - 19), fill=(109, 67, 27, 92), width=3)
-    draw.rounded_rectangle((34, 19, 176, h - 22), radius=5, fill=(111, 76, 43, 104), outline=(75, 46, 22, 96), width=1)
-    draw.rounded_rectangle((w - 100, 18, w - 18, h - 18), radius=4, fill=(117, 73, 31, 112), outline=(250, 197, 72, 108), width=2)
-    for x in [340, 594, 848, 1092]:
-        draw.line((x, 20, x, h - 22), fill=(83, 49, 20, 50), width=2)
-        draw.line((x + 5, 25, x + 5, h - 27), fill=(255, 236, 160, 36), width=1)
+    draw.rounded_rectangle((16, 16, w - 20, h - 18), radius=6, outline=(232, 174, 68, 118), width=2)
+    draw.line((28, 18, w - 28, 18), fill=(255, 220, 102, 118), width=2)
+    draw.line((28, h - 20, w - 28, h - 20), fill=(109, 67, 27, 112), width=3)
+    slot_w = (w - 44) / 4.0
+    for i in range(4):
+        x0 = int(22 + slot_w * i)
+        x1 = int(22 + slot_w * (i + 1) - 8)
+        draw.rounded_rectangle((x0, 20, x1, h - 22), radius=5, fill=(255, 239, 194, 34), outline=(83, 49, 20, 62), width=1)
+        draw.line((x0 + 88, 24, x0 + 88, h - 26), fill=(83, 49, 20, 52), width=2)
+        draw.line((x0 + 96, 28, x0 + 96, h - 30), fill=(255, 236, 160, 36), width=1)
+        if i > 0:
+            sep = x0 - 7
+            draw.line((sep, 17, sep, h - 19), fill=(71, 39, 16, 168), width=4)
+            draw.line((sep + 4, 23, sep + 4, h - 25), fill=(255, 226, 126, 80), width=1)
+        for y in [25, h - 35]:
+            draw.rectangle((x0 + 8, y, x0 + 18, y + 10), fill=(232, 174, 68, 190), outline=(58, 32, 13, 210), width=1)
+            draw.rectangle((x1 - 18, y, x1 - 8, y + 10), fill=(232, 174, 68, 190), outline=(58, 32, 13, 210), width=1)
     for x, y in [(16, 16), (w - 30, 16), (16, h - 32), (w - 30, h - 32)]:
         draw.rectangle((x, y, x + 11, y + 11), fill=(232, 174, 68, 218), outline=(58, 32, 13, 240), width=2)
     save(img, "prep_summary_bar_frame.png")
@@ -944,19 +954,21 @@ def prep_summary_card_frame() -> None:
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     shadow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow, "RGBA")
-    sd.rounded_rectangle((8, 10, w - 6, h - 5), radius=7, fill=(0, 0, 0, 86))
+    sd.rounded_rectangle((8, 10, w - 6, h - 5), radius=7, fill=(0, 0, 0, 98))
     img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(3)))
-    paper = reference_paper_texture((w - 18, h - 16), "f2e0b8", 207, (226, 680, 492, 720), 0.38, 5.0)
+    paper = reference_paper_texture((w - 18, h - 16), "f2e0b8", 207, (226, 680, 492, 720), 0.42, 5.0)
     paste_rounded(img, paper, (6, 6, w - 8, h - 8), 6, 246)
     draw = ImageDraw.Draw(img, "RGBA")
 
-    # Prep-state cards should read like the reference's bottom parchment cards:
-    # a large emblem at left, label above, value below, no form-field chrome.
-    draw.rounded_rectangle((6, 6, w - 8, h - 8), radius=6, outline=(82, 47, 20, 248), width=3)
-    draw.rounded_rectangle((18, 12, 76, h - 13), radius=5, fill=(250, 226, 179, 70), outline=(126, 79, 35, 58), width=1)
-    draw.line((88, 15, 88, h - 17), fill=(94, 57, 24, 66), width=2)
-    draw.line((104, 28, w - 36, 28), fill=(120, 75, 34, 46), width=1)
-    draw.line((104, h - 17, w - 34, h - 17), fill=(122, 76, 34, 42), width=2)
+    # Reusable bottom-slot card. Large emblem on the left, compact label/value
+    # stack on the right; no text is baked into the PNG.
+    draw.rounded_rectangle((6, 6, w - 8, h - 8), radius=6, outline=(82, 47, 20, 250), width=3)
+    draw.rounded_rectangle((16, 12, 78, h - 12), radius=6, fill=(250, 226, 179, 88), outline=(126, 79, 35, 86), width=1)
+    draw.ellipse((27, 18, 67, h - 18), fill=(255, 242, 204, 52), outline=(232, 174, 68, 70), width=1)
+    draw.line((90, 14, 90, h - 16), fill=(94, 57, 24, 78), width=2)
+    draw.line((98, 27, w - 34, 27), fill=(120, 75, 34, 58), width=1)
+    draw.line((98, h - 17, w - 34, h - 17), fill=(122, 76, 34, 52), width=2)
+    draw.rectangle((100, 33, w - 36, 39), fill=(255, 245, 205, 28))
     for x, y in [(14, 12), (w - 28, 12), (14, h - 28), (w - 28, h - 28)]:
         draw.rectangle((x, y, x + 9, y + 9), fill=(232, 174, 68, 214), outline=(58, 32, 13, 228), width=1)
     save(img, "prep_summary_card_frame.png")
