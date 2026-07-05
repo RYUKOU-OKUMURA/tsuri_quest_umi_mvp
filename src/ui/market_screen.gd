@@ -707,7 +707,7 @@ func _has_last_fish_warning() -> bool:
 
 
 func _market_label(text: String, font_size: int, color: Color, outline: int = 0) -> Label:
-	var label := make_screen_label(text, font_size, color, true, outline, Palette.TEXT_OUTLINE_DARK, Color(0.0, 0.0, 0.0, 0.0), true)
+	var label := make_screen_label(text, font_size, color, true, outline, Palette.TEXT_OUTLINE_DARK, Color.TRANSPARENT, true)
 	label.z_index = 30
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	return label
