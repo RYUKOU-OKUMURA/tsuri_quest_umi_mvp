@@ -1855,24 +1855,26 @@ def meal_dish_card_frame() -> None:
     img.alpha_composite(shadow)
     draw = ImageDraw.Draw(img, "RGBA")
 
-    # "Current dish" card for MEAL_RESULT. The left recess holds the dish art,
-    # while the right side stays dark and readable for the dish name/message.
+    # "Current dish" card for MEAL_RESULT. The wide left recess lets the food
+    # read as the hero while the compact right plaque carries runtime labels.
     draw.rounded_rectangle((10, 8, w - 18, h - 18), radius=13, fill=(7, 22, 37, 248), outline=(73, 45, 21, 255), width=5)
     draw.rounded_rectangle((24, 22, w - 32, h - 32), radius=8, fill=(12, 36, 58, 228), outline=(224, 169, 78, 170), width=2)
-    draw.rounded_rectangle((40, 38, 318, h - 42), radius=11, fill=(238, 226, 201, 235), outline=(108, 75, 44, 220), width=4)
-    draw.rounded_rectangle((54, 52, 304, h - 56), radius=8, fill=(205, 194, 170, 210), outline=(255, 248, 221, 145), width=2)
-    draw.rectangle((350, 44, w - 58, 72), fill=(5, 17, 29, 122))
-    draw.line((356, 78, w - 64, 78), fill=(224, 169, 78, 112), width=2)
-    for i in range(18):
-        x = 372 + (i * 31) % (w - 448)
-        y = 92 + (i * 19) % 42
+    draw.rounded_rectangle((40, 34, 522, h - 36), radius=12, fill=(238, 226, 201, 238), outline=(108, 75, 44, 225), width=4)
+    draw.rounded_rectangle((56, 48, 506, h - 50), radius=9, fill=(205, 194, 170, 210), outline=(255, 248, 221, 145), width=2)
+    draw.ellipse((126, 46, 474, h - 44), fill=(255, 244, 214, 32), outline=(255, 226, 128, 70), width=2)
+    draw.rectangle((548, 42, w - 58, 72), fill=(5, 17, 29, 128))
+    draw.line((554, 78, w - 64, 78), fill=(224, 169, 78, 118), width=2)
+    draw.rounded_rectangle((548, 90, w - 62, h - 48), radius=6, fill=(255, 232, 175, 30), outline=(224, 169, 78, 70), width=1)
+    for i in range(12):
+        x = 570 + (i * 27) % 118
+        y = 98 + (i * 17) % 34
         col = (255, 224, 129, 96) if i % 2 == 0 else (107, 241, 255, 72)
         draw.line((x - 3, y, x + 3, y), fill=col, width=2)
         draw.line((x, y - 3, x, y + 3), fill=col, width=2)
     for x, y in [(26, 24), (w - 48, 24), (26, h - 52), (w - 48, h - 52)]:
         draw.rectangle((x, y, x + 14, y + 14), fill=(224, 169, 78, 220), outline=(73, 45, 21, 255), width=2)
     # Small fish stamp on the text side, matching the reference paper/nautical language.
-    fish_cx, fish_cy = w - 96, 104
+    fish_cx, fish_cy = w - 108, 112
     draw.ellipse((fish_cx - 44, fish_cy - 12, fish_cx + 30, fish_cy + 14), fill=(162, 144, 106, 92))
     draw.polygon(
         [(fish_cx + 26, fish_cy), (fish_cx + 62, fish_cy - 19), (fish_cx + 52, fish_cy), (fish_cx + 62, fish_cy + 19)],

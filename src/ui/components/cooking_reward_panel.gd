@@ -106,16 +106,7 @@ func _build_screen() -> void:
 
 	_dialog = PanelContainer.new()
 	_dialog.custom_minimum_size = Vector2(1168.0, 0.0)
-	_dialog.add_theme_stylebox_override(
-		"panel",
-		_texture_style_box(
-			MEAL_RESULT_FRAME,
-			34,
-			_style_box(Color("#10283f"), Color("#5e391a"), Palette.GOLD_BRIGHT, 6, 8),
-			18.0,
-			2.0
-		)
-	)
+	_dialog.add_theme_stylebox_override("panel", _reward_dialog_frame_style())
 	center.add_child(_dialog)
 
 	var root := VBoxContainer.new()
@@ -1063,6 +1054,7 @@ func _set_result_banner_height(height: float) -> void:
 
 
 func _apply_meal_result_composition() -> void:
+	_set_dialog_meal_result_style()
 	if _scene_card != null:
 		_scene_card.custom_minimum_size = Vector2(446.0, 328.0)
 		_set_scene_card_meal_result_style()
@@ -1088,15 +1080,16 @@ func _apply_meal_result_composition() -> void:
 	if _scene_bonus_label != null:
 		_scene_bonus_label.visible = false
 	if _dish_card != null:
-		_dish_card.custom_minimum_size = Vector2(0.0, 188.0)
+		_dish_card.custom_minimum_size = Vector2(0.0, 198.0)
 	if _dish_card_bridge != null:
 		_dish_card_bridge.visible = true
 		_dish_card_bridge.queue_redraw()
 	if _dish_image != null:
-		_dish_image.custom_minimum_size = Vector2(430.0, 0.0)
+		_dish_image.custom_minimum_size = Vector2(462.0, 0.0)
 		_dish_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	if _dish_title != null:
-		_dish_title.add_theme_font_size_override("font_size", 32)
+		_dish_title.add_theme_font_size_override("font_size", 21)
+		_dish_title.custom_minimum_size = Vector2(0.0, 58.0)
 	if _dish_note_label != null:
 		_dish_note_label.visible = false
 	if _flow_row != null:
@@ -1120,6 +1113,7 @@ func _apply_meal_result_composition() -> void:
 
 
 func _apply_exp_gain_composition() -> void:
+	_set_dialog_reward_frame_style()
 	if _scene_card != null:
 		_scene_card.custom_minimum_size = Vector2(340.0, 360.0)
 		_set_scene_card_exp_gain_style()
@@ -1170,6 +1164,41 @@ func _apply_exp_gain_composition() -> void:
 	_set_confirm_button_emphasis(false)
 	_set_status_strip_emphasis(true)
 	_reward_cards.set_reward_cards_height(84.0)
+
+
+func _set_dialog_meal_result_style() -> void:
+	if _dialog == null:
+		return
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color.TRANSPARENT
+	sb.border_color = Color.TRANSPARENT
+	sb.set_border_width_all(0)
+	sb.set_corner_radius_all(0)
+	sb.content_margin_left = 4.0
+	sb.content_margin_top = 0.0
+	sb.content_margin_right = 4.0
+	sb.content_margin_bottom = 3.0
+	sb.shadow_color = Color.TRANSPARENT
+	sb.shadow_size = 0
+	sb.shadow_offset = Vector2.ZERO
+	sb.anti_aliasing = false
+	_dialog.add_theme_stylebox_override("panel", sb)
+
+
+func _set_dialog_reward_frame_style() -> void:
+	if _dialog == null:
+		return
+	_dialog.add_theme_stylebox_override("panel", _reward_dialog_frame_style())
+
+
+func _reward_dialog_frame_style() -> StyleBox:
+	return _texture_style_box(
+		MEAL_RESULT_FRAME,
+		34,
+		_style_box(Color("#10283f"), Color("#5e391a"), Palette.GOLD_BRIGHT, 6, 8),
+		18.0,
+		2.0
+	)
 
 
 func _set_scene_card_meal_result_style() -> void:

@@ -1,6 +1,6 @@
 # 調理場 QA判断ログ
 
-最終更新: 2026-07-05 / 状態: 調理場cooking_screen R1完了 / COOK_SELECT仕上げ点検完了 / 残り4状態reference-upliftへ移行
+最終更新: 2026-07-05 / 状態: 調理場cooking_screen R1完了 / COOK_SELECT仕上げ点検完了 / MEAL_RESULT reference-uplift完了 / 次はEXP_GAIN
 参照画像: reference/cooking_flow/01_cook_select_concept.png, reference/cooking_flow/02_meal_result_concept.png, reference/cooking_flow/03_exp_gain_concept.png, reference/cooking_flow/04_level_up_overlay_concept.png, reference/cooking_flow/05_status_summary_concept.png
 QA更新コマンド: ./tools/cooking_visual_qa.sh
 
@@ -21,6 +21,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 
 | パラメータ | 回数 | 直近の変更内容 | 状態 |
 |---|---|---|---|
+| MEAL_RESULT 料理カード/外枠構成 | 2 | 料理カード素材候補の広い料理窓に合わせて配分を試し、1回目は料理名が狭くなったため、2回目で画像幅/文字サイズとMEAL_RESULT専用透明外枠を採用 | 完了 |
 | COOK_SELECT 料理カードタイトル帯 | 1 | 最新比較で枠ノッチとタイトル文字の干渉を確認し、runtimeタイトルをアウトラインなし太字・帯内下寄せへ調整 | 完了 |
 | COOK_SELECT 料理カード星ランク表示 | 1 | Label幅中央寄せを試したが実スクショで星文字が弱く、runtimeポリゴン描画 `RecipeStarRank` へ切替 | 完了 |
 
@@ -30,7 +31,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 
 ## 5. 現在の残ギャップ
 
-- P2: MEAL_RESULT / EXP_GAIN / LEVEL_UP_OVERLAY / STATUS_SUMMARY は参照uplift未実施。ユーザー指定の優先順どおり1状態1スライスで進める。
+- P2: EXP_GAIN / LEVEL_UP_OVERLAY / STATUS_SUMMARY は参照uplift未実施。ユーザー指定の優先順どおり1状態1スライスで進める。
 - R1温存: レアリティ表示の `RarityStyles` 横展開は未実施。調理場 `src/ui/cooking_screen.gd` のR1完了により、残件は台帳に残したまま一旦停止。
 - R1: `src/ui/cooking_screen.gd` は `Color(` 直書きゼロ。COOK_SELECT左魚リスト周辺は `Palette.COOKING_FISH_*`、見出しリボン周辺は `Palette.COOKING_SECTION_RIBBON_*`、料理カード/中央料理グリッド外枠周辺は `Palette.COOKING_RECIPE_*`、下部バー周辺は `Palette.COOKING_PREP_*`、右詳細パネルactive runtime色は `Palette.COOKING_DETAIL_*`、調理ボタン周辺は `Palette.COOKING_ACTION_*`、料理図鑑ボタン周辺は `Palette.COOKING_RECIPE_BOOK_BUTTON_*`、小アイコン/アクションキュー周辺は `Palette.COOKING_SMALL_ICON_*` / `Palette.COOKING_ACTION_CUE_*`、結果サマリーカード周辺は `Palette.COOKING_SUMMARY_CARD_*` / `Palette.COOKING_RESULT_TITLE_OUTLINE`、背景fallback/glazeは `Palette.COOKING_BG_*` へ移行済み。未使用detail helper由来のhexは削除済み。
 - 監査: `tools/cooking_layout_audit.tscn` / `tools/cooking_content_audit.tscn` / `./tools/cooking_visual_qa.sh` はgreen。visual QAは状態間キャプチャ重複のfail guard追加済み。
@@ -40,6 +41,18 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 なし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-05: `MEAL_RESULT reference-uplift` 完了。`reference/cooking_flow/02_meal_result_concept.png` へ向けて、食事結果がフォームではなくpayoff状態に見えるように調整した。
+
+- 選定理由: COOK_SELECT仕上げ点検後、ユーザー指定の優先順で残り4状態の先頭がMEAL_RESULTだったため。before比較では外側の暗い巨大フレームが強く、食事シーン背景よりフォーム感が勝っていた。
+- 変えたもの: `tools/generate_cooking_showcase_assets.py` の `meal_dish_card_frame()` から `assets/showcase/cooking/meal_dish_card_frame.png` 候補を生成し、料理カードの料理画像窓を広げた。MEAL_RESULT時のみ `CookingRewardPanel` の外枠を透明寄りにし、EXP_GAINでは従来報酬フレームへ戻す。料理画像/料理名の配分をMEAL_RESULT専用に調整。
+- 変えていないもの: §1 freeze値、COOK_SELECT、EXP_GAINの表示契約、LEVEL_UP_OVERLAY、STATUS_SUMMARY、調理/EXP/レベルアップ進行ロジック、魚/料理データ、セーブ仕様、日本語PNG焼き込み、R1残件。
+- 素材候補: `meal_dish_card_frame.png` 候補を採用。1回目は画像窓を広げすぎて料理名領域が狭くなったため採用せず、2回目で画像幅/文字サイズと外枠透明化を合わせて全画面のpayoff感がbeforeに明確に勝つと判断。
+- 微調整カウンタ: `MEAL_RESULT 料理カード/外枠構成` 2回。3回未満で改善したため追加の素材再生成には進まない。
+- 証拠画像: `docs/qa/evidence/cooking/2026-07-05_meal_result_before_after_ref.png`, `docs/qa/evidence/cooking/2026-07-05_meal_result_dish_card_focus.png`, `docs/qa/evidence/cooking/2026-07-05_meal_result_result.png`, `docs/qa/evidence/cooking/2026-07-05_meal_result_report.html`
+- 判定: afterでは大きな暗色モーダルの印象が弱まり、食事シーン背景の上にバナー、料理カード、報酬カード、ステータスカードが載る読みになった。参照ほどの背景全面化や報酬値の迫力は残課題だが、食事結果のpayoff状態へ前進したと第三者に判別できる。cmp一致は判定に使っていない。
+- 検証: `./tools/cooking_visual_qa.sh`、`cooking_layout_audit.tscn`、`cooking_content_audit.tscn`、`cooking_flow_smoke`、`./tools/save_system_verify.sh`、`./tools/validate_project.sh` green。`save_system_verify.sh` のJSON警告と `validate_project.sh` のObjectDB/resource警告はベースライン既知。
+- 固定条件: MEAL_RESULTは暗い巨大外枠を主役に戻さず、食事シーン背景上のpayoffカード群として扱う。次スライスはEXP_GAINへ進める。
 
 2026-07-05: `COOK_SELECT finish precision pass` 完了。最新COOK_SELECTスクショと `reference/cooking_flow/01_cook_select_concept.png` の横並びで、指定3点を点検した。
 
