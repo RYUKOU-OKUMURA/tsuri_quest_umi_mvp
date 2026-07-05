@@ -540,7 +540,12 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	body.add_theme_constant_override("separation", 12)
 	body_margin.add_child(body)
 
-	var fish_panel := _panel_box(Color("#10283d"), Color("#5e391a"), Color("#e4b461"), 6)
+	var fish_panel := _panel_box(
+		Palette.COOKING_FISH_PANEL_FILL,
+		Palette.COOKING_FISH_PANEL_BORDER,
+		Palette.COOKING_FISH_PANEL_INNER,
+		6
+	)
 	fish_panel.custom_minimum_size = Vector2(322, 0)
 	fish_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(fish_panel)
@@ -1097,11 +1102,17 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	icon.modulate = Color(1.18, 1.12, 1.04, 1.0) if owned else Color(0.38, 0.36, 0.31, 0.76)
+	icon.modulate = Palette.COOKING_FISH_ICON_TINT if owned else Palette.COOKING_FISH_ICON_MUTED_TINT
 	row.add_child(icon)
 	var display_name := _fish_row_display_name(fish_id, String(fish.get("name", fish_id)))
 	var name_font_size := 20 if display_name.length() <= 3 else 15
-	var name := make_label(display_name, name_font_size, Color("#241b12"), 1, Color("#fff2ca"))
+	var name := make_label(
+		display_name,
+		name_font_size,
+		Palette.COOKING_FISH_NAME_TEXT,
+		1,
+		Palette.COOKING_FISH_NAME_OUTLINE
+	)
 	name.custom_minimum_size = Vector2(FISH_ROW_NAME_MIN_WIDTH, 0.0)
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name.size_flags_stretch_ratio = 1.0
@@ -1110,8 +1121,8 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	name.clip_text = true
 	row.add_child(name)
 	var amount_text := "× %d 匹" % count if owned else "未所持"
-	var amount_color := Color("#2a2118") if owned else Color("#756a56")
-	var amount := make_label(amount_text, 15 if owned else 12, amount_color, 1, Color("#fff0bd"))
+	var amount_color := Palette.COOKING_FISH_AMOUNT_TEXT if owned else Palette.COOKING_FISH_AMOUNT_MUTED_TEXT
+	var amount := make_label(amount_text, 15 if owned else 12, amount_color, 1, Palette.COOKING_FISH_AMOUNT_OUTLINE)
 	amount.custom_minimum_size = Vector2(FISH_ROW_AMOUNT_WIDTH, 34.0)
 	amount.size_flags_horizontal = Control.SIZE_SHRINK_END
 	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -1178,19 +1189,27 @@ func _refresh_fish_card_styles() -> void:
 		var owned := bool(entry.get("owned", true))
 		if card == null:
 			continue
-		card.self_modulate = Color.WHITE if selected else Color("#f5e6c8" if owned else "#8f846c")
+		var card_tint := Palette.COOKING_FISH_ROW_MUTED_MODULATE
+		var fill := Palette.COOKING_FISH_ROW_MUTED_FILL
+		var border := Palette.COOKING_FISH_ROW_MUTED_BORDER
+		var inner := Palette.COOKING_FISH_ROW_MUTED_INNER
+		if selected:
+			card_tint = Palette.COOKING_FISH_ROW_SELECTED_MODULATE
+			fill = Palette.COOKING_FISH_ROW_SELECTED_FILL
+			border = Palette.COOKING_FISH_ROW_SELECTED_BORDER
+			inner = Palette.COOKING_FISH_ROW_SELECTED_INNER
+		elif owned:
+			card_tint = Palette.COOKING_FISH_ROW_MODULATE
+			fill = Palette.COOKING_FISH_ROW_FILL
+			border = Palette.COOKING_FISH_ROW_BORDER
+			inner = Palette.COOKING_FISH_ROW_INNER
+		card.self_modulate = card_tint
 		card.add_theme_stylebox_override(
 			"panel",
 			_texture_style_box(
 				FISH_ROW_FRAME,
 				36,
-				_style_box(
-					Color("#ffefbd") if selected else Color("#ead9b4" if owned else "#9a8f76"),
-					Color("#f4c96e") if selected else Color("#6a421f" if owned else "#4d3e2c"),
-					Color("#ffffff") if selected else Color("#c29250" if owned else "#756349"),
-					4,
-					6
-				),
+				_style_box(fill, border, inner, 4, 6),
 				10.0,
 				6.0
 			)
