@@ -111,7 +111,7 @@ func play_screen_sfx(path: String, volume_db: float = -3.0) -> void:
 	player.play()
 
 
-func add_background(color: Color = Color("#091a2d")) -> ColorRect:
+func add_background(color: Color = Palette.SCREEN_BG_DEFAULT) -> ColorRect:
 	var background := ColorRect.new()
 	background.color = color
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -169,6 +169,7 @@ static func make_label(
 		label.add_theme_color_override("font_outline_color", outline_color)
 		label.add_theme_constant_override("outline_size", outline)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	return label
 
 

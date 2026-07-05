@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>Tsuri Cooking Reference QA</title>
+  <style>
+    body {
+      margin: 0;
+      background: #10151d;
+      color: #f4ead1;
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      padding: 18px 24px;
+      background: #13243a;
+      border-bottom: 2px solid #c79545;
+    }
+    h1, h2, p {
+      margin: 0;
+    }
+    .status {
+      margin-top: 8px;
+      color: #ffd980;
+    }
+    main {
+      padding: 22px;
+    }
+    section {
+      margin-bottom: 34px;
+      padding: 18px;
+      background: #172130;
+      border: 1px solid #5f4424;
+    }
+    h2 {
+      margin-bottom: 8px;
+      color: #ffd980;
+    }
+    .focus {
+      margin-bottom: 14px;
+      color: #d8c8a8;
+    }
+    .pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    figure {
+      margin: 0;
+    }
+    img {
+      display: block;
+      width: 100%;
+      background: #0b0e14;
+      border: 1px solid #7a5a2a;
+    }
+    figcaption, .missing {
+      margin-top: 8px;
+      color: #d8c8a8;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    code {
+      color: #9fe8ff;
+    }
+    .missing {
+      min-height: 260px;
+      padding: 24px;
+      background: #261922;
+      border: 1px dashed #c76b6b;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Tsuri Cooking Reference QA</h1>
+    <p class="status">All captures found. Review each pair against the focus notes.</p>
+  </header>
+  <main>
+
+            <section>
+              <h2>COOK_SELECT</h2>
+              <p class="focus">Focus: 3カラム構成、魚行、3x2料理カード、右詳細、下部ステータス帯</p>
+              <div class="pair">
+                <figure><img src="file:///Users/ryukouokumura/Desktop/tsuri_quest_umi_mvp/reference/cooking_flow/01_cook_select_concept.png" alt="Reference"><figcaption>Reference<br><code>/Users/ryukouokumura/Desktop/tsuri_quest_umi_mvp/reference/cooking_flow/01_cook_select_concept.png</code></figcaption></figure>
+                <figure><img src="file:///tmp/tsuri_cooking_select.png" alt="Current Capture"><figcaption>Current Capture<br><code>/tmp/tsuri_cooking_select.png</code></figcaption></figure>
+              </div>
+            </section>
+
+            <section>
+              <h2>MEAL_RESULT</h2>
+              <p class="focus">Focus: 食事シーン、食べたバナー、料理カード、4報酬カード、下部ステータス帯</p>
+              <div class="pair">
+                <figure><img src="file:///Users/ryukouokumura/Desktop/tsuri_quest_umi_mvp/reference/cooking_flow/02_meal_result_concept.png" alt="Reference"><figcaption>Reference<br><code>/Users/ryukouokumura/Desktop/tsuri_quest_umi_mvp/reference/cooking_flow/02_meal_result_concept.png</code></figcaption></figure>
+                <figure><img src="file:///tmp/tsuri_cooking_result.png" alt="Current Capture"><figcaption>Current Capture<br><code>/tmp/tsuri_cooking_result.png</code></figcaption></figure>
+              </div>
+            </section>
+
+            <section>
+              <h2>EXP_GAIN</h2>
+              <p class="focus">Focus: +EXP、EXPゲージ、放射バースト、左料理カード、右効果カード</p>
+              <div class="pair">
+                <figure><img src="file:///Users/ryukouokumura/Desktop/tsuri_quest_umi_mvp/reference/cooking_flow/03_exp_gain_concept.png" alt="Reference"><figcaption>Reference<br><code>/Users/ryukouokumura/Desktop/tsuri_quest_umi_mvp/reference/cooking_flow/03_exp_gain_concept.png</code></figcaption></figure>
+                <figure><img src="file:///tmp/tsuri_cooking_exp.png" alt="Current Capture"><figcaption>Current Capture<br><code>/tmp/tsuri_cooking_exp.png</code></figcaption></figure>
+              </div>
+            </section>
+
+            <section>
+              <h2>LEVEL_UP_OVERLAY</h2>
+              <p class="focus">Focus: 中央LEVEL UP、Lv遷移、能力上昇、赤リボン、ぬし/釣り場解放</p>
+              <div class="pair">
+                <figure><img src="file:///Users/ryukouokumura/Desktop/tsuri_quest_umi_mvp/reference/cooking_flow/04_level_up_overlay_concept.png" alt="Reference"><figcaption>Reference<br><code>/Users/ryukouokumura/Desktop/tsuri_quest_umi_mvp/reference/cooking_flow/04_level_up_overlay_concept.png</code></figcaption></figure>
+                <figure><img src="file:///tmp/tsuri_cooking_levelup.png" alt="Current Capture"><figcaption>Current Capture<br><code>/tmp/tsuri_cooking_levelup.png</code></figcaption></figure>
+              </div>
+            </section>
+
+            <section>
+              <h2>STATUS_SUMMARY</h2>
+              <p class="focus">Focus: 5カード、ヘッダーEXP、効果中料理、下部メッセージ、港へ戻る導線</p>
+              <div class="pair">
+                <figure><img src="file:///Users/ryukouokumura/Desktop/tsuri_quest_umi_mvp/reference/cooking_flow/05_status_summary_concept.png" alt="Reference"><figcaption>Reference<br><code>/Users/ryukouokumura/Desktop/tsuri_quest_umi_mvp/reference/cooking_flow/05_status_summary_concept.png</code></figcaption></figure>
+                <figure><img src="file:///tmp/tsuri_cooking_status.png" alt="Current Capture"><figcaption>Current Capture<br><code>/tmp/tsuri_cooking_status.png</code></figcaption></figure>
+              </div>
+            </section>
+
+  </main>
+</body>
+</html>

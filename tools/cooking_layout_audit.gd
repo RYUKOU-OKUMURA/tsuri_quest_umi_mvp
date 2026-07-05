@@ -72,14 +72,17 @@ func _audit_cook_select() -> void:
 	_expect_named_control_size("COOK_SELECT", screen, "FishRowKawahagi", Vector2(230.0, 60.0))
 	_expect_named_control_size("COOK_SELECT", screen, "CookActionCue", Vector2(70.0, 14.0))
 	_expect_named_control_size("COOK_SELECT", screen, "CookButton", Vector2(250.0, 48.0))
+	_expect_named_control_size("COOK_SELECT", screen, "CookingPlayerStatusBar", Vector2(420.0, 52.0))
 	_expect_named_control_size("COOK_SELECT", screen, "CurrentPrepBar", Vector2(1100.0, 54.0))
 	_expect_named_control_size("COOK_SELECT", screen, "CurrentPrepTitleSlot", Vector2(150.0, 40.0))
 	_expect_named_control_size("COOK_SELECT", screen, "CurrentPrepTitleIcon", Vector2(24.0, 20.0))
-	_expect_named_control_size("COOK_SELECT", screen, "PrepSummaryCardLevel", Vector2(160.0, 52.0))
-	_expect_named_control_size("COOK_SELECT", screen, "PrepSummaryLevelGauge", Vector2(70.0, 12.0))
 	_expect_named_control_size("COOK_SELECT", screen, "PrepSummaryCardMeal", Vector2(160.0, 52.0))
 	_expect_named_control_size("COOK_SELECT", screen, "PrepSummaryCardFish", Vector2(160.0, 52.0))
-	_expect_named_control_size("COOK_SELECT", screen, "PrepSummaryCardMoney", Vector2(160.0, 52.0))
+	_expect_absent_named_controls(
+		"COOK_SELECT",
+		screen,
+		["PrepSummaryCardLevel", "PrepSummaryLevelGauge", "PrepSummaryCardMoney"]
+	)
 	screen.queue_free()
 	await _tick()
 
@@ -316,6 +319,31 @@ func _audit_tree(state: String, root: Control) -> void:
 	await _tick()
 	if OS.get_environment("COOKING_LAYOUT_AUDIT_DEBUG") == "1":
 		_debug_top_level(state, root)
+	if OS.get_environment("COOKING_LAYOUT_AUDIT_DEBUG_LABELS") == "1":
+		_debug_named_controls(
+			state,
+			root,
+			[
+				"ExpGainBanner",
+				"ExpGainTitle",
+				"ExpFocusTag",
+				"ExpGainValue",
+				"ExpProgressText",
+				"ExpBurstFrame",
+				"ExpMessagePanel",
+				"LevelUpTitle",
+				"LevelUpLevelLine",
+				"LevelUpSourceLine",
+				"LevelUnlockRibbonAsset",
+				"LevelUnlockRibbonLabel",
+				"LevelStatNameEnergy",
+				"LevelStatValuesEnergy",
+				"LevelStatGainEnergy",
+				"LevelUnlockTitle",
+				"LevelUnlockBody",
+				"StatusTitle",
+			]
+		)
 	var nodes: Array = []
 	_collect_controls(root, nodes)
 	for node in nodes:
@@ -418,6 +446,30 @@ func _debug_top_level(state: String, root: Control) -> void:
 					print("    %s %s min=%s" % [grand_control.get_class(), grand_control.get_global_rect(), grand_control.get_combined_minimum_size()])
 
 
+func _debug_named_controls(state: String, root: Node, node_names: Array) -> void:
+	for node_name in node_names:
+		var node := _find_named(root, String(node_name))
+		var control := node as Control
+		if control == null:
+			continue
+		var label := control as Label
+		var text := ""
+		if label != null:
+			text = label.text
+		print(
+			"%s DEBUG %s rect=%s min=%s visible=%s modulate=%s text='%s'"
+			% [
+				state,
+				String(node_name),
+				control.get_global_rect(),
+				control.get_combined_minimum_size(),
+				control.is_visible_in_tree(),
+				control.modulate,
+				_trim(text),
+			]
+		)
+
+
 func _audit_recipe_grid_shape(state: String, root: Node) -> void:
 	var grid := _find_named(root, "RecipeGrid") as GridContainer
 	if grid == null:
@@ -470,6 +522,12 @@ func _expect_named_controls_hidden(state: String, root: Node, node_names: Array)
 				"%s: named control '%s' should be hidden in this composition."
 				% [state, String(node_name)]
 			)
+
+
+func _expect_absent_named_controls(state: String, root: Node, node_names: Array) -> void:
+	for node_name in node_names:
+		if _find_named(root, String(node_name)) != null:
+			_failures.append("%s: forbidden named control '%s' is present." % [state, String(node_name)])
 
 
 func _expect_reward_status_strip(state: String, root: Node) -> void:

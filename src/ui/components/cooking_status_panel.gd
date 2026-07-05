@@ -528,11 +528,12 @@ func _build_header(parent: VBoxContainer) -> void:
 
 	var title := make_shadow_label("ステータス", 34, Palette.TEXT_BONE, 4)
 	title.name = "StatusTitle"
-	title.custom_minimum_size = Vector2(220.0, 0.0)
+	title.custom_minimum_size = Vector2(220.0, 58.0)
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(title)
 
 	var subtitle := make_shadow_label("調理の成果を確認できます", 18, Palette.TEXT_BONE, 2)
+	_set_label_min_height(subtitle, 18)
 	subtitle.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	subtitle.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(subtitle)
@@ -550,11 +551,11 @@ func _build_header(parent: VBoxContainer) -> void:
 	exp_row.add_child(player_badge)
 	_header_level_label = make_shadow_label("", 22, Palette.TEXT_BONE, 3)
 	_header_level_label.name = "StatusHeaderLevel"
-	_header_level_label.custom_minimum_size = Vector2(64.0, 0.0)
+	_header_level_label.custom_minimum_size = Vector2(64.0, 36.0)
 	_header_level_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	exp_row.add_child(_header_level_label)
 	var exp_title := make_shadow_label("EXP", 17, Palette.TEXT_BONE, 2)
-	exp_title.custom_minimum_size = Vector2(42.0, 0.0)
+	exp_title.custom_minimum_size = Vector2(42.0, 28.0)
 	exp_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	exp_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	exp_title.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -569,7 +570,7 @@ func _build_header(parent: VBoxContainer) -> void:
 	exp_row.add_child(_header_exp_bar)
 	_header_exp_label = make_shadow_label("", 16, Palette.TEXT_BONE, 2)
 	_header_exp_label.name = "StatusHeaderExpValue"
-	_header_exp_label.custom_minimum_size = Vector2(92.0, 0.0)
+	_header_exp_label.custom_minimum_size = Vector2(92.0, 26.0)
 	_header_exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_header_exp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	exp_row.add_child(_header_exp_label)
@@ -599,10 +600,12 @@ func _build_player_card(parent: HBoxContainer) -> void:
 	var portrait := _portrait_box("PLAYER", Palette.GAUGE_CYAN_HI)
 	portrait.custom_minimum_size = Vector2(0.0, 126.0)
 	card.add_child(portrait)
-	_level_label = make_shadow_label("", 48, Color("#2a2118"), 2)
+	_level_label = make_shadow_label("", 24, Color("#2a2118"), 2)
+	_set_label_min_height(_level_label, 24)
 	_level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	card.add_child(_level_label)
 	_next_exp_label = make_label("", 16, Color("#24486a"), 1, Color("#fff4d4"))
+	_set_label_min_height(_next_exp_label, 16)
 	_next_exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	card.add_child(_next_exp_label)
 	_exp_bar = GaugeBarScript.new()
@@ -619,6 +622,7 @@ func _build_player_card(parent: HBoxContainer) -> void:
 func _build_meal_card(parent: HBoxContainer) -> void:
 	var card := _status_card(parent, "効果中の料理")
 	_meal_badge = make_shadow_label("", 18, Palette.GAUGE_GREEN_HI, 2)
+	_set_label_min_height(_meal_badge, 18)
 	_meal_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	card.add_child(_meal_badge)
 	_meal_image = TextureRect.new()
@@ -627,10 +631,12 @@ func _build_meal_card(parent: HBoxContainer) -> void:
 	_meal_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_meal_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	card.add_child(_meal_image)
-	_meal_name_label = make_label("", 30, Color("#2a2118"), 1, Color("#fff4d4"))
+	_meal_name_label = make_label("", 26, Color("#2a2118"), 1, Color("#fff4d4"))
+	_set_label_min_height(_meal_name_label, 26)
 	_meal_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	card.add_child(_meal_name_label)
 	_meal_effect_label = make_label("", 18, Palette.GAUGE_GREEN_HI, 2)
+	_set_label_min_height(_meal_effect_label, 18)
 	_meal_effect_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_meal_effect_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	card.add_child(_meal_effect_label)
@@ -642,7 +648,8 @@ func _build_cooler_card(parent: HBoxContainer) -> void:
 	var visual := _portrait_box("COOLER", Palette.GAUGE_CYAN_HI)
 	visual.custom_minimum_size = Vector2(0.0, 130.0)
 	card.add_child(visual)
-	_cooler_count_label = make_shadow_label("", 48, Color("#2a2118"), 2)
+	_cooler_count_label = make_shadow_label("", 24, Color("#2a2118"), 2)
+	_set_label_min_height(_cooler_count_label, 24)
 	_cooler_count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	card.add_child(_cooler_count_label)
 	_note_box(card, "釣った魚を保存できます\n容量を増やすと、より多くの魚を持ち帰れます")
@@ -658,7 +665,8 @@ func _build_money_card(parent: HBoxContainer) -> void:
 	var visual := _portrait_box("GOLD", Palette.GOLD_BRIGHT)
 	visual.custom_minimum_size = Vector2(0.0, 130.0)
 	card.add_child(visual)
-	_money_label = make_shadow_label("", 46, Color("#2a2118"), 2)
+	_money_label = make_shadow_label("", 24, Color("#2a2118"), 2)
+	_set_label_min_height(_money_label, 24)
 	_money_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	card.add_child(_money_label)
 	_note_box(card, "釣り具の購入や\nクーラーボックスの拡張に使用します")
@@ -669,7 +677,8 @@ func _build_play_card(parent: HBoxContainer) -> void:
 	var visual := _portrait_box("TIME", Palette.TEXT_BONE)
 	visual.custom_minimum_size = Vector2(0.0, 130.0)
 	card.add_child(visual)
-	_play_label = make_shadow_label("", 40, Color("#2a2118"), 2)
+	_play_label = make_shadow_label("", 24, Color("#2a2118"), 2)
+	_set_label_min_height(_play_label, 24)
 	_play_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	card.add_child(_play_label)
 	_note_box(card, "冒険の記録です\nたくさん釣って、強くなろう！")
@@ -688,6 +697,7 @@ func _build_footer(parent: VBoxContainer) -> void:
 	portrait.custom_minimum_size = Vector2(120.0, 0.0)
 	row.add_child(portrait)
 	_footer_message_label = make_shadow_label("", 21, Palette.TEXT_BONE, 2)
+	_set_label_min_height(_footer_message_label, 21, 2)
 	_footer_message_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_footer_message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_footer_message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -791,7 +801,7 @@ func _status_card(parent: HBoxContainer, title: String) -> VBoxContainer:
 	var title_label := make_shadow_label(title, 21, Palette.TEXT_BONE, 3)
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	title_label.custom_minimum_size = Vector2(0.0, 26.0)
+	title_label.custom_minimum_size = Vector2(0.0, 38.0)
 	title_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.7))
 	title_band.add_child(title_label)
 	return box
@@ -878,6 +888,7 @@ func _note_box(parent: VBoxContainer, text: String) -> Label:
 	panel.custom_minimum_size = Vector2(0.0, 76.0)
 	parent.add_child(panel)
 	var label := make_label(text, 15, Color("#3f2d1a"))
+	_set_label_min_height(label, 15, 2)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -905,6 +916,7 @@ func _meal_note_box(parent: VBoxContainer, text: String) -> Label:
 	row.add_child(cue)
 
 	var label := make_label(text, 15, Color("#3f2d1a"))
+	_set_label_min_height(label, 15, 2)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -924,11 +936,12 @@ func _stat_line(title: String, value: String, accent: Color) -> Control:
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(icon)
 	var name := make_label(title, 17, Color("#2a2118"))
+	_set_label_min_height(name, 17)
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(name)
 	var amount := make_label(value, 17, Color("#2a2118"), 1, Color("#fff4d4"))
-	amount.custom_minimum_size = Vector2(46.0, 0.0)
+	amount.custom_minimum_size = Vector2(46.0, 28.0)
 	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	amount.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(amount)
@@ -980,6 +993,14 @@ func _draw_return_anchor(button: Button) -> void:
 		),
 		PackedColorArray([gold, gold, gold])
 	)
+
+
+func _set_label_min_height(label: Label, font_size: int, lines := 1) -> void:
+	if label == null:
+		return
+	var outline := label.get_theme_constant("outline_size")
+	var height := float(font_size * maxi(1, lines)) * 1.35 + float(outline * 2)
+	label.custom_minimum_size.y = maxf(label.custom_minimum_size.y, ceilf(height))
 
 
 func _effect_summary(text: String) -> String:

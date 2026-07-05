@@ -4,6 +4,7 @@ extends ScreenBase
 signal closed
 
 const GaugeBarScript = preload("res://src/ui/components/gauge_bar.gd")
+const CookingRewardCardsScript = preload("res://src/ui/components/cooking_reward_cards.gd")
 const CookingRewardStatusStripScript = preload("res://src/ui/components/cooking_reward_status_strip.gd")
 const CookingRewardVisualsScript = preload("res://src/ui/components/cooking_reward_visuals.gd")
 const SceneActorVisual = CookingRewardVisualsScript.SceneActorVisual
@@ -18,10 +19,6 @@ const MealResultSplitTitleVisual = CookingRewardVisualsScript.MealResultSplitTit
 const MealResultModeTabVisual = CookingRewardVisualsScript.MealResultModeTabVisual
 const MealDishCardBridgeVisual = CookingRewardVisualsScript.MealDishCardBridgeVisual
 const FlowConnectorVisual = CookingRewardVisualsScript.FlowConnectorVisual
-const RewardIconVisual = CookingRewardVisualsScript.RewardIconVisual
-const RewardTotalPeakGlowVisual = CookingRewardVisualsScript.RewardTotalPeakGlowVisual
-const RewardValuePlateVisual = CookingRewardVisualsScript.RewardValuePlateVisual
-const RewardBuffSignalVisual = CookingRewardVisualsScript.RewardBuffSignalVisual
 const EffectPreviewVisual = CookingRewardVisualsScript.EffectPreviewVisual
 
 const MEAL_RESULT_SCENE_ART := "res://assets/showcase/cooking/meal_result_scene_art_v2.png"
@@ -65,6 +62,7 @@ var _scene_actor_visual: SceneActorVisual
 var _scene_actor_image: TextureRect
 var _exp_trail_visual: ExpTrailVisual
 var _exp_focus_card: PanelContainer
+var _exp_focus_burst_layer: Control
 var _exp_message_label: Label
 var _effect_preview_card: PanelContainer
 var _effect_preview_visual: TextureRect
@@ -72,16 +70,10 @@ var _effect_name_label: Label
 var _effect_text_label: Label
 var _effect_duration_label: Label
 var _meal_reward_cue: MealResultRewardCueVisual
-var _reward_grid: GridContainer
-var _exp_card: PanelContainer
+var _reward_cards: CookingRewardCardsScript
 var _exp_bar: GaugeBar
 var _exp_label: Label
 var _exp_progress_label: Label
-var _base_label: Label
-var _bonus_label: Label
-var _total_label: Label
-var _buff_label: Label
-var _growth_label: Label
 var _status_strip: CookingRewardStatusStripScript
 var _confirm_button: Button
 var _flow_row: HBoxContainer
@@ -154,6 +146,7 @@ func _build_screen() -> void:
 	_scene_card.add_child(scene_box)
 	_scene_title = make_shadow_label("食べる", 27, Palette.GOLD_BRIGHT, 3)
 	_scene_title.name = "MealSceneTitle"
+	_set_label_min_height(_scene_title, 27)
 	_scene_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	scene_box.add_child(_scene_title)
 	_scene_visual_stack = Control.new()
@@ -200,12 +193,13 @@ func _build_screen() -> void:
 	_scene_visual_stack.add_child(_scene_foreground_glow)
 	_scene_caption = make_shadow_label("湯気の立つ料理を味わった。", 18, Palette.TEXT_BONE, 2)
 	_scene_caption.name = "MealSceneCaption"
+	_set_label_min_height(_scene_caption, 18, 2)
 	_scene_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_scene_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	scene_box.add_child(_scene_caption)
 	_scene_bonus_label = make_shadow_label("初回ボーナス", 16, Palette.GOLD_BRIGHT, 2)
 	_scene_bonus_label.name = "MealSceneBonusBadge"
-	_scene_bonus_label.custom_minimum_size = Vector2(0.0, 18.0)
+	_scene_bonus_label.custom_minimum_size = Vector2(0.0, 24.0)
 	_scene_bonus_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_scene_bonus_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_scene_bonus_label.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -247,10 +241,12 @@ func _build_screen() -> void:
 	banner_box.add_theme_constant_override("separation", 2)
 	_result_banner.add_child(banner_box)
 	_header_title = make_shadow_label("いただきます！", 32, Color("#9b2f17"), 3)
+	_set_label_min_height(_header_title, 32)
 	_header_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_header_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	banner_box.add_child(_header_title)
 	_bridge_label = make_shadow_label("", 16, Color("#4f3b25"), 1)
+	_set_label_min_height(_bridge_label, 16)
 	_bridge_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_bridge_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_bridge_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -299,6 +295,7 @@ func _build_screen() -> void:
 	dish_text.alignment = BoxContainer.ALIGNMENT_CENTER
 	dish_row.add_child(dish_text)
 	var dish_tag := make_shadow_label("今回の料理", 19, Palette.GOLD_BRIGHT, 2)
+	_set_label_min_height(dish_tag, 19)
 	dish_tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	dish_text.add_child(dish_tag)
 	_dish_title = make_shadow_label("", 30, Palette.TEXT_BONE, 3)
@@ -308,6 +305,7 @@ func _build_screen() -> void:
 	_dish_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	dish_text.add_child(_dish_title)
 	_dish_note_label = make_shadow_label("料理を食べて、体に力が湧いてきた。", 17, Palette.TEXT_BONE, 2)
+	_set_label_min_height(_dish_note_label, 17, 2)
 	_dish_note_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_dish_note_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	dish_text.add_child(_dish_note_label)
@@ -327,23 +325,41 @@ func _build_screen() -> void:
 	_exp_focus_card.custom_minimum_size = Vector2(0.0, 216.0)
 	_exp_focus_card.visible = false
 	right.add_child(_exp_focus_card)
+	_exp_focus_burst_layer = Control.new()
+	_exp_focus_burst_layer.name = "ExpFocusBurstLayer"
+	_exp_focus_burst_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_exp_focus_burst_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_exp_focus_burst_layer.draw.connect(_draw_exp_focus_burst)
+	_exp_focus_card.add_child(_exp_focus_burst_layer)
 	var exp_focus_box := VBoxContainer.new()
+	exp_focus_box.z_index = 2
 	exp_focus_box.add_theme_constant_override("separation", 5)
 	_exp_focus_card.add_child(exp_focus_box)
-	_exp_focus_card.draw.connect(_draw_exp_focus_burst)
 	var exp_focus_tag := make_shadow_label("食経験値", 22, Palette.TEXT_BONE, 3)
+	exp_focus_tag.name = "ExpFocusTag"
+	exp_focus_tag.z_index = 3
+	_set_label_min_height(exp_focus_tag, 22)
 	exp_focus_tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	exp_focus_tag.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	exp_focus_box.add_child(exp_focus_tag)
 	_exp_label = make_shadow_label("+0 EXP", 62, Palette.GOLD_BRIGHT, 7)
+	_exp_label.name = "ExpGainValue"
+	_exp_label.z_index = 3
+	_set_label_min_height(_exp_label, 62)
 	_exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_exp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	exp_focus_box.add_child(_exp_label)
 	_exp_bar = GaugeBarScript.new()
 	_exp_bar.show_value = false
 	_exp_bar.custom_minimum_size = Vector2(0.0, 46.0)
 	_exp_bar.set_colors(Palette.GAUGE_CYAN, Palette.GAUGE_CYAN_HI)
 	exp_focus_box.add_child(_exp_bar)
-	_exp_progress_label = make_shadow_label("", 22, Palette.GAUGE_CYAN_HI, 2)
+	_exp_progress_label = make_shadow_label("", 18, Palette.TEXT_BONE, 2)
+	_exp_progress_label.name = "ExpProgressText"
+	_exp_progress_label.z_index = 3
+	_set_label_min_height(_exp_progress_label, 18)
 	_exp_progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_exp_progress_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	exp_focus_box.add_child(_exp_progress_label)
 	var message_row := HBoxContainer.new()
 	message_row.name = "ExpMessagePanel"
@@ -360,6 +376,7 @@ func _build_screen() -> void:
 	exp_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	message_row.add_child(exp_portrait)
 	_exp_message_label = make_shadow_label("体に力がみなぎってきた！", 17, Palette.TEXT_BONE, 2)
+	_set_label_min_height(_exp_message_label, 17, 2)
 	_exp_message_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_exp_message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_exp_message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -374,35 +391,8 @@ func _build_screen() -> void:
 	_meal_reward_cue.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_meal_reward_cue)
 
-	_reward_grid = GridContainer.new()
-	_reward_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_reward_grid.add_theme_constant_override("h_separation", 8)
-	_reward_grid.add_theme_constant_override("v_separation", 8)
-	_reward_grid.draw.connect(_draw_reward_grid_backdrop)
-	root.add_child(_reward_grid)
-
-	_exp_card = _panel_box(Color("#0f2238"), Color("#07121e"), Palette.GOLD_DEEP, 5)
-	_exp_card.custom_minimum_size = Vector2(280.0, 112.0)
-	_exp_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_reward_grid.add_child(_exp_card)
-	var exp_layout := VBoxContainer.new()
-	exp_layout.add_theme_constant_override("separation", 4)
-	_exp_card.add_child(exp_layout)
-	var exp_title := make_shadow_label("食経験値を獲得！", 23, Palette.TEXT_BONE, 3)
-	exp_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	exp_layout.add_child(exp_title)
-	var exp_summary := make_shadow_label("中央ゲージで加算中", 20, Palette.GAUGE_CYAN_HI, 3)
-	exp_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	exp_summary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	exp_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	exp_summary.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	exp_layout.add_child(exp_summary)
-
-	_base_label = _reward_line(_reward_grid, "基本EXP", "exp", Palette.GAUGE_CYAN_HI)
-	_bonus_label = _reward_line(_reward_grid, "初回ボーナス", "bonus", Palette.GOLD_BRIGHT)
-	_total_label = _reward_line(_reward_grid, "合計獲得", "total", Palette.GAUGE_GREEN_HI)
-	_buff_label = _reward_line(_reward_grid, "次の釣行", "buff", Palette.GAUGE_GREEN_HI)
-	_growth_label = _reward_line(_reward_grid, "成長", "growth", Palette.GAUGE_RED_HI)
+	_reward_cards = CookingRewardCardsScript.new()
+	root.add_child(_reward_cards)
 
 	_build_status_strip(root)
 
@@ -418,6 +408,7 @@ func _build_screen() -> void:
 
 func show_meal_result(result: Dictionary) -> void:
 	_preview_state = "MEAL_RESULT"
+	_reward_cards.set_preview_state(_preview_state)
 	_status_strip.set_secondary(true)
 	_result_banner.name = "MealResultBanner"
 	_header_title.name = "MealResultTitle"
@@ -468,23 +459,10 @@ func show_meal_result(result: Dictionary) -> void:
 	_exp_focus_card.visible = false
 	_effect_preview_card.visible = false
 
-	_exp_card.visible = false
-	_reward_grid.visible = true
-	_reward_grid.columns = 4
-	_reward_grid.queue_redraw()
-	_base_label.text = "+%d EXP" % int(result.get("base_exp", 0))
-	if bool(result.get("first_time", false)):
-		_bonus_label.text = "+%d EXP" % int(result.get("first_bonus", 0))
-	else:
-		_bonus_label.text = "記録済み"
-	_total_label.text = "+%d EXP" % int(result.get("total_exp", 0))
-
 	var buff := Dictionary(result.get("buff", {}))
-	_buff_label.text = _meal_buff_reward_text(buff)
+	_reward_cards.show_meal_result(result, _meal_buff_reward_text(buff))
 	_status_strip.refresh(result)
 	_set_status_strip_emphasis(false)
-	_set_reward_line_visible(_growth_label, false)
-	_apply_meal_reward_hierarchy()
 	_confirm_button.text = "食経験値へ進む"
 	_set_confirm_button_emphasis(true)
 	_confirm_button.queue_redraw()
@@ -502,6 +480,7 @@ func show_reward(
 	level_after := 0
 ) -> void:
 	_preview_state = "EXP_GAIN_LEVELUP" if leveled else "EXP_GAIN"
+	_reward_cards.set_preview_state(_preview_state)
 	_status_strip.set_secondary(false)
 	_result_banner.name = "ExpGainBanner"
 	_header_title.name = "ExpGainTitle"
@@ -518,9 +497,9 @@ func show_reward(
 		_dish_card_bridge.visible = false
 	var dish_name := String(result.get("dish_name", "料理"))
 	_set_result_banner_height(92.0)
-	_set_header_title_font_size(36)
+	_set_header_title_font_size(30)
 	_set_bridge_font_size(14)
-	_set_exp_label_font_size(72)
+	_set_exp_label_font_size(48)
 	_bridge_label.visible = true
 	_header_title.text = "食経験値が成長へ！" if leveled else "食経験値を獲得！"
 	_bridge_label.text = _growth_bridge_text(dish_name, leveled, level_before, level_after)
@@ -547,10 +526,6 @@ func show_reward(
 	_effect_preview_card.visible = true
 	_set_status_strip_emphasis(true)
 	_meal_reward_cue.visible = false
-	_exp_card.visible = false
-	_reward_grid.visible = false
-	_reward_grid.columns = 5
-	_set_reward_line_visible(_growth_label, true)
 
 	_target_max = maxf(1.0, float(exp_max))
 	_target_exp = clampf(float(exp_after), 0.0, _target_max)
@@ -572,21 +547,14 @@ func show_reward(
 		if leveled and level_after > 0
 		else "体に力がみなぎってきた！\n次の釣りも頑張れそうだ！"
 	)
-	_base_label.text = "料理の経験値 +%d EXP" % int(result.get("base_exp", 0))
-
-	if bool(result.get("first_time", false)):
-		_bonus_label.text = "初めて食べた料理！\n+%d EXP" % int(result.get("first_bonus", 0))
-	else:
-		_bonus_label.text = "記録済み。\n今回は基本EXPのみ。"
-	_total_label.text = "今回の合計 +%d EXP" % int(result.get("total_exp", 0))
-
 	var buff := Dictionary(result.get("buff", {}))
-	_buff_label.text = _buff_effect_text(buff)
+	_reward_cards.show_exp_gain(result, _buff_effect_text(buff))
 	_effect_name_label.text = String(buff.get("name", "次回効果"))
 	_effect_text_label.text = String(buff.get("text", "次の釣行で効果を得る"))
 	_effect_duration_label.text = "効果時間：1回の釣行で発動"
 	_effect_preview_visual.queue_redraw()
-	_exp_focus_card.queue_redraw()
+	if _exp_focus_burst_layer != null:
+		_exp_focus_burst_layer.queue_redraw()
 	_status_strip.refresh(result)
 	if leveled:
 		if level_before > 0 and level_after > level_before:
@@ -595,19 +563,19 @@ func show_reward(
 				and level_after >= GameData.BOSS_UNLOCK_LEVEL
 			)
 			if boss_unlocked:
-				_growth_label.text = "Lv.%d -> Lv.%d / ぬし解放" % [
+				_reward_cards.set_growth_text("Lv.%d -> Lv.%d / ぬし解放" % [
 					level_before,
 					level_after,
-				]
+				])
 				_confirm_button.text = "解放を見る"
 			else:
-				_growth_label.text = "LEVEL UP! Lv.%d -> Lv.%d" % [level_before, level_after]
+				_reward_cards.set_growth_text("LEVEL UP! Lv.%d -> Lv.%d" % [level_before, level_after])
 				_confirm_button.text = "Lv.%dの成長を見る" % level_after
 		else:
-			_growth_label.text = "LEVEL UP! 能力上昇へ"
+			_reward_cards.set_growth_text("LEVEL UP! 能力上昇へ")
 			_confirm_button.text = "成長を見る"
 	else:
-		_growth_label.text = "次のレベルまで %d EXP" % maxi(0, exp_max - exp_after)
+		_reward_cards.set_growth_text("次のレベルまで %d EXP" % maxi(0, exp_max - exp_after))
 		_confirm_button.text = "準備へ戻る"
 	_confirm_button.queue_redraw()
 	_refresh_flow_steps(leveled)
@@ -816,9 +784,13 @@ func _draw_button_exp_to_summary(
 
 
 func _draw_exp_focus_burst() -> void:
-	if _exp_focus_card == null or not _exp_focus_card.visible:
+	if (
+		_exp_focus_card == null
+		or _exp_focus_burst_layer == null
+		or not _exp_focus_card.visible
+	):
 		return
-	var rect := Rect2(Vector2.ZERO, _exp_focus_card.size)
+	var rect := Rect2(Vector2.ZERO, _exp_focus_burst_layer.size)
 	var center := Vector2(rect.size.x * 0.5, rect.size.y * 0.48)
 	var gold := Palette.GOLD_BRIGHT
 	var cyan := Palette.GAUGE_CYAN_HI
@@ -828,13 +800,13 @@ func _draw_exp_focus_burst() -> void:
 		var to := center + Vector2(cos(angle), sin(angle)) * 252.0
 		var color := gold if i % 2 == 0 else cyan
 		color.a = 0.16 if i % 2 == 0 else 0.11
-		_exp_focus_card.draw_line(from, to, color, 5.0)
+		_exp_focus_burst_layer.draw_line(from, to, color, 5.0)
 	for i in range(6):
 		var width := rect.size.x - 48.0 - float(i) * 18.0
 		var y := rect.size.y * 0.60 + float(i) * 2.0
 		var color := cyan
 		color.a = 0.15 - float(i) * 0.014
-		_exp_focus_card.draw_rect(
+		_exp_focus_burst_layer.draw_rect(
 			Rect2(Vector2((rect.size.x - width) * 0.5, y), Vector2(width, 12.0)),
 			color
 		)
@@ -846,8 +818,8 @@ func _draw_exp_focus_burst() -> void:
 		var color := gold if i % 3 != 0 else cyan
 		color.a = 0.42
 		var radius := 2.0 + float(i % 3)
-		_exp_focus_card.draw_line(p + Vector2(-radius, 0.0), p + Vector2(radius, 0.0), color, 2.0)
-		_exp_focus_card.draw_line(p + Vector2(0.0, -radius), p + Vector2(0.0, radius), color, 2.0)
+		_exp_focus_burst_layer.draw_line(p + Vector2(-radius, 0.0), p + Vector2(radius, 0.0), color, 2.0)
+		_exp_focus_burst_layer.draw_line(p + Vector2(0.0, -radius), p + Vector2(0.0, radius), color, 2.0)
 
 
 func _build_status_strip(parent: VBoxContainer) -> void:
@@ -921,6 +893,7 @@ func _add_flow_step(parent: HBoxContainer, text: String) -> void:
 	card.custom_minimum_size = Vector2(138.0, 22.0)
 	parent.add_child(card)
 	var label := make_shadow_label(text, 12, Palette.TEXT_BONE, 2)
+	_set_label_min_height(label, 12)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	card.add_child(label)
@@ -942,6 +915,7 @@ func _set_flow_row_compact(compact: bool) -> void:
 		_flow_row.add_theme_constant_override("separation", 2 if compact else 4)
 	for label in _flow_step_labels:
 		label.add_theme_font_size_override("font_size", 11 if compact else 12)
+		_set_label_min_height(label, 11 if compact else 12)
 	for card in _flow_step_cards:
 		card.custom_minimum_size = Vector2(112.0, 18.0) if compact else Vector2(138.0, 22.0)
 	for connector in _flow_connectors:
@@ -1068,16 +1042,19 @@ func _meal_scene_bridge_alpha() -> float:
 func _set_header_title_font_size(font_size: int) -> void:
 	if _header_title != null:
 		_header_title.add_theme_font_size_override("font_size", font_size)
+		_set_label_min_height(_header_title, font_size)
 
 
 func _set_bridge_font_size(font_size: int) -> void:
 	if _bridge_label != null:
 		_bridge_label.add_theme_font_size_override("font_size", font_size)
+		_set_label_min_height(_bridge_label, font_size)
 
 
 func _set_exp_label_font_size(font_size: int) -> void:
 	if _exp_label != null:
 		_exp_label.add_theme_font_size_override("font_size", font_size)
+		_set_label_min_height(_exp_label, font_size)
 
 
 func _set_result_banner_height(height: float) -> void:
@@ -1136,10 +1113,10 @@ func _apply_meal_result_composition() -> void:
 		_meal_banner_spark.queue_redraw()
 	if _meal_result_mode_label != null:
 		_meal_result_mode_label.visible = true
-	if _reward_grid != null:
-		_reward_grid.queue_redraw()
+	if _reward_cards != null:
+		_reward_cards.queue_redraw()
 	_set_status_strip_emphasis(false)
-	_set_reward_cards_height(142.0)
+	_reward_cards.set_reward_cards_height(142.0)
 
 
 func _apply_exp_gain_composition() -> void:
@@ -1192,7 +1169,7 @@ func _apply_exp_gain_composition() -> void:
 		_confirm_button.custom_minimum_size = Vector2(318.0, 40.0)
 	_set_confirm_button_emphasis(false)
 	_set_status_strip_emphasis(true)
-	_set_reward_cards_height(84.0)
+	_reward_cards.set_reward_cards_height(84.0)
 
 
 func _set_scene_card_meal_result_style() -> void:
@@ -1223,68 +1200,8 @@ func _set_scene_card_exp_gain_style() -> void:
 	)
 
 
-func _draw_reward_grid_backdrop() -> void:
-	if _preview_state != "MEAL_RESULT" or _reward_grid == null:
-		return
-	var s := _reward_grid.size
-	if s.x <= 0.0 or s.y <= 0.0:
-		return
-	var top := 4.0
-	var bottom := s.y - 4.0
-	var band := Rect2(Vector2(4.0, top), Vector2(s.x - 8.0, maxf(0.0, bottom - top)))
-	_reward_grid.draw_rect(band, Color("#061726", 0.16))
-	_reward_grid.draw_line(Vector2(16.0, top + 4.0), Vector2(s.x - 16.0, top + 4.0), Color("#ffe081", 0.22), 2.0)
-	_reward_grid.draw_line(Vector2(16.0, bottom - 2.0), Vector2(s.x - 16.0, bottom - 2.0), Color("#d7a456", 0.16), 2.0)
-	for i in range(6):
-		var p := Vector2(
-			s.x * (0.08 + float(i) * 0.17),
-			top + 10.0 + float(i % 2) * 12.0
-		)
-		var sparkle := Color("#ffe081", 0.25 if i % 2 == 0 else 0.14)
-		_reward_grid.draw_line(p + Vector2(-3.0, 0.0), p + Vector2(3.0, 0.0), sparkle, 1.3)
-		_reward_grid.draw_line(p + Vector2(0.0, -3.0), p + Vector2(0.0, 3.0), sparkle, 1.3)
-
-
-func _apply_meal_reward_hierarchy() -> void:
-	_set_reward_label_style(_base_label, 34, Palette.GAUGE_CYAN_HI, 4)
-	_set_reward_label_style(_bonus_label, 34, Palette.GOLD_BRIGHT, 4)
-	_set_reward_label_style(_total_label, 48, Palette.GOLD_BRIGHT, 6)
-	_set_reward_label_style(_buff_label, 18, Palette.GAUGE_GREEN_HI, 3)
-	_set_reward_card_modulate(_base_label, Color(0.92, 0.96, 1.0, 0.92))
-	_set_reward_card_modulate(_bonus_label, Color(1.0, 0.96, 0.86, 0.94))
-	_set_reward_card_modulate(_total_label, Color(1.0, 0.98, 0.86, 1.0))
-	_set_reward_card_modulate(_buff_label, Color(0.90, 1.0, 0.88, 1.0))
-
-
-func _set_reward_label_style(label: Label, font_size: int, color: Color, outline: int) -> void:
-	if label == null:
-		return
-	label.add_theme_font_size_override("font_size", font_size)
-	label.add_theme_color_override("font_color", color)
-	label.add_theme_constant_override("outline_size", outline)
-
-
-func _set_reward_card_modulate(label: Label, color: Color) -> void:
-	var card := _reward_card_from_label(label)
-	if card != null:
-		card.modulate = color
-
-
-func _set_reward_cards_height(height: float) -> void:
-	for label in [_base_label, _bonus_label, _total_label, _buff_label, _growth_label]:
-		var card := _reward_card_from_label(label)
-		if card != null:
-			card.custom_minimum_size = Vector2(0.0, height)
-	if _exp_card != null:
-		_exp_card.custom_minimum_size = Vector2(280.0, height)
-
-
 func _set_status_strip_emphasis(is_primary: bool) -> void:
 	_status_strip.set_emphasis(is_primary)
-
-
-func _reward_card_from_label(label: Label) -> Control:
-	return CookingAssets.card_from_label(label)
 
 
 func _build_effect_preview_card(parent: HBoxContainer) -> void:
@@ -1299,6 +1216,7 @@ func _build_effect_preview_card(parent: HBoxContainer) -> void:
 	_effect_preview_card.add_child(box)
 
 	var title := make_shadow_label("次の釣行で効果！", 16, Color("#fff1c7"), 2)
+	_set_label_min_height(title, 16)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_color_override("font_color", Palette.TEXT_BONE)
 	var title_panel := _compact_panel_box(Color("#173b28"), Color("#07121e"), Palette.GAUGE_GREEN_HI, 3)
@@ -1307,6 +1225,7 @@ func _build_effect_preview_card(parent: HBoxContainer) -> void:
 	box.add_child(title_panel)
 
 	_effect_name_label = make_shadow_label("次回効果", 20, Color("#1f6b32"), 2, Color("#fff1c7"))
+	_set_label_min_height(_effect_name_label, 20)
 	_effect_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_effect_name_label)
 
@@ -1321,353 +1240,24 @@ func _build_effect_preview_card(parent: HBoxContainer) -> void:
 	box.add_child(_effect_preview_visual)
 
 	_effect_text_label = make_shadow_label("", 13, Color("#2a2118"), 1, Color("#fff1c7"))
+	_set_label_min_height(_effect_text_label, 13, 2)
 	_effect_text_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_effect_text_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_effect_text_label)
 
 	_effect_duration_label = make_shadow_label("", 12, Color("#235f33"), 1, Color("#fff1c7"))
+	_set_label_min_height(_effect_duration_label, 12)
 	_effect_duration_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_effect_duration_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_effect_duration_label)
 
 
-func _reward_line(parent: GridContainer, title: String, icon_mode: String, accent: Color) -> Label:
-	var card := _compact_panel_box(Color("#f2e4c2"), Color("#60401f"), Color("#d7a456"), 4)
-	card.name = _reward_card_node_name(icon_mode)
-	card.add_theme_stylebox_override(
-		"panel",
-		_texture_style_box(
-			CookingAssets.REWARD_CARD_FRAME,
-			22,
-			_compact_style_box(Color("#0d2338"), Color("#07121e"), Palette.GOLD_DEEP, 4, 5),
-			8.0,
-			5.0
-		)
-	)
-	card.custom_minimum_size = Vector2(0.0, 112.0)
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.draw.connect(func() -> void: _draw_reward_card_backdrop(card, icon_mode))
-	parent.add_child(card)
-	if icon_mode == "total":
-		var peak_glow := RewardTotalPeakGlowVisual.new()
-		peak_glow.name = "RewardTotalPeakGlow"
-		peak_glow.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		card.add_child(peak_glow)
-	var box := VBoxContainer.new()
-	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_theme_constant_override("separation", 5)
-	card.add_child(box)
-	var title_row := HBoxContainer.new()
-	title_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	title_row.add_theme_constant_override("separation", 4)
-	title_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	box.add_child(title_row)
-	var icon := RewardIconVisual.new()
-	icon.configure(icon_mode, accent)
-	icon.custom_minimum_size = Vector2(38.0, 32.0)
-	title_row.add_child(icon)
-	var title_label := make_shadow_label(title, 16, Palette.TEXT_BONE, 2)
-	title_label.custom_minimum_size = Vector2(0.0, 26.0)
-	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	title_label.clip_text = true
-	title_row.add_child(title_label)
-	if icon_mode == "buff":
-		var value_stack := Control.new()
-		value_stack.custom_minimum_size = Vector2(0.0, 66.0)
-		value_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		value_stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		box.add_child(value_stack)
-		var plate := RewardValuePlateVisual.new()
-		plate.name = "RewardBuffEffectPlate"
-		plate.configure(icon_mode, accent)
-		plate.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		value_stack.add_child(plate)
-		var value_row := HBoxContainer.new()
-		value_row.add_theme_constant_override("separation", 7)
-		value_row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		value_row.offset_left = 8.0
-		value_row.offset_top = 5.0
-		value_row.offset_right = -10.0
-		value_row.offset_bottom = -5.0
-		value_stack.add_child(value_row)
-		var signal_visual := RewardBuffSignalVisual.new()
-		signal_visual.name = "RewardBuffSignal"
-		signal_visual.custom_minimum_size = Vector2(66.0, 56.0)
-		value_row.add_child(signal_visual)
-		var buff_value := make_shadow_label("", 14, accent, 2)
-		buff_value.custom_minimum_size = Vector2(0.0, 52.0)
-		buff_value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		buff_value.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		buff_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		buff_value.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		buff_value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		buff_value.clip_text = false
-		value_row.add_child(buff_value)
-		return buff_value
-	var value_stack := Control.new()
-	value_stack.custom_minimum_size = Vector2(0.0, 66.0)
-	value_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	value_stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	box.add_child(value_stack)
-	var plate := RewardValuePlateVisual.new()
-	plate.configure(icon_mode, accent)
-	plate.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	value_stack.add_child(plate)
-	var value_label := make_shadow_label("", 16, accent, 3)
-	value_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	value_label.offset_left = 8.0
-	value_label.offset_right = -8.0
-	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	value_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	value_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	value_label.clip_text = true
-	value_stack.add_child(value_label)
-	return value_label
-
-
-func _draw_reward_card_backdrop(card: Control, icon_mode: String) -> void:
-	var s := card.size
-	if s.x <= 0.0 or s.y <= 0.0:
+func _set_label_min_height(label: Label, font_size: int, lines := 1) -> void:
+	if label == null:
 		return
-	var center := Vector2(s.x * 0.50, s.y * 0.67)
-	if _preview_state == "MEAL_RESULT":
-		_draw_reward_award_well(card, icon_mode)
-	_draw_reward_header_ribbon(card, icon_mode)
-	match icon_mode:
-		"exp":
-			_draw_reward_exp_backdrop(card, center)
-		"bonus":
-			_draw_reward_bonus_backdrop(card, center)
-		"total":
-			_draw_reward_total_backdrop(card, center)
-		"buff":
-			_draw_reward_buff_backdrop(card, center)
-		"growth":
-			_draw_reward_growth_backdrop(card, center)
-
-
-func _draw_reward_award_well(card: Control, icon_mode: String) -> void:
-	var s := card.size
-	var accent := _reward_card_draw_accent(icon_mode)
-	var well := Rect2(Vector2(13.0, 45.0), Vector2(maxf(12.0, s.x - 26.0), maxf(24.0, s.y - 58.0)))
-	card.draw_rect(well, Color("#03111d", 0.28))
-	var fill := accent
-	fill.a = 0.10 if icon_mode == "total" else 0.07
-	card.draw_rect(Rect2(well.position + Vector2(4.0, 4.0), well.size - Vector2(8.0, 8.0)), fill)
-	var rim := accent
-	rim.a = 0.32 if icon_mode == "total" else 0.20
-	card.draw_line(well.position + Vector2(6.0, 1.0), well.position + Vector2(well.size.x - 6.0, 1.0), rim, 2.0)
-	card.draw_line(
-		well.position + Vector2(6.0, well.size.y - 1.0),
-		well.position + Vector2(well.size.x - 6.0, well.size.y - 1.0),
-		Color("#07121e", 0.68),
-		2.0
-	)
-	if icon_mode == "total":
-		card.draw_ellipse(well.get_center(), well.size.x * 0.34, well.size.y * 0.40, Color("#ffb83d", 0.12))
-
-
-func _draw_reward_header_ribbon(card: Control, icon_mode: String) -> void:
-	var s := card.size
-	var accent := _reward_card_draw_accent(icon_mode)
-	var ribbon := Rect2(Vector2(13.0, 8.0), Vector2(maxf(12.0, s.x - 26.0), 30.0))
-	card.draw_rect(ribbon, Color("#03111d", 0.78))
-	card.draw_rect(Rect2(ribbon.position + Vector2(3.0, 3.0), ribbon.size - Vector2(6.0, 6.0)), Color("#0d2338", 0.54))
-	var top_line := accent
-	top_line.a = 0.62 if icon_mode == "total" else 0.46
-	card.draw_line(ribbon.position + Vector2(5.0, 2.0), ribbon.position + Vector2(ribbon.size.x - 5.0, 2.0), top_line, 2.0)
-	card.draw_line(
-		ribbon.position + Vector2(5.0, ribbon.size.y - 2.0),
-		ribbon.position + Vector2(ribbon.size.x - 5.0, ribbon.size.y - 2.0),
-		Color("#07121e", 0.82),
-		2.0
-	)
-	for side in [-1.0, 1.0]:
-		var x := ribbon.position.x if side < 0.0 else ribbon.end.x
-		var notch := PackedVector2Array(
-			[
-				Vector2(x, ribbon.position.y + 5.0),
-				Vector2(x + side * 10.0, ribbon.position.y + 14.0),
-				Vector2(x, ribbon.position.y + ribbon.size.y - 5.0),
-			]
-		)
-		var notch_color := accent
-		notch_color.a = 0.42
-		card.draw_colored_polygon(notch, notch_color)
-	for i in range(3):
-		var x := ribbon.position.x + 18.0 + float(i) * 12.0
-		var slash := accent
-		slash.a = 0.28
-		card.draw_line(Vector2(x, ribbon.position.y + 6.0), Vector2(x - 8.0, ribbon.end.y - 6.0), slash, 1.4)
-	if icon_mode == "total":
-		var glow := Color("#ffb83d", 0.16)
-		card.draw_ellipse(ribbon.get_center() + Vector2(0.0, 2.0), ribbon.size.x * 0.28, 10.0, glow)
-
-
-func _reward_card_draw_accent(icon_mode: String) -> Color:
-	match icon_mode:
-		"exp":
-			return Color("#6bf1ff")
-		"bonus":
-			return Color("#ffe081")
-		"total":
-			return Color("#ffb83d")
-		"buff":
-			return Color("#8ee65a")
-		"growth":
-			return Color("#ff6f78")
-		_:
-			return Color("#d7a456")
-
-
-func _draw_reward_exp_backdrop(card: Control, center: Vector2) -> void:
-	var cyan := Color("#6bf1ff", 0.18)
-	var green := Color("#9cff6f", 0.20)
-	card.draw_ellipse(center + Vector2(0.0, 22.0), 66.0, 12.0, Color(0.0, 0.0, 0.0, 0.16))
-	card.draw_arc(center + Vector2(0.0, 8.0), 30.0, 0.0, PI, 28, Color("#fff1c7", 0.72), 7.0)
-	card.draw_arc(center + Vector2(0.0, 5.0), 24.0, 0.0, PI, 24, Color("#b35f25", 0.74), 7.0)
-	for x in [-35.0, 35.0]:
-		card.draw_line(center + Vector2(x, 14.0), center + Vector2(x, -22.0), green, 5.0)
-		card.draw_polygon(
-			PackedVector2Array(
-				[
-					center + Vector2(x, -30.0),
-					center + Vector2(x - 9.0, -14.0),
-					center + Vector2(x + 9.0, -14.0),
-				]
-			),
-			PackedColorArray([green, green, green])
-		)
-	for i in range(6):
-		var p := center + Vector2(-55.0 + float(i) * 22.0, -22.0 + float(i % 2) * 42.0)
-		card.draw_line(p + Vector2(-4.0, 0.0), p + Vector2(4.0, 0.0), cyan, 2.0)
-		card.draw_line(p + Vector2(0.0, -4.0), p + Vector2(0.0, 4.0), cyan, 2.0)
-
-
-func _draw_reward_bonus_backdrop(card: Control, center: Vector2) -> void:
-	var gold := Color("#ffe081", 0.22)
-	var red := Color("#9b2f17", 0.48)
-	card.draw_ellipse(center + Vector2(0.0, 23.0), 64.0, 11.0, Color(0.0, 0.0, 0.0, 0.15))
-	card.draw_rect(Rect2(center.x - 44.0, center.y + 4.0, 88.0, 18.0), Color("#8a4a20", 0.42))
-	card.draw_rect(Rect2(center.x - 5.0, center.y - 30.0, 10.0, 40.0), red)
-	card.draw_polygon(
-		PackedVector2Array(
-			[
-				center + Vector2(5.0, -28.0),
-				center + Vector2(54.0, -16.0),
-				center + Vector2(5.0, -2.0),
-			]
-		),
-		PackedColorArray([gold, gold, gold])
-	)
-	for x in [-30.0, 0.0, 30.0]:
-		card.draw_arc(center + Vector2(x, 7.0), 18.0, PI, TAU, 18, Color("#fff1c7", 0.72), 7.0)
-
-
-func _draw_reward_total_backdrop(card: Control, center: Vector2) -> void:
-	var gold := Color("#ffe081", 0.28)
-	var hot := Color("#ffb83d", 0.22)
-	for i in range(16):
-		var a := TAU * float(i) / 16.0
-		var inner := center + Vector2(cos(a), sin(a)) * 18.0
-		var outer := center + Vector2(cos(a), sin(a)) * (70.0 if i % 2 == 0 else 52.0)
-		card.draw_line(inner, outer, hot, 4.0 if i % 2 == 0 else 2.0)
-	var points := PackedVector2Array()
-	for i in range(10):
-		var radius := 34.0 if i % 2 == 0 else 15.0
-		var a := -PI * 0.5 + TAU * float(i) / 10.0
-		points.append(center + Vector2(cos(a), sin(a)) * radius)
-	var colors := PackedColorArray()
-	for _i in range(points.size()):
-		colors.append(gold)
-	card.draw_polygon(points, colors)
-	card.draw_circle(center, 13.0, Color("#fff1c7", 0.22))
-
-
-func _draw_reward_buff_backdrop(card: Control, center: Vector2) -> void:
-	var green := Color("#8ee65a", 0.23)
-	var cyan := Color("#6bf1ff", 0.22)
-	card.draw_circle(center + Vector2(-20.0, 4.0), 32.0, Color("#173b28", 0.46))
-	card.draw_circle(center + Vector2(-20.0, 4.0), 24.0, Color("#2f7a45", 0.44))
-	var fish := PackedVector2Array(
-		[
-			center + Vector2(-45.0, 1.0),
-			center + Vector2(-30.0, -13.0),
-			center + Vector2(-4.0, -7.0),
-			center + Vector2(8.0, 0.0),
-			center + Vector2(-4.0, 8.0),
-			center + Vector2(-30.0, 14.0),
-		]
-	)
-	card.draw_colored_polygon(fish, cyan)
-	card.draw_colored_polygon(
-		PackedVector2Array(
-			[
-				center + Vector2(5.0, -7.0),
-				center + Vector2(28.0, -22.0),
-				center + Vector2(21.0, 0.0),
-				center + Vector2(28.0, 22.0),
-				center + Vector2(5.0, 8.0),
-			]
-		),
-		Color("#4fb2dc", 0.22)
-	)
-	for x in [34.0, 54.0]:
-		card.draw_line(center + Vector2(x, 24.0), center + Vector2(x, -24.0), green, 5.0)
-		card.draw_polygon(
-			PackedVector2Array(
-				[
-					center + Vector2(x, -31.0),
-					center + Vector2(x - 9.0, -15.0),
-					center + Vector2(x + 9.0, -15.0),
-				]
-			),
-			PackedColorArray([green, green, green])
-		)
-
-
-func _draw_reward_growth_backdrop(card: Control, center: Vector2) -> void:
-	var red := Color("#ff6f78", 0.24)
-	var gold := Color("#ffe081", 0.22)
-	card.draw_line(center + Vector2(0.0, 34.0), center + Vector2(0.0, -34.0), red, 9.0)
-	card.draw_polygon(
-		PackedVector2Array(
-			[
-				center + Vector2(0.0, -45.0),
-				center + Vector2(-26.0, -12.0),
-				center + Vector2(26.0, -12.0),
-			]
-		),
-		PackedColorArray([gold, gold, gold])
-	)
-	card.draw_arc(center + Vector2(0.0, 12.0), 30.0, 0.0, TAU, 30, gold, 4.0)
-
-
-func _reward_card_node_name(icon_mode: String) -> String:
-	match icon_mode:
-		"exp":
-			return "RewardCardBaseExp"
-		"bonus":
-			return "RewardCardFirstBonus"
-		"total":
-			return "RewardCardTotalExp"
-		"buff":
-			return "RewardCardNextEffect"
-		"growth":
-			return "RewardCardGrowth"
-		_:
-			return "RewardCard"
-
-
-func _set_reward_line_visible(label: Label, visible: bool) -> void:
-	var card := _reward_card_from_label(label)
-	if card == null:
-		return
-	card.visible = visible
+	var outline := label.get_theme_constant("outline_size")
+	var height := float(font_size * maxi(1, lines)) * 1.35 + float(outline * 2)
+	label.custom_minimum_size.y = maxf(label.custom_minimum_size.y, ceilf(height))
 
 
 func _present() -> void:

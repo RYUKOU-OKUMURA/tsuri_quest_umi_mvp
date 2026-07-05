@@ -279,13 +279,15 @@ func _audit_cook_select() -> void:
 	_expect_named_node("COOK_SELECT", screen, "CurrentPrepTitleSlot")
 	_expect_named_node("COOK_SELECT", screen, "CurrentPrepTitleIcon")
 	_expect_named_node("COOK_SELECT", screen, "CurrentPrepTitle")
-	_expect_named_node("COOK_SELECT", screen, "PrepSummaryCardLevel")
-	_expect_named_node("COOK_SELECT", screen, "PrepSummaryLevelGauge")
-	_expect_named_node("COOK_SELECT", screen, "PrepSummaryLevelExpText")
+	_expect_named_node("COOK_SELECT", screen, "CookingPlayerStatusBar")
 	_expect_named_node("COOK_SELECT", screen, "PrepSummaryCardMeal")
 	_expect_named_node("COOK_SELECT", screen, "PrepSummaryCardFish")
-	_expect_named_node("COOK_SELECT", screen, "PrepSummaryCardMoney")
 	_expect_named_node("COOK_SELECT", screen, "CurrentPrepDetailButton")
+	_expect_absent_named_nodes(
+		"COOK_SELECT",
+		screen,
+		["PrepSummaryCardLevel", "PrepSummaryLevelGauge", "PrepSummaryLevelExpText", "PrepSummaryCardMoney"]
+	)
 	_expect_texture_rect_path(
 		"COOK_SELECT",
 		screen,

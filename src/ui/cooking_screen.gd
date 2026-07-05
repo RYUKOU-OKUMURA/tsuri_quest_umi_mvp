@@ -4,6 +4,7 @@ const GaugeBarScript = preload("res://src/ui/components/gauge_bar.gd")
 const LevelUpPanelScript = preload("res://src/ui/components/level_up_panel.gd")
 const CookingRewardPanelScript = preload("res://src/ui/components/cooking_reward_panel.gd")
 const CookingStatusPanelScript = preload("res://src/ui/components/cooking_status_panel.gd")
+const PlayerStatusBarScript = preload("res://src/ui/components/player_status_bar.gd")
 const FightFishAssets = preload("res://src/ui/fight_fish_assets.gd")
 
 const COOKING_TITLE_BANNER := "res://assets/showcase/cooking/cooking_title_banner.png"
@@ -22,7 +23,6 @@ const COOK_ACTION_RUNWAY_FRAME := "res://assets/showcase/cooking/cook_action_run
 const PREP_SUMMARY_BAR_FRAME := "res://assets/showcase/cooking/prep_summary_bar_frame.png"
 const PREP_SUMMARY_CARD_FRAME := "res://assets/showcase/cooking/prep_summary_card_frame.png"
 const FISH_ROW_FRAME := "res://assets/showcase/cooking/fish_row_frame.png"
-const PLAYER_HEADER_PORTRAIT := "res://assets/showcase/cooking/player_status_portrait_pixel.png"
 const COOKING_FISH_DISPLAY_ORDER := [
 	"aji",
 	"saba",
@@ -360,10 +360,7 @@ var _selected_fish_id: String = ""
 var _selected_recipe_id: String = ""
 var _preview_suppress_level_overlay := false
 
-var _level_label: Label
-var _money_label: Label
-var _exp_bar: GaugeBar
-var _exp_label: Label
+var _player_status_bar: PlayerStatusBar
 var _fish_scroll: ScrollContainer
 var _fish_box: VBoxContainer
 var _recipe_grid: GridContainer
@@ -445,7 +442,13 @@ func _build_header(layout: VBoxContainer) -> void:
 	var title_card := _texture_panel_box(
 		COOKING_TITLE_BANNER,
 		30,
-		_style_box(Color("#25170e"), Color("#70451f"), Color("#f0c06b"), 6, 5),
+		_style_box(
+			Palette.COOKING_TITLE_FALLBACK_BG,
+			Palette.COOKING_WOOD_BORDER,
+			Palette.COOKING_GOLD_TRIM,
+			6,
+			5
+		),
 		24.0,
 		8.0
 	)
@@ -462,41 +465,11 @@ func _build_header(layout: VBoxContainer) -> void:
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title_row.add_child(title)
 
-	var status_card := _panel_box(Color("#0d2338"), Color("#70451f"), Color("#dba75b"), 6)
-	status_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(status_card)
-	var status_row := HBoxContainer.new()
-	status_row.add_theme_constant_override("separation", 12)
-	status_card.add_child(status_row)
-	var player_icon := _header_player_icon()
-	status_row.add_child(player_icon)
-	_level_label = make_shadow_label("", 21, Palette.TEXT_BONE, 3)
-	_level_label.custom_minimum_size = Vector2(138, 0)
-	status_row.add_child(_level_label)
-	_exp_bar = GaugeBarScript.new()
-	_exp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_exp_bar.show_value = false
-	_exp_bar.custom_minimum_size = Vector2(0, 24)
-	_exp_bar.set_colors(Palette.GAUGE_CYAN, Palette.GAUGE_CYAN_HI)
-	status_row.add_child(_exp_bar)
-	_exp_label = make_shadow_label("", 17, Palette.TEXT_BONE, 2)
-	_exp_label.custom_minimum_size = Vector2(126, 0)
-	_exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	status_row.add_child(_exp_label)
-
-	var money_card := _panel_box(Color("#0d2338"), Color("#70451f"), Color("#dba75b"), 6)
-	money_card.custom_minimum_size = Vector2(224, 0)
-	header.add_child(money_card)
-	var money_row := HBoxContainer.new()
-	money_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	money_row.add_theme_constant_override("separation", 8)
-	money_card.add_child(money_row)
-	money_row.add_child(_small_icon("coin", Palette.GOLD_BRIGHT, Vector2(46.0, 0.0)))
-	_money_label = make_shadow_label("", 22, Palette.GOLD_BRIGHT, 3)
-	_money_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_money_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_money_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	money_row.add_child(_money_label)
+	_player_status_bar = PlayerStatusBarScript.new()
+	_player_status_bar.name = "CookingPlayerStatusBar"
+	_player_status_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_player_status_bar.custom_minimum_size = Vector2(0.0, 60.0)
+	header.add_child(_player_status_bar)
 
 	var back := make_button("港へ", func() -> void: navigate("harbor"), 96, false)
 	back.custom_minimum_size = Vector2(90, 52)
@@ -895,17 +868,8 @@ func _refresh_all() -> void:
 
 
 func _refresh_header() -> void:
-	_level_label.text = "プレイヤー Lv.%d" % PlayerProgress.level
-	_money_label.text = "%d G" % PlayerProgress.money
-	if PlayerProgress.level >= GameData.MAX_LEVEL:
-		_exp_bar.max_value = 1.0
-		_exp_bar.set_value(1.0)
-		_exp_label.text = "MAX"
-	else:
-		var next := PlayerProgress.exp_to_next_level()
-		_exp_bar.max_value = maxf(1.0, float(next))
-		_exp_bar.set_value(float(PlayerProgress.exp))
-		_exp_label.text = "%d / %d" % [PlayerProgress.exp, next]
+	if _player_status_bar != null:
+		_player_status_bar.refresh()
 
 
 func _rebuild_fish_cards() -> void:
@@ -1703,7 +1667,6 @@ func _show_status_summary() -> void:
 		_result_title_lead.visible = true
 	_result_title.text = "現在の準備"
 	_clear_container(_result_body)
-	_result_body.add_child(_prep_level_summary_card("PrepSummaryCardLevel"))
 	_result_body.add_child(
 		_prep_summary_card(
 			"効果中の料理",
@@ -1720,15 +1683,6 @@ func _show_status_summary() -> void:
 			Palette.GAUGE_CYAN_HI,
 			"fish_mini",
 			"PrepSummaryCardFish"
-		)
-	)
-	_result_body.add_child(
-		_prep_summary_card(
-			"所持金",
-			"%d G" % PlayerProgress.money,
-			Palette.GOLD_BRIGHT,
-			"coin_mini",
-			"PrepSummaryCardMoney"
 		)
 	)
 
@@ -1882,17 +1836,6 @@ func _small_icon(mode: String, accent: Color, minimum_size: Vector2) -> CookingS
 	return icon
 
 
-func _header_player_icon() -> TextureRect:
-	var icon := TextureRect.new()
-	icon.name = "CookingHeaderPlayerPortrait"
-	icon.texture = load(PLAYER_HEADER_PORTRAIT) as Texture2D
-	icon.custom_minimum_size = Vector2(54.0, 0.0)
-	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return icon
-
-
 func _section_ribbon(text: String, icon_mode: String, node_name: String) -> PanelContainer:
 	var ribbon := _texture_panel_box(
 		COOKING_SECTION_RIBBON,
@@ -1985,90 +1928,6 @@ func _prep_summary_card(
 	value_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	value_label.clip_text = true
 	text_box.add_child(value_label)
-	return card
-
-
-func _prep_level_summary_card(node_name := "") -> PanelContainer:
-	var card := _texture_panel_box(
-		PREP_SUMMARY_CARD_FRAME,
-		12,
-		_style_box(Color("#f0dfb8"), Color("#8b5b2c"), Color("#d7a456"), 3, 5),
-		16.0,
-		3.0
-	)
-	card.name = node_name
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.custom_minimum_size = Vector2(0, 60)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	card.add_child(row)
-	var icon := _small_icon("player_mini", Palette.GOLD_BRIGHT, Vector2(44.0, 44.0))
-	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(icon)
-	var text_box := VBoxContainer.new()
-	text_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	text_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	text_box.add_theme_constant_override("separation", 1)
-	row.add_child(text_box)
-	var title_label := make_shadow_label("プレイヤーLv.", 13, Color("#2b2117"), 1, Color("#fff2ca"))
-	title_label.custom_minimum_size = Vector2(0.0, 18.0)
-	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	title_label.clip_text = true
-	text_box.add_child(title_label)
-	var meter_row := HBoxContainer.new()
-	meter_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	meter_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	meter_row.add_theme_constant_override("separation", 6)
-	text_box.add_child(meter_row)
-	var level_label := make_shadow_label(
-		"%d" % PlayerProgress.level,
-		25,
-		Color("#1f160f"),
-		1,
-		Color("#fff5cf")
-	)
-	level_label.custom_minimum_size = Vector2(36.0, 28.0)
-	level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	level_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	meter_row.add_child(level_label)
-	var gauge_box := VBoxContainer.new()
-	gauge_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	gauge_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	gauge_box.add_theme_constant_override("separation", 0)
-	meter_row.add_child(gauge_box)
-	var gauge := ProgressBar.new()
-	gauge.name = "PrepSummaryLevelGauge"
-	gauge.custom_minimum_size = Vector2(0.0, 13.0)
-	gauge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	gauge.min_value = 0
-	gauge.max_value = PlayerProgress.exp_to_next_level()
-	gauge.value = PlayerProgress.exp
-	gauge.show_percentage = false
-	gauge.add_theme_stylebox_override(
-		"background",
-		_style_box(Color("#16283a"), Color("#3b2515"), Color("#6c5530"), 1, 2)
-	)
-	gauge.add_theme_stylebox_override(
-		"fill",
-		_style_box(Palette.GAUGE_CYAN, Color("#12314d"), Palette.GAUGE_CYAN_HI, 1, 2)
-	)
-	gauge_box.add_child(gauge)
-	var exp_label := make_shadow_label(
-		"%d/%d" % [PlayerProgress.exp, PlayerProgress.exp_to_next_level()],
-		11,
-		Color("#2b2117"),
-		1,
-		Color("#fff5cf")
-	)
-	exp_label.name = "PrepSummaryLevelExpText"
-	exp_label.custom_minimum_size = Vector2(0.0, 13.0)
-	exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	exp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	exp_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	exp_label.clip_text = true
-	gauge_box.add_child(exp_label)
 	return card
 
 

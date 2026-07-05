@@ -22,6 +22,7 @@ const PARCHMENT := Color("#f3e8cd")
 const PARCHMENT_DEEP := Color("#e7d6ad")
 
 # --- パネル ---
+const SCREEN_BG_DEFAULT := Color("#091a2d")
 const DARK_PANEL := Color("#13283f")
 const DARK_PANEL_DEEP := Color("#0a1622")
 const BLUE_PANEL := Color("#173b61")
@@ -63,6 +64,11 @@ const RARITY_UNKNOWN_BADGE := Color("#6b4521")
 const RARITY_COMMON_BORDER := Color("#8dd5f5")
 const RARITY_UNCOMMON_BORDER := Color("#a7e7a1")
 const RARITY_RARE_BORDER := Color("#e5b4ff")
+
+# --- 調理場UI ---
+const COOKING_TITLE_FALLBACK_BG := Color("#25170e")
+const COOKING_WOOD_BORDER := Color("#70451f")
+const COOKING_GOLD_TRIM := Color("#f0c06b")
 
 # --- 魚図鑑 / 台帳UI ---
 const FISH_BOOK_BG_SCRIM := Color(0.02, 0.07, 0.10, 0.42)

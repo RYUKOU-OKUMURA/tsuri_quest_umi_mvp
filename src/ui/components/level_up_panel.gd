@@ -256,6 +256,114 @@ class LevelStatIconVisual:
 		draw_circle(center, 4.0, Palette.GOLD_BRIGHT)
 
 
+class LevelCenteredTextVisual:
+	extends Control
+
+	var text := ""
+	var font_size := 18
+	var text_color := Palette.TEXT_BONE
+	var shadow_color := Color(0.0, 0.0, 0.0, 0.58)
+
+	func configure(next_text: String, next_font_size: int, next_color: Color, next_shadow: Color) -> void:
+		text = next_text
+		font_size = next_font_size
+		text_color = next_color
+		shadow_color = next_shadow
+		queue_redraw()
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		if text.strip_edges().is_empty():
+			return
+		var font := get_theme_default_font()
+		if font == null:
+			return
+		var baseline_y := size.y * 0.5 + float(font_size) * 0.36
+		if shadow_color.a > 0.0:
+			draw_string(
+				font,
+				Vector2(2.0, baseline_y + 2.0),
+				text,
+				HORIZONTAL_ALIGNMENT_CENTER,
+				size.x,
+				font_size,
+				shadow_color
+			)
+		draw_string(
+			font,
+			Vector2(0.0, baseline_y),
+			text,
+			HORIZONTAL_ALIGNMENT_CENTER,
+			size.x,
+			font_size,
+			text_color
+		)
+
+
+class LevelStatTextVisual:
+	extends Control
+
+	var name_text := ""
+	var values_text := ""
+	var gain_text := ""
+	var gain_color := Palette.GAUGE_GREEN_HI
+
+	func configure(next_name: String, next_values: String, next_gain: String, next_gain_color: Color) -> void:
+		name_text = next_name
+		values_text = next_values
+		gain_text = next_gain
+		gain_color = next_gain_color
+		queue_redraw()
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		var font := get_theme_default_font()
+		if font == null:
+			return
+		var baseline_y := size.y * 0.5 + 7.0
+		var shadow := Color(0.0, 0.0, 0.0, 0.54)
+		_draw_text(font, Vector2(62.0, baseline_y), name_text, 17, Palette.TEXT_BONE, shadow, HORIZONTAL_ALIGNMENT_LEFT, 108.0)
+		_draw_text(
+			font,
+			Vector2(156.0, baseline_y + 1.0),
+			values_text,
+			21,
+			Palette.TEXT_BONE,
+			shadow,
+			HORIZONTAL_ALIGNMENT_CENTER,
+			maxf(120.0, size.x - 244.0)
+		)
+		_draw_text(
+			font,
+			Vector2(size.x - 72.0, baseline_y),
+			gain_text,
+			19,
+			gain_color,
+			shadow,
+			HORIZONTAL_ALIGNMENT_RIGHT,
+			58.0
+		)
+
+	func _draw_text(
+		font: Font,
+		pos: Vector2,
+		value: String,
+		draw_font_size: int,
+		color: Color,
+		shadow: Color,
+		alignment: HorizontalAlignment,
+		width: float
+	) -> void:
+		if value.strip_edges().is_empty():
+			return
+		draw_string(font, pos + Vector2(1.5, 1.5), value, alignment, width, draw_font_size, shadow)
+		draw_string(font, pos, value, alignment, width, draw_font_size, color)
+
+
 class LevelToSummaryCueVisual:
 	extends Control
 
@@ -335,6 +443,7 @@ var _stats_box: GridContainer
 var _unlock_card: PanelContainer
 var _unlock_ribbon: PanelContainer
 var _unlock_ribbon_label: Label
+var _unlock_ribbon_visual: LevelCenteredTextVisual
 var _unlock_tag: Label
 var _unlock_title: Label
 var _unlock_body: Label
@@ -363,7 +472,7 @@ func _build_screen() -> void:
 
 	_dialog = PanelContainer.new()
 	_dialog.name = "LevelUpDialog"
-	_dialog.custom_minimum_size = Vector2(1010.0, 0.0)
+	_dialog.custom_minimum_size = Vector2(1010.0, 500.0)
 	_dialog.add_theme_stylebox_override(
 		"panel",
 		_texture_style_box(
@@ -385,7 +494,7 @@ func _build_screen() -> void:
 	title_band.name = "LevelUpTitleBand"
 	title_band.alignment = BoxContainer.ALIGNMENT_CENTER
 	title_band.add_theme_constant_override("separation", 6)
-	title_band.custom_minimum_size = Vector2(900.0, 88.0)
+	title_band.custom_minimum_size = Vector2(900.0, 136.0)
 	title_band.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(title_band)
 
@@ -397,7 +506,7 @@ func _build_screen() -> void:
 	var title_stack := VBoxContainer.new()
 	title_stack.alignment = BoxContainer.ALIGNMENT_CENTER
 	title_stack.add_theme_constant_override("separation", 0)
-	title_stack.custom_minimum_size = Vector2(600.0, 0.0)
+	title_stack.custom_minimum_size = Vector2(600.0, 132.0)
 	title_band.add_child(title_stack)
 
 	var crown_visual := _level_asset_texture(
@@ -407,11 +516,15 @@ func _build_screen() -> void:
 	crown_visual.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	title_stack.add_child(crown_visual)
 	var crown_label := make_shadow_label("成長の証", 12, Palette.GOLD_BRIGHT, 2)
+	_set_label_min_height(crown_label, 12)
 	crown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_stack.add_child(crown_label)
 
-	var title := make_shadow_label("LEVEL UP!", 64, Palette.GOLD_BRIGHT, 6)
+	var title := make_label("LEVEL UP!", 34, Palette.GOLD_BRIGHT)
 	title.name = "LevelUpTitle"
+	title.z_index = 2
+	_set_label_min_height(title, 34)
+	title.custom_minimum_size.y = maxf(title.custom_minimum_size.y, 56.0)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_stack.add_child(title)
 
@@ -420,13 +533,17 @@ func _build_screen() -> void:
 	)
 	title_band.add_child(right_laurel)
 
-	_level_line = make_shadow_label("", 34, Palette.TEXT_BONE, 4)
+	_level_line = make_shadow_label("", 24, Palette.TEXT_BONE, 3)
 	_level_line.name = "LevelUpLevelLine"
+	_set_label_min_height(_level_line, 24)
 	_level_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_level_line)
 
-	var source_line := make_shadow_label("食経験値が成長に変わった", 16, Palette.GAUGE_GREEN_HI, 2)
+	var source_line := make_label("食経験値が成長に変わった", 16, Palette.GAUGE_GREEN_HI)
 	source_line.name = "LevelUpSourceLine"
+	source_line.z_index = 2
+	_set_label_min_height(source_line, 16)
+	source_line.custom_minimum_size.y = maxf(source_line.custom_minimum_size.y, 24.0)
 	source_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(source_line)
 
@@ -449,20 +566,24 @@ func _build_screen() -> void:
 	_unlock_ribbon.name = "LevelUnlockRibbonAsset"
 	_unlock_ribbon.add_theme_stylebox_override(
 		"panel",
-		_texture_style_box(
-			LEVEL_UNLOCK_RIBBON,
-			24,
-			_style_box(Color("#8d2430"), Color("#4c111a"), Palette.GOLD_BRIGHT, 3, 5),
-			12.0,
-			5.0
-		)
+		_style_box(Color("#8d2430"), Color("#4c111a"), Palette.GOLD_BRIGHT, 3, 5)
 	)
 	_unlock_ribbon.custom_minimum_size = Vector2(0.0, 32.0)
 	unlock_root.add_child(_unlock_ribbon)
-	_unlock_ribbon_label = make_shadow_label("新たな釣り場が解放！", 22, Color("#fff4d4"), 3)
+	_unlock_ribbon_label = make_label("新たな釣り場が解放！", 22, Color("#fff4d4"))
+	_unlock_ribbon_label.name = "LevelUnlockRibbonLabel"
+	_unlock_ribbon_label.z_index = 2
+	_set_label_min_height(_unlock_ribbon_label, 22)
 	_unlock_ribbon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_unlock_ribbon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_unlock_ribbon.add_child(_unlock_ribbon_label)
+	_unlock_ribbon_visual = LevelCenteredTextVisual.new()
+	_unlock_ribbon_visual.name = "LevelUnlockRibbonTextVisual"
+	_unlock_ribbon_visual.z_index = 10
+	_unlock_ribbon_visual.custom_minimum_size = Vector2(0.0, 36.0)
+	_unlock_ribbon_visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_unlock_ribbon_visual.configure("新たな釣り場が解放！", 22, Color("#fff4d4"), Color(0.0, 0.0, 0.0, 0.62))
+	_unlock_ribbon.add_child(_unlock_ribbon_visual)
 
 	var unlock_layout := HBoxContainer.new()
 	unlock_layout.add_theme_constant_override("separation", 10)
@@ -474,11 +595,18 @@ func _build_screen() -> void:
 	unlock_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	unlock_text.add_theme_constant_override("separation", 2)
 	unlock_layout.add_child(unlock_text)
-	_unlock_tag = make_shadow_label("", 14, Palette.GAUGE_RED_HI, 2)
+	_unlock_tag = make_label("", 14, Palette.GAUGE_RED_HI)
+	_unlock_tag.z_index = 2
+	_set_label_min_height(_unlock_tag, 14)
 	unlock_text.add_child(_unlock_tag)
-	_unlock_title = make_label("", 24, Color("#8d2430"), 2, Color("#fff4d4"))
+	_unlock_title = make_label("", 24, Color("#8d2430"))
+	_unlock_title.name = "LevelUnlockTitle"
+	_unlock_title.z_index = 2
+	_set_label_min_height(_unlock_title, 24)
 	unlock_text.add_child(_unlock_title)
 	_unlock_body = make_label("", 14, Color("#4d3924"))
+	_unlock_body.name = "LevelUnlockBody"
+	_set_label_min_height(_unlock_body, 14, 2)
 	_unlock_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	unlock_text.add_child(_unlock_body)
 	var summary_cue := LevelToSummaryCueVisual.new()
@@ -509,12 +637,14 @@ func show_level_up(
 	)
 	if boss_unlocked:
 		_unlock_ribbon_label.text = "新たな釣り場が解放！"
+		_unlock_ribbon_visual.configure("新たな釣り場が解放！", 22, Color("#fff4d4"), Color(0.0, 0.0, 0.0, 0.62))
 		_unlock_tag.text = "挑戦解放"
 		_unlock_title.text = "港のぬしに挑戦できるようになった！"
 		_unlock_body.text = "食事でLv.%d到達。次の目標：港のぬし。港の大岩周辺で、本格ファイトが解放されます。" % GameData.BOSS_UNLOCK_LEVEL
 		_set_spot_copy("新釣り場", "港の大岩", "外洋への挑戦")
 	else:
 		_unlock_ribbon_label.text = "成長が進行！"
+		_unlock_ribbon_visual.configure("成長が進行！", 22, Color("#fff4d4"), Color(0.0, 0.0, 0.0, 0.62))
 		_unlock_tag.text = "能力上昇"
 		_unlock_title.text = "次の釣行へ向けて力がついた！"
 		_unlock_body.text = "Lv.%d到達。最大体力や技量が伸び、釣行の安定感が上がりました。ステータスで成長結果を確認しましょう。" % level_to
@@ -575,13 +705,7 @@ func _stat_row(row: Dictionary) -> PanelContainer:
 	panel.name = _stat_row_node_name(String(row["icon"]))
 	panel.add_theme_stylebox_override(
 		"panel",
-		_texture_style_box(
-			LEVEL_STAT_ROW_FRAME,
-			18,
-			_style_box(Color("#17324d"), Color("#07121e"), Palette.GOLD_DEEP, 3, 5),
-			12.0,
-			5.0
-		)
+		_style_box(Color("#17324d"), Color("#07121e"), Palette.GOLD_DEEP, 3, 5)
 	)
 	panel.custom_minimum_size = Vector2(0.0, 46.0)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -593,28 +717,46 @@ func _stat_row(row: Dictionary) -> PanelContainer:
 	icon.custom_minimum_size = Vector2(42.0, 0.0)
 	line.add_child(icon)
 
-	var name := make_label(String(row["name"]), 17, Palette.TEXT_BONE, 2)
-	name.custom_minimum_size = Vector2(84.0, 0.0)
+	var name := make_label(String(row["name"]), 17, Palette.TEXT_BONE)
+	name.name = "LevelStatName%s" % _stat_row_suffix(String(row["icon"]))
+	name.z_index = 2
+	name.custom_minimum_size = Vector2(84.0, 23.0)
+	_set_label_min_height(name, 17)
 	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	line.add_child(name)
 
 	var fmt := String(row["fmt"])
 	var old_text := fmt % old_value
 	var new_text := fmt % new_value
-	var values := make_shadow_label("%s  ->  %s" % [old_text, new_text], 21, Palette.TEXT_BONE, 2)
+	var values := make_label("%s  ->  %s" % [old_text, new_text], 21, Palette.TEXT_BONE)
+	values.name = "LevelStatValues%s" % _stat_row_suffix(String(row["icon"]))
+	values.z_index = 2
+	_set_label_min_height(values, 21)
 	values.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	values.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	values.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	line.add_child(values)
 
 	var gain_text := "%.1f" % delta if fmt == "%.1f" else "%d" % int(round(delta))
-	var gain := make_shadow_label("+%s" % gain_text, 19, Palette.GAUGE_GREEN_HI, 2)
+	var gain := make_label("+%s" % gain_text, 19, Palette.GAUGE_GREEN_HI)
+	gain.name = "LevelStatGain%s" % _stat_row_suffix(String(row["icon"]))
+	gain.z_index = 2
 	if absf(delta) < 0.01:
 		gain.text = "-"
-	gain.custom_minimum_size = Vector2(58.0, 0.0)
+	gain.custom_minimum_size = Vector2(58.0, 27.0)
+	_set_label_min_height(gain, 19)
 	gain.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	gain.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	line.add_child(gain)
+
+	var overlay := LevelStatTextVisual.new()
+	overlay.name = "LevelStatText%s" % _stat_row_suffix(String(row["icon"]))
+	overlay.z_index = 10
+	overlay.custom_minimum_size = Vector2(0.0, 46.0)
+	overlay.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	overlay.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	overlay.configure(String(row["name"]), "%s  ->  %s" % [old_text, new_text], gain.text, Palette.GAUGE_GREEN_HI)
+	panel.add_child(overlay)
 	return panel
 
 
@@ -632,6 +774,20 @@ func _stat_row_node_name(icon: String) -> String:
 			return "LevelStatRow"
 
 
+func _stat_row_suffix(icon: String) -> String:
+	match icon:
+		"energy":
+			return "Energy"
+		"reel":
+			return "Reel"
+		"technique":
+			return "Technique"
+		"focus":
+			return "Focus"
+		_:
+			return "Stat"
+
+
 func _stat_icon(mode: String, accent: Color) -> LevelStatIconVisual:
 	var icon := LevelStatIconVisual.new()
 	icon.configure(mode, accent)
@@ -647,7 +803,7 @@ func _badge_box(text: String, fill: Color, text_color: Color) -> PanelContainer:
 		_style_box(fill.darkened(0.18), Color("#07121e"), Palette.GOLD_BRIGHT, 2, 4)
 	)
 	var label := make_shadow_label(text, 17, text_color, 2)
-	label.custom_minimum_size = Vector2(54.0, 0.0)
+	label.custom_minimum_size = Vector2(54.0, 24.0)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -672,7 +828,9 @@ func _spot_thumbnail_box() -> PanelContainer:
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.add_theme_constant_override("separation", 1)
 	panel.add_child(box)
-	_spot_tag = make_shadow_label("新釣り場", 13, Palette.GOLD_BRIGHT, 2)
+	_spot_tag = make_label("新釣り場", 13, Palette.GOLD_BRIGHT)
+	_spot_tag.z_index = 2
+	_set_label_min_height(_spot_tag, 13)
 	_spot_tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_spot_tag)
 	var visual := _level_asset_texture(
@@ -680,10 +838,14 @@ func _spot_thumbnail_box() -> PanelContainer:
 	)
 	visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(visual)
-	_spot_title = make_shadow_label("港の大岩", 20, Palette.TEXT_BONE, 2)
+	_spot_title = make_label("港の大岩", 20, Palette.TEXT_BONE)
+	_spot_title.z_index = 2
+	_set_label_min_height(_spot_title, 20)
 	_spot_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_spot_title)
-	_spot_subtitle = make_shadow_label("外洋への挑戦", 13, Palette.GAUGE_CYAN_HI, 2)
+	_spot_subtitle = make_label("外洋への挑戦", 13, Palette.GAUGE_CYAN_HI)
+	_spot_subtitle.z_index = 2
+	_set_label_min_height(_spot_subtitle, 13)
 	_spot_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_spot_subtitle)
 	return panel
@@ -820,6 +982,14 @@ func _close() -> void:
 
 func _apply_flow_button_style(button: Button) -> void:
 	CookingAssets.apply_flow_button_style(button, 76.0, 7.0)
+
+
+func _set_label_min_height(label: Label, font_size: int, lines := 1) -> void:
+	if label == null:
+		return
+	var outline := label.get_theme_constant("outline_size")
+	var height := float(font_size * maxi(1, lines)) * 1.35 + float(outline * 2)
+	label.custom_minimum_size.y = maxf(label.custom_minimum_size.y, ceilf(height))
 
 
 func _draw_confirm_button_cue(button: Button) -> void:

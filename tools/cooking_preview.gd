@@ -23,13 +23,7 @@ func _ready() -> void:
 	theme = ThemeFactory.build_theme()
 	_reset_manifest()
 
-	var vp := SubViewport.new()
-	vp.size = VW
-	vp.disable_3d = true
-	vp.transparent_bg = false
-	vp.render_target_clear_mode = SubViewport.CLEAR_MODE_ONCE
-	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	add_child(vp)
+	var vp := _new_capture_viewport()
 
 	_seed_reference_select_state()
 	var screen := await _mount_screen(vp)
@@ -44,9 +38,11 @@ func _ready() -> void:
 	_save_viewport(vp, OUT_ALL)
 
 	screen.queue_free()
+	vp.queue_free()
 	await get_tree().process_frame
 
 	_seed_select_state()
+	vp = _new_capture_viewport()
 	screen = await _mount_screen(vp)
 	var fake_result := _fake_meal_result()
 	_seed_after_meal_state()
@@ -64,9 +60,11 @@ func _ready() -> void:
 	_record_capture("MEAL_RESULT", OUT_RESULT, "MEAL_RESULT")
 
 	screen.queue_free()
+	vp.queue_free()
 	await get_tree().process_frame
 
 	_seed_select_state()
+	vp = _new_capture_viewport()
 	screen = await _mount_screen(vp)
 	var non_level_result := _fake_non_level_result()
 	_seed_after_non_level_meal_state()
@@ -81,9 +79,11 @@ func _ready() -> void:
 	_record_capture("EXP_GAIN", OUT_EXP, "EXP_GAIN")
 
 	screen.queue_free()
+	vp.queue_free()
 	await get_tree().process_frame
 
 	_seed_select_state()
+	vp = _new_capture_viewport()
 	screen = await _mount_screen(vp, false)
 	var boss_unlock_result := _fake_boss_unlock_result()
 	_seed_after_boss_unlock_meal_state()
@@ -103,6 +103,20 @@ func _ready() -> void:
 	if not _expect_level_up_overlay(screen, "LEVEL_UP capture"):
 		get_tree().quit(1)
 		return
+	_debug_named_controls(
+		screen,
+		[
+			"LevelUpTitle",
+			"LevelUpLevelLine",
+			"LevelUpSourceLine",
+			"LevelUnlockRibbonLabel",
+			"LevelStatNameEnergy",
+			"LevelStatValuesEnergy",
+			"LevelStatGainEnergy",
+			"LevelUnlockTitle",
+			"LevelUnlockBody",
+		]
+	)
 	if not _save_viewport(vp, OUT_LEVELUP):
 		get_tree().quit(1)
 		return
@@ -130,6 +144,17 @@ func _ready() -> void:
 	get_tree().quit()
 
 
+func _new_capture_viewport() -> SubViewport:
+	var vp := SubViewport.new()
+	vp.size = VW
+	vp.disable_3d = true
+	vp.transparent_bg = false
+	vp.render_target_clear_mode = SubViewport.CLEAR_MODE_ALWAYS
+	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(vp)
+	return vp
+
+
 func _mount_screen(vp: SubViewport, suppress_level_overlay := true) -> Control:
 	var screen := CookingScreen.new()
 	screen.theme = ThemeFactory.build_theme()
@@ -141,11 +166,9 @@ func _mount_screen(vp: SubViewport, suppress_level_overlay := true) -> Control:
 
 
 func _await_capture_ready(vp: SubViewport) -> void:
+	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	var frames := CAPTURE_SETTLE_FRAMES if ScreenBase.is_qa_deterministic() else 2
 	for _i in range(frames):
-		await get_tree().process_frame
-	if ScreenBase.is_qa_deterministic():
-		vp.render_target_update_mode = SubViewport.UPDATE_ONCE
 		await get_tree().process_frame
 
 
@@ -389,6 +412,49 @@ func _expect_level_up_overlay(screen: Control, context: String) -> bool:
 		return true
 	push_error("%s expected LEVEL_UP_OVERLAY." % context)
 	return false
+
+
+func _debug_named_controls(root: Node, node_names: Array) -> void:
+	if OS.get_environment("COOKING_PREVIEW_DEBUG_LABELS") != "1":
+		return
+	for node_name in node_names:
+		var node := _find_named(root, String(node_name))
+		var control := node as Control
+		if control == null:
+			print("PREVIEW DEBUG %s missing" % String(node_name))
+			continue
+		var label := control as Label
+		var text := ""
+		if label != null:
+			text = label.text
+		print(
+			"PREVIEW DEBUG %s rect=%s min=%s visible=%s modulate=%s text='%s'"
+			% [
+				String(node_name),
+				control.get_global_rect(),
+				control.get_combined_minimum_size(),
+				control.is_visible_in_tree(),
+				control.modulate,
+				_trim(text),
+			]
+		)
+
+
+func _find_named(node: Node, node_name: String) -> Node:
+	if node.name == node_name:
+		return node
+	for child in node.get_children():
+		var found := _find_named(child, node_name)
+		if found != null:
+			return found
+	return null
+
+
+func _trim(value: String) -> String:
+	var one_line := value.replace("\n", "\\n")
+	if one_line.length() <= 80:
+		return one_line
+	return one_line.substr(0, 77) + "..."
 
 
 func _expect_status_overlay(screen: Control, context: String) -> bool:

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import struct
 import sys
@@ -131,6 +132,25 @@ def check_manifest(failures: list[str]) -> None:
             )
 
 
+def check_capture_uniqueness(failures: list[str]) -> None:
+    hashes: dict[str, list[str]] = {}
+    for state in cooking_reference_report.STATES:
+        state_id = str(state["id"])
+        capture = Path(state["capture"])
+        if not capture.exists():
+            continue
+        digest = hashlib.sha256(capture.read_bytes()).hexdigest()
+        hashes.setdefault(digest, []).append(state_id)
+    if not hashes:
+        return
+    for state_ids in hashes.values():
+        if len(state_ids) >= 3:
+            failures.append(
+                "capture frames are stale or duplicated across states: %s"
+                % ", ".join(state_ids)
+            )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Check cooking reference captures and regenerate the HTML QA report."
@@ -155,6 +175,7 @@ def main() -> int:
             missing_capture_failures.append(failures[-1])
     if not missing_capture_failures:
         check_manifest(failures)
+        check_capture_uniqueness(failures)
 
     cooking_reference_report.main()
 

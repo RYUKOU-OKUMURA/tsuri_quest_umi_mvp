@@ -1,11 +1,51 @@
 # リファクタ作戦台帳
 
-最終更新: 2026-07-05 / 状態: R0/R2/R3/R4/R6/R7/R8 完了。R9（cooking_reward_panel 分割）は第1段（Visual抽出）+ 第2段（ステータスストリップ component 化）完了。R5/R1 は釣り場マップ完了、魚図鑑 Palette 移行 + P2素材評価完了（専用素材P2は新規候補待ち）。次候補は R9 第3段（報酬カード節）、R5/R1 次画面
+最終更新: 2026-07-05 / 状態: R0/R2/R3/R4/R6/R7/R8 完了。R9（cooking_reward_panel 分割）は第1〜3段完了。R5/R1 は釣り場マップ完了、魚図鑑 Palette 移行 + P2素材評価完了、調理場 `text_overrun_behavior` 既知ギャップ解消済み、調理場COOK_SELECTの `PlayerStatusBar` 展開 + 情報重複解消済み、調理場 layout監査失敗は実P1修正として解消済み。`src/ui/screen_base.gd` の残hexは `Palette.SCREEN_BG_DEFAULT` へ移行済み。次は調理場R1継続 / `RarityStyles` 展開
 
 Fable オーケストレーターが本ファイルを正本としてスライス順・状態・ベースラインを管理する。
 Composer ワーカーは個別 brief のみ受け取り、本ファイルの更新はオーケストレーターが行う。
 
 関連: `AGENTS.md` §オーケストレーション、`.cursor/rules/orchestration.mdc`、`skills/project-refactor-orchestration/SKILL.md`
+
+## 全体ゴール
+
+MVPを壊さず、今後のUI改善を画面単位で安全に進められる状態にする。
+
+このフェーズの到達点は「全画面を完成形まで磨く」ではなく、次の画面改善を小さなスライスとして切り出し、見た目・Palette・素材所有・セーブ退行を毎回検証できる足場を作ること。
+
+この作戦台帳でいう「安全」は、次を満たすこと:
+
+- 共有基盤・巨大ファイル・Palette境界が、次の画面作業を妨げない粒度に整理されている
+- 画面ごとの見た目判断が、実スクショ、reference横並び比較、`docs/qa/<screen>_qa.md`、`docs/qa/evidence/<screen>/` で追跡できる
+- 触った画面は、その画面内のハードコード色を `src/ui/palette.gd` の用途名定数へ移行している
+- UI変更は、該当 smoke と visual QA、全体 `validate_project.sh`、セーブ退行 `save_system_verify.sh` で退行なしを確認している
+- freeze値は、P1再発時以外は動かしていない
+
+この健全化フェーズの非ゴール:
+
+- 全画面を参照画像どおりの最終アート品質まで磨き切ること
+- `palette.gd` 外の色を機械的に一括ゼロ化すること
+- 魚ポートレート専用描き起こし、水中ファイト最終authored素材など、素材制作そのものを完了条件に含めること
+- コード整理とUI upliftを同一スライス・同一コミットへ混ぜること
+
+## 実装優先順位
+
+1. **完了済み差分の保護**: R9第1〜3段、釣り場マップR5/R1、魚図鑑R5/R1、調理場COOK_SELECT改善は完了済み。以後は純リファクタ、画面uplift、Palette移行を混ぜず、1スライス1関心で扱う。
+2. **検証の信頼性維持**: `tools/cooking_layout_audit.tscn` の既存失敗は実スクショ上のP1文字欠けとして修正済み。以後はvisual QAの状態重複guard、layout/content audit、実スクショ目視をセットで扱う。
+3. **調理場R5/R1継続**: 次の本命は `RarityStyles` 横展開と、同じ調理場スライスで触った行のPalette移行。`src/ui/cooking_screen.gd` の残hexは一括置換せず、触った状態・部品ごとに同値移行する。
+4. **残り画面のR5/R1**: P1があれば最優先。P1がなければ、P2が明確で smoke / visual QA / reference / QAログが揃っている画面から進める。
+5. **R1残件の棚卸し**: 画面単位の進行で残ったPalette未移行箇所を監査リストとして管理する。機械的一括ゼロ化はしない。
+6. **任意の構造課題**: BGM二重実装など、MVP健全化の出口に必須でないものは、上記の完了後に別スライス化する。
+
+## 健全化フェーズの完了判定
+
+- [x] R9 第3段（報酬カード節抽出）が完了し、分割前後の調理visual QA 6キャプチャが cmp 完全一致
+- [x] 調理場の高リスク既知ギャップを、最低1スライス以上、`docs/19` §8.5 と画面QAログに沿って解消
+- [x] `tools/cooking_layout_audit.tscn` の失敗を、実P1修正または現行UX契約への監査更新として整理済み
+- [ ] 触った画面・ファイルのPalette監査が green（`src/ui/cooking_screen.gd` の全体R1は未完。今回触ったヘッダーfallback色のみ `Palette.COOKING_*` へ同値移行済み）
+- [x] 各スライスの判断ログと証拠画像が `docs/qa/` 配下に保存済み
+- [x] `./tools/validate_project.sh`、`./tools/save_system_verify.sh`、該当 smoke、該当 visual QA が green
+- [x] 完了済みのfreeze値をP1再発なしに動かしていない
 
 ## 全体 Definition of Done
 
@@ -56,14 +96,14 @@ done
 | ID | concern | 依存 | 担当 | DoD | 状態 |
 |---|---|---|---|---|---|
 | R0 | ベースライン計測 | — | Composer | 全 smoke + validate の結果を §ベースラインに記録 | **done (2026-07-05)** |
-| R1 | palette 外ハードコード色の洗い出しと修正 | R0 | Composer | `rg` 監査 green、validate + 触った画面 smoke | pending（洗い出しのみ完了: 約932件/22ファイル。機械置換の見た目退行リスクが高く、freeze済み画面のvisual QA前提で画面単位に分割して実施する。2026-07-05: 釣り場マップ2ファイル `src/ui/fishing_spot_select_screen.gd` / `src/ui/components/fishing_spot_map_view.gd` は `Palette.MAP_*` へ移行済み。魚図鑑 `src/ui/fish_book_screen.gd` は `Palette.FISH_BOOK_*` へ移行済み） |
+| R1 | palette 外ハードコード色の洗い出しと修正 | R0 | Composer | `rg` 監査 green、validate + 触った画面 smoke | pending（洗い出しのみ完了: 約932件/22ファイル。機械置換の見た目退行リスクが高く、freeze済み画面のvisual QA前提で画面単位に分割して実施する。2026-07-05: 釣り場マップ2ファイル `src/ui/fishing_spot_select_screen.gd` / `src/ui/components/fishing_spot_map_view.gd` は `Palette.MAP_*` へ移行済み。魚図鑑 `src/ui/fish_book_screen.gd` は `Palette.FISH_BOOK_*` へ移行済み。共有基盤 `src/ui/screen_base.gd` は `Palette.SCREEN_BG_DEFAULT` へ移行済みで直書きhexゼロ。調理場は今回触ったヘッダーfallback色のみ `Palette.COOKING_*` へ同値移行済みで、`src/ui/cooking_screen.gd` 全体のR1は継続） |
 | R2 | showcase 素材参照違反の修正 | R0 | Composer×画面 | `audit_showcase_asset_refs.py` green | **done（監査の結果、現状違反ゼロ。作業不要）** |
 | R3 | autoload / core の pure ロジック境界抽出 | R0, Fable 設計 | Composer | 振る舞い不変、該当 smoke green | **done (2026-07-05)** `game_data.gd`（1828行）を `game_catalog_data.gd`（constテーブル15個・約1430行）と `game_data.gd`（ルール定数+エイリアス+ロジック・約430行）に分離。公開APIはconstエイリアスで不変。7テーブルの JSON md5 前後一致で証明 |
 | R4 | UI 共通基盤（ScreenBase 等）の整理 | R3, Fable 設計 | Composer | Fable 承認済み設計どおり、全 smoke green | **done (2026-07-05)** `ScreenBase.make_screen_label` を新設し、`_harbor_label` / `_shipyard_label` / `_book_label` / `_status_label` / `_market_label` を1行委譲に統合（呼び出し約120箇所は無変更）。画面固有の shadow/outline 色は引数渡しで screen_base への新規hex持ち込みなし。`GameFontsScript` preload を ScreenBase へ昇格し、継承7画面の重複 const を削除。全10 smoke + validate green |
-| R5 | 画面別 UI uplift | R4 | Composer×画面 | 各 `skills/ui-screen-uplift/` + visual QA | 釣り場マップ done (2026-07-05): 詳細`エサ`/`仕掛け`行の省略P1再発を修正し、通常/釣行継続visual QA証拠を `docs/qa/evidence/fishing_spot_map/` に保存。魚図鑑 done (2026-07-05): Palette gate後のvisual QAでP1再発なし、既存portrait候補は現行に明確勝ちせず素材採用見送り（専用素材P2は新規候補待ち）。次画面は pending |
+| R5 | 画面別 UI uplift | R4 | Composer×画面 | 各 `skills/ui-screen-uplift/` + visual QA | 釣り場マップ done (2026-07-05): 詳細`エサ`/`仕掛け`行の省略P1再発を修正し、通常/釣行継続visual QA証拠を `docs/qa/evidence/fishing_spot_map/` に保存。魚図鑑 done (2026-07-05): Palette gate後のvisual QAでP1再発なし、既存portrait候補は現行に明確勝ちせず素材採用見送り（専用素材P2は新規候補待ち）。調理場 safe overrun foundation done (2026-07-05): `ScreenBase.make_label` の既定 `text_overrun_behavior` を `OVERRUN_TRIM_ELLIPSIS` に統一し、`docs/19` §8.5-7 を解消。編集前ベースライン `/tmp/tsuri_refactor_baseline/cooking_overrun_20260705_113951/` と編集後6キャプチャはピクセル完全一致、`cooking_visual_qa.sh` / 全UI smoke / `save_system_verify.sh` / `validate_project.sh` green。調理場 status de-dup done (2026-07-05): COOK_SELECTヘッダーを `PlayerStatusBar` へ置換し、下部「現在の準備」バーから重複Lv/EXP・所持金カードを撤去。証拠 `docs/qa/evidence/cooking/2026-07-05_status_dedupe_before_after_select.png`、`cooking_visual_qa.sh` / `cooking_flow_smoke` / 全UI smoke / `save_system_verify.sh` / `validate_project.sh` / `cooking_content_audit.tscn` green。調理場 layout audit repair done (2026-07-05): EXP_GAIN / LEVEL_UP_OVERLAY / STATUS_SUMMARY の実P1文字欠けを修正し、visual QAに重複キャプチャguardを追加。証拠 `docs/qa/evidence/cooking/2026-07-05_layout_audit_repair_levelup.png`、`cooking_visual_qa.sh` / `cooking_layout_audit.tscn` / `cooking_content_audit.tscn` green |
 | R6 | 調理フロー4ファイルの重複抽出（定数・StyleBoxヘルパ・皿テクスチャ解決→CookingAssets） | R0 | Composer | behavior-preserving、cooking_flow smoke + visual QA 画像一致、validate green | **done (2026-07-05)** 新規 `src/ui/components/cooking_assets.gd`。STATUS スクショはピクセル一致。RESULT/EXP/LEVELUP は元コードからキャプチャ非決定（アニメーション）のため cmp は参考値、visual QA passed |
 | R7 | 画面横断の重複ヘルパ統合と不要コード削除（_format_money 8重複、_load_texture_if_exists、ScreenBase未使用API、extends表記統一） | R0 | Composer | behavior-preserving、全 smoke + validate green | **done (2026-07-05)** `ScreenBase.format_money` / `_anchored_control` / `_place_control` へ統合。見送り: `_last_sfx_path`（smoke が参照）、`shipyard._format_money`（`maxi` で挙動差）、独自ロジック入り `_load_texture_if_exists` 9ファイル |
-| R9 | cooking_reward_panel（3,396行）の behavior-preserving 分割 | R8（決定的QAを退行判定に使用） | Composer | 各段で cooking visual QA 連続キャプチャが分割前と cmp 完全一致、cooking_flow smoke + validate green | **第1段 done (2026-07-05)** 内部Visualクラス17個（純描画・panel非依存）を新規 `src/ui/components/cooking_reward_visuals.gd`（1,297行）へ純移動し、panel 側は const エイリアスで参照不変（2,119行に減）。移動塊は空行差以外完全一致を diff で確認。素材監査 allowlist に抽出先を登録。6キャプチャがベースライン cmp 全一致。**第2段 done (2026-07-05)** ステータスストリップ節を `src/ui/components/cooking_reward_status_strip.gd`（296行、HBoxContainer component）へ抽出し panel は 1,796行に減。共有ヘルパ5つ+素材パス4定数を `CookingAssets` static へ昇格、`ScreenBase.make_label`/`make_body_label`/`make_shadow_label` を static 化（component からの利用を解禁、呼び出し側無変更）。panel の `_preview_state` 依存は `set_secondary(bool)` 注入に置換。6キャプチャがベースライン cmp 全一致。第3段（報酬カード節 約460行）は pending |
+| R9 | cooking_reward_panel（3,396行）の behavior-preserving 分割 | R8（決定的QAを退行判定に使用） | Composer | 各段で cooking visual QA 連続キャプチャが分割前と cmp 完全一致、cooking_flow smoke + validate green | **第1段 done (2026-07-05)** 内部Visualクラス17個（純描画・panel非依存）を新規 `src/ui/components/cooking_reward_visuals.gd`（1,297行）へ純移動し、panel 側は const エイリアスで参照不変（2,119行に減）。移動塊は空行差以外完全一致を diff で確認。素材監査 allowlist に抽出先を登録。6キャプチャがベースライン cmp 全一致。**第2段 done (2026-07-05)** ステータスストリップ節を `src/ui/components/cooking_reward_status_strip.gd`（296行、HBoxContainer component）へ抽出し panel は 1,796行に減。共有ヘルパ5つ+素材パス4定数を `CookingAssets` static へ昇格、`ScreenBase.make_label`/`make_body_label`/`make_shadow_label` を static 化（component からの利用を解禁、呼び出し側無変更）。panel の `_preview_state` 依存は `set_secondary(bool)` 注入に置換。6キャプチャがベースライン cmp 全一致。**第3段 done (2026-07-05)** 報酬カード節を新規 `src/ui/components/cooking_reward_cards.gd`（492行、GridContainer component）へ抽出し、panel は 1,338行に減。panel 側は `set_preview_state` / `show_meal_result` / `show_exp_gain` / `set_reward_cards_height` / `set_growth_text` の明示注入へ置換。編集前ベースライン `/tmp/tsuri_refactor_baseline/r9_reward_cards_20260705_112625/` と分割後6キャプチャが cmp 全一致。`cooking_flow_smoke` / `save_system_verify.sh` / `validate_project.sh` green |
 | R8 | QA決定性（`TSURI_QA_DETERMINISTIC=1` で調理visual QAをピクセル決定的に）+ cooking_flow_smoke の ok 出力 | R0 | Composer | 連続2回実行で全状態 cmp 一致、フラグOFF時のパス不変 | **done (2026-07-05)** 原因は Tween入退場・Juicer trauma/hit_stop・GaugeBar の `_process` 補間。ガードは `ScreenBase.is_qa_deterministic()` に集約。オーケストレーターが独立に2回実行し6キャプチャ全一致を追認済み |
 
 **fan-out 向き**: R0、R1（ファイル単位）、R2（画面単位）、R5（画面単位・並列可）、R6/R7（ファイル集合が素で並列可）  
@@ -75,6 +115,11 @@ done
 - 2026-07-05: 新規Palette定数は `Palette.MAP_*`（`MAP_BG_*` / `MAP_DETAIL_*` / `MAP_FOOTER_*` / `MAP_ENTRY_*` / `MAP_CHART_*` / `MAP_ROUTE_*` / `MAP_CHIP_*` など）。理由: 釣り場マップ固有の海図・羊皮紙・ロック状態・航路発光色が既存Paletteに用途名として存在せず、表示色を変えずに画面単位R1移行するため。
 - 2026-07-05: 2画面目のR5対象は魚図鑑。`docs/qa/fish_book_qa.md` に残P2（専用魚ポートレート素材）と `docs/24_fish_book_portrait_asset_brief.md` の評価手順が整理済みで、`tools/fish_book_visual_qa.sh` / `fish_book_smoke.tscn` が揃っており、Palette移行対象も `src/ui/fish_book_screen.gd` 中心に限定できるため。
 - 2026-07-05: 魚図鑑の新規Palette定数は `Palette.FISH_BOOK_*`。理由: 魚図鑑の台帳紙面・セピア罫線・魚ポートレートtint/影・索引ボタン色は freeze済みの画面固有値が多く、既存Paletteへ近似せず表示色同値でR1移行するため。
+- 2026-07-05: 次のR5対象は調理場の `text_overrun_behavior` 既知ギャップ。`docs/19` §8.5-7 のP1予防で、`tools/cooking_visual_qa.sh` / `cooking_flow_smoke.tscn` が揃っており、共有ラベル基盤で解くため調理場のfreeze値・素材・画面固有Paletteを動かさず検証できるため。
+- 2026-07-05: 新規Palette定数は `Palette.SCREEN_BG_DEFAULT`。理由: `ScreenBase.add_background()` の既定背景 `#091a2d` を表示同値のままPalette正本へ移し、今回触った共有基盤ファイルの残hexをゼロにするため。
+- 2026-07-05: 次の調理場R5対象は `PlayerStatusBar` 展開 + COOK_SELECT情報重複解消。`docs/19` §8.5-2/3 の既知ギャップで、現行ヘッダーと下部「現在の準備」バーがLv/EXP/所持金を重複表示しており、共通ステータスバー適用と下部要約の役割整理を同一構成スライスとして検証できるため。
+- 2026-07-05: 新規Palette定数は `Palette.COOKING_TITLE_FALLBACK_BG` / `Palette.COOKING_WOOD_BORDER` / `Palette.COOKING_GOLD_TRIM`。理由: 調理場ヘッダーのタイトルバナーfallback色を表示同値のままPalette正本へ移し、今回触った行へ新規hexを残さないため。
+- 2026-07-05: 次の調理場R5対象は layout audit failure repair。`tools/cooking_layout_audit.tscn` の失敗が実スクショでもEXP_GAIN / LEVEL_UP_OVERLAY / STATUS_SUMMARYのP1文字欠けとして再現し、visual QAの状態重複も検出されたため。
 
 ### 監査で確認したが今回見送った項目（2026-07-05）
 
