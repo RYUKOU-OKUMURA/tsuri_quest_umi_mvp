@@ -44,6 +44,18 @@ static func border_color(rarity: String) -> Color:
 			return Palette.GOLD
 
 
+static func list_text_color(rarity: String) -> Color:
+	match rarity:
+		"アンコモン":
+			return Palette.RARITY_UNCOMMON_BADGE
+		"レア":
+			return Palette.RARITY_RARE_BADGE
+		"ぬし":
+			return Palette.GOLD_DEEP
+		_:
+			return Palette.TEXT_BODY
+
+
 static func is_rare_or_boss(fish: Dictionary) -> bool:
 	var rarity := String(fish.get("rarity", ""))
 	return rarity == "レア" or rarity == "ぬし" or bool(fish.get("boss", false))

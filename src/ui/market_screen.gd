@@ -506,7 +506,7 @@ func _refresh_inventory() -> void:
 		var rarity := String(fish.get("rarity", ""))
 		var meta_label := row["meta_label"] as Label
 		meta_label.text = rarity
-		meta_label.add_theme_color_override("font_color", _row_rarity_color(rarity))
+		meta_label.add_theme_color_override("font_color", RarityStyles.list_text_color(rarity))
 		(row["count_label"] as Label).text = "x%d" % count
 		(row["price_label"] as Label).text = ScreenBase.format_money(price)
 		(row["quantity_label"] as Label).text = str(quantity)
@@ -772,18 +772,6 @@ func _market_field_panel(bg: Color, border: Color, alpha: float) -> Panel:
 	style.shadow_offset = Vector2(0.0, 1.0)
 	panel.add_theme_stylebox_override("panel", style)
 	return panel
-
-
-func _row_rarity_color(rarity: String) -> Color:
-	match rarity:
-		"アンコモン":
-			return Palette.RARITY_UNCOMMON_BADGE
-		"レア":
-			return Palette.RARITY_RARE_BADGE
-		"ぬし":
-			return Palette.GOLD_DEEP
-		_:
-			return Palette.TEXT_BODY
 
 
 func _make_button_transparent(button: Button) -> void:
