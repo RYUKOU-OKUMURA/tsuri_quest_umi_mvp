@@ -1,6 +1,6 @@
 # 調理場 QA判断ログ
 
-最終更新: 2026-07-05 / 状態: R5 layout audit repair 完了
+最終更新: 2026-07-05 / 状態: COOK_SELECT 料理カード reference-uplift 完了
 参照画像: reference/cooking_flow/01_cook_select_concept.png, reference/cooking_flow/02_meal_result_concept.png, reference/cooking_flow/03_exp_gain_concept.png, reference/cooking_flow/04_level_up_overlay_concept.png, reference/cooking_flow/05_status_summary_concept.png
 QA更新コマンド: ./tools/cooking_visual_qa.sh
 
@@ -21,6 +21,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 
 | パラメータ | 回数 | 直近の変更内容 | 状態 |
 |---|---|---|---|
+| COOK_SELECT 料理カード星ランク表示 | 1 | Label幅中央寄せを試したが実スクショで星文字が弱く、runtimeポリゴン描画 `RecipeStarRank` へ切替 | 完了 |
 
 ## 4. 暫定判定・再検証TODO
 
@@ -29,7 +30,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 ## 5. 現在の残ギャップ
 
 - P2: レアリティ表示の `RarityStyles` 横展開は未実施。
-- R1: `src/ui/cooking_screen.gd` の画面固有ハードコード色は大半が未移行。今回触ったヘッダーfallback色は `Palette.COOKING_*` へ同値移行済み。残りは次の調理場直接編集スライスで継続する。
+- R1: `src/ui/cooking_screen.gd` の画面固有ハードコード色は大半が未移行。今回触った料理カード周辺のruntime色は `Palette.COOKING_RECIPE_*` へ移行済み。残りは次の調理場直接編集スライスで継続する。
 - 監査: `tools/cooking_layout_audit.tscn` / `tools/cooking_content_audit.tscn` / `./tools/cooking_visual_qa.sh` はgreen。visual QAは状態間キャプチャ重複のfail guard追加済み。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
@@ -37,6 +38,18 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 なし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-05: `COOK_SELECT recipe card reference-uplift` 完了。料理カードを参照の3段構成へ寄せ、カード枠素材候補を採用した。
+
+- 選定理由: `docs/qa/evidence/cooking/2026-07-05_layout_audit_repair_select.png` と `reference/cooking_flow/01_cook_select_concept.png` の横並びで、現行はカード上部タイトル帯 / 中央皿画像 / 下部星ランク+魚アイコンの分離が弱く、docs/19の順序では素材質感フェーズに入るため。
+- 変えたもの: 料理カード枠4枚（通常/選択/皿サムネ/素材フッター）、カード内タイトル・皿・星・素材行の縦配分、星ランクのruntimeポリゴン描画、料理カード周辺のPalette定数、`tools/cooking_content_audit.gd` の星ランク契約。
+- 変えていないもの: §1 freeze値、魚リスト、右詳細パネル、画面下部バー、背景/左右余白、調理報酬オーバーレイ、日本語PNG焼き込み。
+- 素材候補: `tools/generate_cooking_showcase_assets.py` でカード枠候補を生成し採用。候補はカード上部にタイトル帯、中央に皿窓、下部に星/素材ソケットを持ち、beforeより参照の読み方に近づいたため。
+- Palette: 新規 `Palette.COOKING_RECIPE_*` を追加。理由は料理カード固有のタイトル/星/フッター/カード状態/サムネ/素材行の色を、今回触ったruntime行から用途名定数へ移すため。
+- 証拠画像: `docs/qa/evidence/cooking/2026-07-05_recipe_card_before_after_ref.png`, `docs/qa/evidence/cooking/2026-07-05_recipe_card_select.png`, `docs/qa/evidence/cooking/2026-07-05_recipe_card_report.html`
+- 判定: beforeではタイトル文字がカード絵へ沈み、星ランクが実質読めなかった。afterではタイトル帯、皿画像、星ランク+魚アイコンの下部ソケットが分かれ、参照構成への前進が第三者に判別できる。cmp一致は判定に使っていない。
+- 検証: `./tools/cooking_visual_qa.sh`、`tools/cooking_content_audit.tscn`、`tools/cooking_layout_audit.tscn`、`cooking_flow_smoke`、`./tools/save_system_verify.sh`、`./tools/validate_project.sh` green。`validate_project.sh` の ObjectDB/resource 警告はベースライン既知。
+- 固定条件: COOK_SELECT料理カードの日本語タイトル・星ランク・素材数値はruntime描画のまま維持する。参照化の次スライスは下部バーで、カード幅/背景余白には波及させない。
 
 2026-07-05: `layout audit repair` 完了。layout audit失敗を実スクショで確認し、EXP_GAIN / LEVEL_UP_OVERLAY / STATUS_SUMMARY の文字欠けP1と、visual QAの状態キャプチャ重複を修正した。
 

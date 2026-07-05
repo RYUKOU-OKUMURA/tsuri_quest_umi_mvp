@@ -170,8 +170,6 @@ func _audit_cook_select() -> void:
 			"料理を選ぶ",
 			"アジの塩焼き",
 			"アジの刺身",
-			"★★",
-			"★★★",
 			"メジナの煮付け",
 			"別素材",
 			"アジフライ",
@@ -234,6 +232,9 @@ func _audit_cook_select() -> void:
 	_expect_named_node("COOK_SELECT", screen, "RecipeTitle_salt_grill")
 	_expect_named_node("COOK_SELECT", screen, "RecipeTitle_sashimi")
 	_expect_named_node("COOK_SELECT", screen, "RecipeTitle_PreviewMeuniere")
+	_expect_named_node("COOK_SELECT", screen, "RecipeStars_salt_grill")
+	_expect_named_node("COOK_SELECT", screen, "RecipeStars_sashimi")
+	_expect_named_node("COOK_SELECT", screen, "RecipeStars_PreviewMeuniere")
 	_expect_named_node("COOK_SELECT", screen, "RecipeDishThumb_salt_grill")
 	_expect_named_node("COOK_SELECT", screen, "RecipeDishImage_salt_grill")
 	_expect_texture_rect_path(

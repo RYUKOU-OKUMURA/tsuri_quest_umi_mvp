@@ -336,6 +336,55 @@ class CookActionCueVisual:
 		return points
 
 
+class RecipeStarRank:
+	extends Control
+
+	var filled_count := 2
+	var muted := false
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func configure(next_filled_count: int, next_muted: bool) -> void:
+		filled_count = clampi(next_filled_count, 0, 3)
+		muted = next_muted
+		queue_redraw()
+
+	func _draw() -> void:
+		var outer_radius: float = clampf(size.y * 0.34, 4.8, 7.0)
+		var inner_radius := outer_radius * 0.46
+		var gap := 3.2
+		var total_width := outer_radius * 2.0 * 3.0 + gap * 2.0
+		var start_x := (size.x - total_width) * 0.5 + outer_radius
+		var center_y := size.y * 0.52
+		for i in range(3):
+			var center := Vector2(start_x + float(i) * (outer_radius * 2.0 + gap), center_y)
+			var filled := i < filled_count
+			var outline := Palette.COOKING_RECIPE_STAR_OUTLINE
+			var fill := Palette.GOLD_BRIGHT if filled and not muted else Palette.COOKING_RECIPE_STAR_LOCKED
+			outline.a = 0.86 if filled else 0.54
+			fill.a = 0.96 if filled and not muted else (0.62 if filled else 0.22)
+			var shadow := Palette.COOKING_RECIPE_STAR_OUTLINE
+			shadow.a = 0.34
+			draw_colored_polygon(
+				_star_points(center + Vector2(0.0, 1.2), outer_radius + 1.5, inner_radius + 0.8),
+				shadow
+			)
+			draw_colored_polygon(
+				_star_points(center, outer_radius + 0.9, inner_radius + 0.5),
+				outline
+			)
+			draw_colored_polygon(_star_points(center, outer_radius, inner_radius), fill)
+
+	func _star_points(center: Vector2, outer_radius: float, inner_radius: float) -> PackedVector2Array:
+		var points := PackedVector2Array()
+		for i in range(10):
+			var radius := outer_radius if i % 2 == 0 else inner_radius
+			var angle := -PI * 0.5 + TAU * float(i) / 10.0
+			points.append(center + Vector2(cos(angle), sin(angle)) * radius)
+		return points
+
+
 const FISH_ICON_INDEX := {
 	"aji": 0,
 	"mejina": 1,
@@ -1136,7 +1185,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	var recipe_id := String(recipe.get("id", ""))
 	var card := PanelContainer.new()
 	card.name = "RecipeCard_%s" % recipe_id
-	card.custom_minimum_size = Vector2(132, 190)
+	card.custom_minimum_size = Vector2(132, 196)
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
 	var selectable := not locked and not unavailable
 	if selectable:
@@ -1150,10 +1199,17 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	box.add_theme_constant_override("separation", 2)
 	card.add_child(box)
 	var title_text := _recipe_card_title_text(recipe, locked, unavailable)
-	var title_font_size := 14 if title_text.length() <= 7 else 13
-	var title := make_shadow_label(title_text, title_font_size, Color("#251c12"), 1, Color("#fff3cf"))
+	var title_font_size := 13 if title_text.length() <= 7 else 12
+	var title := make_shadow_label(
+		title_text,
+		title_font_size,
+		Palette.COOKING_RECIPE_TITLE_TEXT,
+		1,
+		Palette.COOKING_RECIPE_TITLE_OUTLINE
+	)
 	title.name = "RecipeTitle_%s" % recipe_id
-	title.custom_minimum_size = Vector2(0.0, 26.0)
+	title.custom_minimum_size = Vector2(0.0, 31.0)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -1161,22 +1217,17 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	box.add_child(title)
 	var image := _recipe_card_dish_image(recipe_id, locked or unavailable)
 	box.add_child(image)
-	var stars := make_shadow_label(
-		_recipe_star_text(recipe, locked),
-		13,
-		Palette.GOLD_BRIGHT if not locked else Color("#d9bd72"),
-		1,
-		Color("#4c2b0b")
-	)
-	stars.custom_minimum_size = Vector2(0.0, 17.0)
-	stars.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	stars.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	var stars := RecipeStarRank.new()
+	stars.name = "RecipeStars_%s" % recipe_id
+	stars.custom_minimum_size = Vector2(0.0, 19.0)
+	stars.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	stars.configure(_recipe_star_count(recipe), locked)
 	box.add_child(stars)
 	var material_row := _add_recipe_material_badge(box, recipe_id)
 	var material_icon := TextureRect.new()
 	material_icon.name = "RecipeMaterialIcon_%s" % recipe_id
 	material_icon.texture = _recipe_material_texture(recipe, locked, unavailable)
-	material_icon.custom_minimum_size = Vector2(64.0, 20.0)
+	material_icon.custom_minimum_size = Vector2(68.0, 22.0)
 	material_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	material_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	material_icon.modulate = Color(0.88, 0.80, 0.66, 0.96) if locked or unavailable else Color.WHITE
@@ -1184,8 +1235,14 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	var footer_text := _recipe_card_status_text(recipe, locked, unavailable)
 	var footer: Label = null
 	if not footer_text.is_empty():
-		footer = make_label(footer_text, 8, Color("#49351f"), 1, Color("#fff4cf"))
-		footer.custom_minimum_size = Vector2(28.0, 18.0)
+		footer = make_label(
+			footer_text,
+			9,
+			Palette.COOKING_RECIPE_FOOTER_TEXT,
+			1,
+			Palette.COOKING_RECIPE_FOOTER_OUTLINE
+		)
+		footer.custom_minimum_size = Vector2(30.0, 20.0)
 		footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		footer.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		footer.clip_text = true
@@ -1204,7 +1261,7 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 func _make_recipe_preview_card() -> PanelContainer:
 	var card := PanelContainer.new()
 	card.name = "RecipeCard_PreviewMeuniere"
-	card.custom_minimum_size = Vector2(132, 190)
+	card.custom_minimum_size = Vector2(132, 196)
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.self_modulate = Color(0.92, 0.86, 0.74, 1.0)
 	card.add_theme_stylebox_override(
@@ -1212,7 +1269,13 @@ func _make_recipe_preview_card() -> PanelContainer:
 		_texture_style_box(
 			RECIPE_CARD_FRAME,
 			28,
-			_style_box(Color("#ddc99f"), Color("#7b5027"), Color("#c59a59"), 4, 6),
+			_style_box(
+				Palette.COOKING_RECIPE_CARD_UNAVAILABLE_FILL,
+				Palette.COOKING_RECIPE_CARD_BORDER,
+				Palette.COOKING_RECIPE_CARD_INNER,
+				4,
+				6
+			),
 			12.0,
 			8.0
 		)
@@ -1220,9 +1283,16 @@ func _make_recipe_preview_card() -> PanelContainer:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
 	card.add_child(box)
-	var title := make_shadow_label("ヒラメのムニエル", 13, Color("#251c12"), 1, Color("#fff3cf"))
+	var title := make_shadow_label(
+		"ヒラメのムニエル",
+		12,
+		Palette.COOKING_RECIPE_TITLE_TEXT,
+		1,
+		Palette.COOKING_RECIPE_TITLE_OUTLINE
+	)
 	title.name = "RecipeTitle_PreviewMeuniere"
-	title.custom_minimum_size = Vector2(0.0, 26.0)
+	title.custom_minimum_size = Vector2(0.0, 31.0)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -1230,22 +1300,29 @@ func _make_recipe_preview_card() -> PanelContainer:
 	box.add_child(title)
 	var image := _recipe_card_dish_image("PreviewMeuniere", true, _featured_dish_texture("fry"))
 	box.add_child(image)
-	var stars := make_shadow_label("★★", 13, Color("#d9bd72"), 2, Color("#4c2b0b"))
-	stars.custom_minimum_size = Vector2(0.0, 17.0)
-	stars.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	stars.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	var stars := RecipeStarRank.new()
+	stars.name = "RecipeStars_PreviewMeuniere"
+	stars.custom_minimum_size = Vector2(0.0, 19.0)
+	stars.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	stars.configure(2, true)
 	box.add_child(stars)
 	var material_row := _add_recipe_material_badge(box, "PreviewMeuniere")
 	var icon := TextureRect.new()
 	icon.name = "RecipeMaterialIcon_PreviewMeuniere"
 	icon.texture = _fish_material_texture("hirame")
-	icon.custom_minimum_size = Vector2(64.0, 20.0)
+	icon.custom_minimum_size = Vector2(68.0, 22.0)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.modulate = Color(0.88, 0.80, 0.66, 0.96)
 	material_row.add_child(icon)
-	var footer := make_label("Lv.6", 8, Color("#49351f"), 1, Color("#fff4cf"))
-	footer.custom_minimum_size = Vector2(28.0, 18.0)
+	var footer := make_label(
+		"Lv.6",
+		9,
+		Palette.COOKING_RECIPE_FOOTER_TEXT,
+		1,
+		Palette.COOKING_RECIPE_FOOTER_OUTLINE
+	)
+	footer.custom_minimum_size = Vector2(30.0, 20.0)
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	footer.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	footer.clip_text = true
@@ -1260,17 +1337,23 @@ func _recipe_card_dish_image(
 	var thumb := _texture_panel_box(
 		RECIPE_DISH_THUMB_FRAME,
 		18,
-		_style_box(Color("#78502b"), Color("#4d2d15"), Color("#d9a45a"), 2, 4),
+		_style_box(
+			Palette.COOKING_RECIPE_THUMB_FILL,
+			Palette.COOKING_RECIPE_THUMB_BORDER,
+			Palette.COOKING_RECIPE_THUMB_INNER,
+			2,
+			4
+		),
 		5.0,
 		3.0
 	)
 	thumb.name = "RecipeDishThumb_%s" % recipe_id
-	thumb.custom_minimum_size = Vector2(0.0, 90.0)
+	thumb.custom_minimum_size = Vector2(0.0, 94.0)
 	thumb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var image := TextureRect.new()
 	image.name = "RecipeDishImage_%s" % recipe_id
 	image.texture = texture_override if texture_override != null else _featured_dish_texture(recipe_id)
-	image.custom_minimum_size = Vector2(0.0, 84.0)
+	image.custom_minimum_size = Vector2(0.0, 88.0)
 	image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	image.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -1285,17 +1368,23 @@ func _add_recipe_material_badge(parent: Container, recipe_id: String) -> HBoxCon
 	var badge := _texture_panel_box(
 		RECIPE_MATERIAL_STRIP_FRAME,
 		14,
-		_style_box(Color("#f4dfab"), Color("#7b5027"), Color("#d7a456"), 3, 5),
+		_style_box(
+			Palette.COOKING_RECIPE_MATERIAL_FILL,
+			Palette.COOKING_RECIPE_CARD_BORDER,
+			Palette.COOKING_RECIPE_MATERIAL_INNER,
+			3,
+			5
+		),
 		5.0,
 		1.0
 	)
 	badge.name = "RecipeMaterialBadge_%s" % recipe_id
-	badge.custom_minimum_size = Vector2(0.0, 23.0)
+	badge.custom_minimum_size = Vector2(0.0, 26.0)
 	badge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(badge)
 	var material_row := HBoxContainer.new()
 	material_row.name = "RecipeMaterialRow_%s" % recipe_id
-	material_row.custom_minimum_size = Vector2(0.0, 21.0)
+	material_row.custom_minimum_size = Vector2(0.0, 24.0)
 	material_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	material_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	material_row.add_theme_constant_override("separation", 2)
@@ -1303,14 +1392,11 @@ func _add_recipe_material_badge(parent: Container, recipe_id: String) -> HBoxCon
 	return material_row
 
 
-func _recipe_star_text(recipe: Dictionary, locked: bool) -> String:
-	if locked:
-		return "☆☆☆"
+func _recipe_star_count(recipe: Dictionary) -> int:
 	var multiplier := float(recipe.get("exp_multiplier", 1.0))
-	var stars := 2
 	if multiplier >= 1.3:
-		stars = 3
-	return "★★★" if stars >= 3 else "★★"
+		return 3
+	return 2
 
 
 func _recipe_material_texture(recipe: Dictionary, locked: bool, unavailable: bool) -> Texture2D:
@@ -1356,13 +1442,13 @@ func _refresh_recipe_card_styles() -> void:
 		var selected := String(recipe_id) == _selected_recipe_id
 		if card == null:
 			continue
-		var fill := Color("#ffedbb") if selected else Color("#ead7ad")
+		var fill := Palette.COOKING_RECIPE_CARD_SELECTED_FILL if selected else Palette.COOKING_RECIPE_CARD_FILL
 		if locked:
-			fill = Color("#dcc69b")
+			fill = Palette.COOKING_RECIPE_CARD_LOCKED_FILL
 		elif unavailable:
-			fill = Color("#ddc99f")
-		var border := Color("#f2c86d") if selected else Color("#7b5027")
-		var inner := Color("#fff6d4") if selected else Color("#c59a59")
+			fill = Palette.COOKING_RECIPE_CARD_UNAVAILABLE_FILL
+		var border := Palette.COOKING_RECIPE_CARD_SELECTED_BORDER if selected else Palette.COOKING_RECIPE_CARD_BORDER
+		var inner := Palette.COOKING_RECIPE_CARD_SELECTED_INNER if selected else Palette.COOKING_RECIPE_CARD_INNER
 		var tint := Color.WHITE
 		if locked:
 			tint = Color(0.86, 0.80, 0.68, 1.0)

@@ -787,39 +787,41 @@ def recipe_selected_card_frame() -> None:
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     shadow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow, "RGBA")
-    sd.rounded_rectangle((12, 14, w - 10, h - 8), radius=11, fill=(0, 0, 0, 124))
+    sd.rounded_rectangle((12, 15, w - 10, h - 7), radius=12, fill=(0, 0, 0, 142))
     img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(4)))
 
     glow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     gd = ImageDraw.Draw(glow, "RGBA")
-    for offset, alpha, width in [(0, 120, 7), (5, 76, 6), (11, 38, 4), (18, 18, 3)]:
+    for offset, alpha, width in [(0, 132, 8), (5, 84, 6), (12, 42, 4), (19, 20, 3)]:
         gd.rounded_rectangle(
-            (10 - offset, 10 - offset, w - 17 + offset, h - 20 + offset),
-            radius=10 + offset,
+            (9 - offset, 9 - offset, w - 16 + offset, h - 14 + offset),
+            radius=12 + offset,
             outline=(255, 190, 45, alpha),
             width=width,
         )
     glow = glow.filter(ImageFilter.GaussianBlur(3))
     img.alpha_composite(glow)
 
-    paper = reference_paper_texture((w - 24, h - 28), "f2deaa", 72, (496, 204, 650, 438), 0.44, 6.0)
-    paste_rounded(img, paper, (8, 8, w - 16, h - 20), 8, 252)
+    paper = reference_paper_texture((w - 24, h - 22), "f2deaa", 72, (496, 204, 650, 438), 0.48, 6.0)
+    paste_rounded(img, paper, (8, 8, w - 16, h - 14), 9, 252)
     draw = ImageDraw.Draw(img, "RGBA")
 
-    # Keep the parchment clean; selection should come from the gold frame,
-    # not a yellow wash over the food art and text.
-    draw.rounded_rectangle((7, 7, w - 16, h - 20), radius=8, outline=(62, 35, 15, 255), width=6)
-    draw.rounded_rectangle((13, 13, w - 22, h - 26), radius=7, outline=(255, 222, 99, 255), width=4)
-    draw.rounded_rectangle((20, 20, w - 29, h - 35), radius=5, outline=(144, 86, 27, 170), width=2)
-    draw.line((19, 32, 19, h - 48), fill=(255, 231, 98, 134), width=3)
-    draw.line((w - 28, 32, w - 28, h - 48), fill=(255, 231, 98, 124), width=3)
-    draw.line((32, 19, w - 43, 19), fill=(255, 240, 144, 116), width=2)
-    draw.rounded_rectangle((30, 50, w - 38, 154), radius=5, fill=(255, 243, 203, 12), outline=(92, 55, 28, 40), width=1)
-    draw.rounded_rectangle((46, h - 56, w - 54, h - 32), radius=4, fill=(246, 224, 176, 7), outline=(201, 143, 58, 28), width=1)
-    draw_corner_brackets(draw, (18, 18, w - 30, h - 36), (255, 222, 96, 255), (60, 34, 14, 248), 22, 4)
-    for x, y in [(34, 34), (w - 52, 34), (34, h - 52), (w - 52, h - 52)]:
+    # Three sockets mirror the concept art: runtime title, dish art, then
+    # runtime rank/materials. No text is baked into the PNG.
+    draw.rounded_rectangle((7, 7, w - 16, h - 14), radius=9, outline=(62, 35, 15, 255), width=6)
+    draw.rounded_rectangle((14, 14, w - 23, h - 21), radius=8, outline=(255, 225, 103, 255), width=4)
+    draw.rounded_rectangle((24, 22, w - 33, 60), radius=7, fill=(92, 50, 21, 236), outline=(255, 232, 125, 238), width=3)
+    draw.rounded_rectangle((34, 30, w - 43, 52), radius=5, fill=(255, 242, 190, 50), outline=(120, 70, 25, 130), width=1)
+    draw.rounded_rectangle((28, 64, w - 37, 154), radius=8, fill=(88, 53, 29, 132), outline=(83, 48, 23, 230), width=4)
+    draw.rounded_rectangle((42, 76, w - 51, 145), radius=7, fill=(255, 238, 196, 58), outline=(255, 222, 105, 160), width=2)
+    draw.rounded_rectangle((31, 158, w - 40, h - 31), radius=7, fill=(87, 49, 21, 120), outline=(167, 103, 38, 178), width=2)
+    draw.rounded_rectangle((45, 169, w - 54, h - 42), radius=5, fill=(255, 241, 194, 54), outline=(255, 226, 119, 118), width=1)
+    draw.line((50, 164, w - 59, 164), fill=(255, 231, 98, 168), width=2)
+    draw.line((54, h - 39, w - 63, h - 39), fill=(92, 55, 28, 94), width=2)
+    draw_corner_brackets(draw, (18, 18, w - 30, h - 29), (255, 222, 96, 255), (60, 34, 14, 248), 22, 4)
+    for x, y in [(35, 35), (w - 54, 35), (35, h - 46), (w - 54, h - 46)]:
         draw.rectangle((x - 6, y - 6, x + 6, y + 6), fill=(255, 227, 98, 255), outline=(77, 43, 15, 238), width=1)
-    for x, y in [(52, 54), (224, 58), (54, 169), (222, 165), (140, 26), (140, 180)]:
+    for x, y in [(54, 68), (226, 70), (54, 158), (224, 156), (140, 25), (140, 178)]:
         draw.line((x - 5, y, x + 5, y), fill=(255, 247, 178, 158), width=2)
         draw.line((x, y - 5, x, y + 5), fill=(255, 247, 178, 158), width=2)
     save(img, "recipe_selected_card_frame.png")
@@ -830,19 +832,19 @@ def recipe_material_strip_frame() -> None:
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     shadow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow, "RGBA")
-    sd.rounded_rectangle((8, 9, w - 7, h - 5), radius=7, fill=(0, 0, 0, 96))
+    sd.rounded_rectangle((7, 8, w - 7, h - 4), radius=8, fill=(0, 0, 0, 110))
     img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(3)))
-    paper = reference_paper_texture((w - 18, h - 16), "f4dfab", 151, (440, 614, 622, 664), 0.42, 5.0)
-    paste_rounded(img, paper, (6, 6, w - 8, h - 10), 6, 246)
+    paper = reference_paper_texture((w - 18, h - 14), "f4dfab", 151, (440, 614, 622, 664), 0.46, 5.0)
+    paste_rounded(img, paper, (6, 6, w - 8, h - 8), 7, 246)
     draw = ImageDraw.Draw(img, "RGBA")
 
-    # Footer socket for recipe cards: keep this as a quiet parchment slip so
-    # the dish photo remains the hero and state text stays secondary.
-    draw.rounded_rectangle((6, 6, w - 8, h - 10), radius=6, outline=(74, 43, 18, 248), width=3)
-    draw.rounded_rectangle((17, 13, w - 20, h - 17), radius=5, fill=(255, 241, 199, 42), outline=(135, 82, 33, 74), width=1)
-    draw.line((38, h - 19, w - 44, h - 19), fill=(112, 67, 26, 46), width=2)
-    for x, y in [(14, 12), (w - 28, 12), (14, h - 30), (w - 28, h - 30)]:
-        draw.rectangle((x, y, x + 9, y + 9), fill=(231, 174, 69, 210), outline=(58, 33, 14, 220), width=1)
+    # Footer socket for the runtime fish/material icon.
+    draw.rounded_rectangle((6, 6, w - 8, h - 8), radius=7, outline=(74, 43, 18, 252), width=3)
+    draw.rounded_rectangle((17, 13, w - 20, h - 15), radius=6, fill=(255, 241, 199, 56), outline=(135, 82, 33, 104), width=1)
+    draw.line((35, 16, w - 41, 16), fill=(255, 233, 139, 96), width=2)
+    draw.line((38, h - 18, w - 44, h - 18), fill=(112, 67, 26, 64), width=2)
+    for x, y in [(14, 12), (w - 28, 12), (14, h - 28), (w - 28, h - 28)]:
+        draw.rectangle((x, y, x + 9, y + 9), fill=(231, 174, 69, 218), outline=(58, 33, 14, 225), width=1)
     save(img, "recipe_material_strip_frame.png")
 
 
@@ -1888,16 +1890,21 @@ def frame_assets() -> None:
         img = Image.new("RGBA", size, (0, 0, 0, 0))
         shadow = Image.new("RGBA", size, (0, 0, 0, 0))
         sd = ImageDraw.Draw(shadow, "RGBA")
-        sd.rounded_rectangle((14, 16, size[0] - 10, size[1] - 8), radius=10, fill=(0, 0, 0, 108))
+        sd.rounded_rectangle((14, 16, size[0] - 10, size[1] - 7), radius=12, fill=(0, 0, 0, 116))
         img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(4)))
-        paper = reference_paper_texture((size[0] - 24, size[1] - 28), "f0dcaa", 95, (496, 204, 650, 438), 0.48, 6.0)
-        paste_rounded(img, paper, (8, 8, size[0] - 16, size[1] - 20), 8)
+        paper = reference_paper_texture((size[0] - 24, size[1] - 22), "f0dcaa", 95, (496, 204, 650, 438), 0.50, 6.0)
+        paste_rounded(img, paper, (8, 8, size[0] - 16, size[1] - 14), 9)
         draw = ImageDraw.Draw(img, "RGBA")
-        draw.rounded_rectangle((7, 7, size[0] - 16, size[1] - 20), radius=8, outline=(70, 40, 18, 255), width=5)
-        draw.rounded_rectangle((20, 20, size[0] - 28, size[1] - 34), radius=5, outline=(219, 166, 74, 165), width=2)
-        draw.rounded_rectangle((30, 50, size[0] - 38, 154), radius=5, fill=(255, 243, 203, 16), outline=(92, 55, 28, 42), width=1)
-        draw.rounded_rectangle((46, size[1] - 56, size[0] - 54, size[1] - 32), radius=4, fill=(246, 224, 176, 8), outline=(160, 114, 52, 22), width=1)
-        draw_corner_brackets(draw, (18, 18, size[0] - 30, size[1] - 36), (223, 170, 75, 170), (58, 34, 16, 225), 15, 2)
+        draw.rounded_rectangle((7, 7, size[0] - 16, size[1] - 14), radius=9, outline=(70, 40, 18, 255), width=5)
+        draw.rounded_rectangle((18, 18, size[0] - 27, size[1] - 26), radius=7, outline=(219, 166, 74, 175), width=2)
+        draw.rounded_rectangle((24, 22, size[0] - 33, 60), radius=7, fill=(80, 46, 21, 218), outline=(210, 152, 62, 188), width=2)
+        draw.rounded_rectangle((34, 30, size[0] - 43, 52), radius=5, fill=(255, 240, 188, 38), outline=(111, 68, 30, 110), width=1)
+        draw.rounded_rectangle((28, 64, size[0] - 37, 154), radius=8, fill=(92, 55, 28, 106), outline=(92, 55, 28, 170), width=3)
+        draw.rounded_rectangle((42, 76, size[0] - 51, 145), radius=7, fill=(255, 239, 199, 42), outline=(224, 171, 79, 112), width=2)
+        draw.rounded_rectangle((31, 158, size[0] - 40, size[1] - 31), radius=7, fill=(83, 49, 24, 84), outline=(160, 114, 52, 70), width=2)
+        draw.rounded_rectangle((45, 169, size[0] - 54, size[1] - 42), radius=5, fill=(246, 224, 176, 32), outline=(160, 114, 52, 52), width=1)
+        draw.line((50, 164, size[0] - 59, 164), fill=(226, 170, 75, 104), width=2)
+        draw_corner_brackets(draw, (18, 18, size[0] - 30, size[1] - 29), (223, 170, 75, 182), (58, 34, 16, 225), 17, 2)
         save(img, "recipe_card_frame.png")
 
     def save_recipe_dish_thumb_frame() -> None:
@@ -1909,13 +1916,14 @@ def frame_assets() -> None:
         img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(4)))
         draw = ImageDraw.Draw(img, "RGBA")
 
-        # Dish thumbnail mat used inside recipe cards. Keep the frame visible,
-        # but avoid a dark shutter look that fights the finished dish art.
-        draw.rounded_rectangle((7, 7, size[0] - 12, size[1] - 14), radius=7, fill=(92, 55, 28, 132), outline=(48, 27, 13, 245), width=4)
-        draw.rounded_rectangle((18, 18, size[0] - 24, size[1] - 28), radius=5, fill=(245, 227, 184, 54), outline=(224, 171, 79, 150), width=2)
-        draw.rounded_rectangle((28, 28, size[0] - 34, size[1] - 38), radius=4, fill=(255, 241, 205, 18), outline=(255, 231, 150, 52), width=1)
-        draw.line((24, size[1] - 32, size[0] - 30, size[1] - 32), fill=(255, 218, 106, 78), width=2)
-        draw_corner_brackets(draw, (16, 16, size[0] - 24, size[1] - 28), (238, 181, 77, 190), (53, 31, 15, 235), 14, 2)
+        # Plate-like mat used inside recipe cards. The food art remains the
+        # hero, but the socket now reads as a deliberate center stage.
+        draw.rounded_rectangle((7, 7, size[0] - 12, size[1] - 14), radius=9, fill=(92, 55, 28, 150), outline=(48, 27, 13, 248), width=4)
+        draw.rounded_rectangle((18, 18, size[0] - 24, size[1] - 28), radius=7, fill=(245, 227, 184, 64), outline=(224, 171, 79, 168), width=2)
+        draw.ellipse((39, 33, size[0] - 45, size[1] - 45), fill=(255, 244, 214, 34), outline=(255, 226, 128, 76), width=2)
+        draw.rounded_rectangle((30, 28, size[0] - 36, size[1] - 38), radius=5, fill=(255, 241, 205, 16), outline=(255, 231, 150, 58), width=1)
+        draw.line((24, size[1] - 32, size[0] - 30, size[1] - 32), fill=(255, 218, 106, 92), width=2)
+        draw_corner_brackets(draw, (16, 16, size[0] - 24, size[1] - 28), (238, 181, 77, 204), (53, 31, 15, 235), 14, 2)
         save(img, "recipe_dish_thumb_frame.png")
 
     def save_dish_detail_frame() -> None:
