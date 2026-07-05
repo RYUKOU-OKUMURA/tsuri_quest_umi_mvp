@@ -1,6 +1,6 @@
 # ステータス画面 QA判断ログ
 
-最終更新: 2026-07-05 / 状態: 共有GaugeBar R1確認済み
+最終更新: 2026-07-05 / 状態: 共有GaugeBar/Theme R1確認済み
 参照画像: reference/08_status_screen_mockup.png
 QA更新コマンド: ./tools/status_visual_qa.sh
 
@@ -34,6 +34,17 @@ QA更新コマンド: ./tools/status_visual_qa.sh
 なし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-05: `shared UI theme palette R1 pass` 完了。ステータス画面にも適用される共通テーマ色をPalette用途名へ移行した。
+
+- 選定理由: `src/ui/ui_theme.gd` はステータス/釣具店/市場などで共通利用されるが、パネル/ボタン/入力欄/影/無効文字色に直書き色が残っていたため。
+- 変えたもの: `src/ui/ui_theme.gd` のテーマ色参照。`src/ui/palette.gd` へ `Palette.THEME_*` 定数を追加。
+- 変えていないもの: ステータス画面のレイアウト、表示文言、所持品/料理リスト、ボタン配置、背景、日本語PNG焼き込み。
+- Palette: 新規 `Palette.THEME_*` を追加。理由は共通テーマの表示色責務をPaletteへ集約するため。
+- 証拠画像: `docs/qa/evidence/status/2026-07-05_ui_theme_palette_compare.png`, `docs/qa/evidence/theme/2026-07-05_ui_theme_palette_preview.png`
+- 判定: 実スクショでステータス画面のパネル/ボタン/ゲージに未表示・文字重なり・見切れなし。これは参照upliftではなくR1表示同値移行なので、cmp一致は完了条件にしていない。
+- 検証: `./tools/status_visual_qa.sh`、`status_smoke.tscn`、`./tools/tackle_shop_visual_qa.sh`、`./tools/market_visual_qa.sh`、`tackle_shop_smoke.tscn`、`market_smoke.tscn`、`./tools/save_system_verify.sh`、`./tools/validate_project.sh` green。headless `theme_preview.tscn` はViewport texture取得不可で失敗したため通常起動で証拠取得。
+- 固定条件: 共通テーマ色は `Palette.THEME_*` として扱い、`src/ui/ui_theme.gd` へ新規直書き色を戻さない。
 
 2026-07-05: `shared GaugeBar palette R1 pass` 完了。ステータス画面で使う共有ゲージの描画色をPalette用途名へ移行した。
 

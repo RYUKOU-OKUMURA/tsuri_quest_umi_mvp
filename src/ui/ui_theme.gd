@@ -25,15 +25,15 @@ static func build_theme() -> Theme:
 	var bold_font := GameFontsScript.bold(default_font)
 
 	var panel := _panel_style(Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD, false)
-	var dark := _panel_style(Palette.DARK_PANEL, Color("#06101c"), Color("#cfa763"), true)
-	var blue := _panel_style(Palette.BLUE_PANEL, Color("#07172a"), Color("#cfa763"), true)
-	var dialog := _panel_style(Color("#102138"), Palette.GOLD_DEEP, Palette.GOLD_BRIGHT, true)
+	var dark := _panel_style(Palette.DARK_PANEL, Palette.THEME_DARK_PANEL_BORDER, Palette.THEME_PANEL_INNER_GOLD, true)
+	var blue := _panel_style(Palette.BLUE_PANEL, Palette.THEME_BLUE_PANEL_BORDER, Palette.THEME_PANEL_INNER_GOLD, true)
+	var dialog := _panel_style(Palette.THEME_DIALOG_FILL, Palette.GOLD_DEEP, Palette.GOLD_BRIGHT, true)
 
 	var btn_n := _button_style(Palette.WOOD, Palette.WOOD_DARK, Palette.GOLD)
 	var btn_h := _button_style(Palette.WOOD_HOVER, Palette.WOOD_DARK, Palette.GOLD_BRIGHT)
-	var btn_p := _button_style(Palette.WOOD_PRESSED, Color("#2d1b10"), Palette.GOLD_DEEP)
-	var btn_d := _button_style(Color("#5f5142"), Color("#3b3027"), Color("#8f7b5e"))
-	var btn_gold := _button_style(Color("#b88732"), Color("#5a3518"), Palette.GOLD_BRIGHT)
+	var btn_p := _button_style(Palette.WOOD_PRESSED, Palette.THEME_BUTTON_PRESSED_BORDER, Palette.GOLD_DEEP)
+	var btn_d := _button_style(Palette.THEME_BUTTON_DISABLED_FILL, Palette.THEME_BUTTON_DISABLED_BORDER, Palette.THEME_BUTTON_DISABLED_INNER)
+	var btn_gold := _button_style(Palette.THEME_GOLD_BUTTON_FILL, Palette.THEME_GOLD_BUTTON_BORDER, Palette.GOLD_BRIGHT)
 
 	theme.set_stylebox("panel", "PanelContainer", panel)
 	theme.set_stylebox("panel", "Panel", panel)
@@ -74,16 +74,16 @@ static func build_theme() -> Theme:
 	theme.set_stylebox("selected_focus", "ItemList", selected)
 	theme.set_stylebox("cursor", "ItemList", selected)
 	theme.set_stylebox("hover", "ItemList", UITextures.flat_style(Palette.PARCHMENT_DEEP, Palette.WOOD_DARK, 1, 4))
-	theme.set_stylebox("focus", "ItemList", UITextures.flat_style(Color(0, 0, 0, 0), Color(0, 0, 0, 0), 0, 0))
+	theme.set_stylebox("focus", "ItemList", UITextures.flat_style(Color.TRANSPARENT, Color.TRANSPARENT, 0, 0))
 	theme.set_color("font_color", "ItemList", Palette.TEXT_DARK)
 	theme.set_color("font_selected_color", "ItemList", Palette.TEXT_BONE)
 	theme.set_color("font_hovered_color", "ItemList", Palette.TEXT_DARK)
-	theme.set_color("guide_color", "ItemList", Color(0, 0, 0, 0))
+	theme.set_color("guide_color", "ItemList", Color.TRANSPARENT)
 	theme.set_constant("vseparation", "ItemList", 6)
 	theme.set_constant("hseparation", "ItemList", 10)
 
 	# 入力欄
-	var input := UITextures.flat_style(Color("#fff8e8"), Palette.WOOD_DARK, 2, 6)
+	var input := UITextures.flat_style(Palette.THEME_INPUT_FILL, Palette.WOOD_DARK, 2, 6)
 	theme.set_stylebox("normal", "LineEdit", input)
 	theme.set_stylebox("focus", "LineEdit", input)
 	theme.set_stylebox("normal", "TextEdit", input)
@@ -109,7 +109,7 @@ static func build_theme() -> Theme:
 	theme.set_color("font_color", "Button", Palette.TEXT_BONE)
 	theme.set_color("font_hover_color", "Button", Color.WHITE)
 	theme.set_color("font_pressed_color", "Button", Palette.GOLD_BRIGHT)
-	theme.set_color("font_disabled_color", "Button", Color("#d0cbc1"))
+	theme.set_color("font_disabled_color", "Button", Palette.THEME_BUTTON_DISABLED_TEXT)
 	theme.set_color("font_outline_color", "Button", Palette.TEXT_OUTLINE_LIGHT)
 	theme.set_constant("outline_size", "Button", 2)
 	theme.set_color("font_color", "OptionButton", Palette.TEXT_BONE)
@@ -174,7 +174,7 @@ static func _panel_style(fill: Color, outer: Color, inner: Color, dark_text: boo
 	sb.content_margin_top = 10.0
 	sb.content_margin_right = 14.0
 	sb.content_margin_bottom = 10.0
-	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.28)
+	sb.shadow_color = Palette.THEME_PANEL_SHADOW
 	sb.shadow_size = 5
 	sb.shadow_offset = Vector2(0.0, 3.0)
 	sb.anti_aliasing = false
@@ -193,7 +193,7 @@ static func _button_style(fill: Color, outer: Color, inner: Color) -> StyleBoxFl
 	sb.content_margin_top = 8.0
 	sb.content_margin_right = 14.0
 	sb.content_margin_bottom = 8.0
-	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.24)
+	sb.shadow_color = Palette.THEME_BUTTON_SHADOW
 	sb.shadow_size = 3
 	sb.shadow_offset = Vector2(0.0, 2.0)
 	sb.anti_aliasing = false

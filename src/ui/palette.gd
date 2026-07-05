@@ -27,6 +27,22 @@ const DARK_PANEL := Color("#13283f")
 const DARK_PANEL_DEEP := Color("#0a1622")
 const BLUE_PANEL := Color("#173b61")
 
+# --- 共通テーマ ---
+const THEME_DARK_PANEL_BORDER := Color("#06101c")
+const THEME_BLUE_PANEL_BORDER := Color("#07172a")
+const THEME_PANEL_INNER_GOLD := Color("#cfa763")
+const THEME_DIALOG_FILL := Color("#102138")
+const THEME_BUTTON_PRESSED_BORDER := Color("#2d1b10")
+const THEME_BUTTON_DISABLED_FILL := Color("#5f5142")
+const THEME_BUTTON_DISABLED_BORDER := Color("#3b3027")
+const THEME_BUTTON_DISABLED_INNER := Color("#8f7b5e")
+const THEME_GOLD_BUTTON_FILL := Color("#b88732")
+const THEME_GOLD_BUTTON_BORDER := Color("#5a3518")
+const THEME_INPUT_FILL := Color("#fff8e8")
+const THEME_BUTTON_DISABLED_TEXT := Color("#d0cbc1")
+const THEME_PANEL_SHADOW := Color(0.0, 0.0, 0.0, 0.28)
+const THEME_BUTTON_SHADOW := Color(0.0, 0.0, 0.0, 0.24)
+
 # --- 金 ---
 const GOLD := Color("#e1bd72")
 const GOLD_BRIGHT := Color("#ffe7a8")
