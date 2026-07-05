@@ -1,6 +1,6 @@
 # 調理場 QA判断ログ
 
-最終更新: 2026-07-05 / 状態: 調理場cooking_screen R1完了
+最終更新: 2026-07-05 / 状態: 調理場cooking_screen R1完了 / 共有GaugeBar R1確認済み
 参照画像: reference/cooking_flow/01_cook_select_concept.png, reference/cooking_flow/02_meal_result_concept.png, reference/cooking_flow/03_exp_gain_concept.png, reference/cooking_flow/04_level_up_overlay_concept.png, reference/cooking_flow/05_status_summary_concept.png
 QA更新コマンド: ./tools/cooking_visual_qa.sh
 
@@ -38,6 +38,17 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 なし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-05: `shared GaugeBar palette R1 pass` 完了。調理フローで使う共有ゲージの描画色をPalette用途名へ移行した。
+
+- 選定理由: `GaugeBar` は調理報酬/調理ステータス/ステータス画面で共有されるが、既定色と描画色に直書き `Color(...)` が残っており、R1残件として小さく切れるため。
+- 変えたもの: `src/ui/components/gauge_bar.gd` の既定グラデーション、トラック、影、ゴースト、ハイライト、ダメージ点滅、危険域グロー、数値文字色。`src/ui/palette.gd` へ `Palette.GAUGE_*` 定数を追加。
+- 変えていないもの: §1 freeze値、調理場レイアウト、料理カード、下部バー、右詳細パネル、報酬カード、ゲージの値/補間/決定的QAガード、日本語PNG焼き込み。
+- Palette: 新規 `Palette.GAUGE_TRACK` / `GAUGE_TRACK_BORDER` / `GAUGE_SHADOW_CLEAR` / `GAUGE_SHADOW` / `GAUGE_GHOST` / `GAUGE_HIGHLIGHT` / `GAUGE_DAMAGE_FLASH` / `GAUGE_CRITICAL_GLOW` / `GAUGE_VALUE_OUTLINE` / `GAUGE_VALUE_TEXT` を追加。理由は共有ゲージの描画色責務をPaletteへ集約するため。
+- 証拠画像: `docs/qa/evidence/cooking/2026-07-05_gauge_bar_palette_select.png`, `docs/qa/evidence/cooking/2026-07-05_gauge_bar_palette_report.html`
+- 判定: 実スクショでCOOK_SELECTの下部バー/右詳細パネル、および調理フロー5状態にP1なし。これは参照upliftではなくR1表示同値移行なので、cmp一致は完了条件にしていない。
+- 検証: `./tools/cooking_visual_qa.sh` は透明キャプチャで1回失敗後、同一差分で再実行してgreen。`tools/cooking_content_audit.tscn`、`tools/cooking_layout_audit.tscn`、`cooking_flow_smoke`、`./tools/save_system_verify.sh`、`./tools/validate_project.sh` green。`validate_project.sh` の ObjectDB/resource 警告はベースライン既知。
+- 固定条件: 共有ゲージの描画色は `Palette.GAUGE_*` として扱い、`src/ui/components/gauge_bar.gd` へ新規 `Color(...)` を戻さない。
 
 2026-07-05: `cooking_screen final palette R1 pass` 完了。背景fallbackと料理カードtintの残色をPalette用途名へ移行し、`src/ui/cooking_screen.gd` の `Color(` 直書きをゼロにした。
 

@@ -41,6 +41,16 @@ const GAUGE_RED := Color("#d94b4b")
 const GAUGE_RED_HI := Color("#ff9a82")
 const GAUGE_CYAN := Color("#2f7fd0")
 const GAUGE_CYAN_HI := Color("#88bdf2")
+const GAUGE_TRACK := Color(0.03, 0.10, 0.18, 0.88)
+const GAUGE_TRACK_BORDER := Color(1.0, 1.0, 1.0, 0.12)
+const GAUGE_SHADOW_CLEAR := Color(0.0, 0.0, 0.0, 0.0)
+const GAUGE_SHADOW := Color(0.0, 0.0, 0.0, 0.35)
+const GAUGE_GHOST := Color(1.0, 1.0, 1.0, 0.35)
+const GAUGE_HIGHLIGHT := Color(1.0, 1.0, 1.0, 0.35)
+const GAUGE_DAMAGE_FLASH := Color(1.0, 1.0, 1.0, 0.60)
+const GAUGE_CRITICAL_GLOW := Color(1.0, 0.35, 0.35, 1.0)
+const GAUGE_VALUE_OUTLINE := Color(0.0, 0.0, 0.0, 0.55)
+const GAUGE_VALUE_TEXT := Color.WHITE
 
 # --- テキスト ---
 const TEXT_DARK := Color("#203042")

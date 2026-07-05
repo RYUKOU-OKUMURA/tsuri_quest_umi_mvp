@@ -3,9 +3,9 @@ extends Control
 ## グラデ塗り／丸端／ドロップシャドウ／アウトライン付き数値を持つ再利用ゲージ。
 ## juice: 表示値の指数補間（追従）＋ゴースト（減少時の遅れバー）＋ダメージ点滅＋危険域グロー。
 
-var fill_from := Color("#3cbf78")
-var fill_to := Color("#9ff0c0")
-var track_color := Color(0.03, 0.10, 0.18, 0.88)
+var fill_from := Palette.GAUGE_GREEN
+var fill_to := Palette.GAUGE_GREEN_HI
+var track_color := Palette.GAUGE_TRACK
 var label_text := ""
 var show_value := true
 var critical_threshold := 0.25   # この割合以下で危険域グロー
@@ -94,8 +94,8 @@ func _draw() -> void:
 
 	# 落ち影
 	var shadow_style := StyleBoxFlat.new()
-	shadow_style.bg_color = Color(0.0, 0.0, 0.0, 0.0)
-	shadow_style.shadow_color = Color(0.0, 0.0, 0.0, 0.35)
+	shadow_style.bg_color = Palette.GAUGE_SHADOW_CLEAR
+	shadow_style.shadow_color = Palette.GAUGE_SHADOW
 	shadow_style.shadow_size = 6
 	shadow_style.shadow_offset = Vector2(0.0, 3.0)
 	shadow_style.set_corner_radius_all(int(radius))
@@ -104,7 +104,7 @@ func _draw() -> void:
 	# 軌道（背景溝）
 	var track_style := StyleBoxFlat.new()
 	track_style.bg_color = track_color
-	track_style.border_color = Color(1.0, 1.0, 1.0, 0.12)
+	track_style.border_color = Palette.GAUGE_TRACK_BORDER
 	track_style.set_border_width_all(1)
 	track_style.set_corner_radius_all(int(radius))
 	draw_style_box(track_style, bar_rect)
@@ -115,7 +115,7 @@ func _draw() -> void:
 	if r_ghost > r_disp + 0.005:
 		var ghost_w := maxf(bar_rect.size.x * r_ghost - 6.0, radius)
 		var ghost_rect := Rect2(3.0, inset_y, ghost_w, bar_rect.size.y - inset_y * 2.0)
-		draw_rect(ghost_rect, Color(1.0, 1.0, 1.0, 0.35), false, 2.0)
+		draw_rect(ghost_rect, Palette.GAUGE_GHOST, false, 2.0)
 
 	# 塗り（グラデ・丸端）
 	if r_disp > 0.0:
@@ -124,17 +124,21 @@ func _draw() -> void:
 		draw_texture_rect(_gradient, fill_rect, false)
 		# 上面ハイライト
 		var highlight := Rect2(fill_rect.position.x + 2.0, fill_rect.position.y + 1.0, fill_rect.size.x - 4.0, 2.0)
-		draw_rect(highlight, Color(1.0, 1.0, 1.0, 0.35), false, 1.0)
+		draw_rect(highlight, Palette.GAUGE_HIGHLIGHT, false, 1.0)
 		# ダメージ点滅
 		if _flash > 0.0:
-			draw_rect(fill_rect, Color(1.0, 1.0, 1.0, _flash * 0.6), false, 2.0)
+			var flash_color := Palette.GAUGE_DAMAGE_FLASH
+			flash_color.a *= _flash
+			draw_rect(fill_rect, flash_color, false, 2.0)
 
 	# 危険域グロー（点滅）
 	if r_disp > 0.0 and r_disp < critical_threshold:
 		var pulse := 0.35 + 0.35 * sin(_time * 8.0)
+		var critical_glow := Palette.GAUGE_CRITICAL_GLOW
+		critical_glow.a = pulse
 		draw_rect(
 			Rect2(2.0, 2.0, bar_rect.size.x - 4.0, bar_rect.size.y - 4.0),
-			Color(1.0, 0.35, 0.35, pulse),
+			critical_glow,
 			false,
 			2.0
 		)
@@ -147,6 +151,6 @@ func _draw() -> void:
 		var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
 		var pos := Vector2(bar_rect.size.x - text_width - 10.0, bar_rect.size.y * 0.5 + font_size * 0.34)
 		draw_string_outline(
-			font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 2, Color(0.0, 0.0, 0.0, 0.55)
+			font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 2, Palette.GAUGE_VALUE_OUTLINE
 		)
-		draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color.WHITE)
+		draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Palette.GAUGE_VALUE_TEXT)
