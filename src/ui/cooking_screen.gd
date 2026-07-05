@@ -570,7 +570,13 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	var recipe_panel := _texture_panel_box(
 		RECIPE_GRID_FRAME,
 		32,
-		_style_box(Color("#ead9b2"), Color("#5e391a"), Color("#e6b561"), 6, 5),
+		_style_box(
+			Palette.COOKING_RECIPE_GRID_FILL,
+			Palette.COOKING_RECIPE_GRID_BORDER,
+			Palette.COOKING_RECIPE_GRID_INNER,
+			6,
+			5
+		),
 		16.0,
 		10.0
 	)
