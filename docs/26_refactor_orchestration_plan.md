@@ -1,6 +1,6 @@
 # リファクタ作戦台帳
 
-最終更新: 2026-07-05 / 状態: R0/R2/R3/R4/R6/R7/R8 完了。R9（cooking_reward_panel 分割）は第1〜3段完了。R5/R1 は釣り場マップ完了、魚図鑑 Palette 移行 + P2素材評価完了、調理場 `text_overrun_behavior` 既知ギャップ解消済み、調理場COOK_SELECTの `PlayerStatusBar` 展開 + 情報重複解消済み、調理場 layout監査失敗は実P1修正として解消済み、COOK_SELECT 4スライス（料理カード/下部バー/右詳細パネル/背景）reference-uplift完了。`src/ui/screen_base.gd` の残hexは `Palette.SCREEN_BG_DEFAULT` へ移行済み。魚市場一覧レアリティ色は `RarityStyles.list_text_color` へ移行済み。次は調理場R1継続 / 残り `RarityStyles` 展開
+最終更新: 2026-07-05 / 状態: R0/R2/R3/R4/R6/R7/R8 完了。R9（cooking_reward_panel 分割）は第1〜3段完了。R5/R1 は釣り場マップ完了、魚図鑑 Palette 移行 + P2素材評価完了、調理場 `text_overrun_behavior` 既知ギャップ解消済み、調理場COOK_SELECTの `PlayerStatusBar` 展開 + 情報重複解消済み、調理場 layout監査失敗は実P1修正として解消済み、COOK_SELECT 4スライス（料理カード/下部バー/右詳細パネル/背景）reference-uplift完了。`src/ui/screen_base.gd` の残hexは `Palette.SCREEN_BG_DEFAULT` へ移行済み。魚市場一覧レアリティ色は `RarityStyles.list_text_color` へ移行済み。調理場COOK_SELECT右詳細パネルのactive runtime色を追加で `Palette.COOKING_DETAIL_*` へ移行済み。次は調理場R1継続 / 残り `RarityStyles` 展開
 
 Fable オーケストレーターが本ファイルを正本としてスライス順・状態・ベースラインを管理する。
 Composer ワーカーは個別 brief のみ受け取り、本ファイルの更新はオーケストレーターが行う。
@@ -96,7 +96,7 @@ done
 | ID | concern | 依存 | 担当 | DoD | 状態 |
 |---|---|---|---|---|---|
 | R0 | ベースライン計測 | — | Composer | 全 smoke + validate の結果を §ベースラインに記録 | **done (2026-07-05)** |
-| R1 | palette 外ハードコード色の洗い出しと修正 | R0 | Composer | `rg` 監査 green、validate + 触った画面 smoke | pending（洗い出しのみ完了: 約932件/22ファイル。機械置換の見た目退行リスクが高く、freeze済み画面のvisual QA前提で画面単位に分割して実施する。2026-07-05: 釣り場マップ2ファイル `src/ui/fishing_spot_select_screen.gd` / `src/ui/components/fishing_spot_map_view.gd` は `Palette.MAP_*` へ移行済み。魚図鑑 `src/ui/fish_book_screen.gd` は `Palette.FISH_BOOK_*` へ移行済み。共有基盤 `src/ui/screen_base.gd` は `Palette.SCREEN_BG_DEFAULT` へ移行済みで直書きhexゼロ。魚市場 `src/ui/market_screen.gd` の一覧レアリティ色分岐は `RarityStyles.list_text_color` へ移行済み。調理場は今回触ったCOOK_SELECT料理カード周辺を `Palette.COOKING_RECIPE_*`、下部バー周辺を `Palette.COOKING_PREP_*`、右詳細行周辺を `Palette.COOKING_DETAIL_*`、背景glazeを `Palette.COOKING_BG_GLAZE` へ移行済みで、`src/ui/cooking_screen.gd` 全体のR1は継続） |
+| R1 | palette 外ハードコード色の洗い出しと修正 | R0 | Composer | `rg` 監査 green、validate + 触った画面 smoke | pending（洗い出しのみ完了: 約932件/22ファイル。機械置換の見た目退行リスクが高く、freeze済み画面のvisual QA前提で画面単位に分割して実施する。2026-07-05: 釣り場マップ2ファイル `src/ui/fishing_spot_select_screen.gd` / `src/ui/components/fishing_spot_map_view.gd` は `Palette.MAP_*` へ移行済み。魚図鑑 `src/ui/fish_book_screen.gd` は `Palette.FISH_BOOK_*` へ移行済み。共有基盤 `src/ui/screen_base.gd` は `Palette.SCREEN_BG_DEFAULT` へ移行済みで直書きhexゼロ。魚市場 `src/ui/market_screen.gd` の一覧レアリティ色分岐は `RarityStyles.list_text_color` へ移行済み。調理場は今回触ったCOOK_SELECT料理カード周辺を `Palette.COOKING_RECIPE_*`、下部バー周辺を `Palette.COOKING_PREP_*`、右詳細パネルactive runtime色を `Palette.COOKING_DETAIL_*`、背景glazeを `Palette.COOKING_BG_GLAZE` へ移行済みで、`src/ui/cooking_screen.gd` 全体のR1は継続） |
 | R2 | showcase 素材参照違反の修正 | R0 | Composer×画面 | `audit_showcase_asset_refs.py` green | **done（監査の結果、現状違反ゼロ。作業不要）** |
 | R3 | autoload / core の pure ロジック境界抽出 | R0, Fable 設計 | Composer | 振る舞い不変、該当 smoke green | **done (2026-07-05)** `game_data.gd`（1828行）を `game_catalog_data.gd`（constテーブル15個・約1430行）と `game_data.gd`（ルール定数+エイリアス+ロジック・約430行）に分離。公開APIはconstエイリアスで不変。7テーブルの JSON md5 前後一致で証明 |
 | R4 | UI 共通基盤（ScreenBase 等）の整理 | R3, Fable 設計 | Composer | Fable 承認済み設計どおり、全 smoke green | **done (2026-07-05)** `ScreenBase.make_screen_label` を新設し、`_harbor_label` / `_shipyard_label` / `_book_label` / `_status_label` / `_market_label` を1行委譲に統合（呼び出し約120箇所は無変更）。画面固有の shadow/outline 色は引数渡しで screen_base への新規hex持ち込みなし。`GameFontsScript` preload を ScreenBase へ昇格し、継承7画面の重複 const を削除。全10 smoke + validate green |
@@ -112,6 +112,7 @@ done
 ### R1 / RarityStyles 展開ログ
 
 - 2026-07-05: 魚市場一覧行のレアリティ色を、`src/ui/market_screen.gd` 内のローカル `match rarity` から `RarityStyles.list_text_color` へ移行。既存値を同値維持し、新規Palette定数なし。`./tools/market_visual_qa.sh` / `market_smoke.tscn` / `save_system_verify.sh` / `validate_project.sh` green。証拠: `docs/qa/evidence/fish_market/2026-07-05_market_rarity_styles_select_compare.png`。
+- 2026-07-05: 調理場COOK_SELECT右詳細パネルのactive runtime色を追加で `Palette.COOKING_DETAIL_*` へ移行。新規定数は `COOKING_DETAIL_PANEL_*` / `COOKING_DETAIL_TITLE_*` / `COOKING_DETAIL_SUBTITLE_TEXT` / `COOKING_DETAIL_DISH_FRAME_*` / `COOKING_DETAIL_ACTION_FILL` / `COOKING_DETAIL_NOTE_*` / `COOKING_DETAIL_MATERIAL_ACCENT` / `COOKING_DETAIL_EXP_ACCENT`。理由: 参照uplift済みの右詳細パネルを、次回の画面単位改善で直書き色へ戻らず触れるようにするため。`./tools/cooking_visual_qa.sh` / `cooking_content_audit.tscn` / `cooking_layout_audit.tscn` / `cooking_flow_smoke.tscn` / `save_system_verify.sh` / `validate_project.sh` green。証拠: `docs/qa/evidence/cooking/2026-07-05_detail_palette_select.png`。
 
 ### R5 選定ログ
 

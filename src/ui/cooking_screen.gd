@@ -606,7 +606,13 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	var detail_panel := _texture_panel_box(
 		DISH_DETAIL_FRAME,
 		34,
-		_style_box(Color("#f4e7c8"), Color("#5e391a"), Color("#e6b561"), 6, 5),
+		_style_box(
+			Palette.COOKING_DETAIL_PANEL_FILL,
+			Palette.COOKING_DETAIL_PANEL_BORDER,
+			Palette.COOKING_DETAIL_PANEL_INNER,
+			6,
+			5
+		),
 		18.0,
 		12.0
 	)
@@ -616,15 +622,26 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	var detail_layout := VBoxContainer.new()
 	detail_layout.add_theme_constant_override("separation", 3)
 	detail_panel.add_child(detail_layout)
-	_dish_title = make_label("料理を選んでください", 27, Color("#2a2118"), 1, Color("#fff4d4"))
+	_dish_title = make_label(
+		"料理を選んでください",
+		27,
+		Palette.COOKING_DETAIL_TITLE_TEXT,
+		1,
+		Palette.COOKING_DETAIL_TITLE_OUTLINE
+	)
 	_dish_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_dish_title.custom_minimum_size = Vector2(0.0, 32.0)
 	detail_layout.add_child(_dish_title)
-	_dish_subtitle = make_label("", 13, Color("#59422b"))
+	_dish_subtitle = make_label("", 13, Palette.COOKING_DETAIL_SUBTITLE_TEXT)
 	_dish_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_dish_subtitle.custom_minimum_size = Vector2(0.0, 16.0)
 	detail_layout.add_child(_dish_subtitle)
-	var dish_frame := _panel_box(Color("#6a4023"), Color("#3b2515"), Color("#e6b561"), 4)
+	var dish_frame := _panel_box(
+		Palette.COOKING_DETAIL_DISH_FRAME_FILL,
+		Palette.COOKING_DETAIL_DISH_FRAME_BORDER,
+		Palette.COOKING_DETAIL_PANEL_INNER,
+		4
+	)
 	dish_frame.custom_minimum_size = Vector2(0, 154)
 	dish_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_layout.add_child(dish_frame)
@@ -645,7 +662,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 		"CookDetailMaterialRow",
 		"必要な材料",
 		"fish",
-		Color("#2e7f43"),
+		Palette.COOKING_DETAIL_MATERIAL_ACCENT,
 		132.0
 	)
 	_material_value = material_labels[0] as Label
@@ -655,7 +672,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 		"CookDetailExpRow",
 		"獲得EXP",
 		"exp",
-		Color("#8f6422"),
+		Palette.COOKING_DETAIL_EXP_ACCENT,
 		118.0
 	)
 	_exp_value = exp_labels[0] as Label
@@ -673,7 +690,13 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	var action_panel := _texture_panel_box(
 		COOK_ACTION_RUNWAY_FRAME,
 		28,
-		_style_box(Color("#ead7ad"), Color("#8b5b2c"), Color("#e6b561"), 3, 5),
+		_style_box(
+			Palette.COOKING_DETAIL_ACTION_FILL,
+			Palette.COOKING_DETAIL_ROW_BORDER,
+			Palette.COOKING_DETAIL_ROW_INNER,
+			3,
+			5
+		),
 		10.0,
 		5.0
 	)
@@ -690,7 +713,13 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	cue_row.add_theme_constant_override("separation", 8)
 	action_layout.add_child(cue_row)
 	var note_badge := PanelContainer.new()
-	var note_style := _style_box(Color("#5a321d"), Color("#2a1a10"), Color("#d9a65b"), 2, 4)
+	var note_style := _style_box(
+		Palette.COOKING_DETAIL_NOTE_FILL,
+		Palette.COOKING_DETAIL_NOTE_BORDER,
+		Palette.COOKING_DETAIL_NOTE_INNER,
+		2,
+		4
+	)
 	note_style.content_margin_left = 8.0
 	note_style.content_margin_top = 1.0
 	note_style.content_margin_right = 8.0
@@ -698,7 +727,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	note_badge.add_theme_stylebox_override("panel", note_style)
 	note_badge.custom_minimum_size = Vector2(186, 22)
 	cue_row.add_child(note_badge)
-	_overwrite_note = make_label("", 12, Palette.TEXT_BONE, 1, Color("#2b1a0c"))
+	_overwrite_note = make_label("", 12, Palette.TEXT_BONE, 1, Palette.COOKING_DETAIL_NOTE_OUTLINE)
 	_overwrite_note.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_overwrite_note.clip_text = true
 	_overwrite_note.custom_minimum_size = Vector2(0, 18)

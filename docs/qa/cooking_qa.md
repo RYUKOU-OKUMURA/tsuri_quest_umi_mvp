@@ -1,6 +1,6 @@
 # 調理場 QA判断ログ
 
-最終更新: 2026-07-05 / 状態: COOK_SELECT 背景の見せ方 reference-uplift 完了
+最終更新: 2026-07-05 / 状態: COOK_SELECT 右詳細パネルR1追加移行完了
 参照画像: reference/cooking_flow/01_cook_select_concept.png, reference/cooking_flow/02_meal_result_concept.png, reference/cooking_flow/03_exp_gain_concept.png, reference/cooking_flow/04_level_up_overlay_concept.png, reference/cooking_flow/05_status_summary_concept.png
 QA更新コマンド: ./tools/cooking_visual_qa.sh
 
@@ -30,7 +30,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 ## 5. 現在の残ギャップ
 
 - P2: レアリティ表示の `RarityStyles` 横展開は未実施。
-- R1: `src/ui/cooking_screen.gd` の画面固有ハードコード色は大半が未移行。今回触った料理カード周辺のruntime色は `Palette.COOKING_RECIPE_*`、下部バー周辺のruntime色は `Palette.COOKING_PREP_*`、右詳細行周辺のruntime色は `Palette.COOKING_DETAIL_*`、背景glazeは `Palette.COOKING_BG_GLAZE` へ移行済み。残りは次の調理場直接編集スライスで継続する。
+- R1: `src/ui/cooking_screen.gd` の画面固有ハードコード色は大半が未移行。今回触った料理カード周辺のruntime色は `Palette.COOKING_RECIPE_*`、下部バー周辺のruntime色は `Palette.COOKING_PREP_*`、右詳細パネルactive runtime色は `Palette.COOKING_DETAIL_*`、背景glazeは `Palette.COOKING_BG_GLAZE` へ移行済み。残りは次の調理場直接編集スライスで継続する。
 - 監査: `tools/cooking_layout_audit.tscn` / `tools/cooking_content_audit.tscn` / `./tools/cooking_visual_qa.sh` はgreen。visual QAは状態間キャプチャ重複のfail guard追加済み。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
@@ -38,6 +38,17 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 なし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-05: `COOK_SELECT detail palette R1 pass` 完了。参照uplift済み右詳細パネルのactive runtime色をPalette用途名へ追加移行した。
+
+- 選定理由: COOK_SELECT 4スライス完了後の次作業として、台帳で調理場R1継続が最優先になっており、右詳細パネル内に前回触ったactive runtime色の直書きが残っていたため。
+- 変えたもの: 右詳細パネルのfallback panel色、料理タイトル/サブタイトル、皿枠、必要素材/EXPアクセント、アクション帯、上書き注意バッジの色参照。
+- 変えていないもの: §1 freeze値、レイアウト値、素材、表示文言、料理カード、下部バー、背景、調理報酬オーバーレイ、日本語PNG焼き込み。
+- Palette: 新規 `Palette.COOKING_DETAIL_PANEL_*` / `COOKING_DETAIL_TITLE_*` / `COOKING_DETAIL_SUBTITLE_TEXT` / `COOKING_DETAIL_DISH_FRAME_*` / `COOKING_DETAIL_ACTION_FILL` / `COOKING_DETAIL_NOTE_*` / `COOKING_DETAIL_MATERIAL_ACCENT` / `COOKING_DETAIL_EXP_ACCENT` を追加。理由は右詳細パネルのactive runtime色を、表示同値のままPalette正本へ移すため。
+- 証拠画像: `docs/qa/evidence/cooking/2026-07-05_detail_palette_select.png`, `docs/qa/evidence/cooking/2026-07-05_detail_palette_report.html`
+- 判定: 実スクショでCOOK_SELECTの右詳細パネル、料理タイトル、3行詳細、アクション帯にP1なし。これは参照upliftではなくR1表示同値移行なので、cmp一致は完了条件にしていない。
+- 検証: `./tools/cooking_visual_qa.sh`、`tools/cooking_content_audit.tscn`、`tools/cooking_layout_audit.tscn`、`cooking_flow_smoke`、`./tools/save_system_verify.sh`、`./tools/validate_project.sh` green。`validate_project.sh` の ObjectDB/resource 警告はベースライン既知。
+- 固定条件: 次の調理場直接編集でも一括置換はせず、触るactive部品ごとにPalette移行を続ける。
 
 2026-07-05: `COOK_SELECT background reveal reference-uplift` 完了。COOK_SELECT本体の余白/パネル間隔/glazeを調整し、厨房背景の見え方を参照へ寄せた。
 
