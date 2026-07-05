@@ -1,5 +1,8 @@
 # 29. 魚サイズ現実化 & タナ（深さ）挙動修正 指示書
 
+Date: 2026-07-05
+状態: 完了（2026-07-05）
+
 Codex（ワーカー）向けの実装指示書。**スライスA（魚サイズ）とスライスB（タナ挙動）は独立した別作業**として扱い、1スライス=1ブランチ/1報告で進めること。両方を1つの変更に混ぜない。
 
 ## 背景（なぜやるか）
@@ -277,3 +280,60 @@ elif simulator != null:
 - 本指示書の数値・式は正本。実装中に矛盾や不都合（clamp の衝突、smoke の失敗など）を見つけたら、**勝手に数値を変えず**、報告に「未解決」として挙げて指示を仰ぐこと。
 - コミットメッセージは日本語。スライスA/Bで別コミットにする。
 - docs/19（UI制作プレイブック）の不変ルールに従う。今回のスライスはロジック中心だが、B-3 は見た目に影響するため visual QA を省略しない。
+
+---
+
+## 実施結果（2026-07-05）
+
+### マージ結果
+
+- スライスB（タナ挙動）: `d5d7948 ファイト中のタナ挙動を修正`
+- スライスA（魚サイズ）: `7df69e6 魚サイズと抽選分布を現実寄りに調整`
+- main 統合: `51d8f95 魚サイズ現実化とタナ修正を統合`
+
+### スライスB: タナ（深さ）挙動
+
+- `src/core/fishing_simulator.gd` に釣り場水深 `water_depth`、浮上速度、疲労補正、残距離連動の最大タナ制限を追加。
+- `prepare()` で `spot_depth_range` の最大値を釣り場水深として確定し、開始タナを水深内へ収めるように変更。
+- 巻き上げ中に `depth` が減少し、魚が疲れるほど浮上しやすくなる挙動を追加。
+- 残距離が縮むほど深く潜れないよう `depth_ceiling` を導入。
+- 画面上の魚のY位置を固定値 `25.0` 基準ではなく釣り場水深基準に変更。
+- `src/ui/components/fight_status_bar.gd` の上部「水深」は釣り場の固定水深、HUD「タナ」は魚の現在深度として分離。
+
+実装時補正:
+
+- 指示書の式 `minf(water_depth, distance * DEPTH_DISTANCE_RATIO + DEPTH_NEAR_OFFSET)` は、終盤に上限が `DEPTH_SURFACE_LIMIT` を下回る可能性があったため、定数は変えずに `maxf(DEPTH_SURFACE_LIMIT, minf(...))` で上限を水面直下1.2m未満に落とさない形にした。
+
+検証:
+
+- `tools/fishing_reveal_smoke.tscn`: ok
+- `tools/fishing_harbor_return_smoke.tscn`: ok
+- `tools/catch_fanfare_smoke.tscn`: ok
+- `TSURI_FIGHT_RUNTIME_CAPTURE=1 ./tools/fight_visual_qa.sh`: ok
+- `./tools/validate_project.sh`: ok
+- ロジック確認: `start_depth=18.00 water_depth=22.00 final_depth=1.20 final_distance=0.11 ticks=147`
+- ロジック確認: `monotonic_depth=true always_under_water_depth=true depth_at_distance_1=1.97 ok=true`
+- runtime visual QA で上部「水深 22.0m」、HUD「タナ 18.6m」の役割分離を確認。
+
+### スライスA: 魚サイズの現実化
+
+- `src/autoload/game_catalog_data.gd` の本編30種について、`size_min` / `size_max` を本書の表どおり変更。
+- `src/autoload/fish_expansion_data.gd` の拡張40種について、`size_min` / `size_max` を本書の表どおり変更。
+- `boss_kurodai` は `72.0–94.0` を維持し、`size_bias: 0.85` を追加。
+- `src/autoload/game_data.gd` の `roll_fish_size()` を一様分布から小型優位の指数分布へ変更。
+- `src/ui/components/fight_sidebar.gd` の「推定」サイズ計算を中央値から `0.35` 位置の典型値へ変更。
+
+検証:
+
+- サイズ表チェック: 本編30種、拡張40種、`boss_kurodai size_bias=0.85` が本書の表どおり。
+- 分布チェック 1000回: `aji min=12.0 max=39.8 mean=20.36 ok=true`
+- 分布チェック 1000回: `mahaze min=8.0 max=24.0 mean=13.01 ok=true`
+- 分布チェック 1000回: `boss_kurodai min=72.0 max=94.0 mean=84.33 ok=true`
+- `tools/fishing_reveal_smoke.tscn`: ok
+- `tools/catch_fanfare_smoke.tscn`: ok
+- `./tools/validate_project.sh`: ok
+
+### 未解決事項
+
+- 実装上の未解決事項なし。
+- `catch_fanfare_smoke` 等で終了時に ObjectDB / resource の既存警告が出るが、各検証コマンドの終了コードは成功。
