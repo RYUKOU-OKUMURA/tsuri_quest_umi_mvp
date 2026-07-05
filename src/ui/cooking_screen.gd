@@ -1692,9 +1692,27 @@ func _apply_cook_button_style() -> void:
 
 
 func _apply_recipe_book_button_style(button: Button) -> void:
-	var normal_fallback := _style_box(Color("#123553"), Color("#3b2515"), Palette.GOLD_BRIGHT, 4, 6)
-	var hover_fallback := _style_box(Color("#1b496e"), Color("#3b2515"), Color("#ffe67a"), 4, 6)
-	var pressed_fallback := _style_box(Color("#0d2942"), Color("#2a1a10"), Palette.GOLD_DEEP, 4, 6)
+	var normal_fallback := _style_box(
+		Palette.COOKING_RECIPE_BOOK_BUTTON_FILL,
+		Palette.COOKING_RECIPE_BOOK_BUTTON_BORDER,
+		Palette.GOLD_BRIGHT,
+		4,
+		6
+	)
+	var hover_fallback := _style_box(
+		Palette.COOKING_RECIPE_BOOK_BUTTON_HOVER_FILL,
+		Palette.COOKING_RECIPE_BOOK_BUTTON_BORDER,
+		Palette.COOKING_RECIPE_BOOK_BUTTON_HOVER_INNER,
+		4,
+		6
+	)
+	var pressed_fallback := _style_box(
+		Palette.COOKING_RECIPE_BOOK_BUTTON_PRESSED_FILL,
+		Palette.COOKING_RECIPE_BOOK_BUTTON_PRESSED_BORDER,
+		Palette.GOLD_DEEP,
+		4,
+		6
+	)
 	button.add_theme_stylebox_override(
 		"normal",
 		_texture_style_box(COOK_BUTTON_FRAME, 22, normal_fallback, 52.0, 6.0)
@@ -1712,8 +1730,8 @@ func _apply_recipe_book_button_style(button: Button) -> void:
 		_texture_style_box(COOK_BUTTON_FRAME, 22, hover_fallback, 52.0, 6.0)
 	)
 	button.add_theme_color_override("font_color", Palette.GOLD_BRIGHT)
-	button.add_theme_color_override("font_hover_color", Color("#fff1ba"))
-	button.add_theme_color_override("font_pressed_color", Color("#f0c06b"))
+	button.add_theme_color_override("font_hover_color", Palette.COOKING_RECIPE_BOOK_BUTTON_HOVER_TEXT)
+	button.add_theme_color_override("font_pressed_color", Palette.COOKING_RECIPE_BOOK_BUTTON_PRESSED_TEXT)
 	button.add_theme_font_size_override("font_size", 18)
 
 
