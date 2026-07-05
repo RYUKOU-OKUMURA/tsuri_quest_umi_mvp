@@ -46,6 +46,13 @@ const THEME_BUTTON_SHADOW := Color(0.0, 0.0, 0.0, 0.24)
 # --- 共通proceduralアイコン ---
 const UI_FISH_ICON_EYE_DARK := Color(0.05, 0.05, 0.05, 1.0)
 
+# --- 釣具店UI ---
+const TACKLE_DETAIL_ICON_MODULATE := Color(1.0, 1.0, 1.0, 0.86)
+const TACKLE_CARD_SELECTION_WASH := Color(1.0, 0.82, 0.30, 0.08)
+const TACKLE_TAB_ACTIVE_MODULATE := Color.WHITE
+const TACKLE_TAB_INACTIVE_MODULATE := Color(1.0, 1.0, 1.0, 0.78)
+const TACKLE_SELECTION_FILL := Color.TRANSPARENT
+
 # --- 金 ---
 const GOLD := Color("#e1bd72")
 const GOLD_BRIGHT := Color("#ffe7a8")

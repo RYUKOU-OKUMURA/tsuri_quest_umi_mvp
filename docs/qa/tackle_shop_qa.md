@@ -1,6 +1,6 @@
 # 釣具店画面 QA判断ログ
 
-最終更新: 2026-07-04 / 状態: 座標再同期 + ラベル位置ブラッシュアップ済み v1 freeze中
+最終更新: 2026-07-05 / 状態: 座標再同期 + ラベル位置ブラッシュアップ済み v1 freeze中 / R1 Palette確認済み
 参照画像: `reference/09_tackle_shop_rod_mockup.png` / `reference/09_tackle_shop_gear_mockup.png`
 QA更新コマンド: `./tools/tackle_shop_visual_qa.sh`
 
@@ -59,6 +59,15 @@ QA更新コマンド: `./tools/tackle_shop_visual_qa.sh`
 （現在作業中のフェーズなし）
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-05:
+- R1 / Palette移行として、詳細アイコンtint、選択カードwash、タブactive/inactive tint、選択枠透明fillを `Palette.TACKLE_*` へ移行した。
+- 変えていないもの: §1 freeze値、1280x720固定キャンバス、商品カード座標、商品名/価格/状態/詳細文言、backplate、詳細大絵、透明Button領域、日本語PNG焼き込み。
+- 新規Palette定数: `TACKLE_DETAIL_ICON_MODULATE` / `TACKLE_CARD_SELECTION_WASH` / `TACKLE_TAB_ACTIVE_MODULATE` / `TACKLE_TAB_INACTIVE_MODULATE` / `TACKLE_SELECTION_FILL`。理由は釣具店画面の残り直書き色4件を用途名で管理するため。
+- 証拠画像: `docs/qa/evidence/tackle_shop/2026-07-05_tackle_shop_palette_rod_compare.png`, `docs/qa/evidence/tackle_shop/2026-07-05_tackle_shop_palette_rig_compare.png`, `docs/qa/evidence/tackle_shop/2026-07-05_tackle_shop_palette_rod_expanded.png`, `docs/qa/evidence/tackle_shop/2026-07-05_tackle_shop_palette_rig_expanded.png`
+- 判定: 竿/仕掛けの通常キャプチャと広いviewportキャプチャで、カード選択枠・詳細アイコン・タブ表示に未表示/重なり/見切れなし。これはR1表示同値移行なので、cmp一致は完了条件にしていない。
+- 検証: `./tools/tackle_shop_visual_qa.sh`、`tackle_shop_smoke.tscn`、`./tools/save_system_verify.sh`、`./tools/validate_project.sh` green。`validate_project.sh` のObjectDB/resource警告はベースライン既知。
+- 固定条件: 釣具店の画面固有色は `Palette.TACKLE_*` へ寄せ、`src/ui/shop_screen.gd` へ新規直書き色を戻さない。
 
 - 2026-07-03: 店主あり/現行スクショ参照を廃止し、店主なし・商品陳列主役のbackplate構成へ移行。竿は `big_game` / `marlin` を加えて5本化し、表示順は `ROD_ORDER` で固定する。
 - 2026-07-03追補: `window/stretch/aspect="expand"` の実ウィンドウでbackplateだけが伸び、runtime文字/透明クリック領域が1280座標に残るP1を修正。全体を `TackleShopDesignCanvas` に閉じ込めて等比スケールし、カードレイヤーがタブ入力を塞がない順序へ変更した。

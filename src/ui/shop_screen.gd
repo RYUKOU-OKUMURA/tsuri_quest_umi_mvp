@@ -291,7 +291,7 @@ func _build_detail_overlay(parent: Control) -> void:
 	_detail_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_detail_icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_detail_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_detail_icon.modulate = Color(1.0, 1.0, 1.0, 0.86)
+	_detail_icon.modulate = Palette.TACKLE_DETAIL_ICON_MODULATE
 	_place_at_rect(parent, _detail_icon, DETAIL_ICON_RECT)
 
 	_detail_stats_box = Control.new()
@@ -391,7 +391,7 @@ func _make_item_card(item_id: String) -> Button:
 	if selected:
 		var highlight := ColorRect.new()
 		highlight.name = "ShopCardHighlight_%s" % item_id
-		highlight.color = Color(1.0, 0.82, 0.30, 0.08)
+		highlight.color = Palette.TACKLE_CARD_SELECTION_WASH
 		highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		highlight.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		button.add_child(highlight)
@@ -671,7 +671,7 @@ func _make_transparent_button(label_text: String, callback: Callable) -> Button:
 func _style_tab_button(button: Button, active: bool) -> void:
 	if button == null:
 		return
-	button.modulate = Color(1.0, 1.0, 1.0, 1.0 if active else 0.78)
+	button.modulate = Palette.TACKLE_TAB_ACTIVE_MODULATE if active else Palette.TACKLE_TAB_INACTIVE_MODULATE
 	button.add_theme_color_override("font_color", Palette.GOLD_BRIGHT if active else Palette.TEXT_BONE)
 	var normal := _tab_button_style(active, false)
 	var hover := _tab_button_style(active, true)
@@ -705,7 +705,7 @@ func _tab_button_style(active: bool, hover: bool) -> StyleBoxFlat:
 
 func _selection_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.0, 0.0, 0.0, 0.0)
+	style.bg_color = Palette.TACKLE_SELECTION_FILL
 	style.border_color = Color(Palette.GOLD_BRIGHT, 0.82)
 	style.set_border_width_all(3)
 	style.set_corner_radius_all(5)
