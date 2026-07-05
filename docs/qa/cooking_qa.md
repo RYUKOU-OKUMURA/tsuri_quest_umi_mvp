@@ -1,6 +1,6 @@
 # 調理場 QA判断ログ
 
-最終更新: 2026-07-05 / 状態: 調理場cooking_screen R1完了 / COOK_SELECT仕上げ点検完了 / MEAL_RESULT / EXP_GAIN / LEVEL_UP_OVERLAY reference-uplift完了 / 次はSTATUS_SUMMARY
+最終更新: 2026-07-05 / 状態: 調理場cooking_screen R1完了 / COOK_SELECT仕上げ点検完了 / MEAL_RESULT / EXP_GAIN / LEVEL_UP_OVERLAY / STATUS_SUMMARY reference-uplift完了
 参照画像: reference/cooking_flow/01_cook_select_concept.png, reference/cooking_flow/02_meal_result_concept.png, reference/cooking_flow/03_exp_gain_concept.png, reference/cooking_flow/04_level_up_overlay_concept.png, reference/cooking_flow/05_status_summary_concept.png
 QA更新コマンド: ./tools/cooking_visual_qa.sh
 
@@ -22,6 +22,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 | パラメータ | 回数 | 直近の変更内容 | 状態 |
 |---|---|---|---|
 | LEVEL_UP_OVERLAY 上部祝祭帯 | 3 | crown/laurel候補を生成。LEVEL UP文字拡大とLv行拡大は表示契約が落ちたため不採用、最終的にcrown/laurelとダイアログ寸法のみ採用 | 完了 |
+| STATUS_SUMMARY カード密度/背景 | 3 | `status_card_frame.png` 候補生成、背景抜け、値プレート化を実施。半透明化したカード素材候補は不採用とし、素材生成を合成方式へ修正して不透明紙面で採用 | 完了 |
 | EXP_GAIN 中央演出/ステップ行 | 4 | `exp_burst_frame.png` 候補を生成。透明外枠/見出し拡大は可読性が落ちたため不採用、最終的にステップ行はcontent契約上visibleのままalpha 0.18で抑制 | 完了 |
 | MEAL_RESULT 料理カード/外枠構成 | 2 | 料理カード素材候補の広い料理窓に合わせて配分を試し、1回目は料理名が狭くなったため、2回目で画像幅/文字サイズとMEAL_RESULT専用透明外枠を採用 | 完了 |
 | COOK_SELECT 料理カードタイトル帯 | 1 | 最新比較で枠ノッチとタイトル文字の干渉を確認し、runtimeタイトルをアウトラインなし太字・帯内下寄せへ調整 | 完了 |
@@ -33,7 +34,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 
 ## 5. 現在の残ギャップ
 
-- P2: STATUS_SUMMARY は参照uplift未実施。ユーザー指定の優先順どおり1状態1スライスで進める。
+- R5: ユーザー指定の調理フロー残り4状態（MEAL_RESULT / EXP_GAIN / LEVEL_UP_OVERLAY / STATUS_SUMMARY）はreference-uplift完了。残る画面別R5は、次の対象選定時に `docs/19` §8.5 と各画面QAログから判断する。
 - R1温存: レアリティ表示の `RarityStyles` 横展開は未実施。調理場 `src/ui/cooking_screen.gd` のR1完了により、残件は台帳に残したまま一旦停止。
 - R1: `src/ui/cooking_screen.gd` は `Color(` 直書きゼロ。COOK_SELECT左魚リスト周辺は `Palette.COOKING_FISH_*`、見出しリボン周辺は `Palette.COOKING_SECTION_RIBBON_*`、料理カード/中央料理グリッド外枠周辺は `Palette.COOKING_RECIPE_*`、下部バー周辺は `Palette.COOKING_PREP_*`、右詳細パネルactive runtime色は `Palette.COOKING_DETAIL_*`、調理ボタン周辺は `Palette.COOKING_ACTION_*`、料理図鑑ボタン周辺は `Palette.COOKING_RECIPE_BOOK_BUTTON_*`、小アイコン/アクションキュー周辺は `Palette.COOKING_SMALL_ICON_*` / `Palette.COOKING_ACTION_CUE_*`、結果サマリーカード周辺は `Palette.COOKING_SUMMARY_CARD_*` / `Palette.COOKING_RESULT_TITLE_OUTLINE`、背景fallback/glazeは `Palette.COOKING_BG_*` へ移行済み。未使用detail helper由来のhexは削除済み。
 - 監査: `tools/cooking_layout_audit.tscn` / `tools/cooking_content_audit.tscn` / `./tools/cooking_visual_qa.sh` はgreen。visual QAは状態間キャプチャ重複のfail guard追加済み。
@@ -43,6 +44,18 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 なし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-05: `STATUS_SUMMARY reference-uplift` 完了。`reference/cooking_flow/05_status_summary_concept.png` へ向けて、5カードの独立画面感と主値の読みを強めた。
+
+- 選定理由: LEVEL_UP_OVERLAY完了後、ユーザー指定の優先順で次がSTATUS_SUMMARYだったため。before比較では5カード構成はあるが、背景が下のCOOK_SELECTに透け、カードの主値と表面密度が参照より弱かった。
+- 変えたもの: `status_card_frame.png` 候補を生成し、カード表面に紙目/帯を追加。STATUS_SUMMARY背景の下に不透明ベースを敷き、下のCOOK_SELECT透けを解消。5カードの主値をruntime値プレート化し、クーラー/所持金/プレイ時間の読みを強化。visual QA保存は `RenderingServer.force_draw` で同期し、状態別キャプチャの安定性を補強。プレビュー種のクーラー値は参照判断用に `19 / 20` へ調整。
+- 変えていないもの: §1 freeze値、調理/EXP/レベルアップ進行ロジック、COOK_SELECT、MEAL_RESULT、EXP_GAIN、LEVEL_UP_OVERLAY、ステータス計算ロジック、セーブ仕様、R1残件、日本語PNG焼き込み。
+- 素材候補: `status_card_frame.png` 候補を採用。ただし半透明描画が既存紙面を置換して下画面が透けた版は不採用。合成方式に直した不透明紙面版を採用した。
+- 微調整カウンタ: `STATUS_SUMMARY カード密度/背景` 3回。3回目で値プレートと背景抜けは改善したが、半透明カードは素材品質問題と判断し、素材生成を修正して採用した。
+- 証拠画像: `docs/qa/evidence/cooking/2026-07-05_status_summary_before_after_ref.png`, `docs/qa/evidence/cooking/2026-07-05_status_summary_focus.png`, `docs/qa/evidence/cooking/2026-07-05_status_summary_status.png`, `docs/qa/evidence/cooking/2026-07-05_status_summary_report.html`
+- 判定: afterでは背景の港/厨房帯が見え、5カードの絵+主値+説明の読みがbeforeより明確になった。参照ほどカードアートの密度やプレイヤーカードの大きな人物絵には未到達だが、独立したステータス要約画面へ前進したと第三者に判別できる。cmp一致は判定に使っていない。
+- 検証: `./tools/cooking_visual_qa.sh`、`cooking_layout_audit.tscn`、`cooking_content_audit.tscn`、`cooking_flow_smoke`、`./tools/save_system_verify.sh`、`./tools/validate_project.sh` green。`save_system_verify.sh` のJSON警告と `validate_project.sh` のObjectDB/resource警告はベースライン既知。
+- 固定条件: STATUS_SUMMARYは下のCOOK_SELECTを透かさず、5カードの主値を値プレートで表示する。次のR5対象は台帳で改めて選定する。
 
 2026-07-05: `LEVEL_UP_OVERLAY reference-uplift` 完了。`reference/cooking_flow/04_level_up_overlay_concept.png` へ向けて、上部祝祭帯の存在感を強めた。
 

@@ -1991,6 +1991,18 @@ def frame_assets() -> None:
         img.alpha_composite(shadow)
         draw = ImageDraw.Draw(img, "RGBA")
         draw_panel(draw, (8, 8, size[0] - 16, size[1] - 18), fill, border, inner, 5, 9)
+        if name == "status_card_frame.png":
+            overlay = Image.new("RGBA", size, (0, 0, 0, 0))
+            overlay_draw = ImageDraw.Draw(overlay, "RGBA")
+            for y in range(24, size[1] - 34, 11):
+                alpha = 20 if (y // 11) % 2 == 0 else 12
+                overlay_draw.line((28, y, size[0] - 36, y + 2), fill=(93, 57, 28, alpha), width=2)
+            overlay_draw.rounded_rectangle((28, 28, size[0] - 36, 60), radius=6, fill=(255, 244, 211, 28), outline=(216, 158, 72, 58), width=1)
+            overlay_draw.rounded_rectangle((30, size[1] - 54, size[0] - 38, size[1] - 32), radius=5, fill=(102, 62, 30, 34), outline=(216, 158, 72, 50), width=1)
+            for x in range(44, size[0] - 48, 46):
+                overlay_draw.line((x, 72, x + 18, 84), fill=(255, 238, 176, 42), width=2)
+            img.alpha_composite(overlay)
+            draw = ImageDraw.Draw(img, "RGBA")
         # Corner studs.
         for x, y in [(22, 22), (size[0] - 34, 22), (22, size[1] - 44), (size[0] - 34, size[1] - 44)]:
             draw.rectangle((x, y, x + 12, y + 12), fill=inner, outline=border, width=2)

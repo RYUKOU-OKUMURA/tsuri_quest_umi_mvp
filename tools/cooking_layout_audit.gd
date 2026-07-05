@@ -338,6 +338,13 @@ func _audit_tree(state: String, root: Control) -> void:
 				"LevelUnlockTitle",
 				"LevelUnlockBody",
 				"StatusTitle",
+				"StatusLevelValue",
+				"StatusMealBadge",
+				"StatusMealName",
+				"StatusMealEffect",
+				"StatusCoolerValue",
+				"StatusMoneyValue",
+				"StatusPlayTimeValue",
 			]
 		)
 	var nodes: Array = []

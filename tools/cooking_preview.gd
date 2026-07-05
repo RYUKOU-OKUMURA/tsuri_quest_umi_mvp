@@ -251,10 +251,11 @@ func _seed_after_boss_unlock_meal_state() -> void:
 	PlayerProgress.exp = 2
 	PlayerProgress.inventory.clear()
 	PlayerProgress.inventory["aji"] = 12
-	PlayerProgress.inventory["saba"] = 8
-	PlayerProgress.inventory["iwashi"] = 15
-	PlayerProgress.inventory["madai"] = 6
-	PlayerProgress.inventory["buri"] = 4
+	PlayerProgress.inventory["saba"] = 2
+	PlayerProgress.inventory["madai"] = 1
+	PlayerProgress.inventory["kasago"] = 2
+	PlayerProgress.inventory["hirame"] = 1
+	PlayerProgress.inventory["kawahagi"] = 1
 	PlayerProgress.pending_buff = {
 		"recipe_id": "salt_grill",
 		"name": "アジの塩焼き",
@@ -340,9 +341,13 @@ func _fake_boss_unlock_result() -> Dictionary:
 
 func _save_viewport(vp: SubViewport, path: String) -> bool:
 	var img: Image = null
-	for _attempt in range(8):
+	for _attempt in range(18):
 		vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 		await get_tree().process_frame
+		if RenderingServer.has_method("force_draw"):
+			RenderingServer.force_draw(false, 0.0)
+		else:
+			await RenderingServer.frame_post_draw
 		img = vp.get_texture().get_image()
 		if _image_has_visible_pixels(img):
 			img.save_png(path)

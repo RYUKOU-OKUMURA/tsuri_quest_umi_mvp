@@ -476,11 +476,22 @@ func _build_screen() -> void:
 	root.add_child(layout)
 
 	_build_header(layout)
+	var scene_peek := Control.new()
+	scene_peek.name = "StatusScenePeek"
+	scene_peek.custom_minimum_size = Vector2(0.0, 56.0)
+	scene_peek.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	layout.add_child(scene_peek)
 	_build_cards(layout)
 	_build_footer(layout)
 
 
 func _add_status_background() -> void:
+	var base := ColorRect.new()
+	base.color = Palette.SCREEN_BG_DEFAULT
+	base.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	base.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(base)
+
 	var bg_tex := load(STATUS_SUMMARY_BG) as Texture2D
 	if bg_tex == null:
 		bg_tex = load(CookingAssets.COOKING_BG) as Texture2D
@@ -504,7 +515,7 @@ func _add_status_background() -> void:
 		scene.queue_redraw()
 
 	var wash := ColorRect.new()
-	wash.color = Color(0.02, 0.06, 0.11, 0.34)
+	wash.color = Color(0.02, 0.06, 0.11, 0.24)
 	wash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(wash)
@@ -549,9 +560,10 @@ func _build_header(parent: VBoxContainer) -> void:
 	player_badge.name = "StatusHeaderPlayerBadge"
 	player_badge.custom_minimum_size = Vector2(42.0, 0.0)
 	exp_row.add_child(player_badge)
-	_header_level_label = make_shadow_label("", 22, Palette.TEXT_BONE, 3)
+	_header_level_label = make_label("", 21, Palette.TEXT_BONE, 2, Palette.TEXT_OUTLINE_DARK)
 	_header_level_label.name = "StatusHeaderLevel"
 	_header_level_label.custom_minimum_size = Vector2(64.0, 36.0)
+	_header_level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_header_level_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	exp_row.add_child(_header_level_label)
 	var exp_title := make_shadow_label("EXP", 17, Palette.TEXT_BONE, 2)
@@ -568,7 +580,7 @@ func _build_header(parent: VBoxContainer) -> void:
 	_header_exp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_header_exp_bar.set_colors(Palette.GAUGE_CYAN, Palette.GAUGE_CYAN_HI)
 	exp_row.add_child(_header_exp_bar)
-	_header_exp_label = make_shadow_label("", 16, Palette.TEXT_BONE, 2)
+	_header_exp_label = make_label("", 16, Palette.TEXT_BONE, 2, Palette.TEXT_OUTLINE_DARK)
 	_header_exp_label.name = "StatusHeaderExpValue"
 	_header_exp_label.custom_minimum_size = Vector2(92.0, 26.0)
 	_header_exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -600,10 +612,8 @@ func _build_player_card(parent: HBoxContainer) -> void:
 	var portrait := _portrait_box("PLAYER", Palette.GAUGE_CYAN_HI)
 	portrait.custom_minimum_size = Vector2(0.0, 126.0)
 	card.add_child(portrait)
-	_level_label = make_shadow_label("", 24, Color("#2a2118"), 2)
-	_set_label_min_height(_level_label, 24)
-	_level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	card.add_child(_level_label)
+	_level_label = _value_plate(card, "", 20, Palette.TEXT_BONE, Palette.GAUGE_CYAN_HI)
+	_level_label.name = "StatusLevelValue"
 	_next_exp_label = make_label("", 16, Color("#24486a"), 1, Color("#fff4d4"))
 	_set_label_min_height(_next_exp_label, 16)
 	_next_exp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -621,25 +631,19 @@ func _build_player_card(parent: HBoxContainer) -> void:
 
 func _build_meal_card(parent: HBoxContainer) -> void:
 	var card := _status_card(parent, "効果中の料理")
-	_meal_badge = make_shadow_label("", 18, Palette.GAUGE_GREEN_HI, 2)
-	_set_label_min_height(_meal_badge, 18)
-	_meal_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	card.add_child(_meal_badge)
+	_meal_badge = _value_plate(card, "", 16, Palette.GAUGE_GREEN_HI, Palette.GAUGE_GREEN_HI)
+	_meal_badge.name = "StatusMealBadge"
 	_meal_image = TextureRect.new()
 	_meal_image.name = "StatusMealDishImage"
 	_meal_image.custom_minimum_size = Vector2(0.0, 120.0)
 	_meal_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_meal_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	card.add_child(_meal_image)
-	_meal_name_label = make_label("", 26, Color("#2a2118"), 1, Color("#fff4d4"))
-	_set_label_min_height(_meal_name_label, 26)
-	_meal_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	card.add_child(_meal_name_label)
-	_meal_effect_label = make_label("", 18, Palette.GAUGE_GREEN_HI, 2)
-	_set_label_min_height(_meal_effect_label, 18)
-	_meal_effect_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_meal_name_label = _value_plate(card, "", 20, Palette.TEXT_BONE, Palette.GOLD_BRIGHT)
+	_meal_name_label.name = "StatusMealName"
+	_meal_effect_label = _value_plate(card, "", 15, Palette.GAUGE_GREEN_HI, Palette.GAUGE_GREEN_HI)
+	_meal_effect_label.name = "StatusMealEffect"
 	_meal_effect_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	card.add_child(_meal_effect_label)
 	_meal_hint_label = _meal_note_box(card, "")
 
 
@@ -648,10 +652,8 @@ func _build_cooler_card(parent: HBoxContainer) -> void:
 	var visual := _portrait_box("COOLER", Palette.GAUGE_CYAN_HI)
 	visual.custom_minimum_size = Vector2(0.0, 130.0)
 	card.add_child(visual)
-	_cooler_count_label = make_shadow_label("", 24, Color("#2a2118"), 2)
-	_set_label_min_height(_cooler_count_label, 24)
-	_cooler_count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	card.add_child(_cooler_count_label)
+	_cooler_count_label = _value_plate(card, "", 20, Palette.TEXT_BONE, Palette.GAUGE_CYAN_HI)
+	_cooler_count_label.name = "StatusCoolerValue"
 	_note_box(card, "釣った魚を保存できます\n容量を増やすと、より多くの魚を持ち帰れます")
 	var extend := make_button("拡張する", func() -> void: pass, 156.0, false)
 	extend.custom_minimum_size = Vector2(150.0, 34.0)
@@ -665,10 +667,8 @@ func _build_money_card(parent: HBoxContainer) -> void:
 	var visual := _portrait_box("GOLD", Palette.GOLD_BRIGHT)
 	visual.custom_minimum_size = Vector2(0.0, 130.0)
 	card.add_child(visual)
-	_money_label = make_shadow_label("", 24, Color("#2a2118"), 2)
-	_set_label_min_height(_money_label, 24)
-	_money_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	card.add_child(_money_label)
+	_money_label = _value_plate(card, "", 20, Palette.TEXT_BONE, Palette.GOLD_BRIGHT)
+	_money_label.name = "StatusMoneyValue"
 	_note_box(card, "釣り具の購入や\nクーラーボックスの拡張に使用します")
 
 
@@ -677,10 +677,8 @@ func _build_play_card(parent: HBoxContainer) -> void:
 	var visual := _portrait_box("TIME", Palette.TEXT_BONE)
 	visual.custom_minimum_size = Vector2(0.0, 130.0)
 	card.add_child(visual)
-	_play_label = make_shadow_label("", 24, Color("#2a2118"), 2)
-	_set_label_min_height(_play_label, 24)
-	_play_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	card.add_child(_play_label)
+	_play_label = _value_plate(card, "", 20, Palette.TEXT_BONE, Palette.GOLD_BRIGHT)
+	_play_label.name = "StatusPlayTimeValue"
 	_note_box(card, "冒険の記録です\nたくさん釣って、強くなろう！")
 
 
@@ -893,6 +891,39 @@ func _note_box(parent: VBoxContainer, text: String) -> Label:
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	panel.add_child(label)
+	return label
+
+
+func _value_plate(
+	parent: VBoxContainer,
+	text: String,
+	font_size: int,
+	text_color: Color,
+	accent: Color
+) -> Label:
+	var panel := CookingAssets.panel_box(
+		Palette.COOKING_ACTION_BUTTON_FILL,
+		Palette.COOKING_ACTION_BUTTON_BORDER,
+		accent,
+		2,
+		8.0,
+		2.0,
+		0.28,
+		4,
+		2.0,
+		4
+	)
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.custom_minimum_size = Vector2(0.0, 40.0)
+	parent.add_child(panel)
+
+	var label := make_label(text, font_size, text_color, 2, Palette.TEXT_OUTLINE_DARK)
+	_set_label_min_height(label, font_size)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	panel.add_child(label)
 	return label
 
