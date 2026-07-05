@@ -1,6 +1,6 @@
 # 調理場 QA判断ログ
 
-最終更新: 2026-07-05 / 状態: COOK_SELECT 右詳細パネル reference-uplift 完了
+最終更新: 2026-07-05 / 状態: COOK_SELECT 背景の見せ方 reference-uplift 完了
 参照画像: reference/cooking_flow/01_cook_select_concept.png, reference/cooking_flow/02_meal_result_concept.png, reference/cooking_flow/03_exp_gain_concept.png, reference/cooking_flow/04_level_up_overlay_concept.png, reference/cooking_flow/05_status_summary_concept.png
 QA更新コマンド: ./tools/cooking_visual_qa.sh
 
@@ -30,7 +30,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 ## 5. 現在の残ギャップ
 
 - P2: レアリティ表示の `RarityStyles` 横展開は未実施。
-- R1: `src/ui/cooking_screen.gd` の画面固有ハードコード色は大半が未移行。今回触った料理カード周辺のruntime色は `Palette.COOKING_RECIPE_*`、下部バー周辺のruntime色は `Palette.COOKING_PREP_*`、右詳細行周辺のruntime色は `Palette.COOKING_DETAIL_*` へ移行済み。残りは次の調理場直接編集スライスで継続する。
+- R1: `src/ui/cooking_screen.gd` の画面固有ハードコード色は大半が未移行。今回触った料理カード周辺のruntime色は `Palette.COOKING_RECIPE_*`、下部バー周辺のruntime色は `Palette.COOKING_PREP_*`、右詳細行周辺のruntime色は `Palette.COOKING_DETAIL_*`、背景glazeは `Palette.COOKING_BG_GLAZE` へ移行済み。残りは次の調理場直接編集スライスで継続する。
 - 監査: `tools/cooking_layout_audit.tscn` / `tools/cooking_content_audit.tscn` / `./tools/cooking_visual_qa.sh` はgreen。visual QAは状態間キャプチャ重複のfail guard追加済み。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
@@ -38,6 +38,18 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 なし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-05: `COOK_SELECT background reveal reference-uplift` 完了。COOK_SELECT本体の余白/パネル間隔/glazeを調整し、厨房背景の見え方を参照へ寄せた。
+
+- 選定理由: 右詳細パネル完了後のafterでもパネル群が横幅をほぼ覆い、参照のような左右パネル間/外周の厨房背景と暖色奥行きが弱かったため。
+- 変えたもの: COOK_SELECT本体の左右8px余白、パネル間隔12px、厨房背景glazeの色/透明度、背景glazeのPalette定数。
+- 変えていないもの: §1 freeze値、料理カード、魚リスト内容、下部バー、右詳細行、ヘッダー `PlayerStatusBar`、調理報酬オーバーレイ、日本語PNG焼き込み。
+- 素材候補: 新規背景素材は採用していない。既存 `CookingAssets.COOKING_BG` を使い、暗いglazeとパネル間隔が背景を殺していたため、素材差し替えではなく見せ方の調整で前進した。
+- Palette: 新規 `Palette.COOKING_BG_GLAZE` を追加。理由は今回触った背景glaze色をPalette正本へ移すため。
+- 証拠画像: `docs/qa/evidence/cooking/2026-07-05_background_before_after_ref.png`, `docs/qa/evidence/cooking/2026-07-05_background_select.png`, `docs/qa/evidence/cooking/2026-07-05_background_report.html`
+- 判定: afterではパネル外周とパネル間に厨房背景が見え、青黒い暗幕感が弱まった。参照ほど背景面積は大きくないが、freeze値に触れずに奥行きの前進が判別できる。cmp一致は判定に使っていない。
+- 検証: `./tools/cooking_visual_qa.sh`、`tools/cooking_content_audit.tscn`、`tools/cooking_layout_audit.tscn`、`cooking_flow_smoke`、`./tools/save_system_verify.sh`、`./tools/validate_project.sh` green。`validate_project.sh` の ObjectDB/resource 警告はベースライン既知。
+- 固定条件: COOK_SELECT本体は左右8px余白/パネル間隔12pxを現行の参照寄せ基準とする。COOK_SELECT 4スライス（料理カード/下部バー/右詳細パネル/背景）は完了。
 
 2026-07-05: `COOK_SELECT detail panel reference-uplift` 完了。右詳細パネルの3行を帯/アイコン/右端バッジ構成へ寄せ、詳細行素材候補を採用した。
 

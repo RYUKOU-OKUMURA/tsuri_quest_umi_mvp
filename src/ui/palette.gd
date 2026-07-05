@@ -107,6 +107,7 @@ const COOKING_DETAIL_BADGE_FILL := Color("#f4dfab")
 const COOKING_DETAIL_BADGE_BORDER := Color("#7b5027")
 const COOKING_DETAIL_BADGE_INNER := Color("#d7a456")
 const COOKING_DETAIL_BADGE_OUTLINE := Color("#fff2cf")
+const COOKING_BG_GLAZE := Color(0.06, 0.04, 0.02, 0.16)
 
 # --- 魚図鑑 / 台帳UI ---
 const FISH_BOOK_BG_SCRIM := Color(0.02, 0.07, 0.10, 0.42)

@@ -476,7 +476,7 @@ func _add_cooking_background() -> void:
 		add_gradient_background(Color("#2a2418"), Color("#14110b"))
 
 	var glaze := ColorRect.new()
-	glaze.color = Color(0.03, 0.06, 0.10, 0.24)
+	glaze.color = Palette.COOKING_BG_GLAZE
 	glaze.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	glaze.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(glaze)
@@ -527,10 +527,18 @@ func _build_header(layout: VBoxContainer) -> void:
 
 
 func _build_cook_select(layout: VBoxContainer) -> void:
+	var body_margin := MarginContainer.new()
+	body_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body_margin.add_theme_constant_override("margin_left", 8)
+	body_margin.add_theme_constant_override("margin_right", 8)
+	layout.add_child(body_margin)
+
 	var body := HBoxContainer.new()
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.add_theme_constant_override("separation", 7)
-	layout.add_child(body)
+	body.add_theme_constant_override("separation", 12)
+	body_margin.add_child(body)
 
 	var fish_panel := _panel_box(Color("#10283d"), Color("#5e391a"), Color("#e4b461"), 6)
 	fish_panel.custom_minimum_size = Vector2(322, 0)
