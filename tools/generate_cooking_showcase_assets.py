@@ -853,18 +853,23 @@ def cook_detail_row_frame() -> None:
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     shadow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow, "RGBA")
-    sd.rounded_rectangle((8, 10, w - 8, h - 5), radius=7, fill=(0, 0, 0, 92))
+    sd.rounded_rectangle((8, 10, w - 8, h - 5), radius=8, fill=(0, 0, 0, 108))
     img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(3)))
-    paper = reference_paper_texture((w - 18, h - 14), "f5dfad", 149, (1042, 558, 1534, 728), 0.42, 4.0)
+    paper = reference_paper_texture((w - 18, h - 14), "f5dfad", 149, (1042, 558, 1534, 728), 0.46, 4.0)
     paste_rounded(img, paper, (6, 6, w - 8, h - 8), 6, 248)
     draw = ImageDraw.Draw(img, "RGBA")
 
-    # Detail rows are story ribbons: the label gets a dark socket, while
-    # values sit directly on parchment so they do not read as input fields.
-    draw.rounded_rectangle((6, 6, w - 8, h - 8), radius=6, outline=(82, 48, 22, 248), width=3)
-    draw.rounded_rectangle((17, 11, 184, h - 12), radius=5, fill=(83, 50, 25, 228), outline=(47, 28, 14, 225), width=2)
-    draw.line((195, 12, 195, h - 13), fill=(80, 47, 20, 54), width=1)
-    draw.line((210, h - 16, w - 42, h - 16), fill=(117, 73, 34, 30), width=2)
+    # Detail rows are story ribbons: title/icon socket, value field, and a
+    # right-side badge pocket for stock/bonus/count.
+    draw.rounded_rectangle((6, 6, w - 8, h - 8), radius=6, outline=(82, 48, 22, 250), width=3)
+    draw.rounded_rectangle((16, 10, 190, h - 11), radius=6, fill=(72, 43, 21, 232), outline=(47, 28, 14, 230), width=2)
+    draw.rounded_rectangle((24, 15, 58, h - 15), radius=5, fill=(255, 231, 149, 52), outline=(232, 174, 68, 86), width=1)
+    draw.line((66, 14, 66, h - 15), fill=(255, 226, 126, 58), width=1)
+    draw.line((201, 12, 201, h - 13), fill=(80, 47, 20, 70), width=2)
+    draw.line((214, h - 16, w - 102, h - 16), fill=(117, 73, 34, 42), width=2)
+    draw.rectangle((216, 17, w - 108, 24), fill=(255, 245, 205, 24))
+    draw.rounded_rectangle((w - 92, 12, w - 26, h - 12), radius=5, fill=(255, 237, 190, 58), outline=(126, 79, 35, 92), width=1)
+    draw.line((w - 86, h - 17, w - 32, h - 17), fill=(122, 76, 34, 56), width=2)
     for x, y in [(14, 11), (w - 30, 11), (14, h - 23), (w - 30, h - 23)]:
         draw.rectangle((x, y, x + 8, y + 8), fill=(232, 174, 68, 204), outline=(58, 32, 13, 218), width=1)
     draw_corner_brackets(draw, (13, 11, w - 26, h - 18), (234, 181, 80, 128), (59, 34, 16, 182), 12, 1)

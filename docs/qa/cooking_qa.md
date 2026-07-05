@@ -1,6 +1,6 @@
 # 調理場 QA判断ログ
 
-最終更新: 2026-07-05 / 状態: COOK_SELECT 下部バー reference-uplift 完了
+最終更新: 2026-07-05 / 状態: COOK_SELECT 右詳細パネル reference-uplift 完了
 参照画像: reference/cooking_flow/01_cook_select_concept.png, reference/cooking_flow/02_meal_result_concept.png, reference/cooking_flow/03_exp_gain_concept.png, reference/cooking_flow/04_level_up_overlay_concept.png, reference/cooking_flow/05_status_summary_concept.png
 QA更新コマンド: ./tools/cooking_visual_qa.sh
 
@@ -30,7 +30,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 ## 5. 現在の残ギャップ
 
 - P2: レアリティ表示の `RarityStyles` 横展開は未実施。
-- R1: `src/ui/cooking_screen.gd` の画面固有ハードコード色は大半が未移行。今回触った料理カード周辺のruntime色は `Palette.COOKING_RECIPE_*`、下部バー周辺のruntime色は `Palette.COOKING_PREP_*` へ移行済み。残りは次の調理場直接編集スライスで継続する。
+- R1: `src/ui/cooking_screen.gd` の画面固有ハードコード色は大半が未移行。今回触った料理カード周辺のruntime色は `Palette.COOKING_RECIPE_*`、下部バー周辺のruntime色は `Palette.COOKING_PREP_*`、右詳細行周辺のruntime色は `Palette.COOKING_DETAIL_*` へ移行済み。残りは次の調理場直接編集スライスで継続する。
 - 監査: `tools/cooking_layout_audit.tscn` / `tools/cooking_content_audit.tscn` / `./tools/cooking_visual_qa.sh` はgreen。visual QAは状態間キャプチャ重複のfail guard追加済み。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
@@ -38,6 +38,18 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 なし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-05: `COOK_SELECT detail panel reference-uplift` 完了。右詳細パネルの3行を帯/アイコン/右端バッジ構成へ寄せ、詳細行素材候補を採用した。
+
+- 選定理由: 下部バー完了後のafterでも「次の釣行で得られる効果」行の `1回` が右端に浮いて見え、必要素材行/獲得EXP行も参照の帯・アイコン質感に届いていなかったため。
+- 変えたもの: `cook_detail_row_frame.png`、右詳細パネルの必要素材/獲得EXP/次の釣行効果行、右端補足値のバッジ化、行タイトルへのruntime小アイコン追加、効果行見出しの短縮、右詳細行周辺のPalette定数、`tools/cooking_content_audit.gd` の表示契約。
+- 変えていないもの: §1 freeze値、料理カード、魚リスト、下部バー、背景/左右余白、ヘッダー `PlayerStatusBar`、調理報酬オーバーレイ、日本語PNG焼き込み。
+- 素材候補: `tools/generate_cooking_showcase_assets.py` で詳細行フレーム候補を生成し採用。候補は左のタイトル/アイコン帯、中央値、右バッジポケットを持ち、beforeより参照の情報帯構成へ近づいたため。
+- Palette: 新規 `Palette.COOKING_DETAIL_*` を追加。理由は右詳細行/バッジ/値のruntime色を、今回触った行から用途名定数へ移すため。
+- 証拠画像: `docs/qa/evidence/cooking/2026-07-05_detail_panel_before_after_ref.png`, `docs/qa/evidence/cooking/2026-07-05_detail_panel_select.png`, `docs/qa/evidence/cooking/2026-07-05_detail_panel_report.html`
+- 判定: `1回` は右端バッジ内に整理され、必要素材/EXP/効果の各行にアイコン帯が入った。効果行の長い見出しは見切れ回避のため `次の釣行効果` に短縮し、実スクショで見切れなしを確認した。cmp一致は判定に使っていない。
+- 検証: `./tools/cooking_visual_qa.sh`、`tools/cooking_content_audit.tscn`、`tools/cooking_layout_audit.tscn`、`cooking_flow_smoke`、`./tools/save_system_verify.sh`、`./tools/validate_project.sh` green。`cooking_visual_qa.sh` は途中で透明キャプチャが1回発生したが、同一差分で再実行してgreen。`validate_project.sh` の ObjectDB/resource 警告はベースライン既知。
+- 固定条件: 右詳細行の補足値（材料数、初回EXP、効果回数）は行内バッジとして扱う。次スライスは背景の見せ方に進める。
 
 2026-07-05: `COOK_SELECT prep bar reference-uplift` 完了。下部バーを参照の4区画構成へ寄せ、下部バー素材候補を採用した。
 

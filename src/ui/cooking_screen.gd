@@ -655,7 +655,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	var buff_labels := _add_detail_story_row(
 		detail_rows,
 		"CookDetailEffectRow",
-		"次の釣行で得られる効果",
+		"次の釣行効果",
 		"buff",
 		Palette.GAUGE_GREEN_HI,
 		168.0
@@ -802,14 +802,20 @@ func _add_detail_story_row(
 	parent: Container,
 	node_name: String,
 	title: String,
-	_icon_mode: String,
+	icon_mode: String,
 	accent: Color,
 	title_width: float
 ) -> Array:
 	var tile := _texture_panel_box(
 		COOK_DETAIL_ROW_FRAME,
 		16,
-		_style_box(Color("#fff0cf"), Color("#8b5b2c"), Color("#e6b561"), 3, 5),
+		_style_box(
+			Palette.COOKING_DETAIL_ROW_FILL,
+			Palette.COOKING_DETAIL_ROW_BORDER,
+			Palette.COOKING_DETAIL_ROW_INNER,
+			3,
+			5
+		),
 		8.0,
 		2.0
 	)
@@ -831,8 +837,12 @@ func _add_detail_story_row(
 	title_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	title_row.add_theme_constant_override("separation", 4)
 	title_band.add_child(title_row)
-	var compact := title.length() > 6
-	var title_size := 13 if compact else 16
+	var icon_size := 20.0 if title.length() > 8 else 24.0
+	var icon := _small_icon(icon_mode, accent, Vector2(icon_size, icon_size))
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	title_row.add_child(icon)
+	var compact := title.length() > 5
+	var title_size := 10 if title.length() > 8 else 14 if compact else 15
 	var title_label := make_shadow_label(title, title_size, Palette.TEXT_BONE, 1)
 	title_label.custom_minimum_size = Vector2(0, 42)
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -843,7 +853,13 @@ func _add_detail_story_row(
 	title_row.add_child(title_label)
 
 	var primary_size := 17 if node_name == "CookDetailEffectRow" else 18
-	var primary := make_shadow_label("", primary_size, Color("#21170f"), 1, Color("#fff3c8"))
+	var primary := make_shadow_label(
+		"",
+		primary_size,
+		Palette.COOKING_DETAIL_VALUE_TEXT,
+		1,
+		Palette.COOKING_DETAIL_VALUE_OUTLINE
+	)
 	primary.custom_minimum_size = Vector2(0, 44)
 	primary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	primary.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if node_name == "CookDetailEffectRow" else HORIZONTAL_ALIGNMENT_CENTER
@@ -855,8 +871,29 @@ func _add_detail_story_row(
 	var secondary_width := 48.0 if compact else 130.0
 	if node_name == "CookDetailEffectRow":
 		secondary_width = 54.0
-	var secondary := make_shadow_label("", primary_size, accent, 1, Color("#fff2cf"))
-	secondary.custom_minimum_size = Vector2(secondary_width, 44)
+	elif node_name == "CookDetailExpRow":
+		secondary_width = 142.0
+	var secondary_badge := PanelContainer.new()
+	secondary_badge.name = "%sSecondaryBadge" % node_name
+	var secondary_style := _style_box(
+		Palette.COOKING_DETAIL_BADGE_FILL,
+		Palette.COOKING_DETAIL_BADGE_BORDER,
+		Palette.COOKING_DETAIL_BADGE_INNER,
+		2,
+		5
+	)
+	secondary_style.content_margin_left = 5.0
+	secondary_style.content_margin_top = 1.0
+	secondary_style.content_margin_right = 5.0
+	secondary_style.content_margin_bottom = 1.0
+	secondary_badge.add_theme_stylebox_override("panel", secondary_style)
+	secondary_badge.custom_minimum_size = Vector2(secondary_width, 38)
+	secondary_badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(secondary_badge)
+	var secondary_size := 14 if node_name == "CookDetailExpRow" else primary_size
+	var secondary := make_shadow_label("", secondary_size, accent, 1, Palette.COOKING_DETAIL_BADGE_OUTLINE)
+	secondary.custom_minimum_size = Vector2(0, 34)
+	secondary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	secondary.horizontal_alignment = (
 		HORIZONTAL_ALIGNMENT_RIGHT
 		if node_name == "CookDetailEffectRow"
@@ -865,7 +902,7 @@ func _add_detail_story_row(
 	secondary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	secondary.autowrap_mode = TextServer.AUTOWRAP_OFF
 	secondary.clip_text = true
-	row.add_child(secondary)
+	secondary_badge.add_child(secondary)
 	return [primary, secondary]
 
 
