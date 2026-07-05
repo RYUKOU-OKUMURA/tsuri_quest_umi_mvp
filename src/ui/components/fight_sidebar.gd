@@ -155,7 +155,7 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	_draw_fish_portrait(fish_rect)
 	var divider_y := fish_rect.end.y + (3.0 if _sidebar_frame != null else 6.0)
 	draw_line(Vector2(inner.position.x + 8.0, divider_y), Vector2(inner.end.x - 8.0, divider_y), Palette.FIGHT_SIDEBAR_RULE_FAINT, 1.0)
-	var estimate := (float(fish_data.get("size_min", 0.0)) + float(fish_data.get("size_max", 0.0))) * 0.5
+	var estimate := lerpf(float(fish_data.get("size_min", 0.0)), float(fish_data.get("size_max", 0.0)), 0.35)
 	if compact_card:
 		_draw_estimate_line(font, estimate, Rect2(inner.position.x, divider_y + 7.0, inner.size.x, 32.0))
 	else:
