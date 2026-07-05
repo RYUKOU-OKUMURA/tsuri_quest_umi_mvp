@@ -1636,10 +1636,34 @@ func _detail_buff_value_text(buff_text: String) -> String:
 
 
 func _apply_cook_button_style() -> void:
-	var normal_fallback := _style_box(Color("#103a5f"), Color("#3b2515"), Palette.GOLD_BRIGHT, 4, 6)
-	var hover_fallback := _style_box(Color("#19517d"), Color("#3b2515"), Color("#ffe67a"), 4, 6)
-	var pressed_fallback := _style_box(Color("#0c2946"), Color("#2a1a10"), Palette.GOLD_DEEP, 4, 6)
-	var disabled_fallback := _style_box(Color("#5f5142"), Color("#3b3027"), Color("#8f7b5e"), 4, 6)
+	var normal_fallback := _style_box(
+		Palette.COOKING_ACTION_BUTTON_FILL,
+		Palette.COOKING_ACTION_BUTTON_BORDER,
+		Palette.GOLD_BRIGHT,
+		4,
+		6
+	)
+	var hover_fallback := _style_box(
+		Palette.COOKING_ACTION_BUTTON_HOVER_FILL,
+		Palette.COOKING_ACTION_BUTTON_BORDER,
+		Palette.COOKING_ACTION_BUTTON_HOVER_INNER,
+		4,
+		6
+	)
+	var pressed_fallback := _style_box(
+		Palette.COOKING_ACTION_BUTTON_PRESSED_FILL,
+		Palette.COOKING_ACTION_BUTTON_PRESSED_BORDER,
+		Palette.GOLD_DEEP,
+		4,
+		6
+	)
+	var disabled_fallback := _style_box(
+		Palette.COOKING_ACTION_BUTTON_DISABLED_FILL,
+		Palette.COOKING_ACTION_BUTTON_DISABLED_BORDER,
+		Palette.COOKING_ACTION_BUTTON_DISABLED_INNER,
+		4,
+		6
+	)
 	_cook_button.add_theme_stylebox_override(
 		"normal",
 		_texture_style_box(COOK_BUTTON_FRAME, 22, normal_fallback, 58.0, 8.0)
@@ -1661,9 +1685,9 @@ func _apply_cook_button_style() -> void:
 		_texture_style_box(COOK_BUTTON_FRAME, 22, hover_fallback, 58.0, 8.0)
 	)
 	_cook_button.add_theme_color_override("font_color", Palette.GOLD_BRIGHT)
-	_cook_button.add_theme_color_override("font_hover_color", Color("#fff1ba"))
-	_cook_button.add_theme_color_override("font_pressed_color", Color("#f0c06b"))
-	_cook_button.add_theme_color_override("font_disabled_color", Color("#b6a68d"))
+	_cook_button.add_theme_color_override("font_hover_color", Palette.COOKING_ACTION_BUTTON_HOVER_TEXT)
+	_cook_button.add_theme_color_override("font_pressed_color", Palette.COOKING_ACTION_BUTTON_PRESSED_TEXT)
+	_cook_button.add_theme_color_override("font_disabled_color", Palette.COOKING_ACTION_BUTTON_DISABLED_TEXT)
 	_cook_button.add_theme_font_size_override("font_size", 25)
 
 
@@ -1696,10 +1720,10 @@ func _apply_recipe_book_button_style(button: Button) -> void:
 func _draw_cook_button_icon(button: Button) -> void:
 	var active := not button.disabled
 	var center := Vector2(54.0, button.size.y * 0.5 - 1.0)
-	var ink := Color("#2b1a0c") if active else Color("#665847")
-	var pot := Color("#c8873a") if active else Color("#7a6954")
-	var lid := Color("#ffe08a") if active else Color("#a79370")
-	var steam := Color(1.0, 0.88, 0.45, 0.64) if active else Color(0.58, 0.52, 0.42, 0.32)
+	var ink := Palette.COOKING_ACTION_ICON_INK if active else Palette.COOKING_ACTION_ICON_MUTED_INK
+	var pot := Palette.COOKING_ACTION_ICON_POT if active else Palette.COOKING_ACTION_ICON_MUTED_POT
+	var lid := Palette.COOKING_ACTION_ICON_LID if active else Palette.COOKING_ACTION_ICON_MUTED_LID
+	var steam := Palette.COOKING_ACTION_ICON_STEAM if active else Palette.COOKING_ACTION_ICON_MUTED_STEAM
 	button.draw_rect(Rect2(center.x - 14.0, center.y - 1.0, 28.0, 12.0), ink)
 	button.draw_rect(Rect2(center.x - 11.0, center.y + 1.0, 22.0, 9.0), pot)
 	button.draw_line(center + Vector2(-16.0, -3.0), center + Vector2(16.0, -3.0), ink, 3.0)

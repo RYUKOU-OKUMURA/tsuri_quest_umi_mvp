@@ -1,6 +1,6 @@
 # 調理場 QA判断ログ
 
-最終更新: 2026-07-05 / 状態: COOK_SELECT 中央料理グリッド外枠R1追加移行完了
+最終更新: 2026-07-05 / 状態: COOK_SELECT 調理ボタンR1追加移行完了
 参照画像: reference/cooking_flow/01_cook_select_concept.png, reference/cooking_flow/02_meal_result_concept.png, reference/cooking_flow/03_exp_gain_concept.png, reference/cooking_flow/04_level_up_overlay_concept.png, reference/cooking_flow/05_status_summary_concept.png
 QA更新コマンド: ./tools/cooking_visual_qa.sh
 
@@ -30,7 +30,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 ## 5. 現在の残ギャップ
 
 - P2: レアリティ表示の `RarityStyles` 横展開は未実施。
-- R1: `src/ui/cooking_screen.gd` の画面固有ハードコード色は大半が未移行。今回触った左魚リスト周辺のruntime色は `Palette.COOKING_FISH_*`、料理カード/中央料理グリッド外枠周辺は `Palette.COOKING_RECIPE_*`、下部バー周辺は `Palette.COOKING_PREP_*`、右詳細パネルactive runtime色は `Palette.COOKING_DETAIL_*`、背景glazeは `Palette.COOKING_BG_GLAZE` へ移行済み。残りは次の調理場直接編集スライスで継続する。
+- R1: `src/ui/cooking_screen.gd` の画面固有ハードコード色は大半が未移行。今回触った左魚リスト周辺のruntime色は `Palette.COOKING_FISH_*`、料理カード/中央料理グリッド外枠周辺は `Palette.COOKING_RECIPE_*`、下部バー周辺は `Palette.COOKING_PREP_*`、右詳細パネルactive runtime色は `Palette.COOKING_DETAIL_*`、調理ボタン周辺は `Palette.COOKING_ACTION_*`、背景glazeは `Palette.COOKING_BG_GLAZE` へ移行済み。残りは次の調理場直接編集スライスで継続する。
 - 監査: `tools/cooking_layout_audit.tscn` / `tools/cooking_content_audit.tscn` / `./tools/cooking_visual_qa.sh` はgreen。visual QAは状態間キャプチャ重複のfail guard追加済み。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
@@ -38,6 +38,17 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 なし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-05: `COOK_SELECT cook button palette R1 pass` 完了。参照uplift済みCOOK_SELECT調理ボタンのactive runtime色をPalette用途名へ追加移行した。
+
+- 選定理由: COOK_SELECTの主導線である調理ボタンに、枠4状態・文字状態・runtime鍋アイコン色の直書きが残っており、次回のボタン質感改善時に安全に触りづらかったため。
+- 変えたもの: 調理ボタンのnormal/hover/pressed/disabled fallback色、hover/pressed/disabled文字色、runtime鍋アイコンのactive/disabled色。
+- 変えていないもの: §1 freeze値、レイアウト値、素材、表示文言、料理図鑑ボタン、左魚リスト、料理カード、右詳細パネル、下部バー、背景、調理報酬オーバーレイ、日本語PNG焼き込み。
+- Palette: 新規 `Palette.COOKING_ACTION_BUTTON_*` / `COOKING_ACTION_ICON_*` を追加。理由は調理ボタンとruntime鍋アイコン色を、表示同値のままPalette正本へ移すため。
+- 証拠画像: `docs/qa/evidence/cooking/2026-07-05_cook_button_palette_select.png`, `docs/qa/evidence/cooking/2026-07-05_cook_button_palette_report.html`
+- 判定: 実スクショでCOOK_SELECTの調理ボタン、ボタン文字、鍋アイコンにP1なし。これは参照upliftではなくR1表示同値移行なので、cmp一致は完了条件にしていない。
+- 検証: `./tools/cooking_visual_qa.sh`、`tools/cooking_content_audit.tscn`、`tools/cooking_layout_audit.tscn`、`cooking_flow_smoke`、`./tools/save_system_verify.sh`、`./tools/validate_project.sh` green。`validate_project.sh` の ObjectDB/resource 警告はベースライン既知。
+- 固定条件: COOK_SELECTの調理実行導線は `COOKING_ACTION_*` 系で扱い、料理図鑑ボタンは別スライスで扱う。
 
 2026-07-05: `COOK_SELECT recipe grid palette R1 pass` 完了。参照uplift済みCOOK_SELECT中央料理グリッド外枠のactive runtime色をPalette用途名へ追加移行した。
 
