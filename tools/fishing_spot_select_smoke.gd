@@ -14,6 +14,7 @@ func _ready() -> void:
 
 	PlayerProgress.level = 1
 	PlayerProgress.owned_boats = []
+	PlayerProgress.sea_chart_fragments = 0
 	PlayerProgress.owned_rigs = [GameData.DEFAULT_RIG_ID, "chokusen"]
 	PlayerProgress.equipped_rig_id = GameData.DEFAULT_RIG_ID
 	PlayerProgress.spot_caught_counts = {
@@ -77,6 +78,7 @@ func _ready() -> void:
 	_payload = {}
 	PlayerProgress.level = 6
 	PlayerProgress.owned_boats = []
+	PlayerProgress.sea_chart_fragments = 0
 	_screen = _make_screen()
 	await get_tree().process_frame
 	_screen._select_spot("bluewater_route")
@@ -85,6 +87,40 @@ func _ready() -> void:
 	_screen._select_spot("bluewater_route")
 	_expect(_navigated_to == "fishing", "offshore boat should allow bluewater route")
 	_expect(String(_payload.get("spot_id", "")) == "bluewater_route", "bluewater route payload mismatch")
+
+	_screen.queue_free()
+	await get_tree().process_frame
+
+	_navigated_to = ""
+	_payload = {}
+	PlayerProgress.level = 29
+	PlayerProgress.owned_boats = ["bluewater_boat"]
+	PlayerProgress.sea_chart_fragments = 3
+	_screen = _make_screen()
+	await get_tree().process_frame
+	var danger_access := PlayerProgress.fishing_spot_access_status("danger_reef")
+	_expect(String(danger_access.get("reason", "")) == "level", "danger reef should be level-locked below Lv.30")
+	_screen._select_spot("danger_reef")
+	_expect(_navigated_to.is_empty(), "level-locked danger reef must not navigate")
+
+	PlayerProgress.level = 30
+	PlayerProgress.owned_boats = []
+	PlayerProgress.sea_chart_fragments = 3
+	danger_access = PlayerProgress.fishing_spot_access_status("danger_reef")
+	_expect(String(danger_access.get("reason", "")) == "boat", "danger reef should require rank 3 boat after level gate")
+
+	PlayerProgress.owned_boats = ["bluewater_boat"]
+	PlayerProgress.sea_chart_fragments = 2
+	danger_access = PlayerProgress.fishing_spot_access_status("danger_reef")
+	_expect(String(danger_access.get("reason", "")) == "chart", "danger reef should require completed sea chart")
+	_expect(String(danger_access.get("message", "")).contains("断片 2/3"), "chart lock should show fragment progress")
+	_screen._select_spot("danger_reef")
+	_expect(_navigated_to.is_empty(), "chart-locked danger reef must not navigate")
+
+	PlayerProgress.sea_chart_fragments = 3
+	_screen._select_spot("danger_reef")
+	_expect(_navigated_to == "fishing", "completed sea chart should allow danger reef")
+	_expect(String(_payload.get("spot_id", "")) == "danger_reef", "danger reef payload mismatch")
 
 	_screen.queue_free()
 	await get_tree().process_frame

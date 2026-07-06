@@ -2,7 +2,17 @@ extends SceneTree
 
 const GameDataScript = preload("res://src/autoload/game_data.gd")
 const SAMPLE_COUNT := 10000
-const AUDIT_LEVELS: Array[int] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+const AUDIT_LEVELS: Array[int] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 30, 33, 38, 50]
+const DANGER_REEF_NORMAL_SHARK_IDS: Array[String] = [
+	"nekozame",
+	"inuzame",
+	"dochizame",
+	"hoshizame",
+	"eporetto",
+	"darumazame",
+	"fujikujira",
+]
+const DANGER_REEF_LURE_ONLY_SHARK_IDS: Array[String] = ["shumokuzame", "hohojirozame"]
 
 
 func _initialize() -> void:
@@ -16,6 +26,7 @@ func _initialize() -> void:
 	_check_completion_routes(game_data, failures)
 	_check_level_gates(game_data, failures)
 	_check_boat_gates(game_data, failures)
+	_check_danger_reef_shark_distribution(game_data, failures)
 	_check_expected_rates(game_data, failures)
 	_check_rig_encounter_modifiers(game_data, failures)
 	_check_environment_encounter_modifiers(game_data, failures)
@@ -34,8 +45,8 @@ func _initialize() -> void:
 
 func _check_fish_master(game_data: Object, failures: Array[String]) -> void:
 	var fish_ids: Array[String] = game_data.get_all_fish_ids()
-	if fish_ids.size() != 70:
-		failures.append("expected 70 fish, got %d" % fish_ids.size())
+	if fish_ids.size() != 79:
+		failures.append("expected 79 fish, got %d" % fish_ids.size())
 	var seen_numbers: Dictionary = {}
 	var required_keys: Array[String] = [
 		"id",
@@ -82,8 +93,8 @@ func _check_fish_master(game_data: Object, failures: Array[String]) -> void:
 
 func _check_spot_master(game_data: Object, failures: Array[String]) -> void:
 	var spot_ids: Array[String] = game_data.get_all_fishing_spot_ids()
-	if spot_ids.size() != 8:
-		failures.append("expected 8 fishing spots, got %d" % spot_ids.size())
+	if spot_ids.size() != 9:
+		failures.append("expected 9 fishing spots, got %d" % spot_ids.size())
 	var required_keys: Array[String] = [
 		"id",
 		"name",
@@ -141,6 +152,8 @@ func _check_area_limited_distribution(game_data: Object, failures: Array[String]
 		var fish: Dictionary = game_data.get_fish(fish_id)
 		if bool(fish.get("boss", false)):
 			continue
+		if bool(fish.get("shark", false)):
+			continue
 		if fish_id in common_fish:
 			continue
 		var spots: Array = normal_presence.get(fish_id, [])
@@ -155,6 +168,13 @@ func _check_completion_routes(game_data: Object, failures: Array[String]) -> voi
 			failures.append("%s sell_price must be positive" % fish_id)
 		if game_data.get_recipes_for_fish(fish_id, game_data.MAX_LEVEL).is_empty():
 			failures.append("%s must be cookable by at least one recipe" % fish_id)
+		if bool(fish.get("shark", false)):
+			if fish_id in DANGER_REEF_LURE_ONLY_SHARK_IDS:
+				continue
+			var danger_weights: Dictionary = game_data.encounter_weights(game_data.MAX_LEVEL, "danger_reef")
+			if not danger_weights.has(fish_id) or float(danger_weights[fish_id]) <= 0.0:
+				failures.append("%s shark must be reachable in danger_reef at Lv.%d" % [fish_id, game_data.MAX_LEVEL])
+			continue
 		if bool(fish.get("boss", false)):
 			var boss_spot: Dictionary = game_data.get_fishing_spot(game_data.BOSS_FISHING_SPOT_ID)
 			if not Array(boss_spot.get("allowed_fish", [])).has(fish_id):
@@ -209,8 +229,8 @@ func _check_environment_master(game_data: Object, failures: Array[String]) -> vo
 
 func _check_rig_master(game_data: Object, failures: Array[String]) -> void:
 	var rig_ids: Array[String] = game_data.get_all_rig_ids()
-	if rig_ids.size() != 6:
-		failures.append("expected 6 rigs, got %d" % rig_ids.size())
+	if rig_ids.size() != 7:
+		failures.append("expected 7 rigs, got %d" % rig_ids.size())
 	if not rig_ids.has(game_data.DEFAULT_RIG_ID):
 		failures.append("rig list missing default rig %s" % game_data.DEFAULT_RIG_ID)
 	var covered_baits: Array[String] = []
@@ -271,11 +291,37 @@ func _check_boat_gates(game_data: Object, failures: Array[String]) -> void:
 		failures.append("level gate should still block south_reef before Lv.5")
 	if not game_data.is_fishing_spot_accessible("harbor_boulder", 5, no_boats):
 		failures.append("boss spot should not require a boat at Lv.5")
+	if game_data.is_fishing_spot_accessible("danger_reef", 29, bluewater_boat, 3):
+		failures.append("danger_reef should require Lv.30")
+	if game_data.is_fishing_spot_accessible("danger_reef", 30, offshore_boat, 3):
+		failures.append("danger_reef should require bluewater boat")
+	if game_data.is_fishing_spot_accessible("danger_reef", 30, bluewater_boat, 2):
+		failures.append("danger_reef should require completed sea chart")
+	if not game_data.is_fishing_spot_accessible("danger_reef", 30, bluewater_boat, 3):
+		failures.append("danger_reef should unlock with Lv.30, bluewater boat, and sea chart 3/3")
+
+
+func _check_danger_reef_shark_distribution(game_data: Object, failures: Array[String]) -> void:
+	var weights: Dictionary = game_data.encounter_weights(game_data.MAX_LEVEL, "danger_reef")
+	for fish_id in DANGER_REEF_NORMAL_SHARK_IDS:
+		if not weights.has(fish_id) or float(weights[fish_id]) <= 0.0:
+			failures.append("danger_reef should include normal shark %s" % fish_id)
+	for fish_id in DANGER_REEF_LURE_ONLY_SHARK_IDS:
+		if weights.has(fish_id) and float(weights[fish_id]) > 0.0:
+			failures.append("danger_reef should not include lure-only shark without E10 bait: %s" % fish_id)
+	var shark_weight := 0.0
+	var total := _total_weight(weights)
+	for fish_id in DANGER_REEF_NORMAL_SHARK_IDS:
+		shark_weight += float(weights.get(fish_id, 0.0))
+	if total <= 0.0 or shark_weight / total < 0.25:
+		failures.append("danger_reef normal shark share should be meaningful")
 
 
 func _check_expected_rates(game_data: Object, failures: Array[String]) -> void:
 	for spot_id in game_data.get_all_fishing_spot_ids():
 		var spot: Dictionary = game_data.get_fishing_spot(spot_id)
+		if int(spot.get("unlock_level", 1)) > 10:
+			continue
 		if bool(spot.get("boss_spot", false)):
 			var boss_weights: Dictionary = game_data.encounter_weights(10, spot_id)
 			if boss_weights.has("boss_kurodai"):
@@ -307,15 +353,16 @@ func _check_expected_rates(game_data: Object, failures: Array[String]) -> void:
 func _check_rig_encounter_modifiers(game_data: Object, failures: Array[String]) -> void:
 	for spot_id in game_data.get_all_fishing_spot_ids():
 		var spot: Dictionary = game_data.get_fishing_spot(spot_id)
-		var baseline: Dictionary = game_data.encounter_weights(10, spot_id)
+		var audit_level := maxi(10, int(spot.get("unlock_level", 1)))
+		var baseline: Dictionary = game_data.encounter_weights(audit_level, spot_id)
 		if bool(spot.get("boss_spot", false)):
 			for rig_id in game_data.get_all_rig_ids():
-				var boss_weights: Dictionary = game_data.encounter_weights(10, spot_id, rig_id)
+				var boss_weights: Dictionary = game_data.encounter_weights(audit_level, spot_id, rig_id)
 				if not _weights_equal(baseline, boss_weights):
 					failures.append("%s boss spot should ignore rig modifier for %s" % [spot_id, rig_id])
 			continue
 		for rig_id in game_data.get_all_rig_ids():
-			var rig_weights: Dictionary = game_data.encounter_weights(10, spot_id, rig_id)
+			var rig_weights: Dictionary = game_data.encounter_weights(audit_level, spot_id, rig_id)
 			if rig_weights.is_empty():
 				failures.append("%s rig=%s has no encounter weights" % [spot_id, rig_id])
 				continue
@@ -339,9 +386,10 @@ func _check_rig_encounter_modifiers(game_data: Object, failures: Array[String]) 
 func _check_environment_encounter_modifiers(game_data: Object, failures: Array[String]) -> void:
 	for spot_id in game_data.get_all_fishing_spot_ids():
 		var spot: Dictionary = game_data.get_fishing_spot(spot_id)
-		var baseline: Dictionary = game_data.encounter_weights(10, spot_id)
+		var audit_level := maxi(10, int(spot.get("unlock_level", 1)))
+		var baseline: Dictionary = game_data.encounter_weights(audit_level, spot_id)
 		for environment_id in game_data.get_all_fishing_environment_ids():
-			var environment_weights: Dictionary = game_data.encounter_weights(10, spot_id, "", environment_id)
+			var environment_weights: Dictionary = game_data.encounter_weights(audit_level, spot_id, "", environment_id)
 			if bool(spot.get("boss_spot", false)):
 				if not _weights_equal(baseline, environment_weights):
 					failures.append("%s boss spot should ignore environment modifier for %s" % [spot_id, environment_id])

@@ -46,6 +46,11 @@ const BOSS_FIRST_CLEAR_REWARDS: Dictionary = {
 		"money": 3200,
 		"message": "深淵の重鎮を釣り上げた！\n外洋の深場に潜む巨体を制した。",
 	},
+	"nushi_danger_reef":
+	{
+		"money": 5000,
+		"message": "深海の白帝を釣り上げた！\n鮫の根を支配する白い巨影を制した。",
+	},
 }
 
 const TITLES: Array[Dictionary] = [
@@ -1435,6 +1440,38 @@ const NUSHI_FISH: Dictionary = {
 		"action_profile": {"dash": 0.40, "dive": 0.30, "turn": 0.12, "rest": 0.18},
 		"action_messages": {"dash": "深淵の重鎮が根へ突っ込む！ 無理に巻かず耐えよう！", "dive": "深淵の重鎮が深く潜る！ ラインを出して耐えよう！", "turn": "深淵の重鎮が岩陰で反転した！", "rest": "深淵の重鎮の重い抵抗が緩んだ。今が巻き時だ！"},
 	},
+	"nushi_danger_reef":
+	{
+		"id": "nushi_danger_reef",
+		"name": "深海の白帝",
+		"base_fish_id": "hohojirozame",
+		"rarity": "レア",
+		"min_level": 38,
+		"boss": true,
+		"nushi": true,
+		"shark": true,
+		"weight": 1.0,
+		# E4仕様の例外値。ホオジロザメの2.0〜2.6倍だと8m超でファイト画面の読みやすさを壊すため、白帝だけ480〜620cmに抑える。
+		"size_min": 480.0,
+		"size_max": 620.0,
+		"sell_price": 22000,
+		"food_exp": 800,
+		"stamina": 736.0,
+		"power": 2.00,
+		"speed": 0.95,
+		"start_distance": 78.0,
+		"start_depth": 24.0,
+		"color": "#e2e5e0",
+		"habitat": "危険海域・鮫の根",
+		"behavior": "霧の鮫の根に現れ、白い巨体で深場へ沈み続ける。",
+		"preferred_bait": "小魚",
+		"visual_scale": 1.82,
+		"line_anchor_x": 0.455,
+		"line_anchor_y": 0.02,
+		"motion": {"wave_amp": 0.018, "wave_freq": 2.6, "dash_shift": 0.060, "turn_shift": 0.036, "dive_shift": 0.078, "jitter": 0.001, "depth_bias": 0.045},
+		"action_profile": {"dash": 0.32, "dive": 0.40, "turn": 0.10, "rest": 0.18},
+		"action_messages": {"dash": "深海の白帝が巨体を横へ振った！", "dive": "深海の白帝が深場へ沈む！ ラインを出して耐えよう！", "turn": "深海の白帝が白い腹を返した！", "rest": "深海の白帝の動きがわずかに緩んだ。距離を詰めよう！"},
+	},
 }
 
 const COMMON_LOW_LEVEL_FISH_IDS: Array[String] = [
@@ -1468,6 +1505,7 @@ const FISHING_SPOT_ORDER: Array[String] = [
 	"south_reef",
 	"bluewater_route",
 	"deep_ocean",
+	"danger_reef",
 	"harbor_boulder",
 ]
 
@@ -1590,6 +1628,24 @@ const FISHING_SPOTS: Dictionary = {
 		"allowed_fish": ["aji", "mejina", "kasago", "iwashi", "shirogisu", "isaki", "kawahagi", "mebaru", "ainame", "bora", "rouninaji", "kajiki", "kihada", "binnaga", "mebachi", "akamutsu", "kinmedai", "ara", "medai"],
 		"fish_weight_modifiers": {"rouninaji": 0.6, "kajiki": 0.8, "kihada": 0.8, "binnaga": 0.7, "mebachi": 0.8, "akamutsu": 0.7, "kinmedai": 0.7, "ara": 0.7, "medai": 0.7},
 		"nushi": {"fish_id": "nushi_deep_ocean", "environment_id": "fog", "rig_id": "nomase", "time_slot_id": "", "hint": "霧の深場で泳がせると、底から重い影が浮くことがあるらしい…"},
+	},
+	"danger_reef":
+	{
+		"id": "danger_reef",
+		"name": "危険海域・鮫の根",
+		"short_name": "危険海域",
+		"unlock_level": 30,
+		"required_boat_rank": 3,
+		"requires_sea_chart": true,
+		"depth_range": [18.0, 30.0],
+		"description": "海図でしか辿り着けない鮫の根。掛けた魚を横取りされる危険がある。",
+		"common_modifier": 0.05,
+		"featured_fish": ["hoshizame", "dochizame", "kihada", "kajiki", "ara"],
+		"recommended_baits": ["小魚", "大型ルアー"],
+		"boss_spot": false,
+		"allowed_fish": ["nekozame", "inuzame", "dochizame", "hoshizame", "eporetto", "darumazame", "fujikujira", "shumokuzame", "hohojirozame", "kihada", "mebachi", "kajiki", "ara", "shiira", "kanpachi", "buri"],
+		"fish_weight_modifiers": {"nekozame": 1.4, "inuzame": 1.4, "dochizame": 1.6, "hoshizame": 1.6, "eporetto": 0.5, "darumazame": 0.5, "fujikujira": 0.4, "kihada": 0.9, "mebachi": 0.8, "kajiki": 0.9, "ara": 0.8},
+		"nushi": {"fish_id": "nushi_danger_reef", "environment_id": "fog", "rig_id": "nomase", "time_slot_id": "", "hint": "霧の日の鮫の根に、白い巨影が出るという……"},
 	},
 	"harbor_boulder":
 	{

@@ -11,7 +11,9 @@ var _failed := false
 func _ready() -> void:
 	GameData._rng.seed = 20260706
 	var rows: Array[Array] = []
-	for spot_id in GameData.NORMAL_FISHING_SPOT_IDS:
+	var audited_spot_ids: Array[String] = GameData.NORMAL_FISHING_SPOT_IDS.duplicate()
+	audited_spot_ids.append("danger_reef")
+	for spot_id in audited_spot_ids:
 		var spot := GameData.get_fishing_spot(spot_id)
 		var nushi: Dictionary = spot.get("nushi", {})
 		_expect_true(not nushi.is_empty(), "%s should define nushi section" % spot_id)

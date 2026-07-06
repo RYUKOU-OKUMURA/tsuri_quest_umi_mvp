@@ -12,6 +12,8 @@ const DEFAULT_RIG_ID := "sabiki"
 const RIG_MATCH_WEIGHT_MULTIPLIER := 2.5
 const RIG_MISMATCH_WEIGHT_MULTIPLIER := 0.4
 const NUSHI_ENCOUNTER_CHANCE := 0.04
+const SEA_CHART_REQUIRED_FRAGMENTS := 3
+const SHARK_LURE_ONLY_FISH_IDS: Array[String] = ["shumokuzame", "hohojirozame"]
 
 const BOSS_FIRST_CLEAR_REWARDS: Dictionary = GameCatalogData.BOSS_FIRST_CLEAR_REWARDS
 const FISH: Dictionary = GameCatalogData.FISH
@@ -279,7 +281,12 @@ func get_required_boat_for_rank(required_rank: int) -> Dictionary:
 	return {}
 
 
-func fishing_spot_access_status(spot_id: String, player_level: int, owned_boat_ids: Array) -> Dictionary:
+func fishing_spot_access_status(
+	spot_id: String,
+	player_level: int,
+	owned_boat_ids: Array,
+	sea_chart_fragments: int = SEA_CHART_REQUIRED_FRAGMENTS
+) -> Dictionary:
 	var resolved_id := _resolved_spot_id(spot_id)
 	var spot: Dictionary = FISHING_SPOTS[resolved_id]
 	var unlock_level := int(spot.get("unlock_level", 1))
@@ -315,6 +322,22 @@ func fishing_spot_access_status(spot_id: String, player_level: int, owned_boat_i
 			"required_boat_name": boat_name,
 		}
 
+	if bool(spot.get("requires_sea_chart", false)) and sea_chart_fragments < SEA_CHART_REQUIRED_FRAGMENTS:
+		var clamped_fragments := clampi(sea_chart_fragments, 0, SEA_CHART_REQUIRED_FRAGMENTS)
+		return {
+			"ok": false,
+			"spot_id": resolved_id,
+			"reason": "chart",
+			"message": "海図が必要　断片 %d/%d" % [clamped_fragments, SEA_CHART_REQUIRED_FRAGMENTS],
+			"detail": "釣行中に流れ着くボトルメールから海図の断片を集めよう。",
+			"button_text": "海図 %d/%d" % [clamped_fragments, SEA_CHART_REQUIRED_FRAGMENTS],
+			"required_level": unlock_level,
+			"required_boat_rank": required_rank,
+			"owned_boat_rank": owned_rank,
+			"sea_chart_fragments": clamped_fragments,
+			"required_sea_chart_fragments": SEA_CHART_REQUIRED_FRAGMENTS,
+		}
+
 	return {
 		"ok": true,
 		"spot_id": resolved_id,
@@ -325,11 +348,18 @@ func fishing_spot_access_status(spot_id: String, player_level: int, owned_boat_i
 		"required_level": unlock_level,
 		"required_boat_rank": required_rank,
 		"owned_boat_rank": owned_rank,
+		"sea_chart_fragments": clampi(sea_chart_fragments, 0, SEA_CHART_REQUIRED_FRAGMENTS),
+		"required_sea_chart_fragments": SEA_CHART_REQUIRED_FRAGMENTS,
 	}
 
 
-func is_fishing_spot_accessible(spot_id: String, player_level: int, owned_boat_ids: Array) -> bool:
-	return bool(fishing_spot_access_status(spot_id, player_level, owned_boat_ids).get("ok", false))
+func is_fishing_spot_accessible(
+	spot_id: String,
+	player_level: int,
+	owned_boat_ids: Array,
+	sea_chart_fragments: int = SEA_CHART_REQUIRED_FRAGMENTS
+) -> bool:
+	return bool(fishing_spot_access_status(spot_id, player_level, owned_boat_ids, sea_chart_fragments).get("ok", false))
 
 
 func get_accessible_fishing_spot_ids(player_level: int, owned_boat_ids: Array) -> Array[String]:
@@ -764,6 +794,8 @@ func encounter_weights(
 		if int(fish.get("min_level", 1)) > player_level:
 			continue
 		if not allowed_fish.has(fish_id):
+			continue
+		if SHARK_LURE_ONLY_FISH_IDS.has(fish_id) and not extra_fish_weight_modifiers.has(fish_id):
 			continue
 		var modifier := common_modifier
 		if modifiers.has(fish_id):

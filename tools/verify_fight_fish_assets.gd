@@ -9,10 +9,10 @@ func _initialize() -> void:
 	var fish_ids := game_data.get_all_fish_ids()
 	var nushi_ids := game_data.get_all_nushi_fish_ids()
 	var missing: Array[String] = []
-	if fish_ids.size() != 70:
-		missing.append("expected 70 fight fish ids, got %d" % fish_ids.size())
-	if nushi_ids.size() != 7:
-		missing.append("expected 7 E2 nushi fish ids, got %d" % nushi_ids.size())
+	if fish_ids.size() != 79:
+		missing.append("expected 79 fight fish ids, got %d" % fish_ids.size())
+	if nushi_ids.size() != 8:
+		missing.append("expected 8 nushi fish ids, got %d" % nushi_ids.size())
 	for fish_id in nushi_ids:
 		fish_ids.append(fish_id)
 	var required_keys: Array[String] = [

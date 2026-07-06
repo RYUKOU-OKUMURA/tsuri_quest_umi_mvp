@@ -562,7 +562,7 @@ func buy_boat(boat_id: String) -> Dictionary:
 
 
 func fishing_spot_access_status(spot_id: String) -> Dictionary:
-	return GameData.fishing_spot_access_status(spot_id, level, owned_boats)
+	return GameData.fishing_spot_access_status(spot_id, level, owned_boats, sea_chart_fragments)
 
 
 func can_access_fishing_spot(spot_id: String) -> bool:

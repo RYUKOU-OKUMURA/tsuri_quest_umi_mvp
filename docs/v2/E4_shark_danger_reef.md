@@ -56,11 +56,11 @@ if bool(spot.get("requires_sea_chart", false)) and sea_chart_fragments < 3:
 
 | id | 名前 | ランク | rarity | fish_no | min_level | size | sell | stamina | power | speed | style | preferred_bait |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| nekozame | ネコザメ | 通常 | アンコモン | No.071 | 30 | 60〜120cm | 900 | 120 | 0.95 | 0.70 | bottom | カニ |
+| nekozame | ネコザメ | 通常 | アンコモン | No.071 | 30 | 60〜120cm | 900 | 120 | 0.95 | 0.70 | bottom | 岩ガニ |
 | inuzame | イヌザメ | 通常 | アンコモン | No.072 | 30 | 60〜110cm | 850 | 110 | 0.90 | 0.75 | bottom | イソメ |
 | dochizame | ドチザメ | 通常 | アンコモン | No.073 | 30 | 80〜150cm | 1,000 | 140 | 1.05 | 0.85 | bottom | 小魚 |
 | hoshizame | ホシザメ | 通常 | アンコモン | No.074 | 30 | 70〜130cm | 1,400 | 150 | 1.20 | 0.90 | bottom | イソメ |
-| eporetto | エポレットシャーク | レア | レア | No.075 | 33 | 60〜100cm | 2,200 | 130 | 0.85 | 0.65 | bottom | カニ |
+| eporetto | エポレットシャーク | レア | レア | No.075 | 33 | 60〜100cm | 2,200 | 130 | 0.85 | 0.65 | bottom | 岩ガニ |
 | darumazame | ダルマザメ | レア | レア | No.076 | 33 | 30〜55cm | 2,600 | 90 | 0.80 | 1.10 | bottom | 小魚 |
 | fujikujira | フジクジラ | レア | レア | No.077 | 33 | 25〜45cm | 3,000 | 80 | 0.70 | 0.95 | bottom | 小魚 |
 | shumokuzame | シュモクザメ | 大型 | レア | No.078 | 38 | 200〜350cm | 4,200 | 280 | 1.70 | 1.45 | pelagic_fast | 小魚 |
