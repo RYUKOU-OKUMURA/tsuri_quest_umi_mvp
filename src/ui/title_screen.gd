@@ -14,6 +14,10 @@ const TITLE_BUTTON_DISABLED_PATH := "res://assets/showcase/title/title_button_di
 const TITLE_BAIT_PATH := "res://assets/showcase/common/nav_fishing_icon.png"
 
 var _confirm_reset: ConfirmationDialog
+var _slot_buttons: Array[Button] = []
+var _slot_status_label: Label
+var _continue_button: Button
+var _new_button: Button
 
 
 func _build_screen() -> void:
@@ -111,7 +115,7 @@ func _build_menu(root: Control) -> void:
 		bait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 		_place_control(menu, bait, 0.285, 0.075, 0.355, 0.175)
 
-	var header := make_shadow_label("冒険の開始", 24, Palette.TEXT_BONE, 2, Palette.TITLE_MENU_OUTLINE, Palette.TITLE_MENU_SHADOW)
+	var header := make_shadow_label("セーブスロット", 24, Palette.TEXT_BONE, 2, Palette.TITLE_MENU_OUTLINE, Palette.TITLE_MENU_SHADOW)
 	_apply_title_font(header, true)
 	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	header.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -119,31 +123,41 @@ func _build_menu(root: Control) -> void:
 	header.clip_text = true
 	_place_control(menu, header, 0.13, 0.070, 0.91, 0.185)
 
-	var has_save := PlayerProgress.has_save_file()
-	var save_status := make_label("セーブデータ  %s" % ("あり" if has_save else "なし"), 15, Palette.TITLE_SAVE_STATUS)
-	_apply_title_font(save_status, false)
-	save_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	save_status.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	save_status.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_place_control(menu, save_status, 0.14, 0.230, 0.86, 0.290)
+	_slot_buttons = []
+	for slot_index in range(PlayerProgress.SAVE_SLOT_COUNT):
+		var slot_id := slot_index + 1
+		var slot_button := make_button("", Callable(self, "_select_slot").bind(slot_id), 430)
+		slot_button.custom_minimum_size = Vector2.ZERO
+		slot_button.clip_text = true
+		_slot_buttons.append(slot_button)
+		_place_control(
+			menu,
+			slot_button,
+			0.105,
+			0.215 + 0.102 * float(slot_index),
+			0.895,
+			0.300 + 0.102 * float(slot_index)
+		)
 
-	var continue_button := make_button("つづきから", func() -> void: navigate("harbor"), 430)
-	continue_button.disabled = not PlayerProgress.has_save_file()
-	continue_button.custom_minimum_size = Vector2.ZERO
-	_apply_title_button_skin(continue_button, false)
-	_place_control(menu, continue_button, 0.105, 0.330, 0.895, 0.470)
+	_slot_status_label = make_label("", 14, Palette.TITLE_SAVE_STATUS)
+	_apply_title_font(_slot_status_label, false)
+	_slot_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_slot_status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_slot_status_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_slot_status_label.clip_text = true
+	_place_control(menu, _slot_status_label, 0.105, 0.535, 0.895, 0.595)
 
-	var new_text := "最初から" if PlayerProgress.has_save_file() else "ゲームを始める"
-	var new_button := make_button(new_text, _on_new_game_pressed, 430, true)
-	new_button.custom_minimum_size = Vector2.ZERO
-	_apply_title_button_skin(new_button, true)
-	_place_control(menu, new_button, 0.105, 0.535, 0.895, 0.675)
+	_continue_button = make_button("つづきから", func() -> void: navigate("harbor"), 430)
+	_continue_button.custom_minimum_size = Vector2.ZERO
+	_apply_title_button_skin(_continue_button, false)
+	_place_control(menu, _continue_button, 0.105, 0.615, 0.895, 0.735)
 
-	var readme_button := make_button("README.md を参照", func() -> void: pass, 430)
-	readme_button.disabled = true
-	readme_button.custom_minimum_size = Vector2.ZERO
-	_apply_title_button_skin(readme_button, false)
-	_place_control(menu, readme_button, 0.105, 0.740, 0.895, 0.880)
+	_new_button = make_button("", _on_new_game_pressed, 430, true)
+	_new_button.custom_minimum_size = Vector2.ZERO
+	_apply_title_button_skin(_new_button, true)
+	_place_control(menu, _new_button, 0.105, 0.765, 0.895, 0.885)
+
+	_refresh_slot_ui()
 
 
 func _build_version(root: Control) -> void:
@@ -237,8 +251,72 @@ func _make_button_style(path: String) -> StyleBoxTexture:
 	return style
 
 
+func _select_slot(slot_id: int) -> void:
+	PlayerProgress.set_active_save_slot(slot_id)
+	_refresh_slot_ui()
+
+
+func _refresh_slot_ui() -> void:
+	for index in range(_slot_buttons.size()):
+		var slot_id := index + 1
+		var summary := PlayerProgress.save_slot_summary(slot_id)
+		var selected := bool(summary.get("active", false))
+		var button := _slot_buttons[index]
+		button.text = _slot_button_text(summary)
+		_apply_title_button_skin(button, selected)
+	var active_summary := PlayerProgress.save_slot_summary(PlayerProgress.active_save_slot)
+	var has_save := bool(active_summary.get("has_save", false))
+	_slot_status_label.text = _slot_status_text(active_summary)
+	_continue_button.disabled = not has_save
+	_new_button.text = "最初から" if has_save else "ゲームを始める"
+
+
+func _slot_button_text(summary: Dictionary) -> String:
+	var slot_id := int(summary.get("slot_id", 1))
+	if not bool(summary.get("has_save", false)):
+		return "スロット%d　空き" % slot_id
+	return "スロット%d　Lv.%d　%s" % [
+		slot_id,
+		int(summary.get("level", 1)),
+		_format_play_time(float(summary.get("play_seconds", 0.0))),
+	]
+
+
+func _slot_status_text(summary: Dictionary) -> String:
+	var slot_id := int(summary.get("slot_id", 1))
+	if not bool(summary.get("has_save", false)):
+		return "スロット%dを選択中　新しく始められます" % slot_id
+	return "スロット%dを選択中　最終保存 %s　%s" % [
+		slot_id,
+		_format_updated_time(int(summary.get("updated_unix", 0))),
+		_format_play_time(float(summary.get("play_seconds", 0.0))),
+	]
+
+
+func _format_play_time(seconds: float) -> String:
+	var total_minutes := int(maxf(0.0, seconds) / 60.0)
+	var hours := int(total_minutes / 60)
+	var minutes := total_minutes % 60
+	if hours > 0:
+		return "%d時間%02d分" % [hours, minutes]
+	return "%d分" % minutes
+
+
+func _format_updated_time(unix_time: int) -> String:
+	if unix_time <= 0:
+		return "未保存"
+	var date := Time.get_datetime_dict_from_unix_time(unix_time)
+	return "%02d/%02d %02d:%02d" % [
+		int(date.get("month", 1)),
+		int(date.get("day", 1)),
+		int(date.get("hour", 0)),
+		int(date.get("minute", 0)),
+	]
+
+
 func _on_new_game_pressed() -> void:
 	if PlayerProgress.has_save_file():
+		_confirm_reset.dialog_text = "スロット%dの進行を消して、最初から始めます。よろしいですか？" % PlayerProgress.active_save_slot
 		_confirm_reset.popup_centered(Vector2i(620, 220))
 	else:
 		_start_new_game()

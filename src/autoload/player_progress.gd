@@ -6,9 +6,15 @@ signal fish_caught(fish_id: String, size_cm: float)
 signal dish_eaten(recipe_id: String, gained_exp: int)
 signal titles_earned(title_ids: Array[String])
 
-const SAVE_PATH := "user://tsuri_quest_save.json"
-const SAVE_BACKUP_PATH := "user://tsuri_quest_save.json.bak"
-const SAVE_TMP_PATH := "user://tsuri_quest_save.json.tmp"
+const SAVE_SLOT_COUNT := 3
+const DEFAULT_SAVE_SLOT := 1
+const SAVE_SLOT_ROOT := "user://slots"
+const SAVE_FILE_NAME := "tsuri_quest_save.json"
+const SAVE_BACKUP_FILE_NAME := "tsuri_quest_save.json.bak"
+const SAVE_TMP_FILE_NAME := "tsuri_quest_save.json.tmp"
+const LEGACY_SAVE_PATH := "user://tsuri_quest_save.json"
+const LEGACY_SAVE_BACKUP_PATH := "user://tsuri_quest_save.json.bak"
+const LEGACY_SAVE_TMP_PATH := "user://tsuri_quest_save.json.tmp"
 const SAVE_VERSION := 1
 const EXP_REQUIREMENTS: Array[int] = [
 	0,
@@ -83,6 +89,7 @@ var equipped_rig_id: String = GameData.DEFAULT_RIG_ID
 var owned_boats: Array[String] = []
 var pending_buff: Dictionary = {}
 var play_seconds: float = 0.0
+var active_save_slot: int = DEFAULT_SAVE_SLOT
 
 # smoke / preview / audit（res://tools/ 配下のシーン起動）から本番セーブを守るフラグ。
 # true の間はディスクへの読み書きを一切行わない。
@@ -96,6 +103,7 @@ func _ready() -> void:
 		print("PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）")
 		_remember_current_titles()
 		return
+	_migrate_legacy_save_files()
 	load_game()
 
 
@@ -118,11 +126,69 @@ func _process(delta: float) -> void:
 	play_seconds += delta
 
 
-func has_save_file() -> bool:
-	return FileAccess.file_exists(SAVE_PATH) or FileAccess.file_exists(SAVE_BACKUP_PATH)
+func current_save_path() -> String:
+	return _slot_save_path(active_save_slot)
+
+
+func current_backup_path() -> String:
+	return _slot_backup_path(active_save_slot)
+
+
+func current_tmp_path() -> String:
+	return _slot_tmp_path(active_save_slot)
+
+
+func has_save_file(slot_id: int = -1) -> bool:
+	var resolved_slot := active_save_slot if slot_id < 1 else _normalized_slot(slot_id)
+	return FileAccess.file_exists(_slot_save_path(resolved_slot)) or FileAccess.file_exists(
+		_slot_backup_path(resolved_slot)
+	)
+
+
+func set_active_save_slot(slot_id: int, load_slot := true) -> void:
+	active_save_slot = _normalized_slot(slot_id)
+	_ensure_slot_dir(active_save_slot)
+	if not load_slot:
+		return
+	_reset_runtime_state()
+	if has_save_file(active_save_slot):
+		load_game()
+	else:
+		_remember_current_titles()
+		progress_changed.emit()
+
+
+func save_slot_summary(slot_id: int) -> Dictionary:
+	var resolved_slot := _normalized_slot(slot_id)
+	var data := _read_save_dictionary(_slot_save_path(resolved_slot))
+	if data.is_empty():
+		data = _read_save_dictionary(_slot_backup_path(resolved_slot))
+	var save_path := _slot_save_path(resolved_slot)
+	var backup_path := _slot_backup_path(resolved_slot)
+	var updated_unix := 0
+	if FileAccess.file_exists(save_path):
+		updated_unix = int(FileAccess.get_modified_time(save_path))
+	elif FileAccess.file_exists(backup_path):
+		updated_unix = int(FileAccess.get_modified_time(backup_path))
+	return {
+		"slot_id": resolved_slot,
+		"active": resolved_slot == active_save_slot,
+		"has_save": not data.is_empty(),
+		"level": int(data.get("level", 1)),
+		"money": int(data.get("money", 0)),
+		"play_seconds": float(data.get("play_seconds", 0.0)),
+		"updated_unix": updated_unix,
+	}
 
 
 func reset_game() -> void:
+	_reset_runtime_state()
+	_remember_current_titles()
+	save_game()
+	progress_changed.emit()
+
+
+func _reset_runtime_state() -> void:
 	level = 1
 	exp = 0
 	money = 500
@@ -138,9 +204,6 @@ func reset_game() -> void:
 	owned_boats = []
 	pending_buff = {}
 	play_seconds = 0.0
-	_remember_current_titles()
-	save_game()
-	progress_changed.emit()
 
 
 func exp_to_next_level() -> int:
@@ -508,6 +571,7 @@ func title_stats_snapshot() -> Dictionary:
 func save_game() -> void:
 	if _sandbox_mode:
 		return
+	_ensure_slot_dir(active_save_slot)
 	var data := {
 		"version": SAVE_VERSION,
 		"level": level,
@@ -526,20 +590,23 @@ func save_game() -> void:
 		"pending_buff": pending_buff,
 		"play_seconds": play_seconds,
 	}
+	var save_path := current_save_path()
+	var backup_path := current_backup_path()
+	var tmp_path := current_tmp_path()
 	# 一時ファイルへ書き切ってから差し替える（書き込み途中のクラッシュで本体を壊さない）
-	var tmp_file := FileAccess.open(SAVE_TMP_PATH, FileAccess.WRITE)
+	var tmp_file := FileAccess.open(tmp_path, FileAccess.WRITE)
 	if tmp_file == null:
-		push_warning("セーブファイルを開けませんでした: %s" % SAVE_TMP_PATH)
+		push_warning("セーブファイルを開けませんでした: %s" % tmp_path)
 		return
 	tmp_file.store_string(JSON.stringify(data, "\t"))
 	tmp_file.close()
 
 	# 直前の正常な本体を1世代バックアップとして残す
-	if FileAccess.file_exists(SAVE_PATH):
-		var backup_err := DirAccess.rename_absolute(SAVE_PATH, SAVE_BACKUP_PATH)
+	if FileAccess.file_exists(save_path):
+		var backup_err := DirAccess.rename_absolute(save_path, backup_path)
 		if backup_err != OK:
 			push_warning("セーブのバックアップ作成に失敗しました（コード: %d）" % backup_err)
-	var rename_err := DirAccess.rename_absolute(SAVE_TMP_PATH, SAVE_PATH)
+	var rename_err := DirAccess.rename_absolute(tmp_path, save_path)
 	if rename_err != OK:
 		push_warning("セーブファイルの差し替えに失敗しました（コード: %d）" % rename_err)
 
@@ -548,11 +615,13 @@ func load_game() -> void:
 	if _sandbox_mode:
 		_remember_current_titles()
 		return
-	var data := _read_save_dictionary(SAVE_PATH)
+	var save_path := current_save_path()
+	var backup_path := current_backup_path()
+	var data := _read_save_dictionary(save_path)
 	if data.is_empty():
-		var backup := _read_save_dictionary(SAVE_BACKUP_PATH)
+		var backup := _read_save_dictionary(backup_path)
 		if backup.is_empty():
-			if FileAccess.file_exists(SAVE_PATH):
+			if FileAccess.file_exists(save_path):
 				push_warning("セーブデータが壊れているため初期値を使用します。")
 			_remember_current_titles()
 			return
@@ -572,6 +641,47 @@ func _read_save_dictionary(path: String) -> Dictionary:
 	if typeof(parsed) != TYPE_DICTIONARY:
 		return {}
 	return parsed
+
+
+func _migrate_legacy_save_files() -> void:
+	_ensure_slot_dir(DEFAULT_SAVE_SLOT)
+	_move_legacy_save_file(LEGACY_SAVE_PATH, _slot_save_path(DEFAULT_SAVE_SLOT))
+	_move_legacy_save_file(LEGACY_SAVE_BACKUP_PATH, _slot_backup_path(DEFAULT_SAVE_SLOT))
+	_move_legacy_save_file(LEGACY_SAVE_TMP_PATH, _slot_tmp_path(DEFAULT_SAVE_SLOT))
+
+
+func _move_legacy_save_file(from_path: String, to_path: String) -> void:
+	if not FileAccess.file_exists(from_path) or FileAccess.file_exists(to_path):
+		return
+	var err := DirAccess.rename_absolute(from_path, to_path)
+	if err != OK:
+		push_warning("旧セーブの移行に失敗しました（%s → %s / code %d）" % [from_path, to_path, err])
+
+
+func _normalized_slot(slot_id: int) -> int:
+	return clampi(slot_id, 1, SAVE_SLOT_COUNT)
+
+
+func _slot_dir(slot_id: int) -> String:
+	return "%s/%d" % [SAVE_SLOT_ROOT, _normalized_slot(slot_id)]
+
+
+func _slot_save_path(slot_id: int) -> String:
+	return "%s/%s" % [_slot_dir(slot_id), SAVE_FILE_NAME]
+
+
+func _slot_backup_path(slot_id: int) -> String:
+	return "%s/%s" % [_slot_dir(slot_id), SAVE_BACKUP_FILE_NAME]
+
+
+func _slot_tmp_path(slot_id: int) -> String:
+	return "%s/%s" % [_slot_dir(slot_id), SAVE_TMP_FILE_NAME]
+
+
+func _ensure_slot_dir(slot_id: int) -> void:
+	var err := DirAccess.make_dir_recursive_absolute(_slot_dir(slot_id))
+	if err != OK and err != ERR_ALREADY_EXISTS:
+		push_warning("セーブスロットディレクトリを作成できませんでした（code %d）" % err)
 
 
 func _migrate_save_data(data: Dictionary) -> Dictionary:
