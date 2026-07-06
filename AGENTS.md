@@ -19,6 +19,8 @@
 | `skills/` | 作業手順スキル（下記） |
 | `.cursor/rules/` | Cursor 常時ルール（オーケストレーション等） |
 | `docs/26_refactor_orchestration_plan.md` | 全体リファクタの作戦台帳（スライス・ベースライン・DoD） |
+| `docs/30_v2_expansion_overview.md` | **V2拡張（MVP後）の台帳**。フェーズ順・確定事項・共通仕様・進行状況 |
+| `docs/v2/` | V2のフェーズ別実装仕様（`E*.md`）。実装は「docs/30 §4 ＋ 当該フェーズdoc」だけ読めば着手できる |
 
 ## 最重要参考資料
 
