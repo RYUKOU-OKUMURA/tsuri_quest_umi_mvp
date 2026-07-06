@@ -1,5 +1,7 @@
 # AGENTS.md — tsuri_quest_umi_mvp
 
+本ファイルはコーディングエージェント共通の指示書（Codex は AGENTS.md を直接、Claude Code は symlink の CLAUDE.md 経由、Cursor は Cursor rules と併読）。ツール固有の運用ルールはここに書かず、各ツールのルールファイル（例: `.cursor/rules/`）に置く。
+
 海釣りRPG（Godot 4 / GDScript / 1280x720固定）。**MVPと最終リファクタ（docs/26）は完了済み。現在はV2拡張（`docs/30_v2_expansion_overview.md`）を進行中**。UIは「AI生成PNG素材 + Godot runtime描画（テキスト・状態・ゲージ）」の分担で作る方針。ドキュメント・コミットメッセージ・UI文言は日本語。
 
 ## ディレクトリ地図
@@ -17,7 +19,7 @@
 | `reference/` | 正式完成イメージ（`.gdignore` 済み。**ゲームに直接インポート禁止**） |
 | `docs/qa/` | 画面別QA判断ログ（freeze表・不採用リスト。**1画面1ファイル**。書式は `docs/qa/README.md`、過去経過は `archive/`、証拠画像は `evidence/`） |
 | `skills/` | 作業手順スキル（下記） |
-| `.cursor/rules/` | Cursor 常時ルール（オーケストレーション等） |
+| `.cursor/rules/` | Cursor 専用の常時ルール（Fable×Composer 運用など Cursor 固有の取り決め。他ツールは読まない） |
 | `docs/26_refactor_orchestration_plan.md` | 全体リファクタの作戦台帳（スライス・ベースライン・DoD） |
 | `docs/30_v2_expansion_overview.md` | **V2拡張（MVP後）の台帳**。フェーズ順・確定事項・共通仕様・進行状況 |
 | `docs/v2/` | V2のフェーズ別実装仕様（`E*.md`）。実装は「docs/30 §4 ＋ 当該フェーズdoc」だけ読めば着手できる |
@@ -37,37 +39,31 @@
 | 調理・食事・レベルアップフロー | `skills/tsuri-cooking-showcase-uplift/SKILL.md`（専用。上記2つより優先） |
 | プロジェクト全体リファクタ | `skills/project-refactor-orchestration/SKILL.md` |
 
-## オーケストレーション（Fable / Composer）
+## オーケストレーション（ツール共通の原則）
 
-Cursor 常時ルール: `.cursor/rules/orchestration.mdc`  
 作戦台帳: リファクタ = `docs/26_refactor_orchestration_plan.md`（完了済み）/ **V2拡張 = `docs/30_v2_expansion_overview.md`**（進行状況・確定事項はこちらで管理）
 
-### 役割
+本節はサブエージェント機能の有無に関わらず守る共通原則。Cursor 固有の運用（Fable=オーケストレーター / Composer=ワーカーの役割分担、`model: composer-2.5-fast` の明示指定など）は `.cursor/rules/orchestration.mdc` が正本。サブエージェントを使わないツール（Codex 等）は fan-out せず、下記の brief 粒度（1 concern・触るファイル・DoD）とマージ前検証を自分自身のタスク分割に適用する。
 
-- **Fable（オーケストレーター）**: 計画、スライス分割、依存順、完了判断、マージ前レビュー
-- **Composer 2.5（ワーカー）**: brief で渡された scoped 作業（実装・監査・チェック実行）
-
-### Fable 単体（fan-out しない）
+### 親エージェント単体で行う（fan-out しない）
 
 - アーキテクチャ方針の決定（ScreenBase 責務、autoload 境界など）
 - 1スレッドで追うべき難バグ
 - freeze 値・docs/19 との衝突判断
 - サブタスクに名前を付けられない作業
 
-### Composer に fan-out する典型
+### ワーカーに fan-out する典型
 
-| サブタスク | モデル | 手順 |
-|---|---|---|
-| ベースライン計測・smoke 実行 | Composer | `docs/26` §Smoke |
-| **V2フェーズ内の brief（データ層・監査・画面実装）** | Composer | `docs/v2/<フェーズ>.md` の「brief分割案」どおりに渡す |
-| palette / 素材参照監査修正 | Composer | AGENTS.md 不変ルール |
-| 指定ファイルの pure 関数抽出 | Composer | behavior-preserving のみ |
-| 画面別 UI uplift | Composer | `skills/ui-screen-uplift/` |
-| 調理フロー | Composer | `skills/tsuri-cooking-showcase-uplift/` |
+| サブタスク | 手順 |
+|---|---|
+| ベースライン計測・smoke 実行 | `docs/26` §Smoke |
+| **V2フェーズ内の brief（データ層・監査・画面実装）** | `docs/v2/<フェーズ>.md` の「brief分割案」どおりに渡す |
+| palette / 素材参照監査修正 | AGENTS.md 不変ルール |
+| 指定ファイルの pure 関数抽出 | behavior-preserving のみ |
+| 画面別 UI uplift | `skills/ui-screen-uplift/` |
+| 調理フロー | `skills/tsuri-cooking-showcase-uplift/` |
 
-独立スライスは並列起動可。ワーカーに計画を考えさせない。
-**ワーカー起動時は必ず `model: composer-2.5-fast` を明示指定する**（未指定だと親モデル=Fableで実行される）。誤モデルで起動したワーカーは resume せず、新規 Composer ワーカーとして再投入する。
-**ワーカー起動時は必ず `model: composer-2.5-fast` を明示指定する**（未指定だと親モデル=Fableで実行される）。誤モデルで起動したワーカーは resume せず、新規 Composer ワーカーとして再投入する。
+独立スライスは並列起動可。ワーカーに計画を考えさせない。ワーカーに使うモデル・エージェント種別の指定はツール固有ルール側で定める。
 
 ### ワーカー brief 必須項目
 
@@ -77,10 +73,10 @@ Cursor 常時ルール: `.cursor/rules/orchestration.mdc`
 4. **Definition of Done** — 実行コマンド + 期待結果
 5. **短い報告** — 変更概要 / 実行結果 / 未解決
 
-### マージ前（Fable）
+### マージ前（親エージェント）
 
 - ワーカー報告を信じず diff をレビュー
-- ズレていれば brief を書き直して再投入。些末以外は Fable が黙って直さない
+- ズレていれば brief を書き直して再投入。些末以外は親が黙って直さない
 - 各スライス後: `./tools/validate_project.sh` + 触った領域の smoke（UI 変更時は visual QA）
 
 ## 検証コマンド
