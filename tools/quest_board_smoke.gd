@@ -183,6 +183,7 @@ func _quest_context(template_id: String = "") -> Dictionary:
 	var context := {
 		"player_level": PlayerProgress.level,
 		"owned_boats": PlayerProgress.owned_boats.duplicate(true),
+		"sea_chart_fragments": PlayerProgress.sea_chart_fragments,
 		"existing_quests": PlayerProgress.quest_board.duplicate(true),
 		"best_sizes": PlayerProgress.best_sizes.duplicate(true),
 	}

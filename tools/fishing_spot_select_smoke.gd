@@ -114,10 +114,22 @@ func _ready() -> void:
 	danger_access = PlayerProgress.fishing_spot_access_status("danger_reef")
 	_expect(String(danger_access.get("reason", "")) == "chart", "danger reef should require completed sea chart")
 	_expect(String(danger_access.get("message", "")).contains("断片 2/3"), "chart lock should show fragment progress")
+	var accessible_spots := GameData.get_accessible_fishing_spot_ids(
+		PlayerProgress.level,
+		PlayerProgress.owned_boats,
+		PlayerProgress.sea_chart_fragments
+	)
+	_expect(not accessible_spots.has("danger_reef"), "accessible spot helper should respect sea chart lock")
 	_screen._select_spot("danger_reef")
 	_expect(_navigated_to.is_empty(), "chart-locked danger reef must not navigate")
 
 	PlayerProgress.sea_chart_fragments = 3
+	accessible_spots = GameData.get_accessible_fishing_spot_ids(
+		PlayerProgress.level,
+		PlayerProgress.owned_boats,
+		PlayerProgress.sea_chart_fragments
+	)
+	_expect(accessible_spots.has("danger_reef"), "accessible spot helper should include completed danger reef")
 	_screen._select_spot("danger_reef")
 	_expect(_navigated_to == "fishing", "completed sea chart should allow danger reef")
 	_expect(String(_payload.get("spot_id", "")) == "danger_reef", "danger reef payload mismatch")

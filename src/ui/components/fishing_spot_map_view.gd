@@ -26,6 +26,7 @@ const SPOT_MARKER_ORDER := [
 	"south_reef",
 	"bluewater_route",
 	"deep_ocean",
+	"danger_reef",
 	"harbor_boulder",
 ]
 
@@ -37,6 +38,7 @@ const SPOT_POINTS := {
 	"south_reef": Vector2(0.300, 0.735),
 	"bluewater_route": Vector2(0.700, 0.525),
 	"deep_ocean": Vector2(0.765, 0.770),
+	"danger_reef": Vector2(0.870, 0.435),
 	"harbor_boulder": Vector2(0.435, 0.620),
 }
 
@@ -48,6 +50,7 @@ const LABEL_OFFSETS := {
 	"south_reef": Vector2(-70.0, 50.0),
 	"bluewater_route": Vector2(0.0, 50.0),
 	"deep_ocean": Vector2(0.0, 50.0),
+	"danger_reef": Vector2(-84.0, -52.0),
 	"harbor_boulder": Vector2(86.0, 32.0),
 }
 
@@ -59,6 +62,7 @@ const ROUTES := [
 	["harbor_pier", "harbor_boulder"],
 	["outer_tide", "bluewater_route"],
 	["bluewater_route", "deep_ocean"],
+	["bluewater_route", "danger_reef"],
 ]
 
 const ROUTE_PATHS := {
@@ -69,6 +73,7 @@ const ROUTE_PATHS := {
 	"south_reef": [["harbor_pier", "south_reef"]],
 	"bluewater_route": [["harbor_pier", "rock_breakwater"], ["rock_breakwater", "outer_tide"], ["outer_tide", "bluewater_route"]],
 	"deep_ocean": [["harbor_pier", "rock_breakwater"], ["rock_breakwater", "outer_tide"], ["outer_tide", "bluewater_route"], ["bluewater_route", "deep_ocean"]],
+	"danger_reef": [["harbor_pier", "rock_breakwater"], ["rock_breakwater", "outer_tide"], ["outer_tide", "bluewater_route"], ["bluewater_route", "danger_reef"]],
 	"harbor_boulder": [["harbor_pier", "harbor_boulder"]],
 }
 
@@ -137,7 +142,7 @@ func _gui_input(event: InputEvent) -> void:
 	if spot_id.is_empty():
 		return
 	spot_focused.emit(spot_id)
-	if GameData.is_fishing_spot_unlocked(spot_id, player_level):
+	if _spot_accessible(spot_id):
 		spot_selected.emit(spot_id)
 	else:
 		locked_spot_pressed.emit(spot_id)
@@ -399,10 +404,7 @@ func _draw_routes(map_rect: Rect2) -> void:
 		var selected_route := bool(selected_path.get(_route_key(from_id, to_id), false))
 		if selected_spot_id == GameData.DEFAULT_FISHING_SPOT_ID:
 			selected_route = from_id == selected_spot_id or to_id == selected_spot_id
-		var both_unlocked := (
-			GameData.is_fishing_spot_unlocked(from_id, player_level)
-			and GameData.is_fishing_spot_unlocked(to_id, player_level)
-		)
+		var both_unlocked := _spot_accessible(from_id) and _spot_accessible(to_id)
 		var color := Color(Palette.MAP_ROUTE_SELECTED, 0.88) if selected_route else Color(Palette.MAP_ROUTE_IDLE, 0.34)
 		if not both_unlocked and not selected_route:
 			color = Color(Palette.MAP_ROUTE_LOCKED, 0.28)
@@ -450,7 +452,9 @@ func _draw_markers(map_rect: Rect2) -> void:
 		if not SPOT_POINTS.has(spot_id):
 			continue
 		var center := _map_point(map_rect, spot_id)
-		var unlocked := GameData.is_fishing_spot_unlocked(spot_id, player_level)
+		var access := _spot_access_status(spot_id)
+		var unlocked := bool(access.get("ok", false))
+		var lock_reason := String(access.get("reason", ""))
 		var spot := GameData.get_fishing_spot(spot_id)
 		var boss_spot := bool(spot.get("boss_spot", false))
 		var selected := spot_id == selected_spot_id
@@ -458,7 +462,7 @@ func _draw_markers(map_rect: Rect2) -> void:
 		var marker_row := 0
 		if not unlocked:
 			marker_index = MARKER_LOCKED
-			marker_row = 2
+			marker_row = 3 if lock_reason == "chart" else 2
 		elif boss_spot:
 			marker_index = MARKER_BOSS
 		if selected and unlocked:
@@ -471,7 +475,7 @@ func _draw_markers(map_rect: Rect2) -> void:
 		if selected and unlocked:
 			_draw_selected_marker_ping(center, marker_size)
 		_draw_spot_marker(spot_id, marker_row, marker_index, target)
-		_draw_spot_chip(font, map_rect, spot, center, unlocked, selected, boss_spot)
+		_draw_spot_chip(font, map_rect, spot, access, center, unlocked, selected, boss_spot)
 
 
 func _draw_selected_marker_ping(center: Vector2, marker_size: float) -> void:
@@ -526,6 +530,7 @@ func _draw_spot_chip(
 	font: Font,
 	map_rect: Rect2,
 	spot: Dictionary,
+	access: Dictionary,
 	center: Vector2,
 	unlocked: bool,
 	selected: bool,
@@ -535,7 +540,7 @@ func _draw_spot_chip(
 	var name := String(spot.get("short_name", spot.get("name", spot_id)))
 	var extra := "Lv.%d" % int(spot.get("unlock_level", 1))
 	if not unlocked:
-		extra = "LOCK Lv.%d" % int(spot.get("unlock_level", 1))
+		extra = _locked_chip_text(spot, access)
 	elif boss_spot:
 		extra = "ぬし"
 	var font_size := 16 if selected else 14
@@ -574,6 +579,18 @@ func _draw_spot_chip(
 	if not unlocked or boss_spot:
 		var extra_pos := chip_rect.position + Vector2((chip_rect.size.x - extra_w) * 0.5, 36.0)
 		_draw_text(font, extra, extra_pos, 12, Palette.MAP_CHIP_LOCKED_TEXT if not unlocked else Palette.MAP_CHIP_BOSS_TEXT, 0)
+
+
+func _locked_chip_text(spot: Dictionary, access: Dictionary) -> String:
+	var reason := String(access.get("reason", ""))
+	if reason == "chart":
+		return "海図 %d/%d" % [
+			int(access.get("sea_chart_fragments", 0)),
+			int(access.get("required_sea_chart_fragments", GameData.SEA_CHART_REQUIRED_FRAGMENTS)),
+		]
+	if reason == "boat":
+		return "船ランク%d" % int(access.get("required_boat_rank", GameData.NO_BOAT_RANK))
+	return "LOCK Lv.%d" % int(spot.get("unlock_level", 1))
 
 
 func _draw_spot_chip_leader(center: Vector2, chip_rect: Rect2, selected: bool, unlocked: bool) -> void:
@@ -626,6 +643,19 @@ func _spot_at_position(position: Vector2) -> String:
 			nearest_id = spot_id
 			nearest_dist = dist
 	return nearest_id
+
+
+func _spot_access_status(spot_id: String) -> Dictionary:
+	return GameData.fishing_spot_access_status(
+		spot_id,
+		player_level,
+		PlayerProgress.owned_boats,
+		PlayerProgress.sea_chart_fragments
+	)
+
+
+func _spot_accessible(spot_id: String) -> bool:
+	return bool(_spot_access_status(spot_id).get("ok", false))
 
 
 func _map_point(map_rect: Rect2, spot_id: String) -> Vector2:

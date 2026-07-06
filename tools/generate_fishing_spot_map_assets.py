@@ -48,6 +48,7 @@ SPOT_ORDER = [
     "south_reef",
     "bluewater_route",
     "deep_ocean",
+    "danger_reef",
     "harbor_boulder",
 ]
 
@@ -59,6 +60,7 @@ SPOT_POINTS = {
     "south_reef": (0.300, 0.735),
     "bluewater_route": (0.700, 0.525),
     "deep_ocean": (0.765, 0.770),
+    "danger_reef": (0.870, 0.435),
     "harbor_boulder": (0.435, 0.620),
 }
 
@@ -490,10 +492,32 @@ def _draw_spot_symbol(draw: ImageDraw.ImageDraw, spot_id: str, cx: int, cy: int,
     elif spot_id == "deep_ocean":
         draw.polygon([(cx - 28 * s, cy + 10 * s), (cx - 3 * s, cy - 24 * s), (cx + 28 * s, cy + 6 * s), (cx + 3 * s, cy + 34 * s)], fill=color)
         draw.line((cx - 2 * s, cy - 22 * s, cx + 4 * s, cy + 32 * s), fill=(31, 49, 61, 160), width=round(3 * s))
+    elif spot_id == "danger_reef":
+        draw.polygon(
+            [
+                (cx - 34 * s, cy + 23 * s),
+                (cx - 6 * s, cy - 34 * s),
+                (cx + 12 * s, cy + 17 * s),
+                (cx + 34 * s, cy + 24 * s),
+            ],
+            fill=color,
+        )
+        draw.arc((cx - 38 * s, cy + 8 * s, cx + 38 * s, cy + 40 * s), 198, 342, fill=color, width=round(5 * s))
+        draw.arc((cx - 30 * s, cy + 18 * s, cx + 46 * s, cy + 48 * s), 198, 342, fill=color, width=round(4 * s))
     elif spot_id == "harbor_boulder":
         rock = [(cx - 32 * s, cy + 25 * s), (cx - 20 * s, cy - 15 * s), (cx - 3 * s, cy - 30 * s), (cx + 15 * s, cy - 8 * s), (cx + 31 * s, cy - 16 * s), (cx + 41 * s, cy + 24 * s)]
         draw.polygon(rock, fill=color, outline=(48, 37, 31, 210))
         draw.line((cx - 13 * s, cy - 9 * s, cx - 3 * s, cy + 23 * s), fill=(220, 220, 193, 115), width=round(3 * s))
+
+
+def _draw_question_symbol(draw: ImageDraw.ImageDraw, cx: int, cy: int, scale: float, color) -> None:
+    s = scale
+    width = max(1, round(7 * s))
+    arc_box = (cx - 24 * s, cy - 36 * s, cx + 24 * s, cy + 12 * s)
+    draw.arc(arc_box, 200, 360, fill=color, width=width)
+    draw.arc(arc_box, 0, 28, fill=color, width=width)
+    draw.line((cx + 13 * s, cy - 5 * s, cx + 2 * s, cy + 14 * s), fill=color, width=width)
+    draw.ellipse((cx - 6 * s, cy + 27 * s, cx + 7 * s, cy + 40 * s), fill=color)
 
 
 def _draw_spot_marker(spot_id: str, state: str, size: int = 128) -> Image.Image:
@@ -505,6 +529,7 @@ def _draw_spot_marker(spot_id: str, state: str, size: int = 128) -> Image.Image:
     cx = cy = work_size // 2
     selected = state == "selected"
     locked = state == "locked"
+    chart_locked = state == "chart"
     if selected:
         for radius, alpha in [(54 * u, 28), (46 * u, 56), (38 * u, 80)]:
             draw.ellipse((cx - radius, cy - radius, cx + radius, cy + radius), fill=(255, 205, 58, alpha))
@@ -525,6 +550,11 @@ def _draw_spot_marker(spot_id: str, state: str, size: int = 128) -> Image.Image:
         ring = (116, 106, 87, 230)
         symbol = (181, 178, 159, 255)
         inner = (68, 72, 70, 222)
+    if chart_locked:
+        fill = (41, 62, 71, 232)
+        ring = (198, 169, 93, 238)
+        symbol = (238, 231, 181, 255)
+        inner = (33, 54, 64, 226)
     if spot_id == "harbor_boulder" and not locked:
         fill = (93, 38, 32, 248)
         ring = (229, 151, 82, 248)
@@ -545,8 +575,12 @@ def _draw_spot_marker(spot_id: str, state: str, size: int = 128) -> Image.Image:
 
     symbol_scale = 0.55 * u
     symbol_y = cy - 10 * u
-    _draw_spot_symbol(draw, spot_id, cx + 2 * u, symbol_y + 3 * u, symbol_scale, (0, 0, 0, 96))
-    _draw_spot_symbol(draw, spot_id, cx, symbol_y, symbol_scale, symbol)
+    if chart_locked:
+        _draw_question_symbol(draw, cx + 2 * u, symbol_y + 4 * u, symbol_scale, (0, 0, 0, 116))
+        _draw_question_symbol(draw, cx, symbol_y, symbol_scale, symbol)
+    else:
+        _draw_spot_symbol(draw, spot_id, cx + 2 * u, symbol_y + 3 * u, symbol_scale, (0, 0, 0, 96))
+        _draw_spot_symbol(draw, spot_id, cx, symbol_y, symbol_scale, symbol)
     if locked:
         veil = Image.new("RGBA", (work_size, work_size), (0, 0, 0, 0))
         veil_draw = ImageDraw.Draw(veil)
@@ -560,8 +594,8 @@ def _draw_spot_marker(spot_id: str, state: str, size: int = 128) -> Image.Image:
 
 
 def _draw_spot_marker_sheet() -> Image.Image:
-    sheet = Image.new("RGBA", (128 * len(SPOT_ORDER), 128 * 3), (0, 0, 0, 0))
-    for row, state in enumerate(["normal", "selected", "locked"]):
+    sheet = Image.new("RGBA", (128 * len(SPOT_ORDER), 128 * 4), (0, 0, 0, 0))
+    for row, state in enumerate(["normal", "selected", "locked", "chart"]):
         for col, spot_id in enumerate(SPOT_ORDER):
             sheet.alpha_composite(_draw_spot_marker(spot_id, state), (col * 128, row * 128))
     return sheet
@@ -689,7 +723,7 @@ def _make_thumbnails(bg: Image.Image) -> None:
         cy = int(bg.height * ny)
         crop_w = 620
         crop_h = 330
-        if spot_id in {"bluewater_route", "deep_ocean"}:
+        if spot_id in {"bluewater_route", "deep_ocean", "danger_reef"}:
             crop_w = 740
             crop_h = 380
         left = max(0, min(bg.width - crop_w, cx - crop_w // 2))

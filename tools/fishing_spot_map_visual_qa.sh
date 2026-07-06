@@ -21,8 +21,10 @@ mkdir -p "$GODOT_HOME"
 rm -f \
   /tmp/tsuri_fishing_spot_map.png \
   /tmp/tsuri_fishing_spot_map_continue.png \
+  /tmp/tsuri_fishing_spot_map_danger_chart.png \
   /tmp/tsuri_fishing_spot_map_compare.png \
-  /tmp/tsuri_fishing_spot_map_continue_compare.png
+  /tmp/tsuri_fishing_spot_map_continue_compare.png \
+  /tmp/tsuri_fishing_spot_map_danger_chart_compare.png
 
 echo "==> Capture fishing spot map previews"
 HOME="$GODOT_HOME" "$GODOT" --path "$ROOT" "res://tools/fishing_spot_map_preview.tscn"
@@ -33,5 +35,7 @@ python3 "$ROOT/tools/build_screen_visual_comparison.py" fishing_spot_map
 echo "Fishing spot map visual QA outputs:"
 echo "/tmp/tsuri_fishing_spot_map.png"
 echo "/tmp/tsuri_fishing_spot_map_continue.png"
+echo "/tmp/tsuri_fishing_spot_map_danger_chart.png"
 echo "/tmp/tsuri_fishing_spot_map_compare.png"
 echo "/tmp/tsuri_fishing_spot_map_continue_compare.png"
+echo "/tmp/tsuri_fishing_spot_map_danger_chart_compare.png"

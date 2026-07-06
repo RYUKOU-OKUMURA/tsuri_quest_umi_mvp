@@ -1,6 +1,6 @@
 # 釣り場マップ画面 QA判断ログ
 
-最終更新: 2026-07-05 / 状態: **アップリフト進行中のfreeze値あり**（詳細行P1再発修正済み）
+最終更新: 2026-07-06 / 状態: **アップリフト進行中のfreeze値あり**（E4危険海域追加済み）
 参照画像: `reference/` 内の釣り場マップモック
 QA更新コマンド: `./tools/fishing_spot_map_visual_qa.sh`
 
@@ -13,7 +13,7 @@ QA更新コマンド: `./tools/fishing_spot_map_visual_qa.sh`
 | `狙い` 行 | 4魚を2行・省略なしで表示（専用の大きい行スロット） | 同上 | P1（省略）解消の採用値 |
 | 詳細`エサ`/`仕掛け`行 | エサ行は餌リストのみを13px単行表示、仕掛け行は`仕掛け名 / 一致・ふつう`の短縮表記。対応餌リストは重複表示しない | `src/ui/fishing_spot_select_screen.gd` | エサ・仕掛け値の省略表示P1再発を防ぐ |
 | `港へ戻る` ボタン | 高さ50px維持 | `ScreenBase.make_return_button()` 経由 | 共通枠PNGがラベルを潰さない高さ |
-| 釣り場サムネイル | 8枚とも Codex App 生成の俯瞰/三分の二マップアート調。ソースは `tools/source_assets/fishing_spot_thumbs/*.png`、`assets/showcase/fishing_spots/thumbs/*.png` へ 420x184 正規化 | `assets/showcase/fishing_spots/thumbs/` | 焼き込みテキスト・UI枠・ロック標識・ランタイム状態なし。`harbor_pier`=港の情景 / `outer_tide`=潮目 / `deep_ocean`=カケアガリ / `harbor_boulder`=大岩 が判別性の核 |
+| 釣り場サムネイル | 9枚。既存8枚は Codex App 生成の俯瞰/三分の二マップアート調を `tools/source_assets/fishing_spot_thumbs/*.png` から 420x184 正規化。E4 `danger_reef` は `tools/generate_fishing_spot_map_assets.py` による暗い外洋潮筋のマップ切り出し | `assets/showcase/fishing_spots/thumbs/` | 焼き込みテキスト・UI枠・ロック標識・ランタイム状態なし。`harbor_pier`=港の情景 / `outer_tide`=潮目 / `deep_ocean`=カケアガリ / `harbor_boulder`=大岩 / `danger_reef`=暗い外洋潮筋 が判別性の核 |
 | 共通アクションボタン枠 | 静かなネイビー/ゴールド版 `action_button_frame.png`（中央メダリオン・斜線装飾なし） | `assets/showcase/common/action_button_frame.png` | `ScreenBase.make_return_button()` 契約は維持 |
 
 ## 2. 不採用・再試行禁止リスト
@@ -31,7 +31,7 @@ QA更新コマンド: `./tools/fishing_spot_map_visual_qa.sh`
 
 ## 4. 暫定判定・再検証TODO
 
-（なし。2026-07-05 に通常/釣行継続の比較画像を再生成し、`docs/qa/evidence/fishing_spot_map/` へ保存済み）
+（なし。2026-07-06 にE4危険海域追加後の通常/釣行継続/海図ロック状態の比較画像を再生成し、`docs/qa/evidence/fishing_spot_map/` へ保存済み）
 
 ## 5. 現在の残ギャップ
 
@@ -39,8 +39,9 @@ QA更新コマンド: `./tools/fishing_spot_map_visual_qa.sh`
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-（現在作業中のフェーズなし。2026-07-05 のP1修正では、詳細エサ/仕掛け行の文字設計、対象2ファイルのPalette移行、smoke契約のみを動かし、`DETAIL_FRAME_SOURCE_SIZE`、ウェル座標、`狙い`行、戻るボタン高さ、サムネイル素材、航路/マーカー座標は触っていない）
+（現在作業中のフェーズなし。2026-07-06 のE4追加では、`danger_reef` のサムネイル・ピン・航路・海図ロック表示だけを追加し、`DETAIL_FRAME_SOURCE_SIZE`、ウェル座標、`狙い`行、戻るボタン高さ、既存サムネイル素材、既存航路/マーカー座標は触っていない）
 
 ## 7. 判断ログ（直近パスのみ）
 
 - 2026-07-05: R5/R1スライス。通常/釣行継続の現状比較で、右詳細の`エサ`行と`仕掛け`行に省略表示が出るP1再発を確認。エサ行は餌リストだけを単行表示し、相性は仕掛け行へ`サビキ / ふつう`・`ちょい投げ / 一致`の短縮表記で移した。`src/ui/fishing_spot_select_screen.gd` と `src/ui/components/fishing_spot_map_view.gd` の釣り場マップ画面固有hexは `Palette.MAP_*` へ移行し、表示色の実値は維持した。判断根拠: `docs/qa/evidence/fishing_spot_map/2026-07-05_detail_text_p1_fix_compare.png`、`docs/qa/evidence/fishing_spot_map/2026-07-05_detail_text_p1_fix_continue_compare.png`。
+- 2026-07-06: E4危険海域追加。`danger_reef` の暗い外洋サムネ、サメヒレ系ピン、海図未完成時の「？」ピン/`海図 2/3`表示、青物ルートからの航路を追加。通常/釣行継続で既存詳細レイアウトのP1再発なし、Lv30・船ランク3・海図2/3状態で右詳細の海図メッセージとボタン文言が収まることを確認。判断根拠: `docs/qa/evidence/fishing_spot_map/2026-07-06_e4_danger_reef_default_compare.png`、`docs/qa/evidence/fishing_spot_map/2026-07-06_e4_danger_reef_continue_compare.png`、`docs/qa/evidence/fishing_spot_map/2026-07-06_e4_danger_reef_chart_lock_compare.png`。

@@ -19,6 +19,7 @@ const MAP_BGM_PATH_BY_SPOT := {
 	"south_reef": "res://assets/audio/岩礁・消波ブロック.mp3",
 	"bluewater_route": "res://assets/audio/外海・回遊ルート.mp3",
 	"deep_ocean": "res://assets/audio/外海・回遊ルート.mp3",
+	"danger_reef": "res://assets/audio/外海・回遊ルート.mp3",
 	"harbor_boulder": "res://assets/audio/港外・潮目.mp3",
 }
 const DETAIL_ICON_SIZE := 96.0
@@ -849,7 +850,7 @@ func _rebuild_completion_entries() -> void:
 
 func _make_completion_entry(spot: Dictionary) -> Control:
 	var spot_id := String(spot.get("id", GameData.DEFAULT_FISHING_SPOT_ID))
-	var unlocked := GameData.is_fishing_spot_unlocked(spot_id, PlayerProgress.level)
+	var unlocked := PlayerProgress.can_access_fishing_spot(spot_id)
 	var selected := spot_id == _selected_spot_id
 	var completion := _spot_completion_counts(spot)
 	var entry := Control.new()

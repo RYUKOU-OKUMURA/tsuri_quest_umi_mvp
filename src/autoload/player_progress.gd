@@ -674,6 +674,7 @@ func _quest_generation_context(extra_excluded_quests: Array = []) -> Dictionary:
 	return {
 		"player_level": level,
 		"owned_boats": owned_boats.duplicate(true),
+		"sea_chart_fragments": sea_chart_fragments,
 		"existing_quests": existing,
 		"best_sizes": best_sizes.duplicate(true),
 	}

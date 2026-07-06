@@ -49,6 +49,12 @@ PRESETS = {
             "capture": Path("/tmp/tsuri_fishing_spot_map_continue.png"),
             "out": Path("/tmp/tsuri_fishing_spot_map_continue_compare.png"),
         },
+        {
+            "id": "FISHING_SPOT_DANGER_CHART",
+            "reference": ROOT / "reference" / "06_fishing_spot_map_mockup.png",
+            "capture": Path("/tmp/tsuri_fishing_spot_map_danger_chart.png"),
+            "out": Path("/tmp/tsuri_fishing_spot_map_danger_chart_compare.png"),
+        },
     ],
     "tackle_shop": [
         {
@@ -121,8 +127,11 @@ def fit_viewport(image: Image.Image) -> Image.Image:
 
 
 def draw_label(draw: ImageDraw.ImageDraw, x: int, title: str, path: Path) -> None:
-    draw.text((x, 7), title, font=font(16), fill=TEXT)
-    draw.text((x + 150, 9), str(path), font=font(12, bold=False), fill=MUTED)
+    title_font = font(16)
+    path_font = font(12, bold=False)
+    draw.text((x, 7), title, font=title_font, fill=TEXT)
+    path_x = x + int(draw.textlength(title, font=title_font)) + 16
+    draw.text((path_x, 9), str(path), font=path_font, fill=MUTED)
 
 
 def build_pair(reference: Path, capture: Path, out: Path, state_id: str) -> list[str]:

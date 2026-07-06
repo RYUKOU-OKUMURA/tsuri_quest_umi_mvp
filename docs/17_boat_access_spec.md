@@ -53,9 +53,9 @@ var owned_boats: Array[String] = []
 `GameData` は静的な判定を提供する。
 
 ```gdscript
-func fishing_spot_access_status(spot_id: String, player_level: int, owned_boat_ids: Array) -> Dictionary
-func is_fishing_spot_accessible(spot_id: String, player_level: int, owned_boat_ids: Array) -> bool
-func get_accessible_fishing_spot_ids(player_level: int, owned_boat_ids: Array) -> Array[String]
+func fishing_spot_access_status(spot_id: String, player_level: int, owned_boat_ids: Array, sea_chart_fragments: int = 3) -> Dictionary
+func is_fishing_spot_accessible(spot_id: String, player_level: int, owned_boat_ids: Array, sea_chart_fragments: int = 3) -> bool
+func get_accessible_fishing_spot_ids(player_level: int, owned_boat_ids: Array, sea_chart_fragments: int = 3) -> Array[String]
 ```
 
 `PlayerProgress` は現在の進行状態を使うラッパーを提供する。

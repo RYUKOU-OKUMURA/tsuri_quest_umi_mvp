@@ -365,10 +365,14 @@ func is_fishing_spot_accessible(
 	return bool(fishing_spot_access_status(spot_id, player_level, owned_boat_ids, sea_chart_fragments).get("ok", false))
 
 
-func get_accessible_fishing_spot_ids(player_level: int, owned_boat_ids: Array) -> Array[String]:
+func get_accessible_fishing_spot_ids(
+	player_level: int,
+	owned_boat_ids: Array,
+	sea_chart_fragments: int = SEA_CHART_REQUIRED_FRAGMENTS
+) -> Array[String]:
 	var ids: Array[String] = []
 	for spot_id in FISHING_SPOT_ORDER:
-		if is_fishing_spot_accessible(spot_id, player_level, owned_boat_ids):
+		if is_fishing_spot_accessible(spot_id, player_level, owned_boat_ids, sea_chart_fragments):
 			ids.append(spot_id)
 	return ids
 
@@ -559,9 +563,10 @@ func _quest_candidate_fish_ids(context: Dictionary, rarity: String = "") -> Arra
 	var ids: Array[String] = []
 	var player_level := int(context.get("player_level", 1))
 	var owned_boats := Array(context.get("owned_boats", []))
+	var sea_chart_fragments := int(context.get("sea_chart_fragments", SEA_CHART_REQUIRED_FRAGMENTS))
 	var spot_ids := Array(context.get("spot_ids", []))
 	if spot_ids.is_empty():
-		spot_ids = get_accessible_fishing_spot_ids(player_level, owned_boats)
+		spot_ids = get_accessible_fishing_spot_ids(player_level, owned_boats, sea_chart_fragments)
 	for spot_id_variant in spot_ids:
 		var spot := get_fishing_spot(String(spot_id_variant))
 		for fish_id_variant in Array(spot.get("allowed_fish", [])):
