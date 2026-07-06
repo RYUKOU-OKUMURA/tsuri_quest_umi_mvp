@@ -85,7 +85,11 @@ def _audit_sheet(path: Path, anchors_by_asset_id: dict[str, tuple[float, float]]
         if index == 0:
             anchor = anchors_by_asset_id.get(asset_id)
             if anchor is None:
-                failures.append(f"{path.name}: no fish data line_anchor_x/y found for asset id '{asset_id}'")
+                failures.append(
+                    f"{path.name}: no fish data line_anchor_x/y found for asset id '{asset_id}'"
+                    " (fish data と id が一致しているか確認。asset_id 間接参照を使う魚を追加した場合は"
+                    " _load_anchor_data() に asset_id 対応を足すこと)"
+                )
             else:
                 _audit_anchor(path.name, frame, anchor, failures)
 
