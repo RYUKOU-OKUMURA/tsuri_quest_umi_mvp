@@ -30,9 +30,13 @@ var _buff_name_label: Label
 var _buff_text_label: Label
 var _facility_detail_title_label: Label
 var _facility_detail_body_label: Label
+var _preparation_body_label: Label
+var _shark_lure_button: Button
+var _selected_shark_lure_fish_id := ""
 
 
 func _build_screen() -> void:
+	_resolve_shark_lure_selection()
 	var backdrop := HarborBackdropScript.new()
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(backdrop)
@@ -105,14 +109,34 @@ func _build_main_panel(root: Control) -> void:
 	scene_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_place_control(main, scene_text, 0.130, 0.215, 0.870, 0.415)
 
-	_build_parchment_card(
-		main,
-		Rect2(0.066, 0.482, 0.868, 0.172),
-		"今日の支度",
-		_preparation_card_text(),
-		ICON_FISHING_PATH
-	)
+	_build_preparation_card(main)
 	_build_buff_card(main)
+
+
+func _build_preparation_card(main: Control) -> void:
+	var card := _anchored_control(main, 0.066, 0.482, 0.934, 0.654)
+	var frame := _texture_rect(HARBOR_PARCHMENT_CARD_PATH)
+	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	card.add_child(frame)
+
+	var icon := _icon_rect(ICON_FISHING_PATH)
+	_place_control(card, icon, 0.030, 0.185, 0.112, 0.815)
+
+	var title := _harbor_label("今日の支度", 15, Palette.HARBOR_PARCHMENT_TITLE, true, 0)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(card, title, 0.140, 0.100, 0.930, 0.375)
+
+	_preparation_body_label = _harbor_label("", 16, Palette.HARBOR_PARCHMENT_BODY, true, 0)
+	_preparation_body_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_preparation_body_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_preparation_body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_preparation_body_label.clip_text = true
+	_place_control(card, _preparation_body_label, 0.140, 0.390, 0.675, 0.850)
+
+	_shark_lure_button = make_button("", _cycle_shark_lure_fish, 0.0, false)
+	_shark_lure_button.add_theme_font_size_override("font_size", 13)
+	_place_control(card, _shark_lure_button, 0.700, 0.245, 0.940, 0.800)
 
 
 func _build_buff_card(main: Control) -> void:
@@ -140,33 +164,22 @@ func _build_buff_card(main: Control) -> void:
 	_place_control(card, _buff_text_label, 0.145, 0.625, 0.930, 0.900)
 
 
-func _build_parchment_card(parent: Control, ratios: Rect2, title_text: String, body_text: String, icon_path: String) -> void:
-	var card := _anchored_control(parent, ratios.position.x, ratios.position.y, ratios.position.x + ratios.size.x, ratios.position.y + ratios.size.y)
-	var frame := _texture_rect(HARBOR_PARCHMENT_CARD_PATH)
-	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	card.add_child(frame)
-
-	var icon := _icon_rect(icon_path)
-	_place_control(card, icon, 0.030, 0.185, 0.112, 0.815)
-
-	var title := _harbor_label(title_text, 15, Palette.HARBOR_PARCHMENT_TITLE, true, 0)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(card, title, 0.140, 0.100, 0.930, 0.375)
-
-	var body_font_size := 17 if body_text.contains("\n") else 19
-	var body := _harbor_label(body_text, body_font_size, Palette.HARBOR_PARCHMENT_BODY, true, 0)
-	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	body.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_place_control(card, body, 0.140, 0.405, 0.930, 0.820)
-
-
 func _preparation_card_text() -> String:
+	var megalodon_omen := _megalodon_omen_text()
+	if not megalodon_omen.is_empty():
+		return megalodon_omen
 	var hint := _nushi_hint_text()
 	if hint.is_empty():
-		return "釣る  →  売る／料理する  →  装備・レベル強化  →  ぬしに挑む"
-	return "釣る  →  売る／料理する  →  装備強化\n目撃談：%s" % hint
+		return "釣る → 売る／料理する → 強化\n危険海域では餌魚で大物サメを狙う"
+	return "釣る → 売る／料理する → 強化\n目撃談：%s" % hint
+
+
+func _megalodon_omen_text() -> String:
+	if int(PlayerProgress.caught_counts.get("megalodon", 0)) > 0:
+		return ""
+	if not GameData.is_megalodon_unlocked(PlayerProgress.level, PlayerProgress.shark_bonds):
+		return ""
+	return "生簀のサメたちが、深海の何かに怯えている……\nヌシ級の餌魚を危険海域へ捧げよう"
 
 
 func _nushi_hint_text() -> String:
@@ -188,6 +201,99 @@ func _nushi_hint_text() -> String:
 	return candidates[rng.randi_range(0, candidates.size() - 1)]
 
 
+func _resolve_shark_lure_selection() -> void:
+	_selected_shark_lure_fish_id = String(route_payload.get("shark_lure_fish_id", ""))
+	if not _eligible_shark_lure_fish_ids().has(_selected_shark_lure_fish_id):
+		_selected_shark_lure_fish_id = ""
+
+
+func _refresh_preparation_card() -> void:
+	if _preparation_body_label != null:
+		_preparation_body_label.text = _preparation_card_text()
+	if _shark_lure_button == null:
+		return
+	var unlocked := PlayerProgress.can_access_fishing_spot("danger_reef")
+	var ids := _eligible_shark_lure_fish_ids()
+	if not unlocked:
+		_selected_shark_lure_fish_id = ""
+		_shark_lure_button.text = "危険海域で解放"
+		_shark_lure_button.disabled = true
+		return
+	if ids.is_empty():
+		_selected_shark_lure_fish_id = ""
+		_shark_lure_button.text = "餌魚なし"
+		_shark_lure_button.disabled = true
+		return
+	_shark_lure_button.disabled = false
+	if _selected_shark_lure_fish_id.is_empty():
+		_shark_lure_button.text = "餌魚を選ぶ"
+		return
+	var fish := GameData.get_fish(_selected_shark_lure_fish_id)
+	var count := PlayerProgress.fish_count(_selected_shark_lure_fish_id)
+	_shark_lure_button.text = "%s x%d" % [String(fish.get("name", _selected_shark_lure_fish_id)), count]
+
+
+func _cycle_shark_lure_fish() -> void:
+	var ids := _eligible_shark_lure_fish_ids()
+	if ids.is_empty() or not PlayerProgress.can_access_fishing_spot("danger_reef"):
+		return
+	var current_index := ids.find(_selected_shark_lure_fish_id)
+	if current_index < 0:
+		_selected_shark_lure_fish_id = ids[0]
+	elif current_index >= ids.size() - 1:
+		_selected_shark_lure_fish_id = ""
+	else:
+		_selected_shark_lure_fish_id = ids[current_index + 1]
+	_refresh_preparation_card()
+
+
+func _eligible_shark_lure_fish_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for fish_id_variant in PlayerProgress.inventory.keys():
+		var fish_id := String(fish_id_variant)
+		if PlayerProgress.fish_count(fish_id) <= 0:
+			continue
+		var fish := GameData.get_fish(fish_id)
+		if fish.is_empty() or bool(fish.get("shark", false)):
+			continue
+		ids.append(fish_id)
+	ids.sort_custom(
+		func(a: String, b: String) -> bool:
+			var fish_a := GameData.get_fish(a)
+			var fish_b := GameData.get_fish(b)
+			var price_a := int(fish_a.get("sell_price", 0))
+			var price_b := int(fish_b.get("sell_price", 0))
+			if price_a == price_b:
+				return String(fish_a.get("name", a)) < String(fish_b.get("name", b))
+			return price_a > price_b
+	)
+	return ids
+
+
+func _fishing_spots_payload() -> Dictionary:
+	if _selected_shark_lure_fish_id.is_empty():
+		return {}
+	return {"shark_lure_fish_id": _selected_shark_lure_fish_id}
+
+
+func _has_caught_raiseable_shark() -> bool:
+	for shark_id in GameData.get_raiseable_shark_ids():
+		if int(PlayerProgress.caught_counts.get(shark_id, 0)) > 0:
+			return true
+	return false
+
+
+func _can_open_shark_pen() -> bool:
+	return PlayerProgress.level >= 30 and _has_caught_raiseable_shark()
+
+
+func _open_shark_pen() -> void:
+	if not _can_open_shark_pen():
+		_set_facility_detail("サメの生簀", "Lv.30／危険海域で解放", false)
+		return
+	navigate("shark_pen")
+
+
 func _build_facility_menu(root: Control) -> void:
 	var menu := _anchored_control(root, 0.675, 0.170, 0.974, 0.882)
 	var frame := _texture_rect(HARBOR_MENU_FRAME_PATH)
@@ -201,18 +307,21 @@ func _build_facility_menu(root: Control) -> void:
 
 	_build_facility_detail_panel(menu)
 
-	var button_height := 0.064
-	var row_step := 0.070
+	var button_height := 0.058
+	var row_step := 0.064
 	var row_top := 0.126
-	_build_facility_button(menu, row_top + row_step * 0.0, "釣り場へ向かう", "狙う魚に合わせてポイントを選ぶ", ICON_FISHING_PATH, func() -> void: navigate("fishing_spots"), true, button_height)
-	_build_facility_button(menu, row_top + row_step * 1.0, "依頼ボード", "釣果を届けて報酬を受け取る", ICON_QUEST_PATH, func() -> void: navigate("quest_board"), false, button_height)
-	_build_facility_button(menu, row_top + row_step * 2.0, "調理場", "魚を料理して食事にする", ICON_COOKING_PATH, func() -> void: navigate("cooking"), false, button_height)
-	_build_facility_button(menu, row_top + row_step * 3.0, "魚市場", "釣果を売って資金にする", ICON_MARKET_PATH, func() -> void: navigate("market"), false, button_height)
-	_build_facility_button(menu, row_top + row_step * 4.0, "釣具店", "竿を購入・装備する", ICON_SHOP_PATH, func() -> void: navigate("shop"), false, button_height)
-	_build_facility_button(menu, row_top + row_step * 5.0, "船着き場", "船を購入して沖へ出る", ICON_SHIPYARD_PATH, func() -> void: navigate("shipyard"), false, button_height)
-	_build_facility_button(menu, row_top + row_step * 6.0, "ステータス", "成長と装備を確認する", ICON_STATUS_PATH, func() -> void: navigate("status"), false, button_height)
-	_build_facility_button(menu, row_top + row_step * 7.0, "魚図鑑", "釣った魚の記録を見る", FightFishAssets.card_portrait_path({"id": "aji"}), func() -> void: navigate("fish_book"), false, button_height)
-	_build_facility_button(menu, row_top + row_step * 8.0, "タイトルへ戻る", "進行を保存して戻る", ICON_TITLE_PATH, _return_to_title, false, button_height)
+	var shark_pen_locked := not _can_open_shark_pen()
+	var shark_pen_detail := "捕獲したサメを育てる" if not shark_pen_locked else "Lv.30／危険海域で解放"
+	_build_facility_button(menu, row_top + row_step * 0.0, "釣り場へ向かう", "狙う魚に合わせてポイントを選ぶ", ICON_FISHING_PATH, func() -> void: navigate("fishing_spots", _fishing_spots_payload()), true, button_height)
+	_build_facility_button(menu, row_top + row_step * 1.0, "サメの生簀", shark_pen_detail, FightFishAssets.card_portrait_path({"id": "nekozame"}), _open_shark_pen, false, button_height, shark_pen_locked)
+	_build_facility_button(menu, row_top + row_step * 2.0, "依頼ボード", "釣果を届けて報酬を受け取る", ICON_QUEST_PATH, func() -> void: navigate("quest_board"), false, button_height)
+	_build_facility_button(menu, row_top + row_step * 3.0, "調理場", "魚を料理して食事にする", ICON_COOKING_PATH, func() -> void: navigate("cooking"), false, button_height)
+	_build_facility_button(menu, row_top + row_step * 4.0, "魚市場", "釣果を売って資金にする", ICON_MARKET_PATH, func() -> void: navigate("market"), false, button_height)
+	_build_facility_button(menu, row_top + row_step * 5.0, "釣具店", "竿を購入・装備する", ICON_SHOP_PATH, func() -> void: navigate("shop"), false, button_height)
+	_build_facility_button(menu, row_top + row_step * 6.0, "船着き場", "船を購入して沖へ出る", ICON_SHIPYARD_PATH, func() -> void: navigate("shipyard"), false, button_height)
+	_build_facility_button(menu, row_top + row_step * 7.0, "ステータス", "成長と装備を確認する", ICON_STATUS_PATH, func() -> void: navigate("status"), false, button_height)
+	_build_facility_button(menu, row_top + row_step * 8.0, "魚図鑑", "釣った魚の記録を見る", FightFishAssets.card_portrait_path({"id": "aji"}), func() -> void: navigate("fish_book"), false, button_height)
+	_build_facility_button(menu, row_top + row_step * 9.0, "タイトルへ戻る", "進行を保存して戻る", ICON_TITLE_PATH, _return_to_title, false, button_height)
 	_set_facility_detail("釣り場へ向かう", "狙う魚に合わせてポイントを選ぶ", true)
 
 
@@ -246,7 +355,8 @@ func _build_facility_button(
 	icon_path: String,
 	callback: Callable,
 	primary := false,
-	height := 0.108
+	height := 0.108,
+	locked := false
 ) -> void:
 	var button := make_button("", callback)
 	button.custom_minimum_size = Vector2.ZERO
@@ -283,11 +393,26 @@ func _build_facility_button(
 	icon.modulate = Palette.HARBOR_ICON_MODULATE
 	_place_control(button, icon, 0.070, 0.210, 0.150, 0.790)
 
-	var title := _harbor_label(title_text, 21, Palette.HARBOR_FACILITY_PRIMARY_TEXT if primary else Palette.HARBOR_FACILITY_SECONDARY_TEXT, true, 2 if primary else 1, Palette.HARBOR_FACILITY_PRIMARY_OUTLINE if primary else Palette.HARBOR_FACILITY_SECONDARY_OUTLINE)
+	var title_font_size := 19 if height < 0.064 else 21
+	var title_color := (
+		Palette.HARBOR_DETAIL_BODY_SECONDARY
+		if locked
+		else (Palette.HARBOR_FACILITY_PRIMARY_TEXT if primary else Palette.HARBOR_FACILITY_SECONDARY_TEXT)
+	)
+	var title := _harbor_label(title_text, title_font_size, title_color, true, 2 if primary else 1, Palette.HARBOR_FACILITY_PRIMARY_OUTLINE if primary else Palette.HARBOR_FACILITY_SECONDARY_OUTLINE)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(button, title, 0.205, 0.120, 0.900, 0.880)
+	_place_control(button, title, 0.205, 0.120, 0.560 if locked else 0.900, 0.880)
+
+	if locked:
+		var lock := _harbor_label(body_text, 8, Palette.HARBOR_DETAIL_BODY_SECONDARY, true, 1, Palette.HARBOR_LABEL_OUTLINE)
+		lock.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		lock.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lock.clip_text = true
+		lock.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_place_control(button, lock, 0.545, 0.160, 0.930, 0.840)
 
 
 func _set_facility_detail(title_text: String, body_text: String, primary := false) -> void:
@@ -312,6 +437,7 @@ func _build_footer(root: Control) -> void:
 
 
 func _refresh_labels() -> void:
+	_refresh_preparation_card()
 	var fish_total := 0
 	for count in PlayerProgress.inventory.values():
 		fish_total += int(count)
@@ -397,6 +523,7 @@ func _apply_facility_button_skin(button: Button, primary: bool) -> void:
 	button.add_theme_stylebox_override("hover", hover)
 	button.add_theme_stylebox_override("focus", hover)
 	button.add_theme_stylebox_override("pressed", hover)
+	button.add_theme_stylebox_override("disabled", normal)
 	button.add_theme_font_override("font", GameFontsScript.bold(get_theme_default_font()))
 	button.add_theme_color_override("font_color", Color.TRANSPARENT)
 	button.add_theme_color_override("font_hover_color", Color.TRANSPARENT)

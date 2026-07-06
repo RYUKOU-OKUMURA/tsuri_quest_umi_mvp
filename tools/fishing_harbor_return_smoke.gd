@@ -31,6 +31,7 @@ func _ready() -> void:
 	_verify_keyboard_confirmation_flow()
 	_verify_bite_escape_sfx()
 	await _verify_continue_trip_does_not_consume_pending_buff()
+	await _verify_shark_lure_route_stats()
 
 	if _failed:
 		return
@@ -219,6 +220,82 @@ func _verify_continue_trip_does_not_consume_pending_buff() -> void:
 	continued.queue_free()
 	await get_tree().process_frame
 	PlayerProgress.pending_buff = {}
+
+
+func _verify_shark_lure_route_stats() -> void:
+	PlayerProgress.level = GameData.MAX_LEVEL
+	PlayerProgress.pending_buff = {}
+	PlayerProgress.owned_boats = ["bluewater_boat"]
+	PlayerProgress.sea_chart_fragments = 3
+	PlayerProgress.shark_bonds = {}
+	for shark_id in GameData.get_normal_shark_ids():
+		PlayerProgress.shark_bonds[shark_id] = 100
+	var lure_name := String(GameData.get_fish("kihada").get("name", "kihada"))
+	var lure_screen := FishingScreenScript.new()
+	lure_screen.theme = ThemeFactory.build_theme()
+	lure_screen.configure({
+		"spot_id": "danger_reef",
+		"shark_lure_fish_id": "kihada",
+		"shark_lure_fish_name": lure_name,
+	})
+	lure_screen.size = Vector2(1280.0, 720.0)
+	add_child(lure_screen)
+	await get_tree().process_frame
+	_expect(
+		String(lure_screen._trip_stats.get("shark_lure_fish_id", "")) == "kihada",
+		"new danger reef fishing screen should store shark lure fish in trip_stats"
+	)
+	_expect(
+		String(lure_screen._trip_stats.get("shark_lure_fish_name", "")) == lure_name,
+		"new danger reef fishing screen should store shark lure fish name"
+	)
+	_expect(
+		lure_screen._spot_detail_label.text.contains(lure_name),
+		"new danger reef fishing detail should show shark lure fish"
+	)
+	var modifiers: Dictionary = lure_screen._trip_extra_fish_weight_modifiers()
+	var expected: Dictionary = GameData.shark_lure_weights(GameData.get_fish("kihada"))
+	_expect(not expected.is_empty(), "kihada should produce shark lure modifiers")
+	for fish_id_variant in expected.keys():
+		var fish_id := String(fish_id_variant)
+		_expect(modifiers.has(fish_id), "fishing screen lure modifiers should include %s" % fish_id)
+		_expect(
+			is_equal_approx(float(modifiers.get(fish_id, 0.0)), float(expected.get(fish_id, 0.0))),
+			"fishing screen lure modifier mismatch for %s" % fish_id
+		)
+	lure_screen._trip_stats["bird_swarm_hits_remaining"] = 1
+	var combined_modifiers: Dictionary = lure_screen._trip_extra_fish_weight_modifiers()
+	var bird_modifiers: Dictionary = GameData.bird_swarm_fish_weight_modifiers()
+	_expect(combined_modifiers.has("kihada"), "combined modifiers should include bird swarm fish")
+	_expect(
+		is_equal_approx(float(combined_modifiers.get("kihada", 0.0)), float(bird_modifiers.get("kihada", 0.0))),
+		"combined modifiers should preserve bird swarm multiplier"
+	)
+	for fish_id_variant in expected.keys():
+		var fish_id := String(fish_id_variant)
+		_expect(combined_modifiers.has(fish_id), "combined modifiers should include shark lure fish %s" % fish_id)
+	lure_screen.queue_free()
+	await get_tree().process_frame
+
+	var mega_lure_name := String(GameData.get_fish("nushi_deep_ocean").get("name", "nushi_deep_ocean"))
+	var mega_screen := FishingScreenScript.new()
+	mega_screen.theme = ThemeFactory.build_theme()
+	mega_screen.configure({
+		"spot_id": "danger_reef",
+		"shark_lure_fish_id": "nushi_deep_ocean",
+		"shark_lure_fish_name": mega_lure_name,
+	})
+	mega_screen.size = Vector2(1280.0, 720.0)
+	add_child(mega_screen)
+	await get_tree().process_frame
+	var mega_lure: Dictionary = mega_screen._trip_shark_lure_fish_data()
+	_expect(not mega_lure.is_empty(), "megalodon route should expose nushi-grade lure data")
+	_expect(
+		GameData.can_encounter_megalodon(PlayerProgress.level, "danger_reef", PlayerProgress.shark_bonds, mega_lure),
+		"megalodon route should satisfy encounter gate with nushi-grade lure"
+	)
+	mega_screen.queue_free()
+	await get_tree().process_frame
 
 
 func _advance_until_bite() -> void:

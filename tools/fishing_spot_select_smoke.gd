@@ -139,6 +139,45 @@ func _ready() -> void:
 
 	_navigated_to = ""
 	_payload = {}
+	PlayerProgress.inventory = {"nekozame": 1}
+	_screen = _make_screen({
+		"spot_id": "danger_reef",
+		"shark_lure_fish_id": "nekozame",
+	})
+	await get_tree().process_frame
+	var shark_lure_name := String(GameData.get_fish("nekozame").get("name", "nekozame"))
+	_expect(not _screen._detail_bait_value_label.text.contains(shark_lure_name), "danger reef detail should reject shark lure payload")
+	_expect(_screen._detail_bait_value_label.text.contains("餌魚なし"), "invalid shark lure payload should display no lure fish")
+	_screen._select_spot("danger_reef")
+	_expect(_navigated_to == "fishing", "danger reef with invalid lure payload should still navigate without lure")
+	_expect(not _payload.has("shark_lure_fish_id"), "invalid shark lure payload should not be forwarded")
+	_expect(PlayerProgress.fish_count("nekozame") == 1, "invalid shark lure payload should not consume shark inventory")
+
+	_screen.queue_free()
+	await get_tree().process_frame
+
+	_navigated_to = ""
+	_payload = {}
+	PlayerProgress.inventory = {"kihada": 2, "nekozame": 1}
+	_screen = _make_screen({
+		"spot_id": "danger_reef",
+		"shark_lure_fish_id": "kihada",
+	})
+	await get_tree().process_frame
+	var lure_name := String(GameData.get_fish("kihada").get("name", "kihada"))
+	_expect(_screen._detail_bait_value_label.text.contains(lure_name), "danger reef detail should show selected shark lure fish")
+	_screen._select_spot("danger_reef")
+	_expect(_navigated_to == "fishing", "danger reef with lure should navigate")
+	_expect(String(_payload.get("shark_lure_fish_id", "")) == "kihada", "danger reef lure payload mismatch")
+	_expect(String(_payload.get("shark_lure_fish_name", "")) == lure_name, "danger reef lure name payload mismatch")
+	_expect(PlayerProgress.fish_count("kihada") == 1, "danger reef lure should consume one selected fish")
+	_expect(PlayerProgress.fish_count("nekozame") == 1, "shark inventory entry should not be consumed as lure")
+
+	_screen.queue_free()
+	await get_tree().process_frame
+
+	_navigated_to = ""
+	_payload = {}
 	PlayerProgress.level = 3
 	PlayerProgress.owned_boats = []
 	PlayerProgress.owned_rigs = [GameData.DEFAULT_RIG_ID, "chokusen"]
@@ -158,6 +197,32 @@ func _ready() -> void:
 	var stats: Dictionary = _payload.get("trip_stats", {})
 	_expect(String(stats.get("sentinel", "")) == "carried", "continued spot selection should carry trip_stats")
 	_expect(String(stats.get("rig_id", "")) == "chokusen", "continued spot selection should refresh rig stats")
+
+	_screen.queue_free()
+	await get_tree().process_frame
+
+	_navigated_to = ""
+	_payload = {}
+	PlayerProgress.level = 30
+	PlayerProgress.owned_boats = ["bluewater_boat"]
+	PlayerProgress.sea_chart_fragments = 3
+	PlayerProgress.inventory = {"kihada": 1}
+	_screen = _make_screen({
+		"from_fishing": true,
+		"current_spot_id": "danger_reef",
+		"trip_stats": {
+			"sentinel": "lure-carried",
+			"shark_lure_fish_id": "kihada",
+			"shark_lure_fish_name": lure_name,
+		},
+	})
+	await get_tree().process_frame
+	_screen._select_spot("danger_reef")
+	_expect(_navigated_to == "fishing", "continued danger reef selection should navigate")
+	_expect(PlayerProgress.fish_count("kihada") == 1, "continued danger reef selection should not consume lure again")
+	var continued_stats: Dictionary = _payload.get("trip_stats", {})
+	_expect(String(continued_stats.get("shark_lure_fish_id", "")) == "kihada", "continued danger reef should carry lure stats")
+
 	PlayerProgress.record_catch("saba", 32.0, "outer_tide")
 	var outer_counts: Dictionary = PlayerProgress.spot_caught_counts.get("outer_tide", {})
 	_expect(int(outer_counts.get("saba", 0)) == 1, "record_catch should store spot-specific catch counts")

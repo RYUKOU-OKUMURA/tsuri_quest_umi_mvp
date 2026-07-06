@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tools/harbor_screen_smoke.gd" id="1_harbor_screen_smoke"]
+
+[node name="HarborScreenSmoke" type="Node"]
+script = ExtResource("1_harbor_screen_smoke")

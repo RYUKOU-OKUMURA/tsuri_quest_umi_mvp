@@ -28,6 +28,7 @@ const COMPLETION_SLOT_SIZE := Vector2(220.0, 44.0)
 const DETAIL_FRAME_SOURCE_SIZE := Vector2(520.0, 760.0)
 
 var _selected_spot_id: String = GameData.DEFAULT_FISHING_SPOT_ID
+var _selected_shark_lure_fish_id := ""
 var _continue_trip := false
 var _trip_stats: Dictionary = {}
 
@@ -87,6 +88,15 @@ func _resolve_route_state() -> void:
 	var incoming_stats = route_payload.get("trip_stats", {})
 	if typeof(incoming_stats) == TYPE_DICTIONARY:
 		_trip_stats = incoming_stats.duplicate(true)
+	_selected_shark_lure_fish_id = _validated_shark_lure_fish_id(
+		String(route_payload.get("shark_lure_fish_id", "")),
+		true
+	)
+	if _selected_shark_lure_fish_id.is_empty() and _trip_stats.has("shark_lure_fish_id"):
+		_selected_shark_lure_fish_id = _validated_shark_lure_fish_id(
+			String(_trip_stats.get("shark_lure_fish_id", "")),
+			false
+		)
 	_continue_trip = (
 		bool(route_payload.get("from_fishing", false))
 		or bool(route_payload.get("continue_trip", false))
@@ -1108,6 +1118,19 @@ func _select_spot(spot_id: String) -> void:
 		var stats := _trip_stats.duplicate(true)
 		_apply_current_rig_to_stats(stats)
 		payload["trip_stats"] = stats
+	elif spot_id == "danger_reef" and not _selected_shark_lure_fish_id.is_empty():
+		var lure_result := PlayerProgress.consume_fish_for_shark_lure(_selected_shark_lure_fish_id)
+		if not bool(lure_result.get("ok", false)):
+			if _message_label != null:
+				_message_label.text = "餌魚をセットできません"
+			if _message_detail_label != null:
+				_message_detail_label.text = String(lure_result.get("message", "餌魚を確認してください。"))
+			_selected_shark_lure_fish_id = ""
+			_refresh_detail()
+			return
+		var consumed_id := String(lure_result.get("fish_id", _selected_shark_lure_fish_id))
+		payload["shark_lure_fish_id"] = consumed_id
+		payload["shark_lure_fish_name"] = String(lure_result.get("fish_name", consumed_id))
 	navigate("fishing", payload)
 
 
@@ -1167,7 +1190,28 @@ func _bait_text(spot: Dictionary) -> String:
 	var baits: Array[String] = []
 	for bait_variant in Array(spot.get("recommended_baits", [])):
 		baits.append(String(bait_variant))
-	return "、".join(PackedStringArray(baits))
+	var bait_text := "、".join(PackedStringArray(baits))
+	if String(spot.get("id", "")) != "danger_reef":
+		return bait_text
+	var lure_text := "餌魚なし"
+	if not _selected_shark_lure_fish_id.is_empty():
+		var lure_fish := GameData.get_fish(_selected_shark_lure_fish_id)
+		if not lure_fish.is_empty():
+			lure_text = "餌魚:%s" % String(lure_fish.get("name", _selected_shark_lure_fish_id))
+	if bait_text.is_empty():
+		return lure_text
+	return "%s / %s" % [bait_text, lure_text]
+
+
+func _validated_shark_lure_fish_id(fish_id: String, require_inventory := true) -> String:
+	if fish_id.strip_edges().is_empty():
+		return ""
+	var fish := GameData.get_fish(fish_id)
+	if fish.is_empty() or bool(fish.get("shark", false)):
+		return ""
+	if require_inventory and PlayerProgress.fish_count(fish_id) <= 0:
+		return ""
+	return fish_id
 
 
 func _equipped_rig_text(spot: Dictionary) -> String:

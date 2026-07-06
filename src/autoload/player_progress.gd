@@ -427,6 +427,28 @@ func feed_shark(shark_id: String, fish_id: String) -> Dictionary:
 	}
 
 
+func consume_fish_for_shark_lure(fish_id: String) -> Dictionary:
+	var food := GameData.get_fish(fish_id)
+	if food.is_empty():
+		return {"ok": false, "message": "餌魚にする魚データが見つかりません。"}
+	if bool(food.get("shark", false)):
+		return {"ok": false, "message": "サメは餌魚にできません。"}
+	var current_count := fish_count(fish_id)
+	if current_count <= 0:
+		return {"ok": false, "message": "餌魚にする魚を持っていません。"}
+
+	inventory[fish_id] = current_count - 1
+	save_game()
+	progress_changed.emit()
+	return {
+		"ok": true,
+		"fish_id": fish_id,
+		"fish_name": String(food.get("name", fish_id)),
+		"fish": food.duplicate(true),
+		"message": "%sを餌魚にした。" % String(food.get("name", fish_id)),
+	}
+
+
 func ensure_quest_board() -> void:
 	var changed := false
 	while quest_board.size() < 3:

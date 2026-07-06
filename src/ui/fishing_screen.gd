@@ -232,7 +232,21 @@ func _resolve_trip_stats() -> void:
 			_init_trip_event_state()
 			return
 	_trip_stats = PlayerProgress.begin_fishing_trip()
+	_apply_route_shark_lure_to_trip_stats()
 	_init_trip_event_state()
+
+
+func _apply_route_shark_lure_to_trip_stats() -> void:
+	if _spot_id != "danger_reef":
+		return
+	var fish_id := String(route_payload.get("shark_lure_fish_id", ""))
+	if fish_id.is_empty():
+		return
+	var fish := GameData.get_fish(fish_id)
+	if fish.is_empty() or bool(fish.get("shark", false)):
+		return
+	_trip_stats["shark_lure_fish_id"] = fish_id
+	_trip_stats["shark_lure_fish_name"] = String(route_payload.get("shark_lure_fish_name", fish.get("name", fish_id)))
 
 
 func _init_trip_event_state() -> void:
@@ -310,12 +324,16 @@ func _spot_summary_text() -> String:
 
 
 func _spot_detail_text() -> String:
+	var rig_line := "仕掛け：%s" % _rig_summary_text()
+	var lure_summary := _shark_lure_summary_text()
+	if not lure_summary.is_empty():
+		rig_line = "%s / 餌魚:%s" % [rig_line, lure_summary]
 	return (
-		"水深 %s\n狙い：%s\n仕掛け：%s"
+		"水深 %s\n狙い：%s\n%s"
 		% [
 			_depth_range_text(_spot),
 			_featured_fish_text(_spot),
-			_rig_summary_text(),
+			rig_line,
 		]
 	)
 
@@ -354,6 +372,15 @@ func _rig_summary_text() -> String:
 	if bait_types.is_empty():
 		return rig_name
 	return "%s（%s）" % [rig_name, "、".join(PackedStringArray(bait_types))]
+
+
+func _shark_lure_summary_text() -> String:
+	if _spot_id != "danger_reef":
+		return ""
+	var fish_id := String(_trip_stats.get("shark_lure_fish_id", ""))
+	if fish_id.is_empty():
+		return ""
+	return String(_trip_stats.get("shark_lure_fish_name", fish_id))
 
 
 func _create_result_overlay() -> void:
@@ -538,16 +565,16 @@ func _prepare_new_attempt() -> void:
 	if bool(_spot.get("boss_spot", false)):
 		_current_fish = GameData.get_fish("boss_kurodai")
 	else:
-		var extra_modifiers: Dictionary = {}
-		if int(_trip_stats.get("bird_swarm_hits_remaining", 0)) > 0:
-			extra_modifiers = GameData.bird_swarm_fish_weight_modifiers()
+		var extra_modifiers := _trip_extra_fish_weight_modifiers()
 		_current_fish = GameData.roll_hooked_fish(
 			PlayerProgress.level,
 			_spot_id,
 			String(_trip_stats.get("rig_id", PlayerProgress.equipped_rig_id)),
 			String(_trip_stats.get("environment_id", GameData.DEFAULT_FISHING_ENVIRONMENT_ID)),
 			String(_trip_stats.get("time_slot_id", "")),
-			extra_modifiers
+			extra_modifiers,
+			PlayerProgress.shark_bonds,
+			_trip_shark_lure_fish_data()
 		)
 		if int(_trip_stats.get("bird_swarm_hits_remaining", 0)) > 0:
 			_trip_stats["bird_swarm_hits_remaining"] = int(_trip_stats.get("bird_swarm_hits_remaining", 0)) - 1
@@ -566,6 +593,38 @@ func _prepare_new_attempt() -> void:
 func _refresh_fish_info() -> void:
 	if _fight_sidebar != null:
 		_fight_sidebar.set_fish(_current_fish, _trip_stats)
+
+
+func _trip_extra_fish_weight_modifiers() -> Dictionary:
+	var modifiers: Dictionary = {}
+	if int(_trip_stats.get("bird_swarm_hits_remaining", 0)) > 0:
+		_merge_fish_weight_modifiers(modifiers, GameData.bird_swarm_fish_weight_modifiers())
+	var lure_fish := _trip_shark_lure_fish_data()
+	if not lure_fish.is_empty():
+		_merge_fish_weight_modifiers(modifiers, GameData.shark_lure_weights(lure_fish))
+	return modifiers
+
+
+func _merge_fish_weight_modifiers(target: Dictionary, source: Dictionary) -> void:
+	for fish_id_variant in source.keys():
+		var fish_id := String(fish_id_variant)
+		var multiplier := float(source[fish_id_variant])
+		if target.has(fish_id):
+			target[fish_id] = float(target[fish_id]) * multiplier
+		else:
+			target[fish_id] = multiplier
+
+
+func _trip_shark_lure_fish_data() -> Dictionary:
+	if _spot_id != "danger_reef":
+		return {}
+	var fish_id := String(_trip_stats.get("shark_lure_fish_id", ""))
+	if fish_id.is_empty():
+		return {}
+	var fish := GameData.get_fish(fish_id)
+	if bool(fish.get("shark", false)):
+		return {}
+	return fish
 
 
 func _prepare_shark_ambush_plan() -> void:
