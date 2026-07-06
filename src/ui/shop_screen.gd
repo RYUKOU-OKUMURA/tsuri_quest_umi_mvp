@@ -531,7 +531,14 @@ func _buy_or_equip() -> void:
 
 
 func _current_item_ids() -> Array[String]:
-	return GameData.get_all_rod_ids() if _shop_mode == "rod" else GameData.get_all_rig_ids()
+	if _shop_mode == "rod":
+		return GameData.get_all_rod_ids()
+	var ids: Array[String] = []
+	for rig_id in GameData.get_all_rig_ids():
+		if bool(GameData.get_rig(rig_id).get("shop_hidden", false)):
+			continue
+		ids.append(rig_id)
+	return ids
 
 
 func _item_data(item_id: String) -> Dictionary:

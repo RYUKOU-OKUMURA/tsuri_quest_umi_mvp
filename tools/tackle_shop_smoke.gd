@@ -61,7 +61,10 @@ func _ready() -> void:
 	PlayerProgress.money = 150
 	await _click_control(_screen._rig_tab_button)
 	_expect(_screen._shop_mode == "rig", "clicking rig tab should switch shop mode")
-	_expect(_card_buttons(_screen, "rig").size() == GameData.get_all_rig_ids().size(), "rig cards should match rig data")
+	_expect(
+		_card_buttons(_screen, "rig").size() == _shop_visible_rig_ids().size(),
+		"rig cards should match shop-visible rig data"
+	)
 	_expect(_card_buttons(_screen, "rod").is_empty(), "rod cards should not render while rig tab is active")
 	_expect_card_geometry("rig")
 	_expect_runtime_button_count("rig")
@@ -190,6 +193,15 @@ func _expect_runtime_button_count(mode: String) -> void:
 	_expect(buttons.size() == expected, "%s mode should only have card buttons plus rod/rig/action/return buttons, got %d expected %d" % [mode, buttons.size(), expected])
 	for button in buttons:
 		_expect(not bool(button.get_meta("shop_category", false)), "old category button metadata should not exist")
+
+
+func _shop_visible_rig_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for rig_id in GameData.get_all_rig_ids():
+		if bool(GameData.get_rig(rig_id).get("shop_hidden", false)):
+			continue
+		ids.append(rig_id)
+	return ids
 
 
 func _card_label(root: Node, item_id: String, role: String) -> Label:

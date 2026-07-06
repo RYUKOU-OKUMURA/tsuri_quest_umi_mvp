@@ -90,6 +90,8 @@ var owned_boats: Array[String] = []
 var pending_buff: Dictionary = {}
 var play_seconds: float = 0.0
 var active_save_slot: int = DEFAULT_SAVE_SLOT
+var quest_board: Array[Dictionary] = []
+var quest_completed_count: int = 0
 
 # smoke / preview / audit（res://tools/ 配下のシーン起動）から本番セーブを守るフラグ。
 # true の間はディスクへの読み書きを一切行わない。
@@ -204,6 +206,8 @@ func _reset_runtime_state() -> void:
 	owned_boats = []
 	pending_buff = {}
 	play_seconds = 0.0
+	quest_board = []
+	quest_completed_count = 0
 
 
 func exp_to_next_level() -> int:
@@ -338,6 +342,66 @@ func sell_fish_batch(orders: Dictionary) -> Dictionary:
 		"total_amount": total_amount,
 		"sold": sold,
 		"message": "%d匹売って、%d Gを受け取った。" % [total_amount, income],
+	}
+
+
+func ensure_quest_board() -> void:
+	var changed := false
+	while quest_board.size() < 3:
+		var quest := GameData.generate_quest(_quest_generation_context())
+		if quest.is_empty():
+			break
+		quest_board.append(quest)
+		changed = true
+	if changed:
+		save_game()
+		progress_changed.emit()
+
+
+func quest_progress(index: int) -> Dictionary:
+	if index < 0 or index >= quest_board.size():
+		return {}
+	return GameData.quest_progress(quest_board[index], _quest_stats_snapshot())
+
+
+func deliver_quest(index: int) -> Dictionary:
+	ensure_quest_board()
+	if index < 0 or index >= quest_board.size():
+		return {"ok": false, "message": "依頼が見つかりません。"}
+	var quest := quest_board[index].duplicate(true)
+	var progress := GameData.quest_progress(quest, _quest_stats_snapshot())
+	if not bool(progress.get("completed", false)):
+		return {"ok": false, "message": "まだ依頼を達成していません。", "progress": progress}
+
+	var kind := String(quest.get("kind", "delivery"))
+	var fish_id := String(quest.get("fish_id", ""))
+	if kind == "delivery":
+		var required_count := int(quest.get("count", 0))
+		var current_count := fish_count(fish_id)
+		if current_count < required_count:
+			return {"ok": false, "message": "納品する魚が足りません。", "progress": progress}
+		inventory[fish_id] = current_count - required_count
+
+	var reward := int(quest.get("reward_money", 0))
+	money += reward
+	quest_completed_count += 1
+	var rig_awarded := _award_quest_reward_rig()
+	var new_titles := _award_new_titles()
+	var replacement := GameData.generate_quest(_quest_generation_context([quest]))
+	quest_board.remove_at(index)
+	if not replacement.is_empty():
+		quest_board.insert(index, replacement)
+	save_game()
+	progress_changed.emit()
+	return {
+		"ok": true,
+		"quest": quest,
+		"replacement": replacement,
+		"reward_money": reward,
+		"quest_completed_count": quest_completed_count,
+		"rig_awarded": rig_awarded,
+		"new_titles": new_titles,
+		"message": "依頼達成！ %d Gを受け取った。" % reward,
 	}
 
 
@@ -563,9 +627,40 @@ func title_stats_snapshot() -> Dictionary:
 		"spot_caught_counts": spot_caught_counts.duplicate(true),
 		"best_sizes": best_sizes.duplicate(true),
 		"eaten_recipes": eaten_recipes.duplicate(true),
-		"quest_completed_count": 0,
+		"quest_completed_count": quest_completed_count,
 		"shark_bonds": {},
 	}
+
+
+func _quest_stats_snapshot() -> Dictionary:
+	return {
+		"inventory": inventory.duplicate(true),
+		"best_sizes": best_sizes.duplicate(true),
+	}
+
+
+func _quest_generation_context(extra_excluded_quests: Array = []) -> Dictionary:
+	var existing: Array[Dictionary] = []
+	for quest in quest_board:
+		existing.append(quest.duplicate(true))
+	for quest_variant in extra_excluded_quests:
+		if typeof(quest_variant) == TYPE_DICTIONARY:
+			existing.append(Dictionary(quest_variant).duplicate(true))
+	return {
+		"player_level": level,
+		"owned_boats": owned_boats.duplicate(true),
+		"existing_quests": existing,
+		"best_sizes": best_sizes.duplicate(true),
+	}
+
+
+func _award_quest_reward_rig() -> bool:
+	if quest_completed_count < 10 or "shokunin" in owned_rigs:
+		return false
+	if GameData.get_rig("shokunin").is_empty():
+		return false
+	owned_rigs.append("shokunin")
+	return true
 
 
 func save_game() -> void:
@@ -589,6 +684,8 @@ func save_game() -> void:
 		"owned_boats": owned_boats,
 		"pending_buff": pending_buff,
 		"play_seconds": play_seconds,
+		"quest_board": quest_board,
+		"quest_completed_count": quest_completed_count,
 	}
 	var save_path := current_save_path()
 	var backup_path := current_backup_path()
@@ -707,6 +804,7 @@ func _apply_save_data(data: Dictionary) -> void:
 	var loaded_spot_caught_counts = data.get("spot_caught_counts", {})
 	var loaded_best_sizes = data.get("best_sizes", {})
 	var loaded_eaten_recipes = data.get("eaten_recipes", {})
+	var loaded_quest_board = data.get("quest_board", [])
 	inventory = (
 		loaded_inventory.duplicate(true) if typeof(loaded_inventory) == TYPE_DICTIONARY else {}
 	)
@@ -728,6 +826,8 @@ func _apply_save_data(data: Dictionary) -> void:
 		if typeof(loaded_eaten_recipes) == TYPE_DICTIONARY
 		else {}
 	)
+	quest_board = _normalized_quest_board(loaded_quest_board)
+	quest_completed_count = maxi(0, int(data.get("quest_completed_count", 0)))
 	owned_rods = []
 	var loaded_rods = data.get("owned_rods", ["starter"])
 	if typeof(loaded_rods) == TYPE_ARRAY:
@@ -763,6 +863,30 @@ func _apply_save_data(data: Dictionary) -> void:
 	pending_buff = loaded_buff.duplicate(true) if typeof(loaded_buff) == TYPE_DICTIONARY else {}
 	play_seconds = maxf(0.0, float(data.get("play_seconds", 0.0)))
 	progress_changed.emit()
+
+
+func _normalized_quest_board(value: Variant) -> Array[Dictionary]:
+	var normalized: Array[Dictionary] = []
+	if typeof(value) != TYPE_ARRAY:
+		return normalized
+	for quest_variant in Array(value):
+		if typeof(quest_variant) != TYPE_DICTIONARY:
+			continue
+		var quest := Dictionary(quest_variant).duplicate(true)
+		quest["template_id"] = String(quest.get("template_id", ""))
+		quest["kind"] = String(quest.get("kind", "delivery"))
+		quest["fish_id"] = String(quest.get("fish_id", ""))
+		quest["count"] = int(quest.get("count", 0))
+		quest["target_size_cm"] = float(quest.get("target_size_cm", 0.0))
+		quest["posted_best_cm"] = float(quest.get("posted_best_cm", 0.0))
+		quest["reward_money"] = int(quest.get("reward_money", 0))
+		quest["text"] = String(quest.get("text", ""))
+		if String(quest.get("fish_id", "")).is_empty() or String(quest.get("text", "")).is_empty():
+			continue
+		normalized.append(quest)
+		if normalized.size() >= 3:
+			break
+	return normalized
 
 
 func _remember_current_titles() -> void:

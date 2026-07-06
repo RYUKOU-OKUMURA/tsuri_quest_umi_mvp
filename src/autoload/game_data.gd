@@ -24,6 +24,7 @@ const FISHING_ENVIRONMENT_ORDER: Array[String] = GameCatalogData.FISHING_ENVIRON
 const FISHING_ENVIRONMENTS: Dictionary = GameCatalogData.FISHING_ENVIRONMENTS
 const TITLES: Array[Dictionary] = GameCatalogData.TITLES
 const RECIPES: Dictionary = GameCatalogData.RECIPES
+const QUEST_TEMPLATES: Dictionary = GameCatalogData.QUEST_TEMPLATES
 const ROD_ORDER: Array[String] = GameCatalogData.ROD_ORDER
 const RODS: Dictionary = GameCatalogData.RODS
 const RIG_ORDER: Array[String] = GameCatalogData.RIG_ORDER
@@ -95,6 +96,12 @@ func get_recipe(recipe_id: String) -> Dictionary:
 	if bool(recipe.get("allow_all_fish", false)):
 		recipe["allowed_fish"] = get_all_fish_ids()
 	return recipe
+
+
+func get_quest_template(template_id: String) -> Dictionary:
+	if not QUEST_TEMPLATES.has(template_id):
+		return {}
+	return QUEST_TEMPLATES[template_id].duplicate(true)
 
 
 func get_rod(rod_id: String) -> Dictionary:
@@ -329,6 +336,276 @@ func get_accessible_fishing_spot_ids(player_level: int, owned_boat_ids: Array) -
 		if is_fishing_spot_accessible(spot_id, player_level, owned_boat_ids):
 			ids.append(spot_id)
 	return ids
+
+
+func quest_template_weights(player_level: int) -> Dictionary:
+	if player_level >= 8:
+		return {
+			"bulk_common": 30.0,
+			"bulk_uncommon": 25.0,
+			"cuisine": 15.0,
+			"size_record": 15.0,
+			"rare_order": 15.0,
+		}
+	return {
+		"bulk_common": 50.0,
+		"bulk_uncommon": 25.0,
+		"cuisine": 15.0,
+		"size_record": 10.0,
+	}
+
+
+func generate_quest(context: Dictionary) -> Dictionary:
+	var forced_template_id := String(context.get("template_id", ""))
+	if not forced_template_id.is_empty():
+		return _build_quest_from_template(forced_template_id, context)
+	var weights := quest_template_weights(int(context.get("player_level", 1)))
+	var available_weights: Dictionary = {}
+	for template_id_variant in weights.keys():
+		var template_id := String(template_id_variant)
+		if _quest_has_candidate(template_id, context):
+			available_weights[template_id] = float(weights[template_id])
+	return _build_quest_from_template(_roll_weighted_key(available_weights), context)
+
+
+func generate_quest_board(context: Dictionary, count: int = 3) -> Array[Dictionary]:
+	var quests: Array[Dictionary] = []
+	var working_context := context.duplicate(true)
+	var attempts := 0
+	while quests.size() < count and attempts < count * 8:
+		attempts += 1
+		working_context["existing_quests"] = quests.duplicate(true)
+		var quest := generate_quest(working_context)
+		if quest.is_empty():
+			break
+		quests.append(quest)
+	return quests
+
+
+func quest_progress(quest: Dictionary, stats: Dictionary) -> Dictionary:
+	var kind := String(quest.get("kind", "delivery"))
+	var fish_id := String(quest.get("fish_id", ""))
+	if kind == "record":
+		var best_sizes := _stats_dictionary(stats, "best_sizes")
+		var current_size := float(best_sizes.get(fish_id, 0.0))
+		var target_size := float(quest.get("target_size_cm", 0.0))
+		return {
+			"kind": "record",
+			"fish_id": fish_id,
+			"current": current_size,
+			"target": target_size,
+			"completed": current_size >= target_size and target_size > 0.0,
+			"action_label": "報告",
+			"progress_text": "%.1f / %.1f cm" % [current_size, target_size],
+		}
+	var inventory := _stats_dictionary(stats, "inventory")
+	var current_count := int(inventory.get(fish_id, 0))
+	var target_count := int(quest.get("count", 0))
+	return {
+		"kind": "delivery",
+		"fish_id": fish_id,
+		"current": current_count,
+		"target": target_count,
+		"completed": current_count >= target_count and target_count > 0,
+		"action_label": "納品",
+		"progress_text": "%d / %d 匹" % [current_count, target_count],
+	}
+
+
+func _build_quest_from_template(template_id: String, context: Dictionary) -> Dictionary:
+	if template_id.is_empty() or not QUEST_TEMPLATES.has(template_id):
+		return {}
+	var template: Dictionary = QUEST_TEMPLATES[template_id]
+	var player_level := int(context.get("player_level", 1))
+	if player_level < int(template.get("min_level", 1)):
+		return {}
+	match template_id:
+		"bulk_common", "bulk_uncommon", "rare_order":
+			return _build_bulk_quest(template, context)
+		"cuisine":
+			return _build_cuisine_quest(template, context)
+		"size_record":
+			return _build_size_record_quest(template, context)
+		_:
+			return {}
+
+
+func _build_bulk_quest(template: Dictionary, context: Dictionary) -> Dictionary:
+	var rarity := String(template.get("rarity", ""))
+	var candidates := _quest_candidate_fish_ids(context, rarity)
+	if candidates.is_empty():
+		return {}
+	var fish_id := _pick_string(candidates)
+	var fish := get_fish(fish_id)
+	var count := _rng.randi_range(int(template.get("min_count", 1)), int(template.get("max_count", 1)))
+	var multiplier := float(template.get("reward_multiplier", 1.0))
+	var reward := int(round(float(fish.get("sell_price", 0)) * float(count) * multiplier))
+	var text := ""
+	match String(template.get("id", "")):
+		"bulk_uncommon":
+			text = "%sを%d匹。上物を頼む" % [String(fish.get("name", fish_id)), count]
+		"rare_order":
+			text = "%sを探している。金は弾む" % String(fish.get("name", fish_id))
+		_:
+			text = "%sを%d匹届けてほしい" % [String(fish.get("name", fish_id)), count]
+	return {
+		"template_id": String(template.get("id", "")),
+		"kind": "delivery",
+		"fish_id": fish_id,
+		"count": count,
+		"reward_money": reward,
+		"text": text,
+	}
+
+
+func _build_cuisine_quest(template: Dictionary, context: Dictionary) -> Dictionary:
+	var options := _quest_cuisine_options(context)
+	if options.is_empty():
+		return {}
+	var option: Dictionary = options[_rng.randi_range(0, options.size() - 1)]
+	var fish_id := String(option.get("fish_id", ""))
+	var recipe_id := String(option.get("recipe_id", ""))
+	var fish := get_fish(fish_id)
+	var recipe := get_recipe(recipe_id)
+	var reward := int(round(float(fish.get("sell_price", 0)) * float(template.get("reward_multiplier", 1.0))))
+	return {
+		"template_id": "cuisine",
+		"kind": "delivery",
+		"fish_id": fish_id,
+		"recipe_id": recipe_id,
+		"count": 1,
+		"reward_money": reward,
+		"text": "%sにする%sを1匹" % [
+			String(recipe.get("name", "料理")),
+			String(fish.get("name", fish_id)),
+		],
+	}
+
+
+func _build_size_record_quest(template: Dictionary, context: Dictionary) -> Dictionary:
+	var candidates := _quest_candidate_fish_ids(context)
+	if candidates.is_empty():
+		return {}
+	var fish_id := _pick_string(candidates)
+	var fish := get_fish(fish_id)
+	var size_min := float(fish.get("size_min", 0.0))
+	var size_max := float(fish.get("size_max", size_min))
+	var target := snappedf(
+		size_min + (size_max - size_min) * float(template.get("target_ratio", 0.62)),
+		float(template.get("target_snap_cm", 5.0))
+	)
+	var best_sizes := _stats_dictionary(context, "best_sizes")
+	return {
+		"template_id": "size_record",
+		"kind": "record",
+		"fish_id": fish_id,
+		"target_size_cm": target,
+		"posted_best_cm": float(best_sizes.get(fish_id, 0.0)),
+		"reward_money": int(round(float(fish.get("sell_price", 0)) * float(template.get("reward_multiplier", 1.0)))),
+		"text": "%.0fcm以上の%sを釣り上げてくれ" % [target, String(fish.get("name", fish_id))],
+	}
+
+
+func _quest_has_candidate(template_id: String, context: Dictionary) -> bool:
+	match template_id:
+		"bulk_common", "bulk_uncommon", "rare_order":
+			var template: Dictionary = QUEST_TEMPLATES[template_id]
+			return not _quest_candidate_fish_ids(context, String(template.get("rarity", ""))).is_empty()
+		"cuisine":
+			return not _quest_cuisine_options(context).is_empty()
+		"size_record":
+			return not _quest_candidate_fish_ids(context).is_empty()
+		_:
+			return false
+
+
+func _quest_candidate_fish_ids(context: Dictionary, rarity: String = "") -> Array[String]:
+	var excluded := _quest_excluded_fish_ids(context)
+	var ids: Array[String] = []
+	var player_level := int(context.get("player_level", 1))
+	var owned_boats := Array(context.get("owned_boats", []))
+	var spot_ids := Array(context.get("spot_ids", []))
+	if spot_ids.is_empty():
+		spot_ids = get_accessible_fishing_spot_ids(player_level, owned_boats)
+	for spot_id_variant in spot_ids:
+		var spot := get_fishing_spot(String(spot_id_variant))
+		for fish_id_variant in Array(spot.get("allowed_fish", [])):
+			var fish_id := String(fish_id_variant)
+			if ids.has(fish_id) or excluded.has(fish_id):
+				continue
+			var fish := get_fish(fish_id)
+			if fish.is_empty() or _quest_excludes_fish(fish_id, fish):
+				continue
+			if int(fish.get("min_level", 1)) > player_level:
+				continue
+			if not rarity.is_empty() and String(fish.get("rarity", "")) != rarity:
+				continue
+			ids.append(fish_id)
+	return ids
+
+
+func _quest_cuisine_options(context: Dictionary) -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	var candidates := _quest_candidate_fish_ids(context)
+	var player_level := int(context.get("player_level", 1))
+	var recipe_ids: Array[String] = []
+	for recipe_id_variant in RECIPES.keys():
+		recipe_ids.append(String(recipe_id_variant))
+	recipe_ids.sort()
+	for recipe_id in recipe_ids:
+		var recipe := get_recipe(recipe_id)
+		if int(recipe.get("unlock_level", 1)) > player_level:
+			continue
+		var allowed_fish := Array(recipe.get("allowed_fish", []))
+		for fish_id in candidates:
+			if allowed_fish.has(fish_id):
+				options.append({"recipe_id": recipe_id, "fish_id": fish_id})
+	return options
+
+
+func _quest_excluded_fish_ids(context: Dictionary) -> Array[String]:
+	var excluded: Array[String] = []
+	for fish_id_variant in Array(context.get("exclude_fish_ids", [])):
+		var fish_id := String(fish_id_variant)
+		if not excluded.has(fish_id):
+			excluded.append(fish_id)
+	for quest_variant in Array(context.get("existing_quests", [])):
+		if typeof(quest_variant) != TYPE_DICTIONARY:
+			continue
+		var fish_id := String(Dictionary(quest_variant).get("fish_id", ""))
+		if not fish_id.is_empty() and not excluded.has(fish_id):
+			excluded.append(fish_id)
+	return excluded
+
+
+func _quest_excludes_fish(fish_id: String, fish: Dictionary) -> bool:
+	return (
+		bool(fish.get("shark", false))
+		or bool(fish.get("nushi", false))
+		or bool(fish.get("boss", false))
+		or NUSHI_FISH.has(fish_id)
+	)
+
+
+func _roll_weighted_key(weights: Dictionary) -> String:
+	var total_weight := 0.0
+	for key in weights.keys():
+		total_weight += maxf(0.0, float(weights[key]))
+	if total_weight <= 0.0:
+		return ""
+	var pick := _rng.randf_range(0.0, total_weight)
+	var running := 0.0
+	for key in weights.keys():
+		running += maxf(0.0, float(weights[key]))
+		if pick <= running:
+			return String(key)
+	return String(weights.keys().back())
+
+
+func _pick_string(values: Array[String]) -> String:
+	if values.is_empty():
+		return ""
+	return values[_rng.randi_range(0, values.size() - 1)]
 
 
 func _expansion_fish() -> Dictionary:

@@ -1818,6 +1818,63 @@ const RECIPES: Dictionary = {
 	},
 }
 
+const QUEST_TEMPLATES: Dictionary = {
+	"bulk_common":
+	{
+		"id": "bulk_common",
+		"kind": "delivery",
+		"rarity": "コモン",
+		"min_count": 3,
+		"max_count": 5,
+		"reward_multiplier": 1.6,
+	},
+	"bulk_uncommon":
+	{
+		"id": "bulk_uncommon",
+		"kind": "delivery",
+		"rarity": "アンコモン",
+		"min_count": 2,
+		"max_count": 3,
+		"reward_multiplier": 1.8,
+	},
+	"cuisine":
+	{
+		"id": "cuisine",
+		"kind": "delivery",
+		"min_count": 1,
+		"max_count": 1,
+		"reward_multiplier": 2.0,
+	},
+	"size_record":
+	{
+		"id": "size_record",
+		"kind": "record",
+		"target_ratio": 0.62,
+		"target_snap_cm": 5.0,
+		"reward_multiplier": 2.5,
+	},
+	"rare_order":
+	{
+		"id": "rare_order",
+		"kind": "delivery",
+		"rarity": "レア",
+		"min_count": 1,
+		"max_count": 1,
+		"reward_multiplier": 2.2,
+		"min_level": 8,
+	},
+	"zarigani_kid":
+	{
+		"id": "zarigani_kid",
+		"kind": "delivery",
+		"fish_id": "zarigani",
+		"min_count": 3,
+		"max_count": 3,
+		"reward_multiplier": 0.0,
+		"min_phase": "E8",
+	},
+}
+
 const ROD_ORDER: Array[String] = [
 	"starter",
 	"iso",
@@ -1886,6 +1943,7 @@ const RIG_ORDER: Array[String] = [
 	"nomase",
 	"jigging",
 	"kani",
+	"shokunin",
 ]
 
 const RIGS: Dictionary = {
@@ -1942,6 +2000,16 @@ const RIGS: Dictionary = {
 		"bait_types": ["岩ガニ"],
 		"unlock_level": 5,
 		"description": "石物やぬし級の魚に備える専用寄りの仕掛け。",
+	},
+	"shokunin":
+	{
+		"id": "shokunin",
+		"name": "職人仕掛け",
+		"price": 0,
+		"bait_types": ["イソメ", "オキアミ", "小魚"],
+		"unlock_level": 1,
+		"shop_hidden": true,
+		"description": "港の常連たちから贈られた万能仕掛け。",
 	},
 }
 
