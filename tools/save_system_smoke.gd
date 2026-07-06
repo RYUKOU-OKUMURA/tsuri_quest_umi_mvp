@@ -72,6 +72,25 @@ func _ready() -> void:
 	_expect_eq(PlayerProgress.money, 4242, "future version should still load")
 	_expect_eq(PlayerProgress.level, 3, "future version should still load level")
 
+	# V2 E0: 旧上限だったLv10セーブは維持され、Lv11以降へ進行できる
+	_write_text(
+		PlayerProgress.SAVE_PATH,
+		JSON.stringify(
+			{"version": PlayerProgress.SAVE_VERSION, "level": 10, "exp": 459, "money": 4242}
+		)
+	)
+	PlayerProgress.load_game()
+	_expect_eq(PlayerProgress.level, 10, "Lv10 save should load as Lv10")
+	_expect_eq(PlayerProgress.exp, 459, "Lv10 save should preserve EXP")
+	_expect_eq(PlayerProgress.exp_to_next_level(), 460, "Lv10 should require EXP toward Lv11")
+	var leveled_to := PlayerProgress.add_exp(1)
+	_expect_eq(PlayerProgress.level, 11, "Lv10 save should be able to advance to Lv11")
+	_expect_eq(PlayerProgress.exp, 0, "Lv11 should consume exact overflow EXP")
+	_expect(
+		leveled_to.size() == 1 and int(leveled_to[0]) == 11,
+		"Lv10 add_exp should report Lv11"
+	)
+
 	# サンドボックス中はディスクに一切触れない
 	PlayerProgress._sandbox_mode = true
 	PlayerProgress.money = 9999

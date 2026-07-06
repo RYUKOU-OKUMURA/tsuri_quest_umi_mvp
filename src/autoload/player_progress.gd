@@ -10,7 +10,63 @@ const SAVE_PATH := "user://tsuri_quest_save.json"
 const SAVE_BACKUP_PATH := "user://tsuri_quest_save.json.bak"
 const SAVE_TMP_PATH := "user://tsuri_quest_save.json.tmp"
 const SAVE_VERSION := 1
-const EXP_REQUIREMENTS: Array[int] = [0, 60, 85, 115, 150, 190, 235, 285, 340, 400, 0]
+const EXP_REQUIREMENTS: Array[int] = [
+	0,
+	60,
+	85,
+	115,
+	150,
+	190,
+	235,
+	285,
+	340,
+	400,
+	460,
+	520,
+	580,
+	640,
+	700,
+	770,
+	840,
+	910,
+	980,
+	1050,
+	1130,
+	1210,
+	1290,
+	1370,
+	1450,
+	1540,
+	1630,
+	1720,
+	1810,
+	1900,
+	2000,
+	2100,
+	2200,
+	2300,
+	2400,
+	2500,
+	2600,
+	2700,
+	2800,
+	2900,
+	3050,
+	3200,
+	3350,
+	3500,
+	3650,
+	3800,
+	3950,
+	4100,
+	4250,
+	4400,
+	0,
+]
+const GROWTH_SOFT_CAP := 10
+const GROWTH_RATE_AFTER_CAP := 0.35
+const GROWTH_SOFT_CAP_2 := 30
+const GROWTH_RATE_AFTER_CAP_2 := 0.10
 
 var level: int = 1
 var exp: int = 0
@@ -361,17 +417,34 @@ func can_access_fishing_spot(spot_id: String) -> bool:
 	return bool(fishing_spot_access_status(spot_id).get("ok", false))
 
 
+func growth_points() -> float:
+	if level <= GROWTH_SOFT_CAP:
+		return float(level - 1)
+	if level <= GROWTH_SOFT_CAP_2:
+		return (
+			float(GROWTH_SOFT_CAP - 1)
+			+ float(level - GROWTH_SOFT_CAP) * GROWTH_RATE_AFTER_CAP
+		)
+	return (
+		float(GROWTH_SOFT_CAP - 1)
+		+ float(GROWTH_SOFT_CAP_2 - GROWTH_SOFT_CAP) * GROWTH_RATE_AFTER_CAP
+		+ float(level - GROWTH_SOFT_CAP_2) * GROWTH_RATE_AFTER_CAP_2
+	)
+
+
 func get_base_stats() -> Dictionary:
 	var rod := GameData.get_rod(equipped_rod_id)
-	var technique_points := (level - 1) + int(rod.get("technique_bonus", 0))
+	var growth := growth_points()
+	var growth_floor := int(floor(growth))
+	var technique_points := growth_floor + int(rod.get("technique_bonus", 0))
 	return {
 		"level": level,
-		"max_energy": 100.0 + float(level - 1) * 5.0,
-		"reel_power": (5.6 + float(level - 1) * 0.58) * float(rod.get("reel_multiplier", 1.0)),
+		"max_energy": 100.0 + growth * 5.0,
+		"reel_power": (5.6 + growth * 0.58) * float(rod.get("reel_multiplier", 1.0)),
 		"technique": technique_points,
-		"focus": level - 1,
-		"energy_regen": 14.0 + float(level - 1) * 0.45,
-		"bite_window_bonus": float(level - 1) * 0.025,
+		"focus": growth_floor,
+		"energy_regen": 14.0 + growth * 0.45,
+		"bite_window_bonus": growth * 0.025,
 		"safe_min": maxf(0.10, 0.22 - float(technique_points) * 0.007),
 		"safe_max": minf(0.88, 0.72 + float(technique_points) * 0.010),
 		"line_break_limit": 1.0 + float(rod.get("line_limit_bonus", 0.0)),

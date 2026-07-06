@@ -2,7 +2,7 @@
 
 正本: `docs/30_v2_expansion_overview.md`（読む順: docs/30 §4 共通仕様 → 本doc）
 前提フェーズ: なし（E1と並走可）
-状態: 仕様確定・未着手
+状態: 完了（2026-07-06）
 改訂: 2026-07-06 決定#10 により旧仕様（10→30）を **10→50 の一括拡張**へ改訂。30キャップは経由しない
 
 ## E0-1. 定数変更
@@ -75,3 +75,10 @@ Lv11以降は主に解放ゲート:
   2. `save_system_verify.sh`（Lv10セーブのロード）
   3. `cooking_flow_smoke`（レベルアップ演出の回帰。`level_up_panel.gd` はgrowth差分をそのまま表示するので変更不要のはず）
   4. validate green
+
+実行結果（2026-07-06）:
+
+- `level_curve_audit`: green（Lv1〜50表出力、Lv1〜10旧式一致、Lv30 growth=16.0 / Lv50 growth=18.0）
+- `./tools/save_system_verify.sh`: green（Lv10ロード後にLv11へ進行できることを追加確認）
+- `cooking_flow_smoke`: green
+- `./tools/validate_project.sh`: green

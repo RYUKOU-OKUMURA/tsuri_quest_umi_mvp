@@ -3,7 +3,7 @@ extends Node
 const FishExpansionData = preload("res://src/autoload/fish_expansion_data.gd")
 const GameCatalogData = preload("res://src/autoload/game_catalog_data.gd")
 
-const MAX_LEVEL: int = 10
+const MAX_LEVEL: int = 50
 const BOSS_UNLOCK_LEVEL: int = 5
 const DEFAULT_FISHING_SPOT_ID := "harbor_pier"
 const BOSS_FISHING_SPOT_ID := "harbor_boulder"
