@@ -35,8 +35,13 @@ func _ready() -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
-		PlayerProgress.save_game()
+		if _should_save_on_close():
+			PlayerProgress.save_game()
 		get_tree().quit()
+
+
+func _should_save_on_close() -> bool:
+	return _current_screen == null or _current_screen.get_script() != TitleScreen
 
 
 func _show_screen(screen_id: String, payload: Dictionary = {}) -> void:

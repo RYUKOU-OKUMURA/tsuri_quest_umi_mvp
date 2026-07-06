@@ -18,6 +18,7 @@ var _slot_buttons: Array[Button] = []
 var _slot_status_label: Label
 var _continue_button: Button
 var _new_button: Button
+var _selected_slot_id := PlayerProgress.DEFAULT_SAVE_SLOT
 
 
 func _build_screen() -> void:
@@ -147,7 +148,9 @@ func _build_menu(root: Control) -> void:
 	_slot_status_label.clip_text = true
 	_place_control(menu, _slot_status_label, 0.105, 0.535, 0.895, 0.595)
 
-	_continue_button = make_button("つづきから", func() -> void: navigate("harbor"), 430)
+	_selected_slot_id = PlayerProgress.active_save_slot
+
+	_continue_button = make_button("つづきから", _continue_selected_slot, 430)
 	_continue_button.custom_minimum_size = Vector2.ZERO
 	_apply_title_button_skin(_continue_button, false)
 	_place_control(menu, _continue_button, 0.105, 0.615, 0.895, 0.735)
@@ -252,7 +255,7 @@ func _make_button_style(path: String) -> StyleBoxTexture:
 
 
 func _select_slot(slot_id: int) -> void:
-	PlayerProgress.set_active_save_slot(slot_id)
+	_selected_slot_id = clampi(slot_id, 1, PlayerProgress.SAVE_SLOT_COUNT)
 	_refresh_slot_ui()
 
 
@@ -260,11 +263,11 @@ func _refresh_slot_ui() -> void:
 	for index in range(_slot_buttons.size()):
 		var slot_id := index + 1
 		var summary := PlayerProgress.save_slot_summary(slot_id)
-		var selected := bool(summary.get("active", false))
+		var selected := slot_id == _selected_slot_id
 		var button := _slot_buttons[index]
 		button.text = _slot_button_text(summary)
 		_apply_title_button_skin(button, selected)
-	var active_summary := PlayerProgress.save_slot_summary(PlayerProgress.active_save_slot)
+	var active_summary := PlayerProgress.save_slot_summary(_selected_slot_id)
 	var has_save := bool(active_summary.get("has_save", false))
 	_slot_status_label.text = _slot_status_text(active_summary)
 	_continue_button.disabled = not has_save
@@ -315,13 +318,19 @@ func _format_updated_time(unix_time: int) -> String:
 
 
 func _on_new_game_pressed() -> void:
-	if PlayerProgress.has_save_file():
-		_confirm_reset.dialog_text = "スロット%dの進行を消して、最初から始めます。よろしいですか？" % PlayerProgress.active_save_slot
+	if PlayerProgress.has_save_file(_selected_slot_id):
+		_confirm_reset.dialog_text = "スロット%dの進行を消して、最初から始めます。よろしいですか？" % _selected_slot_id
 		_confirm_reset.popup_centered(Vector2i(620, 220))
 	else:
 		_start_new_game()
 
 
+func _continue_selected_slot() -> void:
+	PlayerProgress.set_active_save_slot(_selected_slot_id)
+	navigate("harbor")
+
+
 func _start_new_game() -> void:
+	PlayerProgress.set_active_save_slot(_selected_slot_id, false)
 	PlayerProgress.reset_game()
 	navigate("harbor")

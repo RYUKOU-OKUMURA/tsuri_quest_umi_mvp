@@ -4,6 +4,10 @@ extends Node
 ## 実際に user:// へ読み書きするため、必ず tools/save_system_verify.sh 経由
 ## （HOME 隔離 + TSURI_SAVE_SMOKE_ALLOW=1）で実行すること。
 
+const MainScript = preload("res://src/main.gd")
+const ThemeFactory = preload("res://src/ui/ui_theme.gd")
+const TitleScreen = preload("res://src/ui/title_screen.gd")
+
 var _failed := false
 
 
@@ -23,6 +27,7 @@ func _ready() -> void:
 	_remove_all_save_files()
 	PlayerProgress.set_active_save_slot(1, false)
 	_expect(not PlayerProgress.has_save_file(), "clean slate should report no save file")
+	await _verify_title_empty_slot_selection_is_non_committal()
 
 	# 旧単一セーブはslot 1へ自動移行される
 	_write_text(
@@ -142,6 +147,30 @@ func _ready() -> void:
 		return
 	print("save_system_smoke: ok")
 	get_tree().quit(0)
+
+
+func _verify_title_empty_slot_selection_is_non_committal() -> void:
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(1280, 720)
+	viewport.disable_3d = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(viewport)
+	var title := TitleScreen.new()
+	title.theme = ThemeFactory.build_theme()
+	viewport.add_child(title)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	title._select_slot(2)
+	await get_tree().process_frame
+	_expect_eq(PlayerProgress.active_save_slot, 1, "selecting an empty title slot should not activate it")
+	_expect(not FileAccess.file_exists(_slot_save_path(2)), "selecting an empty title slot should not create a save")
+	var main := MainScript.new()
+	main._current_screen = title
+	_expect(not main._should_save_on_close(), "closing on title should not auto-save")
+	main.free()
+	viewport.queue_free()
+	await get_tree().process_frame
+	await get_tree().process_frame
 
 
 func _remove_if_exists(path: String) -> void:
