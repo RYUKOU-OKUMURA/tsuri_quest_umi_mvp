@@ -197,6 +197,7 @@ def _make_sheet(spec: dict) -> Image.Image:
     for index in range(SHEET_FRAMES):
         phase = index / float(SHEET_FRAMES)
         frame = _draw_shark(spec, work_size, phase=phase, scale=float(spec["scale"]))
+        frame = frame.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
         frame = _contain_alpha(_readability_pass(frame), FRAME_SIZE, margin=10)
         sheet.alpha_composite(frame, (index * frame_w, 0))
     return sheet
@@ -237,6 +238,7 @@ def _make_sheet_from_source(source: Image.Image) -> Image.Image:
                 ),
                 Image.Resampling.LANCZOS,
             )
+        frame_source = frame_source.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
         frame = _contain_alpha(_realistic_readability_pass(frame_source), FRAME_SIZE, margin=9)
         y_offset = round(phase * 2.0)
         sheet.alpha_composite(frame, (index * frame_w, y_offset))
