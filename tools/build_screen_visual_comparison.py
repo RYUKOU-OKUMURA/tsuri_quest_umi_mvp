@@ -90,6 +90,14 @@ PRESETS = {
             "out": Path("/tmp/tsuri_market_empty_compare.png"),
         },
     ],
+    "quest_board": [
+        {
+            "id": "QUEST_BOARD",
+            "reference": ROOT / "reference" / "11_quest_board_mockup.png",
+            "capture": Path("/tmp/tsuri_quest_board.png"),
+            "out": Path("/tmp/tsuri_quest_board_compare.png"),
+        }
+    ],
 }
 
 

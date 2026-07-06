@@ -19,6 +19,7 @@ const ICON_SHOP_PATH := "res://assets/showcase/common/nav_shop_icon.png"
 const ICON_SHIPYARD_PATH := "res://assets/showcase/common/nav_shipyard_icon.png"
 const ICON_STATUS_PATH := "res://assets/showcase/common/nav_status_icon.png"
 const ICON_TITLE_PATH := "res://assets/showcase/common/nav_title_icon.png"
+const ICON_QUEST_PATH := "res://assets/showcase/common/nav_status_icon.png"
 
 var _status_label: Label
 var _top_level_label: Label
@@ -200,17 +201,18 @@ func _build_facility_menu(root: Control) -> void:
 
 	_build_facility_detail_panel(menu)
 
-	var button_height := 0.074
-	var row_step := 0.082
-	var row_top := 0.132
+	var button_height := 0.064
+	var row_step := 0.070
+	var row_top := 0.126
 	_build_facility_button(menu, row_top + row_step * 0.0, "釣り場へ向かう", "狙う魚に合わせてポイントを選ぶ", ICON_FISHING_PATH, func() -> void: navigate("fishing_spots"), true, button_height)
-	_build_facility_button(menu, row_top + row_step * 1.0, "調理場", "魚を料理して食事にする", ICON_COOKING_PATH, func() -> void: navigate("cooking"), false, button_height)
-	_build_facility_button(menu, row_top + row_step * 2.0, "魚市場", "釣果を売って資金にする", ICON_MARKET_PATH, func() -> void: navigate("market"), false, button_height)
-	_build_facility_button(menu, row_top + row_step * 3.0, "釣具店", "竿を購入・装備する", ICON_SHOP_PATH, func() -> void: navigate("shop"), false, button_height)
-	_build_facility_button(menu, row_top + row_step * 4.0, "船着き場", "船を購入して沖へ出る", ICON_SHIPYARD_PATH, func() -> void: navigate("shipyard"), false, button_height)
-	_build_facility_button(menu, row_top + row_step * 5.0, "ステータス", "成長と装備を確認する", ICON_STATUS_PATH, func() -> void: navigate("status"), false, button_height)
-	_build_facility_button(menu, row_top + row_step * 6.0, "魚図鑑", "釣った魚の記録を見る", FightFishAssets.card_portrait_path({"id": "aji"}), func() -> void: navigate("fish_book"), false, button_height)
-	_build_facility_button(menu, row_top + row_step * 7.0, "タイトルへ戻る", "進行を保存して戻る", ICON_TITLE_PATH, _return_to_title, false, button_height)
+	_build_facility_button(menu, row_top + row_step * 1.0, "依頼ボード", "釣果を届けて報酬を受け取る", ICON_QUEST_PATH, func() -> void: navigate("quest_board"), false, button_height)
+	_build_facility_button(menu, row_top + row_step * 2.0, "調理場", "魚を料理して食事にする", ICON_COOKING_PATH, func() -> void: navigate("cooking"), false, button_height)
+	_build_facility_button(menu, row_top + row_step * 3.0, "魚市場", "釣果を売って資金にする", ICON_MARKET_PATH, func() -> void: navigate("market"), false, button_height)
+	_build_facility_button(menu, row_top + row_step * 4.0, "釣具店", "竿を購入・装備する", ICON_SHOP_PATH, func() -> void: navigate("shop"), false, button_height)
+	_build_facility_button(menu, row_top + row_step * 5.0, "船着き場", "船を購入して沖へ出る", ICON_SHIPYARD_PATH, func() -> void: navigate("shipyard"), false, button_height)
+	_build_facility_button(menu, row_top + row_step * 6.0, "ステータス", "成長と装備を確認する", ICON_STATUS_PATH, func() -> void: navigate("status"), false, button_height)
+	_build_facility_button(menu, row_top + row_step * 7.0, "魚図鑑", "釣った魚の記録を見る", FightFishAssets.card_portrait_path({"id": "aji"}), func() -> void: navigate("fish_book"), false, button_height)
+	_build_facility_button(menu, row_top + row_step * 8.0, "タイトルへ戻る", "進行を保存して戻る", ICON_TITLE_PATH, _return_to_title, false, button_height)
 	_set_facility_detail("釣り場へ向かう", "狙う魚に合わせてポイントを選ぶ", true)
 
 

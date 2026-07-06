@@ -1,5 +1,8 @@
 extends Node
 
+const QuestBoardScreen = preload("res://src/ui/quest_board_screen.gd")
+const ThemeFactory = preload("res://src/ui/ui_theme.gd")
+
 var _failed := false
 
 
@@ -11,6 +14,7 @@ func _ready() -> void:
 	_verify_insufficient_delivery()
 	_verify_shokunin_reward()
 	_verify_save_type_normalization()
+	await _verify_screen_build()
 
 	if _failed:
 		return
@@ -145,6 +149,34 @@ func _verify_save_type_normalization() -> void:
 		TYPE_INT,
 		"quest reward field should normalize to int"
 	)
+
+
+func _verify_screen_build() -> void:
+	_seed_progress()
+	var quest := GameData.generate_quest(_quest_context("bulk_common"))
+	var fish_id := String(quest.get("fish_id", ""))
+	PlayerProgress.quest_board = [quest]
+	PlayerProgress.inventory[fish_id] = int(quest.get("count", 0))
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(1280, 720)
+	viewport.disable_3d = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(viewport)
+	var screen := QuestBoardScreen.new()
+	screen.theme = ThemeFactory.build_theme()
+	screen.configure({})
+	viewport.add_child(screen)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_expect_eq(PlayerProgress.quest_board.size(), 3, "quest board screen should fill board to three quests")
+	var action := screen.find_child("QuestActionButton1", true, false) as Button
+	_expect(action != null, "quest board screen should expose first action button")
+	if action != null:
+		_expect(not action.disabled, "ready delivery should enable first action button")
+	var return_button := screen.find_child("QuestBoardReturnButton", true, false) as Button
+	_expect(return_button != null, "quest board screen should expose return button")
+	viewport.queue_free()
+	await get_tree().process_frame
 
 
 func _quest_context(template_id: String = "") -> Dictionary:
