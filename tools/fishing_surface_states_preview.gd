@@ -41,19 +41,31 @@ func _ready() -> void:
 	await _settle()
 	_save(vp, OUT_CASTING)
 
-	await _wait_until(screen, FishingSimulator.State.WAITING, 1.4)
+	var reached := await _wait_until(screen, FishingSimulator.State.WAITING, 3.2)
+	if not reached:
+		get_tree().quit(1)
+		return
 	await get_tree().create_timer(0.26).timeout
 	await _settle()
+	print("capture waiting state=%d" % screen._simulator.state)
 	_save(vp, OUT_WAITING)
 
-	await _wait_until(screen, FishingSimulator.State.APPROACH, 3.4)
+	reached = await _wait_until(screen, FishingSimulator.State.APPROACH, 5.2)
+	if not reached:
+		get_tree().quit(1)
+		return
 	await get_tree().create_timer(0.38).timeout
 	await _settle()
+	print("capture approach state=%d" % screen._simulator.state)
 	_save(vp, OUT_APPROACH)
 
-	await _wait_until(screen, FishingSimulator.State.BITE, 2.4)
+	reached = await _wait_until(screen, FishingSimulator.State.BITE, 4.2)
+	if not reached:
+		get_tree().quit(1)
+		return
 	await get_tree().create_timer(0.10).timeout
 	await _settle()
+	print("capture bite state=%d" % screen._simulator.state)
 	_save(vp, OUT_BITE)
 
 	print("fishing_surface_states_preview:")
@@ -74,6 +86,8 @@ func _trip_stats_for_environment(environment: Dictionary) -> Dictionary:
 	stats["wind_id"] = String(environment.get("wind_id", "weak"))
 	stats["wind_label"] = String(environment.get("wind_label", "風 弱"))
 	stats["surface_bgm_key"] = String(environment.get("surface_bgm_key", "calm"))
+	stats["trip_fired_event_ids"] = ["bird_swarm", "driftwood", "bottle_mail"]
+	stats["bird_swarm_hits_remaining"] = 0
 	var rig := GameData.get_rig(GameData.DEFAULT_RIG_ID)
 	stats["rig_id"] = GameData.DEFAULT_RIG_ID
 	stats["rig_name"] = String(rig.get("name", "サビキ仕掛け"))
@@ -81,18 +95,21 @@ func _trip_stats_for_environment(environment: Dictionary) -> Dictionary:
 	return stats
 
 
-func _wait_until(screen: Node, target_state: int, timeout: float) -> void:
+func _wait_until(screen: Node, target_state: int, timeout: float) -> bool:
 	var elapsed := 0.0
 	while elapsed < timeout:
 		if screen._simulator.state == target_state:
-			return
+			return true
 		await get_tree().create_timer(0.05).timeout
 		elapsed += 0.05
 	push_error("Timed out waiting for fishing state %d, current=%d" % [target_state, screen._simulator.state])
+	return false
 
 
 func _settle() -> void:
 	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().create_timer(0.05).timeout
 	await get_tree().process_frame
 
 

@@ -23,6 +23,7 @@ const SURFACE_AMBIENCE_PATH := "res://assets/showcase/surface/surface_foreground
 const SURFACE_ANGLER_IDLE_PATH := "res://assets/showcase/surface/surface_angler_idle.png"
 const SURFACE_ANGLER_CAST_PATH := "res://assets/showcase/surface/surface_angler_cast.png"
 const SURFACE_BOBBER_PATH := "res://assets/showcase/surface/surface_bobber.png"
+const SURFACE_FISH_SHADOW_SOFT_PATH := "res://assets/showcase/surface/surface_fish_shadow_soft.png"
 const SURFACE_FISH_SHADOW_PATH := "res://assets/showcase/surface/surface_fish_shadow.png"
 const SURFACE_SPLASH_PATH := "res://assets/showcase/surface/surface_splash.png"
 const SURFACE_BIRD_SWARM_PATH := "res://assets/showcase/surface/surface_bird_swarm.png"
@@ -69,6 +70,7 @@ var _surface_angler_idle: Texture2D
 var _surface_angler_cast: Texture2D
 var _surface_bobber: Texture2D
 var _surface_fish_shadow: Texture2D
+var _surface_fish_shadow_frame_count: int = 1
 var _surface_splash: Texture2D
 var _surface_scene_ready: Texture2D
 var _surface_scene_casting: Texture2D
@@ -173,7 +175,12 @@ func _load_surface_assets() -> void:
 	_surface_angler_idle = _load_texture_if_exists(SURFACE_ANGLER_IDLE_PATH)
 	_surface_angler_cast = _load_texture_if_exists(SURFACE_ANGLER_CAST_PATH)
 	_surface_bobber = _load_texture_if_exists(SURFACE_BOBBER_PATH)
-	_surface_fish_shadow = _load_texture_if_exists(SURFACE_FISH_SHADOW_PATH)
+	_surface_fish_shadow = _load_texture_if_exists(SURFACE_FISH_SHADOW_SOFT_PATH)
+	if _surface_fish_shadow != null:
+		_surface_fish_shadow_frame_count = 3
+	else:
+		_surface_fish_shadow = _load_texture_if_exists(SURFACE_FISH_SHADOW_PATH)
+		_surface_fish_shadow_frame_count = 1
 	_surface_splash = _load_texture_if_exists(SURFACE_SPLASH_PATH)
 	_surface_bird_swarm = _load_texture_if_exists(SURFACE_BIRD_SWARM_PATH)
 	_surface_scene_ready = _load_texture_if_exists(SURFACE_SCENE_READY_PATH)
@@ -244,13 +251,14 @@ func _draw_weather_overlay(rect: Rect2) -> void:
 		_draw_cover_texture(grade, rect, Color.WHITE, Vector2(0.5, 0.50))
 	var overlay := _weather_overlays.get(weather_id, null) as Texture2D
 	if overlay != null:
-		_draw_cover_texture(overlay, rect, Color.WHITE, Vector2(0.5, 0.50))
+		_draw_weather_texture_overlay(overlay, rect, weather_id)
 
 
 func _draw_weather_effect_overlay(rect: Rect2) -> void:
-	var overlay := _weather_overlays.get(_weather_id(), null) as Texture2D
+	var weather_id := _weather_id()
+	var overlay := _weather_overlays.get(weather_id, null) as Texture2D
 	if overlay != null:
-		_draw_cover_texture(overlay, rect, Color.WHITE, Vector2(0.5, 0.50))
+		_draw_weather_texture_overlay(overlay, rect, weather_id)
 
 
 func _draw_weather_scene_state_effects(rect: Rect2) -> void:
@@ -261,7 +269,6 @@ func _draw_weather_scene_state_effects(rect: Rect2) -> void:
 	var horizon := _asset_horizon()
 	if state == FishingSimulator.State.WAITING:
 		_draw_bobber_ripples(_bobber_target_position(horizon), horizon)
-		return
 	_draw_asset_fish_shadow(horizon)
 	if state == FishingSimulator.State.BITE:
 		_draw_asset_bite_splash(_bobber_target_position(horizon))
@@ -321,6 +328,38 @@ func _draw_cover_texture(texture: Texture2D, target_rect: Rect2, modulate: Color
 	draw_texture_rect(texture, Rect2(draw_pos, draw_size), false, modulate)
 
 
+func _draw_weather_texture_overlay(texture: Texture2D, target_rect: Rect2, weather_id: String) -> void:
+	match weather_id:
+		"rain":
+			var scroll_y := fmod(_time * target_rect.size.y * 0.54, maxf(target_rect.size.y, 1.0))
+			var drift := Vector2(-scroll_y * 0.20, scroll_y)
+			_draw_cover_texture_offset(texture, target_rect, Palette.SURFACE_WEATHER_RAIN_OVERLAY_MODULATE, Vector2(0.5, 0.50), drift)
+			_draw_cover_texture_offset(texture, target_rect, Color(Palette.SURFACE_WEATHER_RAIN_OVERLAY_MODULATE, 0.34), Vector2(0.5, 0.50), drift - Vector2(0.0, target_rect.size.y))
+		"fog":
+			var alpha := 0.48 + 0.10 * sin(_time * 0.43)
+			var drift_x := sin(_time * 0.16) * target_rect.size.x * 0.035 + fmod(_time * target_rect.size.x * 0.018, maxf(target_rect.size.x, 1.0))
+			var modulate := Color(Palette.SURFACE_WEATHER_FOG_OVERLAY_MODULATE, alpha)
+			_draw_cover_texture_offset(texture, target_rect, modulate, Vector2(0.5, 0.50), Vector2(drift_x, 0.0))
+			_draw_cover_texture_offset(texture, target_rect, Color(modulate, alpha * 0.58), Vector2(0.5, 0.50), Vector2(drift_x - target_rect.size.x, 0.0))
+		_:
+			_draw_cover_texture(texture, target_rect, Color.WHITE, Vector2(0.5, 0.50))
+
+
+func _draw_cover_texture_offset(texture: Texture2D, target_rect: Rect2, modulate: Color, align: Vector2, offset: Vector2) -> void:
+	if texture == null:
+		return
+	var tex_size := texture.get_size()
+	if tex_size.x <= 0.0 or tex_size.y <= 0.0:
+		return
+	var scale := maxf(target_rect.size.x / tex_size.x, target_rect.size.y / tex_size.y)
+	var draw_size := tex_size * scale
+	var draw_pos := target_rect.position + Vector2(
+		(target_rect.size.x - draw_size.x) * align.x,
+		(target_rect.size.y - draw_size.y) * align.y
+	) + offset
+	draw_texture_rect(texture, Rect2(draw_pos, draw_size), false, modulate)
+
+
 func _asset_horizon() -> float:
 	return roundf(size.y * 0.41)
 
@@ -371,26 +410,138 @@ func _draw_asset_fish_shadow(horizon: float) -> void:
 	var bobber := _bobber_target_position(horizon)
 	var water_h := size.y - horizon
 	var progress := clampf(simulator.visual_position.x / 0.61, 0.0, 1.0)
+	var stage := 0.0
+	var stage_scale := 0.72
+	var stage_alpha := 0.18
 	if state == FishingSimulator.State.WAITING:
-		progress = 0.18 + sin(_time * 0.74) * 0.04
+		progress = 0.16 + sin(_time * 0.74) * 0.035
+		stage_scale = 0.62 + sin(_time * 0.52) * 0.025
+		stage_alpha = 0.24 + _approach_glow * 0.10
 	elif state == FishingSimulator.State.APPROACH:
-		progress = maxf(progress, 0.62)
+		progress = maxf(progress, 0.52)
+		stage = clampf((progress - 0.52) / 0.48, 0.0, 1.0)
+		stage_scale = lerpf(0.92, 1.14, stage)
+		stage_alpha = lerpf(0.62, 0.90, maxf(stage, _approach_glow * 0.72))
 	elif state == FishingSimulator.State.BITE:
 		progress = 1.0
+		stage = 1.0
+		stage_scale = 0.72 + sin(_time * 7.0) * 0.025
+		stage_alpha = 0.11
 	var fish_x := lerpf(size.x * 0.19, bobber.x - size.x * 0.060, progress)
 	var fish_y := horizon + water_h * (0.31 + 0.14 * clampf(simulator.visual_position.y, 0.0, 1.0))
+	fish_x += sin(_time * 0.82 + progress * 2.1) * size.x * 0.010
+	fish_y += sin(_time * 0.55 + 1.7) * size.y * 0.006
 	if state == FishingSimulator.State.BITE:
-		fish_y = bobber.y + size.y * 0.050
-	var alpha := 0.18 + _approach_glow * 0.52
-	if state == FishingSimulator.State.BITE:
-		alpha = 0.82
-	var draw_w := size.x * (0.145 + _approach_glow * 0.034)
-	var draw_h := draw_w * (_surface_fish_shadow.get_height() / float(_surface_fish_shadow.get_width()))
-	var dst := Rect2(Vector2(fish_x - draw_w * 0.50, fish_y - draw_h * 0.50), Vector2(draw_w, draw_h))
-	draw_texture_rect(_surface_fish_shadow, dst, false, Color(Color.WHITE, alpha))
+		fish_x = bobber.x - size.x * 0.034 + sin(_time * 6.8) * size.x * 0.004
+		fish_y = bobber.y + size.y * 0.072 + (1.0 - clampf(_splash, 0.0, 1.0)) * size.y * 0.020
+	var alpha := stage_alpha * _fish_shadow_weather_alpha_scale()
+	var draw_w := size.x * 0.154 * stage_scale
+	var frame_size := _fish_shadow_frame_size()
+	var draw_h := draw_w * (frame_size.y / maxf(1.0, frame_size.x))
+	var frame_index := 0
+	if _surface_fish_shadow_frame_count > 1:
+		frame_index = int(floor(_time / 0.32)) % _surface_fish_shadow_frame_count
+	var center := Vector2(fish_x, fish_y)
+	var tint := _fish_shadow_weather_tint()
+	var under_size := Vector2(draw_w * 1.22, draw_h * 1.36)
+	var under_dst := Rect2(center - under_size * 0.50 + Vector2(0.0, draw_h * 0.08), under_size)
+	_draw_fish_shadow_frame(under_dst, Color(tint, alpha * 0.34), frame_index)
+	var dst := Rect2(center - Vector2(draw_w, draw_h) * 0.50, Vector2(draw_w, draw_h))
+	_draw_fish_shadow_frame(dst, Color(tint, alpha), frame_index)
 	if state == FishingSimulator.State.APPROACH or state == FishingSimulator.State.BITE:
-		var wake := Vector2(fish_x, fish_y).lerp(bobber + Vector2(-8.0, 12.0), 0.62)
-		_draw_ellipse_outline(wake, size.x * 0.042, size.y * 0.011, Color(Color.WHITE, 0.18 + _approach_glow * 0.14), 34, 1.5)
+		_draw_asset_fish_wake(center, bobber, draw_w, alpha, stage)
+
+
+func _fish_shadow_frame_size() -> Vector2:
+	if _surface_fish_shadow == null:
+		return Vector2.ONE
+	var tex_size := _surface_fish_shadow.get_size()
+	var frame_count := maxi(_surface_fish_shadow_frame_count, 1)
+	return Vector2(tex_size.x / float(frame_count), tex_size.y)
+
+
+func _draw_fish_shadow_frame(dst: Rect2, modulate: Color, frame_index: int) -> void:
+	if _surface_fish_shadow == null:
+		return
+	var frame_size := _fish_shadow_frame_size()
+	var frame_count := maxi(_surface_fish_shadow_frame_count, 1)
+	var safe_index := clampi(frame_index, 0, frame_count - 1)
+	var src := Rect2(Vector2(frame_size.x * float(safe_index), 0.0), frame_size)
+	draw_texture_rect_region(_surface_fish_shadow, dst, src, modulate)
+
+
+func _fish_shadow_weather_tint() -> Color:
+	match _weather_id():
+		"partly_cloudy":
+			return Palette.SURFACE_FISH_SHADOW_PARTLY_CLOUDY
+		"cloudy":
+			return Palette.SURFACE_FISH_SHADOW_CLOUDY
+		"rain":
+			return Palette.SURFACE_FISH_SHADOW_RAIN
+		"fog":
+			return Palette.SURFACE_FISH_SHADOW_FOG
+	return Palette.SURFACE_FISH_SHADOW
+
+
+func _fish_shadow_weather_alpha_scale() -> float:
+	match _weather_id():
+		"partly_cloudy":
+			return 0.88
+		"cloudy":
+			return 0.76
+		"rain":
+			return 0.82
+		"fog":
+			return 0.50
+	return 1.0
+
+
+func _fish_wake_color() -> Color:
+	match _weather_id():
+		"partly_cloudy":
+			return Palette.SURFACE_FISH_WAKE_PARTLY_CLOUDY
+		"cloudy":
+			return Palette.SURFACE_FISH_WAKE_CLOUDY
+		"rain":
+			return Palette.SURFACE_FISH_WAKE_RAIN
+		"fog":
+			return Palette.SURFACE_FISH_WAKE_FOG
+	return Color.WHITE
+
+
+func _draw_asset_fish_wake(center: Vector2, bobber: Vector2, fish_width: float, shadow_alpha: float, stage: float) -> void:
+	var to_bobber := bobber + Vector2(-size.x * 0.010, size.y * 0.018) - center
+	if to_bobber.length() < 1.0:
+		to_bobber = Vector2.RIGHT
+	var dir := to_bobber.normalized()
+	var back := -dir
+	var perp := Vector2(-dir.y, dir.x)
+	var apex := center + dir * fish_width * 0.28
+	var length := fish_width * lerpf(0.48, 0.70, stage)
+	var spread := fish_width * lerpf(0.12, 0.18, stage)
+	var wake_color := _fish_wake_color()
+	var wake_alpha := clampf(shadow_alpha * (0.40 + stage * 0.24), 0.0, 0.24)
+	if _state() == FishingSimulator.State.BITE:
+		wake_alpha *= 0.46
+	for side in [-1.0, 1.0]:
+		var arm := PackedVector2Array([
+			apex,
+			apex + back * length * 0.50 + perp * spread * side * 0.48,
+			apex + back * length + perp * spread * side,
+		])
+		draw_polyline(arm, Color(wake_color, wake_alpha), 1.6, false)
+	for i in range(4):
+		var t := float(i) / 3.0
+		var ripple_center := apex + back * length * (0.42 + t * 0.62) + perp * sin(_time * 1.4 + float(i)) * fish_width * 0.018
+		var ripple_len := fish_width * (0.12 + t * 0.07)
+		var offset := perp * ripple_len * 0.42
+		var trail := back * fish_width * (0.035 + t * 0.020)
+		var points := PackedVector2Array([
+			ripple_center - offset,
+			ripple_center + trail,
+			ripple_center + offset,
+		])
+		draw_polyline(points, Color(wake_color, wake_alpha * (1.0 - t) * 0.64), 1.15, false)
 
 
 func _draw_asset_angler() -> void:
