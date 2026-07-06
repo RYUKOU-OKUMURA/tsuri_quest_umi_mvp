@@ -4,12 +4,14 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 
 
 ROOT = Path(__file__).resolve().parents[1]
 FISH_DIR = ROOT / "assets" / "showcase" / "fish"
 CONTACT_SHEET = ROOT / "tools" / "source_assets" / "fish" / "shark_e4_contact_sheet.png"
+REALISTIC_SOURCE_DIR = ROOT / "tools" / "source_assets" / "fish" / "shark_e4_realistic_sources"
+FONT_BOLD = ROOT / "assets" / "fonts" / "line_seed" / "LINESeedJP_A_TTF_Bd.ttf"
 
 CARD_SIZE = (560, 310)
 FRAME_SIZE = 320
@@ -162,11 +164,17 @@ SHARK_SPECS = [
 
 
 def main() -> None:
+    missing_sources = _missing_realistic_sources()
+    if missing_sources:
+        formatted = "\n".join(f"- {path}" for path in missing_sources)
+        raise FileNotFoundError(f"Missing required realistic shark source PNGs:\n{formatted}")
+
     FISH_DIR.mkdir(parents=True, exist_ok=True)
     previews: list[Image.Image] = []
     for spec in SHARK_SPECS:
-        card = _make_card(spec)
-        sheet = _make_sheet(spec)
+        source = _load_realistic_source(spec)
+        card = _make_card_from_source(source)
+        sheet = _make_sheet_from_source(source)
         card.save(FISH_DIR / f"{spec['id']}_card_portrait.png")
         sheet.save(FISH_DIR / f"{spec['id']}_showcase_sheet.png")
         previews.append(_preview_tile(spec, card))
@@ -191,6 +199,125 @@ def _make_sheet(spec: dict) -> Image.Image:
         frame = _contain_alpha(_readability_pass(frame), (FRAME_SIZE, FRAME_SIZE), margin=10)
         sheet.alpha_composite(frame, (index * FRAME_SIZE, 0))
     return sheet
+
+
+def _missing_realistic_sources() -> list[Path]:
+    return [path for spec in SHARK_SPECS if not (path := _realistic_source_path(spec)).exists()]
+
+
+def _realistic_source_path(spec: dict) -> Path:
+    return REALISTIC_SOURCE_DIR / f"{spec['id']}_source.png"
+
+
+def _load_realistic_source(spec: dict) -> Image.Image:
+    path = _realistic_source_path(spec)
+    if not path.exists():
+        raise FileNotFoundError(path)
+    source = Image.open(path).convert("RGBA")
+    return _trim_alpha(_remove_chroma_green(source))
+
+
+def _make_card_from_source(source: Image.Image) -> Image.Image:
+    return _add_card_shadow(_contain_alpha(_realistic_readability_pass(source), CARD_SIZE, margin=10))
+
+
+def _make_sheet_from_source(source: Image.Image) -> Image.Image:
+    sheet = Image.new("RGBA", (FRAME_SIZE * SHEET_FRAMES, FRAME_SIZE), (0, 0, 0, 0))
+    for index in range(SHEET_FRAMES):
+        phase = math.sin(index / float(SHEET_FRAMES) * math.tau)
+        scale = 1.0 + phase * 0.012
+        frame_source = source
+        if abs(scale - 1.0) > 0.001:
+            frame_source = source.resize(
+                (
+                    max(1, round(source.width * scale)),
+                    max(1, round(source.height * (1.0 - phase * 0.006))),
+                ),
+                Image.Resampling.LANCZOS,
+            )
+        frame = _contain_alpha(_realistic_readability_pass(frame_source), (FRAME_SIZE, FRAME_SIZE), margin=9)
+        y_offset = round(phase * 2.0)
+        sheet.alpha_composite(frame, (index * FRAME_SIZE, y_offset))
+    return sheet
+
+
+def _remove_chroma_green(image: Image.Image) -> Image.Image:
+    """Remove the flat green ImageGen background while preserving antialiased edges."""
+    img = image.convert("RGBA")
+    pixels = img.load()
+    width, height = img.size
+    border_samples = []
+    for x in range(0, width, max(1, width // 80)):
+        border_samples.append(pixels[x, 0])
+        border_samples.append(pixels[x, height - 1])
+    for y in range(0, height, max(1, height // 80)):
+        border_samples.append(pixels[0, y])
+        border_samples.append(pixels[width - 1, y])
+    key_r = round(sum(p[0] for p in border_samples) / len(border_samples))
+    key_g = round(sum(p[1] for p in border_samples) / len(border_samples))
+    key_b = round(sum(p[2] for p in border_samples) / len(border_samples))
+
+    transparent_threshold = 42.0
+    opaque_threshold = 132.0
+    for y in range(height):
+        for x in range(width):
+            r, g, b, a = pixels[x, y]
+            distance = math.sqrt((r - key_r) ** 2 + (g - key_g) ** 2 + (b - key_b) ** 2)
+            if distance <= transparent_threshold:
+                pixels[x, y] = (r, g, b, 0)
+            elif distance < opaque_threshold:
+                edge_alpha = int(a * ((distance - transparent_threshold) / (opaque_threshold - transparent_threshold)))
+                pixels[x, y] = (*_despill_green(r, g, b), edge_alpha)
+            elif g > max(r, b) + 20 and g > 80:
+                pixels[x, y] = (*_despill_green(r, g, b), a)
+    return img
+
+
+def _despill_green(r: int, g: int, b: int) -> tuple[int, int, int]:
+    if g <= max(r, b) + 8:
+        return (r, g, b)
+    softened_g = min(g, max(r, b, round((r + b) * 0.54)))
+    return (r, softened_g, b)
+
+
+def _trim_alpha(image: Image.Image) -> Image.Image:
+    bbox = image.getchannel("A").getbbox()
+    if bbox is None:
+        return image
+    return image.crop(bbox)
+
+
+def _realistic_readability_pass(image: Image.Image) -> Image.Image:
+    alpha = image.getchannel("A")
+    rgb = image.convert("RGB")
+    rgb = ImageEnhance.Color(rgb).enhance(1.03)
+    rgb = ImageEnhance.Contrast(rgb).enhance(1.08)
+    rgb = ImageEnhance.Sharpness(rgb).enhance(1.08)
+    out = rgb.convert("RGBA")
+    out.putalpha(alpha)
+    return out
+
+
+def _add_card_shadow(image: Image.Image) -> Image.Image:
+    bbox = image.getchannel("A").getbbox()
+    if bbox is None:
+        return image
+    x0, _y0, x1, y1 = bbox
+    shadow = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(shadow)
+    pad_x = max(8, round((x1 - x0) * 0.10))
+    ellipse = (
+        x0 + pad_x,
+        min(image.height - 34, y1 - 18),
+        x1 - pad_x,
+        min(image.height - 4, y1 + 28),
+    )
+    draw.ellipse(ellipse, fill=(74, 45, 22, 105))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(13))
+    out = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    out.alpha_composite(shadow)
+    out.alpha_composite(image)
+    return out
 
 
 def _draw_shark(spec: dict, size: tuple[int, int], phase: float, scale: float) -> Image.Image:
@@ -382,8 +509,15 @@ def _preview_tile(spec: dict, card: Image.Image) -> Image.Image:
     tile.alpha_composite(card, (30, 25))
     draw = ImageDraw.Draw(tile)
     draw.rectangle((20, 20, 600, 340), outline=(*tuple(spec.get("glow", spec["accent"])), 170), width=3)
-    draw.text((34, 315), f"{spec['id']} / {spec['label']}", fill=(238, 231, 205, 255))
+    draw.text((34, 315), f"{spec['id']} / {spec['label']}", font=_font(13), fill=(238, 231, 205, 255))
     return tile
+
+
+def _font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+    try:
+        return ImageFont.truetype(str(FONT_BOLD), size)
+    except OSError:
+        return ImageFont.load_default()
 
 
 def _build_contact_sheet(previews: list[Image.Image]) -> Image.Image:
