@@ -20,6 +20,8 @@ var _player_status_bar: PlayerStatusBar
 var _player_panel: Control
 var _summary_panel: Control
 var _inventory_panel: Control
+var _title_list_button: Button
+var _title_overlay: Control
 var _fish_book_button: Button
 var _cooking_button: Button
 var _return_button: Button
@@ -50,6 +52,7 @@ func _build_screen() -> void:
 	_build_summary_panel(root)
 	_build_inventory_panel(root)
 	_build_footer(root)
+	_build_title_overlay(root)
 
 
 func _build_header(root: Control) -> void:
@@ -472,7 +475,102 @@ func _add_title_strip(parent: Control) -> void:
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		var left := 0.265 + float(index) * 0.365
-		_place_control(strip, label, left, 0.0, left + 0.335, 1.0)
+		_place_control(strip, label, left, 0.0, left + 0.245, 1.0)
+
+	_title_list_button = _textured_button("称号一覧", func() -> void: _set_title_overlay_visible(true), false)
+	_title_list_button.name = "StatusTitleListButton"
+	_title_list_button.add_theme_font_size_override("font_size", 13)
+	_place_control(strip, _title_list_button, 0.805, 0.070, 0.982, 0.930)
+
+
+func _build_title_overlay(root: Control) -> void:
+	_title_overlay = Control.new()
+	_title_overlay.name = "StatusTitleOverlay"
+	_title_overlay.visible = false
+	_title_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	_title_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root.add_child(_title_overlay)
+
+	var shade := ColorRect.new()
+	shade.color = _alpha(Palette.DARK_PANEL_DEEP, 0.64)
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_title_overlay.add_child(shade)
+
+	var panel := Panel.new()
+	panel.name = "StatusTitleOverlayPanel"
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	panel.add_theme_stylebox_override("panel", _header_style())
+	_place_control(_title_overlay, panel, 0.175, 0.105, 0.825, 0.895)
+
+	var title := _status_label("称号 %d / %d" % [GameData.compute_earned_titles(PlayerProgress.title_stats_snapshot()).size(), GameData.TITLES.size()], 26, Palette.TEXT_BONE, true, 2)
+	title.name = "StatusTitleOverlayHeading"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(panel, title, 0.055, 0.035, 0.510, 0.120)
+
+	var close_button := _textured_button("閉じる", func() -> void: _set_title_overlay_visible(false), false)
+	close_button.name = "StatusTitleOverlayCloseButton"
+	close_button.add_theme_font_size_override("font_size", 18)
+	_place_control(panel, close_button, 0.760, 0.040, 0.940, 0.120)
+
+	var scroll := ScrollContainer.new()
+	scroll.name = "StatusTitleOverlayScroll"
+	scroll.mouse_filter = Control.MOUSE_FILTER_STOP
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	_place_control(panel, scroll, 0.055, 0.155, 0.945, 0.930)
+
+	var list := VBoxContainer.new()
+	list.name = "StatusTitleOverlayList"
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list.add_theme_constant_override("separation", 5)
+	scroll.add_child(list)
+
+	var earned_ids := GameData.compute_earned_titles(PlayerProgress.title_stats_snapshot())
+	for title_data in GameData.TITLES:
+		_add_title_overlay_row(list, title_data, earned_ids)
+
+
+func _set_title_overlay_visible(visible: bool) -> void:
+	if _title_overlay != null:
+		_title_overlay.visible = visible
+
+
+func _add_title_overlay_row(parent: VBoxContainer, title_data: Dictionary, earned_ids: Array[String]) -> void:
+	var title_id := String(title_data.get("id", ""))
+	var earned := title_id in earned_ids
+	var row := PanelContainer.new()
+	row.name = "StatusTitleRow_%s" % title_id
+	row.custom_minimum_size = Vector2(0.0, 36.0)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_theme_stylebox_override("panel", _log_row_style(earned))
+	parent.add_child(row)
+
+	var box := HBoxContainer.new()
+	box.add_theme_constant_override("separation", 10)
+	row.add_child(box)
+
+	var mark := _status_label("◆" if earned else "？", 13, Palette.GOLD_BRIGHT if earned else _alpha(Palette.FOAM, 0.72), true, 1)
+	mark.custom_minimum_size = Vector2(32.0, 0.0)
+	mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	mark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	box.add_child(mark)
+
+	var name_text := String(title_data.get("name", title_id)) if earned else "？？？"
+	var name := _status_label(name_text, 14, Palette.TEXT_BONE if earned else _alpha(Palette.FOAM, 0.78), earned, 1)
+	name.custom_minimum_size = Vector2(150.0, 0.0)
+	name.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	box.add_child(name)
+
+	var hint := _status_label(String(title_data.get("hint", "条件未達")), 13, _alpha(Palette.FOAM, 0.82 if earned else 0.68), false, 1)
+	hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hint.clip_text = true
+	hint.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	box.add_child(hint)
 
 
 func _add_cooler_grid(parent: Control) -> void:

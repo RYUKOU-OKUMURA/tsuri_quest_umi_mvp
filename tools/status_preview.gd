@@ -71,6 +71,8 @@ func _ready() -> void:
 
 	await get_tree().process_frame
 	await get_tree().process_frame
+	if OS.get_environment("TSURI_STATUS_TITLE_OVERLAY") == "1":
+		s._set_title_overlay_visible(true)
 	await get_tree().create_timer(0.4).timeout
 
 	var img := vp.get_texture().get_image()

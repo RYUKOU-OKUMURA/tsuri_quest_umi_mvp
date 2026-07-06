@@ -31,9 +31,21 @@ func _ready() -> void:
 	_expect(_find_named(_screen, "StatusExpValue") != null, "EXP value label should be present")
 	_expect(_find_named(_screen, "StatusCompletionValue") != null, "completion value label should be present")
 	_expect(_find_named(_screen, "StatusTitleStrip") != null, "title strip should be present")
+	_expect(_find_named(_screen, "StatusTitleListButton") != null, "title list button should be present")
 	_expect(_find_label_containing(_screen, "称号 1 / 31") != null, "title count should be visible")
 	_expect(_find_label_containing(_screen, "駆け出し釣り人") != null, "earned title should be visible")
 	_expect(_find_label_containing(_screen, "？？？ 累計100匹釣る") != null, "locked title hint should be visible")
+	_expect(_find_named(_screen, "StatusTitleOverlay") != null, "title overlay should be present")
+	_expect(not _screen._title_overlay.visible, "title overlay should start hidden")
+	_screen._title_list_button.pressed.emit()
+	await get_tree().process_frame
+	_expect(_screen._title_overlay.visible, "title overlay should open from title strip")
+	_expect(_title_row_count(_screen) == 31, "title overlay should list all titles")
+	_expect(_find_named(_screen, "StatusTitleRow_total_10") != null, "earned title row should exist")
+	_expect(_find_named(_screen, "StatusTitleRow_total_100") != null, "locked title row should exist")
+	_expect(_find_label_containing(_screen, "累計100匹釣る") != null, "locked title hint should be visible in overlay")
+	_screen._set_title_overlay_visible(false)
+	await get_tree().process_frame
 	_expect(_find_named(_screen, "StatusRecentFish_aji") != null, "recent fish cards should be present")
 	_expect(_find_named(_screen, "StatusCoolerSlot_0") != null, "cooler item slots should be present")
 	_expect(_find_label_containing(_screen, "カジキ竿・蒼槍（装備中）") != null, "equipped marlin rod should be visible in owned rods")
@@ -137,6 +149,15 @@ func _buttons_with_meta(root: Node, meta_name: String) -> Array[Button]:
 	var buttons: Array[Button] = []
 	_collect_buttons_with_meta(root, meta_name, buttons)
 	return buttons
+
+
+func _title_row_count(root: Node) -> int:
+	var count := 0
+	for child in root.get_children():
+		if child.name.begins_with("StatusTitleRow_"):
+			count += 1
+		count += _title_row_count(child)
+	return count
 
 
 func _collect_buttons_with_meta(node: Node, meta_name: String, buttons: Array[Button]) -> void:
