@@ -16,6 +16,7 @@ const FIGHT_BGM_PATH_NORMAL := "res://assets/audio/水中ファイト通常.mp3"
 const BITE_SFX_PATH := "res://assets/audio/アタリ_ヒット音.mp3"
 const ESCAPED_SFX_PATH := "res://assets/audio/逃げられた.mp3"
 const FISHING_SFX_VOLUME_DB := -2.0
+const TRIP_EVENT_MESSAGE_DURATION := 3.5
 
 var _simulator: FishingSimulator
 var _trip_stats: Dictionary = {}
@@ -53,6 +54,8 @@ var _quit_details: Label
 var _quit_confirm_button: Button
 var _quit_target := "harbor"
 var _nushi_omen_shown := false
+var _trip_event_message: String = ""
+var _trip_event_message_timer: float = 0.0
 
 
 func _build_screen() -> void:
@@ -126,6 +129,12 @@ func _build_screen() -> void:
 	_message_label = make_body_label("", 18, Palette.FISHING_MESSAGE_TEXT, 2, Palette.FISHING_MESSAGE_OUTLINE)
 	_message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	# 単一行メッセージ帯。autowrap+clip_text+trim の組み合わせだと
+	# 高さ計算が潰れて文字が描画されないため、折り返しとトリムを無効化する
+	_message_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_message_label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+	_message_label.custom_minimum_size = Vector2(0.0, 26.0)
+	_message_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_message_panel.add_child(_message_label)
 
 	_fight_hud = FightHudScript.new()
@@ -203,8 +212,24 @@ func _resolve_trip_stats() -> void:
 		var stats_dict: Dictionary = incoming_stats
 		if not stats_dict.is_empty():
 			_trip_stats = stats_dict.duplicate(true)
+			_init_trip_event_state()
 			return
 	_trip_stats = PlayerProgress.begin_fishing_trip()
+	_init_trip_event_state()
+
+
+func _init_trip_event_state() -> void:
+	if not _trip_stats.has("trip_fired_event_ids"):
+		_trip_stats["trip_fired_event_ids"] = []
+	if not _trip_stats.has("bird_swarm_hits_remaining"):
+		_trip_stats["bird_swarm_hits_remaining"] = 0
+
+
+func _trip_fired_event_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for id_variant in Array(_trip_stats.get("trip_fired_event_ids", [])):
+		ids.append(String(id_variant))
+	return ids
 
 
 func _apply_spot_to_trip_stats() -> void:
@@ -406,6 +431,11 @@ func _create_catch_fanfare() -> void:
 func _process(delta: float) -> void:
 	if _simulator == null:
 		return
+	if _trip_event_message_timer > 0.0:
+		_trip_event_message_timer = maxf(0.0, _trip_event_message_timer - delta)
+		if _trip_event_message_timer <= 0.0:
+			_trip_event_message = ""
+			_update_ui()
 	if _quit_overlay != null and _quit_overlay.visible:
 		return
 	if _catch_fanfare != null and _catch_fanfare.is_playing():
@@ -477,13 +507,19 @@ func _prepare_new_attempt() -> void:
 	if bool(_spot.get("boss_spot", false)):
 		_current_fish = GameData.get_fish("boss_kurodai")
 	else:
+		var extra_modifiers: Dictionary = {}
+		if int(_trip_stats.get("bird_swarm_hits_remaining", 0)) > 0:
+			extra_modifiers = GameData.bird_swarm_fish_weight_modifiers()
 		_current_fish = GameData.roll_hooked_fish(
 			PlayerProgress.level,
 			_spot_id,
 			String(_trip_stats.get("rig_id", PlayerProgress.equipped_rig_id)),
 			String(_trip_stats.get("environment_id", GameData.DEFAULT_FISHING_ENVIRONMENT_ID)),
-			String(_trip_stats.get("time_slot_id", ""))
+			String(_trip_stats.get("time_slot_id", "")),
+			extra_modifiers
 		)
+		if int(_trip_stats.get("bird_swarm_hits_remaining", 0)) > 0:
+			_trip_stats["bird_swarm_hits_remaining"] = int(_trip_stats.get("bird_swarm_hits_remaining", 0)) - 1
 	_simulator.prepare(_current_fish, _trip_stats)
 	_view.bind_simulator(_simulator)
 	_surface_view.bind_simulator(_simulator)
@@ -597,6 +633,8 @@ func _navigate_to_spot_select() -> void:
 
 
 func _on_state_changed(new_state: int) -> void:
+	if new_state == FishingSimulator.State.WAITING:
+		_roll_and_apply_trip_event()
 	_update_bgm_for_state(new_state)
 	_update_ui()
 
@@ -653,7 +691,9 @@ func _update_ui() -> void:
 	if _simulator == null:
 		return
 	var message := _simulator.action_message
-	if _simulator.state == FishingSimulator.State.READY and _should_show_nushi_omen():
+	if _trip_event_message_timer > 0.0 and not _trip_event_message.is_empty():
+		message = _trip_event_message
+	elif _simulator.state == FishingSimulator.State.READY and _should_show_nushi_omen():
 		message = "……ヌシの気配がする。"
 	_set_message_text(message)
 
@@ -669,19 +709,85 @@ func _set_message_text(message: String) -> void:
 		return
 	_message_label.text = message
 	if _message_panel != null:
-		var show_message := not message.strip_edges().is_empty()
+		var has_text := not message.strip_edges().is_empty()
+		var show_message := has_text
 		if _simulator != null:
+			var trip_event_active := (
+				_trip_event_message_timer > 0.0
+				and not _trip_event_message.is_empty()
+				and message == _trip_event_message
+			)
 			var ready_nushi_omen := _simulator.state == FishingSimulator.State.READY and message == "……ヌシの気配がする。"
-			show_message = show_message and (_simulator.state != FishingSimulator.State.READY or ready_nushi_omen)
+			show_message = has_text and (_simulator.state != FishingSimulator.State.READY or ready_nushi_omen)
 			if (
 				_simulator.state == FishingSimulator.State.CASTING
 				or _simulator.state == FishingSimulator.State.WAITING
-				or _simulator.state == FishingSimulator.State.APPROACH
+			):
+				show_message = has_text and trip_event_active
+			elif (
+				_simulator.state == FishingSimulator.State.APPROACH
 				or _simulator.state == FishingSimulator.State.BITE
 				or _simulator.state == FishingSimulator.State.FIGHT
 			):
 				show_message = false
 		_message_panel.visible = show_message
+
+
+func _roll_and_apply_trip_event() -> void:
+	var event := GameData.roll_trip_event(_trip_fired_event_ids())
+	var event_id := String(event.get("id", "none"))
+	if event_id == "none":
+		return
+	var fired := _trip_fired_event_ids()
+	fired.append(event_id)
+	_trip_stats["trip_fired_event_ids"] = fired
+	match event_id:
+		"bird_swarm":
+			_trip_stats["bird_swarm_hits_remaining"] = int(event.get("hits_remaining", 0))
+			if _surface_view != null:
+				_surface_view.play_bird_swarm()
+			_show_trip_event_message(String(event.get("message", "")))
+		"driftwood":
+			_apply_driftwood_event()
+		"bottle_mail":
+			_apply_bottle_mail_event(event)
+
+
+func _apply_driftwood_event() -> void:
+	var outcome := GameData.roll_driftwood_outcome()
+	var money := int(outcome.get("money", 0))
+	if money > 0:
+		PlayerProgress.gain_trip_event_money(money)
+	_show_trip_event_message(String(outcome.get("message", "")))
+
+
+func _apply_bottle_mail_event(event: Dictionary) -> void:
+	var fragment_max := int(event.get("fragment_max", PlayerProgress.SEA_CHART_FRAGMENT_MAX))
+	var gained := PlayerProgress.gain_trip_event_sea_chart_fragment()
+	var message := ""
+	if gained > 0:
+		var after := PlayerProgress.sea_chart_fragments
+		if after >= fragment_max:
+			message = String(event.get("complete_message", ""))
+		else:
+			message = String(event.get("fragment_message", "")).replace("{n}", str(after))
+	else:
+		var money := int(event.get("fallback_money", 0))
+		if money > 0:
+			PlayerProgress.gain_trip_event_money(money)
+		message = String(event.get("fallback_message", "")).replace("{money}", str(money))
+		if message.strip_edges().is_empty() and money > 0:
+			message = "+%d G" % money
+	_show_trip_event_message(message)
+
+
+func _show_trip_event_message(text: String, duration: float = TRIP_EVENT_MESSAGE_DURATION) -> void:
+	var trimmed := text.strip_edges()
+	if trimmed.is_empty():
+		return
+	_trip_event_message = trimmed
+	_trip_event_message_timer = maxf(duration, 0.1)
+	_set_message_text(trimmed)
 
 
 func _should_show_nushi_omen() -> bool:

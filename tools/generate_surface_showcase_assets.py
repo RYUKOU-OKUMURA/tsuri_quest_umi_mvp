@@ -932,6 +932,39 @@ def create_scene_state_plates() -> None:
     _save_scene_plate(bite, "surface_scene_bite.png")
 
 
+def create_bird_swarm_sprite() -> None:
+    """E6 bird_swarm: distant flock silhouette for horizon overlay (no baked text)."""
+    width = 240
+    height = 56
+    canvas = HiCanvas(width, height, 4)
+    bird_color = rgba("#163f4e", 168)
+    bird_hi = rgba("#1a5060", 118)
+    flock_centers = [
+        (34, 24, 0.72),
+        (58, 18, 0.58),
+        (82, 27, 0.66),
+        (108, 16, 0.80),
+        (132, 22, 0.62),
+        (156, 14, 0.74),
+        (178, 26, 0.56),
+        (198, 19, 0.68),
+        (214, 28, 0.52),
+    ]
+    for cx, cy, scale in flock_centers:
+        wing = 7.5 * scale
+        dip = 1.6 * scale
+        canvas.line([(cx - wing, cy + dip), (cx, cy - dip)], bird_color, 2.0 * scale)
+        canvas.line([(cx, cy - dip), (cx + wing, cy + dip * 0.6)], bird_color, 2.0 * scale)
+        canvas.line([(cx - wing * 0.55, cy + dip * 0.35), (cx, cy - dip * 0.45)], bird_hi, 1.0 * scale)
+    # Secondary distant layer (smaller, lighter)
+    for cx, cy, scale in [(46, 34, 0.42), (118, 36, 0.38), (170, 33, 0.44)]:
+        wing = 5.5 * scale
+        dip = 1.1 * scale
+        canvas.line([(cx - wing, cy), (cx, cy - dip)], rgba("#163f4e", 92), 1.4 * scale)
+        canvas.line([(cx, cy - dip), (cx + wing, cy)], rgba("#163f4e", 92), 1.4 * scale)
+    save_image(canvas.finish(), OUT_DIR / "surface_bird_swarm.png")
+
+
 def main() -> None:
     create_background()
     create_dock_foreground()
@@ -941,6 +974,7 @@ def main() -> None:
     create_bobber()
     create_fish_shadow()
     create_splash()
+    create_bird_swarm_sprite()
     create_scene_state_plates()
     create_ready_weather_scene_assets()
     create_weather_assets()

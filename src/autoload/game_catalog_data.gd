@@ -2051,3 +2051,59 @@ const BOATS: Dictionary = {
 		"access_text": "外洋の深場まで出航可能",
 	},
 }
+
+const BIRD_SWARM_FISH_IDS: Array[String] = [
+	"iwashi",
+	"saba",
+	"kamasu",
+	"sawara",
+	"hirasouda",
+	"suma",
+	"katsuo",
+	"buri",
+	"kanpachi",
+	"shiira",
+	"hiramasa",
+	"tsumuburi",
+	"gingameaji",
+	"kihada",
+	"binnaga",
+	"mebachi",
+]
+
+const TRIP_EVENTS: Array[Dictionary] = [
+	{
+		"id": "none",
+		"name": "（何もなし）",
+		"weight": 0.86,
+	},
+	{
+		"id": "bird_swarm",
+		"name": "鳥山",
+		"weight": 0.06,
+		"message": "沖で鳥山が立っている！",
+		"hits_remaining": 3,
+		"fish_weight_multiplier": 2.5,
+	},
+	{
+		"id": "driftwood",
+		"name": "流木・漂着物",
+		"weight": 0.05,
+		"outcomes":
+		[
+			{"id": "miss", "weight": 0.50, "money": 0, "message": "流木だった…"},
+			{"id": "small_loot", "weight": 0.45, "money": 80, "message": "漂着物を回収した"},
+			{"id": "treasure", "weight": 0.05, "money": 500, "message": "小箱を拾った！"},
+		],
+	},
+	{
+		"id": "bottle_mail",
+		"name": "ボトルメール",
+		"weight": 0.03,
+		"fragment_max": 3,
+		"fragment_message": "海図の断片を拾った！（{n}/3）",
+		"complete_message": "古い海図が完成した——危険海域の位置が判る",
+		"fallback_money": 200,
+		"fallback_message": "ボトルメールを拾った。海図はもう完成している（+{money} G）",
+	},
+]

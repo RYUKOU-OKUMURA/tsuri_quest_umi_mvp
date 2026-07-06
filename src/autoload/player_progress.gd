@@ -16,6 +16,7 @@ const LEGACY_SAVE_PATH := "user://tsuri_quest_save.json"
 const LEGACY_SAVE_BACKUP_PATH := "user://tsuri_quest_save.json.bak"
 const LEGACY_SAVE_TMP_PATH := "user://tsuri_quest_save.json.tmp"
 const SAVE_VERSION := 1
+const SEA_CHART_FRAGMENT_MAX := 3
 const EXP_REQUIREMENTS: Array[int] = [
 	0,
 	60,
@@ -92,6 +93,7 @@ var play_seconds: float = 0.0
 var active_save_slot: int = DEFAULT_SAVE_SLOT
 var quest_board: Array[Dictionary] = []
 var quest_completed_count: int = 0
+var sea_chart_fragments: int = 0
 
 # smoke / preview / audit（res://tools/ 配下のシーン起動）から本番セーブを守るフラグ。
 # true の間はディスクへの読み書きを一切行わない。
@@ -208,6 +210,29 @@ func _reset_runtime_state() -> void:
 	play_seconds = 0.0
 	quest_board = []
 	quest_completed_count = 0
+	sea_chart_fragments = 0
+
+
+func add_sea_chart_fragments(amount: int = 1) -> int:
+	var before := sea_chart_fragments
+	sea_chart_fragments = clampi(sea_chart_fragments + amount, 0, SEA_CHART_FRAGMENT_MAX)
+	return sea_chart_fragments - before
+
+
+func gain_trip_event_money(amount: int) -> void:
+	if amount <= 0:
+		return
+	money += amount
+	save_game()
+	progress_changed.emit()
+
+
+func gain_trip_event_sea_chart_fragment() -> int:
+	var gained := add_sea_chart_fragments(1)
+	if gained > 0:
+		save_game()
+		progress_changed.emit()
+	return gained
 
 
 func exp_to_next_level() -> int:
@@ -686,6 +711,7 @@ func save_game() -> void:
 		"play_seconds": play_seconds,
 		"quest_board": quest_board,
 		"quest_completed_count": quest_completed_count,
+		"sea_chart_fragments": sea_chart_fragments,
 	}
 	var save_path := current_save_path()
 	var backup_path := current_backup_path()
@@ -828,6 +854,7 @@ func _apply_save_data(data: Dictionary) -> void:
 	)
 	quest_board = _normalized_quest_board(loaded_quest_board)
 	quest_completed_count = maxi(0, int(data.get("quest_completed_count", 0)))
+	sea_chart_fragments = clampi(int(data.get("sea_chart_fragments", 0)), 0, SEA_CHART_FRAGMENT_MAX)
 	owned_rods = []
 	var loaded_rods = data.get("owned_rods", ["starter"])
 	if typeof(loaded_rods) == TYPE_ARRAY:

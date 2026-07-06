@@ -31,6 +31,8 @@ const RIG_ORDER: Array[String] = GameCatalogData.RIG_ORDER
 const RIGS: Dictionary = GameCatalogData.RIGS
 const BOAT_ORDER: Array[String] = GameCatalogData.BOAT_ORDER
 const BOATS: Dictionary = GameCatalogData.BOATS
+const TRIP_EVENTS: Array[Dictionary] = GameCatalogData.TRIP_EVENTS
+const BIRD_SWARM_FISH_IDS: Array[String] = GameCatalogData.BIRD_SWARM_FISH_IDS
 
 const DEFAULT_FISHING_ENVIRONMENT_ID := "sunny_calm"
 const SIZE_ROLL_EXPONENT_DEFAULT := 2.1
@@ -666,11 +668,78 @@ func nushi_candidate(
 	return fish
 
 
+func trip_event_table() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for event in TRIP_EVENTS:
+		result.append(event.duplicate(true))
+	return result
+
+
+func _trip_event_by_id(event_id: String) -> Dictionary:
+	for event in TRIP_EVENTS:
+		if String(event.get("id", "")) == event_id:
+			return event
+	return {}
+
+
+func roll_trip_event(already_fired: Array[String]) -> Dictionary:
+	var fired: Dictionary = {}
+	for event_id_variant in already_fired:
+		fired[String(event_id_variant)] = true
+
+	var effective_weights: Dictionary = {}
+	var redirected_to_none := 0.0
+	var none_weight := 0.0
+	for event in TRIP_EVENTS:
+		var event_id := String(event.get("id", ""))
+		var weight := maxf(0.0, float(event.get("weight", 0.0)))
+		if event_id == "none":
+			none_weight = weight
+			continue
+		if fired.has(event_id):
+			redirected_to_none += weight
+		else:
+			effective_weights[event_id] = weight
+	effective_weights["none"] = none_weight + redirected_to_none
+
+	var picked_id := _roll_weighted_key(effective_weights)
+	for event in TRIP_EVENTS:
+		if String(event.get("id", "")) == picked_id:
+			return event.duplicate(true)
+	return {}
+
+
+func roll_driftwood_outcome() -> Dictionary:
+	var outcomes: Array = _trip_event_by_id("driftwood").get("outcomes", [])
+	if outcomes.is_empty():
+		return {}
+	var weights: Dictionary = {}
+	for outcome_variant in outcomes:
+		var outcome: Dictionary = outcome_variant
+		weights[String(outcome.get("id", ""))] = float(outcome.get("weight", 0.0))
+	var picked_id := _roll_weighted_key(weights)
+	for outcome_variant in outcomes:
+		var outcome: Dictionary = outcome_variant
+		if String(outcome.get("id", "")) == picked_id:
+			return outcome.duplicate(true)
+	return {}
+
+
+func bird_swarm_fish_weight_modifiers() -> Dictionary:
+	var event := _trip_event_by_id("bird_swarm")
+	var multiplier := float(event.get("fish_weight_multiplier", 1.0))
+	var modifiers: Dictionary = {}
+	for fish_id in BIRD_SWARM_FISH_IDS:
+		modifiers[fish_id] = multiplier
+	return modifiers
+
+
 func encounter_weights(
 	player_level: int,
 	spot_id: String = DEFAULT_FISHING_SPOT_ID,
 	rig_id: String = "",
-	environment_id: String = ""
+	environment_id: String = "",
+	extra_fish_weight_modifiers: Dictionary = {}
 ) -> Dictionary:
 	var requested_spot_id := _resolved_spot_id(spot_id)
 	var requested_spot: Dictionary = FISHING_SPOTS[requested_spot_id]
@@ -703,6 +772,8 @@ func encounter_weights(
 			modifier *= _rig_weight_modifier(fish, rig_id)
 		if apply_environment_modifier:
 			modifier *= _environment_weight_modifier(fish_id, fish, environment_id)
+		if extra_fish_weight_modifiers.has(fish_id):
+			modifier *= float(extra_fish_weight_modifiers[fish_id])
 		var weight := float(fish.get("weight", 0.0)) * maxf(0.0, modifier)
 		if weight <= 0.0:
 			continue
@@ -715,21 +786,25 @@ func roll_hooked_fish(
 	spot_id: String = DEFAULT_FISHING_SPOT_ID,
 	rig_id: String = "",
 	environment_id: String = "",
-	time_slot_id: String = ""
+	time_slot_id: String = "",
+	extra_fish_weight_modifiers: Dictionary = {}
 ) -> Dictionary:
 	var nushi := nushi_candidate(spot_id, environment_id, rig_id, time_slot_id, player_level)
 	if not nushi.is_empty() and _rng.randf() < NUSHI_ENCOUNTER_CHANCE:
 		return nushi
-	return roll_normal_fish(player_level, spot_id, rig_id, environment_id)
+	return roll_normal_fish(player_level, spot_id, rig_id, environment_id, extra_fish_weight_modifiers)
 
 
 func roll_normal_fish(
 	player_level: int,
 	spot_id: String = DEFAULT_FISHING_SPOT_ID,
 	rig_id: String = "",
-	environment_id: String = ""
+	environment_id: String = "",
+	extra_fish_weight_modifiers: Dictionary = {}
 ) -> Dictionary:
-	var weights := encounter_weights(player_level, spot_id, rig_id, environment_id)
+	var weights := encounter_weights(
+		player_level, spot_id, rig_id, environment_id, extra_fish_weight_modifiers
+	)
 	var candidate_ids: Array[String] = []
 	var total_weight := 0.0
 	for fish_id_variant in weights.keys():

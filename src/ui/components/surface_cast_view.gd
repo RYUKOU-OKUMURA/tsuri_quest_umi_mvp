@@ -25,6 +25,8 @@ const SURFACE_ANGLER_CAST_PATH := "res://assets/showcase/surface/surface_angler_
 const SURFACE_BOBBER_PATH := "res://assets/showcase/surface/surface_bobber.png"
 const SURFACE_FISH_SHADOW_PATH := "res://assets/showcase/surface/surface_fish_shadow.png"
 const SURFACE_SPLASH_PATH := "res://assets/showcase/surface/surface_splash.png"
+const SURFACE_BIRD_SWARM_PATH := "res://assets/showcase/surface/surface_bird_swarm.png"
+const BIRD_SWARM_DEFAULT_DURATION := 4.0
 const SURFACE_SCENE_READY_PATH := "res://assets/showcase/surface/surface_scene_ready.png"
 const SURFACE_SCENE_CASTING_PATH := "res://assets/showcase/surface/surface_scene_casting.png"
 const SURFACE_SCENE_WAITING_PATH := "res://assets/showcase/surface/surface_scene_waiting.png"
@@ -76,6 +78,9 @@ var _surface_scene_bite: Texture2D
 var _surface_scene_ready_weather: Dictionary = {}
 var _weather_grades: Dictionary = {}
 var _weather_overlays: Dictionary = {}
+var _surface_bird_swarm: Texture2D
+var _bird_swarm_timer: float = 0.0
+var _bird_swarm_duration: float = 0.0
 
 
 func bind_simulator(value: FishingSimulator) -> void:
@@ -88,6 +93,14 @@ func bind_simulator(value: FishingSimulator) -> void:
 	_hit_flash = 0.0
 	_cast_flight = 0.0
 	_approach_glow = 0.0
+	_bird_swarm_timer = 0.0
+	_bird_swarm_duration = 0.0
+	queue_redraw()
+
+
+func play_bird_swarm(duration: float = BIRD_SWARM_DEFAULT_DURATION) -> void:
+	_bird_swarm_duration = maxf(duration, 0.1)
+	_bird_swarm_timer = _bird_swarm_duration
 	queue_redraw()
 
 
@@ -115,6 +128,8 @@ func _process(delta: float) -> void:
 	_hit_flash = maxf(_hit_flash - delta * 2.6, 0.0)
 	_cast_flight = maxf(_cast_flight - delta * 2.15, 0.0)
 	_waiting_ring = fmod(_waiting_ring + delta * 0.58, 1.0)
+	if _bird_swarm_timer > 0.0:
+		_bird_swarm_timer = maxf(0.0, _bird_swarm_timer - delta)
 	queue_redraw()
 
 
@@ -146,6 +161,7 @@ func _draw() -> void:
 	_draw_angler()
 	_draw_line_and_bobber(horizon)
 	_draw_hit_flash()
+	_draw_bird_swarm_overlay()
 	_draw_frame()
 
 
@@ -159,6 +175,7 @@ func _load_surface_assets() -> void:
 	_surface_bobber = _load_texture_if_exists(SURFACE_BOBBER_PATH)
 	_surface_fish_shadow = _load_texture_if_exists(SURFACE_FISH_SHADOW_PATH)
 	_surface_splash = _load_texture_if_exists(SURFACE_SPLASH_PATH)
+	_surface_bird_swarm = _load_texture_if_exists(SURFACE_BIRD_SWARM_PATH)
 	_surface_scene_ready = _load_texture_if_exists(SURFACE_SCENE_READY_PATH)
 	_surface_scene_casting = _load_texture_if_exists(SURFACE_SCENE_CASTING_PATH)
 	_surface_scene_waiting = _load_texture_if_exists(SURFACE_SCENE_WAITING_PATH)
@@ -199,6 +216,7 @@ func _draw_asset_scene() -> void:
 		_draw_cover_texture(_surface_color_grade, rect, Palette.SURFACE_COLOR_GRADE_MODULATE, Vector2(0.5, 0.50))
 	_draw_weather_overlay(rect)
 	_draw_hit_flash()
+	_draw_bird_swarm_overlay()
 	_draw_frame()
 
 
@@ -213,6 +231,7 @@ func _draw_state_plate_scene() -> void:
 		_draw_weather_overlay(rect)
 	if _state() == FishingSimulator.State.BITE:
 		_draw_hit_flash()
+	_draw_bird_swarm_overlay()
 	_draw_frame()
 
 
@@ -304,6 +323,43 @@ func _draw_cover_texture(texture: Texture2D, target_rect: Rect2, modulate: Color
 
 func _asset_horizon() -> float:
 	return roundf(size.y * 0.41)
+
+
+func _draw_bird_swarm_overlay() -> void:
+	if _bird_swarm_timer <= 0.0 or _surface_bird_swarm == null:
+		return
+	var horizon := _asset_horizon() if _surface_scene_ready != null else roundf(size.y * 0.43)
+	var elapsed := _bird_swarm_duration - _bird_swarm_timer
+	var alpha := _bird_swarm_alpha(elapsed)
+	if alpha <= 0.0:
+		return
+	var drift_x := sin(_time * 0.42 + 0.6) * size.x * 0.014 + elapsed * size.x * 0.008
+	var bob_y := sin(_time * 1.15) * size.y * 0.005
+	var draw_w := size.x * 0.30
+	var tex_size := _surface_bird_swarm.get_size()
+	var draw_h := draw_w * (tex_size.y / maxf(1.0, tex_size.x))
+	var pos := Vector2(
+		size.x * 0.50 + drift_x - draw_w * 0.50,
+		horizon - draw_h * 0.92 + bob_y
+	)
+	draw_texture_rect(
+		_surface_bird_swarm,
+		Rect2(pos, Vector2(draw_w, draw_h)),
+		false,
+		Color(Color.WHITE, alpha)
+	)
+
+
+func _bird_swarm_alpha(elapsed: float) -> float:
+	var duration := maxf(_bird_swarm_duration, 0.1)
+	var fade_in := minf(0.18, duration * 0.22)
+	var fade_out := minf(0.85, duration * 0.28)
+	if elapsed < fade_in:
+		return elapsed / fade_in
+	var remaining := duration - elapsed
+	if remaining < fade_out:
+		return maxf(0.0, remaining / fade_out)
+	return 1.0
 
 
 func _draw_asset_fish_shadow(horizon: float) -> void:
