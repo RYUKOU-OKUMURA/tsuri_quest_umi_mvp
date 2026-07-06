@@ -1,6 +1,6 @@
 # 魚図鑑画面 QA判断ログ
 
-最終更新: 2026-07-05 / 状態: **v1.35 Palette移行完了・P2専用魚ポートレート素材は新規候補待ち**
+最終更新: 2026-07-06 / 状態: **E2ヌシタブ・ヌシ記録追加済み**
 参照画像: `reference/07_fish_book_mockup.png`
 QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
@@ -33,8 +33,9 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 | 右詳細記録ラベル | 上部紙面wash `Palette.PARCHMENT_DEEP` alpha 0.92 を 0.082/0.052–0.918/0.150、No木札 `Palette.WOOD_DARK` alpha 0.88 を 0.082/0.052–0.318/0.118、場所見出し紙面wash alpha 0.90 を 0.086/0.824–0.915/0.882、場所見出し木札 alpha 0.88 を 0.090/0.834–0.545/0.884 | `src/ui/fish_book_screen.gd` | 右詳細の濃紺UI帯を、羊皮紙ページ上の記録ラベルとして読ませる |
 | 釣り場カード紙面化 | 右下釣り場カードに `Palette.PARCHMENT` alpha 0.78 の1px紙枠、サムネ 0.045/0.055–0.955/0.680、サムネtint `Color(1.0, 0.965, 0.860, 0.92)`、ラベル紙面 `Palette.PARCHMENT_DEEP` alpha 0.96 を 0.045/0.700–0.955/0.955、ラベル文字13px `Palette.TEXT_OUTLINE_LIGHT` | `src/ui/fish_book_screen.gd` | 右下サムネを濃紺UIストリップから羊皮紙ページ内の記録カードへ寄せる |
 | 右詳細釣果記録欄 | 大魚窓下の釣果欄を 0.090/0.518–0.500/0.596、最大欄を 0.510/0.518–0.910/0.596 の `StyleBoxFlat` 紙面スリップに分ける。各欄は `Palette.PARCHMENT_DEEP` alpha 0.48、border `Palette.WOOD_DARK` alpha 0.28、木札ラベル `Palette.WOOD_DARK` alpha 0.88、値は `Palette.TEXT_OUTLINE_LIGHT`。表示文言は値側を `12匹` / `34.2cm` に分離し、未発見は `未記録` / `--.-cm` | `src/ui/fish_book_screen.gd` | 釣果と最大サイズを単なる中央テキストではなく、羊皮紙ページ上の収集記録欄として読ませる |
-| 下部索引タブ | フィルタ6件を 0.032 から x step 0.125 / 幅 0.122、y 0.072–0.850 に配置。背面に索引レール `Palette.PARCHMENT_DEEP` alpha 0.16、上罫線 `Palette.GOLD_DEEP` alpha 0.24、下影 `Palette.TEXT_OUTLINE_DARK` alpha 0.20 を敷く。選択タブは `Palette.DARK_PANEL` alpha 0.94 + `Palette.GOLD_BRIGHT` border、非選択は `Palette.PARCHMENT_DEEP` alpha 0.88 + `Palette.WOOD_DARK` border | `src/ui/fish_book_screen.gd` | 下部フィルタを汎用ボタン列ではなく、図鑑の収集カテゴリをめくる索引タブとして読ませる |
+| 下部索引タブ | フィルタ7件を 0.032 から x step 0.1065 / 幅 0.104、y 0.072–0.850 に配置。7件目の右端は 0.775 で「港へ戻る」レール x=0.778 と衝突しない。背面に索引レール `Palette.PARCHMENT_DEEP` alpha 0.16、上罫線 `Palette.GOLD_DEEP` alpha 0.24、下影 `Palette.TEXT_OUTLINE_DARK` alpha 0.20 を敷く。選択タブは `Palette.DARK_PANEL` alpha 0.94 + `Palette.GOLD_BRIGHT` border、非選択は `Palette.PARCHMENT_DEEP` alpha 0.88 + `Palette.WOOD_DARK` border。タブ順は 全魚 / 港内 / 砂浜 / 岩礁 / 沖 / レア / ヌシ | `src/ui/fish_book_screen.gd` | E2機能追加に伴う意図的なfreeze改訂。下部フィルタを汎用ボタン列ではなく、図鑑の収集カテゴリをめくる索引タブとして読ませる |
 | 港へ戻る主導線 | 下部右 0.778/0.038–0.974/0.938 に `Palette.WOOD_DARK` alpha 0.70 の木札受け板、`Palette.GOLD_DEEP` alpha 0.58 の1px枠、上金線 0.792/0.086–0.960/0.118、下影 0.792/0.842–0.960/0.898 を配置。`FishBookReturnButton` は 0.786/0.100–0.970/0.910、ExtraBold 22px、outline 3。共通 `make_return_button()` 本体は変更しない | `src/ui/fish_book_screen.gd` | 下部右の戻る導線を完成イメージの主ボタンに近づけ、フィルタタブ列から独立した操作として読ませる |
+| ヌシ記録表示 | 捕獲済みヌシがある基準魚カード右上に `Palette.GOLD_BRIGHT` の小さな金ピンと runtime文字「主」を重ねる。詳細ページは外周に `Palette.GOLD_BRIGHT` の2px金線を出し、釣果/最大欄の下に `ヌシ記録　{異名}　{最大cm}` を表示する。未捕獲の気配表示はしない | `src/ui/fish_book_screen.gd` | E2の「既存魚ページに金枠＋ヌシ記録」を、魚図鑑の台帳文法を崩さず追加する |
 | 未発見カード封印紙面 | 未発見カードの魚窓下地 `Palette.PARCHMENT_DEEP` alpha 0.58、魚影 `Palette.WOOD_DARK` alpha 0.62、紙面wash `Palette.PARCHMENT` alpha 0.18、No木札 `Palette.WOOD_DARK` alpha 0.72、`？` は `Palette.GOLD_DEEP` alpha 0.88、`未発見` 札は `Palette.PARCHMENT_DEEP` alpha 0.94 + `Palette.WOOD_DARK` alpha 0.34 の罫線。魚窓内には封印コード 0.125/0.492–0.875/0.508、封印印 0.125/0.418–0.255/0.608（`Palette.GOLD_DEEP` alpha 0.84、`封` 15px）を追加。カードサイズ・既存ラベル座標は変更しない | `src/ui/fish_book_screen.gd` | 未発見カードを濃紺UIパネルではなく、まだ開いていない封印記録として読ませる |
 | 右詳細魚標本窓 | 右詳細の大魚clip内に横罫線3本 `Palette.GOLD_DEEP` alpha 0.12、左測定線 `Palette.WOOD_DARK` alpha 0.10、下辺の採寸目盛り（base alpha 0.10、minor/medium/major tick alpha 0.12/0.15/0.18）、魚上の紙面wash `Palette.PARCHMENT` alpha 0.08 を追加。上部左右に紙テープ 0.060/0.060–0.210/0.145 と 0.790/0.060–0.940/0.145（`Palette.PARCHMENT_DEEP` alpha 0.46）と小さな金具を置く。魚clip座標と魚PNG本体は変更なし | `src/ui/fish_book_screen.gd` | 右詳細の大魚をPNGステッカーではなく、羊皮紙ページに留めた標本画として読ませる |
 | 右詳細高解像度魚フレーム | 発見済み右詳細の大魚のみ、`showcase_sheet` frame0 を左向きにミラーし、既存alpha bboxクロップで表示する。未発見・左カード・clip座標は変更せず、読み込み不可時は `card_portrait` へフォールバック | `src/ui/fish_book_screen.gd`, `assets/showcase/fish/` | 右詳細の大魚をカード用縮小ポートレートではなく、詳細ページの主役としてより鮮明に見せる |
@@ -46,6 +47,7 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 | 2026-06時点での新規PNG生成 | 構成・文字収まり・スクリムのみで v1.5 目標を達成できたため、その時点では生成に着手せず | 2026-06 |
 | カード高だけを112/124/132pxまで詰める案 | 一覧密度は上がるが、下部の釣果/最大サイズが窮屈になり、魚ポートレートも主役性が弱くなる。内部レイアウト再設計なしでは採用しない | 2026-07-03 |
 | 既存 `card_portrait` 系の単純差し替え | 2026-07-05 の contact sheet では、現行の左カードtight crop/右詳細高解像度cropを全画面で明確に上回らない。専用描き起こし候補が来るまでは採用しない | 2026-07-05 |
+| 未捕獲ヌシの「気配」表示 | E2仕様どおり今回は採用しない。未捕獲状態で基準魚ページに気配だけ出すと、通常魚の未発見/発見導線とヌシ導線が混ざるため、捕獲済みヌシの金ピン・詳細記録だけに限定する | 2026-07-06 |
 
 ## 3. 微調整カウンタ
 
@@ -70,6 +72,8 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 | 左一覧カード紙面ベース化 | 1 | カード枠内側へ紙面ベースを追加し、暗色台帳地がカード中央に透ける状態を解消 | P2台帳感としてfreeze |
 | 中央綴じ目 | 1 | 左右ページ間に細い背表紙影・中央fold・金細線を追加 | P2台帳感としてfreeze |
 | 下部索引タブ化 | 1 | フィルタ6件を紙/濃紺の索引タブstyleへ変更し、背面に薄い索引レールを追加 | P2収集導線としてfreeze |
+| E2ヌシタブ追加 | 1 | 6件freezeを7列用 x step 0.1065 / 幅 0.104 へ意図的改訂し、戻る導線との衝突なしをvisual QAで確認 | E2機能追加としてfreeze |
+| E2ヌシ記録表示 | 1 | 捕獲済みヌシの基準魚カードへ金ピン、詳細ページへ金線とヌシ記録行を追加 | E2機能追加としてfreeze |
 | 発見進捗バー化 | 1 | 上部左の発見済みバー内へ `found / total` で伸縮する小さな進捗線を追加 | P2収集導線としてfreeze |
 | 左一覧ページ面紙面化 | 1 | 左一覧スクロール領域の背後へ羊皮紙下地、紙面wash、淡い端影/罫線を追加 | P2台帳感としてfreeze |
 | 港へ戻る主導線強化 | 1 | 下部右の戻るボタン背後へ木札受け板・金線・下影を追加し、ボタンを少し拡張 | P2主導線としてfreeze |
@@ -80,7 +84,7 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
 ## 4. 暫定判定・再検証TODO
 
-なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-05_palette_gate_compare.png`、`docs/qa/evidence/fish_book/2026-07-05_portrait_contact_sheet.png` に保存済み。
+なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-06_e2_nushi_tab_compare.png`、`docs/qa/evidence/fish_book/2026-07-06_e2_nushi_tab.png` に保存済み。
 
 ## 5. 現在の残ギャップ
 
@@ -95,3 +99,4 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
 - 2026-07-03: v1.34 P2専用魚ポートレート素材フェーズ設計。現行の画面座標、魚clip、crop、文字、台帳フレームは変更せず、残P2である魚ポートレート専用描き起こしの発注/採用条件を `docs/24_fish_book_portrait_asset_brief.md` として追加した。既存 `card_portrait` の単純差し替えでは全画面で明確に勝つ根拠が弱いため、次の実装は `aji` / `saba` / `kasago` などファーストビュー魚の専用候補を作り、contact sheet→全画面比較で採用判定する。判断根拠: `docs/qa/evidence/fish_book/2026-07-03_portrait_asset_brief_current_compare.png`、`docs/qa/evidence/fish_book/2026-07-03_portrait_asset_brief_contact_sheet.png`。検証: `git diff --check` exit 0、`python3 tools/build_fish_book_portrait_contact_sheet.py` exit 0、`./tools/fish_book_visual_qa.sh` exit 0、`fish_book_smoke: ok`、`./tools/validate_project.sh` exit 0（Godot終了時のObjectDB/resource警告あり）。
 - 2026-07-05: R5/R1魚図鑑スライス。`src/ui/fish_book_screen.gd` の hardcoded hex / 数値 `Color(...)` を表示色同値の `Palette.FISH_BOOK_*` へ移行し、`rg -n "#[0-9a-fA-F]{6}|Color\\([0-9]" src/ui/fish_book_screen.gd` が空であることを確認した。実スクショ比較でP1再発はなし。contact sheetでは既存 `card_portrait` 系が現行の左カードtight crop/右詳細高解像度cropを明確に上回らないため、素材採用は見送り、専用描き起こしP2は新規候補待ちとして継続。判断根拠: `docs/qa/evidence/fish_book/2026-07-05_palette_gate_compare.png`、`docs/qa/evidence/fish_book/2026-07-05_portrait_contact_sheet.png`。検証: `git diff --check` exit 0、contact sheet再生成 exit 0、`./tools/fish_book_visual_qa.sh` exit 0、`fish_book_smoke: ok`、`./tools/save_system_verify.sh` exit 0、`./tools/validate_project.sh` exit 0（Godot終了時のObjectDB Snapshots directory警告は既存ベースライン枠）。
+- 2026-07-06: E2ヌシ図鑑スライス。機能追加に伴い下部索引を7列freezeへ改訂し、`ヌシ` タブを追加。捕獲済みヌシは基準魚ページへ金ピン、詳細ページへ金線と `ヌシ記録` 行を表示する。未捕獲ヌシの気配表示は不採用として記録。判断根拠: `docs/qa/evidence/fish_book/2026-07-06_e2_nushi_tab_compare.png`、`docs/qa/evidence/fish_book/2026-07-06_e2_nushi_tab.png`。検証: `./tools/fish_book_visual_qa.sh` exit 0、`fish_book_smoke: ok`。
