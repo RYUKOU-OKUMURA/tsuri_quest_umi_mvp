@@ -104,6 +104,14 @@ PRESETS = {
             "out": Path("/tmp/tsuri_quest_board_compare.png"),
         }
     ],
+    "shark_pen": [
+        {
+            "id": "SHARK_PEN",
+            "reference": ROOT / "reference" / "12_shark_pen_mockup.png",
+            "capture": Path("/tmp/tsuri_shark_pen.png"),
+            "out": Path("/tmp/tsuri_shark_pen_compare.png"),
+        }
+    ],
 }
 
 
