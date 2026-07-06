@@ -168,8 +168,12 @@ func _build_screen() -> void:
 	info_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	info_box.add_theme_constant_override("separation", 6)
 	info_panel.add_child(info_box)
-	_info_title_label = make_label("釣り場", 24, Palette.FISHING_SPOT_TITLE_TEXT)
+	_info_title_label = make_label("釣り場", 24, Palette.TEXT_BONE, 2, Palette.TEXT_OUTLINE_DARK)
 	_info_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	# autowrap+trim の組み合わせだと最小サイズが潰れて描画されないため無効化する
+	_info_title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_info_title_label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+	_info_title_label.custom_minimum_size = Vector2(0.0, 30.0)
 	info_box.add_child(_info_title_label)
 
 	_spot_panel = make_panel()
@@ -181,10 +185,16 @@ func _build_screen() -> void:
 	_spot_summary_label = make_label(_spot_summary_text(), 17, Palette.TEXT_DARK)
 	_spot_summary_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_spot_summary_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_spot_summary_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_spot_summary_label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+	_spot_summary_label.custom_minimum_size = Vector2(0.0, 22.0)
 	spot_box.add_child(_spot_summary_label)
 	_spot_detail_label = make_label(_spot_detail_text(), 13, Palette.TEXT_BODY)
 	_spot_detail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_spot_detail_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_spot_detail_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_spot_detail_label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+	_spot_detail_label.custom_minimum_size = Vector2(0.0, 60.0)
 	spot_box.add_child(_spot_detail_label)
 
 	_fight_sidebar = FightSidebarScript.new()

@@ -44,6 +44,21 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh`
 
 ## 7. 判断ログ（直近パスのみ）
 
+2026-07-06 右上「釣り場」情報パネル（READY時のみ表示）のバグ修正。
+
+不具合: `make_label()` の既定値（autowrap_mode=WORD_SMART + text_overrun_behavior=OVERRUN_TRIM_ELLIPSIS）の組み合わせにより、VBoxContainer内でラベル最小サイズが (1,1) に潰れ、タイトル・釣り場概要・詳細の3ラベルが1行も描画されず空の枠だけが見えていた（水上メッセージ帯で既知だった同じ崩れがここでも再発）。加えて `_info_title_label`（「釣り場」）の文字色 `FISHING_SPOT_TITLE_TEXT`（`#22354a`）が背景グラデーション（`#0c243a`）とほぼ同色で、たとえ描画されても視認不可能だった。
+
+変更したもの（`src/ui/fishing_screen.gd`）:
+- `_info_title_label` / `_spot_summary_label` / `_spot_detail_label` に `autowrap_mode = AUTOWRAP_OFF` + `text_overrun_behavior = OVERRUN_NO_TRIMMING` + 固定 `custom_minimum_size` を設定し、崩れを解消。
+- `_info_title_label` の色を `Palette.TEXT_BONE` + アウトラインへ変更（ダーク背景に直接乗る見出しは他画面同様このパターンを使用）。
+- 未使用になった `Palette.FISHING_SPOT_TITLE_TEXT` を削除。
+
+変えていないもの:
+- パネルのレイアウト位置・サイズ、READY時のみ表示するロジック。
+- 非晴天魚影・天候オーバーレイなど本ドキュメントの既存freeze値。
+
+検証: `./tools/validate_project.sh`、`fishing_harbor_return_smoke.tscn`、`fishing_reveal_smoke.tscn` すべて通過。`fishing_surface_states_preview.tscn` で全天候READY状態のスクショを再取得し目視確認（`docs/qa/evidence/fishing_surface/2026-07-06_spot_info_panel_fix_ready.png`）。
+
 2026-07-06 非晴天魚影・ヒット演出 uplift を採用。
 
 変更したもの:
