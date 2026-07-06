@@ -1,6 +1,6 @@
 # AGENTS.md — tsuri_quest_umi_mvp
 
-海釣りRPG（Godot 4 / GDScript / 1280x720固定）のMVP。UIは「AI生成PNG素材 + Godot runtime描画（テキスト・状態・ゲージ）」の分担で作る方針。ドキュメント・コミットメッセージ・UI文言は日本語。
+海釣りRPG（Godot 4 / GDScript / 1280x720固定）。**MVPと最終リファクタ（docs/26）は完了済み。現在はV2拡張（`docs/30_v2_expansion_overview.md`）を進行中**。UIは「AI生成PNG素材 + Godot runtime描画（テキスト・状態・ゲージ）」の分担で作る方針。ドキュメント・コミットメッセージ・UI文言は日本語。
 
 ## ディレクトリ地図
 
@@ -30,6 +30,7 @@
 
 | 作業 | 従う手順 |
 |---|---|
+| **V2拡張フェーズの実装（E0〜E10）** | `docs/30_v2_expansion_overview.md` §4 ＋ `docs/v2/<当該フェーズ>.md`（新画面を含むフェーズは下記UIスキルを併用） |
 | 新しい画面UIをゼロから実装 | `skills/ui-screen-build/SKILL.md` |
 | 既存画面UIの品質向上 | `skills/ui-screen-uplift/SKILL.md` |
 | 調理・食事・レベルアップフロー | `skills/tsuri-cooking-showcase-uplift/SKILL.md`（専用。上記2つより優先） |
@@ -38,7 +39,7 @@
 ## オーケストレーション（Fable / Composer）
 
 Cursor 常時ルール: `.cursor/rules/orchestration.mdc`  
-作戦台帳: `docs/26_refactor_orchestration_plan.md`
+作戦台帳: リファクタ = `docs/26_refactor_orchestration_plan.md`（完了済み）/ **V2拡張 = `docs/30_v2_expansion_overview.md`**（進行状況・確定事項はこちらで管理）
 
 ### 役割
 
@@ -57,6 +58,7 @@ Cursor 常時ルール: `.cursor/rules/orchestration.mdc`
 | サブタスク | モデル | 手順 |
 |---|---|---|
 | ベースライン計測・smoke 実行 | Composer | `docs/26` §Smoke |
+| **V2フェーズ内の brief（データ層・監査・画面実装）** | Composer | `docs/v2/<フェーズ>.md` の「brief分割案」どおりに渡す |
 | palette / 素材参照監査修正 | Composer | AGENTS.md 不変ルール |
 | 指定ファイルの pure 関数抽出 | Composer | behavior-preserving のみ |
 | 画面別 UI uplift | Composer | `skills/ui-screen-uplift/` |
