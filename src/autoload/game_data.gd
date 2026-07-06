@@ -14,6 +14,9 @@ const RIG_MISMATCH_WEIGHT_MULTIPLIER := 0.4
 const NUSHI_ENCOUNTER_CHANCE := 0.04
 const SEA_CHART_REQUIRED_FRAGMENTS := 3
 const SHARK_LURE_ONLY_FISH_IDS: Array[String] = ["shumokuzame", "hohojirozame"]
+const SHARK_AMBUSH_CHANCE := 0.22
+const SHARK_AMBUSH_THRESHOLD_MIN := 0.25
+const SHARK_AMBUSH_THRESHOLD_MAX := 0.60
 
 const BOSS_FIRST_CLEAR_REWARDS: Dictionary = GameCatalogData.BOSS_FIRST_CLEAR_REWARDS
 const FISH: Dictionary = GameCatalogData.FISH
@@ -762,6 +765,31 @@ func bird_swarm_fish_weight_modifiers() -> Dictionary:
 	for fish_id in BIRD_SWARM_FISH_IDS:
 		modifiers[fish_id] = multiplier
 	return modifiers
+
+
+func can_shark_ambush(spot_id: String, fish: Dictionary) -> bool:
+	return (
+		_resolved_spot_id(spot_id) == "danger_reef"
+		and not bool(fish.get("shark", false))
+		and not bool(fish.get("boss", false))
+	)
+
+
+func shark_ambush_plan(rand_chance: float, rand_threshold: float) -> Dictionary:
+	var happens := clampf(rand_chance, 0.0, 1.0) < SHARK_AMBUSH_CHANCE
+	if not happens:
+		return {
+			"active": false,
+			"threshold": 0.0,
+		}
+	return {
+		"active": true,
+		"threshold": lerpf(
+			SHARK_AMBUSH_THRESHOLD_MIN,
+			SHARK_AMBUSH_THRESHOLD_MAX,
+			clampf(rand_threshold, 0.0, 1.0)
+		),
+	}
 
 
 func encounter_weights(

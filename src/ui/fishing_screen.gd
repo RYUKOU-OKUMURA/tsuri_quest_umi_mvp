@@ -17,6 +17,8 @@ const BITE_SFX_PATH := "res://assets/audio/アタリ_ヒット音.mp3"
 const ESCAPED_SFX_PATH := "res://assets/audio/逃げられた.mp3"
 const FISHING_SFX_VOLUME_DB := -2.0
 const TRIP_EVENT_MESSAGE_DURATION := 3.5
+const SHARK_AMBUSH_REASON := "巨大な影が食らいついた！ 獲物を横取りされた……"
+const SHARK_AMBUSH_FLASH_DURATION := 0.34
 
 var _simulator: FishingSimulator
 var _trip_stats: Dictionary = {}
@@ -24,6 +26,9 @@ var _current_fish: Dictionary = {}
 var _result_recorded: bool = false
 var _spot_id: String = GameData.DEFAULT_FISHING_SPOT_ID
 var _spot: Dictionary = {}
+var _shark_ambush_plan: Dictionary = {}
+var _shark_ambush_triggered := false
+var _shark_ambush_flash_timer := 0.0
 
 var _info_title_label: Label
 var _spot_panel: PanelContainer
@@ -53,6 +58,7 @@ var _quit_title: Label
 var _quit_details: Label
 var _quit_confirm_button: Button
 var _quit_target := "harbor"
+var _shark_ambush_flash: ColorRect
 var _nushi_omen_shown := false
 var _trip_event_message: String = ""
 var _trip_event_message_timer: float = 0.0
@@ -188,6 +194,7 @@ func _build_screen() -> void:
 
 	_create_result_overlay()
 	_create_quit_overlay()
+	_create_shark_ambush_flash()
 	_create_catch_fanfare()
 	_prepare_new_attempt()
 	_update_ui()
@@ -420,6 +427,16 @@ func _create_quit_overlay() -> void:
 	row.add_child(_quit_confirm_button)
 
 
+func _create_shark_ambush_flash() -> void:
+	_shark_ambush_flash = ColorRect.new()
+	_shark_ambush_flash.color = Palette.FISHING_AMBUSH_FLASH_CLEAR
+	_shark_ambush_flash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_shark_ambush_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_shark_ambush_flash.z_index = 90
+	_shark_ambush_flash.visible = false
+	add_child(_shark_ambush_flash)
+
+
 func _create_catch_fanfare() -> void:
 	_catch_fanfare = CatchFanfareScript.new()
 	_catch_fanfare.z_index = 80
@@ -431,6 +448,7 @@ func _create_catch_fanfare() -> void:
 func _process(delta: float) -> void:
 	if _simulator == null:
 		return
+	_update_shark_ambush_flash(delta)
 	if _trip_event_message_timer > 0.0:
 		_trip_event_message_timer = maxf(0.0, _trip_event_message_timer - delta)
 		if _trip_event_message_timer <= 0.0:
@@ -441,6 +459,7 @@ func _process(delta: float) -> void:
 	if _catch_fanfare != null and _catch_fanfare.is_playing():
 		return
 	_simulator.tick(delta)
+	_check_shark_ambush()
 	_update_ui()
 	_update_view_visibility(delta)
 
@@ -501,6 +520,8 @@ func _input(event: InputEvent) -> void:
 func _prepare_new_attempt() -> void:
 	_result_recorded = false
 	_result_overlay.visible = false
+	_shark_ambush_plan = {}
+	_shark_ambush_triggered = false
 	if _quit_overlay != null:
 		_quit_overlay.visible = false
 	_play_fishing_bgm()
@@ -520,6 +541,7 @@ func _prepare_new_attempt() -> void:
 		)
 		if int(_trip_stats.get("bird_swarm_hits_remaining", 0)) > 0:
 			_trip_stats["bird_swarm_hits_remaining"] = int(_trip_stats.get("bird_swarm_hits_remaining", 0)) - 1
+	_prepare_shark_ambush_plan()
 	_simulator.prepare(_current_fish, _trip_stats)
 	_view.bind_simulator(_simulator)
 	_surface_view.bind_simulator(_simulator)
@@ -534,6 +556,47 @@ func _prepare_new_attempt() -> void:
 func _refresh_fish_info() -> void:
 	if _fight_sidebar != null:
 		_fight_sidebar.set_fish(_current_fish, _trip_stats)
+
+
+func _prepare_shark_ambush_plan() -> void:
+	if not GameData.can_shark_ambush(_spot_id, _current_fish):
+		return
+	_shark_ambush_plan = GameData.shark_ambush_plan(randf(), randf())
+
+
+func _check_shark_ambush() -> void:
+	if _shark_ambush_triggered or _shark_ambush_plan.is_empty():
+		return
+	if not bool(_shark_ambush_plan.get("active", false)):
+		return
+	if _simulator == null or _simulator.state != FishingSimulator.State.FIGHT:
+		return
+	if _simulator.fish_stamina_ratio() > float(_shark_ambush_plan.get("threshold", 0.0)):
+		return
+	_shark_ambush_triggered = true
+	_show_shark_ambush_flash()
+	_simulator.force_escape(SHARK_AMBUSH_REASON)
+
+
+func _show_shark_ambush_flash() -> void:
+	_shark_ambush_flash_timer = SHARK_AMBUSH_FLASH_DURATION
+	if _shark_ambush_flash == null:
+		return
+	_shark_ambush_flash.color = Palette.FISHING_AMBUSH_FLASH
+	_shark_ambush_flash.visible = true
+
+
+func _update_shark_ambush_flash(delta: float) -> void:
+	if _shark_ambush_flash == null or _shark_ambush_flash_timer <= 0.0:
+		return
+	_shark_ambush_flash_timer = maxf(0.0, _shark_ambush_flash_timer - delta)
+	var ratio := _shark_ambush_flash_timer / SHARK_AMBUSH_FLASH_DURATION
+	_shark_ambush_flash.color = Palette.FISHING_AMBUSH_FLASH.lerp(
+		Palette.FISHING_AMBUSH_FLASH_CLEAR,
+		1.0 - clampf(ratio, 0.0, 1.0)
+	)
+	if _shark_ambush_flash_timer <= 0.0:
+		_shark_ambush_flash.visible = false
 
 
 func _sync_fish_info_scroll_size() -> void:
@@ -668,8 +731,12 @@ func _on_fight_finished(caught: bool, reason: String) -> void:
 			_catch_fanfare.play(_current_fish, _simulator.result_size_cm, catch_result)
 			return
 	else:
-		_result_title.text = "逃げられた……"
-		_result_details.text = "%s\n\nテンションの安全域を保ち、魚の突進時は糸を出そう。" % reason
+		if reason == SHARK_AMBUSH_REASON:
+			_result_title.text = "横取りされた……"
+			_result_details.text = "%s\n\n危険海域では、弱った獲物にサメが寄ってくることがある。" % reason
+		else:
+			_result_title.text = "逃げられた……"
+			_result_details.text = "%s\n\nテンションの安全域を保ち、魚の突進時は糸を出そう。" % reason
 		_retry_button.text = "再挑戦"
 		play_screen_sfx(ESCAPED_SFX_PATH, FISHING_SFX_VOLUME_DB)
 	_result_overlay.visible = true

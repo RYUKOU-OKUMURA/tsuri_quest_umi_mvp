@@ -125,6 +125,12 @@ func set_giving_line(active: bool) -> void:
 		reeling = false
 
 
+func force_escape(reason: String) -> void:
+	if state == State.CAUGHT or state == State.ESCAPED:
+		return
+	_escape(reason)
+
+
 func tick(delta: float) -> void:
 	_visual_time += delta
 	match state:
