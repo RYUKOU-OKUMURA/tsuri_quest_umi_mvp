@@ -69,6 +69,7 @@ Lv11以降は主に解放ゲート:
 
 - 触る: `game_data.gd`, `player_progress.gd`, `tools/level_curve_audit.tscn`（新設）
 - 触らない: `fishing_simulator.gd`（バランスはgrowth側で吸収）、既存Lv1〜10の必要経験値
+- `level_curve_audit` はV2最初の監査シーンなので、**表出力の共通ヘルパを `tools/` に切り出して作る**（docs/30 §4-4。以後の nushi / trip_event / shark_lure / difficulty 監査が使い回す）
 - DoD:
   1. `level_curve_audit` でLv1〜50の必要経験値・全ステータスを表出力し、**Lv1〜10が現行値と完全一致**すること
   2. `save_system_verify.sh`（Lv10セーブのロード）

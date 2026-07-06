@@ -3,6 +3,7 @@
 正本: `docs/30_v2_expansion_overview.md`（読む順: docs/30 §4 共通仕様 → 本doc）
 前提フェーズ: E1
 状態: 仕様確定・未着手
+**着手前の必須決定**: セーブスロット数（1 / 3。docs/30 §3-4 未決#2）。スロット化する場合は本フェーズのセーブスキーマ変更（`quest_board` 等の追加）と同時に実施し、移行を1回で済ませる（詳細は `E11_launch_readiness.md` §E11-2）
 
 目的: 毎回の釣行に「今日の目的」を作る。中盤のダレ（動機のレベル上げ一本化）対策の本命。
 
@@ -26,6 +27,7 @@
 | zarigani_kid | 納品型 | E8導入後のみ。固定（E8 doc §依頼接続） | 「（子ども）ザリガニをつかまえて！」 | 0 G（称号・お礼文言のみ） |
 
 - 生成: 掲示枠が空いたとき、レベルで重み付けして抽選（Lv7以下: bulk_common 50% / bulk_uncommon 25% / cuisine 15% / size_record 10%。Lv8+: bulk_common 30% / bulk_uncommon 25% / cuisine 15% / size_record 15% / rare_order 15%）。同じ魚の依頼が2枚同時に出ないこと
+- **対象魚の除外（docs/30 §3-3 不変条件）**: 依頼の魚抽選から `shark: true` の魚とヌシ（`NUSHI_FISH`）を必ず除外する。サメはE10以降インベントリに入らないため、含めると達成不能依頼になる（記録型 size_record も同様に除外。`quest_board_smoke` に「danger_reef 解放済み状態でサメ依頼が生成されない」検証を含める）
 - pure関数: `generate_quest(template_weights_context) -> Dictionary` と `quest_progress(quest, stats) -> Dictionary` を `game_data.gd` に置き、headlessで検証する
 
 ## E3-3. 依頼データの形（セーブされる `quest_board` の要素）

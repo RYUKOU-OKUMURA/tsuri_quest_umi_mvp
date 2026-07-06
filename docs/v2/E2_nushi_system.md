@@ -90,9 +90,19 @@ func roll_hooked_fish(player_level, spot_id, rig_id, environment_id, time_slot_i
 - 触らない: `player_progress.gd`（セーブ追加なし。`caught_counts` で足りる）, `catch_fanfare.gd`（boss経路で動く）
 - DoD: `nushi_encounter_audit` で「条件成立時のみ約4%、非成立時0%」を確認 + `fish_book_smoke` + `fishing_reveal_smoke` 退行なし + 図鑑visual QA + validate green
 
-## E2-8. brief分割案
+## E2-8. ヌシ級ファイトの成立監査（最初のスライス。2026-07-06 追加）
 
-1. brief A: NUSHI_FISH/spot nushi節/BOSS_FIRST_CLEAR_REWARDS + `nushi_candidate`/`roll_hooked_fish` + 監査シーン
-2. brief B: 素材生成（8体×2点セット。ブリーフ先行）
-3. brief C: 図鑑金枠＋ヌシタブ（freeze改訂手順込み）
-4. brief D: 気配メッセージ＋港ヒント
+現行のファイトシステムが検証済みなのは魚スタミナ約240（＋boss_kurodai）まで。ヌシは基準魚×2.3で**500〜736**に達し、検証済みエンベロープの2〜3倍になる。データを本実装する前に、**ヌシ級ステータスでのファイト成立をheadless監査で確認する**:
+
+- `tools/fight_envelope_audit.tscn`（新設）: 仮のヌシ級ステータス（stamina 400 / 550 / 736、power 1.6〜2.0）× プレイヤーLv（10 / 30 / 50 相当の growth）で自動ファイトを回し、**勝率・所要時間・ライン切れ率**を表出力する
+- 成立条件の目安: 適正装備・適正Lvで勝率がゼロや100%に張り付かず、所要時間が子供の集中力の範囲（1ファイト2〜3分以内）に収まること
+- 崩れていた場合は E2-1 の導出倍率（stamina ×2.3 等）を先に調整してから本実装に入る。`fishing_simulator.gd` は触らない（バランスはデータ側で吸収）
+- この監査はE4のサメ（white shark 320 / 白帝 736）・E10のメガロドン（600）の事前検証を兼ねる
+
+## E2-9. brief分割案
+
+1. brief A: **fight_envelope_audit（§E2-8）**。結果をFableがレビューし、必要なら導出倍率を改訂してから以降へ
+2. brief B: NUSHI_FISH/spot nushi節/BOSS_FIRST_CLEAR_REWARDS + `nushi_candidate`/`roll_hooked_fish` + 監査シーン
+3. brief C: 素材生成（8体×2点セット。ブリーフ先行）
+4. brief D: 図鑑金枠＋ヌシタブ（freeze改訂手順込み）
+5. brief E: 気配メッセージ＋港ヒント
