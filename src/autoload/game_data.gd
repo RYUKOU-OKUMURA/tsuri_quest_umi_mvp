@@ -11,9 +11,11 @@ const NO_BOAT_RANK := 0
 const DEFAULT_RIG_ID := "sabiki"
 const RIG_MATCH_WEIGHT_MULTIPLIER := 2.5
 const RIG_MISMATCH_WEIGHT_MULTIPLIER := 0.4
+const NUSHI_ENCOUNTER_CHANCE := 0.04
 
 const BOSS_FIRST_CLEAR_REWARDS: Dictionary = GameCatalogData.BOSS_FIRST_CLEAR_REWARDS
 const FISH: Dictionary = GameCatalogData.FISH
+const NUSHI_FISH: Dictionary = GameCatalogData.NUSHI_FISH
 const COMMON_LOW_LEVEL_FISH_IDS: Array[String] = GameCatalogData.COMMON_LOW_LEVEL_FISH_IDS
 const NORMAL_FISHING_SPOT_IDS: Array[String] = GameCatalogData.NORMAL_FISHING_SPOT_IDS
 const FISHING_SPOT_ORDER: Array[String] = GameCatalogData.FISHING_SPOT_ORDER
@@ -42,12 +44,14 @@ func _ready() -> void:
 
 
 func get_fish(fish_id: String) -> Dictionary:
-	if not FISH.has(fish_id):
-		var expansion := _expansion_fish()
-		if not expansion.has(fish_id):
-			return {}
+	if FISH.has(fish_id):
+		return FISH[fish_id].duplicate(true)
+	if NUSHI_FISH.has(fish_id):
+		return NUSHI_FISH[fish_id].duplicate(true)
+	var expansion := _expansion_fish()
+	if expansion.has(fish_id):
 		return Dictionary(expansion[fish_id]).duplicate(true)
-	return FISH[fish_id].duplicate(true)
+	return {}
 
 
 func get_boss_first_clear_reward(fish_id: String) -> Dictionary:
@@ -126,6 +130,34 @@ func get_all_fish_ids() -> Array[String]:
 			return number_a < number_b
 	)
 	return ids
+
+
+func get_all_nushi_fish_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for spot_id in FISHING_SPOT_ORDER:
+		var spot: Dictionary = FISHING_SPOTS[spot_id]
+		var nushi: Dictionary = spot.get("nushi", {})
+		var fish_id := String(nushi.get("fish_id", ""))
+		if not fish_id.is_empty() and NUSHI_FISH.has(fish_id):
+			ids.append(fish_id)
+	return ids
+
+
+func get_nushi_for_base_fish(base_fish_id: String) -> Dictionary:
+	for nushi_id in get_all_nushi_fish_ids():
+		var fish := get_fish(nushi_id)
+		if String(fish.get("base_fish_id", "")) == base_fish_id:
+			return fish
+	return {}
+
+
+func get_nushi_for_spot(spot_id: String) -> Dictionary:
+	var spot := get_fishing_spot(spot_id)
+	var nushi: Dictionary = spot.get("nushi", {})
+	var fish_id := String(nushi.get("fish_id", ""))
+	if fish_id.is_empty():
+		return {}
+	return get_fish(fish_id)
 
 
 func get_all_fishing_spot_ids() -> Array[String]:
@@ -320,6 +352,36 @@ func get_recipes_for_fish(fish_id: String, player_level: int) -> Array[Dictionar
 	return results
 
 
+func nushi_candidate(
+	spot_id: String,
+	environment_id: String,
+	rig_id: String,
+	time_slot_id: String,
+	player_level: int
+) -> Dictionary:
+	var resolved_id := _resolved_spot_id(spot_id)
+	var spot: Dictionary = FISHING_SPOTS[resolved_id]
+	var nushi: Dictionary = spot.get("nushi", {})
+	if nushi.is_empty():
+		return {}
+	var fish_id := String(nushi.get("fish_id", ""))
+	var required_environment := String(nushi.get("environment_id", ""))
+	var required_rig := String(nushi.get("rig_id", ""))
+	var required_time_slot := String(nushi.get("time_slot_id", ""))
+	if fish_id.is_empty() or not NUSHI_FISH.has(fish_id):
+		return {}
+	if not required_environment.is_empty() and environment_id != required_environment:
+		return {}
+	if not required_rig.is_empty() and rig_id != required_rig:
+		return {}
+	if not required_time_slot.is_empty() and time_slot_id != required_time_slot:
+		return {}
+	var fish := get_fish(fish_id)
+	if int(fish.get("min_level", 1)) > player_level:
+		return {}
+	return fish
+
+
 func encounter_weights(
 	player_level: int,
 	spot_id: String = DEFAULT_FISHING_SPOT_ID,
@@ -362,6 +424,19 @@ func encounter_weights(
 			continue
 		weights[fish_id] = weight
 	return weights
+
+
+func roll_hooked_fish(
+	player_level: int,
+	spot_id: String = DEFAULT_FISHING_SPOT_ID,
+	rig_id: String = "",
+	environment_id: String = "",
+	time_slot_id: String = ""
+) -> Dictionary:
+	var nushi := nushi_candidate(spot_id, environment_id, rig_id, time_slot_id, player_level)
+	if not nushi.is_empty() and _rng.randf() < NUSHI_ENCOUNTER_CHANCE:
+		return nushi
+	return roll_normal_fish(player_level, spot_id, rig_id, environment_id)
 
 
 func roll_normal_fish(
