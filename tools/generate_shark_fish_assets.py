@@ -14,8 +14,8 @@ REALISTIC_SOURCE_DIR = ROOT / "tools" / "source_assets" / "fish" / "shark_e4_rea
 FONT_BOLD = ROOT / "assets" / "fonts" / "line_seed" / "LINESeedJP_A_TTF_Bd.ttf"
 
 CARD_SIZE = (560, 310)
-FRAME_SIZE = 320
-SHEET_FRAMES = 8
+FRAME_SIZE = (640, 320)
+SHEET_FRAMES = 4
 
 
 SHARK_SPECS = [
@@ -191,13 +191,14 @@ def _make_card(spec: dict) -> Image.Image:
 
 
 def _make_sheet(spec: dict) -> Image.Image:
-    sheet = Image.new("RGBA", (FRAME_SIZE * SHEET_FRAMES, FRAME_SIZE), (0, 0, 0, 0))
-    work_size = (round(FRAME_SIZE * 1.35), round(FRAME_SIZE * 1.35))
+    frame_w, frame_h = FRAME_SIZE
+    sheet = Image.new("RGBA", (frame_w * SHEET_FRAMES, frame_h), (0, 0, 0, 0))
+    work_size = (round(frame_w * 1.20), round(frame_h * 1.35))
     for index in range(SHEET_FRAMES):
         phase = index / float(SHEET_FRAMES)
         frame = _draw_shark(spec, work_size, phase=phase, scale=float(spec["scale"]))
-        frame = _contain_alpha(_readability_pass(frame), (FRAME_SIZE, FRAME_SIZE), margin=10)
-        sheet.alpha_composite(frame, (index * FRAME_SIZE, 0))
+        frame = _contain_alpha(_readability_pass(frame), FRAME_SIZE, margin=10)
+        sheet.alpha_composite(frame, (index * frame_w, 0))
     return sheet
 
 
@@ -222,7 +223,8 @@ def _make_card_from_source(source: Image.Image) -> Image.Image:
 
 
 def _make_sheet_from_source(source: Image.Image) -> Image.Image:
-    sheet = Image.new("RGBA", (FRAME_SIZE * SHEET_FRAMES, FRAME_SIZE), (0, 0, 0, 0))
+    frame_w, frame_h = FRAME_SIZE
+    sheet = Image.new("RGBA", (frame_w * SHEET_FRAMES, frame_h), (0, 0, 0, 0))
     for index in range(SHEET_FRAMES):
         phase = math.sin(index / float(SHEET_FRAMES) * math.tau)
         scale = 1.0 + phase * 0.012
@@ -235,9 +237,9 @@ def _make_sheet_from_source(source: Image.Image) -> Image.Image:
                 ),
                 Image.Resampling.LANCZOS,
             )
-        frame = _contain_alpha(_realistic_readability_pass(frame_source), (FRAME_SIZE, FRAME_SIZE), margin=9)
+        frame = _contain_alpha(_realistic_readability_pass(frame_source), FRAME_SIZE, margin=9)
         y_offset = round(phase * 2.0)
-        sheet.alpha_composite(frame, (index * FRAME_SIZE, y_offset))
+        sheet.alpha_composite(frame, (index * frame_w, y_offset))
     return sheet
 
 
