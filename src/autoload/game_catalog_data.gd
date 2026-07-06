@@ -51,6 +51,11 @@ const BOSS_FIRST_CLEAR_REWARDS: Dictionary = {
 		"money": 5000,
 		"message": "深海の白帝を釣り上げた！\n鮫の根を支配する白い巨影を制した。",
 	},
+	"megalodon":
+	{
+		"money": 10000,
+		"message": "メガロドンを釣り上げた！\n生簀のサメたちと辿り着いた、古代の海の頂点だ。",
+	},
 }
 
 const TITLES: Array[Dictionary] = [

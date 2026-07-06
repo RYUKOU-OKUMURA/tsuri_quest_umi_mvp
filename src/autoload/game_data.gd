@@ -49,6 +49,7 @@ const SHARK_DEFAULT_BOND_GAIN := 3
 const SHARK_FAVORITE_EXP_MULTIPLIER := 2.0
 const SHARK_DEFAULT_EXP_MULTIPLIER := 1.5
 const SHARK_FAVORITE_LURE_MULTIPLIER := 3.0
+const MEGALODON_ENCOUNTER_CHANCE := 0.08
 
 
 var _rng := RandomNumberGenerator.new()
@@ -252,6 +253,35 @@ func is_megalodon_unlocked(player_level: int, shark_bonds: Dictionary) -> bool:
 		if int(shark_bonds.get(shark_id, 0)) < 100:
 			return false
 	return true
+
+
+func can_encounter_megalodon(
+	player_level: int,
+	spot_id: String,
+	shark_bonds: Dictionary,
+	bait_fish_data: Dictionary
+) -> bool:
+	return (
+		_resolved_spot_id(spot_id) == "danger_reef"
+		and is_megalodon_unlocked(player_level, shark_bonds)
+		and is_favorite_food("megalodon", bait_fish_data)
+		and not get_fish("megalodon").is_empty()
+	)
+
+
+func megalodon_encounter_plan(
+	rand_chance: float,
+	player_level: int,
+	spot_id: String,
+	shark_bonds: Dictionary,
+	bait_fish_data: Dictionary
+) -> Dictionary:
+	var eligible := can_encounter_megalodon(player_level, spot_id, shark_bonds, bait_fish_data)
+	return {
+		"eligible": eligible,
+		"active": eligible and clampf(rand_chance, 0.0, 1.0) < MEGALODON_ENCOUNTER_CHANCE,
+		"chance": MEGALODON_ENCOUNTER_CHANCE if eligible else 0.0,
+	}
 
 
 func is_quest_excluded_fish_id(fish_id: String) -> bool:
@@ -949,8 +979,16 @@ func roll_hooked_fish(
 	rig_id: String = "",
 	environment_id: String = "",
 	time_slot_id: String = "",
-	extra_fish_weight_modifiers: Dictionary = {}
+	extra_fish_weight_modifiers: Dictionary = {},
+	shark_bonds: Dictionary = {},
+	bait_fish_data: Dictionary = {}
 ) -> Dictionary:
+	if can_encounter_megalodon(player_level, spot_id, shark_bonds, bait_fish_data):
+		var megalodon_plan := megalodon_encounter_plan(
+			_rng.randf(), player_level, spot_id, shark_bonds, bait_fish_data
+		)
+		if bool(megalodon_plan.get("active", false)):
+			return get_fish("megalodon")
 	var nushi := nushi_candidate(spot_id, environment_id, rig_id, time_slot_id, player_level)
 	if not nushi.is_empty() and _rng.randf() < NUSHI_ENCOUNTER_CHANCE:
 		return nushi

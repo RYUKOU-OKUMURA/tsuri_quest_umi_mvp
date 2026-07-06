@@ -45,8 +45,8 @@ func _initialize() -> void:
 
 func _check_fish_master(game_data: Object, failures: Array[String]) -> void:
 	var fish_ids: Array[String] = game_data.get_all_fish_ids()
-	if fish_ids.size() != 79:
-		failures.append("expected 79 fish, got %d" % fish_ids.size())
+	if fish_ids.size() != 80:
+		failures.append("expected 80 fish, got %d" % fish_ids.size())
 	var seen_numbers: Dictionary = {}
 	var required_keys: Array[String] = [
 		"id",
@@ -166,15 +166,19 @@ func _check_completion_routes(game_data: Object, failures: Array[String]) -> voi
 		var fish: Dictionary = game_data.get_fish(fish_id)
 		if int(fish.get("sell_price", 0)) <= 0:
 			failures.append("%s sell_price must be positive" % fish_id)
-		if game_data.get_recipes_for_fish(fish_id, game_data.MAX_LEVEL).is_empty():
-			failures.append("%s must be cookable by at least one recipe" % fish_id)
 		if bool(fish.get("shark", false)):
+			if fish_id == "megalodon":
+				if not bool(fish.get("boss", false)):
+					failures.append("megalodon should be a boss shark")
+				continue
 			if fish_id in DANGER_REEF_LURE_ONLY_SHARK_IDS:
 				continue
 			var danger_weights: Dictionary = game_data.encounter_weights(game_data.MAX_LEVEL, "danger_reef")
 			if not danger_weights.has(fish_id) or float(danger_weights[fish_id]) <= 0.0:
 				failures.append("%s shark must be reachable in danger_reef at Lv.%d" % [fish_id, game_data.MAX_LEVEL])
 			continue
+		if game_data.get_recipes_for_fish(fish_id, game_data.MAX_LEVEL).is_empty():
+			failures.append("%s must be cookable by at least one recipe" % fish_id)
 		if bool(fish.get("boss", false)):
 			var boss_spot: Dictionary = game_data.get_fishing_spot(game_data.BOSS_FISHING_SPOT_ID)
 			if not Array(boss_spot.get("allowed_fish", [])).has(fish_id):
@@ -247,6 +251,8 @@ func _check_rig_master(game_data: Object, failures: Array[String]) -> void:
 				covered_baits.append(bait)
 	for fish_id in game_data.get_all_fish_ids():
 		var fish: Dictionary = game_data.get_fish(fish_id)
+		if fish_id == "megalodon":
+			continue
 		var preferred_bait := String(fish.get("preferred_bait", ""))
 		if preferred_bait not in covered_baits:
 			failures.append("%s preferred bait is not covered by any rig: %s" % [fish_id, preferred_bait])

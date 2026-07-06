@@ -58,6 +58,7 @@ const ROWS: Array[Dictionary] = [
 	{"id": "fujikujira", "name": "フジクジラ", "rarity": "レア", "min_level": 33, "weight": 0.7, "size_min": 25.0, "size_max": 45.0, "sell_price": 3000, "food_exp": 250, "stamina": 80.0, "power": 0.70, "speed": 0.95, "start_distance": 25.0, "start_depth": 25.0, "color": "#3f455b", "habitat": "鮫の根の深場", "behavior": "暗い深場で小刻みに逃げる。軽くても油断できない。", "fish_no": "No.077", "preferred_bait": "小魚", "visual_scale": 0.64, "line_anchor_x": 0.465, "line_anchor_y": 0.055, "style": "bottom", "shark": true},
 	{"id": "shumokuzame", "name": "シュモクザメ", "rarity": "レア", "min_level": 38, "weight": 0.6, "size_min": 200.0, "size_max": 350.0, "sell_price": 4200, "food_exp": 320, "stamina": 280.0, "power": 1.70, "speed": 1.45, "start_distance": 64.0, "start_depth": 18.0, "color": "#506f7f", "habitat": "危険海域の潮目", "behavior": "広い頭で潮を切り、横へ長く走る。", "fish_no": "No.078", "preferred_bait": "小魚", "visual_scale": 1.36, "line_anchor_x": 0.465, "line_anchor_y": 0.070, "style": "pelagic_fast", "shark": true},
 	{"id": "hohojirozame", "name": "ホオジロザメ", "rarity": "レア", "min_level": 38, "weight": 0.5, "size_min": 250.0, "size_max": 420.0, "sell_price": 5500, "food_exp": 380, "stamina": 320.0, "power": 1.90, "speed": 1.50, "start_distance": 70.0, "start_depth": 17.0, "color": "#475b67", "habitat": "鮫の根の外縁", "behavior": "白い腹を返しながら強烈に突っ込む。", "fish_no": "No.079", "preferred_bait": "小魚", "visual_scale": 1.45, "line_anchor_x": 0.465, "line_anchor_y": 0.075, "style": "pelagic_fast", "shark": true},
+	{"id": "megalodon", "name": "メガロドン", "rarity": "レア", "min_level": 50, "weight": 0.1, "size_min": 1200.0, "size_max": 1600.0, "sell_price": 50000, "food_exp": 1200, "stamina": 600.0, "power": 2.00, "speed": 1.30, "start_distance": 86.0, "start_depth": 26.0, "color": "#344955", "habitat": "危険海域の深淵", "behavior": "古代の巨影が深場から浮かぶ。到達そのものが儀式となる一戦。", "fish_no": "", "preferred_bait": "ヌシ級の餌魚", "visual_scale": 2.10, "line_anchor_x": 0.465, "line_anchor_y": 0.075, "style": "big_power", "shark": true, "boss": true},
 ]
 
 
@@ -72,7 +73,7 @@ static func all_fish() -> Dictionary:
 static func _build_fish(row: Dictionary) -> Dictionary:
 	var fish := row.duplicate(true)
 	var style := String(fish.get("style", "balanced"))
-	fish["boss"] = false
+	fish["boss"] = bool(fish.get("boss", false))
 	fish["motion"] = _motion_for_style(style)
 	fish["action_profile"] = _action_profile_for_style(style)
 	fish["action_messages"] = _action_messages_for_style(String(fish["name"]), style)
