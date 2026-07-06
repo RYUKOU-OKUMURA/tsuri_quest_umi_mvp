@@ -25,6 +25,8 @@ func _ready() -> void:
 	_screen._select_shark("nekozame")
 	_screen._select_food("mahaze")
 	await get_tree().process_frame
+	_expect_selected_hover_matches_normal(_screen._shark_rows["nekozame"]["button"] as Button, "selected shark row")
+	_expect_selected_hover_matches_normal(_screen._food_rows["mahaze"]["button"] as Button, "selected food row")
 	var before_stock := PlayerProgress.fish_count("mahaze")
 	var before_bond := int(PlayerProgress.shark_bonds.get("nekozame", 0))
 	var before_exp := PlayerProgress.exp
@@ -113,3 +115,14 @@ func _expect(condition: bool, message: String) -> void:
 	_failed = true
 	push_error(message)
 	get_tree().quit(1)
+
+
+func _expect_selected_hover_matches_normal(button: Button, label: String) -> void:
+	var normal := button.get_theme_stylebox("normal") as StyleBoxFlat
+	var hover := button.get_theme_stylebox("hover") as StyleBoxFlat
+	var focus := button.get_theme_stylebox("focus") as StyleBoxFlat
+	_expect(normal != null and hover != null and focus != null, "%s should define selected state styles" % label)
+	if _failed:
+		return
+	_expect(hover.bg_color == normal.bg_color, "%s hover should keep selected text readable" % label)
+	_expect(focus.bg_color == normal.bg_color, "%s focus should keep selected text readable" % label)

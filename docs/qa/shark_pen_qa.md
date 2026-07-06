@@ -48,6 +48,14 @@ QA更新コマンド: `./tools/shark_pen_visual_qa.sh`
 
 ## 7. 判断ログ（直近パスのみ）
 
+2026-07-07 P1可読性修正:
+
+- 変更: 選択済みサメ行・餌カードの hover/focus 背景を通常選択背景と同じ紙面色に揃え、濃色文字が濃紺背景へ沈む状態を解消。`shark_pen_screen_smoke` に選択済み hover/focus 背景の回帰チェックを追加。
+- 変えていない: サメ選択列のfreeze値、行数、行ごとの金縁禁止、素材構成。
+- 判断画像: `docs/qa/evidence/shark_pen/2026-07-07_selected_hover_readability_compare.png`（通常選択状態の確認）。hover/focus の回帰保証は `shark_pen_screen_smoke` で固定。
+- 採用理由: P1（選択中テキストが読めない）の解消。選択行は紙面ハイライトのまま読み、非選択行のみ濃紺hoverを維持する。
+- 固定条件: 選択済みアイテムでは `hover` / `focus` 時も濃色文字に対して明背景を維持する。
+
 2026-07-07 v1構成確認:
 
 - 変更: `src/ui/shark_pen_screen.gd`、`tools/shark_pen_preview.gd`、`tools/shark_pen_screen_smoke.gd`、`tools/shark_pen_visual_qa.sh` を追加。

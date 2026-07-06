@@ -515,9 +515,10 @@ func _apply_row_skin(button: Button, selected: bool, caught: bool) -> void:
 	var fill := Palette.PARCHMENT if selected else Palette.THEME_DIALOG_FILL if caught else _alpha(Palette.DARK_PANEL_DEEP, 0.72)
 	var border := Palette.GOLD_BRIGHT if selected else Palette.GAUGE_TRACK_BORDER
 	var normal := _flat_style(fill, border, 5, 2 if selected else 1)
+	var hover := normal if selected else _flat_style(Palette.BLUE_PANEL, Palette.GOLD, 5, 1)
 	button.add_theme_stylebox_override("normal", normal)
-	button.add_theme_stylebox_override("hover", _flat_style(Palette.BLUE_PANEL, Palette.GOLD, 5, 1))
-	button.add_theme_stylebox_override("focus", _flat_style(Palette.BLUE_PANEL, Palette.GOLD, 5, 1))
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("focus", hover)
 	button.add_theme_stylebox_override("pressed", _flat_style(Palette.PARCHMENT_DEEP, Palette.GOLD_BRIGHT, 5, 2))
 	button.add_theme_stylebox_override("disabled", normal)
 
@@ -526,9 +527,10 @@ func _apply_food_skin(button: Button, selected: bool, favorite: bool) -> void:
 	var fill := Palette.PARCHMENT if selected else Palette.THEME_DIALOG_FILL
 	var border := Palette.GOLD_BRIGHT if selected or favorite else Palette.GAUGE_TRACK_BORDER
 	var normal := _flat_style(fill, border, 5, 2 if selected else 1)
+	var hover := normal if selected else _flat_style(Palette.BLUE_PANEL, Palette.GOLD, 5, 1)
 	button.add_theme_stylebox_override("normal", normal)
-	button.add_theme_stylebox_override("hover", _flat_style(Palette.BLUE_PANEL, Palette.GOLD, 5, 1))
-	button.add_theme_stylebox_override("focus", _flat_style(Palette.BLUE_PANEL, Palette.GOLD, 5, 1))
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("focus", hover)
 	button.add_theme_stylebox_override("pressed", _flat_style(Palette.PARCHMENT_DEEP, Palette.GOLD_BRIGHT, 5, 2))
 
 
