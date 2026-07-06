@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+"""Generate E4 shark fish assets.
+
+Showcase sheet contract:
+- 4 horizontal frames, each 640x320; total sheet size is 2560x320.
+- Each frame contains one fish and is authored for the fight runtime's 4-frame atlas.
+- Sheet fish face right so the runtime line anchor connects to the mouth/head side.
+- Card portraits keep the project convention: fish face left.
+"""
 from __future__ import annotations
 
 import math
@@ -16,6 +24,7 @@ FONT_BOLD = ROOT / "assets" / "fonts" / "line_seed" / "LINESeedJP_A_TTF_Bd.ttf"
 CARD_SIZE = (560, 310)
 FRAME_SIZE = (640, 320)
 SHEET_FRAMES = 4
+SHEET_SIZE = (FRAME_SIZE[0] * SHEET_FRAMES, FRAME_SIZE[1])
 
 
 SHARK_SPECS = [
@@ -175,6 +184,7 @@ def main() -> None:
         source = _load_realistic_source(spec)
         card = _make_card_from_source(source)
         sheet = _make_sheet_from_source(source)
+        assert sheet.size == SHEET_SIZE, f"{spec['id']} sheet size must be {SHEET_SIZE}, got {sheet.size}"
         card.save(FISH_DIR / f"{spec['id']}_card_portrait.png")
         sheet.save(FISH_DIR / f"{spec['id']}_showcase_sheet.png")
         previews.append(_preview_tile(spec, card))

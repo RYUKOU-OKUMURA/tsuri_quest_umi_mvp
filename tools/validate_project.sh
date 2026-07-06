@@ -17,5 +17,6 @@ GODOT_HOME="${TSURI_GODOT_HOME:-${TMPDIR:-/tmp}/tsuri-godot-home}"
 mkdir -p "$GODOT_HOME"
 
 python3 "$ROOT/tools/audit_showcase_asset_refs.py"
+python3 "$ROOT/tools/audit_fish_sheet_contract.py"
 HOME="$GODOT_HOME" "$GODOT" --headless --editor --path "$ROOT" --quit
 HOME="$GODOT_HOME" "$GODOT" --headless --path "$ROOT" --quit-after 2

@@ -5,6 +5,14 @@
 QA更新コマンド: `./tools/fight_visual_qa.sh` / 水面天候確認: `./tools/surface_weather_visual_qa.sh` / 釣り上げ結果確認: `godot --path . res://tools/catch_fanfare_preview.tscn`（通常魚確認は `TSURI_CATCH_FANFARE_FISH_ID=aji`）
 詳細な経過履歴: `docs/qa/archive/underwater_fight_design_qa_2026-06.md`（旧 `design-qa.md`）
 
+## 新魚素材投入時チェックリスト
+
+`tools/audit_fish_sheet_contract.py` で泳ぎシートのサイズ・4フレーム構成・1フレーム1魚・line_anchor近傍は自動監査する。頭の向きは自動判定が不安定なため、素材追加・差し替え時は必ず次を実スクショで確認する。
+
+- 泳ぎシート `*_showcase_sheet.png` の先頭フレームは、既存魚と同じく頭が右向き。
+- `./tools/fight_visual_qa.sh` または `TSURI_FIGHT_FISH_ID=<fish_id>` 指定の実キャプチャで、ライン/ルアーが口元（吻の下）に接続し、頬・エラ・目に重ならない。
+- カード肖像 `*_card_portrait.png` は、既存慣例どおり頭が左向き。
+
 ## 1. freeze値（正本）
 
 P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字衝突/見切れ・魚/ライン/距離が読めない）の再発時以外は動かさない。次の品質向上は値いじりではなく素材差し替えで行う。
