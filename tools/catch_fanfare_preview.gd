@@ -18,9 +18,10 @@ func _ready() -> void:
 
 	PlayerProgress.level = max(PlayerProgress.level, GameData.BOSS_UNLOCK_LEVEL)
 	PlayerProgress.money = 12450
+	var scenario := OS.get_environment("TSURI_CATCH_FANFARE_SCENARIO")
 	var fish_id := OS.get_environment("TSURI_CATCH_FANFARE_FISH_ID")
 	if fish_id.is_empty():
-		fish_id = "boss_kurodai"
+		fish_id = "aji" if scenario in ["first", "record", "title"] else "boss_kurodai"
 	var spot_id := GameData.BOSS_FISHING_SPOT_ID if fish_id == "boss_kurodai" else GameData.DEFAULT_FISHING_SPOT_ID
 
 	var vp := SubViewport.new()
@@ -47,12 +48,12 @@ func _ready() -> void:
 	screen._view.modulate.a = 1.0
 	screen._surface_view.modulate.a = 0.0
 	var size_cm := 48.2 if fish_id == "boss_kurodai" else 23.4
+	if scenario in ["record", "title"]:
+		size_cm = 24.5
 	var size_env := OS.get_environment("TSURI_CATCH_FANFARE_SIZE_CM")
 	if not size_env.is_empty():
 		size_cm = size_env.to_float()
-	var catch_result := {"first_catch": true}
-	if fish_id == "boss_kurodai":
-		catch_result["boss_first_clear_reward"] = {"money": 3000}
+	var catch_result := _catch_result_for_scenario(scenario, fish_id, size_cm)
 	screen._catch_fanfare.play(fish, size_cm, catch_result)
 
 	await get_tree().create_timer(1.15).timeout
@@ -63,3 +64,39 @@ func _ready() -> void:
 		return
 	img.save_png(out)
 	get_tree().quit(0)
+
+
+func _catch_result_for_scenario(scenario: String, fish_id: String, _size_cm: float) -> Dictionary:
+	match scenario:
+		"first":
+			return {
+				"fish_id": fish_id,
+				"first_catch": true,
+				"boss_first_clear_reward": {},
+				"record_broken": false,
+				"previous_best_cm": 0.0,
+				"new_titles": [],
+			}
+		"record":
+			return {
+				"fish_id": fish_id,
+				"first_catch": false,
+				"boss_first_clear_reward": {},
+				"record_broken": true,
+				"previous_best_cm": 20.0,
+				"new_titles": [],
+			}
+		"title":
+			return {
+				"fish_id": fish_id,
+				"first_catch": false,
+				"boss_first_clear_reward": {},
+				"record_broken": true,
+				"previous_best_cm": 20.0,
+				"new_titles": ["total_10", "species_10"],
+			}
+		_:
+			var catch_result := {"first_catch": true}
+			if fish_id == "boss_kurodai":
+				catch_result["boss_first_clear_reward"] = {"money": 3000}
+			return catch_result

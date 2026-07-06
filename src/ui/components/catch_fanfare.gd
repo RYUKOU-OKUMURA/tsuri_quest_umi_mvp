@@ -23,7 +23,8 @@ const FANFARE_NOTES := [
 const CATCH_PHOTO_BASE_PATH := "res://assets/showcase/underwater/catch_photo_base.png"
 const PHOTO_TITLE_SLOT := Rect2(326.0, 28.0, 628.0, 112.0)
 const PHOTO_INFO_SLOT := Rect2(150.0, 496.0, 284.0, 90.0)
-const PHOTO_BONUS_SLOT := Rect2(758.0, 516.0, 356.0, 62.0)
+const PHOTO_RECORD_BADGE_SLOT := Rect2(286.0, 472.0, 136.0, 24.0)
+const PHOTO_BONUS_SLOT := Rect2(742.0, 500.0, 388.0, 112.0)
 const PHOTO_FISH_SLOT := Rect2(210.0, 204.0, 860.0, 476.0)
 const PHOTO_CONTINUE_SLOT := Rect2(280.0, 642.0, 300.0, 54.0)
 const PHOTO_HARBOR_SLOT := Rect2(674.0, 642.0, 300.0, 54.0)
@@ -47,6 +48,7 @@ var _fish_texture: TextureRect
 var _fish_name_label: Label
 var _rarity_label: Label
 var _size_label: Label
+var _record_badge_label: Label
 var _bonus_label: Label
 var _continue_button: Button
 var _harbor_button: Button
@@ -183,13 +185,20 @@ func _build_nodes() -> void:
 	_rarity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	info_box.add_child(_rarity_label)
 
+	_record_badge_label = _make_label("NEW RECORD", 12, Palette.GOLD_BRIGHT, 2)
+	_record_badge_label.name = "CatchRecordBadge"
+	_record_badge_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_record_badge_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_record_badge_label.visible = false
+	add_child(_record_badge_label)
+
 	_bonus_panel = PanelContainer.new()
 	_bonus_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_bonus_panel.add_theme_stylebox_override("panel", _text_plate_style())
 	add_child(_bonus_panel)
-	_bonus_label = _make_label("", 19, Palette.TEXT_BONE, 3)
+	_bonus_label = _make_label("", 17, Palette.TEXT_BONE, 3)
 	_bonus_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_bonus_label.max_lines_visible = 2
+	_bonus_label.max_lines_visible = 4
 	_bonus_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_bonus_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_bonus_label.clip_text = false
@@ -220,6 +229,7 @@ func _layout_nodes() -> void:
 	_apply_rect(_photo_base_texture, Rect2(Vector2.ZERO, DESIGN_SIZE), scale_factor, origin)
 	_apply_rect(_banner, PHOTO_TITLE_SLOT, scale_factor, origin)
 	_apply_rect(_info_panel, PHOTO_INFO_SLOT, scale_factor, origin)
+	_apply_rect(_record_badge_label, PHOTO_RECORD_BADGE_SLOT, scale_factor, origin)
 	_apply_rect(_bonus_panel, PHOTO_BONUS_SLOT, scale_factor, origin)
 	_apply_rect(_fish_card, PHOTO_FISH_SLOT, scale_factor, origin)
 	_apply_rect(_fish_texture, Rect2(Vector2.ZERO, _fish_card.size), 1.0, Vector2.ZERO)
@@ -245,8 +255,14 @@ func _apply_rect(control: Control, design_rect: Rect2, scale_factor: float, orig
 func _update_content() -> void:
 	var fish_name := String(_fish_data.get("name", "魚"))
 	var rarity := String(_fish_data.get("rarity", "コモン"))
+	var record_broken := bool(_catch_result.get("record_broken", false))
 	_fish_name_label.text = fish_name
 	_size_label.text = "大きさ %.1f cm" % _size_cm
+	_size_label.add_theme_color_override(
+		"font_color",
+		Palette.GOLD_BRIGHT if record_broken else Palette.TEXT_BONE
+	)
+	_record_badge_label.visible = record_broken
 	_rarity_label.text = "レアリティ　%s" % rarity
 	_rarity_label.add_theme_color_override("font_color", RarityStylesScript.text_color(rarity))
 	_bonus_label.text = _bonus_text()
@@ -255,15 +271,27 @@ func _update_content() -> void:
 
 func _bonus_text() -> String:
 	var lines: Array[String] = []
-	if bool(_catch_result.get("first_catch", false)):
-		lines.append("初回記録　図鑑に登録")
+	if bool(_catch_result.get("record_broken", false)):
+		var previous_best := float(_catch_result.get("previous_best_cm", 0.0))
+		lines.append("自己記録更新！ %.1f cm（+%.1f cm）" % [_size_cm, maxf(0.0, _size_cm - previous_best)])
 	var reward: Dictionary = _catch_result.get("boss_first_clear_reward", {})
 	var reward_money := int(reward.get("money", 0))
 	if reward_money > 0:
 		lines.append("撃破報酬 +%s G" % ScreenBase.format_money(reward_money))
+	for title_id_variant in Array(_catch_result.get("new_titles", [])).slice(0, 2):
+		lines.append("称号獲得　「%s」" % _title_name(String(title_id_variant)))
+	if bool(_catch_result.get("first_catch", false)) and lines.is_empty():
+		lines.append("初回記録　図鑑に登録")
 	if lines.is_empty():
 		lines.append("港で売却 / 料理に使える")
 	return "\n".join(PackedStringArray(lines))
+
+
+func _title_name(title_id: String) -> String:
+	for title in GameData.TITLES:
+		if String(title.get("id", "")) == title_id:
+			return String(title.get("name", title_id))
+	return title_id
 
 
 func _prepare_intro_state() -> void:
@@ -274,6 +302,7 @@ func _prepare_intro_state() -> void:
 	_info_panel.position = _info_target_position + Vector2(-72.0, 18.0)
 	_info_panel.scale = Vector2(0.96, 0.96)
 	_info_panel.modulate = Palette.CATCH_FLASH_CLEAR
+	_record_badge_label.modulate = Palette.CATCH_FLASH_CLEAR
 	_bonus_panel.position = _bonus_target_position + Vector2(58.0, 16.0)
 	_bonus_panel.scale = Vector2(0.96, 0.96)
 	_bonus_panel.modulate = Palette.CATCH_FLASH_CLEAR
@@ -297,6 +326,7 @@ func _start_animation() -> void:
 	_animation_tween.tween_property(_fish_card, "scale", Vector2.ONE, 0.42).set_delay(0.18).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 	_animation_tween.tween_property(_info_panel, "position", _info_target_position, 0.34).set_delay(0.36).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	_animation_tween.tween_property(_info_panel, "modulate:a", 1.0, 0.28).set_delay(0.36).set_ease(Tween.EASE_OUT)
+	_animation_tween.tween_property(_record_badge_label, "modulate:a", 1.0, 0.24).set_delay(0.42).set_ease(Tween.EASE_OUT)
 	_animation_tween.tween_property(_bonus_panel, "position", _bonus_target_position, 0.34).set_delay(0.40).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	_animation_tween.tween_property(_bonus_panel, "modulate:a", 1.0, 0.28).set_delay(0.40).set_ease(Tween.EASE_OUT)
 	_animation_tween.tween_property(_continue_button, "modulate:a", 1.0, 0.18).set_delay(0.82).set_ease(Tween.EASE_OUT)

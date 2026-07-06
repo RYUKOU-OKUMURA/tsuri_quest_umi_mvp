@@ -10,6 +10,8 @@ var _harbor_count := 0
 
 
 func _ready() -> void:
+	_verify_record_catch_result()
+
 	var fanfare := CatchFanfareScript.new()
 	fanfare.theme = ThemeFactory.build_theme()
 	fanfare.size = Vector2(1280.0, 720.0)
@@ -22,14 +24,33 @@ func _ready() -> void:
 	fanfare.play(boss, 48.2, {
 		"first_catch": true,
 		"boss_first_clear_reward": {"money": 3000},
+		"new_titles": ["boss_kurodai"],
 	})
 	_expect(fanfare.visible, "fanfare should be visible after play")
 	_expect(fanfare.is_playing(), "fanfare should report playing after play")
+	_expect(fanfare._bonus_label.text.contains("撃破報酬"), "boss reward should be visible")
+	_expect(fanfare._bonus_label.text.contains("大岩の覇者"), "new title should be visible")
 	await get_tree().create_timer(3.15).timeout
 	_expect(_continue_count == 0, "fanfare should not auto-continue")
 	_expect(_harbor_count == 0, "fanfare should not auto-request harbor")
 	_expect(fanfare.visible, "fanfare should stay visible until the player chooses")
 	_expect(fanfare.is_playing(), "fanfare should keep blocking the simulation while visible")
+
+	fanfare.play(GameData.get_fish("aji"), 24.5, {
+		"record_broken": true,
+		"previous_best_cm": 20.0,
+		"new_titles": ["total_10", "species_10"],
+	})
+	await get_tree().process_frame
+	_expect(fanfare._bonus_label.text.contains("自己記録更新！ 24.5 cm（+4.5 cm）"), "record line should be first-class fanfare text")
+	_expect(fanfare._bonus_label.text.contains("駆け出し釣り人"), "first new title should be visible")
+	_expect(fanfare._bonus_label.text.contains("図鑑の入り口"), "second new title should be visible")
+	_expect(fanfare._record_badge_label.visible, "record marker should be visible near size")
+
+	fanfare.play(GameData.get_fish("aji"), 18.3, {"first_catch": true})
+	await get_tree().process_frame
+	_expect(fanfare._bonus_label.text.contains("初回記録"), "first catch should keep book registration line")
+	_expect(not fanfare._bonus_label.text.contains("自己記録更新"), "first catch should not be treated as record broken")
 
 	fanfare.play(GameData.get_fish("aji"), 18.3, {})
 	await get_tree().process_frame
@@ -56,6 +77,36 @@ func _ready() -> void:
 		return
 	print("catch_fanfare_smoke: ok")
 	get_tree().quit(0)
+
+
+func _verify_record_catch_result() -> void:
+	PlayerProgress.inventory = {}
+	PlayerProgress.caught_counts = {"aji": 9}
+	PlayerProgress.spot_caught_counts = {"harbor_pier": {"aji": 9}}
+	PlayerProgress.best_sizes = {"aji": 20.0}
+	PlayerProgress.eaten_recipes = {}
+	PlayerProgress._remember_current_titles()
+	var emitted_title_ids: Array[String] = []
+	PlayerProgress.titles_earned.connect(
+		func(title_ids: Array[String]) -> void:
+			for title_id in title_ids:
+				emitted_title_ids.append(title_id)
+	)
+	var record_result := PlayerProgress.record_catch("aji", 21.0, "harbor_pier")
+	_expect(bool(record_result.get("record_broken", false)), "repeat larger catch should break record")
+	_expect(float(record_result.get("previous_best_cm", 0.0)) == 20.0, "record result should expose previous best")
+	_expect(Array(record_result.get("new_titles", [])).has("total_10"), "record result should include newly earned total_10 title")
+	_expect(emitted_title_ids.has("total_10"), "titles_earned signal should emit new title ids")
+
+	PlayerProgress.inventory = {}
+	PlayerProgress.caught_counts = {}
+	PlayerProgress.spot_caught_counts = {}
+	PlayerProgress.best_sizes = {}
+	PlayerProgress.eaten_recipes = {}
+	PlayerProgress._remember_current_titles()
+	var first_result := PlayerProgress.record_catch("mejina", 31.0, "harbor_pier")
+	_expect(bool(first_result.get("first_catch", false)), "first catch should be marked")
+	_expect(not bool(first_result.get("record_broken", false)), "first catch should not break a record")
 
 
 func _expect(condition: bool, message: String) -> void:

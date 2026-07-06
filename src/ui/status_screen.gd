@@ -176,6 +176,8 @@ func _build_summary_panel(root: Control) -> void:
 		else:
 			_add_empty_fish_card(_summary_panel, Rect2(left, 0.455, right - left, 0.230))
 
+	_add_title_strip(_summary_panel)
+
 	var completion_title := _status_label("図鑑コンプリート率", 17, Palette.TEXT_BODY, true)
 	completion_title.name = "StatusCompletionTitle"
 	completion_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -445,6 +447,34 @@ func _add_empty_fish_card(parent: Control, ratios: Rect2) -> void:
 	_place_control(card, empty, 0.0, 0.0, 1.0, 1.0)
 
 
+func _add_title_strip(parent: Control) -> void:
+	var earned_ids := GameData.compute_earned_titles(PlayerProgress.title_stats_snapshot())
+	var strip := Panel.new()
+	strip.name = "StatusTitleStrip"
+	strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	strip.add_theme_stylebox_override("panel", _log_row_style(false))
+	_place_control(parent, strip, 0.070, 0.695, 0.930, 0.728)
+
+	var heading := _status_label("称号 %d / %d" % [earned_ids.size(), GameData.TITLES.size()], 13, Palette.TEXT_BODY, true)
+	heading.name = "StatusTitleCount"
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	heading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(strip, heading, 0.028, 0.0, 0.245, 1.0)
+
+	var items := _title_strip_items(earned_ids, 2)
+	for index in range(items.size()):
+		var item: Dictionary = items[index]
+		var earned := bool(item.get("earned", false))
+		var label := _status_label(String(item.get("text", "")), 12, Palette.TEXT_DARK if earned else _alpha(Palette.TEXT_BODY, 0.68), earned)
+		label.name = "StatusTitleItem_%d" % index
+		label.clip_text = true
+		label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		var left := 0.265 + float(index) * 0.365
+		_place_control(strip, label, left, 0.0, left + 0.335, 1.0)
+
+
 func _add_cooler_grid(parent: Control) -> void:
 	var ids := _inventory_fish_ids(8)
 	for index in range(8):
@@ -690,6 +720,23 @@ func _inventory_fish_ids(limit: int) -> Array[String]:
 	if ids.size() > limit:
 		ids.resize(limit)
 	return ids
+
+
+func _title_strip_items(earned_ids: Array[String], limit: int) -> Array[Dictionary]:
+	var items: Array[Dictionary] = []
+	for title in GameData.TITLES:
+		if items.size() >= limit:
+			return items
+		var title_id := String(title.get("id", ""))
+		if title_id in earned_ids:
+			items.append({"earned": true, "text": String(title.get("name", title_id))})
+	for title in GameData.TITLES:
+		if items.size() >= limit:
+			return items
+		var title_id := String(title.get("id", ""))
+		if title_id not in earned_ids:
+			items.append({"earned": false, "text": "？？？ %s" % String(title.get("hint", "条件未達"))})
+	return items
 
 
 func _meal_log_rows(limit: int) -> Array[String]:
