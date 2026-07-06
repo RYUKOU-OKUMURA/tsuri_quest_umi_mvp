@@ -3,6 +3,13 @@
 正本: `docs/30_v2_expansion_overview.md`（読む順: docs/30 §4 共通仕様 → 本doc）
 前提フェーズ: E1
 状態: 完了（2026-07-06）
+
+実装完了メモ（2026-07-06）:
+
+- セーブ3スロット化、旧単一セーブのslot 1移行、依頼テンプレート、掲示3件、納品/記録報告、限定仕掛け、依頼ボード画面を実装済み。
+- タイトルの空きスロット選択だけでは保存を作らない回帰も修正・検証済み。
+- 完了確認: `quest_board_smoke`, `market_smoke`, `tackle_shop_smoke`, `save_system_verify.sh`, `quest_board_visual_qa.sh`, `./tools/validate_project.sh`。
+
 **本フェーズに含む追加作業（決定#17）**: セーブの**3スロット化**を、本フェーズのセーブスキーマ変更（`quest_board` 等の追加）と同時に実施する（移行を1回で済ませるため）。仕様は `E11_launch_readiness.md` §E11-2（`user://slots/<n>/` 構造、既存セーブは slot 1 へ自動移行、タイトルにスロット選択UI、`save_system_verify.sh` へ移行テスト追加）。brief分割ではデータ層（brief B）とは別スライスにする
 
 目的: 毎回の釣行に「今日の目的」を作る。中盤のダレ（動機のレベル上げ一本化）対策の本命。

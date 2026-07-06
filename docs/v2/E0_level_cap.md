@@ -5,6 +5,12 @@
 状態: 完了（2026-07-06）
 改訂: 2026-07-06 決定#10 により旧仕様（10→30）を **10→50 の一括拡張**へ改訂。30キャップは経由しない
 
+実装完了メモ（2026-07-06）:
+
+- `MAX_LEVEL = 50` と `EXP_REQUIREMENTS` 51要素化を実装済み。
+- Lv1〜10の既存値維持、Lv10以降の2段ソフトキャップ成長、Lv10セーブロード回帰を確認済み。
+- 完了確認: `level_curve_audit`, `save_system_verify.sh`, cooking smoke, `./tools/validate_project.sh`。
+
 ## E0-1. 定数変更
 
 - `game_data.gd`: `MAX_LEVEL: int = 50`
