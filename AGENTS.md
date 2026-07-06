@@ -66,6 +66,8 @@ Cursor 常時ルール: `.cursor/rules/orchestration.mdc`
 | 調理フロー | Composer | `skills/tsuri-cooking-showcase-uplift/` |
 
 独立スライスは並列起動可。ワーカーに計画を考えさせない。
+**ワーカー起動時は必ず `model: composer-2.5-fast` を明示指定する**（未指定だと親モデル=Fableで実行される）。誤モデルで起動したワーカーは resume せず、新規 Composer ワーカーとして再投入する。
+**ワーカー起動時は必ず `model: composer-2.5-fast` を明示指定する**（未指定だと親モデル=Fableで実行される）。誤モデルで起動したワーカーは resume せず、新規 Composer ワーカーとして再投入する。
 
 ### ワーカー brief 必須項目
 
