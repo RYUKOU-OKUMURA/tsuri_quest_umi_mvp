@@ -7,11 +7,15 @@ const GameDataScript = preload("res://src/autoload/game_data.gd")
 func _initialize() -> void:
 	var game_data := GameDataScript.new()
 	var fish_ids := game_data.get_all_fish_ids()
+	var nushi_ids := game_data.get_all_nushi_fish_ids()
 	var missing: Array[String] = []
 	if fish_ids.size() != 70:
 		missing.append("expected 70 fight fish ids, got %d" % fish_ids.size())
+	if nushi_ids.size() != 7:
+		missing.append("expected 7 E2 nushi fish ids, got %d" % nushi_ids.size())
+	for fish_id in nushi_ids:
+		fish_ids.append(fish_id)
 	var required_keys: Array[String] = [
-		"fish_no",
 		"preferred_bait",
 		"visual_scale",
 		"line_anchor_x",
@@ -30,6 +34,10 @@ func _initialize() -> void:
 			missing.append("%s sheet %s" % [fish_id, sheet_path])
 		if card == null:
 			missing.append("%s card %s" % [fish_id, card_path])
+		if not bool(fish.get("nushi", false)) and not fish.has("fish_no"):
+			missing.append("%s data missing fish_no" % fish_id)
+		if bool(fish.get("nushi", false)) and String(fish.get("base_fish_id", "")).is_empty():
+			missing.append("%s nushi data missing base_fish_id" % fish_id)
 		for key in required_keys:
 			if not fish.has(key):
 				missing.append("%s data missing %s" % [fish_id, key])

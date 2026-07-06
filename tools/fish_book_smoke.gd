@@ -17,7 +17,7 @@ func _ready() -> void:
 	_expect(_screen._grid != null, "fish book grid should be present")
 	_expect(_screen._detail_name_label != null, "fish detail name label should be present")
 	_expect(_screen._detail_spots != null, "fish detail spot strip should be present")
-	_expect(_screen._found_label.text.contains("5/"), "found count should reflect caught fish")
+	_expect(_screen._found_label.text.contains("6/"), "found count should reflect caught fish and nushi base page")
 	_expect(_screen._player_status_bar._status_values()[1] == "蒼槍", "status bar should shorten long rod names")
 	_expect(_screen._player_status_bar._status_values()[2] == "123,456 G", "status bar should format long money values")
 	_expect(_screen._selected_fish_id == "aji", "first discovered fish should be selected")
@@ -38,6 +38,14 @@ func _ready() -> void:
 	_expect(_screen._filtered_fish_ids().has("madai"), "rare filter should include madai")
 	_expect(_screen._selected_fish_id == "madai", "rare filter should select discovered rare fish")
 	_expect(_screen._detail_name_label.text == "マダイ", "rare discovered fish should show detail")
+
+	_screen._set_filter("nushi")
+	_expect(_screen._active_filter == "nushi", "nushi filter should become active")
+	_expect(_screen._filtered_fish_ids().has("hirame"), "nushi filter should include nushi base fish")
+	_screen._select_fish("hirame")
+	_expect(_screen._detail_name_label.text == "ヒラメ", "caught nushi should reveal base fish detail")
+	_expect(_screen._detail_nushi_label.visible, "caught nushi should show nushi record row")
+	_expect(_screen._detail_nushi_label.text.contains("砂底の座布団"), "nushi record row should name the nushi")
 
 	_screen._set_filter("all")
 	_screen._select_fish("medai")
@@ -77,6 +85,7 @@ func _seed_progress() -> void:
 		"madai": 2,
 		"medai": 1,
 		"boss_kurodai": 1,
+		"nushi_shallow_sand": 1,
 	}
 	PlayerProgress.best_sizes = {
 		"aji": 34.2,
@@ -84,6 +93,7 @@ func _seed_progress() -> void:
 		"madai": 48.2,
 		"medai": 72.4,
 		"boss_kurodai": 88.8,
+		"nushi_shallow_sand": 188.4,
 	}
 	PlayerProgress.spot_caught_counts = {
 		"harbor_pier": {"aji": 12},

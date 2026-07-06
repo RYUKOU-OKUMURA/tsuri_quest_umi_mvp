@@ -84,7 +84,7 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
 ## 4. 暫定判定・再検証TODO
 
-なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-06_e2_nushi_tab_compare.png`、`docs/qa/evidence/fish_book/2026-07-06_e2_nushi_tab.png` に保存済み。
+なし。直近の判断根拠は `docs/qa/evidence/fish_book/2026-07-06_e2_nushi_tab_compare.png`、`docs/qa/evidence/fish_book/2026-07-06_e2_nushi_record_compare.png` に保存済み。
 
 ## 5. 現在の残ギャップ
 
@@ -99,4 +99,4 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
 - 2026-07-03: v1.34 P2専用魚ポートレート素材フェーズ設計。現行の画面座標、魚clip、crop、文字、台帳フレームは変更せず、残P2である魚ポートレート専用描き起こしの発注/採用条件を `docs/24_fish_book_portrait_asset_brief.md` として追加した。既存 `card_portrait` の単純差し替えでは全画面で明確に勝つ根拠が弱いため、次の実装は `aji` / `saba` / `kasago` などファーストビュー魚の専用候補を作り、contact sheet→全画面比較で採用判定する。判断根拠: `docs/qa/evidence/fish_book/2026-07-03_portrait_asset_brief_current_compare.png`、`docs/qa/evidence/fish_book/2026-07-03_portrait_asset_brief_contact_sheet.png`。検証: `git diff --check` exit 0、`python3 tools/build_fish_book_portrait_contact_sheet.py` exit 0、`./tools/fish_book_visual_qa.sh` exit 0、`fish_book_smoke: ok`、`./tools/validate_project.sh` exit 0（Godot終了時のObjectDB/resource警告あり）。
 - 2026-07-05: R5/R1魚図鑑スライス。`src/ui/fish_book_screen.gd` の hardcoded hex / 数値 `Color(...)` を表示色同値の `Palette.FISH_BOOK_*` へ移行し、`rg -n "#[0-9a-fA-F]{6}|Color\\([0-9]" src/ui/fish_book_screen.gd` が空であることを確認した。実スクショ比較でP1再発はなし。contact sheetでは既存 `card_portrait` 系が現行の左カードtight crop/右詳細高解像度cropを明確に上回らないため、素材採用は見送り、専用描き起こしP2は新規候補待ちとして継続。判断根拠: `docs/qa/evidence/fish_book/2026-07-05_palette_gate_compare.png`、`docs/qa/evidence/fish_book/2026-07-05_portrait_contact_sheet.png`。検証: `git diff --check` exit 0、contact sheet再生成 exit 0、`./tools/fish_book_visual_qa.sh` exit 0、`fish_book_smoke: ok`、`./tools/save_system_verify.sh` exit 0、`./tools/validate_project.sh` exit 0（Godot終了時のObjectDB Snapshots directory警告は既存ベースライン枠）。
-- 2026-07-06: E2ヌシ図鑑スライス。機能追加に伴い下部索引を7列freezeへ改訂し、`ヌシ` タブを追加。捕獲済みヌシは基準魚ページへ金ピン、詳細ページへ金線と `ヌシ記録` 行を表示する。未捕獲ヌシの気配表示は不採用として記録。判断根拠: `docs/qa/evidence/fish_book/2026-07-06_e2_nushi_tab_compare.png`、`docs/qa/evidence/fish_book/2026-07-06_e2_nushi_tab.png`。検証: `./tools/fish_book_visual_qa.sh` exit 0、`fish_book_smoke: ok`。
+- 2026-07-06: E2ヌシ図鑑スライス。機能追加に伴い下部索引を7列freezeへ改訂し、`ヌシ` タブを追加。捕獲済みヌシは基準魚ページへ金ピン、詳細ページへ金線と `ヌシ記録` 行を表示する。未捕獲ヌシの気配表示は不採用として記録。判断根拠: `docs/qa/evidence/fish_book/2026-07-06_e2_nushi_tab_compare.png`、`docs/qa/evidence/fish_book/2026-07-06_e2_nushi_record_compare.png`、`docs/qa/evidence/fish_book/2026-07-06_e2_nushi_record.png`。検証: `./tools/fish_book_visual_qa.sh` exit 0、`TSURI_FISH_BOOK_PREVIEW_MODE=nushi ./tools/fish_book_visual_qa.sh` exit 0、`fish_book_smoke: ok`。

@@ -12,7 +12,12 @@ const FISH_CASES: Array[Dictionary] = [
 	{"id": "nushi_probe_550", "label": "S550/P1.80", "stamina": 550.0, "power": 1.80, "speed": 0.98},
 	{"id": "nushi_probe_736", "label": "S736/P2.00", "stamina": 736.0, "power": 2.00, "speed": 0.95},
 ]
-const PLAYER_LEVELS: Array[int] = [10, 30, 50]
+const PLAYER_CASES: Array[Dictionary] = [
+	{"level": 10, "rod": "starter", "band": "undergear"},
+	{"level": 10, "rod": "big_game", "band": "late-mid"},
+	{"level": 30, "rod": "marlin", "band": "appropriate"},
+	{"level": 50, "rod": "marlin", "band": "appropriate"},
+]
 
 var _failed := false
 
@@ -20,12 +25,13 @@ var _failed := false
 func _ready() -> void:
 	var rows: Array[Array] = []
 	for fish_case in FISH_CASES:
-		for level_value in PLAYER_LEVELS:
-			var result := _run_case(fish_case, level_value)
+		for player_case in PLAYER_CASES:
+			var result := _run_case(fish_case, player_case)
 			rows.append(
 				[
 					String(fish_case["label"]),
-					level_value,
+					int(player_case["level"]),
+					String(player_case["band"]),
 					String(result["rod"]),
 					int(result["wins"]),
 					"%.1f%%" % float(result["win_rate"]),
@@ -36,13 +42,14 @@ func _ready() -> void:
 					int(result["timeouts"]),
 				]
 			)
-			_check_envelope(result, String(fish_case["label"]), level_value)
+			_check_envelope(result, String(fish_case["label"]), player_case)
 
 	AuditTablePrinter.print_table(
 		"fight_envelope_audit: nushi-class fight envelope",
 		[
 			"Fish",
 			"Lv",
+			"Band",
 			"Rod",
 			"Wins",
 			"WinRate",
@@ -62,13 +69,14 @@ func _ready() -> void:
 	get_tree().quit(0)
 
 
-func _run_case(fish_case: Dictionary, level_value: int) -> Dictionary:
+func _run_case(fish_case: Dictionary, player_case: Dictionary) -> Dictionary:
 	var wins := 0
 	var line_breaks := 0
 	var slack_escapes := 0
 	var timeouts := 0
 	var durations: Array[float] = []
-	var stats := _stats_for_level(level_value)
+	var level_value := int(player_case["level"])
+	var stats := _stats_for_case(player_case)
 	var fish := _fish_for_case(fish_case)
 	for trial in range(TRIALS_PER_CASE):
 		var result := _run_trial(fish, stats, level_value * 1000 + trial)
@@ -154,18 +162,12 @@ func _apply_auto_control(simulator: FishingSimulator) -> void:
 	simulator.set_reeling(energy_ratio > 0.18)
 
 
-func _stats_for_level(level_value: int) -> Dictionary:
-	PlayerProgress.level = level_value
-	PlayerProgress.equipped_rod_id = _appropriate_rod_id(level_value)
+func _stats_for_case(player_case: Dictionary) -> Dictionary:
+	PlayerProgress.level = int(player_case["level"])
+	PlayerProgress.equipped_rod_id = String(player_case["rod"])
 	var stats := PlayerProgress.get_base_stats()
 	stats["spot_depth_range"] = [15.0, 25.0]
 	return stats
-
-
-func _appropriate_rod_id(level_value: int) -> String:
-	if level_value >= 30:
-		return "marlin"
-	return "big_game"
 
 
 func _fish_for_case(fish_case: Dictionary) -> Dictionary:
@@ -195,13 +197,16 @@ func _average(values: Array[float]) -> float:
 	return total / float(values.size())
 
 
-func _check_envelope(result: Dictionary, fish_label: String, level_value: int) -> void:
-	if level_value != 50:
-		return
+func _check_envelope(result: Dictionary, fish_label: String, player_case: Dictionary) -> void:
 	var win_rate := float(result["win_rate"])
 	var p90_seconds := float(result["p90_seconds"])
-	_expect_true(win_rate > 0.0, "%s Lv%d should be catchable with appropriate gear" % [fish_label, level_value])
-	_expect_true(p90_seconds <= 180.0, "%s Lv%d p90 fight should fit within 3 minutes" % [fish_label, level_value])
+	var level_value := int(player_case["level"])
+	var band := String(player_case["band"])
+	if band == "appropriate":
+		_expect_true(win_rate > 0.0, "%s Lv%d should be catchable with appropriate gear" % [fish_label, level_value])
+		_expect_true(p90_seconds <= 180.0, "%s Lv%d p90 fight should fit within 3 minutes" % [fish_label, level_value])
+	if band == "undergear" and fish_label == "S736/P2.00":
+		_expect_true(win_rate < 100.0, "%s Lv%d undergear should not be guaranteed" % [fish_label, level_value])
 
 
 func _expect_true(condition: bool, message: String) -> void:

@@ -22,6 +22,7 @@ func _ready() -> void:
 	viewport.add_child(screen)
 
 	await get_tree().process_frame
+	_apply_preview_mode(screen)
 	await get_tree().process_frame
 	await get_tree().create_timer(0.35).timeout
 
@@ -49,6 +50,7 @@ func _seed_progress() -> void:
 		"hirame": 2,
 		"buri": 3,
 		"madai": 4,
+		"nushi_shallow_sand": 1,
 	}
 	PlayerProgress.best_sizes = {
 		"aji": 34.2,
@@ -60,6 +62,7 @@ func _seed_progress() -> void:
 		"hirame": 52.7,
 		"buri": 78.6,
 		"madai": 48.2,
+		"nushi_shallow_sand": 188.4,
 	}
 	PlayerProgress.spot_caught_counts = {
 		"harbor_pier": {"aji": 12, "mebaru": 2, "shirogisu": 5},
@@ -69,3 +72,10 @@ func _seed_progress() -> void:
 		"south_reef": {"madai": 4},
 		"bluewater_route": {"buri": 3},
 	}
+
+
+func _apply_preview_mode(screen: Control) -> void:
+	var mode := OS.get_environment("TSURI_FISH_BOOK_PREVIEW_MODE")
+	if mode == "nushi":
+		screen._set_filter("nushi")
+		screen._select_fish("hirame")
