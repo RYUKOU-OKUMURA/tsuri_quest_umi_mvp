@@ -4,6 +4,7 @@ signal progress_changed
 signal level_up(new_level: int)
 signal fish_caught(fish_id: String, size_cm: float)
 signal dish_eaten(recipe_id: String, gained_exp: int)
+signal titles_earned(title_ids: Array[String])
 
 const SAVE_PATH := "user://tsuri_quest_save.json"
 const SAVE_BACKUP_PATH := "user://tsuri_quest_save.json.bak"
@@ -30,12 +31,14 @@ var play_seconds: float = 0.0
 # smoke / preview / audit（res://tools/ 配下のシーン起動）から本番セーブを守るフラグ。
 # true の間はディスクへの読み書きを一切行わない。
 var _sandbox_mode := false
+var _known_title_ids: Array[String] = []
 
 
 func _ready() -> void:
 	_sandbox_mode = _detect_sandbox_mode()
 	if _sandbox_mode:
 		print("PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）")
+		_remember_current_titles()
 		return
 	load_game()
 
@@ -79,6 +82,7 @@ func reset_game() -> void:
 	owned_boats = []
 	pending_buff = {}
 	play_seconds = 0.0
+	_remember_current_titles()
 	save_game()
 	progress_changed.emit()
 
@@ -112,10 +116,14 @@ func add_exp(amount: int) -> Array[int]:
 func record_catch(fish_id: String, size_cm: float, spot_id: String = "") -> Dictionary:
 	var fish := GameData.get_fish(fish_id)
 	var previous_count := int(caught_counts.get(fish_id, 0))
+	var previous_best := float(best_sizes.get(fish_id, 0.0))
 	var catch_result := {
 		"fish_id": fish_id,
 		"first_catch": previous_count <= 0,
 		"boss_first_clear_reward": {},
+		"record_broken": previous_count > 0 and size_cm > previous_best,
+		"previous_best_cm": previous_best,
+		"new_titles": [],
 	}
 	inventory[fish_id] = int(inventory.get(fish_id, 0)) + 1
 	caught_counts[fish_id] = previous_count + 1
@@ -133,6 +141,7 @@ func record_catch(fish_id: String, size_cm: float, spot_id: String = "") -> Dict
 		if reward_money > 0:
 			money += reward_money
 		catch_result["boss_first_clear_reward"] = reward
+	catch_result["new_titles"] = _award_new_titles()
 	fish_caught.emit(fish_id, size_cm)
 	save_game()
 	progress_changed.emit()
@@ -241,6 +250,7 @@ func cook_and_eat(fish_id: String, recipe_id: String) -> Dictionary:
 	}
 	var leveled_to := add_exp(total_exp)
 	dish_eaten.emit(recipe_id, total_exp)
+	var new_titles := _award_new_titles()
 	save_game()
 	progress_changed.emit()
 	return {
@@ -252,6 +262,7 @@ func cook_and_eat(fish_id: String, recipe_id: String) -> Dictionary:
 		"total_exp": total_exp,
 		"leveled_to": leveled_to,
 		"buff": pending_buff.duplicate(true),
+		"new_titles": new_titles,
 	}
 
 
@@ -409,6 +420,18 @@ func begin_fishing_trip() -> Dictionary:
 	return stats
 
 
+func title_stats_snapshot() -> Dictionary:
+	return {
+		"level": level,
+		"caught_counts": caught_counts.duplicate(true),
+		"spot_caught_counts": spot_caught_counts.duplicate(true),
+		"best_sizes": best_sizes.duplicate(true),
+		"eaten_recipes": eaten_recipes.duplicate(true),
+		"quest_completed_count": 0,
+		"shark_bonds": {},
+	}
+
+
 func save_game() -> void:
 	if _sandbox_mode:
 		return
@@ -450,6 +473,7 @@ func save_game() -> void:
 
 func load_game() -> void:
 	if _sandbox_mode:
+		_remember_current_titles()
 		return
 	var data := _read_save_dictionary(SAVE_PATH)
 	if data.is_empty():
@@ -457,10 +481,12 @@ func load_game() -> void:
 		if backup.is_empty():
 			if FileAccess.file_exists(SAVE_PATH):
 				push_warning("セーブデータが壊れているため初期値を使用します。")
+			_remember_current_titles()
 			return
 		push_warning("セーブデータが壊れていたため、バックアップから復元します。")
 		data = backup
 	_apply_save_data(_migrate_save_data(data))
+	_remember_current_titles()
 
 
 func _read_save_dictionary(path: String) -> Dictionary:
@@ -554,3 +580,19 @@ func _apply_save_data(data: Dictionary) -> void:
 	pending_buff = loaded_buff.duplicate(true) if typeof(loaded_buff) == TYPE_DICTIONARY else {}
 	play_seconds = maxf(0.0, float(data.get("play_seconds", 0.0)))
 	progress_changed.emit()
+
+
+func _remember_current_titles() -> void:
+	_known_title_ids = GameData.compute_earned_titles(title_stats_snapshot())
+
+
+func _award_new_titles() -> Array[String]:
+	var earned_ids := GameData.compute_earned_titles(title_stats_snapshot())
+	var new_ids: Array[String] = []
+	for title_id in earned_ids:
+		if title_id not in _known_title_ids:
+			new_ids.append(title_id)
+	_known_title_ids = earned_ids
+	if not new_ids.is_empty():
+		titles_earned.emit(new_ids)
+	return new_ids

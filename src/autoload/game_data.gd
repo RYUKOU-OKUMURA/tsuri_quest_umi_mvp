@@ -20,6 +20,7 @@ const FISHING_SPOT_ORDER: Array[String] = GameCatalogData.FISHING_SPOT_ORDER
 const FISHING_SPOTS: Dictionary = GameCatalogData.FISHING_SPOTS
 const FISHING_ENVIRONMENT_ORDER: Array[String] = GameCatalogData.FISHING_ENVIRONMENT_ORDER
 const FISHING_ENVIRONMENTS: Dictionary = GameCatalogData.FISHING_ENVIRONMENTS
+const TITLES: Array[Dictionary] = GameCatalogData.TITLES
 const RECIPES: Dictionary = GameCatalogData.RECIPES
 const ROD_ORDER: Array[String] = GameCatalogData.ROD_ORDER
 const RODS: Dictionary = GameCatalogData.RODS
@@ -140,6 +141,17 @@ func get_all_fishing_environment_ids() -> Array[String]:
 		if FISHING_ENVIRONMENTS.has(environment_id):
 			ids.append(environment_id)
 	return ids
+
+
+func compute_earned_titles(stats: Dictionary) -> Array[String]:
+	var earned: Array[String] = []
+	for title in TITLES:
+		var title_id := String(title.get("id", ""))
+		if title_id.is_empty():
+			continue
+		if _is_title_earned(title, stats):
+			earned.append(title_id)
+	return earned
 
 
 func get_unlocked_fishing_spot_ids(player_level: int) -> Array[String]:
@@ -390,6 +402,140 @@ func recipe_exp(fish_id: String, recipe_id: String) -> int:
 	if fish.is_empty() or recipe.is_empty():
 		return 0
 	return int(round(float(fish["food_exp"]) * float(recipe["exp_multiplier"])))
+
+
+func _is_title_earned(title: Dictionary, stats: Dictionary) -> bool:
+	var title_type := String(title.get("type", ""))
+	match title_type:
+		"total_catches":
+			return _title_total_catches(stats) >= int(title.get("value", 0))
+		"species_count":
+			return _title_species_count(stats) >= int(title.get("value", 0))
+		"fish_count":
+			return _title_fish_count(stats, String(title.get("fish_id", ""))) >= int(title.get("value", 0))
+		"best_size":
+			return _title_best_size(stats, String(title.get("fish_id", ""))) >= float(title.get("value", 0.0))
+		"spots_complete":
+			return _title_spots_complete(stats, Array(title.get("spot_ids", [])))
+		"level":
+			return int(stats.get("level", 1)) >= int(title.get("value", 0))
+		"dish_total":
+			return _title_dish_total(stats) >= int(title.get("value", 0))
+		"quest_completed":
+			return int(stats.get("quest_completed_count", 0)) >= int(title.get("value", 0))
+		"fish_caught_any":
+			return _title_fish_caught_any(stats, Array(title.get("fish_ids", [])))
+		"fish_caught_all":
+			return _title_fish_caught_all(stats, Array(title.get("fish_ids", [])))
+		"shark_bond":
+			return _title_shark_bond(stats, String(title.get("shark_id", ""))) >= int(title.get("value", 100))
+		"shark_bond_all":
+			return _title_shark_bond_all(stats, Array(title.get("shark_ids", [])), int(title.get("value", 100)))
+		_:
+			return false
+
+
+func _title_total_catches(stats: Dictionary) -> int:
+	var caught_counts := _stats_dictionary(stats, "caught_counts")
+	var total := 0
+	for fish_id in caught_counts.keys():
+		total += int(caught_counts[fish_id])
+	return total
+
+
+func _title_species_count(stats: Dictionary) -> int:
+	var caught_counts := _stats_dictionary(stats, "caught_counts")
+	var total := 0
+	for fish_id in caught_counts.keys():
+		if int(caught_counts[fish_id]) > 0:
+			total += 1
+	return total
+
+
+func _title_fish_count(stats: Dictionary, fish_id: String) -> int:
+	if fish_id.is_empty():
+		return 0
+	var caught_counts := _stats_dictionary(stats, "caught_counts")
+	return int(caught_counts.get(fish_id, 0))
+
+
+func _title_best_size(stats: Dictionary, fish_id: String) -> float:
+	if fish_id.is_empty():
+		return 0.0
+	var best_sizes := _stats_dictionary(stats, "best_sizes")
+	return float(best_sizes.get(fish_id, 0.0))
+
+
+func _title_spots_complete(stats: Dictionary, spot_ids: Array) -> bool:
+	if spot_ids.is_empty():
+		return false
+	var spot_caught_counts := _stats_dictionary(stats, "spot_caught_counts")
+	for spot_id_variant in spot_ids:
+		var spot_id := String(spot_id_variant)
+		var spot_counts := _dictionary_value(spot_caught_counts.get(spot_id, {}))
+		var has_catch := false
+		for fish_id in spot_counts.keys():
+			if int(spot_counts[fish_id]) > 0:
+				has_catch = true
+				break
+		if not has_catch:
+			return false
+	return true
+
+
+func _title_dish_total(stats: Dictionary) -> int:
+	var eaten_recipes := _stats_dictionary(stats, "eaten_recipes")
+	var total := 0
+	for dish_key in eaten_recipes.keys():
+		total += int(eaten_recipes[dish_key])
+	return total
+
+
+func _title_fish_caught_any(stats: Dictionary, fish_ids: Array) -> bool:
+	if fish_ids.is_empty():
+		return false
+	var caught_counts := _stats_dictionary(stats, "caught_counts")
+	for fish_id_variant in fish_ids:
+		if int(caught_counts.get(String(fish_id_variant), 0)) > 0:
+			return true
+	return false
+
+
+func _title_fish_caught_all(stats: Dictionary, fish_ids: Array) -> bool:
+	if fish_ids.is_empty():
+		return false
+	var caught_counts := _stats_dictionary(stats, "caught_counts")
+	for fish_id_variant in fish_ids:
+		if int(caught_counts.get(String(fish_id_variant), 0)) <= 0:
+			return false
+	return true
+
+
+func _title_shark_bond(stats: Dictionary, shark_id: String) -> int:
+	if shark_id.is_empty():
+		return 0
+	var shark_bonds := _stats_dictionary(stats, "shark_bonds")
+	return int(shark_bonds.get(shark_id, 0))
+
+
+func _title_shark_bond_all(stats: Dictionary, shark_ids: Array, required_bond: int) -> bool:
+	if shark_ids.is_empty():
+		return false
+	var shark_bonds := _stats_dictionary(stats, "shark_bonds")
+	for shark_id_variant in shark_ids:
+		if int(shark_bonds.get(String(shark_id_variant), 0)) < required_bond:
+			return false
+	return true
+
+
+func _stats_dictionary(stats: Dictionary, key: String) -> Dictionary:
+	return _dictionary_value(stats.get(key, {}))
+
+
+func _dictionary_value(value: Variant) -> Dictionary:
+	if typeof(value) != TYPE_DICTIONARY:
+		return {}
+	return Dictionary(value)
 
 
 func _resolved_spot_id(spot_id: String) -> String:
