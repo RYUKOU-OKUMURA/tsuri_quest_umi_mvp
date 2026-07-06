@@ -355,6 +355,44 @@ const TITLES: Array[Dictionary] = [
 	},
 ]
 
+const NORMAL_SHARK_IDS: Array[String] = [
+	"nekozame",
+	"inuzame",
+	"dochizame",
+	"hoshizame",
+	"eporetto",
+	"darumazame",
+	"fujikujira",
+	"shumokuzame",
+	"hohojirozame",
+]
+
+const RAISEABLE_SHARK_IDS: Array[String] = [
+	"nekozame",
+	"inuzame",
+	"dochizame",
+	"hoshizame",
+	"eporetto",
+	"darumazame",
+	"fujikujira",
+	"shumokuzame",
+	"hohojirozame",
+	"megalodon",
+]
+
+const SHARK_DIETS: Dictionary = {
+	"nekozame": {"type": "style_rarity", "styles": ["bottom"], "rarities": ["コモン"]},
+	"inuzame": {"type": "rarity", "rarities": ["コモン"]},
+	"dochizame": {"type": "bird_swarm_rarity", "rarities": ["コモン"]},
+	"hoshizame": {"type": "spot_allowed", "spot_id": "harbor_pier"},
+	"eporetto": {"type": "style_rarity", "styles": ["bottom"], "rarities": ["コモン", "アンコモン"]},
+	"darumazame": {"type": "rarity", "rarities": ["レア"]},
+	"fujikujira": {"type": "spot_allowed", "spot_id": "deep_ocean"},
+	"shumokuzame": {"type": "bird_swarm"},
+	"hohojirozame": {"type": "min_sell_price", "min_sell_price": 1000},
+	"megalodon": {"type": "nushi_or_min_sell_price", "min_sell_price": 3000},
+}
+
 const FISH: Dictionary = {
 	"aji":
 	{

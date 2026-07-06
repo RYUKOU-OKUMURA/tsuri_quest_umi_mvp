@@ -94,6 +94,7 @@ var active_save_slot: int = DEFAULT_SAVE_SLOT
 var quest_board: Array[Dictionary] = []
 var quest_completed_count: int = 0
 var sea_chart_fragments: int = 0
+var shark_bonds: Dictionary = {}
 
 # smoke / preview / audit（res://tools/ 配下のシーン起動）から本番セーブを守るフラグ。
 # true の間はディスクへの読み書きを一切行わない。
@@ -211,6 +212,7 @@ func _reset_runtime_state() -> void:
 	quest_board = []
 	quest_completed_count = 0
 	sea_chart_fragments = 0
+	shark_bonds = {}
 
 
 func add_sea_chart_fragments(amount: int = 1) -> int:
@@ -272,8 +274,15 @@ func record_catch(fish_id: String, size_cm: float, spot_id: String = "") -> Dict
 		"record_broken": previous_count > 0 and size_cm > previous_best,
 		"previous_best_cm": previous_best,
 		"new_titles": [],
+		"sent_to_shark_pen": false,
 	}
-	inventory[fish_id] = int(inventory.get(fish_id, 0)) + 1
+	var is_shark := bool(fish.get("shark", false))
+	if is_shark:
+		catch_result["sent_to_shark_pen"] = true
+		if GameData.is_raiseable_shark_id(fish_id) and not shark_bonds.has(fish_id):
+			shark_bonds[fish_id] = 0
+	else:
+		inventory[fish_id] = int(inventory.get(fish_id, 0)) + 1
 	caught_counts[fish_id] = previous_count + 1
 	if not spot_id.is_empty():
 		var spot_counts: Dictionary = {}
@@ -303,7 +312,7 @@ func fish_count(fish_id: String) -> int:
 func sell_fish(fish_id: String, amount: int) -> Dictionary:
 	var fish := GameData.get_fish(fish_id)
 	var current := fish_count(fish_id)
-	if fish.is_empty() or amount <= 0 or current < amount:
+	if fish.is_empty() or bool(fish.get("shark", false)) or amount <= 0 or current < amount:
 		return {"ok": false, "message": "売却できる魚が足りません。"}
 
 	var income := int(fish["sell_price"]) * amount
@@ -327,7 +336,7 @@ func sell_fish_batch(orders: Dictionary) -> Dictionary:
 			continue
 		var fish := GameData.get_fish(fish_id)
 		var current := fish_count(fish_id)
-		if fish.is_empty() or current < amount:
+		if fish.is_empty() or bool(fish.get("shark", false)) or current < amount:
 			return {
 				"ok": false,
 				"income": 0,
@@ -370,6 +379,54 @@ func sell_fish_batch(orders: Dictionary) -> Dictionary:
 	}
 
 
+func feed_shark(shark_id: String, fish_id: String) -> Dictionary:
+	if not GameData.is_raiseable_shark_id(shark_id):
+		return {"ok": false, "message": "飼育できるサメではありません。"}
+	if int(caught_counts.get(shark_id, 0)) <= 0:
+		return {"ok": false, "message": "まだこのサメを生簀に迎えていません。"}
+	var food := GameData.get_fish(fish_id)
+	if food.is_empty():
+		return {"ok": false, "message": "餌にする魚データが見つかりません。"}
+	if bool(food.get("shark", false)):
+		return {"ok": false, "message": "サメは餌にできません。"}
+	var current_count := fish_count(fish_id)
+	if current_count <= 0:
+		return {"ok": false, "message": "餌にする魚を持っていません。"}
+
+	if not shark_bonds.has(shark_id):
+		shark_bonds[shark_id] = 0
+	var before_bond := clampi(int(shark_bonds.get(shark_id, 0)), 0, 100)
+	var favorite := GameData.is_favorite_food(shark_id, food)
+	var bond_gain := GameData.SHARK_FAVORITE_BOND_GAIN if favorite else GameData.SHARK_DEFAULT_BOND_GAIN
+	var exp_multiplier := (
+		GameData.SHARK_FAVORITE_EXP_MULTIPLIER
+		if favorite
+		else GameData.SHARK_DEFAULT_EXP_MULTIPLIER
+	)
+	var after_bond := clampi(before_bond + bond_gain, 0, 100)
+	var exp_gain := int(round(float(food.get("food_exp", 0)) * exp_multiplier))
+	inventory[fish_id] = current_count - 1
+	shark_bonds[shark_id] = after_bond
+	var leveled_to := add_exp(exp_gain)
+	var new_titles := _award_new_titles()
+	save_game()
+	progress_changed.emit()
+	return {
+		"ok": true,
+		"shark_id": shark_id,
+		"fish_id": fish_id,
+		"favorite": favorite,
+		"bond_before": before_bond,
+		"bond_after": after_bond,
+		"bond_gain": after_bond - before_bond,
+		"exp_gain": exp_gain,
+		"leveled_to": leveled_to,
+		"completed": before_bond < 100 and after_bond >= 100,
+		"new_titles": new_titles,
+		"message": "サメに餌をあたえた。",
+	}
+
+
 func ensure_quest_board() -> void:
 	var changed := false
 	while quest_board.size() < 3:
@@ -400,6 +457,8 @@ func deliver_quest(index: int) -> Dictionary:
 
 	var kind := String(quest.get("kind", "delivery"))
 	var fish_id := String(quest.get("fish_id", ""))
+	if GameData.is_quest_excluded_fish_id(fish_id):
+		return {"ok": false, "message": "この依頼は現在は受け付けできません。", "progress": progress}
 	if kind == "delivery":
 		var required_count := int(quest.get("count", 0))
 		var current_count := fish_count(fish_id)
@@ -435,6 +494,8 @@ func cook_and_eat(fish_id: String, recipe_id: String) -> Dictionary:
 	var recipe := GameData.get_recipe(recipe_id)
 	if fish.is_empty() or recipe.is_empty():
 		return {"ok": false, "message": "魚または料理データが見つかりません。"}
+	if bool(fish.get("shark", false)):
+		return {"ok": false, "message": "サメは生簀で飼育します。"}
 	if fish_count(fish_id) <= 0:
 		return {"ok": false, "message": "その魚を持っていません。"}
 	if level < int(recipe["unlock_level"]):
@@ -653,7 +714,7 @@ func title_stats_snapshot() -> Dictionary:
 		"best_sizes": best_sizes.duplicate(true),
 		"eaten_recipes": eaten_recipes.duplicate(true),
 		"quest_completed_count": quest_completed_count,
-		"shark_bonds": {},
+		"shark_bonds": shark_bonds.duplicate(true),
 	}
 
 
@@ -713,6 +774,7 @@ func save_game() -> void:
 		"quest_board": quest_board,
 		"quest_completed_count": quest_completed_count,
 		"sea_chart_fragments": sea_chart_fragments,
+		"shark_bonds": shark_bonds,
 	}
 	var save_path := current_save_path()
 	var backup_path := current_backup_path()
@@ -832,6 +894,7 @@ func _apply_save_data(data: Dictionary) -> void:
 	var loaded_best_sizes = data.get("best_sizes", {})
 	var loaded_eaten_recipes = data.get("eaten_recipes", {})
 	var loaded_quest_board = data.get("quest_board", [])
+	var loaded_shark_bonds = data.get("shark_bonds", {})
 	inventory = (
 		loaded_inventory.duplicate(true) if typeof(loaded_inventory) == TYPE_DICTIONARY else {}
 	)
@@ -856,6 +919,7 @@ func _apply_save_data(data: Dictionary) -> void:
 	quest_board = _normalized_quest_board(loaded_quest_board)
 	quest_completed_count = maxi(0, int(data.get("quest_completed_count", 0)))
 	sea_chart_fragments = clampi(int(data.get("sea_chart_fragments", 0)), 0, SEA_CHART_FRAGMENT_MAX)
+	shark_bonds = _normalized_shark_bonds(loaded_shark_bonds)
 	owned_rods = []
 	var loaded_rods = data.get("owned_rods", ["starter"])
 	if typeof(loaded_rods) == TYPE_ARRAY:
@@ -914,6 +978,18 @@ func _normalized_quest_board(value: Variant) -> Array[Dictionary]:
 		normalized.append(quest)
 		if normalized.size() >= 3:
 			break
+	return normalized
+
+
+func _normalized_shark_bonds(value: Variant) -> Dictionary:
+	var normalized: Dictionary = {}
+	if typeof(value) != TYPE_DICTIONARY:
+		return normalized
+	for key in Dictionary(value).keys():
+		var shark_id := String(key)
+		if not GameData.is_raiseable_shark_id(shark_id):
+			continue
+		normalized[shark_id] = clampi(int(Dictionary(value)[key]), 0, 100)
 	return normalized
 
 

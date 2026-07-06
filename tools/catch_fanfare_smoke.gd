@@ -85,6 +85,7 @@ func _verify_record_catch_result() -> void:
 	PlayerProgress.spot_caught_counts = {"harbor_pier": {"aji": 9}}
 	PlayerProgress.best_sizes = {"aji": 20.0}
 	PlayerProgress.eaten_recipes = {}
+	PlayerProgress.shark_bonds = {}
 	PlayerProgress._remember_current_titles()
 	var emitted_title_ids: Array[String] = []
 	PlayerProgress.titles_earned.connect(
@@ -103,10 +104,24 @@ func _verify_record_catch_result() -> void:
 	PlayerProgress.spot_caught_counts = {}
 	PlayerProgress.best_sizes = {}
 	PlayerProgress.eaten_recipes = {}
+	PlayerProgress.shark_bonds = {}
 	PlayerProgress._remember_current_titles()
 	var first_result := PlayerProgress.record_catch("mejina", 31.0, "harbor_pier")
 	_expect(bool(first_result.get("first_catch", false)), "first catch should be marked")
 	_expect(not bool(first_result.get("record_broken", false)), "first catch should not break a record")
+
+	PlayerProgress.inventory = {}
+	PlayerProgress.caught_counts = {}
+	PlayerProgress.spot_caught_counts = {}
+	PlayerProgress.best_sizes = {}
+	PlayerProgress.eaten_recipes = {}
+	PlayerProgress.shark_bonds = {}
+	PlayerProgress._remember_current_titles()
+	var shark_result := PlayerProgress.record_catch("nekozame", 88.0, "danger_reef")
+	_expect(bool(shark_result.get("sent_to_shark_pen", false)), "shark catch should be sent to pen")
+	_expect(PlayerProgress.fish_count("nekozame") == 0, "shark catch should not enter inventory")
+	_expect(int(PlayerProgress.caught_counts.get("nekozame", 0)) == 1, "shark catch should update caught counts")
+	_expect(int(PlayerProgress.shark_bonds.get("nekozame", -1)) == 0, "shark catch should initialize bond")
 
 
 func _expect(condition: bool, message: String) -> void:

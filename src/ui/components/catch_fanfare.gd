@@ -283,7 +283,10 @@ func _bonus_text() -> String:
 	if bool(_catch_result.get("first_catch", false)) and lines.is_empty():
 		lines.append("初回記録　図鑑に登録")
 	if lines.is_empty():
-		lines.append("港で売却 / 料理に使える")
+		if bool(_catch_result.get("sent_to_shark_pen", false)):
+			lines.append("サメの生簀に運ばれた")
+		else:
+			lines.append("港で売却 / 料理に使える")
 	return "\n".join(PackedStringArray(lines))
 
 

@@ -1020,7 +1020,7 @@ func _ordered_cooking_fish_ids() -> Array[String]:
 			continue
 		if not ids.has(fish_id):
 			ids.append(fish_id)
-	for fish_id_variant in GameData.get_all_fish_ids():
+	for fish_id_variant in GameData.get_all_cookable_fish_ids():
 		var fish_id := String(fish_id_variant)
 		if not ids.has(fish_id):
 			ids.append(fish_id)
@@ -2201,7 +2201,7 @@ func _show_post_level_status_summary() -> void:
 
 func _total_fish_count() -> int:
 	var total := 0
-	for fish_id in GameData.get_all_fish_ids():
+	for fish_id in GameData.get_all_cookable_fish_ids():
 		total += PlayerProgress.fish_count(fish_id)
 	return total
 

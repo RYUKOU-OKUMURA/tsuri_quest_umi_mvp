@@ -71,6 +71,7 @@ func _ready() -> void:
 	var saved := _read_json(PlayerProgress.current_save_path())
 	_expect_eq(int(saved.get("version", -1)), PlayerProgress.SAVE_VERSION, "saved version")
 	_expect_eq(int(saved.get("money", -1)), 500, "saved initial money")
+	_expect(typeof(saved.get("shark_bonds", {})) == TYPE_DICTIONARY, "saved data should include shark_bonds")
 
 	# 2回目の保存でバックアップ世代が残る
 	PlayerProgress.money = 1234
@@ -111,6 +112,29 @@ func _ready() -> void:
 	PlayerProgress.load_game()
 	_expect_eq(PlayerProgress.money, 4242, "future version should still load")
 	_expect_eq(PlayerProgress.level, 3, "future version should still load level")
+
+	# E10: shark_bonds は欠損時に補完され、JSON由来のfloat値はintへ正規化される
+	_write_text(
+		PlayerProgress.current_save_path(),
+		JSON.stringify(
+			{
+				"version": PlayerProgress.SAVE_VERSION,
+				"level": 30,
+				"shark_bonds": {
+					"nekozame": 8.0,
+					"inuzame": 120.0,
+					"nushi_danger_reef": 100.0,
+				},
+			}
+		)
+	)
+	PlayerProgress.load_game()
+	_expect_eq(int(PlayerProgress.shark_bonds.get("nekozame", 0)), 8, "shark bond should load as int")
+	_expect_eq(int(PlayerProgress.shark_bonds.get("inuzame", 0)), 100, "shark bond should clamp on load")
+	_expect(
+		not PlayerProgress.shark_bonds.has("nushi_danger_reef"),
+		"non-raiseable shark bond should be dropped on load"
+	)
 
 	# V2 E0: 旧上限だったLv10セーブは維持され、Lv11以降へ進行できる
 	_write_text(

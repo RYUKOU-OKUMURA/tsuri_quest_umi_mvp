@@ -38,9 +38,17 @@ const BOAT_ORDER: Array[String] = GameCatalogData.BOAT_ORDER
 const BOATS: Dictionary = GameCatalogData.BOATS
 const TRIP_EVENTS: Array[Dictionary] = GameCatalogData.TRIP_EVENTS
 const BIRD_SWARM_FISH_IDS: Array[String] = GameCatalogData.BIRD_SWARM_FISH_IDS
+const NORMAL_SHARK_IDS: Array[String] = GameCatalogData.NORMAL_SHARK_IDS
+const RAISEABLE_SHARK_IDS: Array[String] = GameCatalogData.RAISEABLE_SHARK_IDS
+const SHARK_DIETS: Dictionary = GameCatalogData.SHARK_DIETS
 
 const DEFAULT_FISHING_ENVIRONMENT_ID := "sunny_calm"
 const SIZE_ROLL_EXPONENT_DEFAULT := 2.1
+const SHARK_FAVORITE_BOND_GAIN := 8
+const SHARK_DEFAULT_BOND_GAIN := 3
+const SHARK_FAVORITE_EXP_MULTIPLIER := 2.0
+const SHARK_DEFAULT_EXP_MULTIPLIER := 1.5
+const SHARK_FAVORITE_LURE_MULTIPLIER := 3.0
 
 
 var _rng := RandomNumberGenerator.new()
@@ -101,7 +109,7 @@ func get_recipe(recipe_id: String) -> Dictionary:
 		return {}
 	var recipe: Dictionary = RECIPES[recipe_id].duplicate(true)
 	if bool(recipe.get("allow_all_fish", false)):
-		recipe["allowed_fish"] = get_all_fish_ids()
+		recipe["allowed_fish"] = get_all_cookable_fish_ids()
 	return recipe
 
 
@@ -158,10 +166,99 @@ func get_all_nushi_fish_ids() -> Array[String]:
 
 
 func get_all_sellable_fish_ids() -> Array[String]:
-	var ids := get_all_fish_ids()
+	var ids: Array[String] = []
+	for fish_id in get_all_fish_ids():
+		if not bool(get_fish(fish_id).get("shark", false)):
+			ids.append(fish_id)
 	for fish_id in get_all_nushi_fish_ids():
-		ids.append(fish_id)
+		if not bool(get_fish(fish_id).get("shark", false)):
+			ids.append(fish_id)
 	return ids
+
+
+func get_all_cookable_fish_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for fish_id in get_all_fish_ids():
+		if not bool(get_fish(fish_id).get("shark", false)):
+			ids.append(fish_id)
+	return ids
+
+
+func get_raiseable_shark_ids() -> Array[String]:
+	return RAISEABLE_SHARK_IDS.duplicate()
+
+
+func get_normal_shark_ids() -> Array[String]:
+	return NORMAL_SHARK_IDS.duplicate()
+
+
+func is_raiseable_shark_id(shark_id: String) -> bool:
+	return RAISEABLE_SHARK_IDS.has(shark_id)
+
+
+func is_normal_shark_id(shark_id: String) -> bool:
+	return NORMAL_SHARK_IDS.has(shark_id)
+
+
+func is_favorite_food(shark_id: String, fish_data: Dictionary) -> bool:
+	if not SHARK_DIETS.has(shark_id) or fish_data.is_empty():
+		return false
+	var diet: Dictionary = SHARK_DIETS[shark_id]
+	var diet_type := String(diet.get("type", ""))
+	var fish_id := String(fish_data.get("id", ""))
+	var rarity := String(fish_data.get("rarity", ""))
+	var style := String(fish_data.get("style", ""))
+	match diet_type:
+		"style_rarity":
+			return _diet_has_value(diet, "styles", style) and _diet_has_value(diet, "rarities", rarity)
+		"rarity":
+			return _diet_has_value(diet, "rarities", rarity)
+		"bird_swarm_rarity":
+			return BIRD_SWARM_FISH_IDS.has(fish_id) and _diet_has_value(diet, "rarities", rarity)
+		"bird_swarm":
+			return BIRD_SWARM_FISH_IDS.has(fish_id)
+		"spot_allowed":
+			var spot_id := String(diet.get("spot_id", ""))
+			if not FISHING_SPOTS.has(spot_id):
+				return false
+			var spot: Dictionary = FISHING_SPOTS[spot_id]
+			return Array(spot.get("allowed_fish", [])).has(fish_id)
+		"min_sell_price":
+			return int(fish_data.get("sell_price", 0)) >= int(diet.get("min_sell_price", 0))
+		"nushi_or_min_sell_price":
+			return (
+				bool(fish_data.get("nushi", false))
+				or fish_id.begins_with("nushi_")
+				or int(fish_data.get("sell_price", 0)) >= int(diet.get("min_sell_price", 0))
+			)
+		_:
+			return false
+
+
+func shark_lure_weights(bait_fish_data: Dictionary) -> Dictionary:
+	var weights: Dictionary = {}
+	if bait_fish_data.is_empty():
+		return weights
+	for shark_id in NORMAL_SHARK_IDS:
+		if is_favorite_food(shark_id, bait_fish_data):
+			weights[shark_id] = SHARK_FAVORITE_LURE_MULTIPLIER
+	return weights
+
+
+func is_megalodon_unlocked(player_level: int, shark_bonds: Dictionary) -> bool:
+	if player_level < MAX_LEVEL:
+		return false
+	for shark_id in NORMAL_SHARK_IDS:
+		if int(shark_bonds.get(shark_id, 0)) < 100:
+			return false
+	return true
+
+
+func is_quest_excluded_fish_id(fish_id: String) -> bool:
+	var fish := get_fish(fish_id)
+	if fish.is_empty():
+		return true
+	return _quest_excludes_fish(fish_id, fish)
 
 
 func get_nushi_for_base_fish(base_fish_id: String) -> Dictionary:
@@ -1035,6 +1132,13 @@ func _dictionary_value(value: Variant) -> Dictionary:
 	if typeof(value) != TYPE_DICTIONARY:
 		return {}
 	return Dictionary(value)
+
+
+func _diet_has_value(diet: Dictionary, key: String, value: String) -> bool:
+	for variant in Array(diet.get(key, [])):
+		if String(variant) == value:
+			return true
+	return false
 
 
 func _resolved_spot_id(spot_id: String) -> String:
