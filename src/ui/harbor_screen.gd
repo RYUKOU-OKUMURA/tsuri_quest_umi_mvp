@@ -108,7 +108,7 @@ func _build_main_panel(root: Control) -> void:
 		main,
 		Rect2(0.066, 0.482, 0.868, 0.172),
 		"今日の支度",
-		"釣る  →  売る／料理する  →  装備・レベル強化  →  ぬしに挑む",
+		_preparation_card_text(),
 		ICON_FISHING_PATH
 	)
 	_build_buff_card(main)
@@ -153,10 +153,38 @@ func _build_parchment_card(parent: Control, ratios: Rect2, title_text: String, b
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(card, title, 0.140, 0.100, 0.930, 0.375)
 
-	var body := _harbor_label(body_text, 19, Palette.HARBOR_PARCHMENT_BODY, true, 0)
+	var body_font_size := 17 if body_text.contains("\n") else 19
+	var body := _harbor_label(body_text, body_font_size, Palette.HARBOR_PARCHMENT_BODY, true, 0)
 	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	body.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_place_control(card, body, 0.140, 0.405, 0.930, 0.820)
+
+
+func _preparation_card_text() -> String:
+	var hint := _nushi_hint_text()
+	if hint.is_empty():
+		return "釣る  →  売る／料理する  →  装備・レベル強化  →  ぬしに挑む"
+	return "釣る  →  売る／料理する  →  装備強化\n目撃談：%s" % hint
+
+
+func _nushi_hint_text() -> String:
+	var candidates: Array[String] = []
+	for spot_id in GameData.NORMAL_FISHING_SPOT_IDS:
+		var spot := GameData.get_fishing_spot(spot_id)
+		var nushi: Dictionary = spot.get("nushi", {})
+		var fish_id := String(nushi.get("fish_id", ""))
+		if fish_id.is_empty():
+			continue
+		if int(PlayerProgress.caught_counts.get(fish_id, 0)) <= 0:
+			var hint := String(nushi.get("hint", ""))
+			if not hint.is_empty():
+				candidates.append(hint)
+	if candidates.is_empty():
+		return ""
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	return candidates[rng.randi_range(0, candidates.size() - 1)]
 
 
 func _build_facility_menu(root: Control) -> void:

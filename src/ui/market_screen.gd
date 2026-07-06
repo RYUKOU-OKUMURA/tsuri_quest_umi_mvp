@@ -429,7 +429,7 @@ func _refresh() -> void:
 
 func _rebuild_fish_ids() -> void:
 	_fish_ids.clear()
-	for fish_id in GameData.get_all_fish_ids():
+	for fish_id in GameData.get_all_sellable_fish_ids():
 		if PlayerProgress.fish_count(fish_id) > 0:
 			_fish_ids.append(fish_id)
 
@@ -691,7 +691,7 @@ func _cart_summary() -> Dictionary:
 
 func _selected_order_ids() -> Array[String]:
 	var selected: Array[String] = []
-	for fish_id in GameData.get_all_fish_ids():
+	for fish_id in GameData.get_all_sellable_fish_ids():
 		if int(_sell_quantities.get(fish_id, 0)) > 0:
 			selected.append(fish_id)
 	return selected

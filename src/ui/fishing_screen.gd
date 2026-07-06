@@ -52,6 +52,7 @@ var _quit_title: Label
 var _quit_details: Label
 var _quit_confirm_button: Button
 var _quit_target := "harbor"
+var _nushi_omen_shown := false
 
 
 func _build_screen() -> void:
@@ -476,11 +477,12 @@ func _prepare_new_attempt() -> void:
 	if bool(_spot.get("boss_spot", false)):
 		_current_fish = GameData.get_fish("boss_kurodai")
 	else:
-		_current_fish = GameData.roll_normal_fish(
+		_current_fish = GameData.roll_hooked_fish(
 			PlayerProgress.level,
 			_spot_id,
 			String(_trip_stats.get("rig_id", PlayerProgress.equipped_rig_id)),
-			String(_trip_stats.get("environment_id", GameData.DEFAULT_FISHING_ENVIRONMENT_ID))
+			String(_trip_stats.get("environment_id", GameData.DEFAULT_FISHING_ENVIRONMENT_ID)),
+			String(_trip_stats.get("time_slot_id", ""))
 		)
 	_simulator.prepare(_current_fish, _trip_stats)
 	_view.bind_simulator(_simulator)
@@ -505,6 +507,7 @@ func _sync_fish_info_scroll_size() -> void:
 func _on_main_action_pressed() -> void:
 	match _simulator.state:
 		FishingSimulator.State.READY:
+			_nushi_omen_shown = true
 			_simulator.cast()
 		FishingSimulator.State.BITE:
 			_simulator.hook()
@@ -649,7 +652,10 @@ func _retry() -> void:
 func _update_ui() -> void:
 	if _simulator == null:
 		return
-	_set_message_text(_simulator.action_message)
+	var message := _simulator.action_message
+	if _simulator.state == FishingSimulator.State.READY and _should_show_nushi_omen():
+		message = "……ヌシの気配がする。"
+	_set_message_text(message)
 
 	var show_spot_panel := _simulator.state == FishingSimulator.State.READY
 	if _info_title_label != null:
@@ -665,7 +671,8 @@ func _set_message_text(message: String) -> void:
 	if _message_panel != null:
 		var show_message := not message.strip_edges().is_empty()
 		if _simulator != null:
-			show_message = show_message and _simulator.state != FishingSimulator.State.READY
+			var ready_nushi_omen := _simulator.state == FishingSimulator.State.READY and message == "……ヌシの気配がする。"
+			show_message = show_message and (_simulator.state != FishingSimulator.State.READY or ready_nushi_omen)
 			if (
 				_simulator.state == FishingSimulator.State.CASTING
 				or _simulator.state == FishingSimulator.State.WAITING
@@ -675,6 +682,20 @@ func _set_message_text(message: String) -> void:
 			):
 				show_message = false
 		_message_panel.visible = show_message
+
+
+func _should_show_nushi_omen() -> bool:
+	if _nushi_omen_shown:
+		return false
+	if bool(_spot.get("boss_spot", false)):
+		return false
+	return not GameData.nushi_candidate(
+		_spot_id,
+		String(_trip_stats.get("environment_id", GameData.DEFAULT_FISHING_ENVIRONMENT_ID)),
+		String(_trip_stats.get("rig_id", PlayerProgress.equipped_rig_id)),
+		String(_trip_stats.get("time_slot_id", "")),
+		PlayerProgress.level
+	).is_empty()
 
 
 # 水上キャストビュー／水中ビューのクロスフェード。

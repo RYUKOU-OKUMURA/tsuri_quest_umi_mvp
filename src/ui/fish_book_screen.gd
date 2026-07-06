@@ -26,6 +26,9 @@ const COMMON_BUTTON_HOVER_PATH := "res://assets/showcase/common/button_frame_hov
 const COMMON_BUTTON_PRIMARY_PATH := "res://assets/showcase/common/button_frame_primary.png"
 const COMMON_PARCHMENT_CARD_PATH := "res://assets/showcase/common/parchment_card.png"
 const FISH_BOOK_ICON_SIZE := 96.0
+const FILTER_TAB_X0 := 0.032
+const FILTER_TAB_STEP := 0.1065
+const FILTER_TAB_WIDTH := 0.104
 
 const FILTERS := [
 	{"id": "all", "label": "全魚", "icon": 1},
@@ -34,6 +37,7 @@ const FILTERS := [
 	{"id": "rock", "label": "岩礁", "icon": 3},
 	{"id": "offshore", "label": "沖", "icon": 0},
 	{"id": "rare", "label": "レア", "icon": 3},
+	{"id": "nushi", "label": "ヌシ", "icon": 3},
 ]
 
 var _active_filter := "all"
@@ -53,6 +57,8 @@ var _detail_portrait_shadow: TextureRect
 var _detail_portrait_underprints: Array[TextureRect] = []
 var _detail_count_label: Label
 var _detail_best_label: Label
+var _detail_nushi_label: Label
+var _detail_nushi_accent: Panel
 var _detail_habitat_label: Label
 var _detail_bait_label: Label
 var _detail_behavior_label: Label
@@ -218,6 +224,12 @@ func _build_detail_panel(root: Control) -> void:
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	detail.add_child(frame)
 
+	_detail_nushi_accent = Panel.new()
+	_detail_nushi_accent.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_detail_nushi_accent.visible = false
+	_detail_nushi_accent.add_theme_stylebox_override("panel", _nushi_detail_accent_style())
+	_place_control(detail, _detail_nushi_accent, 0.060, 0.042, 0.940, 0.972)
+
 	var header_wash := _label_plate(_alpha(Palette.PARCHMENT_DEEP, 0.92))
 	_place_control(detail, header_wash, 0.082, 0.052, 0.918, 0.150)
 	_add_rule(detail, 0.095, 0.126, 0.905, _alpha(Palette.GOLD_DEEP, 0.30), 1.0)
@@ -296,6 +308,12 @@ func _build_detail_panel(root: Control) -> void:
 	_detail_best_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(detail, _detail_best_label, 0.662, 0.524, 0.895, 0.590)
 
+	_detail_nushi_label = _book_label("", 13, Palette.GOLD_BRIGHT, true, 1, Palette.TEXT_OUTLINE_DARK)
+	_detail_nushi_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_detail_nushi_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_detail_nushi_label.visible = false
+	_place_control(detail, _detail_nushi_label, 0.105, 0.594, 0.895, 0.620)
+
 	_add_rule(detail, 0.095, 0.602, 0.910, _alpha(Palette.FISH_BOOK_RULE_INK, 0.30), 1.0)
 	_detail_habitat_label = _detail_row(detail, 0.620, "生息地")
 	_detail_bait_label = _detail_row(detail, 0.695, "好物")
@@ -348,7 +366,7 @@ func _build_footer(root: Control) -> void:
 	var rail_shadow := _label_plate(_alpha(Palette.TEXT_OUTLINE_DARK, 0.20))
 	_place_control(footer, rail_shadow, 0.034, 0.812, 0.776, 0.868)
 
-	var x := 0.032
+	var x := FILTER_TAB_X0
 	for filter in FILTERS:
 		var filter_id := String(filter["id"])
 		var button := _textured_button(String(filter["label"]), _set_filter.bind(filter_id), false)
@@ -356,8 +374,8 @@ func _build_footer(root: Control) -> void:
 		button.set_meta("fish_book_filter", filter_id)
 		_filter_buttons[filter_id] = button
 		_add_button_icon(button, _detail_icon(int(filter.get("icon", -1))), false)
-		_place_control(footer, button, x, 0.072, x + 0.122, 0.850)
-		x += 0.125
+		_place_control(footer, button, x, 0.072, x + FILTER_TAB_WIDTH, 0.850)
+		x += FILTER_TAB_STEP
 
 	var return_plaque := Panel.new()
 	return_plaque.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -517,6 +535,17 @@ func _make_fish_card(fish: Dictionary) -> Button:
 		_place_control(button, lock, 0.640, 0.630, 0.930, 0.790)
 		return button
 
+	if _has_caught_nushi_for_base(fish_id):
+		var nushi_pin := Panel.new()
+		nushi_pin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		nushi_pin.add_theme_stylebox_override("panel", _nushi_card_pin_style())
+		_place_control(button, nushi_pin, 0.840, 0.205, 0.925, 0.355)
+		var nushi_mark := _book_label("主", 12, Palette.TEXT_OUTLINE_DARK, true, 0)
+		nushi_mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		nushi_mark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		nushi_mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_place_control(button, nushi_mark, 0.842, 0.204, 0.923, 0.354)
+
 	var rarity := String(fish.get("rarity", ""))
 	var badge_bg := _label_plate(_rarity_badge_color(rarity))
 	badge_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -566,6 +595,11 @@ func _refresh_detail() -> void:
 		_detail_count_label.add_theme_font_size_override("font_size", 26)
 		_detail_best_label.text = "--.-cm"
 		_detail_best_label.add_theme_font_size_override("font_size", 22)
+		if _detail_nushi_label != null:
+			_detail_nushi_label.visible = false
+			_detail_nushi_label.text = ""
+		if _detail_nushi_accent != null:
+			_detail_nushi_accent.visible = false
 		_detail_habitat_label.text = ""
 		_detail_bait_label.text = ""
 		_detail_behavior_label.text = ""
@@ -594,6 +628,7 @@ func _refresh_detail() -> void:
 	_detail_count_label.add_theme_font_size_override("font_size", 28 if discovered else 22)
 	_detail_best_label.text = "%.1fcm" % best if discovered else "--.-cm"
 	_detail_best_label.add_theme_font_size_override("font_size", 24 if discovered else 22)
+	_refresh_nushi_detail_record(fish_id, discovered)
 	_detail_habitat_label.text = String(fish.get("habitat", "")) if discovered else "まだ釣ったことがない魚。記録すると詳細が開きます。"
 	_detail_bait_label.text = String(fish.get("preferred_bait", "")) if discovered else "？？？"
 	_detail_behavior_label.text = String(fish.get("behavior", "")) if discovered else "釣り場で出会うまで行動は不明。"
@@ -687,6 +722,8 @@ func _fish_matches_filter(fish: Dictionary) -> bool:
 			return true
 		"rare":
 			return RarityStylesScript.is_rare_or_boss(fish)
+		"nushi":
+			return not GameData.get_nushi_for_base_fish(fish_id).is_empty()
 		"harbor":
 			return _spot_group_has_fish(["harbor_pier", "harbor_boulder"], fish_id)
 		"sand":
@@ -727,7 +764,29 @@ func _spot_ids_for_fish(fish_id: String) -> Array[String]:
 
 
 func _is_discovered(fish_id: String) -> bool:
-	return int(PlayerProgress.caught_counts.get(fish_id, 0)) > 0
+	return int(PlayerProgress.caught_counts.get(fish_id, 0)) > 0 or _has_caught_nushi_for_base(fish_id)
+
+
+func _has_caught_nushi_for_base(base_fish_id: String) -> bool:
+	var nushi := GameData.get_nushi_for_base_fish(base_fish_id)
+	if nushi.is_empty():
+		return false
+	return int(PlayerProgress.caught_counts.get(String(nushi.get("id", "")), 0)) > 0
+
+
+func _refresh_nushi_detail_record(base_fish_id: String, discovered: bool) -> void:
+	if _detail_nushi_label == null or _detail_nushi_accent == null:
+		return
+	var nushi := GameData.get_nushi_for_base_fish(base_fish_id)
+	var nushi_id := String(nushi.get("id", ""))
+	var caught := discovered and not nushi_id.is_empty() and int(PlayerProgress.caught_counts.get(nushi_id, 0)) > 0
+	_detail_nushi_label.visible = caught
+	_detail_nushi_accent.visible = caught
+	if not caught:
+		_detail_nushi_label.text = ""
+		return
+	var best := float(PlayerProgress.best_sizes.get(nushi_id, 0.0))
+	_detail_nushi_label.text = "ヌシ記録　%s　%.1fcm" % [String(nushi.get("name", "ヌシ")), best]
 
 
 func _fish_portrait_texture(fish: Dictionary, crop_to_fish := false) -> Texture2D:
@@ -1171,6 +1230,30 @@ func _detail_stat_slip_style() -> StyleBoxFlat:
 	style.content_margin_top = 2.0
 	style.content_margin_right = 4.0
 	style.content_margin_bottom = 2.0
+	return style
+
+
+func _nushi_detail_accent_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color.TRANSPARENT
+	style.border_color = _alpha(Palette.GOLD_BRIGHT, 0.86)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(4)
+	style.shadow_color = _alpha(Palette.GOLD, 0.22)
+	style.shadow_size = 4
+	style.shadow_offset = Vector2.ZERO
+	return style
+
+
+func _nushi_card_pin_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = _alpha(Palette.GOLD_BRIGHT, 0.92)
+	style.border_color = _alpha(Palette.GOLD_DEEP, 0.95)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(10)
+	style.shadow_color = _alpha(Palette.TEXT_OUTLINE_DARK, 0.30)
+	style.shadow_size = 2
+	style.shadow_offset = Vector2(0.0, 1.0)
 	return style
 
 

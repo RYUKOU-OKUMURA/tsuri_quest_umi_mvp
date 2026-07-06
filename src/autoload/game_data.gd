@@ -143,6 +143,13 @@ func get_all_nushi_fish_ids() -> Array[String]:
 	return ids
 
 
+func get_all_sellable_fish_ids() -> Array[String]:
+	var ids := get_all_fish_ids()
+	for fish_id in get_all_nushi_fish_ids():
+		ids.append(fish_id)
+	return ids
+
+
 func get_nushi_for_base_fish(base_fish_id: String) -> Dictionary:
 	for nushi_id in get_all_nushi_fish_ids():
 		var fish := get_fish(nushi_id)
