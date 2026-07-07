@@ -50,6 +50,7 @@ func _ready() -> void:
 	s._view.bind_simulator(s._simulator)
 	s._surface_view.bind_simulator(s._simulator)
 	s._fight_sidebar.bind(s._simulator, showcase_fish, s._trip_stats)
+	s._fight_floating_card.bind(s._simulator, showcase_fish, s._trip_stats)
 	s._fight_hud.bind(s._simulator, showcase_fish, s._trip_stats)
 	s._simulator.cast()
 	for _i in range(80):
@@ -70,6 +71,7 @@ func _ready() -> void:
 	s.set_process(false)
 	s._view.set_process(false)
 	s._fight_sidebar.set_process(false)
+	s._fight_floating_card.set_process(false)
 	s._fight_hud.set_process(false)
 	s._fight_status_bar.set_process(false)
 	s._simulator.action_name = "突進"
@@ -81,6 +83,7 @@ func _ready() -> void:
 	s._view._fish_flash = 0.88
 	s._view.queue_redraw()
 	s._fight_sidebar.queue_redraw()
+	s._fight_floating_card.queue_redraw()
 	s._fight_hud.queue_redraw()
 	s._fight_status_bar.queue_redraw()
 	await get_tree().process_frame

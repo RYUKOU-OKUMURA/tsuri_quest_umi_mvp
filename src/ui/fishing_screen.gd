@@ -31,6 +31,7 @@ var _shark_ambush_plan: Dictionary = {}
 var _shark_ambush_triggered := false
 var _shark_ambush_flash_timer := 0.0
 
+var _info_panel: MarginContainer
 var _info_title_label: Label
 var _spot_panel: PanelContainer
 var _spot_summary_label: Label
@@ -46,6 +47,7 @@ var _safe_zone_label: Label
 var _view: UnderwaterView
 var _surface_view: SurfaceCastView
 var _fight_sidebar: FightSidebar
+var _fight_floating_card: FightSidebar
 var _fight_hud: FightHud
 var _fight_status_bar: FightStatusBar
 var _catch_fanfare: CatchFanfare
@@ -144,6 +146,20 @@ func _build_screen() -> void:
 	_message_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_message_panel.add_child(_message_label)
 
+	_fight_floating_card = FightSidebarScript.new()
+	_fight_floating_card.set_floating_card(true)
+	_fight_floating_card.visible = false
+	_fight_floating_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fight_floating_card.anchor_left = 1.0
+	_fight_floating_card.anchor_top = 0.0
+	_fight_floating_card.anchor_right = 1.0
+	_fight_floating_card.anchor_bottom = 0.0
+	_fight_floating_card.offset_left = -306.0
+	_fight_floating_card.offset_top = 16.0
+	_fight_floating_card.offset_right = -18.0
+	_fight_floating_card.offset_bottom = 136.0
+	message_layer.add_child(_fight_floating_card)
+
 	_fight_hud = FightHudScript.new()
 	_fight_hud.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_fight_hud.custom_minimum_size = Vector2(0.0, FightHudScript.DEFAULT_HUD_HEIGHT)
@@ -156,21 +172,21 @@ func _build_screen() -> void:
 	_fight_hud.shark_lure_next_pressed.connect(func() -> void: _cycle_selected_shark_lure(1))
 	left_column.add_child(_fight_hud)
 
-	var info_panel := MarginContainer.new()
-	info_panel.custom_minimum_size = Vector2(326, 0)
-	info_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	info_panel.size_flags_stretch_ratio = 0.0
-	info_panel.clip_contents = true
-	info_panel.add_theme_constant_override("margin_left", 0)
-	info_panel.add_theme_constant_override("margin_top", 0)
-	info_panel.add_theme_constant_override("margin_right", 0)
-	info_panel.add_theme_constant_override("margin_bottom", 0)
-	body.add_child(info_panel)
+	_info_panel = MarginContainer.new()
+	_info_panel.custom_minimum_size = Vector2(326, 0)
+	_info_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_info_panel.size_flags_stretch_ratio = 0.0
+	_info_panel.clip_contents = true
+	_info_panel.add_theme_constant_override("margin_left", 0)
+	_info_panel.add_theme_constant_override("margin_top", 0)
+	_info_panel.add_theme_constant_override("margin_right", 0)
+	_info_panel.add_theme_constant_override("margin_bottom", 0)
+	body.add_child(_info_panel)
 	var info_box := VBoxContainer.new()
 	info_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	info_box.add_theme_constant_override("separation", 6)
-	info_panel.add_child(info_box)
+	_info_panel.add_child(info_box)
 	_info_title_label = make_label("釣り場", 24, Palette.TEXT_BONE, 2, Palette.TEXT_OUTLINE_DARK)
 	_info_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	# autowrap+trim の組み合わせだと最小サイズが潰れて描画されないため無効化する
@@ -595,6 +611,8 @@ func _prepare_simulator_with_current_fish() -> void:
 	_view.bind_simulator(_simulator)
 	_surface_view.bind_simulator(_simulator)
 	_fight_sidebar.bind(_simulator, _current_fish, _trip_stats)
+	if _fight_floating_card != null:
+		_fight_floating_card.bind(_simulator, _current_fish, _trip_stats)
 	_fight_hud.bind(_simulator, _current_fish, _trip_stats)
 	_sync_ready_shark_lure_selector()
 
@@ -625,6 +643,8 @@ func _roll_hooked_fish_for_current_cast() -> Dictionary:
 func _refresh_fish_info() -> void:
 	if _fight_sidebar != null:
 		_fight_sidebar.set_fish(_current_fish, _trip_stats)
+	if _fight_floating_card != null:
+		_fight_floating_card.set_fish(_current_fish, _trip_stats)
 
 
 func _trip_extra_fish_weight_modifiers() -> Dictionary:
@@ -1067,7 +1087,12 @@ func _update_ui() -> void:
 		message = "……ヌシの気配がする。"
 	_set_message_text(message)
 
+	var show_fight_overlay := _simulator.state == FishingSimulator.State.FIGHT
 	var show_spot_panel := _simulator.state == FishingSimulator.State.READY
+	if _info_panel != null:
+		_info_panel.visible = not show_fight_overlay
+	if _fight_floating_card != null:
+		_fight_floating_card.visible = show_fight_overlay
 	if _info_title_label != null:
 		_info_title_label.visible = show_spot_panel
 	if _spot_panel != null:

@@ -24,6 +24,7 @@ var _sidebar_frame: Texture2D
 var _icons: Texture2D
 var _action_card_icon: Texture2D
 var _tackle_card_icon: Texture2D
+var _floating_card := false
 
 
 func bind(value: FishingSimulator, fish: Dictionary, stats: Dictionary) -> void:
@@ -38,6 +39,11 @@ func set_fish(fish: Dictionary, stats: Dictionary) -> void:
 	fish_data = fish.duplicate(true)
 	trip_stats = stats.duplicate(true)
 	_load_fish_assets_for_current_fish()
+	queue_redraw()
+
+
+func set_floating_card(value: bool) -> void:
+	_floating_card = value
 	queue_redraw()
 
 
@@ -81,6 +87,9 @@ func _draw() -> void:
 	var h := size.y
 	if w <= 0.0 or h <= 0.0:
 		return
+	if _floating_card:
+		_draw_floating_card(font, Rect2(Vector2.ZERO, size))
+		return
 
 	var header := Rect2(0.0, 0.0, w, 30.0)
 	var fish_card := Rect2()
@@ -105,6 +114,64 @@ func _draw() -> void:
 	_draw_fish_card(font, fish_card)
 	_draw_action_card(font, action_card)
 	_draw_tackle_card(font, tackle_card)
+
+
+func _draw_floating_card(font: Font, rect: Rect2) -> void:
+	var card := rect.grow(-2.0)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(Palette.PARCHMENT, 0.96)
+	style.border_color = Color(Palette.GOLD_DEEP, 0.94)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	style.shadow_color = Color(Color.BLACK, 0.30)
+	style.shadow_size = 3
+	draw_style_box(style, card)
+	draw_rect(card.grow(-6.0), Color(Palette.GOLD_BRIGHT, 0.16), false, 1.0)
+	var header := Rect2(card.position + Vector2(6.0, 6.0), Vector2(card.size.x - 12.0, 28.0))
+	var header_style := StyleBoxFlat.new()
+	header_style.bg_color = Color(Palette.DARK_PANEL, 0.95)
+	header_style.border_color = Color(Palette.GOLD_DEEP, 0.72)
+	header_style.set_border_width_all(1)
+	header_style.set_corner_radius_all(4)
+	draw_style_box(header_style, header)
+	if _fish_is_revealed():
+		_draw_floating_revealed(font, card, header)
+	else:
+		_draw_floating_unknown(font, card, header)
+
+
+func _draw_floating_revealed(font: Font, card: Rect2, header: Rect2) -> void:
+	var fish_name := _display_fish_name(String(fish_data.get("name", "クロダイ")))
+	var rarity := String(fish_data.get("rarity", "レア"))
+	var rarity_rect := Rect2(Vector2(header.end.x - 58.0, header.position.y + 4.0), Vector2(50.0, 20.0))
+	var name_max_w := rarity_rect.position.x - header.position.x - 16.0
+	_draw_text_fit(font, fish_name, header.position + Vector2(10.0, 21.0), name_max_w, 18, 13, Palette.TEXT_BONE, 1)
+	_draw_rarity_tag(font, rarity_rect, rarity)
+	var estimate := lerpf(float(fish_data.get("size_min", 0.0)), float(fish_data.get("size_max", 0.0)), 0.35)
+	var regular_font := GameFontsScript.regular(get_theme_default_font())
+	_draw_text(regular_font, "推定", card.position + Vector2(16.0, 58.0), 14, Palette.FIGHT_SIDEBAR_ESTIMATE_LABEL, 0)
+	_draw_text(font, "%.1f cm" % estimate, card.position + Vector2(62.0, 61.0), 23, Palette.FIGHT_STATUS_BODY_TEXT, 0)
+	_draw_floating_action_line(font, card, simulator.action_message if simulator != null else "テンションを保とう。")
+
+
+func _draw_floating_unknown(font: Font, card: Rect2, header: Rect2) -> void:
+	_draw_text_fit(font, "未確認の魚影", header.position + Vector2(10.0, 21.0), header.size.x - 88.0, 18, 13, Palette.TEXT_BONE, 1)
+	_draw_unknown_state_tag(font, Rect2(Vector2(header.end.x - 72.0, header.position.y + 4.0), Vector2(62.0, 20.0)), _unknown_short_status())
+	var regular_font := GameFontsScript.regular(get_theme_default_font())
+	_draw_text(regular_font, "反応", card.position + Vector2(16.0, 58.0), 14, Palette.FIGHT_SIDEBAR_ESTIMATE_LABEL, 0)
+	var reaction := _unknown_reaction_label()
+	_draw_text_fit(font, reaction, card.position + Vector2(58.0, 61.0), card.size.x - 74.0, 22, 14, _unknown_reaction_color(), 0)
+	_draw_floating_action_line(font, card, _unknown_action_message())
+
+
+func _draw_floating_action_line(font: Font, card: Rect2, message: String) -> void:
+	var regular_font := GameFontsScript.regular(get_theme_default_font())
+	var line_rect := Rect2(card.position + Vector2(12.0, 78.0), Vector2(card.size.x - 24.0, 30.0))
+	draw_line(Vector2(line_rect.position.x, line_rect.position.y - 6.0), Vector2(line_rect.end.x, line_rect.position.y - 6.0), Color(Palette.FIGHT_SIDEBAR_RULE_FAINT, 0.58), 1.0)
+	var text := message.strip_edges()
+	if text.is_empty():
+		text = "ラインの動きを見よう。"
+	_draw_text_fit(regular_font, text, line_rect.position + Vector2(0.0, 20.0), line_rect.size.x, 14, 10, Palette.TEXT_DARK, 0)
 
 
 func _draw_header(font: Font, rect: Rect2) -> void:
@@ -383,6 +450,25 @@ func _draw_text(font: Font, text: String, baseline: Vector2, font_size: int, col
 	if outline > 0:
 		draw_string_outline(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, outline, Palette.FIGHT_SIDEBAR_TEXT_OUTLINE)
 	draw_string(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
+
+
+func _draw_text_fit(
+	font: Font,
+	text: String,
+	baseline: Vector2,
+	max_width: float,
+	font_size: int,
+	min_size: int,
+	color: Color,
+	outline: int
+) -> void:
+	var fitted_size := font_size
+	while (
+		fitted_size > min_size
+		and font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fitted_size).x > max_width
+	):
+		fitted_size -= 1
+	_draw_text(font, text, baseline, fitted_size, color, outline)
 
 
 func _draw_centered_text(font: Font, text: String, rect: Rect2, font_size: int, color: Color, outline: int) -> void:
