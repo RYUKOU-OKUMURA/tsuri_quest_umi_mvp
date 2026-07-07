@@ -1087,10 +1087,10 @@ func _update_ui() -> void:
 		message = "……ヌシの気配がする。"
 	_set_message_text(message)
 
-	var show_fight_overlay := _simulator.state == FishingSimulator.State.FIGHT
+	var show_fight_overlay := _should_show_floating_fight_card()
 	var show_spot_panel := _simulator.state == FishingSimulator.State.READY
 	if _info_panel != null:
-		_info_panel.visible = not show_fight_overlay
+		_info_panel.visible = _simulator.state == FishingSimulator.State.READY
 	if _fight_floating_card != null:
 		_fight_floating_card.visible = show_fight_overlay
 	if _info_title_label != null:
@@ -1103,12 +1103,30 @@ func _update_fight_hud_height() -> void:
 	if _fight_hud == null or _simulator == null:
 		return
 	var target_height := FightHudScript.DEFAULT_HUD_HEIGHT
-	if _simulator.state == FishingSimulator.State.FIGHT:
+	if _should_use_slim_hud():
 		target_height = FightHudScript.FIGHT_SLIM_HUD_HEIGHT
 	if is_equal_approx(_fight_hud.custom_minimum_size.y, target_height):
 		return
 	_fight_hud.custom_minimum_size = Vector2(0.0, target_height)
 	_fight_hud.queue_redraw()
+
+
+func _should_use_slim_hud() -> bool:
+	if _simulator == null:
+		return false
+	return _should_show_floating_fight_card()
+
+
+func _should_show_floating_fight_card() -> bool:
+	if _simulator == null:
+		return false
+	return (
+		_simulator.state == FishingSimulator.State.CASTING
+		or _simulator.state == FishingSimulator.State.WAITING
+		or _simulator.state == FishingSimulator.State.APPROACH
+		or _simulator.state == FishingSimulator.State.BITE
+		or _simulator.state == FishingSimulator.State.FIGHT
+	)
 
 
 func _set_message_text(message: String) -> void:

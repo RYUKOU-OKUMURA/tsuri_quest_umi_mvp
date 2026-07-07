@@ -154,7 +154,7 @@ func _draw() -> void:
 		return
 
 	var state := _simulator_state()
-	if state == FishingSimulator.State.FIGHT:
+	if state == FishingSimulator.State.FIGHT or _is_intermediate_state(state):
 		_draw_fight_bar_background(rect)
 	elif _hud_frame != null:
 		draw_texture_rect(_hud_frame, rect, false, Color.WHITE)
@@ -172,6 +172,12 @@ func _draw() -> void:
 		if _hud_frame == null:
 			fight_rect = rect.grow(-10.0)
 		_draw_fight_slim_controls(font, fight_rect)
+		return
+	if _is_intermediate_state(state):
+		var intermediate_rect := Rect2(size.x * 0.014, size.y * 0.085, size.x * 0.972, size.y * 0.83)
+		if _hud_frame == null:
+			intermediate_rect = rect.grow(-10.0)
+		_draw_intermediate_slim_controls(font, intermediate_rect)
 		return
 
 	var gap := 10.0
@@ -217,6 +223,27 @@ func _draw_fight_slim_controls(font: Font, rect: Rect2) -> void:
 	_draw_stamina(font, stamina_rect)
 
 
+func _draw_intermediate_slim_controls(font: Font, rect: Rect2) -> void:
+	var gap := 10.0
+	var action_w := clampf(rect.size.x * 0.36, 380.0, 470.0)
+	var side_w := (rect.size.x - action_w - gap * 2.0) * 0.5
+	var depth_rect := Rect2(rect.position, Vector2(side_w, rect.size.y))
+	var action_rect := Rect2(Vector2(depth_rect.end.x + gap, rect.position.y), Vector2(action_w, rect.size.y))
+	var status_rect := Rect2(Vector2(action_rect.end.x + gap, rect.position.y), Vector2(side_w, rect.size.y))
+
+	_reel_rect = Rect2()
+	_give_rect = Rect2()
+	_lure_prev_rect = Rect2()
+	_lure_next_rect = Rect2()
+	_change_spot_rect = Rect2()
+	_harbor_rect = Rect2()
+	_main_rect = Rect2()
+
+	_draw_intermediate_depth_panel(font, depth_rect)
+	_draw_intermediate_action_panel(font, action_rect)
+	_draw_intermediate_status_panel(font, status_rect)
+
+
 func _draw_fight_bar_background(rect: Rect2) -> void:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(Palette.FIGHT_HUD_FALLBACK_PANEL_FILL, 0.96)
@@ -244,6 +271,63 @@ func _draw_fight_action_zone(font: Font, rect: Rect2) -> void:
 	_give_rect = Rect2(Vector2(_reel_rect.end.x + gap, button_y), Vector2(button_w, button_h))
 	_draw_fight_action_button(font, _reel_rect, "Space", "巻く", _is_reeling_active())
 	_draw_fight_action_button(font, _give_rect, "Shift", "糸を出す", _is_giving_active())
+
+
+func _draw_intermediate_depth_panel(font: Font, rect: Rect2) -> void:
+	_draw_ready_panel(rect, Color(Palette.FIGHT_HUD_PANEL_BLUE_FILL, 0.86), Palette.FIGHT_HUD_PANEL_BLUE_BORDER, Palette.GOLD)
+	_draw_text(font, "タナ（深さ）", rect.position + Vector2(16.0, 31.0), 18, Palette.TEXT_BONE, 1)
+	var depth := 0.0
+	if simulator != null:
+		depth = simulator.depth
+	var value := "%.1fm" % depth
+	var value_size := 32
+	var value_w := font.get_string_size(value, HORIZONTAL_ALIGNMENT_LEFT, -1, value_size).x
+	_draw_text(font, value, rect.position + Vector2((rect.size.x - value_w) * 0.5, 74.0), value_size, Palette.FIGHT_HUD_DEPTH_VALUE_TEXT, 1)
+	var arrow_x := rect.end.x - 26.0
+	_draw_triangle(Vector2(arrow_x, rect.position.y + 43.0), 8.0, Palette.FIGHT_HUD_DEPTH_UP_ARROW, true)
+	_draw_triangle(Vector2(arrow_x, rect.position.y + 70.0), 8.0, Palette.FIGHT_HUD_DEPTH_DOWN_ARROW, false)
+
+
+func _draw_intermediate_action_panel(font: Font, rect: Rect2) -> void:
+	_draw_ready_panel(rect, Color(Palette.FIGHT_HUD_PANEL_BLUE_FILL, 0.90), Palette.FIGHT_HUD_PANEL_BLUE_BORDER, Palette.GOLD)
+	var bite := _simulator_state() == FishingSimulator.State.BITE
+	var title := "アタリ発生" if bite else _intermediate_title()
+	var title_size := 17
+	var title_w := font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x
+	_draw_text(font, title, rect.position + Vector2((rect.size.x - title_w) * 0.5, 29.0), title_size, Palette.TEXT_BONE, 1)
+	var button := Rect2(rect.position + Vector2(28.0, 42.0), Vector2(rect.size.x - 56.0, rect.size.y - 54.0))
+	if bite:
+		_main_rect = button
+	_draw_intermediate_hook_button(font, button, bite)
+
+
+func _draw_intermediate_hook_button(font: Font, rect: Rect2, enabled: bool) -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(Palette.FIGHT_HUD_KEY_ENTER_FILL, 0.96 if enabled else 0.46)
+	style.border_color = Palette.FIGHT_HUD_KEY_BORDER_ACTIVE if enabled else Color(Palette.FIGHT_HUD_KEY_BORDER, 0.46)
+	style.set_border_width_all(2 if enabled else 1)
+	style.set_corner_radius_all(7)
+	style.shadow_color = Color(Color.BLACK, 0.30 if enabled else 0.16)
+	style.shadow_size = 3 if enabled else 1
+	draw_style_box(style, rect)
+	draw_line(rect.position + Vector2(12.0, 7.0), rect.position + Vector2(rect.size.x - 12.0, 7.0), Color(Color.WHITE, 0.15 if enabled else 0.05), 1.0)
+	var key_rect := Rect2(rect.position + Vector2(22.0, rect.size.y * 0.5 - 13.0), Vector2(82.0, 26.0))
+	_draw_keyboard_key_cap(font, key_rect, "E / Enter", false, enabled)
+	var label := "アワセ"
+	var label_size := 29
+	var label_color := Palette.TEXT_BONE if enabled else Color(Palette.TEXT_BONE, 0.58)
+	var label_w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
+	_draw_text(font, label, rect.position + Vector2((rect.size.x - label_w) * 0.5 + 44.0, rect.size.y * 0.5 + 10.0), label_size, label_color, 2 if enabled else 1)
+
+
+func _draw_intermediate_status_panel(font: Font, rect: Rect2) -> void:
+	_draw_ready_panel(rect, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
+	var status := _intermediate_status_label()
+	_draw_text(font, "反応", rect.position + Vector2(16.0, 28.0), 17, Palette.FIGHT_HUD_DARK_INK, 0)
+	_draw_text_fit(font, status, rect.position + Vector2(68.0, 31.0), rect.size.x - 84.0, 22, 15, Palette.FIGHT_HUD_DARK_INK, 0)
+	var note_font := GameFontsScript.regular(get_theme_default_font())
+	_draw_text_fit(note_font, _intermediate_note_text(), rect.position + Vector2(16.0, 61.0), rect.size.x - 32.0, 14, 10, Palette.FIGHT_HUD_HINT_NOTE, 0)
+	_draw_text_fit(note_font, _rig_bait_text(), rect.position + Vector2(16.0, 89.0), rect.size.x - 32.0, 13, 10, Palette.FIGHT_HUD_DARK_INK, 0)
 
 
 func _draw_fight_depth_chip(font: Font, rect: Rect2) -> void:
@@ -930,8 +1014,54 @@ func _simulator_state() -> int:
 	return simulator.state
 
 
+func _is_intermediate_state(state: int) -> bool:
+	return (
+		state == FishingSimulator.State.CASTING
+		or state == FishingSimulator.State.WAITING
+		or state == FishingSimulator.State.APPROACH
+		or state == FishingSimulator.State.BITE
+	)
+
+
 func _can_reel_controls() -> bool:
 	return _simulator_state() == FishingSimulator.State.FIGHT
+
+
+func _intermediate_title() -> String:
+	match _simulator_state():
+		FishingSimulator.State.CASTING:
+			return "仕掛け投入"
+		FishingSimulator.State.WAITING:
+			return "反応待ち"
+		FishingSimulator.State.APPROACH:
+			return "魚影接近"
+	return "待機中"
+
+
+func _intermediate_status_label() -> String:
+	match _simulator_state():
+		FishingSimulator.State.CASTING:
+			return "投入中"
+		FishingSimulator.State.WAITING:
+			return "探索中"
+		FishingSimulator.State.APPROACH:
+			return "魚影あり"
+		FishingSimulator.State.BITE:
+			return "食いついた"
+	return "待機中"
+
+
+func _intermediate_note_text() -> String:
+	match _simulator_state():
+		FishingSimulator.State.CASTING:
+			return "タナへ沈めている"
+		FishingSimulator.State.WAITING:
+			return "水面と糸を見る"
+		FishingSimulator.State.APPROACH:
+			return "まだ正体は見せない"
+		FishingSimulator.State.BITE:
+			return "すぐにアワセよう"
+	return "次の反応を待つ"
 
 
 func _rig_name_text() -> String:
