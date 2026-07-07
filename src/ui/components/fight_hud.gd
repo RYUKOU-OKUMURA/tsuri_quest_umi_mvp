@@ -605,14 +605,24 @@ func _draw_ready_shark_lure_panel(font: Font, rect: Rect2) -> void:
 	var inventory_count := int(shark_lure_selector.get("count", 0))
 	var remaining := int(shark_lure_selector.get("remaining", 0))
 	var total_charges := int(shark_lure_selector.get("total_charges", 0))
-	var portrait := Rect2(card.position + Vector2(16.0, 16.0), Vector2(minf(card.size.x * 0.38, 112.0), card.size.y - 32.0))
+	var left_w := clampf(card.size.x * 0.58, 150.0, 176.0)
+	var name_rect := Rect2(card.position + Vector2(12.0, card.size.y - 39.0), Vector2(left_w, 20.0))
+	var portrait := Rect2(
+		card.position + Vector2(10.0, 15.0),
+		Vector2(left_w + 4.0, maxf(52.0, name_rect.position.y - card.position.y - 18.0))
+	)
 	if _lure_portrait != null:
 		_draw_texture_icon(_lure_portrait, portrait)
 	else:
 		_draw_ready_bait_asset(portrait)
-	var text_x := portrait.end.x + 14.0
-	var text_w := card.end.x - text_x - 16.0
-	_draw_lure_name_count(title_font, fish_name, inventory_count, Vector2(text_x, card.position.y + 42.0), text_w)
+	_draw_text_center_fit(title_font, fish_name, name_rect, 14, 10, Palette.FIGHT_HUD_DARK_INK, 0)
+	var right_x := name_rect.end.x + 12.0
+	var right_rect := Rect2(
+		Vector2(right_x, card.position.y + 14.0),
+		Vector2(maxf(1.0, card.end.x - right_x - 14.0), maxf(1.0, name_rect.position.y - card.position.y - 20.0))
+	)
+	var count_rect := Rect2(right_rect.position, Vector2(right_rect.size.x, 34.0))
+	_draw_text_right_fit(title_font, "x%d" % inventory_count, count_rect, 30, 20, Palette.FIGHT_HUD_DARK_INK, 0)
 	var charge_text := "投げると1匹つかう"
 	var stock_empty_note := false
 	if remaining > 0:
@@ -622,14 +632,18 @@ func _draw_ready_shark_lure_panel(font: Font, rect: Rect2) -> void:
 	var charge_font := GameFontsScript.regular(font)
 	var footer_note := ""
 	if total_charges > 1:
-		var pips_w := minf(66.0, text_w * 0.46)
-		var pips := Rect2(Vector2(text_x, card.position.y + 60.0), Vector2(pips_w, 20.0))
+		var pips_w := maxf(1.0, minf(74.0, right_rect.size.x))
+		var pips := Rect2(Vector2(right_rect.position.x, card.position.y + 58.0), Vector2(pips_w, 20.0))
 		var displayed_charges := remaining if remaining > 0 else total_charges if inventory_count > 0 else 0
 		_draw_lure_charge_pips(font, pips, displayed_charges, total_charges)
 		if remaining > 0:
-			_draw_text_fit(charge_font, charge_text, Vector2(text_x + pips_w + 8.0, card.position.y + 76.0), text_w - pips_w - 8.0, 15, 10, Palette.FIGHT_HUD_DARK_INK, 0)
-			if stock_empty_note:
-				footer_note = "在庫0"
+			var charge_text_w := card.end.x - pips.end.x - 24.0
+			if charge_text_w >= 44.0:
+				_draw_text_fit(charge_font, charge_text, Vector2(pips.end.x + 8.0, card.position.y + 74.0), charge_text_w, 15, 10, Palette.FIGHT_HUD_DARK_INK, 0)
+				if stock_empty_note:
+					footer_note = "在庫0"
+			else:
+				footer_note = "%s（在庫0）" % charge_text if stock_empty_note else charge_text
 		else:
 			footer_note = charge_text
 	else:
@@ -786,18 +800,42 @@ func _draw_text_fit(
 	_draw_text_clipped(font, display, baseline, fitted_size, color, max_width, outline)
 
 
-func _draw_lure_name_count(font: Font, fish_name: String, inventory_count: int, baseline: Vector2, max_width: float) -> void:
-	var count_text := "x%d" % inventory_count
-	var count_size := _fit_font_size(font, count_text, 15, 11, max_width)
-	var count_w := font.get_string_size(count_text, HORIZONTAL_ALIGNMENT_LEFT, -1, count_size).x
-	var gap := 8.0
-	var name_w := max_width - count_w - gap
-	if name_w <= 0.0:
-		_draw_text_clipped(font, _fit_text(font, count_text, count_size, max_width), baseline, count_size, Palette.FIGHT_HUD_DARK_INK, max_width, 0)
-		return
-	var name_size := _fit_font_size(font, fish_name, 22, 10, name_w)
-	_draw_text_clipped(font, _fit_text(font, fish_name, name_size, name_w), baseline, name_size, Palette.FIGHT_HUD_DARK_INK, name_w, 0)
-	_draw_text(font, count_text, Vector2(baseline.x + max_width - count_w, baseline.y), count_size, Palette.FIGHT_HUD_DARK_INK, 0)
+func _draw_text_center_fit(
+	font: Font,
+	text: String,
+	rect: Rect2,
+	font_size: int,
+	min_size: int,
+	color: Color,
+	outline: int
+) -> void:
+	var fitted_size := _fit_font_size(font, text, font_size, min_size, rect.size.x)
+	var display := _fit_text(font, text, fitted_size, rect.size.x)
+	var ascent := font.get_ascent(fitted_size)
+	var descent := font.get_descent(fitted_size)
+	var baseline := rect.position + Vector2(0.0, (rect.size.y - ascent - descent) * 0.5 + ascent)
+	if outline > 0:
+		draw_string_outline(font, baseline, display, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, fitted_size, outline, Palette.FIGHT_HUD_TEXT_OUTLINE)
+	draw_string(font, baseline, display, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, fitted_size, color)
+
+
+func _draw_text_right_fit(
+	font: Font,
+	text: String,
+	rect: Rect2,
+	font_size: int,
+	min_size: int,
+	color: Color,
+	outline: int
+) -> void:
+	var fitted_size := _fit_font_size(font, text, font_size, min_size, rect.size.x)
+	var display := _fit_text(font, text, fitted_size, rect.size.x)
+	var ascent := font.get_ascent(fitted_size)
+	var descent := font.get_descent(fitted_size)
+	var baseline := rect.position + Vector2(0.0, (rect.size.y - ascent - descent) * 0.5 + ascent)
+	if outline > 0:
+		draw_string_outline(font, baseline, display, HORIZONTAL_ALIGNMENT_RIGHT, rect.size.x, fitted_size, outline, Palette.FIGHT_HUD_TEXT_OUTLINE)
+	draw_string(font, baseline, display, HORIZONTAL_ALIGNMENT_RIGHT, rect.size.x, fitted_size, color)
 
 
 func _fit_font_size(font: Font, text: String, base_size: int, minimum_size: int, max_width: float) -> int:
@@ -890,6 +928,8 @@ func _draw_lure_charge_pips(_font: Font, rect: Rect2, remaining: int, total: int
 		return
 	var gap := 5.0
 	var size := minf(16.0, (rect.size.x - gap * float(pip_count - 1)) / float(pip_count))
+	if size <= 0.0:
+		return
 	for index in range(pip_count):
 		var center := rect.position + Vector2(float(index) * (size + gap) + size * 0.5, size * 0.5)
 		var filled := index < remaining
