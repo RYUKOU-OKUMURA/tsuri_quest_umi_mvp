@@ -612,7 +612,7 @@ func _draw_ready_shark_lure_panel(font: Font, rect: Rect2) -> void:
 		_draw_ready_bait_asset(portrait)
 	var text_x := portrait.end.x + 14.0
 	var text_w := card.end.x - text_x - 16.0
-	_draw_text_fit(title_font, "%s x%d" % [fish_name, inventory_count], Vector2(text_x, card.position.y + 42.0), text_w, 24, 12, Palette.FIGHT_HUD_DARK_INK, 0)
+	_draw_lure_name_count(title_font, fish_name, inventory_count, Vector2(text_x, card.position.y + 42.0), text_w)
 	var charge_text := "投げると1匹つかう"
 	var stock_empty_note := false
 	if remaining > 0:
@@ -781,13 +781,63 @@ func _draw_text_fit(
 	color: Color,
 	outline: int
 ) -> void:
-	var fitted_size := font_size
-	while (
-		fitted_size > min_size
-		and font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fitted_size).x > max_width
-	):
-		fitted_size -= 1
-	_draw_text(font, text, baseline, fitted_size, color, outline)
+	var fitted_size := _fit_font_size(font, text, font_size, min_size, max_width)
+	var display := _fit_text(font, text, fitted_size, max_width)
+	_draw_text_clipped(font, display, baseline, fitted_size, color, max_width, outline)
+
+
+func _draw_lure_name_count(font: Font, fish_name: String, inventory_count: int, baseline: Vector2, max_width: float) -> void:
+	var count_text := "x%d" % inventory_count
+	var count_size := _fit_font_size(font, count_text, 15, 11, max_width)
+	var count_w := font.get_string_size(count_text, HORIZONTAL_ALIGNMENT_LEFT, -1, count_size).x
+	var gap := 8.0
+	var name_w := max_width - count_w - gap
+	if name_w <= 0.0:
+		_draw_text_clipped(font, _fit_text(font, count_text, count_size, max_width), baseline, count_size, Palette.FIGHT_HUD_DARK_INK, max_width, 0)
+		return
+	var name_size := _fit_font_size(font, fish_name, 22, 10, name_w)
+	_draw_text_clipped(font, _fit_text(font, fish_name, name_size, name_w), baseline, name_size, Palette.FIGHT_HUD_DARK_INK, name_w, 0)
+	_draw_text(font, count_text, Vector2(baseline.x + max_width - count_w, baseline.y), count_size, Palette.FIGHT_HUD_DARK_INK, 0)
+
+
+func _fit_font_size(font: Font, text: String, base_size: int, minimum_size: int, max_width: float) -> int:
+	for size_value in range(base_size, minimum_size - 1, -1):
+		if font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size_value).x <= max_width:
+			return size_value
+	return minimum_size
+
+
+func _fit_text(font: Font, text: String, font_size: int, max_width: float) -> String:
+	if max_width <= 0.0:
+		return ""
+	if font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x <= max_width:
+		return text
+	var ellipsis := "..."
+	if font.get_string_size(ellipsis, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x > max_width:
+		return ""
+	var result := text
+	while result.length() > 0:
+		result = result.left(result.length() - 1)
+		var candidate := result + ellipsis
+		if font.get_string_size(candidate, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x <= max_width:
+			return candidate
+	return ellipsis
+
+
+func _draw_text_clipped(
+	font: Font,
+	text: String,
+	baseline: Vector2,
+	font_size: int,
+	color: Color,
+	max_width: float,
+	outline: int
+) -> void:
+	if text.is_empty() or max_width <= 0.0:
+		return
+	if outline > 0:
+		draw_string_outline(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, max_width, font_size, outline, Palette.FIGHT_HUD_TEXT_OUTLINE)
+	draw_string(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, max_width, font_size, color)
 
 
 func _draw_text_center(font: Font, text: String, rect: Rect2, font_size: int, color: Color, outline: int) -> void:
