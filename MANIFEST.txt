@@ -10,7 +10,7 @@ docs/02_ゲームデザイン仕様.md
 docs/03_画面遷移とUI.md
 docs/04_技術設計.md
 docs/05_データ仕様.md
-docs/06_実装ロードマップ.md
+docs/archive/06_実装ロードマップ.md
 docs/07_テスト計画.md
 docs/08_独自性と権利メモ.md
 docs/09_パラメータ調整表.md

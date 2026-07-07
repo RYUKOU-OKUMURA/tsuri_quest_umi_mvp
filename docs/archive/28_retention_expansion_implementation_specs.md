@@ -1,4 +1,4 @@
-# 28. リテンション拡張 実装仕様書（docs/27 の実装用詳細）
+# 28. リテンション拡張 実装仕様書（27_retention_expansion_plan.md の実装用詳細）
 
 作成日: 2026-07-05
 更新日: 2026-07-06（**V2ドキュメント体系へ再編済み。本docは経緯資料**）
@@ -8,10 +8,10 @@
 
 - 実装時は「§1 確定判断」→「§2 共通仕様」→ 当該フェーズ節、の順に読む
 - 数値（確率・倍率・経験値・称号しきい値）は**初期値**。headless監査で分布を確認して調整してよいが、変更したら本docの表を更新する
-- 本docと docs/27 が矛盾したら docs/27 の方針（順序・目的）が優先。ただし**レベル基準は本doc §1-1 が正**（docs/27 作成時の Lv30〜50 記述はキャップ拡張決定で回収済み）
+- 本docと 27_retention_expansion_plan.md が矛盾したら 27_retention_expansion_plan.md の方針（順序・目的）が優先。ただし**レベル基準は本doc §1-1 が正**（27_retention_expansion_plan.md 作成時の Lv30〜50 記述はキャップ拡張決定で回収済み）
 - UI品質判断はすべて `docs/19_ui_production_playbook.md` に従う。freeze値は `docs/qa/<screen>_qa.md` を参照
 
-### フェーズ実施順（docs/27 §3 を E0 挿入で改訂）
+### フェーズ実施順（27_retention_expansion_plan.md §3 を E0 挿入で改訂）
 
 | 順 | ID | 内容 | 前提 |
 |---|---|---|---|
@@ -30,25 +30,25 @@
 
 ## 1. 確定判断（2026-07-05 ユーザー確認 + Fable設計判断）
 
-### 1-1. ユーザー決定（docs/27 §7 の残項目を解消）
+### 1-1. ユーザー決定（27_retention_expansion_plan.md §7 の残項目を解消）
 
 | # | 項目 | 決定 |
 |---|---|---|
-| 9 | レベル基準 | **MAX_LEVEL を 10→30 へ拡張**（新フェーズE0）。Lv11以降はステータス成長を減衰させ、主に解放ゲートとして使う。夜釣り=Lv15、サメ海域=Lv30 は docs/27 の記述どおり有効 |
+| 9 | レベル基準 | **MAX_LEVEL を 10→30 へ拡張**（新フェーズE0）。Lv11以降はステータス成長を減衰させ、主に解放ゲートとして使う。夜釣り=Lv15、サメ海域=Lv30 は 27_retention_expansion_plan.md の記述どおり有効 |
 | 5 | サメ海域の解放 | **(c) 両方**。Lv30到達で釣り場マップに「？」として存在を告知、E6ボトルメールの海図断片3つで解放 |
 | 6 | サメ横取りペナルティ | **(a) 掛けた魚のロストのみ**。仕掛け・餌は失わない（消耗品システムは導入しない） |
 | 7 | 川エリアの形態 | **(a) 同一セーブ内の新エリア**。釣り場マップにエリア切替（海/川）を追加 |
 
-### 1-2. Fable 設計判断（docs/27 で「Fable単体で決める」とされていた項目）
+### 1-2. Fable 設計判断（27_retention_expansion_plan.md で「Fable単体で決める」とされていた項目）
 
 | 項目 | 決定 | 理由 |
 |---|---|---|
 | ヌシのデータモデル | **別魚ID方式**（`nushi_<spot_id>` の独立エントリ、`boss: true` + `nushi: true`）。ただし通常の `FISH` 辞書ではなく新設 `NUSHI_FISH` 辞書に置く | `boss_kurodai` の初回撃破報酬・演出・素材規約をそのまま流用できる。`NUSHI_FISH` を分けるのは `get_all_fish_ids()`（図鑑ページ列挙・出現抽選の走査元）にヌシを混ぜないため。図鑑は「既存魚ページに金枠」決定なのでヌシに `fish_no` は振らない |
 | 図鑑「ヌシ」タブとfreezeの衝突 | **タブ列freeze値を7列用に改訂する**（§E2-6 に再計測値）。改訂理由をQAログに追記し、before/after比較画像を残す | 現行freeze（6件 x step 0.125）のまま7件目を足すと「港へ戻る」レール（x 0.778〜）に衝突する。機能追加に伴う意図的なfreeze改訂として扱う |
-| E3依頼の受注モデル | **受注操作なしの掲示制**。掲示中の3件は常に進行中扱いで、ボード画面で納品/達成報告する | docs/27決定の「達成＆帰港でリフレッシュ・未達成は掲示継続」と整合し、受注/辞退のUI状態を丸ごと省ける |
+| E3依頼の受注モデル | **受注操作なしの掲示制**。掲示中の3件は常に進行中扱いで、ボード画面で納品/達成報告する | 27_retention_expansion_plan.md決定の「達成＆帰港でリフレッシュ・未達成は掲示継続」と整合し、受注/辞退のUI状態を丸ごと省ける |
 | E3サイズ依頼の判定 | 依頼は**納品型**（数量・料理向け）と**記録型**（サイズ条件）の2種類に分ける | インベントリは魚種ごとの匹数のみでサイズを持たない。サイズ依頼は「掲示中に `best_sizes` が条件を超えたら達成」の記録型にすることでスキーマ変更を回避 |
 | E8ザリガニの変則ルール | シミュレータに `surface_escape` フラグの分岐を1つ足す（§E8-2）。技術スパイクは不要 | 「体力が残ったまま水面に出たら逃げる」は既存の depth / stamina_ratio で表現でき、追加は10行程度 |
-| E9エリア切替UI | 釣り場マップ画面の左上に「海 / 川」タブを追加する（港からの導線分岐は作らない） | マップ画面はE4/E6でも追加が入る（docs/27 §6-4）。エリア概念をマップに集約し、港の導線は現状維持 |
+| E9エリア切替UI | 釣り場マップ画面の左上に「海 / 川」タブを追加する（港からの導線分岐は作らない） | マップ画面はE4/E6でも追加が入る（27_retention_expansion_plan.md §6-4）。エリア概念をマップに集約し、港の導線は現状維持 |
 
 ---
 
@@ -78,7 +78,7 @@
 
 ### 2-3. 新魚の素材規約
 
-新魚（サメ・ザリガニ・川魚・ヌシ）はすべて `assets/showcase/fish/` に `<id>_card_portrait.png` + `<id>_showcase_sheet.png` の2点セット。参照は `FightFishAssets` 経由。素材ブリーフを docs/22〜24 方式で書き、**サンプル生成→品質確認をコード実装より先に行う**（docs/27 §5-5）。ブリーフ一覧は §13。
+新魚（サメ・ザリガニ・川魚・ヌシ）はすべて `assets/showcase/fish/` に `<id>_card_portrait.png` + `<id>_showcase_sheet.png` の2点セット。参照は `FightFishAssets` 経由。素材ブリーフを docs/22〜24 方式で書き、**サンプル生成→品質確認をコード実装より先に行う**（27_retention_expansion_plan.md §5-5）。ブリーフ一覧は §13。
 
 ### 2-4. smoke増設の一覧（docs/26 §Smoke へ追記するもの)
 
@@ -177,7 +177,7 @@ func compute_earned_titles(stats: Dictionary) -> Array[String]
 | shark_nushi | 白帝を討つ者 | fish_caught_any | nushi_danger_reef | E4 |
 | zarigani_10 | ザリガニ名人 | fish_count | zarigani 10匹 | E8 |
 
-E2以降の称号もE1時点でカタログに全部入れてよい（対象魚が未実装なら判定が偽になるだけ）。後続フェーズは統計を書くだけで称号が増える（docs/27 §6-2 のとおり）。
+E2以降の称号もE1時点でカタログに全部入れてよい（対象魚が未実装なら判定が偽になるだけ）。後続フェーズは統計を書くだけで称号が増える（27_retention_expansion_plan.md §6-2 のとおり）。
 
 ### E1-4. CatchFanfare の演出序列
 
@@ -377,7 +377,7 @@ func roll_hooked_fish(player_level, spot_id, rig_id, environment_id, time_slot_i
 }
 ```
 
-### E3-4. 達成・納品・リフレッシュ（docs/27 決定の実装）
+### E3-4. 達成・納品・リフレッシュ（27_retention_expansion_plan.md 決定の実装）
 
 - **納品型**: ボード画面の「納品」ボタン。`PlayerProgress.deliver_quest(index)` を新設し、インベントリから `count` 匹消費 → `money += reward` → `quest_completed_count += 1` → 称号再計算 → その枠を**即座に新依頼で入替**（「達成して帰港した時に入替」の実装形。納品できるのは帰港中＝ボード画面にいる時だけなので同義）
 - **記録型**: 釣行から帰港した時点で `best_sizes[fish_id] >= target_size_cm` なら達成扱い。ボード画面で「報告」ボタンを押して報酬受取→枠入替（魚の消費なし）
@@ -476,7 +476,7 @@ if bool(spot.get("requires_sea_chart", false)) and sea_chart_fragments < 3:
 ```
 
 - マップ表示: Lv30未満は従来どおり「未発見 Lv.30で発見」。Lv30以上かつ断片<3 は「？」アイコン＋上記メッセージ（存在の告知）。断片3で通常表示
-- 釣り場マップへのサムネ・ピン追加は `docs/qa/fishing_spot_map_qa.md` のfreeze値と照合してから（docs/27 §6-4: マップ追加はフェーズごとに1回で済ませる）
+- 釣り場マップへのサムネ・ピン追加は `docs/qa/fishing_spot_map_qa.md` のfreeze値と照合してから（27_retention_expansion_plan.md §6-4: マップ追加はフェーズごとに1回で済ませる）
 
 ### E4-3. サメ2種＋ヌシ1体
 
@@ -521,21 +521,21 @@ if bool(spot.get("requires_sea_chart", false)) and sea_chart_fragments < 3:
 
 `encounter_weights()` に任意引数 `time_slot_id: String = ""` を追加（5軸目。既存呼び出し互換）。適用は environment と同じパターン: `_time_slot_weight_modifier(fish_id, fish, time_slot_id)` を掛ける。`roll_hooked_fish`（E2）にも `time_slot_id` を通し、`nushi` 節の `time_slot_id` が非空ならヌシ条件に含める。
 
-### E5-3. 港画面の選択UI（docs/27 決定: 出港前に選択）
+### E5-3. 港画面の選択UI（27_retention_expansion_plan.md 決定: 出港前に選択）
 
 - 位置: 「今日の支度」節（`harbor_screen.gd:110` 付近）に、食事バフカードと並ぶ時間帯セレクタ（3ボタンの横並び。未解放はロック表示「Lv.15で解放」）
 - ヘッダーの状況行（`harbor_screen.gd:63`）は**現在ハードコードされた飾り文字列**なので、この機会に実データ駆動へ差し替える: 天候は釣行開始時抽選（変えない）なのでヘッダーでは天候を出さず、「時間帯：{選択中}　潮位：{飾りのまま}　風：{飾りのまま}」の形で時間帯のみ実値にする。潮位・風の実データ化はスコープ外（やらない）
 - 選択は `selected_time_slot_id` に保存（§2-1）。`begin_fishing_trip()` が `stats["time_slot_id"]` / `stats["time_slot_label"]` を載せる
-- 港のスクショ比較を行い、`docs/qa/harbor_qa.md` を新設して選択UIの配置を記録（現状freezeログなし＝低リスク、docs/27 §E5条件2のとおり）
+- 港のスクショ比較を行い、`docs/qa/harbor_qa.md` を新設して選択UIの配置を記録（現状freezeログなし＝低リスク、27_retention_expansion_plan.md §E5条件2のとおり）
 
 ### E5-4. 背景・空気感（素材は最小から)
 
-- 全組み合わせの背景素材は**作らない**。まず釣行画面・港画面に時間帯カラーグレーディング（`CanvasModulate` 相当の色乗算+ビネット1枚）で成立するか検証する（docs/27 §E5条件3）
+- 全組み合わせの背景素材は**作らない**。まず釣行画面・港画面に時間帯カラーグレーディング（`CanvasModulate` 相当の色乗算+ビネット1枚）で成立するか検証する（27_retention_expansion_plan.md §E5条件3）
 - グレーディングで不足と判断した画面だけ、時間帯差し替え背景を素材ブリーフに起こす（§13）。判断は実スクショ横並び比較で行い、`docs/qa/` に判断理由を残す
 
 ### E5-5. 釣り場マップの「よく釣れる魚」追従
 
-**追従させない**（v1スコープ外と決定）。マップは日中基準の表示のまま。理由: freeze照合コストに対して情報価値が薄い。将来要望が出たら別スライスで（docs/27 §設計ノートの判断を確定）
+**追従させない**（v1スコープ外と決定）。マップは日中基準の表示のまま。理由: freeze照合コストに対して情報価値が薄い。将来要望が出たら別スライスで（27_retention_expansion_plan.md §設計ノートの判断を確定）
 
 ### E5-6. 触ってよいファイル / DoD
 
@@ -554,7 +554,7 @@ if bool(spot.get("requires_sea_chart", false)) and sea_chart_fragments < 3:
 | normal | ふつう | 0 | 0 | ×1.00 | ×1.00 | ×1.00 | ×1.00 |
 | hard | むずかしい | +0.02 | -0.04 | ×0.95 | ×1.25 | ×1.25 | ×1.25 |
 
-「むずかしい」の売値・経験値ボーナスが採用条件（docs/27）。
+「むずかしい」の売値・経験値ボーナスが採用条件（27_retention_expansion_plan.md）。
 
 ### E7-2. 適用点（ロジック側は難易度IDを参照するだけ）
 
@@ -568,7 +568,7 @@ if bool(spot.get("requires_sea_chart", false)) and sea_chart_fragments < 3:
 
 - `title_screen.gd`: 「はじめから」押下時に3択パネルを重ねる（既存タイトルレイアウトの上のモーダル。タイトル自体の配置は動かさない）。選択→`reset_game(difficulty_id)` へ引数追加
 - 既存セーブはロード補完で `"normal"`（§2-1）
-- タイトルのfreeze記録は `docs/qa/` に現状ファイルがないため、実装後スクショ比較を行い必要なら `docs/qa/title_qa.md` を新設（docs/27 の「freeze済み」記述はQAログ未整備なので、抵触判断はスクショ比較で代替する）
+- タイトルのfreeze記録は `docs/qa/` に現状ファイルがないため、実装後スクショ比較を行い必要なら `docs/qa/title_qa.md` を新設（27_retention_expansion_plan.md の「freeze済み」記述はQAログ未整備なので、抵触判断はスクショ比較で代替する）
 - ステータス画面のヘッダー付近に現在難易度を小さく表示
 
 ### E7-4. 触ってよいファイル / DoD
@@ -624,7 +624,7 @@ if bool(_fish_data.get("surface_escape", false)) \
 
 ## E9. 川エリア（横展開検証）
 
-方針（docs/27）: 実装は原則カタログ＋素材の追加のみ。**コード変更が必要になった箇所を「横展開の障害リスト」として docs/27 に記録する**のが成果物。以下は着手時にそのまま使うデータ骨子。魚の詳細ステータスは「海の類似魚から導出」ルールで埋める（サンプル3種の素材品質確認が先。§13）。
+方針（27_retention_expansion_plan.md）: 実装は原則カタログ＋素材の追加のみ。**コード変更が必要になった箇所を「横展開の障害リスト」として 27_retention_expansion_plan.md に記録する**のが成果物。以下は着手時にそのまま使うデータ骨子。魚の詳細ステータスは「海の類似魚から導出」ルールで埋める（サンプル3種の素材品質確認が先。§13）。
 
 ### E9-1. エリアとデータの持ち方
 
@@ -670,7 +670,7 @@ if bool(_fish_data.get("surface_escape", false)) \
 
 ### E9-5. DoD
 
-- 既存smokeの川版一式 + 横展開障害リスト（docs/27へ追記）+ validate green
+- 既存smokeの川版一式 + 横展開障害リスト（27_retention_expansion_plan.mdへ追記）+ validate green
 - 検証の観点: 「encounter/fight/図鑑/依頼/称号が、コード変更なしに川データで動いたか」。動かなかった箇所が障害リスト行になる
 
 ---
@@ -694,4 +694,4 @@ if bool(_fish_data.get("surface_escape", false)) \
 
 ## 14. 更新履歴
 
-- 2026-07-05: 初版。docs/27 の未決5件（レベル基準含む）をユーザー確認で解消し、E0〜E9の実装仕様を確定
+- 2026-07-05: 初版。27_retention_expansion_plan.md の未決5件（レベル基準含む）をユーザー確認で解消し、E0〜E9の実装仕様を確定
