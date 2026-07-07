@@ -40,9 +40,12 @@ func _ready() -> void:
 	print("  equipped_rod: %s" % PlayerProgress.equipped_rod_id)
 	print("  equipped_rig: %s" % PlayerProgress.equipped_rig_id)
 	print("  owned_rigs: %s" % ", ".join(PlayerProgress.owned_rigs))
+	print("  bait_fish: %s" % _inventory_summary())
 	print("")
 	print("ゲームを起動し、スロット%dを選んで「危険海域・鮫の根」へ向かってください。" % TARGET_SLOT)
+	print("港の出港準備で餌魚を選んでから出航してください。")
 	print("仕掛けの目安: nomase=小魚 / chokusen=イソメ / kani=岩ガニ（タックル屋で切替）")
+	print("餌魚の目安: アジ=ホシザメ好物 / イワシ=群鳥系 / キハダ=高単価・大型向け")
 	get_tree().quit(0)
 
 
@@ -50,7 +53,12 @@ func _apply_seed_state() -> void:
 	PlayerProgress.level = 30
 	PlayerProgress.exp = 0
 	PlayerProgress.money = 50000
-	PlayerProgress.inventory = {}
+	PlayerProgress.inventory = {
+		"aji": 5,
+		"iwashi": 5,
+		"mejina": 3,
+		"kihada": 3,
+	}
 	PlayerProgress.caught_counts = {}
 	PlayerProgress.spot_caught_counts = {}
 	PlayerProgress.best_sizes = {}
@@ -65,3 +73,17 @@ func _apply_seed_state() -> void:
 	PlayerProgress.quest_board = []
 	PlayerProgress.quest_completed_count = 0
 	PlayerProgress.sea_chart_fragments = PlayerProgress.SEA_CHART_FRAGMENT_MAX
+
+
+func _inventory_summary() -> String:
+	var parts: PackedStringArray = []
+	for fish_id_variant in PlayerProgress.inventory.keys():
+		var fish_id := String(fish_id_variant)
+		var count := PlayerProgress.fish_count(fish_id)
+		if count <= 0:
+			continue
+		var fish := GameData.get_fish(fish_id)
+		var name := String(fish.get("name", fish_id))
+		parts.append("%s x%d" % [name, count])
+	parts.sort()
+	return ", ".join(parts)
