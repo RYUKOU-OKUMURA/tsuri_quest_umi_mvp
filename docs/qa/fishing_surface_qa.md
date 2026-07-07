@@ -1,6 +1,6 @@
 # 水上キャスト画面 QA判断ログ
 
-最終更新: 2026-07-06 / 状態: 非晴天魚影・ヒット演出 uplift 採用
+最終更新: 2026-07-07 / 状態: サメ餌魚UX表示 採用
 参照画像: `reference/01_surface_fishing_mockup.png`
 QA更新コマンド: `./tools/surface_weather_visual_qa.sh`
 
@@ -13,6 +13,10 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh`
 | 非晴天魚影ステージング | WAITING=小・薄、APPROACH=拡大+alpha上昇、BITE=縮小+低alpha | `_draw_asset_fish_shadow()` | BITEで魚影を濃くせず、スプラッシュを主役にする |
 | 非晴天航跡 | 固定楕円なし、進行方向V字航跡+後方リップル | `_draw_asset_fish_wake()` | 旧楕円アウトラインの照準レティクル感を解消 |
 | rain/fogオーバーレイ | rain=2枚縦スクロール、fog=横ドリフト+alpha揺らぎ | `_draw_weather_texture_overlay()` | 静止合成をやめ、天候の動きを出す |
+| サメ餌魚HUD表示 | `spot_id == "danger_reef"` かつ `shark_lure_fish_id` ありの時だけ、下段を `餌魚：<魚名>` に差し替え | `src/ui/components/fight_hud.gd` | 釣行開始時に消費済みの「この釣行で使った餌魚」を見せる。在庫・残数は表示しない |
+| サメ餌魚APPROACH/BITE文 | 餌魚ありの時だけ `魚影が餌の<魚名>へ近づいている` / `<魚名>に何かが食いついた`。ヒット魚名・サメ名は出さない | `src/core/fishing_simulator.gd` / `src/ui/components/fight_sidebar.gd` | 上部メッセージパネルはAPPROACH/BITEで非表示のため、実表示される右サイドカードにも反映 |
+| 未確認魚影カード詳細行 | signal art比率を compact=0.36 / 通常=0.34、詳細2行を下端から逆算して配置 | `src/ui/components/fight_sidebar.gd` | 「釣り場」「タナ / エサ」2行の下端見切れP1を解消 |
+| 好物発見ファンファーレ | `favorite_bait_discovery_text` を記録更新・撃破報酬の下、称号の上に表示。`megalodon` は除外 | `src/ui/fishing_screen.gd` / `src/ui/components/catch_fanfare.gd` | 好物一致サメだけポジティブな発見行を返す。不一致・非サメ・メガロドンは無言 |
 
 ## 2. 不採用・再試行禁止リスト
 
@@ -28,6 +32,7 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh`
 |---|---|---|---|
 | 装飾パス累計 | 1 | 非晴天魚影の2パス描画、V字航跡、rain/fogオーバーレイアニメ化 | 採用 |
 | 魚影tint/alpha | 2 | rainで沈みすぎたため、環境色tintを明るめの青灰へ戻しAPPROACHのみalpha/scaleを増加 | 採用・close |
+| 未確認魚影カード下部詰め | 1 | signal art比率を圧縮し、詳細2行を下端から逆算配置 | 採用・close |
 
 ## 4. 暫定判定・再検証TODO
 
@@ -43,6 +48,31 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh`
 完了済みのためなし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-07 サメ餌魚の釣行中UX表示を採用。
+
+変更したもの:
+- 危険海域かつ餌魚ありの時だけ、下部HUD「使用中のエサ」下段を `餌魚：<魚名>` に差し替え。
+- APPROACH/BITE の simulator文言と、実際に見える右サイドカード「今の状況」を餌魚主語に変更。
+- 未確認魚影カードの signal art 高さと詳細2行の配置を調整し、下端見切れを解消。
+- 好物一致サメ釣果のみ、ファンファーレに `ホシザメはアジが大好物みたいだ！` 形式の発見行を追加。メガロドンは除外。
+- `tools/fishing_surface_states_preview.gd` に釣り場・餌魚・出力prefixのQA用環境変数を追加し、`tools/catch_fanfare_preview.gd` に `favorite_bait` シナリオを追加。
+
+変えていないもの:
+- E10-4の餌魚消費、抽選重み、メガロドン条件。
+- 晴天状態別プレート、非晴天魚影素材、天候オーバーレイのfreeze値。
+- 港画面の餌魚セットUI、図鑑の好物永続表示。
+
+検証:
+- `fishing_reveal_smoke.tscn`: 餌魚名がAPPROACH/BITE文言に出ても、アワセ前の魚種公開は発生しない。
+- `catch_fanfare_smoke.tscn`: 好物一致サメで発見行あり、不一致サメ・メガロドンで発見行なし。
+- `shark_lure_audit.tscn`: 餌魚重み・大型サメ解禁・メガロドン条件の監査が従来どおりgreen。
+
+判断根拠:
+- 危険海域APPROACH: `docs/qa/evidence/fishing_surface/2026-07-07_shark_bait_approach.png`
+- 危険海域BITE: `docs/qa/evidence/fishing_surface/2026-07-07_shark_bait_bite.png`
+- 通常釣り場BITE回帰: `docs/qa/evidence/fishing_surface/2026-07-07_shark_bait_normal_bite_regression.png`
+- 好物発見ファンファーレ: `docs/qa/evidence/fishing_surface/2026-07-07_shark_bait_favorite_fanfare.png`
 
 2026-07-06 右上「釣り場」情報パネル（READY時のみ表示）のバグ修正。
 

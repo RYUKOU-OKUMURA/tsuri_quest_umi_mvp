@@ -5,11 +5,7 @@ const ThemeFactory = preload("res://src/ui/ui_theme.gd")
 const FishingScreen = preload("res://src/ui/fishing_screen.gd")
 
 const VW := Vector2i(1280, 720)
-const OUT_READY := "/tmp/tsuri_fishing_surface_ready.png"
-const OUT_CASTING := "/tmp/tsuri_fishing_surface_casting.png"
-const OUT_WAITING := "/tmp/tsuri_fishing_surface_waiting.png"
-const OUT_APPROACH := "/tmp/tsuri_fishing_surface_approach.png"
-const OUT_BITE := "/tmp/tsuri_fishing_surface_bite.png"
+const DEFAULT_OUT_PREFIX := "/tmp/tsuri_fishing_surface"
 
 
 func _ready() -> void:
@@ -23,23 +19,27 @@ func _ready() -> void:
 
 	var screen := FishingScreen.new()
 	screen.theme = ThemeFactory.build_theme()
-	var config := {}
-	var environment_id := OS.get_environment("TSURI_SURFACE_STATE_ENVIRONMENT_ID")
-	if not environment_id.strip_edges().is_empty():
-		var environment := GameData.get_fishing_environment(environment_id)
-		config["continue_trip"] = true
-		config["trip_stats"] = _trip_stats_for_environment(environment)
+	var config := _preview_config()
 	screen.configure(config)
 	screen.size = Vector2(VW)
 	vp.add_child(screen)
 
+	var out_prefix := OS.get_environment("TSURI_SURFACE_STATE_OUT_PREFIX").strip_edges()
+	if out_prefix.is_empty():
+		out_prefix = DEFAULT_OUT_PREFIX
+	var out_ready := "%s_ready.png" % out_prefix
+	var out_casting := "%s_casting.png" % out_prefix
+	var out_waiting := "%s_waiting.png" % out_prefix
+	var out_approach := "%s_approach.png" % out_prefix
+	var out_bite := "%s_bite.png" % out_prefix
+
 	await _settle()
-	_save(vp, OUT_READY)
+	_save(vp, out_ready)
 
 	screen._simulator.cast()
 	await get_tree().create_timer(0.16).timeout
 	await _settle()
-	_save(vp, OUT_CASTING)
+	_save(vp, out_casting)
 
 	var reached := await _wait_until(screen, FishingSimulator.State.WAITING, 3.2)
 	if not reached:
@@ -48,7 +48,7 @@ func _ready() -> void:
 	await get_tree().create_timer(0.26).timeout
 	await _settle()
 	print("capture waiting state=%d" % screen._simulator.state)
-	_save(vp, OUT_WAITING)
+	_save(vp, out_waiting)
 
 	reached = await _wait_until(screen, FishingSimulator.State.APPROACH, 5.2)
 	if not reached:
@@ -57,7 +57,7 @@ func _ready() -> void:
 	await get_tree().create_timer(0.38).timeout
 	await _settle()
 	print("capture approach state=%d" % screen._simulator.state)
-	_save(vp, OUT_APPROACH)
+	_save(vp, out_approach)
 
 	reached = await _wait_until(screen, FishingSimulator.State.BITE, 4.2)
 	if not reached:
@@ -66,15 +66,45 @@ func _ready() -> void:
 	await get_tree().create_timer(0.10).timeout
 	await _settle()
 	print("capture bite state=%d" % screen._simulator.state)
-	_save(vp, OUT_BITE)
+	_save(vp, out_bite)
 
 	print("fishing_surface_states_preview:")
-	print(OUT_READY)
-	print(OUT_CASTING)
-	print(OUT_WAITING)
-	print(OUT_APPROACH)
-	print(OUT_BITE)
+	print(out_ready)
+	print(out_casting)
+	print(out_waiting)
+	print(out_approach)
+	print(out_bite)
 	get_tree().quit()
+
+
+func _preview_config() -> Dictionary:
+	var config := {}
+	var spot_id := OS.get_environment("TSURI_SURFACE_STATE_SPOT_ID").strip_edges()
+	var environment_id := OS.get_environment("TSURI_SURFACE_STATE_ENVIRONMENT_ID").strip_edges()
+	var lure_fish_id := OS.get_environment("TSURI_SURFACE_STATE_SHARK_LURE_FISH_ID").strip_edges()
+	if not spot_id.is_empty():
+		config["spot_id"] = spot_id
+	if spot_id.is_empty() and environment_id.is_empty() and lure_fish_id.is_empty():
+		return config
+
+	var environment := GameData.get_fishing_environment(
+		environment_id if not environment_id.is_empty() else GameData.DEFAULT_FISHING_ENVIRONMENT_ID
+	)
+	var stats := _trip_stats_for_environment(environment)
+	if spot_id == "danger_reef" or not lure_fish_id.is_empty():
+		var nomase := GameData.get_rig("nomase")
+		if not nomase.is_empty():
+			stats["rig_id"] = "nomase"
+			stats["rig_name"] = String(nomase.get("name", "泳がせ仕掛け"))
+			stats["rig_bait_types"] = GameData.rig_bait_types("nomase")
+	if not lure_fish_id.is_empty():
+		var lure_fish := GameData.get_fish(lure_fish_id)
+		if not lure_fish.is_empty() and not bool(lure_fish.get("shark", false)):
+			stats["shark_lure_fish_id"] = lure_fish_id
+			stats["shark_lure_fish_name"] = String(lure_fish.get("name", lure_fish_id))
+	config["continue_trip"] = true
+	config["trip_stats"] = stats
+	return config
 
 
 func _trip_stats_for_environment(environment: Dictionary) -> Dictionary:
