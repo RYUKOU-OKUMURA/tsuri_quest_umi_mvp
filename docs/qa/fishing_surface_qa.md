@@ -1,8 +1,8 @@
 # 水上キャスト画面 QA判断ログ
 
-最終更新: 2026-07-07 / 状態: サメ餌魚UX表示 採用
-参照画像: `reference/01_surface_fishing_mockup.png`
-QA更新コマンド: `./tools/surface_weather_visual_qa.sh`
+最終更新: 2026-07-07 / 状態: サメ餌魚READYセレクタ 採用
+参照画像: `reference/01_surface_fishing_mockup.png` / `reference/13_fishing_ready_danger_mockup.png`
+QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `tools/fishing_surface_states_preview.gd`
 
 ## 1. freeze値（正本）
 
@@ -13,7 +13,8 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh`
 | 非晴天魚影ステージング | WAITING=小・薄、APPROACH=拡大+alpha上昇、BITE=縮小+低alpha | `_draw_asset_fish_shadow()` | BITEで魚影を濃くせず、スプラッシュを主役にする |
 | 非晴天航跡 | 固定楕円なし、進行方向V字航跡+後方リップル | `_draw_asset_fish_wake()` | 旧楕円アウトラインの照準レティクル感を解消 |
 | rain/fogオーバーレイ | rain=2枚縦スクロール、fog=横ドリフト+alpha揺らぎ | `_draw_weather_texture_overlay()` | 静止合成をやめ、天候の動きを出す |
-| サメ餌魚HUD表示 | `spot_id == "danger_reef"` かつ `shark_lure_fish_id` ありの時だけ、下段を `餌魚：<魚名>` に差し替え | `src/ui/components/fight_hud.gd` | 釣行開始時に消費済みの「この釣行で使った餌魚」を見せる。在庫・残数は表示しない |
+| サメ餌魚READYセレクタ | `spot_id == "danger_reef"` のREADY時だけ下段HUD左をサメ餌魚セレクタに差し替え。`餌魚なし`・所持魚・残チャージ中の魚を左右で選ぶ | `src/ui/fishing_screen.gd` / `src/ui/components/fight_hud.gd` | docs/38準拠。餌魚は釣り場選択では消費せず、投げる時に1匹消費してチャージを付与する |
+| サメ餌魚チャージ表示 | READYでは `所持 xN` と `あとN回` / `1匹で最大N回` を表示。CASTING以降は下段HUDに `餌魚：<魚名>（あとN回）` を表示 | `src/ui/components/fight_hud.gd` | レア=3回、ぬし=5回の耐久をUI上で追えるようにする。通常魚は1投ごとに1匹消費 |
 | サメ餌魚APPROACH/BITE文 | 餌魚ありの時だけ `魚影が餌の<魚名>へ近づいている` / `<魚名>に何かが食いついた`。ヒット魚名・サメ名は出さない | `src/core/fishing_simulator.gd` / `src/ui/components/fight_sidebar.gd` | 上部メッセージパネルはAPPROACH/BITEで非表示のため、実表示される右サイドカードにも反映 |
 | 未確認魚影カード詳細行 | signal art比率を compact=0.36 / 通常=0.34、詳細2行を下端から逆算して配置 | `src/ui/components/fight_sidebar.gd` | 「釣り場」「タナ / エサ」2行の下端見切れP1を解消 |
 | 好物発見ファンファーレ | `favorite_bait_discovery_text` を記録更新・撃破報酬の下、称号の上に表示。`megalodon` は除外 | `src/ui/fishing_screen.gd` / `src/ui/components/catch_fanfare.gd` | 好物一致サメだけポジティブな発見行を返す。不一致・非サメ・メガロドンは無言 |
@@ -49,7 +50,32 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh`
 
 ## 7. 判断ログ（直近パスのみ）
 
-2026-07-07: docs/38採用により消費モデルが変更（キャスト時消費＋チャージ）。§1「サメ餌魚HUD表示」freeze（「在庫・残数は表示しない」「釣行開始時消費済み」前提）は docs/38 実装時に改定予定。残数表示仕様の正本は docs/38 §4-2。本パスでは freeze 値そのものは変更しない。
+2026-07-07 サメ餌魚READYセレクタ＋チャージ表示を採用。
+
+変更したもの:
+- 危険海域READYの下段HUDを、左=サメ餌魚セレクタ / 中央=投げる / 右=釣り場変更・港へ戻る の専用レイアウトに差し替え。
+- 左右クリックと `←` / `→` で、`餌魚なし`・所持魚・残チャージ中の魚を切替可能にした。
+- READYで所持数とチャージ（`あとN回` / `1匹で最大N回`）を表示し、CASTING以降は `餌魚：<魚名>（あとN回）` を下段HUDへ引き継ぐ。
+- 危険海域READYの未抽選状態では右サイドのタナ表示を `--` にし、投げる前に魚の深度が出ないようにした。
+- `tools/fishing_surface_states_preview.gd` を実際のREADY投入ボタン経由に変更し、QA用の餌魚選択プレビューでもキャスト時消費モデルを通すようにした。
+
+変えていないもの:
+- 水上背景・天候・魚影合成のfreeze値。
+- FIGHT中のテンション/スタミナ/深度/操作ヒントの既存HUDレイアウト。
+- 右サイドカードの未確認魚影レイアウト（未抽選時の深度だけ非表示）。
+
+検証:
+- `./tools/validate_project.sh`: showcase素材監査、魚シート監査、Godotロード確認すべて通過。
+- `fishing_harbor_return_smoke.tscn`: キャスト時消費、レア3回、ぬし5回、餌魚なし再投入回帰を確認。
+- `fishing_spot_select_smoke.tscn`: 釣り場選択時に餌魚を消費しないことを確認。
+- `harbor_screen_smoke.tscn` / `fishing_reveal_smoke.tscn` / `catch_fanfare_smoke.tscn`: 周辺画面と未公開魚影・ファンファーレ回帰を確認。
+- `fishing_surface_states_preview.tscn`: 非headless通常起動で危険海域READY、レアチャージREADY、投入後残回数、通常READYのスクショを取得して目視確認。
+
+判断根拠:
+- 参照比較: `docs/qa/evidence/fishing_surface/2026-07-07_shark_lure_ready_selector_reference_compare.png`
+- 通常餌魚READY: `docs/qa/evidence/fishing_surface/2026-07-07_shark_lure_ready_selector_common.png`
+- レア餌魚チャージREADY: `docs/qa/evidence/fishing_surface/2026-07-07_shark_lure_ready_selector_rare_charges.png`
+- 投入後残チャージHUD: `docs/qa/evidence/fishing_surface/2026-07-07_shark_lure_cast_remaining_charges.png`
 
 2026-07-07 サメ餌魚の釣行中UX表示を採用。
 

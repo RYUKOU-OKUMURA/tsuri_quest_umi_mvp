@@ -152,6 +152,8 @@ func _build_screen() -> void:
 	_fight_hud.give_line_changed.connect(func(active: bool) -> void: _simulator.set_giving_line(active))
 	_fight_hud.harbor_pressed.connect(_request_harbor_return)
 	_fight_hud.change_spot_pressed.connect(_request_spot_change)
+	_fight_hud.shark_lure_previous_pressed.connect(func() -> void: _cycle_selected_shark_lure(-1))
+	_fight_hud.shark_lure_next_pressed.connect(func() -> void: _cycle_selected_shark_lure(1))
 	left_column.add_child(_fight_hud)
 
 	var info_panel := MarginContainer.new()
@@ -386,10 +388,7 @@ func _shark_lure_summary_text() -> String:
 		var selected_fish := GameData.get_fish(_selected_shark_lure_fish_id)
 		if not selected_fish.is_empty():
 			return String(selected_fish.get("name", _selected_shark_lure_fish_id))
-	var fish_id := String(_trip_stats.get("shark_lure_fish_id", ""))
-	if fish_id.is_empty():
-		return ""
-	return String(_trip_stats.get("shark_lure_fish_name", fish_id))
+	return ""
 
 
 func _create_result_overlay() -> void:
@@ -536,6 +535,14 @@ func _input(event: InputEvent) -> void:
 	elif (
 		key_event.pressed
 		and not key_event.echo
+		and _can_change_selected_shark_lure()
+		and (key_event.keycode == KEY_LEFT or key_event.keycode == KEY_RIGHT)
+	):
+		_cycle_selected_shark_lure(-1 if key_event.keycode == KEY_LEFT else 1)
+		get_viewport().set_input_as_handled()
+	elif (
+		key_event.pressed
+		and not key_event.echo
 		and (key_event.keycode == KEY_E or key_event.keycode == KEY_ENTER)
 	):
 		_on_main_action_pressed()
@@ -589,6 +596,7 @@ func _prepare_simulator_with_current_fish() -> void:
 	_surface_view.bind_simulator(_simulator)
 	_fight_sidebar.bind(_simulator, _current_fish, _trip_stats)
 	_fight_hud.bind(_simulator, _current_fish, _trip_stats)
+	_sync_ready_shark_lure_selector()
 
 
 func _delays_hook_roll_until_cast() -> bool:
@@ -660,6 +668,88 @@ func _valid_shark_lure_selection_id(fish_id: String) -> String:
 	if PlayerProgress.fish_count(fish_id) <= 0 and _shark_lure_remaining_charges(fish_id) <= 0:
 		return ""
 	return fish_id
+
+
+func _can_change_selected_shark_lure() -> bool:
+	return (
+		_spot_id == "danger_reef"
+		and _simulator != null
+		and _simulator.state == FishingSimulator.State.READY
+	)
+
+
+func _cycle_selected_shark_lure(direction: int) -> void:
+	if not _can_change_selected_shark_lure():
+		return
+	var candidates := _shark_lure_candidate_ids()
+	if candidates.is_empty():
+		candidates.append("")
+	var current_index := candidates.find(_selected_shark_lure_fish_id)
+	if current_index < 0:
+		current_index = 0
+	var next_index := current_index + direction
+	while next_index < 0:
+		next_index += candidates.size()
+	while next_index >= candidates.size():
+		next_index -= candidates.size()
+	_selected_shark_lure_fish_id = candidates[next_index]
+	_refresh_ready_lure_selection_display()
+
+
+func _shark_lure_candidate_ids() -> Array[String]:
+	var ids: Array[String] = [""]
+	var seen: Dictionary = {"": true}
+	for fish_id_variant in PlayerProgress.inventory.keys():
+		var fish_id := _valid_shark_lure_selection_id(String(fish_id_variant))
+		if fish_id.is_empty() or seen.has(fish_id):
+			continue
+		ids.append(fish_id)
+		seen[fish_id] = true
+	for fish_id_variant in _shark_lure_charges().keys():
+		var fish_id := _valid_shark_lure_selection_id(String(fish_id_variant))
+		if fish_id.is_empty() or seen.has(fish_id):
+			continue
+		ids.append(fish_id)
+		seen[fish_id] = true
+	return ids
+
+
+func _refresh_ready_lure_selection_display() -> void:
+	if _spot_detail_label != null:
+		_spot_detail_label.text = _spot_detail_text()
+	_sync_ready_shark_lure_selector()
+	_update_ui()
+
+
+func _sync_ready_shark_lure_selector() -> void:
+	if _fight_hud == null:
+		return
+	_fight_hud.set_shark_lure_selector(_ready_shark_lure_selector_data())
+
+
+func _ready_shark_lure_selector_data() -> Dictionary:
+	var data: Dictionary = {
+		"danger": _spot_id == "danger_reef",
+		"candidate_count": 0,
+		"fish_id": _selected_shark_lure_fish_id,
+		"fish": {},
+		"count": 0,
+		"remaining": 0,
+		"total_charges": 0,
+	}
+	if _spot_id != "danger_reef":
+		return data
+	data["candidate_count"] = _shark_lure_candidate_ids().size()
+	if _selected_shark_lure_fish_id.is_empty():
+		return data
+	var fish := GameData.get_fish(_selected_shark_lure_fish_id)
+	if fish.is_empty() or bool(fish.get("shark", false)):
+		return data
+	data["fish"] = fish
+	data["count"] = PlayerProgress.fish_count(_selected_shark_lure_fish_id)
+	data["remaining"] = _shark_lure_remaining_charges(_selected_shark_lure_fish_id)
+	data["total_charges"] = GameData.shark_lure_charges_for(fish)
+	return data
 
 
 func _shark_lure_charges() -> Dictionary:

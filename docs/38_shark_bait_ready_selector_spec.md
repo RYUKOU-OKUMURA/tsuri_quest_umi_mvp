@@ -1,7 +1,7 @@
 # 38. サメ餌魚のREADYセレクタ＋レア度耐久チャージ 実装仕様
 
 作成日: 2026-07-07
-状態: 仕様確定・実装前
+状態: 実装完了（2026-07-07）
 位置づけ: `docs/37_shark_bait_in_trip_management_design_note.md` の全面採用を前提に、(1) レア度別の耐久チャージ、(2) READY画面の餌魚セレクタUI、(3) docs/37レビューで出た4つの穴（経済バランス・奇襲プラン・抽選タイミング統一判断・継続釣行フォールバック）を確定させた実装仕様。実装はこのdocとdocs/37を正本とする。
 
 ## 0. 要約
@@ -228,3 +228,4 @@ docs/37 §8に加えて:
 - 2026-07-07: 調査3本（READY UI実測・レア度分布・抽選タイミング影響）を実施。チャージは trip_stats 管理、抽選遅延は危険海域のみ、と確定
 - 2026-07-07: 餌魚切替時の残チャージは釣行内保持と決定（実験ループを罰しない）。全魚チャージ一覧は非表示（帳簿化の禁止）
 - 2026-07-07: ユーザー決定「READY UIを刷新する」。理想イメージ `reference/13_fishing_ready_danger_mockup.png` を生成し、§4を「左下パネル差し替え」から「READY専用下段バー（セレクタ＋大型投げるボタン＋メニュー）」へ改訂。READY中のゲージ非表示・タナ情報漏れの解消を含む。参照画像のサメ形シルエットは正体秘匿原則に反するため不採用（§4-4）
+- 2026-07-07: 実装完了。`GameData.shark_lure_charges_for()`、危険海域のみのキャスト時消費/抽選遅延、READY専用下段バー、左右切替、タナ未抽選表示、preview更新を追加。検証は `./tools/validate_project.sh`、釣行/釣り場/港/魚影/ファンファーレsmoke、`fishing_surface_states_preview.tscn` の実スクショ。QA証拠は `docs/qa/fishing_surface_qa.md` §7 と `docs/qa/evidence/fishing_surface/2026-07-07_shark_lure_ready_selector_reference_compare.png` を参照

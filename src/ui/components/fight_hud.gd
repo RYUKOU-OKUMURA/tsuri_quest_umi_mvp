@@ -8,8 +8,11 @@ signal reel_changed(active: bool)
 signal give_line_changed(active: bool)
 signal harbor_pressed
 signal change_spot_pressed
+signal shark_lure_previous_pressed
+signal shark_lure_next_pressed
 
 const GameFontsScript = preload("res://src/ui/game_fonts.gd")
+const FightFishAssetsScript = preload("res://src/ui/fight_fish_assets.gd")
 const HUD_FRAME_PATH := "res://assets/showcase/underwater/fight_hud_frame.png"
 const ICON_SHEET_PATH := "res://assets/showcase/underwater/fight_icon_sheet.png"
 const HUD_BAIT_ICON_PATH := "res://assets/showcase/underwater/hud_bait_icon.png"
@@ -24,6 +27,7 @@ const ICON_BAIT := 6
 var simulator: FishingSimulator
 var fish_data: Dictionary = {}
 var trip_stats: Dictionary = {}
+var shark_lure_selector: Dictionary = {}
 
 var _hud_frame: Texture2D
 var _icons: Texture2D
@@ -38,14 +42,31 @@ var _reel_rect := Rect2()
 var _give_rect := Rect2()
 var _harbor_rect := Rect2()
 var _change_spot_rect := Rect2()
+var _lure_prev_rect := Rect2()
+var _lure_next_rect := Rect2()
 var _reeling := false
 var _giving := false
+var _lure_portrait: Texture2D
+var _lure_portrait_id := ""
 
 
 func bind(value: FishingSimulator, fish: Dictionary, stats: Dictionary) -> void:
 	simulator = value
 	fish_data = fish.duplicate(true)
 	trip_stats = stats.duplicate(true)
+	queue_redraw()
+
+
+func set_shark_lure_selector(data: Dictionary) -> void:
+	shark_lure_selector = data.duplicate(true)
+	var fish_id := String(shark_lure_selector.get("fish_id", ""))
+	if fish_id.is_empty():
+		_lure_portrait = null
+		_lure_portrait_id = ""
+	elif fish_id != _lure_portrait_id:
+		var fish: Dictionary = shark_lure_selector.get("fish", {})
+		_lure_portrait = _load_texture_if_exists(FightFishAssetsScript.card_portrait_path(fish))
+		_lure_portrait_id = fish_id
 	queue_redraw()
 
 
@@ -69,6 +90,14 @@ func _ready() -> void:
 		_key_minus_icon = load(HUD_KEY_MINUS_PATH) as Texture2D
 
 
+func _load_texture_if_exists(path: String) -> Texture2D:
+	if path.is_empty():
+		return null
+	if ResourceLoader.exists(path) or FileAccess.file_exists(path):
+		return load(path) as Texture2D
+	return null
+
+
 func _process(_delta: float) -> void:
 	if simulator != null:
 		queue_redraw()
@@ -89,6 +118,12 @@ func _gui_input(event: InputEvent) -> void:
 		elif _give_rect.has_point(pos):
 			_giving = true
 			give_line_changed.emit(true)
+			accept_event()
+		elif _lure_prev_rect.has_point(pos):
+			shark_lure_previous_pressed.emit()
+			accept_event()
+		elif _lure_next_rect.has_point(pos):
+			shark_lure_next_pressed.emit()
 			accept_event()
 		elif _main_rect.has_point(pos):
 			main_action_pressed.emit()
@@ -120,6 +155,13 @@ func _draw() -> void:
 		draw_texture_rect(_hud_frame, rect, false, Color.WHITE)
 	else:
 		_draw_panel(rect, Palette.FIGHT_HUD_FALLBACK_PANEL_FILL, Palette.GOLD_DEEP, Palette.GOLD)
+
+	if _simulator_state() == FishingSimulator.State.READY:
+		var ready_rect := Rect2(size.x * 0.014, size.y * 0.065, size.x * 0.972, size.y * 0.875)
+		if _hud_frame == null:
+			ready_rect = rect.grow(-10.0)
+		_draw_ready_controls(font, ready_rect)
+		return
 
 	var gap := 10.0
 	var top := Rect2(gap, gap, size.x - gap * 2.0, minf(92.0, size.y * 0.54))
@@ -230,6 +272,8 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 	_main_rect = Rect2()
 	_reel_rect = Rect2()
 	_give_rect = Rect2()
+	_lure_prev_rect = Rect2()
+	_lure_next_rect = Rect2()
 	if _can_reel_controls():
 		_reel_rect = key_slots[0]
 		_give_rect = key_slots[1]
@@ -281,6 +325,208 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 	else:
 		_draw_key_row(font, _change_spot_rect.position + Vector2(12.0, _change_spot_rect.size.y * 0.62), "+", "釣り場変更")
 		_draw_key_row(font, _harbor_rect.position + Vector2(12.0, _harbor_rect.size.y * 0.62), "-", "港へ戻る")
+
+
+func _draw_ready_controls(font: Font, rect: Rect2) -> void:
+	var gap := 10.0
+	var menu_w := rect.size.x * (0.175 if _hud_frame != null else 0.210)
+	var lure_w := rect.size.x * (0.405 if _hud_frame != null else 0.375)
+	var cast_w := rect.size.x - lure_w - menu_w - gap * 2.0
+	var lure_rect := Rect2(rect.position, Vector2(lure_w, rect.size.y))
+	var cast_rect := Rect2(Vector2(lure_rect.end.x + gap, rect.position.y), Vector2(cast_w, rect.size.y))
+	var menu_rect := Rect2(Vector2(cast_rect.end.x + gap, rect.position.y), Vector2(menu_w, rect.size.y))
+	_main_rect = Rect2()
+	_reel_rect = Rect2()
+	_give_rect = Rect2()
+	_lure_prev_rect = Rect2()
+	_lure_next_rect = Rect2()
+
+	if bool(shark_lure_selector.get("danger", false)):
+		_draw_ready_shark_lure_panel(font, lure_rect)
+	else:
+		_draw_ready_bait_panel(font, lure_rect)
+	_draw_ready_cast_panel(font, cast_rect)
+	_draw_ready_menu_panel(font, menu_rect)
+
+
+func _draw_ready_shark_lure_panel(font: Font, rect: Rect2) -> void:
+	_draw_ready_panel(rect, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
+	var inner := rect.grow(-10.0)
+	_draw_text(font, "サメ餌魚", inner.position + Vector2(6.0, 21.0), 17 if _hud_frame != null else 18, Palette.FIGHT_HUD_DARK_INK, 0)
+	var count := int(shark_lure_selector.get("candidate_count", 0))
+	var arrows_enabled := count > 1
+	var arrow_w := 34.0
+	_lure_prev_rect = Rect2(inner.position + Vector2(2.0, 42.0), Vector2(arrow_w, inner.size.y - 54.0))
+	_lure_next_rect = Rect2(Vector2(inner.end.x - arrow_w - 2.0, inner.position.y + 42.0), Vector2(arrow_w, inner.size.y - 54.0))
+	_draw_ready_arrow(font, _lure_prev_rect, "<", arrows_enabled)
+	_draw_ready_arrow(font, _lure_next_rect, ">", arrows_enabled)
+
+	var card := Rect2(
+		Vector2(_lure_prev_rect.end.x + 8.0, inner.position.y + 34.0),
+		Vector2(_lure_next_rect.position.x - _lure_prev_rect.end.x - 16.0, inner.size.y - 40.0)
+	)
+	_draw_ready_panel(card, Color(Palette.PARCHMENT_DEEP, 0.92), Palette.GOLD_DEEP, Palette.GOLD_BRIGHT)
+	var fish_id := String(shark_lure_selector.get("fish_id", ""))
+	if fish_id.is_empty():
+		_draw_bait_icon(card.position + Vector2(56.0, card.size.y * 0.57))
+		_draw_text(font, "餌魚なし", card.position + Vector2(112.0, 42.0), 22, Palette.FIGHT_HUD_DARK_INK, 0)
+		_draw_text(font, "通常サメ狙い", card.position + Vector2(112.0, 66.0), 14, Palette.FIGHT_HUD_HINT_NOTE, 0)
+		return
+
+	var fish: Dictionary = shark_lure_selector.get("fish", {})
+	var fish_name := String(fish.get("name", fish_id))
+	var inventory_count := int(shark_lure_selector.get("count", 0))
+	var remaining := int(shark_lure_selector.get("remaining", 0))
+	var total_charges := int(shark_lure_selector.get("total_charges", 0))
+	var portrait := Rect2(card.position + Vector2(14.0, 17.0), Vector2(86.0, card.size.y - 30.0))
+	_draw_ready_panel(portrait, Color(Palette.FIGHT_HUD_PANEL_BLUE_FILL, 0.82), Palette.GOLD_DEEP, Palette.GOLD)
+	if _lure_portrait != null:
+		_draw_texture_icon(_lure_portrait, portrait.grow(-5.0))
+	else:
+		_draw_bait_icon(portrait.position + portrait.size * 0.5)
+	_draw_text_fit(font, fish_name, card.position + Vector2(112.0, 35.0), card.size.x - 126.0, 21, 15, Palette.FIGHT_HUD_DARK_INK, 0)
+	_draw_text(font, "所持 x%d" % inventory_count, card.position + Vector2(112.0, 58.0), 14, Palette.FIGHT_HUD_HINT_NOTE, 0)
+	var charge_text := "投げると1匹つかう"
+	if remaining > 0:
+		charge_text = "あと%d回" % remaining
+		if inventory_count <= 0:
+			charge_text = "%s（在庫0）" % charge_text
+	elif total_charges > 1:
+		charge_text = "1匹で最大%d回" % total_charges
+	_draw_text_fit(font, charge_text, card.position + Vector2(112.0, 82.0), card.size.x - 126.0, 15, 11, Palette.FIGHT_HUD_DARK_INK, 0)
+	if total_charges > 1:
+		var pips := Rect2(card.position + Vector2(112.0, 96.0), Vector2(card.size.x - 126.0, 16.0))
+		var displayed_charges := remaining if remaining > 0 else total_charges if inventory_count > 0 else 0
+		_draw_lure_charge_pips(font, pips, displayed_charges, total_charges)
+
+
+func _draw_ready_arrow(font: Font, rect: Rect2, label: String, enabled: bool) -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(Palette.FIGHT_HUD_MENU_BUTTON_FRAME_FILL, 0.82 if enabled else 0.34)
+	style.border_color = Color(Palette.FIGHT_HUD_MENU_BUTTON_BORDER, 0.82 if enabled else 0.28)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(5)
+	style.shadow_color = Color(Color.BLACK, 0.20)
+	style.shadow_size = 1
+	draw_style_box(style, rect)
+	var text_size := 22
+	var text_w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, text_size).x
+	var color := Palette.TEXT_BONE if enabled else Color(Palette.TEXT_BONE, 0.38)
+	_draw_text(font, label, rect.position + Vector2((rect.size.x - text_w) * 0.5, rect.size.y * 0.5 + 8.0), text_size, color, 1 if enabled else 0)
+
+
+func _draw_ready_bait_panel(font: Font, rect: Rect2) -> void:
+	_draw_ready_panel(rect, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
+	var icon_center := rect.position + Vector2(82.0, rect.size.y * 0.58)
+	_draw_text(font, "使用中のエサ", rect.position + Vector2(18.0, 27.0), 18, Palette.FIGHT_HUD_DARK_INK, 0)
+	if _bait_icon != null:
+		_draw_bait_texture_icon(Rect2(icon_center - Vector2(42.0, 38.0), Vector2(84.0, 76.0)))
+	else:
+		_draw_bait_icon(icon_center)
+	_draw_text_fit(font, _rig_name_text(), rect.position + Vector2(142.0, 68.0), rect.size.x - 160.0, 24, 16, Palette.FIGHT_HUD_DARK_INK, 0)
+	_draw_text_fit(font, _rig_bait_text(), rect.position + Vector2(142.0, 96.0), rect.size.x - 160.0, 16, 12, Palette.FIGHT_HUD_HINT_NOTE, 0)
+
+
+func _draw_ready_cast_panel(font: Font, rect: Rect2) -> void:
+	_draw_ready_panel(rect, Color(Palette.FIGHT_HUD_PANEL_BLUE_FILL, 0.84), Palette.FIGHT_HUD_PANEL_BLUE_BORDER, Palette.GOLD)
+	var title := "仕掛け投入"
+	var title_size := 17
+	var title_w := font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x
+	_draw_text(font, title, rect.position + Vector2((rect.size.x - title_w) * 0.5, 30.0), title_size, Palette.TEXT_BONE, 1)
+	_main_rect = Rect2(rect.position + Vector2(34.0, 46.0), Vector2(rect.size.x - 68.0, rect.size.y - 66.0))
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(Palette.FIGHT_HUD_KEY_ENTER_FILL, 0.96)
+	style.border_color = Palette.FIGHT_HUD_KEY_BORDER_ACTIVE
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	style.shadow_color = Color(Color.BLACK, 0.28)
+	style.shadow_size = 3
+	draw_style_box(style, _main_rect)
+	draw_line(_main_rect.position + Vector2(14.0, 7.0), _main_rect.position + Vector2(_main_rect.size.x - 14.0, 7.0), Color(Color.WHITE, 0.18), 1.0)
+	var key_rect := Rect2(_main_rect.position + Vector2(22.0, _main_rect.size.y * 0.5 - 13.0), Vector2(78.0, 26.0))
+	_draw_keyboard_key_cap(font, key_rect, "E / Enter", false, true)
+	var label := "投げる"
+	var label_size := 30
+	var label_w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
+	_draw_text(font, label, _main_rect.position + Vector2((_main_rect.size.x - label_w) * 0.5 + 42.0, _main_rect.size.y * 0.5 + 10.0), label_size, Palette.TEXT_BONE, 2)
+
+
+func _draw_ready_menu_panel(font: Font, rect: Rect2) -> void:
+	_draw_ready_panel(rect, Palette.FIGHT_HUD_PANEL_BLUE_FILL, Palette.FIGHT_HUD_PANEL_BLUE_BORDER, Palette.GOLD)
+	var gap := 8.0
+	var button_h := (rect.size.y - 22.0 - gap) * 0.5
+	_change_spot_rect = Rect2(rect.position + Vector2(10.0, 11.0), Vector2(rect.size.x - 20.0, button_h))
+	_harbor_rect = Rect2(
+		rect.position + Vector2(10.0, 11.0 + button_h + gap),
+		Vector2(rect.size.x - 20.0, button_h)
+	)
+	_draw_menu_button(_change_spot_rect)
+	_draw_menu_button(_harbor_rect)
+	_draw_menu_row(font, _change_spot_rect.position + Vector2(25.0, _change_spot_rect.size.y * 0.62), "+", "釣り場変更")
+	_draw_menu_row(font, _harbor_rect.position + Vector2(25.0, _harbor_rect.size.y * 0.62), "-", "港へ戻る")
+
+
+func _draw_ready_panel(rect: Rect2, fill: Color, border: Color, highlight: Color) -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color = fill
+	style.border_color = border
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(6)
+	style.shadow_color = Color(Color.BLACK, 0.24)
+	style.shadow_size = 2
+	draw_style_box(style, rect)
+	draw_rect(rect.grow(-5.0), Color(highlight, 0.18), false, 1.0)
+
+
+func _draw_text_fit(
+	font: Font,
+	text: String,
+	baseline: Vector2,
+	max_width: float,
+	font_size: int,
+	min_size: int,
+	color: Color,
+	outline: int
+) -> void:
+	var fitted_size := font_size
+	while (
+		fitted_size > min_size
+		and font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fitted_size).x > max_width
+	):
+		fitted_size -= 1
+	_draw_text(font, text, baseline, fitted_size, color, outline)
+
+
+func _draw_lure_charge_pips(_font: Font, rect: Rect2, remaining: int, total: int) -> void:
+	var pip_count := clampi(total, 0, 5)
+	if pip_count <= 1:
+		return
+	var gap := 5.0
+	var size := minf(12.0, (rect.size.x - gap * float(pip_count - 1)) / float(pip_count))
+	for index in range(pip_count):
+		var center := rect.position + Vector2(float(index) * (size + gap) + size * 0.5, size * 0.5)
+		var filled := index < remaining
+		var color := Palette.GOLD_BRIGHT if filled else Color(Palette.WOOD_DARK, 0.28)
+		draw_colored_polygon(
+			PackedVector2Array([
+				center + Vector2(0.0, -size * 0.52),
+				center + Vector2(size * 0.52, 0.0),
+				center + Vector2(0.0, size * 0.52),
+				center + Vector2(-size * 0.52, 0.0),
+			]),
+			color
+		)
+		draw_polyline(
+			PackedVector2Array([
+				center + Vector2(0.0, -size * 0.52),
+				center + Vector2(size * 0.52, 0.0),
+				center + Vector2(0.0, size * 0.52),
+				center + Vector2(-size * 0.52, 0.0),
+				center + Vector2(0.0, -size * 0.52),
+			]),
+			Palette.GOLD_DEEP,
+			1.0
+		)
 
 
 func _draw_segment_gauge(rect: Rect2, ratio: float, safe_min: float, safe_max: float, warm: bool) -> void:
@@ -591,6 +837,11 @@ func _rig_name_text() -> String:
 func _rig_bait_text() -> String:
 	var lure_name := _shark_lure_fish_name()
 	if not lure_name.is_empty():
+		var fish_id := String(trip_stats.get("shark_lure_fish_id", ""))
+		var charges: Dictionary = trip_stats.get("shark_lure_charges", {})
+		var remaining := int(charges.get(fish_id, 0))
+		if remaining > 0:
+			return "餌魚：%s（あと%d回）" % [lure_name, remaining]
 		return "餌魚：%s" % lure_name
 	var bait_types: Array[String] = []
 	for bait_variant in Array(trip_stats.get("rig_bait_types", [])):

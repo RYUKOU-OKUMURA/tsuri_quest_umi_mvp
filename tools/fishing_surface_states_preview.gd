@@ -36,7 +36,7 @@ func _ready() -> void:
 	await _settle()
 	_save(vp, out_ready)
 
-	screen._simulator.cast()
+	screen._on_main_action_pressed()
 	await get_tree().create_timer(0.16).timeout
 	await _settle()
 	_save(vp, out_casting)
@@ -100,6 +100,7 @@ func _preview_config() -> Dictionary:
 	if not lure_fish_id.is_empty():
 		var lure_fish := GameData.get_fish(lure_fish_id)
 		if not lure_fish.is_empty() and not bool(lure_fish.get("shark", false)):
+			PlayerProgress.inventory[lure_fish_id] = max(1, PlayerProgress.fish_count(lure_fish_id))
 			stats["shark_lure_fish_id"] = lure_fish_id
 			stats["shark_lure_fish_name"] = String(lure_fish.get("name", lure_fish_id))
 	config["continue_trip"] = true

@@ -643,6 +643,12 @@ func _shark_lure_fish_name() -> String:
 func _current_depth_text() -> String:
 	if simulator == null:
 		return "--.-m"
+	if (
+		simulator.state == FishingSimulator.State.READY
+		and String(trip_stats.get("spot_id", "")) == "danger_reef"
+		and fish_data.is_empty()
+	):
+		return "--"
 	return "%.1fm" % simulator.depth
 
 
