@@ -589,12 +589,24 @@ func _rig_name_text() -> String:
 
 
 func _rig_bait_text() -> String:
+	var lure_name := _shark_lure_fish_name()
+	if not lure_name.is_empty():
+		return "餌魚：%s" % lure_name
 	var bait_types: Array[String] = []
 	for bait_variant in Array(trip_stats.get("rig_bait_types", [])):
 		bait_types.append(String(bait_variant))
 	if bait_types.is_empty():
 		return "対応餌：--"
 	return "対応餌：%s" % "、".join(PackedStringArray(bait_types))
+
+
+func _shark_lure_fish_name() -> String:
+	if String(trip_stats.get("spot_id", "")) != "danger_reef":
+		return ""
+	var fish_id := String(trip_stats.get("shark_lure_fish_id", ""))
+	if fish_id.is_empty():
+		return ""
+	return String(trip_stats.get("shark_lure_fish_name", fish_id)).strip_edges()
 
 
 func _is_reeling_active() -> bool:

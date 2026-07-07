@@ -192,18 +192,24 @@ func _draw_unknown_fish_card(font: Font, rect: Rect2) -> void:
 		inner.position + Vector2(6.0, 44.0 if compact_card else 46.0),
 		Vector2(
 			inner.size.x - 12.0,
-			maxf(82.0, rect.size.y * (0.425 if compact_card else 0.37))
+			maxf(76.0 if compact_card else 82.0, rect.size.y * (0.36 if compact_card else 0.34))
 		)
 	)
 	_draw_unknown_signal_art(font, signal_rect)
 	var divider_y := signal_rect.end.y + (3.0 if _sidebar_frame != null else 6.0)
 	draw_line(Vector2(inner.position.x + 8.0, divider_y), Vector2(inner.end.x - 8.0, divider_y), Palette.FIGHT_SIDEBAR_RULE_FAINT, 1.0)
 	_draw_unknown_reaction_line(font, Rect2(inner.position.x, divider_y + 7.0, inner.size.x, 32.0))
-	var desc_y := divider_y + (37.0 if compact_card else 36.0)
+	var detail_first_offset := 20.0 if compact_card else 22.0
+	var detail_gap := 15.0 if compact_card else 16.0
+	var desc_y := divider_y + (33.0 if compact_card else 36.0)
+	var detail_second_y := desc_y + detail_first_offset + detail_gap
+	var max_detail_second_y := inner.end.y - (18.0 if _sidebar_frame != null else 20.0)
+	if detail_second_y > max_detail_second_y:
+		desc_y -= detail_second_y - max_detail_second_y
 	draw_line(Vector2(inner.position.x + 8.0, desc_y - 12.0), Vector2(inner.end.x - 8.0, desc_y - 12.0), Palette.FIGHT_SIDEBAR_SECTION_RULE, 1.0)
 	_draw_wrapped(regular_font, _unknown_description(), Vector2(inner.position.x + 15.0, desc_y), inner.size.x - 26.0, 13, Palette.FIGHT_SIDEBAR_BODY_INK, 1, 15.0)
-	_draw_detail_line(regular_font, "釣り場：%s" % _target_mode_text(), Vector2(inner.position.x + 15.0, desc_y + 22.0), inner.size.x - 26.0)
-	_draw_detail_line(regular_font, "タナ：%s / エサ：%s" % [_current_depth_text(), _bait_text()], Vector2(inner.position.x + 15.0, desc_y + 38.0), inner.size.x - 26.0)
+	_draw_detail_line(regular_font, "釣り場：%s" % _target_mode_text(), Vector2(inner.position.x + 15.0, desc_y + detail_first_offset), inner.size.x - 26.0)
+	_draw_detail_line(regular_font, "タナ：%s / エサ：%s" % [_current_depth_text(), _bait_text()], Vector2(inner.position.x + 15.0, desc_y + detail_first_offset + detail_gap), inner.size.x - 26.0)
 
 
 func _draw_unknown_signal_art(font: Font, rect: Rect2) -> void:
