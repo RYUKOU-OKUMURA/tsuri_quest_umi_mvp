@@ -34,7 +34,7 @@
 - 対象: `src/ui/components/fight_hud.gd`（描画）、`src/ui/fishing_screen.gd`（trip_stats受け渡しの確認のみ。`shark_lure_fish_id` / `shark_lure_fish_name` は `_trip_stats` に格納済み）
 - 仕様:
   - 危険海域かつ餌魚セット時のみ、パネル下段の対応餌カテゴリ行（`_rig_bait_text()`）を「餌魚：<魚名>」表示に差し替える（例: 「餌魚：マアジ」）。上段の仕掛け名（「泳がせ」）は現状維持
-  - 餌魚未セット時・通常釣り場は現行表示のまま。表示分岐は trip_stats の `shark_lure_fish_id` の有無で判定
+  - 餌魚未セット時・通常釣り場は現行表示のまま。表示分岐は trip_stats の `spot_id == "danger_reef"` かつ `shark_lure_fish_id` が空でないことを条件にする（釣行継続・釣り場変更で payload が残っても通常釣り場に誤表示しない）
   - 魚ポートレートを添える場合は `FightFishAssets` 経由で取得（直接パス参照禁止）。まず文字だけで v1 とし、ポートレートは収まり確認後の任意加点
   - 日本語テキストのPNG焼き込み禁止（runtime描画のみ）
 - 意味論: 表示は「この釣行で使った餌魚」であり在庫を意味しない（E10-4で釣行開始時に消費済み）
@@ -51,9 +51,10 @@
 #### 改修C: アタリ・ヒットの瞬間に餌魚を主語にする
 
 - 目的: 「僕のアジがサメを呼んだ」という因果を、緊張が最大の瞬間（アタリ〜ヒット）に体感させる
-- 対象: `src/core/fishing_simulator.gd` のメッセージ文言（`_set_message()`、APPROACH: 「魚影がエサへ近づいている……」/ BITE: 「食いついた！ E / Enterでアワセ！」）、`src/ui/fishing_screen.gd`（餌魚名の受け渡し）
+- 対象: `src/core/fishing_simulator.gd` のメッセージ文言（`_set_message()`、APPROACH: 「魚影がエサへ近づいている……」/ BITE: 「食いついた！ E / Enterでアワセ！」）、`src/ui/components/fight_sidebar.gd` の未公開時「今の状況」カード（APPROACH/BITEで実際に見える文言）、`src/ui/fishing_screen.gd`（餌魚名の受け渡し確認）
 - 仕様:
   - simulator に釣行コンテキストとして餌魚名（表示専用の String。空なら無効）を渡す。渡し方は既存の `player_stats` Dictionary への相乗りか専用プロパティのどちらでもよいが、**simulator が PlayerProgress / trip_stats を直接参照する形は禁止**（docs/26 R3 の pure 境界維持）
+  - APPROACH/BITE中は `fishing_screen.gd` の上部メッセージパネルが非表示になるため、プレイヤーに見える主表示は `fight_sidebar.gd` の「今の状況」カード側にも反映する。simulator文言だけを変えて完了扱いにしない
   - 餌魚セット時のみ、メッセージを餌魚主語に差し替える。例:
     - APPROACH: 「魚影が**餌のマアジ**へ近づいている……」
     - BITE: 「**マアジに何かが食いついた！** E / Enterでアワセ！」
@@ -69,8 +70,10 @@
   - 釣れた魚がサメ（`fish.get("shark", false)`）かつ餌魚セット釣行のとき、`GameData.is_favorite_food(shark_id, bait_fish_data)` を判定し、一致していればファンファーレに発見行を1行追加する。例: 「**ホシザメはマアジが大好物みたいだ！**」
   - 好物**不一致**のサメ釣果には何も出さない（「好物ではなかった」等のネガティブ表示は、餌魚選択を間違い扱いにするため禁止。無言＝手がかりなし、が正しい実験フィードバック）
   - 大型2種（shumokuzame / hohojirozame）は好物セット時のみ出現する仕様（E10-4）のため、釣れた時点で必ず好物一致。同じ文言系で構わないが、初回釣果はE10側の演出が主役なので**発見行が既存演出を邪魔しない位置・タイミング**にする
-  - メガロドンは対象外（好物述語ではなくヌシ級述語＋Lv50＋全なつき度100の特殊条件。発見行を出すと誤学習させる）
+  - メガロドンは対象外（好物述語ではなくヌシ級述語＋Lv50＋全なつき度100の特殊条件。発見行を出すと誤学習させる）。実装では `fish_id != "megalodon"` を明示条件にする
   - 判定は pure 関数（`is_favorite_food`）の呼び出しのみで行い、新しい判定ロジックを UI 側に書かない
+  - `catch_result` には表示済み文言（例: `favorite_bait_discovery_text`）または表示に必要な最小キーを詰める。`catch_fanfare.gd` 側で `GameData.is_favorite_food()` 相当の判定を再実装しない
+  - 既存ファンファーレのボーナス欄は最大4行（`_bonus_label.max_lines_visible = 4`）。発見行は「称号獲得」より上、「自己記録更新」「撃破報酬」より下に差し込む。4行を超える場合は称号表示を最大1件に圧縮し、記録更新・撃破報酬・好物発見を優先する
   - 発見の記録永続化（図鑑への好物欄追加など）は本docのスコープ外。反応が良ければ別フェーズで検討
 
 ### スコープ外（やらない）
@@ -91,7 +94,7 @@
 
 1. **brief A（改修A）**: `fight_hud.gd` の餌魚名表示。触ってよいファイル: `fight_hud.gd` のみ。DoD: 危険海域・餌魚ありのスクショで「餌魚：<魚名>」が視認でき、通常釣り場・餌魚なしで現行表示が変わらないこと
 2. **brief B（改修B）**: `fight_sidebar.gd` の見切れ修正。触ってよいファイル: `fight_sidebar.gd` のみ。DoD: 全状態×フレーム有無のスクショで2行がカード枠内に収まること
-3. **brief C（改修C）**: 餌魚主語メッセージ。触ってよいファイル: `fishing_simulator.gd`（文言とコンテキスト受け口）、`fishing_screen.gd`（受け渡し）。DoD: 餌魚あり釣行で APPROACH / BITE 文言に餌魚名が出ること、餌魚なしで現行文言のままであること、`shark_lure_audit` の結果が変化しないこと
+3. **brief C（改修C）**: 餌魚主語メッセージ。触ってよいファイル: `fishing_simulator.gd`（文言とコンテキスト受け口）、`fight_sidebar.gd`（実表示される未公開時の状況文）、`fishing_screen.gd`（受け渡し確認）。DoD: 餌魚あり釣行で APPROACH / BITE 文言に餌魚名が出ること、餌魚なしで現行文言のままであること、`shark_lure_audit` の結果が変化しないこと
 4. **brief D（改修D）**: 好物発見行。触ってよいファイル: `catch_fanfare.gd`、`fishing_screen.gd`（catch_result 詰め込み）。DoD: 好物一致サメ釣果で発見行が出るスクショ、不一致サメ・非サメ・メガロドンで出ないこと
 
 AとBは独立・並列可。CとDはフェーズ1完了後、相互には独立・並列可。
@@ -104,10 +107,11 @@ AとBは独立・並列可。CとDはフェーズ1完了後、相互には独立
 - [ ] 餌魚あり釣行で APPROACH / BITE メッセージが餌魚主語になり、かつヒット魚の正体は明かされない
 - [ ] 好物一致サメの釣果ファンファーレに発見行が表示され、不一致・非サメ・メガロドンでは表示されない
 - [ ] `./tools/validate_project.sh` 通過
-- [ ] 釣行系smoke（`fishing_harbor_return_smoke.tscn`、`fishing_reveal_smoke.tscn`）通過。抽選ロジック非変更の確認として `shark_lure_audit` を実行し結果が変化しないこと
+- [ ] 釣行系smoke（`fishing_harbor_return_smoke.tscn`、`fishing_reveal_smoke.tscn`）と `catch_fanfare_smoke.tscn` 通過。抽選ロジック非変更の確認として `shark_lure_audit` を実行し結果が変化しないこと
 - [ ] 判断ログ・証拠画像を `docs/qa/fishing_surface_qa.md` / `docs/qa/evidence/fishing_surface/` へ記録
 
 ## 6. 更新履歴
 
 - 2026-07-07: 初版。2026-07-07 のUXレビュー（危険海域釣行スクショ）を受けて課題整理・不採用案の記録・スコープ確定
 - 2026-07-07: フェーズ2（改修C: 餌魚主語のアタリ/ヒット文言、改修D: 好物発見フィードバック）を追加。§0 設計原則（子供の体験第一。在庫情報ではなく餌魚の物語を見せる）を明文化。ユーザー決定: 「子供が本当に喜ぶゲームを作る。エンジニア都合で仕様を狭めない」
+- 2026-07-07: 実装前レビューを反映。改修Cの実表示先として `fight_sidebar.gd` を追加、改修Aの危険海域条件、改修Dのメガロドン除外・ファンファーレ行優先順位・検証smokeを明確化
