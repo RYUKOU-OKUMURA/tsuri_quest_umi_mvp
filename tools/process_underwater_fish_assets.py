@@ -18,6 +18,7 @@ FINAL_FISH_SOURCE = SOURCE_ASSET_DIR / "kurodai_final_art_source.png"
 FISH_CONTACT_SOURCE = FISH_SOURCE_ASSET_DIR / "fish_final_art_contact_sheet.png"
 FISH_EXPANSION_CONTACT_SOURCE_1 = FISH_SOURCE_ASSET_DIR / "fish_expansion_contact_sheet_1.png"
 FISH_EXPANSION_CONTACT_SOURCE_2 = FISH_SOURCE_ASSET_DIR / "fish_expansion_contact_sheet_2.png"
+FISH_DEDUP_CONTACT_SOURCE_20260708_1 = FISH_SOURCE_ASSET_DIR / "fish_dedup_2026-07-08_contact_sheet_1.png"
 FISH_SHEET = FISH_VARIANT_DIR / "kurodai_showcase_sheet.png"
 FISH_CARD_PORTRAIT = FISH_VARIANT_DIR / "kurodai_card_portrait.png"
 HIT_BURST = OUT_DIR / "hit_burst.png"
@@ -146,16 +147,31 @@ FISH_ART_SOURCES = {
     "mahaze": {"template": "kochi", "tint": "#b78a55", "tint_strength": 0.32, "scale_x": 0.72, "scale_y": 0.86, "markings": "sand_mottle"},
     "umitanago": {"template": "mejina", "tint": "#91a8ad", "tint_strength": 0.28, "scale_x": 0.82, "scale_y": 0.86, "markings": "soft_lateral"},
     "sappa": {"template": "iwashi", "tint": "#d8e4e7", "tint_strength": 0.72, "scale_x": 0.50, "scale_y": 0.54, "markings": "sappa_plain"},
-    "konoshiro": {"template": "iwashi", "tint": "#aebabe", "tint_strength": 0.24, "scale_x": 0.84, "scale_y": 0.88, "markings": "dark_spots"},
-    "sayori": {"template": "kamasu", "tint": "#c4dfe2", "tint_strength": 0.30, "scale_x": 1.08, "scale_y": 0.62, "markings": "needle_line"},
+    "konoshiro": {
+        "source": "dedup_20260708_1",
+        "contact_crop": (1230, 490, 1672, 805),
+        "flip_runtime_source": True,
+        "runtime_offset_x": 90,
+    },
+    "sayori": {"source": "dedup_20260708_1", "contact_crop": (405, 530, 835, 750), "flip_runtime_source": True},
     "maanago": {"template": "tachiuo", "tint": "#6e5840", "tint_strength": 0.72, "scale_x": 1.05, "scale_y": 0.54, "markings": "eel_spots"},
-    "kyusen": {"template": "aobudai", "tint": "#82ad67", "tint_strength": 0.48, "scale_x": 0.58, "scale_y": 0.58, "markings": "wrasse_bands"},
+    "kyusen": {"source": "dedup_20260708_1", "contact_crop": (830, 145, 1225, 380), "flip_runtime_source": True},
     "nenbutsudai": {"template": "akahata", "tint": "#c96a54", "tint_strength": 0.50, "scale_x": 0.56, "scale_y": 0.58, "markings": "soft_lateral"},
     "makogarei": {"template": "hirame", "tint": "#8e7350", "tint_strength": 0.42, "scale_x": 0.82, "scale_y": 0.82, "markings": "sand_mottle"},
     "ishigarei": {"template": "hirame", "tint": "#746f59", "tint_strength": 0.50, "scale_x": 0.92, "scale_y": 0.88, "markings": "dark_spots"},
     "shitabirame": {"template": "hirame", "tint": "#a08362", "tint_strength": 0.58, "scale_x": 0.70, "scale_y": 0.46, "markings": "sand_mottle"},
-    "houbou": {"template": "akahata", "tint": "#c75b42", "tint_strength": 0.44, "scale_x": 0.88, "scale_y": 0.84, "markings": "fin_glow"},
-    "kanagashira": {"template": "kasago", "tint": "#c16442", "tint_strength": 0.44, "scale_x": 0.64, "scale_y": 0.68, "markings": "fin_glow"},
+    "houbou": {
+        "source": "dedup_20260708_1",
+        "contact_crop": (0, 90, 420, 420),
+        "flip_runtime_source": True,
+        "runtime_offset_x": 95,
+    },
+    "kanagashira": {
+        "source": "dedup_20260708_1",
+        "contact_crop": (415, 120, 830, 420),
+        "flip_runtime_source": True,
+        "runtime_offset_x": 65,
+    },
     "megochi": {"template": "kochi", "tint": "#907556", "tint_strength": 0.34, "scale_x": 0.58, "scale_y": 0.58, "markings": "sand_mottle"},
     "ishigakidai": {"template": "ishidai", "tint": "#6a6656", "tint_strength": 0.36, "scale_x": 0.92, "scale_y": 0.94, "markings": "dark_spots"},
     "kurosoi": {"template": "mebaru", "tint": "#3e4039", "tint_strength": 0.70, "scale_x": 0.86, "scale_y": 0.90, "markings": "dark_spots"},
@@ -163,12 +179,22 @@ FISH_ART_SOURCES = {
     "takenokomebaru": {"template": "mebaru", "tint": "#7b5a34", "tint_strength": 0.58, "scale_x": 0.90, "scale_y": 0.86, "markings": "dark_spots"},
     "oomonhata": {"template": "akahata", "tint": "#98683d", "tint_strength": 0.38, "scale_x": 1.02, "scale_y": 0.96, "markings": "dark_spots"},
     "onikasago": {"template": "kasago", "tint": "#b34838", "tint_strength": 0.46, "scale_x": 0.90, "scale_y": 0.92, "markings": "fin_glow"},
-    "kobudai": {"template": "aobudai", "tint": "#797160", "tint_strength": 0.46, "scale_x": 1.12, "scale_y": 1.06, "markings": "kobudai_head"},
+    "kobudai": {
+        "source": "dedup_20260708_1",
+        "contact_crop": (1220, 100, 1672, 425),
+        "flip_runtime_source": True,
+        "runtime_offset_x": 55,
+    },
     "sawara": {"template": "kamasu", "tint": "#8fa9ad", "tint_strength": 0.28, "scale_x": 1.18, "scale_y": 0.76, "markings": "dark_spots"},
     "datsu": {"template": "kamasu", "tint": "#9db8b8", "tint_strength": 0.36, "scale_x": 1.18, "scale_y": 0.54, "markings": "needle_line"},
     "hirasouda": {"template": "katsuo", "tint": "#4b6179", "tint_strength": 0.32, "scale_x": 0.86, "scale_y": 0.84, "markings": "pelagic_stripes"},
     "suma": {"template": "katsuo", "tint": "#3e536e", "tint_strength": 0.38, "scale_x": 0.94, "scale_y": 0.88, "markings": "pelagic_stripes"},
-    "ojisan": {"template": "fuefukidai", "tint": "#b06b48", "tint_strength": 0.44, "scale_x": 0.70, "scale_y": 0.72, "markings": "soft_lateral"},
+    "ojisan": {
+        "source": "dedup_20260708_1",
+        "contact_crop": (0, 500, 420, 820),
+        "flip_runtime_source": True,
+        "runtime_offset_x": 60,
+    },
     "takabe": {"template": "isaki", "tint": "#83a967", "tint_strength": 0.42, "scale_x": 0.70, "scale_y": 0.68, "markings": "yellow_lateral"},
     "ira": {"template": "aobudai", "tint": "#b98566", "tint_strength": 0.42, "scale_x": 0.90, "scale_y": 0.92, "markings": "wrasse_bands"},
     "meichidai": {"template": "madai", "tint": "#bc7f58", "tint_strength": 0.30, "scale_x": 0.86, "scale_y": 0.86, "markings": "soft_lateral"},
@@ -177,7 +203,12 @@ FISH_ART_SOURCES = {
     "gingameaji": {"template": "rouninaji", "tint": "#788a91", "tint_strength": 0.34, "scale_x": 0.96, "scale_y": 0.96, "markings": "clean_silver"},
     "kaiwari": {"template": "rouninaji", "tint": "#b2babe", "tint_strength": 0.32, "scale_x": 0.62, "scale_y": 0.72, "markings": "yellow_lateral"},
     "kihada": {"template": "katsuo", "tint": "#3b6d88", "tint_strength": 0.34, "scale_x": 1.18, "scale_y": 1.04, "markings": "yellow_lateral"},
-    "binnaga": {"template": "katsuo", "tint": "#5a7787", "tint_strength": 0.32, "scale_x": 1.08, "scale_y": 0.98, "markings": "long_fin"},
+    "binnaga": {
+        "source": "dedup_20260708_1",
+        "contact_crop": (820, 500, 1250, 850),
+        "flip_runtime_source": True,
+        "runtime_offset_x": 130,
+    },
     "mebachi": {"template": "katsuo", "tint": "#394f67", "tint_strength": 0.42, "scale_x": 1.22, "scale_y": 1.06, "markings": "pelagic_stripes"},
     "akamutsu": {"template": "madai", "tint": "#b4413a", "tint_strength": 0.52, "scale_x": 0.78, "scale_y": 0.82, "markings": "deep_red"},
     "kinmedai": {"template": "madai", "tint": "#c33f3d", "tint_strength": 0.58, "scale_x": 0.86, "scale_y": 0.84, "markings": "deep_red"},
@@ -189,6 +220,7 @@ FISH_CONTACT_SOURCES = {
     "base": FISH_CONTACT_SOURCE,
     "expansion_1": FISH_EXPANSION_CONTACT_SOURCE_1,
     "expansion_2": FISH_EXPANSION_CONTACT_SOURCE_2,
+    "dedup_20260708_1": FISH_DEDUP_CONTACT_SOURCE_20260708_1,
 }
 
 
@@ -700,11 +732,35 @@ def _add_variant_markings(fish: Image.Image, markings: str) -> Image.Image:
 def create_fish_variant_assets(current_kurodai_sheet: Image.Image, fish_id: str, spec: dict[str, object]) -> None:
     FISH_VARIANT_DIR.mkdir(parents=True, exist_ok=True)
     source = _fish_source_image(fish_id, spec, current_kurodai_sheet)
+    if bool(spec.get("flip_runtime_source", False)):
+        source = ImageOps.mirror(source)
     sheet = source if bool(spec.get("use_current_kurodai", False)) else _create_runtime_fish_sheet(source)
+    if not bool(spec.get("use_current_kurodai", False)):
+        sheet = _offset_runtime_sheet(sheet, int(spec.get("runtime_offset_x", 0)), int(spec.get("runtime_offset_y", 0)))
     sheet_path = FISH_VARIANT_DIR / f"{fish_id}_showcase_sheet.png"
     card_path = FISH_VARIANT_DIR / f"{fish_id}_card_portrait.png"
     sheet.save(sheet_path)
     create_fish_card_portrait(sheet, card_path)
+
+
+def _offset_runtime_sheet(sheet: Image.Image, offset_x: int, offset_y: int) -> Image.Image:
+    if offset_x == 0 and offset_y == 0:
+        return sheet
+    frame_w = sheet.width // 4
+    out = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    for index in range(4):
+        x0 = index * frame_w
+        frame = sheet.crop((x0, 0, x0 + frame_w, sheet.height))
+        shifted = Image.new("RGBA", frame.size, (0, 0, 0, 0))
+        src_left = max(0, -offset_x)
+        src_top = max(0, -offset_y)
+        src_right = min(frame.width, frame.width - offset_x) if offset_x >= 0 else frame.width
+        src_bottom = min(frame.height, frame.height - offset_y) if offset_y >= 0 else frame.height
+        if src_right > src_left and src_bottom > src_top:
+            cropped = frame.crop((src_left, src_top, src_right, src_bottom))
+            shifted.alpha_composite(cropped, (max(0, offset_x), max(0, offset_y)))
+        out.alpha_composite(shifted, (x0, 0))
+    return out
 
 
 def create_kurodai_sheet() -> Image.Image:

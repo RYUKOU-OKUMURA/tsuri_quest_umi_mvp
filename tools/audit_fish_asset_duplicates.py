@@ -71,32 +71,20 @@ ALLOWED_PAIRS: dict[frozenset[str], str] = {
 # Exact docs/35 baseline pairs observed in the current assets. This is
 # pair-specific so any new near-duplicate fails, even inside a known family.
 PENDING_PAIRS: dict[frozenset[str], str] = {
-    _pair("houbou", "oomonhata"): "docs/35 P1/P2 akahata family",
     _pair("madai", "meichidai"): "docs/35 P1/P2 madai family",
     _pair("kasago", "murasoi"): "docs/35 P1/P2 kasago family",
     _pair("kasago", "onikasago"): "docs/35 P1/P2 kasago family",
     _pair("kihada", "mebachi"): "docs/35 P1/P2 katsuo family",
-    _pair("aobudai", "kyusen"): "docs/35 P1/P2 aobudai family",
-    _pair("binnaga", "kihada"): "docs/35 P1/P2 katsuo family",
     _pair("murasoi", "onikasago"): "docs/35 P1/P2 kasago family",
     _pair("medai", "shimaaji"): "docs/35 P1/P2 rouninaji family",
-    _pair("binnaga", "mebachi"): "docs/35 P1/P2 katsuo family",
-    _pair("fuefukidai", "ojisan"): "docs/35 P1 ojisan",
     _pair("hirasouda", "suma"): "docs/35 P1/P2 katsuo family",
     _pair("ishidai", "ishigakidai"): "docs/35 P2 ishigakidai",
     _pair("gingameaji", "rouninaji"): "docs/35 P1/P2 rouninaji family",
     _pair("isaki", "takabe"): "docs/35 P2 takabe",
-    _pair("iwashi", "konoshiro"): "docs/35 C/P1 iwashi family",
-    _pair("kanagashira", "onikasago"): "docs/35 P1/P2 kasago family",
     _pair("kinmedai", "madai"): "docs/35 P1/P2 madai family",
     _pair("kinmedai", "meichidai"): "docs/35 P1/P2 madai family",
-    _pair("binnaga", "suma"): "docs/35 P1/P2 katsuo family",
     _pair("hirame", "makogarei"): "docs/35 C/P1/P2 hirame family",
     _pair("aobudai", "ira"): "docs/35 P1/P2 aobudai family",
-    _pair("ira", "kyusen"): "docs/35 P1/P2 aobudai family",
-    _pair("kanagashira", "murasoi"): "docs/35 P1/P2 kasago family",
-    _pair("kanagashira", "kasago"): "docs/35 P1/P2 kasago family",
-    _pair("datsu", "sayori"): "docs/35 C/P1 kamasu family",
 }
 
 
