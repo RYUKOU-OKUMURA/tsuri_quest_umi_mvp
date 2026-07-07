@@ -1,6 +1,6 @@
 ---
 name: ui-screen-uplift
-description: Quality uplift of an EXISTING game screen UI in this repo. Use when the user asks to raise/polish/improve a screen's visual quality (クオリティを上げる, ブラッシュアップ, 参照に近づける, 見た目改善) for screens like fish book (`src/ui/fish_book_screen.gd`), fishing spot map (`src/ui/fishing_spot_select_screen.gd`), underwater fight, title, or harbor. For building a brand-new screen OR formalizing an existing placeholder/simple screen into its first production v1 (○○画面を正式化) use ui-screen-build instead; for the cooking/meal/level-up flow use tsuri-cooking-showcase-uplift instead.
+description: Quality uplift of an EXISTING game screen UI in this repo. Use when the user asks to raise/polish/improve a screen's visual quality (クオリティを上げる, ブラッシュアップ, 参照に近づける, 見た目改善) for screens like fish book (`src/ui/fish_book_screen.gd`), fishing spot map (`src/ui/fishing_spot_select_screen.gd`), underwater fight, title, or harbor. ALSO use when an existing screen gains a new UI block/layout (状態別HUDバー・新パネルゾーンの追加, 既存画面への新レイアウト追加) — in that case apply ui-screen-build's 分解・共通キット配線 steps for the new block AND this skill's reference-distance gate; the new block must pass both. For building a brand-new screen OR formalizing an existing placeholder/simple screen into its first production v1 (○○画面を正式化) use ui-screen-build instead; for the cooking/meal/level-up flow use tsuri-cooking-showcase-uplift instead.
 ---
 
 # UI Screen Uplift（既存画面ブラッシュアップ）
@@ -10,6 +10,8 @@ description: Quality uplift of an EXISTING game screen UI in this repo. Use when
 既存画面を、微調整ループに入らずに参照品質へ近づける。ルールの正本は `docs/19_ui_production_playbook.md`（以下「プレイブック」）。本スキルは手順の圧縮のみで、規約本文はプレイブックを読むこと。
 
 **upliftの成果は「beforeより少し良い」ではなく「参照との距離が縮んだ」で測る。** beforeとの微小勝ちを積み重ねても体感品質は上がらない（2026-07-05 調理フロー・魚図鑑の反省。プレイブック §5-11〜13）。
+
+**質感の正はPNG素材であり、runtime描画（StyleBoxFlat・draw_rect）は質感の代替手段ではない。** 順序は常に「①共通キット配線 → ②足りない部品は素材生成（キット昇格 or 一点物） → ③それでも残る部分だけruntime装飾」。①②を飛ばして③から始めない（2026-07-07 調理・市場、READYバーで2度再発した失敗。docs/33 §2）。
 
 ## Load Before Acting
 
@@ -25,6 +27,7 @@ description: Quality uplift of an EXISTING game screen UI in this repo. Use when
 
 2. **差分をトリアージし、差分Top3を書き出す**
    横並び比較から差分を列挙し、P1（破綻: 見切れ・省略・重なり・素材未表示・読めないゲージ）/ P2（素材・構成差分）/ P3（好み・数px）に分類して報告する。P2は**面積×視線優先度で並べた「参照との差分Top3」**をQAドキュメントへ書く（例: 背景イラストの不在 > 主役素材の質感 > 見出しタイポ）。§8.5 の既知ギャップ（共通キット未整備、情報重複、装飾過多など）に該当するものは画面個別の問題ではなく横断工事として扱う。
+   あわせて**共通キット未配線リスト**を必ず書き出す: パネル・枠・帯・主操作ボタンが `assets/showcase/common/` のPNGでなくStyleBoxFlat / draw_rectのフラット描画で構成されている箇所。これはプレイブック §2.1 のv1完了条件違反（合格ブロッカー）であり、P3として流したり記録なしで放置しない。
 
 3. **P1を先に全部直す**
    P1は安く直せて未完成感の大半を占める。素材・構成に触る前に潰す。
@@ -33,8 +36,9 @@ description: Quality uplift of an EXISTING game screen UI in this repo. Use when
    選定基準は「全画面比較で一番大きく効く差分」= 原則Top3の最上位。**最上位を飛ばして安全な小差分を選ぶ場合は、理由をQAドキュメントに書く**（理由なく小粒スライスへ逃げない）。構成ズレ（参照に無い要素、状態合成モックの詰め込み、装飾階層違反）があるなら素材より先に構成を直す。着手前に「今回動かすパラメータ」「触らないfreeze値」をスコープ宣言欄へ書く。宣言外の値は触らず別フェーズとして起票する。なお **palette移行・関数整理などのリファクタはupliftフェーズとして数えない**（uplift目的のセッションで代わりに選ばない。別スライスとして起票する）。
 
 5. **候補は正しい供給経路で作る（§3.4）**
-   - **幾何部品**（枠・帯・9-slice・ゲージ枠・チップ）: プロシージャル生成（PIL）でよい。
-   - **一点物**（背景イラスト、キャラ、料理・魚アート、王冠/月桂樹等の装飾モチーフ、大型演出）: **AI画像生成必須**。docs/12形式の発注仕様を書き、参照画像をスタイル手本にして生成 → 統一処理（§3.3）。**一点物をPIL描画で作って候補にしない。** 生成手段が使えない環境では「素材待ちP2」として起票し、プロシージャル代替で前進扱いしない。
+   - **キット部品**（パネル・枠・帯・ボタン・ゲージ枠・キーキャップ）: まず `assets/showcase/common/` の既存9-slice/PNGを配線する（§3.2）。キットに無い場合だけ新規に作り、作ったらcommonへ置いて昇格させる。**既存キットを配線せずにPILやStyleBoxFlatで同等品を再発明しない。**
+   - **幾何部品**（キットに無いセパレータ・単色チップ等の小物）: プロシージャル生成（PIL）でよい。
+   - **一点物**（背景イラスト、キャラ、料理・魚アート、王冠/月桂樹等の装飾モチーフ、大型演出）: **AI画像生成必須**。標準1周は docs/33 §3.0 のパイプラインに従う: docs/12形式の発注仕様 → AI生成（参照画像の該当領域をスタイル手本に添付） → `tools/source_assets/<screen>/` へソース保存 → `tools/generate_<screen>_assets.py` のソース加工モード（切り出し・クロマキー透過・§3.3パレット量子化・解像度規約・9-slice分割） → `assets/showcase/<screen>/` へ出力 → 同じコミットで `docs/31_asset_ledger.md` に記入。**一点物をPIL描画で作って候補にしない。** 生成手段が使えない環境では「素材待ちP2」として起票し、プロシージャル代替で前進扱いしない。
 
 6. **比較で採用判定する（2条件）**
    contact sheet → 既存スロットへ仮適用 → before/候補/参照の全画面比較。採用条件は**「beforeに明確に勝つ」かつ「対象にした差分が縮小サムネイル比較で参照へ縮んだと判別できる」の両方**。「参照ほどではないが前進」判定は同一画面・同一系統の差分で**3フェーズまで**。3回出したらアプローチの限界とみなし、構成フェーズまたはAI生成素材フェーズへエスカレーションする。同一パラメータの微調整は微調整カウンタで3回まで。**runtime描画の装飾追加（wash・罫線・影・StyleBoxFlat）は新しい名前でも装飾パス累計として数え、1画面につき累計3パスまで。**
@@ -44,6 +48,8 @@ description: Quality uplift of an EXISTING game screen UI in this repo. Use when
 
 ## Acceptance Gate
 
+- **パネル・枠・帯・主操作ボタンが `assets/showcase/common/`（または昇格済みキット素材）のPNGで構成されており、StyleBoxFlat / draw_rect のフラット描画で金縁・紙面・CTAの質感を代替していない**（プレイブック §2.1・§3.2）。未配線が残る場合はv1合格・freezeを宣言できない（未配線リストとして起票した上で継続フェーズにする）
+- 新素材・昇格素材を追加した場合、同じコミットで `docs/31_asset_ledger.md` に記入済み
 - 対象フェーズの変更が、参照との全画面横並び比較で**変更前に明確に勝っている**
 - **着手時に書いた差分Top3の対象項目が、縮小サムネイル比較（after/参照を並べて縮小）で縮んだと第三者に判別できる**
 - P1がゼロ（見切れ・省略・重なり・素材未表示なし）
@@ -54,6 +60,8 @@ description: Quality uplift of an EXISTING game screen UI in this repo. Use when
 
 ## Hard Rules
 
+- **質感が必要な部位（パネル・枠・帯・主操作ボタン）をStyleBoxFlat / draw_rect のフラット描画だけで実装したまま合格・freezeしない**。キットに該当部品が無ければ、先に部品をcommonへ追加/昇格してから配線する
+- **「コードで描けば済む」をまず試さない**。順序は「キット配線 → 素材生成 → 残りだけruntime装飾」で固定（Purpose参照）
 - freeze値をP3（好み）を理由に再調整しない
 - 数px・明度の微調整で素材品質不足を埋めようとしない（微調整カウンタに記録し、3回で見切って素材フェーズへ）
 - **一点物（背景・キャラ・料理・魚・装飾モチーフ・大型演出）をプロシージャル描画で作って採用しない**（§3.4）
