@@ -223,6 +223,52 @@ func _ready() -> void:
 	var continued_stats: Dictionary = _payload.get("trip_stats", {})
 	_expect(String(continued_stats.get("shark_lure_fish_id", "")) == "kihada", "continued danger reef should carry lure stats")
 
+	_screen.queue_free()
+	await get_tree().process_frame
+
+	_navigated_to = ""
+	_payload = {}
+	PlayerProgress.inventory = {}
+	_screen = _make_screen({
+		"from_fishing": true,
+		"current_spot_id": "danger_reef",
+		"trip_stats": {
+			"sentinel": "stale-lure",
+			"shark_lure_fish_id": "kihada",
+			"shark_lure_fish_name": lure_name,
+			"shark_lure_charges": {},
+		},
+	})
+	await get_tree().process_frame
+	_expect(not _screen._detail_bait_value_label.text.contains(lure_name), "continued danger reef should reject stale lure without stock or charges")
+	_expect(_screen._detail_bait_value_label.text.contains("餌魚なし"), "continued danger reef stale lure should display no lure fish")
+	_screen._select_spot("danger_reef")
+	var stale_stats: Dictionary = _payload.get("trip_stats", {})
+	_expect(not stale_stats.has("shark_lure_fish_id"), "continued danger reef should not forward stale lure stats")
+	_expect(String(stale_stats.get("sentinel", "")) == "stale-lure", "continued danger reef should keep other trip stats when removing stale lure")
+
+	_screen.queue_free()
+	await get_tree().process_frame
+
+	_navigated_to = ""
+	_payload = {}
+	PlayerProgress.inventory = {}
+	_screen = _make_screen({
+		"from_fishing": true,
+		"current_spot_id": "danger_reef",
+		"trip_stats": {
+			"sentinel": "charged-lure",
+			"shark_lure_fish_id": "kihada",
+			"shark_lure_fish_name": lure_name,
+			"shark_lure_charges": {"kihada": 2},
+		},
+	})
+	await get_tree().process_frame
+	_expect(_screen._detail_bait_value_label.text.contains(lure_name), "continued danger reef should keep lure with remaining charges")
+	_screen._select_spot("danger_reef")
+	var charged_stats: Dictionary = _payload.get("trip_stats", {})
+	_expect(String(charged_stats.get("shark_lure_fish_id", "")) == "kihada", "continued danger reef should forward charged lure stats")
+
 	PlayerProgress.record_catch("saba", 32.0, "outer_tide")
 	var outer_counts: Dictionary = PlayerProgress.spot_caught_counts.get("outer_tide", {})
 	_expect(int(outer_counts.get("saba", 0)) == 1, "record_catch should store spot-specific catch counts")

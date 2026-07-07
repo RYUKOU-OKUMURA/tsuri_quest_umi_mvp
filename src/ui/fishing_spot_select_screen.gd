@@ -97,6 +97,9 @@ func _resolve_route_state() -> void:
 			String(_trip_stats.get("shark_lure_fish_id", "")),
 			false
 		)
+		if _selected_shark_lure_fish_id.is_empty():
+			_trip_stats.erase("shark_lure_fish_id")
+			_trip_stats.erase("shark_lure_fish_name")
 	_continue_trip = (
 		bool(route_payload.get("from_fishing", false))
 		or bool(route_payload.get("continue_trip", false))
@@ -1200,9 +1203,19 @@ func _validated_shark_lure_fish_id(fish_id: String, require_inventory := true) -
 	var fish := GameData.get_fish(fish_id)
 	if fish.is_empty() or bool(fish.get("shark", false)):
 		return ""
-	if require_inventory and PlayerProgress.fish_count(fish_id) <= 0:
-		return ""
-	return fish_id
+	if PlayerProgress.fish_count(fish_id) > 0:
+		return fish_id
+	if not require_inventory and _shark_lure_remaining_charges(fish_id) > 0:
+		return fish_id
+	return ""
+
+
+func _shark_lure_remaining_charges(fish_id: String) -> int:
+	var charges_variant = _trip_stats.get("shark_lure_charges", {})
+	if typeof(charges_variant) != TYPE_DICTIONARY:
+		return 0
+	var charges: Dictionary = charges_variant
+	return maxi(0, int(charges.get(fish_id, 0)))
 
 
 func _equipped_rig_text(spot: Dictionary) -> String:
