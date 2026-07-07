@@ -575,19 +575,22 @@ func _draw_ready_shark_lure_panel(font: Font, rect: Rect2) -> void:
 	var inner := rect.grow(-5.0)
 	var count := int(shark_lure_selector.get("candidate_count", 0))
 	var arrows_enabled := count > 1
-	var arrow_w := 42.0
+	var arrow_w := 34.0
+	var arrow_hit_w := 42.0
 	var card_y := inner.position.y + 48.0
 	var card_h := inner.size.y - 70.0
-	var arrow_h := minf(106.0, card_h)
+	var arrow_h := minf(100.0, card_h)
 	var arrow_y := card_y + (card_h - arrow_h) * 0.5
-	_lure_prev_rect = Rect2(inner.position + Vector2(0.0, arrow_y - inner.position.y), Vector2(arrow_w, arrow_h))
-	_lure_next_rect = Rect2(Vector2(inner.end.x - arrow_w, arrow_y), Vector2(arrow_w, arrow_h))
-	_draw_ready_arrow(font, _lure_prev_rect, "◀", arrows_enabled)
-	_draw_ready_arrow(font, _lure_next_rect, "▶", arrows_enabled)
+	var prev_arrow_rect := Rect2(inner.position + Vector2(0.0, arrow_y - inner.position.y), Vector2(arrow_w, arrow_h))
+	var next_arrow_rect := Rect2(Vector2(inner.end.x - arrow_w, arrow_y), Vector2(arrow_w, arrow_h))
+	_lure_prev_rect = prev_arrow_rect.grow_individual(0.0, 0.0, arrow_hit_w - arrow_w, 0.0)
+	_lure_next_rect = next_arrow_rect.grow_individual(arrow_hit_w - arrow_w, 0.0, 0.0, 0.0)
+	_draw_ready_arrow(font, prev_arrow_rect, "◀", arrows_enabled)
+	_draw_ready_arrow(font, next_arrow_rect, "▶", arrows_enabled)
 
 	var card := Rect2(
-		Vector2(_lure_prev_rect.end.x + 9.0, card_y),
-		Vector2(_lure_next_rect.position.x - _lure_prev_rect.end.x - 18.0, card_h)
+		Vector2(prev_arrow_rect.end.x + 7.0, card_y),
+		Vector2(next_arrow_rect.position.x - prev_arrow_rect.end.x - 14.0, card_h)
 	)
 	_draw_ready_card_frame(card)
 	var fish_id := String(shark_lure_selector.get("fish_id", ""))
@@ -616,13 +619,13 @@ func _draw_ready_shark_lure_panel(font: Font, rect: Rect2) -> void:
 	else:
 		_draw_ready_bait_asset(portrait)
 	_draw_text_center_fit(title_font, fish_name, name_rect, 14, 10, Palette.FIGHT_HUD_DARK_INK, 0)
-	var right_x := name_rect.end.x + 12.0
+	var right_x := card.position.x + card.size.x * 0.56
 	var right_rect := Rect2(
 		Vector2(right_x, card.position.y + 14.0),
 		Vector2(maxf(1.0, card.end.x - right_x - 14.0), maxf(1.0, name_rect.position.y - card.position.y - 20.0))
 	)
 	var count_rect := Rect2(right_rect.position, Vector2(right_rect.size.x, 34.0))
-	_draw_text_right_fit(title_font, "x%d" % inventory_count, count_rect, 30, 20, Palette.FIGHT_HUD_DARK_INK, 0)
+	_draw_text_left_fit(title_font, "x%d" % inventory_count, count_rect, 30, 20, Palette.FIGHT_HUD_DARK_INK, 0)
 	var charge_text := "投げると1匹つかう"
 	var stock_empty_note := false
 	if remaining > 0:
@@ -655,7 +658,7 @@ func _draw_ready_shark_lure_panel(font: Font, rect: Rect2) -> void:
 func _draw_ready_arrow(font: Font, rect: Rect2, label: String, enabled: bool) -> void:
 	if not _draw_kit_frame(_common_button_frame, rect, KIT_BUTTON_MARGINS, Color(Color.WHITE, 1.0 if enabled else 0.46)):
 		_draw_ready_panel(rect, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
-	var text_size := 25
+	var text_size := 22 if rect.size.x < 38.0 else 25
 	var text_w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, text_size).x
 	var color := Palette.FIGHT_HUD_DARK_INK if enabled else Color(Palette.FIGHT_HUD_DARK_INK, 0.42)
 	_draw_text(font, label, rect.position + Vector2((rect.size.x - text_w) * 0.5, rect.size.y * 0.5 + 8.0), text_size, color, 1 if enabled else 0)
@@ -817,6 +820,25 @@ func _draw_text_center_fit(
 	if outline > 0:
 		draw_string_outline(font, baseline, display, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, fitted_size, outline, Palette.FIGHT_HUD_TEXT_OUTLINE)
 	draw_string(font, baseline, display, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, fitted_size, color)
+
+
+func _draw_text_left_fit(
+	font: Font,
+	text: String,
+	rect: Rect2,
+	font_size: int,
+	min_size: int,
+	color: Color,
+	outline: int
+) -> void:
+	var fitted_size := _fit_font_size(font, text, font_size, min_size, rect.size.x)
+	var display := _fit_text(font, text, fitted_size, rect.size.x)
+	var ascent := font.get_ascent(fitted_size)
+	var descent := font.get_descent(fitted_size)
+	var baseline := rect.position + Vector2(0.0, (rect.size.y - ascent - descent) * 0.5 + ascent)
+	if outline > 0:
+		draw_string_outline(font, baseline, display, HORIZONTAL_ALIGNMENT_LEFT, rect.size.x, fitted_size, outline, Palette.FIGHT_HUD_TEXT_OUTLINE)
+	draw_string(font, baseline, display, HORIZONTAL_ALIGNMENT_LEFT, rect.size.x, fitted_size, color)
 
 
 func _draw_text_right_fit(

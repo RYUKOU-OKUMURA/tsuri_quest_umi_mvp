@@ -1,6 +1,6 @@
 # 水上キャスト画面 QA判断ログ
 
-最終更新: 2026-07-08 / 状態: READY餌魚名の画像下配置 採用
+最終更新: 2026-07-08 / 状態: READY餌魚カードの余白圧縮 採用
 参照画像: `reference/01_surface_fishing_mockup.png` / `reference/13_fishing_ready_danger_mockup.png`
 QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `godot --path . res://tools/fishing_surface_states_preview.tscn` / `godot --path . res://tools/catch_fanfare_preview.tscn` / `./tools/fight_visual_qa.sh`
 
@@ -14,7 +14,7 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `godot --path . r
 | 非晴天航跡 | 固定楕円なし、進行方向V字航跡+後方リップル | `_draw_asset_fish_wake()` | 旧楕円アウトラインの照準レティクル感を解消 |
 | rain/fogオーバーレイ | rain=2枚縦スクロール、fog=横ドリフト+alpha揺らぎ | `_draw_weather_texture_overlay()` | 静止合成をやめ、天候の動きを出す |
 | READY専用下段バー品質 | READY時は `fight_hud_frame.png` を背景に描かない。下段バーは `common/button_frame_primary.png`、セレクタ/通常エサカードは `common/parchment_card.png` + `common/card_frame.png`、投げるボタンは `common/action_button_frame.png`、矢印・右メニューは `common/button_frame*.png` で構成する。READYキーチップは濃色の `common/button_frame_primary.png` + 白文字で表示する。`投げる` はfont ascent/descentで中央に収め、READYで見える餌アイコンは `underwater/hud_bait_icon.png` または魚ポートレートを使う | `src/ui/components/fight_hud.gd` / `tools/audit_showcase_asset_refs.py` | docs/40準拠。FIGHT用の焼き込み区画・分割線がREADYバー背面に覗かないことをfreeze。監査allowlistはこのため `fight_hud.gd` に common を明示許可。READY実表示でコード描画の餌アイコンを出さない |
-| サメ餌魚READYセレクタ | `spot_id == "danger_reef"` のREADY時だけ下段HUD左をサメ餌魚セレクタに差し替え。`餌魚なし`・所持魚・残チャージ中の魚を左右で選ぶ。表示は左列に魚ポートレート＋画像下の魚名、右上に大きめの `xN`、右下にチャージピップ、下部フッターに `投げると1匹つかう` / `あとN回` / `在庫0` を出す。長い魚名は画像下スロット内で縮小し、最小でも収まらない場合だけ末尾を詰める | `src/ui/fishing_screen.gd` / `src/ui/components/fight_hud.gd` | docs/38・docs/40準拠。餌魚は釣り場選択では消費せず、投げる時に1匹消費してチャージを付与する。魚名と在庫数を別領域に固定し、`港のぬし・大岩クロダイ x99` / `イサキ x101` 等で画面の重心が揺れないことをfreeze |
+| サメ餌魚READYセレクタ | `spot_id == "danger_reef"` のREADY時だけ下段HUD左をサメ餌魚セレクタに差し替え。`餌魚なし`・所持魚・残チャージ中の魚を左右で選ぶ。表示は左列に魚ポートレート＋画像下の魚名、魚のすぐ右に大きめの `xN`、右下にチャージピップ、下部フッターに `投げると1匹つかう` / `あとN回` / `在庫0` を出す。長い魚名は画像下スロット内で縮小し、最小でも収まらない場合だけ末尾を詰める。左右矢印は34px幅で、カード幅を優先する | `src/ui/fishing_screen.gd` / `src/ui/components/fight_hud.gd` | docs/38・docs/40準拠。餌魚は釣り場選択では消費せず、投げる時に1匹消費してチャージを付与する。魚名と在庫数を別領域に固定し、`港のぬし・大岩クロダイ x99` / `メダイ x101` 等で画面の重心が揺れないことをfreeze |
 | サメ餌魚チャージ表示 | READYでは旧 `所持 xN` / `1匹で最大N回` 表記を廃止し、`魚名 xN` + ピップ + `あとN回` / `投げると1匹つかう` に集約。CASTING以降は下段HUDに `餌魚：<魚名>（あとN回）` を表示 | `src/ui/components/fight_hud.gd` | レア=3回、ぬし=5回の耐久をUI上で追えるようにする。READYの情報階層を参照13へ寄せたため旧freezeを上書き |
 | サメ餌魚APPROACH/BITE文 | 餌魚ありの時だけ `魚影が餌の<魚名>へ近づいている` / `<魚名>に何かが食いついた`。ヒット魚名・サメ名は出さない | `src/core/fishing_simulator.gd` / `src/ui/components/fight_sidebar.gd` | 上部メッセージパネルはAPPROACH/BITEで非表示のため、実表示される右サイドカードにも反映 |
 | 未確認魚影カード詳細行 | signal art比率を compact=0.36 / 通常=0.34、詳細2行を下端から逆算して配置 | `src/ui/components/fight_sidebar.gd` | 「釣り場」「タナ / エサ」2行の下端見切れP1を解消 |
@@ -34,7 +34,7 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `godot --path . r
 |---|---|---|---|
 | 装飾パス累計 | 2 | READY下段バーのゾーンセパレータのみruntime直線。枠・カード・ボタンの質感はcommon PNGへ移管 | 採用 |
 | READY下段バー品質改善 | 3 | `投げる` をさらに上へ補正し、`E / Enter` を濃色PNGキーチップ＋白文字へ変更 | 採用・close。文字位置の微調整は3回到達のため、以後はP1再発以外で値いじりしない |
-| READY餌魚名固定スロット | 2 | 魚名を魚画像下へ移し、`xN` をカード右上固定の大きめ表示へ分離 | 採用。長名や3桁在庫で重心が揺れるP1再発時のみ再調整 |
+| READY餌魚名固定スロット | 3 | 左右矢印を42px→34pxへ圧縮し、`xN` をカード右端固定から魚の右隣の左固定へ変更 | 採用・close。長名や3桁在庫で重心が揺れるP1再発時以外、この系統の位置調整は行わない |
 | 魚影tint/alpha | 2 | rainで沈みすぎたため、環境色tintを明るめの青灰へ戻しAPPROACHのみalpha/scaleを増加 | 採用・close |
 | 未確認魚影カード下部詰め | 1 | signal art比率を圧縮し、詳細2行を下端から逆算配置 | 採用・close |
 
@@ -46,13 +46,38 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `godot --path . r
 
 - WAITING魚影は遠景扱いでかなり控えめ。P1/P2ではなく、必要なら別フェーズで「待機時の水面反応」演出として扱う。
 - 右サイドカード内の魚影図は既存UI表示で、今回の水面合成パスとは別対象。
-- READYセレクタ内の長い魚名（例: `港のぬし・大岩クロダイ`）は魚画像下の名前帯に収める。カード外へのはみ出し、または魚名・在庫数の横幅変化でカード全体が揺れて見える状態はP1として扱う。
+- READYセレクタ内の長い魚名（例: `港のぬし・大岩クロダイ`）は魚画像下の名前帯に収める。カード外へのはみ出し、または魚名・在庫数の横幅変化でカード全体が揺れて見える状態はP1として扱う。READY餌魚名固定スロットの微調整は3回到達のため、次に再発した場合はカード構成そのものを再設計する。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
 完了済みのためなし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-08 READY餌魚カードの余白圧縮を採用。
+
+差分Top1:
+- P1-1: 魚名を画像下へ移した後も、`xN` がカード右端に寄りすぎ、魚画像との間に大きい空白が残って切替時のブレに見える。
+
+スコープ:
+- 今回動かしたもの: READY餌魚カード内の左右矢印幅、中央カード幅、在庫数 `xN` の横位置、チャージピップの横位置。
+- 触っていないもの: READY下段バーの3ゾーン幅、投げるボタンサイズ、右メニュー、抽選/消費ロジック、CASTING以降のHUDレイアウト。
+
+変更したもの:
+- 左右矢印ボタンを42pxから34pxへ圧縮し、中央カードを少し広げた。
+- `xN` をカード右端固定の右揃えから、魚の右隣に寄せた左固定表示へ変更した。
+- チャージピップも同じ右側スロットに寄せ、空白がカード右端だけへ偏らないようにした。
+
+検証:
+- `tools/fishing_surface_states_preview.tscn`: 危険海域READY（`medai` x101 / `boss_kurodai` x99）を取得し、魚と数字の間の空白が縮み、カード外へ出ないことを目視確認。
+
+判断根拠:
+- メダイ3桁在庫READY証拠: `docs/qa/evidence/fishing_surface/2026-07-08_ready_lure_tight_medai_x101.png`
+- 長名READY証拠: `docs/qa/evidence/fishing_surface/2026-07-08_ready_lure_tight_long_x99.png`
+
+採用理由:
+- `x101` が魚の近くに固定され、魚名・在庫数の違いで視線重心が左右へ大きく動きにくくなった。
+- 投げるボタンは維持し、先に矢印とカード内余白を詰めるだけで改善できた。
 
 2026-07-08 READY餌魚名の画像下配置を採用。
 
