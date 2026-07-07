@@ -14,5 +14,5 @@ else
   exit 1
 fi
 
-echo "サメ釣りQA用セーブをスロット2へ書き込みます（スロット1は触りません）。"
+echo "Lv50カンストQA用セーブをスロット2へ書き込みます（スロット1は触りません）。"
 TSURI_SEED_SHARK_TEST_SAVE_ALLOW=1 "$GODOT" --headless --path "$ROOT" "res://tools/seed_shark_test_save.tscn"
