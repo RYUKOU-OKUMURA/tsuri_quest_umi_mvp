@@ -21,12 +21,12 @@ Date: 2026-07-07
 
 ## 3. 原因
 
-`FISH_ART_SOURCES`（`tools/process_underwater_fish_assets.py`）には2種類のエントリがある。
+調査時点の `FISH_ART_SOURCES`（`tools/process_underwater_fish_assets.py`）には2種類のエントリがあった。
 
 - **オリジナル30種**: AI生成コンタクトシート3枚（`tools/source_assets/fish/fish_final_art_contact_sheet.png`, `fish_expansion_contact_sheet_1/2.png`）から `contact_crop` で切り出し
 - **テンプレート派生40種**: `"template": "<他魚id>"` 指定。他魚の元アートに tint（色替え）・scale（伸縮）・markings（簡易模様）を適用しただけの派生
 
-派生40種のうち大半は形状がテンプレート元と同一のため、名前が違う魚が「色違いの同じ絵」になっている。これは docs/24 §素材条件の「**魚種の識別特徴を優先する。色違いだけで別魚に見える候補は不採用**」に反する状態。
+調査時点の派生40種のうち大半は形状がテンプレート元と同一のため、名前が違う魚が「色違いの同じ絵」になっていた。これは docs/24 §素材条件の「**魚種の識別特徴を優先する。色違いだけで別魚に見える候補は不採用**」に反する状態。
 
 テンプレート派生の全マップ（→ の右が派生種）:
 
@@ -97,7 +97,7 @@ Date: 2026-07-07
 | onikasago / murasoi（← kasago） | d=9/8 | カサゴ系で体型は近いが3種ほぼ同一。オニカサゴは強い棘・皮弁が特徴 |
 | ara（← kue） | 目視酷似 | クエとほぼ同一。アラは細身で棘が強い |
 
-### C: 当面許容（据え置き・8種）
+### C: 最終許容（据え置き・5種）
 
 体型が実魚として正しく、ゲーム内でも判別できるため今回は動かさない。
 
@@ -105,10 +105,16 @@ Date: 2026-07-07
 - shitabirame（← hirame）: 舌型に変形済みで判別可
 - datsu（← kamasu）: 細長い変形で判別可
 - maanago（← tachiuo）: 茶色の細身で判別可
-- megochi（← kochi）: コチ科同士。d=9だがサイズ・色で判別可（境界ケース。P2完了後に再評価）
-- kurosoi / takenokomebaru（← mebaru）: ソイ類同士で体型正。相互 d=12 は境界ケース。P2完了後に再評価
 - tsumuburi（← hiramasa）: 青物同士で近いが帯色で判別可
-- mejina（オリジナル）: 元絵自体が縞模様でイシダイ寄りに見える品質課題あり。使い回しではないため本計画の対象外とし、図鑑upliftの素材候補として別途扱う
+
+### P3: 再評価の最終判定（4種）
+
+P2完了後の再クラスタリングでは `kochi ↔ megochi`（portrait d=9）と `mebaru ↔ takenokomebaru`（portrait d=12）が閾値内に残った。`kurosoi` と `mejina` は監査上は閾値外だったが、P3対象として同じコンタクトシートで新規source化し、境界ケースの暫定allowlistをすべて削除した。
+
+- megochi: コチ縮小派生から、砂地斑・大きな胸鰭を持つ小型底魚の新規sourceへ差し替え
+- kurosoi: 黒褐色の岩礁魚として新規sourceへ差し替え、`mebaru/takenokomebaru` との暫定allowlistを不要化
+- takenokomebaru: 茶褐色の竹斑を持つ新規sourceへ差し替え、`mebaru` とのportrait類似を解消
+- mejina: 縞が強くイシダイ寄りに見える元絵から、縞なしの灰色グレ体型へ差し替え
 
 ### 対象外（意図的派生・記録済み）
 
@@ -133,18 +139,19 @@ Date: 2026-07-07
 |---|---|---|
 | P1: A群 15種 | §4-A の15種 | 各魚の識別特徴が絵に出ている。dhash距離が旧ペア相手に対して13以上。fish_book/fight visual QA で現行に全画面比較で勝つ |
 | P2: B群 17種 | §4-B の17種 | 同グループ内の全ペアで dhash距離13以上。図鑑の隣接カードで判別可能 |
-| P3: 再評価 | megochi, kurosoi/takenokomebaru, mejina元絵 | P2完了後に再クラスタリングして判定 |
+| P3: 再評価 | megochi, kurosoi/takenokomebaru, mejina元絵 | 4種を新規source化し、P3暫定allowlistを削除。残る類似は意図的派生のみ |
 
 - P1/P2 の中はコンタクトシート単位（8〜12種）で独立に進められる
 - freeze値（`docs/qa/*_qa.md`）・画面レイアウト・clip座標には触れない。素材の中身だけを差し替える
 
 ### 進捗メモ
 
-- 2026-07-08: 再発防止監査 `tools/audit_fish_asset_duplicates.py` を `./tools/validate_project.sh` に組み込み済み。通常モードはdocs/35の既知pendingだけを許容し、`--strict` は全pending解消確認用として残す。
+- 2026-07-08: 再発防止監査 `tools/audit_fish_asset_duplicates.py` を `./tools/validate_project.sh` に組み込み済み。P3完了後は暫定pendingを持たず、通常/strictとも新規近似ペアをfailする。
 - 2026-07-08: P1バッチ1として8種（`houbou`, `kanagashira`, `kyusen`, `kobudai`, `ojisan`, `sayori`, `binnaga`, `konoshiro`）を新規OpenAI生成コンタクトシート由来に差し替え。監査結果は pending 26→14 / unexpected 0。残P1は `ira`, `kinmedai`, `akamutsu`, `medai`, `sawara`, `mahaze`, `nenbutsudai` の7種。
 - 2026-07-08: P1バッチ2として残7種（`ira`, `kinmedai`, `akamutsu`, `medai`, `sawara`, `mahaze`, `nenbutsudai`）を新規OpenAI生成コンタクトシート由来に差し替え、P1 A群15種を完了。監査結果は pending 14→8 / unexpected 0。残pending 8件はP2/P3で扱う。
 - 2026-07-08: P2バッチ1として9種（`meichidai`, `murasoi`, `onikasago`, `kihada`, `mebachi`, `hirasouda`, `suma`, `takabe`, `makogarei`）を新規OpenAI生成コンタクトシート由来に差し替え。監査結果は pending 8→0 / unexpected 0、`--strict` も通過。P2の `source` + `contact_crop` 化は残8種（`shimaaji`, `gingameaji`, `kaiwari`, `ishigarei`, `umitanago`, `ishigakidai`, `oomonhata`, `ara`）を次バッチで継続。P3（`megochi`, `kurosoi/takenokomebaru`, `mejina`）はP2完了後に再評価。
-- 2026-07-08: P2バッチ2として残8種（`shimaaji`, `gingameaji`, `kaiwari`, `ishigarei`, `umitanago`, `ishigakidai`, `oomonhata`, `ara`）を新規OpenAI生成コンタクトシート由来に差し替え、P2 B群17種を完了。監査結果は pending 0 / unexpected 0、`--strict` 通過を維持。残作業はP3（`megochi`, `kurosoi/takenokomebaru`, `mejina`）の再クラスタリングと最終判定。
+- 2026-07-08: P2バッチ2として残8種（`shimaaji`, `gingameaji`, `kaiwari`, `ishigarei`, `umitanago`, `ishigakidai`, `oomonhata`, `ara`）を新規OpenAI生成コンタクトシート由来に差し替え、P2 B群17種を完了。監査結果は pending 0 / unexpected 0、`--strict` 通過を維持し、次工程としてP3（`megochi`, `kurosoi/takenokomebaru`, `mejina`）の再クラスタリングへ進めた。
+- 2026-07-08: P3として4種（`megochi`, `kurosoi`, `takenokomebaru`, `mejina`）を新規OpenAI生成コンタクトシート由来へ差し替え、再クラスタリングを完了。監査結果は `megalodon ↔ nushi_danger_reef` の意図的派生1件のみ、pending 0 / unexpected 0。P3暫定allowlistは削除済み。
 
 ### 検証（各バッチ後に必須）
 
@@ -167,3 +174,8 @@ python3 tools/audit_fish_sheet_contract.py   # シート寸法・フレーム契
 | `docs/qa/evidence/fish_assets/2026-07-07_dup_portrait_pairs_0〜4.png` | 疑わしい25ペアの横並び比較 |
 | `docs/qa/evidence/fish_assets/2026-07-07_dup_family_grid.png` | カマス系・イシダイ系・アジ系・カツオ系・マダイ系・ハタ系の系統別グリッド |
 | `docs/qa/evidence/fish_assets/2026-07-07_dup_derived_check_grid.png` | クラスタ外の派生種（mahaze, kanagashira, maanago, ara ほか）の確認グリッド |
+| `docs/qa/evidence/fish_assets/2026-07-08_p3_source_before_after.png` | P3 4種の新規source sheetと差し替え前後カード比較 |
+| `docs/qa/evidence/fish_assets/2026-07-08_p3_card_contact.png` | P3後の境界魚カードcontact（kochi/megochi、mebaru/kurosoi/takenokomebaru、mejina/umitanago/ishidai） |
+| `docs/qa/evidence/fish_book/2026-07-08_p3_fish_book_compare.png` | P3後の魚図鑑runtime比較 |
+| `docs/qa/evidence/underwater_fight/2026-07-08_p3_fight_targets.png` | P3 4種の泳ぎシート先頭フレーム確認 |
+| `docs/qa/evidence/underwater_fight/2026-07-08_p3_fight_compare.png` | P3後の水中ファイトruntime比較 |

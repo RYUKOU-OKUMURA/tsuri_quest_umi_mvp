@@ -1,6 +1,6 @@
 # 魚図鑑画面 QA判断ログ
 
-最終更新: 2026-07-08 / 状態: **docs/35 P1/P2 差し替え済み**
+最終更新: 2026-07-08 / 状態: **docs/35 魚素材重複修正 完了**
 参照画像: `reference/07_fish_book_mockup.png`
 QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
@@ -88,7 +88,7 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
 ## 5. 現在の残ギャップ
 
-- **P2/P3**: 2026-07-08 に docs/35 P1 A群15種とP2 B群17種は採用済み。残りはP3境界ケース（`megochi`, `kurosoi/takenokomebaru`, `mejina`）の再評価。
+- docs/35 魚素材重複修正はP1/P2/P3とも完了。P3後の境界魚カードと標準図鑑比較は `docs/qa/evidence/fish_assets/2026-07-08_p3_card_contact.png`、`docs/qa/evidence/fish_book/2026-07-08_p3_fish_book_compare.png` に保存済み。
 - 文字収まりの採用値（レアリティチップ幅・段階的フォント縮小）を、P1再発なしに動かさないこと。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
@@ -104,3 +104,4 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 - 2026-07-08: docs/35 P1バッチ2魚素材差し替え。`ira`, `kinmedai`, `akamutsu`, `medai`, `sawara`, `mahaze`, `nenbutsudai` を新規OpenAI生成コンタクトシート由来へ置き換え、図鑑カード/詳細で魚種識別特徴（イラの斜帯、キンメダイの大きな金眼、アカムツの赤い鰓、メダイの丸い灰色体、サワラの細長い体と斑点、マハゼの底物体型、ネンブツダイの黒線）が読めるため採用。画面freeze値・魚clip座標・文字配置は変更なし。判断根拠: `docs/qa/evidence/fish_assets/2026-07-08_p1_batch2_before_after.png`、`docs/qa/evidence/fish_assets/2026-07-08_p1_batch2_card_contact.png`、`docs/qa/evidence/fish_book/2026-07-08_p1_batch2_fish_book_compare.png`。検証: `./tools/fish_book_visual_qa.sh` exit 0、`python3 tools/audit_fish_asset_duplicates.py` exit 0（pending 14→8、unexpected 0）、`python3 tools/audit_fish_sheet_contract.py` exit 0、`./tools/validate_project.sh` exit 0。
 - 2026-07-08: docs/35 P2バッチ1魚素材差し替え。`meichidai`, `murasoi`, `onikasago`, `kihada`, `mebachi`, `hirasouda`, `suma`, `takabe`, `makogarei` を新規OpenAI生成コンタクトシート由来へ置き換え、図鑑カードで魚種識別特徴（メイチダイの眼帯、ムラソイの黒褐色斑、オニカサゴの強い棘、キハダの黄色ヒレ、メバチの大眼、ヒラソウダの背中虫食い模様、スマの腹側黒点、タカベの黄帯、マコガレイの平たい砂地斑）が読めるため採用。画面freeze値・魚clip座標・文字配置は変更なし。判断根拠: `docs/qa/evidence/fish_assets/2026-07-08_p2_batch1_before_after.png`、`docs/qa/evidence/fish_assets/2026-07-08_p2_batch1_card_contact.png`、`docs/qa/evidence/fish_assets/2026-07-08_p2_batch1_source_contact.png`、`docs/qa/evidence/fish_book/2026-07-08_p2_batch1_fish_book_compare.png`。検証: `./tools/fish_book_visual_qa.sh` exit 0、`python3 tools/audit_fish_asset_duplicates.py --strict` exit 0（pending 8→0、unexpected 0）、`python3 tools/audit_fish_sheet_contract.py` exit 0。
 - 2026-07-08: docs/35 P2バッチ2魚素材差し替え。`shimaaji`, `gingameaji`, `kaiwari`, `ishigarei`, `umitanago`, `ishigakidai`, `oomonhata`, `ara` を新規OpenAI生成コンタクトシート由来へ置き換え、図鑑カードで魚種識別特徴（シマアジの黄帯と頭部帯、ギンガメアジの大眼、カイワリの小型菱形体型、イシガレイの石状斑、ウミタナゴの淡桃色無地、イシガキダイの石垣斑、オオモンハタの蜂の巣斑、アラの細長いハタ型）が読めるため採用。これでP2 B群17種の `source` + `contact_crop` 化を完了。画面freeze値・魚clip座標・文字配置は変更なし。判断根拠: `docs/qa/evidence/fish_assets/2026-07-08_p2_batch2_before_after.png`、`docs/qa/evidence/fish_assets/2026-07-08_p2_batch2_card_contact.png`、`docs/qa/evidence/fish_assets/2026-07-08_p2_batch2_source_contact.png`、`docs/qa/evidence/fish_book/2026-07-08_p2_batch2_fish_book_compare.png`。検証: `./tools/fish_book_visual_qa.sh` exit 0、`python3 tools/audit_fish_asset_duplicates.py --strict` exit 0（pending 0、unexpected 0）、`python3 tools/audit_fish_sheet_contract.py` exit 0。
+- 2026-07-08: docs/35 P3魚素材差し替え。`megochi`, `kurosoi`, `takenokomebaru`, `mejina` を新規OpenAI生成コンタクトシート由来へ置き換え、境界ケースを暫定許容ではなくsource artで解消。図鑑カードで `kochi/megochi`、`mebaru/kurosoi/takenokomebaru`、`mejina/umitanago/ishidai` の識別特徴が分かれるため採用。画面freeze値・魚clip座標・文字配置は変更なし。判断根拠: `docs/qa/evidence/fish_assets/2026-07-08_p3_source_before_after.png`、`docs/qa/evidence/fish_assets/2026-07-08_p3_card_contact.png`、`docs/qa/evidence/fish_book/2026-07-08_p3_fish_book_compare.png`。検証: `./tools/fish_book_visual_qa.sh` exit 0、`python3 tools/audit_fish_asset_duplicates.py --strict` exit 0（allowed 1、pending 0、unexpected 0）、`python3 tools/audit_fish_sheet_contract.py` exit 0。

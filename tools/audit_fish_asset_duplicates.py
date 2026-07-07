@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """Audit fish portraits and fight sheets for near-duplicate art.
 
-Default mode keeps validation green while docs/35 P1/P2 are still in progress:
-documented C-class/intended derivatives are allowed, and documented P1/P2
-duplicates are reported as a temporary pair-specific baseline. Use ``--strict``
-after P1/P2 are complete to make that temporary baseline fail.
+Default mode fails any near-duplicate fish art unless the pair is documented as
+a final C-class exception or an intentional nushi/boss derivative. ``--strict``
+also fails any temporary baseline pair if a future replacement plan adds one.
 """
 from __future__ import annotations
 
@@ -51,10 +50,6 @@ ALLOWED_PAIRS: dict[frozenset[str], str] = {
     _pair("shitabirame", "hirame"): "docs/35 C: shitabirame shape is distinguishable",
     _pair("datsu", "kamasu"): "docs/35 C: datsu silhouette is distinguishable",
     _pair("maanago", "tachiuo"): "docs/35 C: maanago is a permitted eel-like derivative",
-    _pair("megochi", "kochi"): "docs/35 C/P3: boundary case kept until P3 reevaluation",
-    _pair("kurosoi", "mebaru"): "docs/35 C/P3: rockfish derivative kept until P3 reevaluation",
-    _pair("takenokomebaru", "mebaru"): "docs/35 C/P3: rockfish derivative kept until P3 reevaluation",
-    _pair("kurosoi", "takenokomebaru"): "docs/35 C/P3: rockfish pair kept until P3 reevaluation",
     _pair("tsumuburi", "hiramasa"): "docs/35 C: bluefish derivative is distinguishable",
     _pair("megalodon", "nushi_danger_reef"): "docs/35 target-excluded E10 derivative",
     _pair("nushi_harbor_pier", "maanago"): "E2 nushi is an intentional base-fish derivative",
@@ -218,7 +213,7 @@ def _classify(first: str, second: str) -> tuple[str, str]:
     if pair in ALLOWED_PAIRS:
         return "allowed", ALLOWED_PAIRS[pair]
     if pair in PENDING_PAIRS:
-        return "pending", f"{PENDING_PAIRS[pair]}; temporary baseline until P1/P2/P3 is closed"
+        return "pending", f"{PENDING_PAIRS[pair]}; temporary baseline until its replacement phase is closed"
     return "unexpected", "not documented in docs/35 allowlist or temporary P1/P2 baseline"
 
 

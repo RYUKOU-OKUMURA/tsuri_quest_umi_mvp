@@ -22,6 +22,7 @@ FISH_DEDUP_CONTACT_SOURCE_20260708_1 = FISH_SOURCE_ASSET_DIR / "fish_dedup_2026-
 FISH_DEDUP_CONTACT_SOURCE_20260708_2 = FISH_SOURCE_ASSET_DIR / "fish_dedup_2026-07-08_contact_sheet_2.png"
 FISH_DEDUP_CONTACT_SOURCE_20260708_3 = FISH_SOURCE_ASSET_DIR / "fish_dedup_2026-07-08_contact_sheet_3.png"
 FISH_DEDUP_CONTACT_SOURCE_20260708_4 = FISH_SOURCE_ASSET_DIR / "fish_dedup_2026-07-08_contact_sheet_4.png"
+FISH_DEDUP_CONTACT_SOURCE_20260708_5 = FISH_SOURCE_ASSET_DIR / "fish_dedup_2026-07-08_contact_sheet_5.png"
 FISH_SHEET = FISH_VARIANT_DIR / "kurodai_showcase_sheet.png"
 FISH_CARD_PORTRAIT = FISH_VARIANT_DIR / "kurodai_card_portrait.png"
 HIT_BURST = OUT_DIR / "hit_burst.png"
@@ -41,7 +42,10 @@ FISH_ART_SOURCES = {
         "contact_crop": (90, 25, 705, 230),
     },
     "mejina": {
-        "contact_crop": (100, 245, 700, 445),
+        "source": "dedup_20260708_5",
+        "contact_crop": (605, 640, 1238, 1085),
+        "flip_runtime_source": True,
+        "runtime_offset_x": 45,
     },
     "kasago": {
         "contact_crop": (105, 450, 710, 650),
@@ -199,21 +203,36 @@ FISH_ART_SOURCES = {
         "flip_runtime_source": True,
         "runtime_offset_x": 65,
     },
-    "megochi": {"template": "kochi", "tint": "#907556", "tint_strength": 0.34, "scale_x": 0.58, "scale_y": 0.58, "markings": "sand_mottle"},
+    "megochi": {
+        "source": "dedup_20260708_5",
+        "contact_crop": (0, 170, 630, 530),
+        "flip_runtime_source": True,
+        "runtime_offset_x": 45,
+    },
     "ishigakidai": {
         "source": "dedup_20260708_4",
         "contact_crop": (421, 448, 908, 767),
         "flip_runtime_source": True,
         "runtime_offset_x": 55,
     },
-    "kurosoi": {"template": "mebaru", "tint": "#3e4039", "tint_strength": 0.70, "scale_x": 0.86, "scale_y": 0.90, "markings": "dark_spots"},
+    "kurosoi": {
+        "source": "dedup_20260708_5",
+        "contact_crop": (600, 120, 1238, 545),
+        "flip_runtime_source": True,
+        "runtime_offset_x": 45,
+    },
     "murasoi": {
         "source": "dedup_20260708_3",
         "contact_crop": (513, 59, 1028, 353),
         "flip_runtime_source": True,
         "runtime_offset_x": 50,
     },
-    "takenokomebaru": {"template": "mebaru", "tint": "#7b5a34", "tint_strength": 0.58, "scale_x": 0.90, "scale_y": 0.86, "markings": "dark_spots"},
+    "takenokomebaru": {
+        "source": "dedup_20260708_5",
+        "contact_crop": (0, 640, 615, 1080),
+        "flip_runtime_source": True,
+        "runtime_offset_x": 45,
+    },
     "oomonhata": {
         "source": "dedup_20260708_4",
         "contact_crop": (865, 487, 1351, 749),
@@ -339,6 +358,7 @@ FISH_CONTACT_SOURCES = {
     "dedup_20260708_2": FISH_DEDUP_CONTACT_SOURCE_20260708_2,
     "dedup_20260708_3": FISH_DEDUP_CONTACT_SOURCE_20260708_3,
     "dedup_20260708_4": FISH_DEDUP_CONTACT_SOURCE_20260708_4,
+    "dedup_20260708_5": FISH_DEDUP_CONTACT_SOURCE_20260708_5,
 }
 
 
