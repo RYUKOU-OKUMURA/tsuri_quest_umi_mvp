@@ -1,6 +1,6 @@
 # 水上キャスト画面 QA判断ログ
 
-最終更新: 2026-07-07 / 状態: READY下段バー見落とし修正 採用
+最終更新: 2026-07-07 / 状態: READY投げる/Enter視認性修正 採用
 参照画像: `reference/01_surface_fishing_mockup.png` / `reference/13_fishing_ready_danger_mockup.png`
 QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `godot --path . res://tools/fishing_surface_states_preview.tscn` / `godot --path . res://tools/catch_fanfare_preview.tscn` / `./tools/fight_visual_qa.sh`
 
@@ -13,7 +13,7 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `godot --path . r
 | 非晴天魚影ステージング | WAITING=小・薄、APPROACH=拡大+alpha上昇、BITE=縮小+低alpha | `_draw_asset_fish_shadow()` | BITEで魚影を濃くせず、スプラッシュを主役にする |
 | 非晴天航跡 | 固定楕円なし、進行方向V字航跡+後方リップル | `_draw_asset_fish_wake()` | 旧楕円アウトラインの照準レティクル感を解消 |
 | rain/fogオーバーレイ | rain=2枚縦スクロール、fog=横ドリフト+alpha揺らぎ | `_draw_weather_texture_overlay()` | 静止合成をやめ、天候の動きを出す |
-| READY専用下段バー品質 | READY時は `fight_hud_frame.png` を背景に描かない。下段バーは `common/button_frame_primary.png`、セレクタ/通常エサカードは `common/parchment_card.png` + `common/card_frame.png`、投げるボタンは `common/action_button_frame.png`、矢印・右メニュー・READYキーチップは `common/button_frame*.png` で構成する。`投げる` はfont ascent/descentで中央に収め、READYで見える餌アイコンは `underwater/hud_bait_icon.png` または魚ポートレートを使う | `src/ui/components/fight_hud.gd` / `tools/audit_showcase_asset_refs.py` | docs/40準拠。FIGHT用の焼き込み区画・分割線がREADYバー背面に覗かないことをfreeze。監査allowlistはこのため `fight_hud.gd` に common を明示許可。READY実表示でコード描画の餌アイコンを出さない |
+| READY専用下段バー品質 | READY時は `fight_hud_frame.png` を背景に描かない。下段バーは `common/button_frame_primary.png`、セレクタ/通常エサカードは `common/parchment_card.png` + `common/card_frame.png`、投げるボタンは `common/action_button_frame.png`、矢印・右メニューは `common/button_frame*.png` で構成する。READYキーチップは濃色の `common/button_frame_primary.png` + 白文字で表示する。`投げる` はfont ascent/descentで中央に収め、READYで見える餌アイコンは `underwater/hud_bait_icon.png` または魚ポートレートを使う | `src/ui/components/fight_hud.gd` / `tools/audit_showcase_asset_refs.py` | docs/40準拠。FIGHT用の焼き込み区画・分割線がREADYバー背面に覗かないことをfreeze。監査allowlistはこのため `fight_hud.gd` に common を明示許可。READY実表示でコード描画の餌アイコンを出さない |
 | サメ餌魚READYセレクタ | `spot_id == "danger_reef"` のREADY時だけ下段HUD左をサメ餌魚セレクタに差し替え。`餌魚なし`・所持魚・残チャージ中の魚を左右で選ぶ。表示は `魚名 xN` 1行、チャージありはピップ＋`あとN回`、在庫0残チャージはフッターに `在庫0` を出す | `src/ui/fishing_screen.gd` / `src/ui/components/fight_hud.gd` | docs/38・docs/40準拠。餌魚は釣り場選択では消費せず、投げる時に1匹消費してチャージを付与する |
 | サメ餌魚チャージ表示 | READYでは旧 `所持 xN` / `1匹で最大N回` 表記を廃止し、`魚名 xN` + ピップ + `あとN回` / `投げると1匹つかう` に集約。CASTING以降は下段HUDに `餌魚：<魚名>（あとN回）` を表示 | `src/ui/components/fight_hud.gd` | レア=3回、ぬし=5回の耐久をUI上で追えるようにする。READYの情報階層を参照13へ寄せたため旧freezeを上書き |
 | サメ餌魚APPROACH/BITE文 | 餌魚ありの時だけ `魚影が餌の<魚名>へ近づいている` / `<魚名>に何かが食いついた`。ヒット魚名・サメ名は出さない | `src/core/fishing_simulator.gd` / `src/ui/components/fight_sidebar.gd` | 上部メッセージパネルはAPPROACH/BITEで非表示のため、実表示される右サイドカードにも反映 |
@@ -33,7 +33,7 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `godot --path . r
 | パラメータ | 回数 | 直近の変更内容 | 状態 |
 |---|---|---|---|
 | 装飾パス累計 | 2 | READY下段バーのゾーンセパレータのみruntime直線。枠・カード・ボタンの質感はcommon PNGへ移管 | 採用 |
-| READY下段バー品質改善 | 2 | `投げる` の縦ズレ、`餌魚なし`/ポートレート欠落時のコード描画、READYキーチップのStyleBoxFlatを修正 | 採用・close |
+| READY下段バー品質改善 | 3 | `投げる` をさらに上へ補正し、`E / Enter` を濃色PNGキーチップ＋白文字へ変更 | 採用・close。文字位置の微調整は3回到達のため、以後はP1再発以外で値いじりしない |
 | 魚影tint/alpha | 2 | rainで沈みすぎたため、環境色tintを明るめの青灰へ戻しAPPROACHのみalpha/scaleを増加 | 採用・close |
 | 未確認魚影カード下部詰め | 1 | signal art比率を圧縮し、詳細2行を下端から逆算配置 | 採用・close |
 
@@ -52,6 +52,40 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `godot --path . r
 完了済みのためなし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-07 READY投げる/Enter視認性修正を採用。
+
+差分Top2:
+- P1-1: `投げる` がまだわずかに下へ寄って見え、主操作ボタンの中央感が弱かった。
+- P1-2: `E / Enter` が紙色キーチップ上の小さい暗色文字になり、縮小表示で読みにくかった。
+
+スコープ:
+- 今回動かしたもの: READY中央ボタン内の `E / Enter` キーチップサイズ・素材・文字色・文字サイズ、`投げる` ラベル領域の縦位置。
+- 触っていないもの: READY下段バーの3ゾーン幅、餌魚カード、右メニュー、抽選/消費ロジック、CASTING以降のHUD情報設計。
+
+変更したもの:
+- `E / Enter` を 124x34px の濃色PNGキーチップに変更し、白文字+outlineで視認性を上げた。
+- `投げる` のラベル領域を上へ補正し、ボタン下端へ落ちて見える状態を解消した。
+
+検証:
+- `tools/fishing_surface_states_preview.tscn`: 非headless通常起動で危険海域READY（マハゼ）・通常釣り場READY・CASTINGを取得し目視確認。
+- `./tools/validate_project.sh`: showcase素材参照監査、魚シート監査、Godotロード確認すべて通過。
+- `fishing_harbor_return_smoke.tscn`: green。
+- `fishing_spot_select_smoke.tscn`: green。
+- `harbor_screen_smoke.tscn`: green。
+- `catch_fanfare_smoke.tscn`: green。
+- `./tools/fight_visual_qa.sh`: FIGHT runtime captureと比較画像生成まで通過。
+
+判断根拠:
+- before/after比較: `docs/qa/evidence/fishing_surface/2026-07-07_ready_button_label_key_final_before_after.png`
+- 中央ボタン焦点比較: `docs/qa/evidence/fishing_surface/2026-07-07_ready_button_label_key_final_focus.png`
+- 個別READY証拠: `docs/qa/evidence/fishing_surface/2026-07-07_ready_button_label_key_final_danger_ready.png` / `2026-07-07_ready_button_label_key_final_common_ready.png`
+- CASTING回帰証拠: `docs/qa/evidence/fishing_surface/2026-07-07_ready_button_label_key_final_casting_regression.png`
+
+採用理由:
+- focus比較で `E / Enter` が縮小状態でも読める。
+- `投げる` の下寄り感が減り、中央主操作としての収まりが改善した。
+- 既存PNGキット内の使い方変更のみで、新規素材・新規コード描画は増やしていない。
 
 2026-07-07 READY下段バー見落とし修正を採用。
 

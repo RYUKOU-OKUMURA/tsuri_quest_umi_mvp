@@ -32,6 +32,7 @@ const ICON_STAMINA := 5
 const ICON_BAIT := 6
 const KIT_ACTION_MARGINS := Vector4(36.0, 18.0, 36.0, 18.0)
 const KIT_BUTTON_MARGINS := Vector4(42.0, 22.0, 42.0, 22.0)
+const KIT_KEY_CAP_MARGINS := Vector4(28.0, 14.0, 28.0, 14.0)
 const KIT_CARD_MARGINS := Vector4(30.0, 30.0, 30.0, 30.0)
 const KIT_PARCHMENT_MARGINS := Vector4(34.0, 16.0, 34.0, 16.0)
 
@@ -664,8 +665,8 @@ func _draw_ready_cast_panel(font: Font, rect: Rect2) -> void:
 	if not _draw_kit_frame(_common_action_button_frame, _main_rect, KIT_ACTION_MARGINS):
 		_draw_ready_panel(_main_rect, Color(Palette.FIGHT_HUD_PANEL_BLUE_FILL, 0.84), Palette.FIGHT_HUD_PANEL_BLUE_BORDER, Palette.GOLD)
 	var key_rect := Rect2(
-		_main_rect.position + Vector2((_main_rect.size.x - 92.0) * 0.5, 18.0),
-		Vector2(92.0, 29.0)
+		_main_rect.position + Vector2((_main_rect.size.x - 124.0) * 0.5, 16.0),
+		Vector2(124.0, 34.0)
 	)
 	_draw_ready_key_cap(font, key_rect, "E / Enter")
 	var label := "投げる"
@@ -673,7 +674,7 @@ func _draw_ready_cast_panel(font: Font, rect: Rect2) -> void:
 	var label_size := 52
 	while label_size > 34 and label_font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x > _main_rect.size.x - 48.0:
 		label_size -= 2
-	var label_rect := Rect2(_main_rect.position + Vector2(0.0, 52.0), Vector2(_main_rect.size.x, _main_rect.size.y - 62.0))
+	var label_rect := Rect2(_main_rect.position + Vector2(0.0, 44.0), Vector2(_main_rect.size.x, _main_rect.size.y - 58.0))
 	_draw_text_center(label_font, label, label_rect, label_size, Palette.TEXT_BONE, 3)
 
 
@@ -751,11 +752,11 @@ func _draw_ready_bait_asset(target: Rect2) -> void:
 
 
 func _draw_ready_key_cap(font: Font, key_rect: Rect2, key: String) -> void:
-	if not _draw_kit_frame(_common_button_frame, key_rect, KIT_BUTTON_MARGINS):
+	if not _draw_kit_frame(_common_button_primary_frame, key_rect, KIT_KEY_CAP_MARGINS):
 		_draw_keyboard_key_cap(font, key_rect, key, false, true)
 		return
 	var key_font := GameFontsScript.bold(font)
-	_draw_text_center(key_font, key, key_rect.grow(-2.0), 10, Palette.FIGHT_HUD_DARK_INK, 0)
+	_draw_text_center(key_font, key, key_rect.grow(-3.0), 13, Palette.TEXT_BONE, 1)
 
 
 func _draw_ready_panel(rect: Rect2, fill: Color, border: Color, highlight: Color) -> void:
