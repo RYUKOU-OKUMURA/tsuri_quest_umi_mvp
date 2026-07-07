@@ -592,7 +592,7 @@ func _draw_ready_shark_lure_panel(font: Font, rect: Rect2) -> void:
 	var fish_id := String(shark_lure_selector.get("fish_id", ""))
 	if fish_id.is_empty():
 		var empty_icon := Rect2(card.position + Vector2(18.0, 18.0), Vector2(minf(card.size.x * 0.36, 96.0), card.size.y - 36.0))
-		_draw_bait_icon(empty_icon.position + empty_icon.size * 0.5)
+		_draw_ready_bait_asset(empty_icon)
 		var empty_text_x := empty_icon.end.x + 14.0
 		var empty_text_w := card.end.x - empty_text_x - 16.0
 		_draw_text_fit(title_font, "餌魚なし", Vector2(empty_text_x, card.position.y + 48.0), empty_text_w, 25, 17, Palette.FIGHT_HUD_DARK_INK, 0)
@@ -608,7 +608,7 @@ func _draw_ready_shark_lure_panel(font: Font, rect: Rect2) -> void:
 	if _lure_portrait != null:
 		_draw_texture_icon(_lure_portrait, portrait)
 	else:
-		_draw_bait_icon(portrait.position + portrait.size * 0.5)
+		_draw_ready_bait_asset(portrait)
 	var text_x := portrait.end.x + 14.0
 	var text_w := card.end.x - text_x - 16.0
 	_draw_text_fit(title_font, "%s x%d" % [fish_name, inventory_count], Vector2(text_x, card.position.y + 42.0), text_w, 24, 12, Palette.FIGHT_HUD_DARK_INK, 0)
@@ -652,10 +652,7 @@ func _draw_ready_bait_panel(font: Font, rect: Rect2) -> void:
 	var card := Rect2(rect.position + Vector2(22.0, 44.0), Vector2(rect.size.x - 44.0, rect.size.y - 52.0))
 	_draw_ready_card_frame(card)
 	var portrait := Rect2(card.position + Vector2(18.0, 18.0), Vector2(minf(card.size.x * 0.36, 128.0), card.size.y - 36.0))
-	if _bait_icon != null:
-		_draw_bait_texture_icon(portrait)
-	else:
-		_draw_bait_icon(portrait.position + portrait.size * 0.5)
+	_draw_ready_bait_asset(portrait)
 	var text_x := portrait.end.x + 16.0
 	var text_w := card.end.x - text_x - 18.0
 	_draw_text_fit(title_font, _rig_name_text(), Vector2(text_x, card.position.y + 56.0), text_w, 27, 16, Palette.FIGHT_HUD_DARK_INK, 0)
@@ -670,13 +667,14 @@ func _draw_ready_cast_panel(font: Font, rect: Rect2) -> void:
 		_main_rect.position + Vector2((_main_rect.size.x - 92.0) * 0.5, 18.0),
 		Vector2(92.0, 29.0)
 	)
-	_draw_keyboard_key_cap(font, key_rect, "E / Enter", false, true)
+	_draw_ready_key_cap(font, key_rect, "E / Enter")
 	var label := "投げる"
 	var label_font := GameFontsScript.extra_bold(font)
-	var label_size := 56
+	var label_size := 52
 	while label_size > 34 and label_font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x > _main_rect.size.x - 48.0:
 		label_size -= 2
-	_draw_text_center(label_font, label, Rect2(_main_rect.position + Vector2(0.0, _main_rect.size.y * 0.37), Vector2(_main_rect.size.x, _main_rect.size.y * 0.58)), label_size, Palette.TEXT_BONE, 3)
+	var label_rect := Rect2(_main_rect.position + Vector2(0.0, 52.0), Vector2(_main_rect.size.x, _main_rect.size.y - 62.0))
+	_draw_text_center(label_font, label, label_rect, label_size, Palette.TEXT_BONE, 3)
 
 
 func _draw_ready_menu_panel(font: Font, rect: Rect2) -> void:
@@ -745,6 +743,21 @@ func _draw_ready_zone_divider(x: float, top: float, height: float) -> void:
 	draw_line(Vector2(x + 1.5, top + 7.0), Vector2(x + 1.5, top + height - 7.0), Color(Palette.FIGHT_HUD_PANEL_BLUE_BORDER, 0.44), 1.0)
 
 
+func _draw_ready_bait_asset(target: Rect2) -> void:
+	if _bait_icon != null:
+		_draw_bait_texture_icon(target)
+		return
+	_draw_hud_icon(ICON_BAIT, target, Palette.FIGHT_HUD_BAIT_ICON_MID)
+
+
+func _draw_ready_key_cap(font: Font, key_rect: Rect2, key: String) -> void:
+	if not _draw_kit_frame(_common_button_frame, key_rect, KIT_BUTTON_MARGINS):
+		_draw_keyboard_key_cap(font, key_rect, key, false, true)
+		return
+	var key_font := GameFontsScript.bold(font)
+	_draw_text_center(key_font, key, key_rect.grow(-2.0), 10, Palette.FIGHT_HUD_DARK_INK, 0)
+
+
 func _draw_ready_panel(rect: Rect2, fill: Color, border: Color, highlight: Color) -> void:
 	var style := StyleBoxFlat.new()
 	style.bg_color = fill
@@ -778,7 +791,12 @@ func _draw_text_fit(
 
 func _draw_text_center(font: Font, text: String, rect: Rect2, font_size: int, color: Color, outline: int) -> void:
 	var text_size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
-	var baseline := rect.position + Vector2((rect.size.x - text_size.x) * 0.5, (rect.size.y + text_size.y) * 0.5 - 2.0)
+	var ascent := font.get_ascent(font_size)
+	var descent := font.get_descent(font_size)
+	var baseline := rect.position + Vector2(
+		(rect.size.x - text_size.x) * 0.5,
+		(rect.size.y - ascent - descent) * 0.5 + ascent
+	)
 	_draw_text(font, text, baseline, font_size, color, outline)
 
 
