@@ -13,6 +13,9 @@ const TACKLE_CARD_ICON_PATH := "res://assets/showcase/underwater/fight_tackle_ca
 const FISH_FRAME_COUNT := 4
 const ICON_ACTION := 7
 const ICON_TACKLE := 8
+const RARITY_TAG_MIN_WIDTH := 50.0
+const RARITY_TAG_MAX_WIDTH := 92.0
+const RARITY_TAG_HORIZONTAL_PAD := 18.0
 
 var simulator: FishingSimulator
 var fish_data: Dictionary = {}
@@ -143,7 +146,8 @@ func _draw_floating_card(font: Font, rect: Rect2) -> void:
 func _draw_floating_revealed(font: Font, card: Rect2, header: Rect2) -> void:
 	var fish_name := _display_fish_name(String(fish_data.get("name", "クロダイ")))
 	var rarity := String(fish_data.get("rarity", "レア"))
-	var rarity_rect := Rect2(Vector2(header.end.x - 58.0, header.position.y + 4.0), Vector2(50.0, 20.0))
+	var rarity_width := _rarity_tag_width(font, rarity)
+	var rarity_rect := Rect2(Vector2(header.end.x - rarity_width - 8.0, header.position.y + 4.0), Vector2(rarity_width, 20.0))
 	var name_max_w := rarity_rect.position.x - header.position.x - 16.0
 	_draw_text_fit(font, fish_name, header.position + Vector2(10.0, 21.0), name_max_w, 18, 13, Palette.TEXT_BONE, 1)
 	_draw_rarity_tag(font, rarity_rect, rarity)
@@ -201,7 +205,8 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	var preferred_bait := String(fish_data.get("preferred_bait", "オキアミ"))
 	if compact_card:
 		var title_plaque := Rect2(inner.position + Vector2(7.0, 8.0), Vector2(inner.size.x - 14.0, 28.0))
-		var rarity_rect := Rect2(inner.position + Vector2(inner.size.x - 58.0, 11.0), Vector2(48.0, 20.0))
+		var rarity_width := _rarity_tag_width(font, rarity)
+		var rarity_rect := Rect2(inner.position + Vector2(inner.size.x - rarity_width - 10.0, 11.0), Vector2(rarity_width, 20.0))
 		var name_rect := Rect2(title_plaque.position + Vector2(62.0, 0.0), Vector2(rarity_rect.position.x - title_plaque.position.x - 72.0, title_plaque.size.y))
 		draw_line(Vector2(title_plaque.position.x + 8.0, title_plaque.end.y + 3.0), Vector2(title_plaque.end.x - 8.0, title_plaque.end.y + 3.0), Color(Palette.FIGHT_SIDEBAR_RULE_FAINT, 0.62), 1.0)
 		_draw_text(font, no_text, inner.position + Vector2(17.0, 27.0), 14, Palette.FIGHT_SIDEBAR_MUTED_TEXT, 0)
@@ -210,7 +215,8 @@ func _draw_fish_card(font: Font, rect: Rect2) -> void:
 	else:
 		_draw_text(font, no_text, inner.position + Vector2(0.0, 26.0), 14, Palette.FIGHT_SIDEBAR_MUTED_LABEL, 0)
 		_draw_text(font, _display_fish_name(fish_name), inner.position + Vector2(74.0, 28.0), 20, Palette.TEXT_DARK, 0)
-		_draw_rarity_tag(font, Rect2(inner.position + Vector2(inner.size.x - 52.0, 8.0), Vector2(48.0, 22.0)), rarity)
+		var rarity_width := _rarity_tag_width(font, rarity)
+		_draw_rarity_tag(font, Rect2(inner.position + Vector2(inner.size.x - rarity_width - 4.0, 8.0), Vector2(rarity_width, 22.0)), rarity)
 
 	var fish_rect := Rect2(
 		inner.position + Vector2(6.0, 44.0 if compact_card else 46.0),
@@ -760,6 +766,11 @@ func _draw_rarity_tag(font: Font, rect: Rect2, rarity: String) -> void:
 	draw_line(rect.position + Vector2(4.0, rect.size.y - 3.0), Vector2(rect.end.x - 4.0, rect.end.y - 3.0), Palette.FIGHT_SIDEBAR_RARITY_BOTTOM_SHADE, 1.0)
 	var text_width := font.get_string_size(rarity, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
 	_draw_text(font, rarity, rect.position + Vector2((rect.size.x - text_width) * 0.5, 17.0), 13, Color.WHITE, 1)
+
+
+func _rarity_tag_width(font: Font, rarity: String) -> float:
+	var text_width := font.get_string_size(rarity, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
+	return clampf(text_width + RARITY_TAG_HORIZONTAL_PAD, RARITY_TAG_MIN_WIDTH, RARITY_TAG_MAX_WIDTH)
 
 
 func _draw_fish_portrait(rect: Rect2) -> void:

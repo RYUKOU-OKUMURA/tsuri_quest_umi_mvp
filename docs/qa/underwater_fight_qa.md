@@ -45,6 +45,13 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 | ルアー前方オフセット | 魚幅の約 0.44 | 同上 | 鼻先と融合しない距離 |
 | 泳ぎシート | 尾側のみ変化する4フレーム | `assets/showcase/fish/kurodai_showcase_sheet.png` | クローン4枚へ戻さない |
 
+### 魚（共通表示・個別素材）
+
+| 項目 | 値 | 場所 | 理由・備考 |
+|---|---|---|---|
+| 水中魚表示の上下安全域 | `UnderwaterView._target_fish_center()` で、泳ぎシートの実描画高さから上下margin（8px以上）を逆算してY中心をclamp | `src/ui/components/underwater_view.gd` | シマアジを含む大きい魚が水面側/海底側へ寄ったときの上端・下端見切れP1を防ぐ。`FishingSimulator.visual_position` は変更しない |
+| シマアジ派生素材 | `process_underwater_fish_assets.py` の `shimaaji.scale_y = 1.00`、カード/泳ぎシートを再生成 | `tools/process_underwater_fish_assets.py` / `assets/showcase/fish/shimaaji_*` | 旧 `0.90` は背側の丸みが潰れ、上部が切れたように見えたためP1補正 |
+
 ### ヒット・距離表示
 
 | 項目 | 値 | 場所 | 理由・備考 |
@@ -127,6 +134,9 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 | 水面天候overlay | 1 | 5天気の候補contact sheetから、状態別PNG量産ではなくgrade/overlay方式を採用 | 採用 |
 | 水面天気専用ベース | 3 | READY用の5天気フル画像を生成後、`SurfaceCastView` で `weather_id` に応じてruntime採用。非快晴はキャスト後も同じ天気ベースを維持 | 採用 |
 | 上部天気アイコン | 1 | `weather_id` 未参照で晴れ固定だったため、5天気シートを追加して上部アイコンだけを天気追従に変更 | 採用 |
+| 魚表示上下安全域 | 1 | 描画時に泳ぎシートの実描画高さからY中心をclampし、上端/下端見切れを防止 | 採用 |
+| シマアジ派生素材 | 1 | `scale_y` を 0.90→1.00 に戻して背側の丸みを回復。シマアジ2素材だけ再生成 | 採用 |
+| フローティングカード・レアリティ帯 | 1 | 固定50pxから文字幅+paddingへ変更し、「アンコモン」が緑帯内に収まるようにした | 採用 |
 
 ## 4. 判定メモ・再検証ルール
 
@@ -144,6 +154,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 
 ## 7. 判断ログ（直近パスのみ）
 
+- 2026-07-07: シマアジ上部見切れ・アンコモン帯はみ出しのP1修正。`UnderwaterView` は魚の実描画高さから上下安全域を計算してY中心をclampし、大型魚/端寄り魚の上端・下端見切れを予防する。シマアジは `process_underwater_fish_assets.py` の派生値 `scale_y` を 0.90→1.00 に戻し、`shimaaji_card_portrait.png` / `shimaaji_showcase_sheet.png` だけ再生成した。`FightSidebar` はレアリティ帯を文字幅+paddingの動的幅へ変更し、「アンコモン」を省略・はみ出しなしで表示する。魚のロジック、上部ステータス、下段HUD、釣果フローは変更なし。検証: シマアジ/イヌザメ/釣果の通常起動キャプチャ、全魚上端alpha接触監査0件、`python3 tools/audit_fish_sheet_contract.py`、`./tools/fight_visual_qa.sh`、`fishing_reveal_smoke.tscn`、`fishing_harbor_return_smoke.tscn`、`catch_fanfare_smoke.tscn`、`./tools/validate_project.sh`。証拠: `docs/qa/evidence/underwater_fight/2026-07-07_shimaaji_clip_fix_fight.png`、`2026-07-07_uncommon_badge_fit_fight.png`、`2026-07-07_shimaaji_clip_fix_catch.png`、`2026-07-07_shimaaji_asset_before_after.png`。
 - 2026-07-07: docs/39 水中ファイト基盤UI刷新を採用。FIGHT下段を140pxスリムバーへ改定し、右サイドバーを廃止してシーン右上フローティングカードへ魚名/レア度/推定サイズ/行動行を集約。CASTING/WAITING/APPROACH/BITEも同じスリムバーに寄せ、BITEの主操作を `E / Enter` のアワセへ集中させた。READY右カラム・docs/38餌魚セレクタ・上部ステータス・背景/魚素材・天候overlay・釣果ファンファーレ・`FishingSimulator` ロジックは変更なし。検証: `./tools/validate_project.sh`、`./tools/fight_visual_qa.sh`、`./tools/surface_weather_visual_qa.sh`、`fishing_surface_states_preview.tscn`、釣行系smoke。証拠: `docs/qa/evidence/underwater_fight/2026-07-07_docs39_final_fight_runtime.png`、`2026-07-07_docs39_final_reference14_compare.png`、`2026-07-07_docs39_final_surface_weather_state_matrix.png`、`2026-07-07_docs39_final_surface_casting.png`、`2026-07-07_docs39_final_surface_waiting.png`、`2026-07-07_docs39_final_surface_approach.png`、`2026-07-07_docs39_final_surface_bite.png`、`2026-07-07_docs39_slice3_danger_lure_approach.png`、`2026-07-07_docs39_slice3_danger_lure_bite.png`。
 - 2026-07-05: catch fanfareのレア紙吹雪色を `Palette.RARITY_RARE_TEXT` 直接参照から `RarityStylesScript.text_color("レア")` へ移行。表示色は同値で、レアリティ色責務を `src/ui/rarity_styles.gd` に閉じた。freeze値、素材、レイアウト、表示文言、日本語PNG焼き込みは変更なし。検証: `catch_fanfare_smoke.tscn`、`./tools/save_system_verify.sh`、`./tools/validate_project.sh` green。通常起動プレビュー証拠: `docs/qa/evidence/underwater_fight/2026-07-05_catch_fanfare_rarity_styles.png`。
 - 2026-07-05: RF2 Palette移行完了。`fight_hud.gd` / `surface_cast_view.gd` / `fight_sidebar.gd` / `underwater_view.gd` / `fight_status_bar.gd` / `fishing_screen.gd` / `catch_fanfare.gd` の生色を `Palette.FIGHT_*` / `Palette.SURFACE_*` / `Palette.UNDERWATER_*` / `Palette.CATCH_*` 等へ移行し、対象7ファイルraw color監査0件。freeze値、素材所有、レイアウト、表示文言、日本語PNG焼き込みは変更なし。検証: `fight_visual_qa.sh`、`surface_weather_visual_qa.sh`、`fishing_reveal_smoke.tscn`、`fishing_harbor_return_smoke.tscn`、`catch_fanfare_smoke.tscn`、`save_system_verify.sh`、`validate_project.sh` green。証拠: `docs/qa/evidence/underwater_fight/2026-07-05_rf2_palette_fight_compare.png`, `2026-07-05_rf2_palette_surface_weather_compare.png`, `2026-07-05_rf2_palette_catch_fanfare.png`。

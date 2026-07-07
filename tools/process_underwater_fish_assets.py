@@ -172,7 +172,7 @@ FISH_ART_SOURCES = {
     "takabe": {"template": "isaki", "tint": "#83a967", "tint_strength": 0.42, "scale_x": 0.70, "scale_y": 0.68, "markings": "yellow_lateral"},
     "ira": {"template": "aobudai", "tint": "#b98566", "tint_strength": 0.42, "scale_x": 0.90, "scale_y": 0.92, "markings": "wrasse_bands"},
     "meichidai": {"template": "madai", "tint": "#bc7f58", "tint_strength": 0.30, "scale_x": 0.86, "scale_y": 0.86, "markings": "soft_lateral"},
-    "shimaaji": {"template": "rouninaji", "tint": "#93a0a5", "tint_strength": 0.24, "scale_x": 0.90, "scale_y": 0.90, "markings": "yellow_lateral"},
+    "shimaaji": {"template": "rouninaji", "tint": "#93a0a5", "tint_strength": 0.24, "scale_x": 0.90, "scale_y": 1.00, "markings": "yellow_lateral"},
     "tsumuburi": {"template": "hiramasa", "tint": "#4f8c86", "tint_strength": 0.34, "scale_x": 1.05, "scale_y": 0.90, "markings": "yellow_lateral"},
     "gingameaji": {"template": "rouninaji", "tint": "#788a91", "tint_strength": 0.34, "scale_x": 0.96, "scale_y": 0.96, "markings": "clean_silver"},
     "kaiwari": {"template": "rouninaji", "tint": "#b2babe", "tint_strength": 0.32, "scale_x": 0.62, "scale_y": 0.72, "markings": "yellow_lateral"},

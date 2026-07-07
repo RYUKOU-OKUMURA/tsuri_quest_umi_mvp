@@ -577,6 +577,21 @@ func _target_fish_center() -> Vector2:
 	var center := Vector2(simulator.visual_position.x * size.x, simulator.visual_position.y * size.y)
 	if _showcase_fish_sheet != null:
 		center += SHOWCASE_FISH_CENTER_OFFSET * size
+		center = _clamp_showcase_fish_center(center)
+	return center
+
+
+func _clamp_showcase_fish_center(center: Vector2) -> Vector2:
+	var draw_size := _showcase_fish_draw_size()
+	if draw_size.y <= 0.0 or size.y <= 0.0:
+		return center
+	var margin := maxf(8.0, size.y * 0.012)
+	var min_y := draw_size.y * 0.5 + margin
+	var max_y := size.y - draw_size.y * 0.5 - margin
+	if min_y > max_y:
+		center.y = size.y * 0.5
+	else:
+		center.y = clampf(center.y, min_y, max_y)
 	return center
 
 
