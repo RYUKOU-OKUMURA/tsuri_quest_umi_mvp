@@ -1,7 +1,7 @@
 # 39. 水中ファイト画面 基盤UI刷新 実装仕様
 
 作成日: 2026-07-07
-状態: 仕様確定・実装前（着手は docs/38 完了後）
+状態: 実装完了（2026-07-07）
 対象: `src/ui/fishing_screen.gd` / `src/ui/components/fight_hud.gd` / `src/ui/components/fight_sidebar.gd`
 参照画像: `reference/14_underwater_fight_simple_mockup.png`（FIGHT）/ `reference/13_fishing_ready_danger_mockup.png`（READY。実装は docs/38）
 根拠: `docs/19_ui_production_playbook.md` §4.6（基盤レイアウト原則。2026-07-07ユーザー決定）
@@ -142,3 +142,4 @@ docs/38 完了が前提。1フェーズ1変更（docs/19 §5-1）。
 - 2026-07-07: FIGHT中のゲージは維持（核心操作のため）。簡素化は情報削除ではなくレイアウト規律で実現する、と確認
 - 2026-07-07: サイドバー廃止に伴う生態解説・タックル欄は削除と決定（他画面に既存表示あり）。FIGHT中のメニューボタンはEsc離脱オーバーレイへ集約
 - 2026-07-07: 実装順は docs/38 → docs/39 → E5 と確定（釣行画面ファミリーの回帰を1回で済ませる）
+- 2026-07-07: 実装完了。FIGHT下段スリムバー、CASTING/WAITING/APPROACH/BITEの中間スリムバー、右サイドバー廃止、シーン右上フローティングカード、reference/14 visual QAへの切り替え、QA freeze改定を反映

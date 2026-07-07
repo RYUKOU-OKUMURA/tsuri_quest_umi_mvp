@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-REFERENCE = ROOT / "reference" / "02_underwater_fight_mockup.png"
+REFERENCE = ROOT / "reference" / "14_underwater_fight_simple_mockup.png"
 CAPTURE = Path("/tmp/tsuri_fishing_fight.png")
 STATIC_CAPTURE = Path("/tmp/tsuri_fishing_fight_static.png")
 OUT = Path("/tmp/tsuri_fight_compare.html")
@@ -125,7 +125,7 @@ def main() -> int:
   <main>
     <figure>
       <figcaption><span>Reference</span><span class="path">{escape(str(REFERENCE))}</span></figcaption>
-      <img alt="reference underwater fight mockup" src="{file_url(REFERENCE)}">
+      <img alt="reference underwater fight simple mockup" src="{file_url(REFERENCE)}">
     </figure>
     <figure>
       <figcaption><span>Current Capture</span><span class="path">{escape(str(capture_path))}</span></figcaption>

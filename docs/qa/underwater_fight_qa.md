@@ -1,8 +1,8 @@
 # 水中ファイト画面 QA判断ログ
 
-最終更新: 2026-07-07 / 状態: **docs/39 水中ファイト基盤UI刷新 作業中**（旧v1 freezeは docs/39 採用により一部上書き予定）
+最終更新: 2026-07-07 / 状態: **docs/39 水中ファイト基盤UI刷新 採用・freeze改定済み**
 参照画像: `reference/14_underwater_fight_simple_mockup.png`（基盤レイアウト） / `reference/02_underwater_fight_mockup.png`（旧v1素材・質感参照）
-QA更新コマンド: `./tools/fight_visual_qa.sh` / 水面天候確認: `./tools/surface_weather_visual_qa.sh` / 釣り上げ結果確認: `godot --path . res://tools/catch_fanfare_preview.tscn`（通常魚確認は `TSURI_CATCH_FANFARE_FISH_ID=aji`）
+QA更新コマンド: `./tools/fight_visual_qa.sh`（reference/14 + runtime capture標準） / 水面天候確認: `./tools/surface_weather_visual_qa.sh` / 釣り上げ結果確認: `godot --path . res://tools/catch_fanfare_preview.tscn`（通常魚確認は `TSURI_CATCH_FANFARE_FISH_ID=aji`）
 詳細な経過履歴: `docs/qa/archive/underwater_fight_design_qa_2026-06.md`（旧 `design-qa.md`）
 
 ## 新魚素材投入時チェックリスト
@@ -57,9 +57,9 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 
 | 項目 | 値 | 場所 | 理由・備考 |
 |---|---|---|---|
-| 表示高さ | 224px | `fishing_screen.gd` / `fight_hud.gd` | 214px試行は水窓が窮屈で不採用 |
-| 下段比率 | エサ 26.5% / メニュー 17.5% / 残り操作ヒント | `fight_hud_frame.png` ＋ runtime | |
-| 操作表記 | 実キー `Space` / `Shift` / `E / Enter`、`+ 釣り場変更` / `- 港へ戻る` | `fight_hud.gd` ほか | A/B/L/R 表記へ戻さない。`Esc` は入力のみ（表示しない） |
+| 表示高さ | READY=224px / CASTING〜FIGHT=140px | `fishing_screen.gd` / `fight_hud.gd` | docs/39採用による改定。旧214px試行の不採用理由はREADY側にのみ残す |
+| 下段構成 | READY=docs/38専用バー / CASTING〜BITE=タナ・アワセ・反応+餌情報 / FIGHT=テンション・巻く/糸を出す+タナ・魚体力 | `fight_hud.gd` | 旧「エサ26.5% / メニュー17.5% / 操作ヒント」はFIGHT/中間状態では廃止 |
+| 操作表記 | 実キー `Space` / `Shift` / `E / Enter`。FIGHT中は `Space` / `Shift` の主操作のみ、CASTING〜BITEは `E / Enter` のアワセを中心表示 | `fight_hud.gd` ほか | A/B/L/R 表記へ戻さない。`+ 釣り場変更` / `- 港へ戻る` はREADYのみ。FIGHT中の離脱はEscオーバーレイ |
 | ゲージ | 18分割セグメント | `fight_hud.gd` | |
 
 ### 上部ステータス
@@ -70,14 +70,14 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 | アイコン | 38–44px、時計/風/コインは `top_status_icon_sheet.png`（128pxセル）、天気は `weather_status_icon_sheet.png`（5天気128pxセル） | 同上 | スロット比率と文字位置は変更なし。天気アイコンのみ `trip_stats.weather_id` に追従 |
 | タイポ | AM 16px（濃色）、時刻/所持金 24px、AM→時刻オフセット 31px、天候/風 21/19px、ロケーションカード 14px＋16/19px | `fight_status_bar.gd` | AM/時刻間隔は再調整禁止 |
 
-### 右サイドバー
+### 右カラム / フローティングカード
 
 | 項目 | 値 | 場所 | 理由・備考 |
 |---|---|---|---|
-| ヘッダー | 高さ 7.71%、タイトル/カウント 1px アウトライン | `sidebar_frame.png` ＋ `fight_sidebar.gd` | |
-| 魚カード | y=9.18% h=48.83%、ポートレート88%スケール・-9px/-15px、窓高42.5%、推定 16px/26px、生態 14px | 同上 | ポートレートは `kurodai_card_portrait.png`（560x310、透明左向き切り抜き）。泳ぎシート直描画へ戻さない |
-| アクション/タックル | y=59.18% / 80.08%、h=19.53% / 18.75%、アクションタイトル21px・メッセージ15px | 同上 | |
-| タックルカード | **5行13px（ロッド/リール/ライン/ハリス/針）、104pxアイコンレーン、118x86pxロッド/リール切り抜き** | 同上 | v1公式値。`docs/11_underwater_fight_showcase.md` と共通 |
+| READY右カラム | 右326px前後。釣り場情報・魚影/状態・仕掛けカードを表示 | `fishing_screen.gd` / `fight_sidebar.gd` | docs/38 READY専用。釣り場詳細はREADYにだけ残す |
+| CASTING〜FIGHT | 右カラムを隠し、シーンを全幅へ拡張。シーン右上に約288x120pxのフローティングカード1枚 | `fishing_screen.gd` / `fight_sidebar.gd` | docs/39採用による改定。旧サイドバー寸法はFIGHT/中間状態へ戻さない |
+| 未確認カード | 「未確認の魚影」＋反応タグ＋行動行。魚名・レア度・推定サイズは出さない | `fight_sidebar.gd` | 正体秘匿を維持。APPROACH/BITEの餌魚主語文言は行動行へ移す |
+| 判明後カード | 魚名＋レア度バッジ＋推定サイズ＋行動行。生態解説・タックル欄は表示しない | `fight_sidebar.gd` | ファイト中の判断に使わない情報を削除し、図鑑/仕掛け画面へ役割分担 |
 
 ### キャッチ演出
 
@@ -130,43 +130,21 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 
 ## 4. 暫定判定・再検証TODO
 
-- [ ] **P2/環境依存**: ランタイムの水中ファイト実スクショは環境依存で不安定なため、v1判定の一部は静的合成ボード（`tools/build_fight_*_static_compare.py`）を証跡として採用する。2026-07-05に `./tools/fight_visual_qa.sh` を再実行し、静的比較は `docs/qa/evidence/underwater_fight/2026-07-05_fight_static_qa_compare.png` / `2026-07-05_fight_frame_focus_compare.png` / `2026-07-05_fight_hit_focus.png` / `2026-07-05_fight_sidebar_static_compare.png` / `2026-07-05_fight_hud_static_compare.png` / `2026-07-05_fight_top_status_static_compare.png` / `2026-07-05_fight_full_static_compare.png` へ永続化済み。通常キャプチャ復旧後にランタイム実スクショで再判定するが、これは最終リファクタ完了ブロッカーではない。
+- 2026-07-07 docs/39で `./tools/fight_visual_qa.sh` のランタイム実キャプチャを標準に戻し、比較対象を `reference/14_underwater_fight_simple_mockup.png` へ更新済み。静的合成ボードはruntime失敗時のフォールバックとして残す。
 - 注: 2026-06-26 パスの証拠画像は `/tmp` のみに残され失われた。以後の採用判断では `docs/qa/evidence/underwater_fight/` へのコピーを必須とする。
 
 ## 5. 現在の残ギャップ
 
-- **P2**: 右パネル/HUD/上部の最終authored素材・専用タイポグラフィ品質が参照に未達。生成フレームの機械的な印象が残る。→ 対応は次フェーズ（下記）であり、フレーム素材のマイクロポリッシュ続行ではない。
+- **P2**: reference/14の最終アート質感（フローティングカード/スリムバー専用PNG化、カード縁やボタン質感のauthored素材化）は未着手。現状は共通paletteのruntime描画でv1採用。
 - **残**: 魚のアニメ/接地の微ポリッシュ、背景中央の理想画質、ヒットバッジの最終合わせ。非快晴の水面状態は天気専用ベースを維持済み。専用の状態別×天気PNG量産はしない。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-2026-07-07 docs/39 水中ファイト基盤UI刷新。
-
-参照との差分Top3:
-
-1. **構成P2**: 右サイドバー常設により中央水中シーンが狭い。docs/39ではサイドバーを廃止し、必要情報はシーン右上フローティングカード1枚へ集約する。
-2. **構成P2**: FIGHT下段HUDが224pxで、使用中のエサ・操作ヒント・メニューボタンを含む。docs/39では約140pxのスリムバーへ上書きし、テンション／主操作／魚の体力に絞る。
-3. **情報階層P2**: CASTING〜BITEの操作導線が旧HUD/右サイドに分散している。docs/39では主操作（アワセ）と餌魚主語の行動行をスリムバー＋フローティングカードへ移す。
-
-今回動かすパラメータ:
-
-- スライス1: `fight_hud.gd` のFIGHT描画レイアウト、FIGHT時のHUD高さ（約140px、実測±10px）、必要最小限の `fishing_screen.gd` 下段配分。
-- スライス2: 右326pxサイドバー廃止、`fight_sidebar.gd` のフローティングカード化、`fishing_screen.gd` のシーン拡大。
-- スライス3: CASTING / WAITING / APPROACH / BITE の下段スリムバー表示、アワセ主操作、餌魚主語文言の表示先。
-
-触らないfreeze値:
-
-- 上部ステータスバー（76px・スロット比率・時刻/天候/所持金/釣り場表示）。
-- ゲージ分割数18・既存ゲージ配色。
-- 水中/水面ビューの背景・魚素材・天候オーバーレイ・非晴天魚影・晴天状態別プレート。
-- 釣果ファンファーレ、結果オーバーレイ、離脱オーバーレイ。
-- `FishingSimulator` の状態遷移・テンション/体力/キャッチ/逃走ロジック。
-- docs/38のREADY専用下段バー、危険海域餌魚セレクタ、通常READY表示、CASTING以降の餌魚残回数の意味論。
-
-スライス1ではサイドバー廃止、フローティングカード、中間状態表示は触らない。FIGHT中の「使用中のエサ」「操作のヒント」「釣り場変更」「港へ戻る」復活禁止はスライス2以降の回帰条件に含める。
+（現在作業中のフェーズなし。docs/39は2026-07-07に採用・freeze改定済み）
 
 ## 7. 判断ログ（直近パスのみ）
 
+- 2026-07-07: docs/39 水中ファイト基盤UI刷新を採用。FIGHT下段を140pxスリムバーへ改定し、右サイドバーを廃止してシーン右上フローティングカードへ魚名/レア度/推定サイズ/行動行を集約。CASTING/WAITING/APPROACH/BITEも同じスリムバーに寄せ、BITEの主操作を `E / Enter` のアワセへ集中させた。READY右カラム・docs/38餌魚セレクタ・上部ステータス・背景/魚素材・天候overlay・釣果ファンファーレ・`FishingSimulator` ロジックは変更なし。検証: `./tools/validate_project.sh`、`./tools/fight_visual_qa.sh`、`./tools/surface_weather_visual_qa.sh`、釣行系smoke。証拠: `docs/qa/evidence/underwater_fight/2026-07-07_docs39_final_fight_runtime.png`、`2026-07-07_docs39_final_reference14_compare.png`、`2026-07-07_docs39_slice3_normal_bite_slim.png`、`2026-07-07_docs39_slice3_danger_lure_approach.png`、`2026-07-07_docs39_slice3_danger_lure_bite.png`。
 - 2026-07-05: catch fanfareのレア紙吹雪色を `Palette.RARITY_RARE_TEXT` 直接参照から `RarityStylesScript.text_color("レア")` へ移行。表示色は同値で、レアリティ色責務を `src/ui/rarity_styles.gd` に閉じた。freeze値、素材、レイアウト、表示文言、日本語PNG焼き込みは変更なし。検証: `catch_fanfare_smoke.tscn`、`./tools/save_system_verify.sh`、`./tools/validate_project.sh` green。通常起動プレビュー証拠: `docs/qa/evidence/underwater_fight/2026-07-05_catch_fanfare_rarity_styles.png`。
 - 2026-07-05: RF2 Palette移行完了。`fight_hud.gd` / `surface_cast_view.gd` / `fight_sidebar.gd` / `underwater_view.gd` / `fight_status_bar.gd` / `fishing_screen.gd` / `catch_fanfare.gd` の生色を `Palette.FIGHT_*` / `Palette.SURFACE_*` / `Palette.UNDERWATER_*` / `Palette.CATCH_*` 等へ移行し、対象7ファイルraw color監査0件。freeze値、素材所有、レイアウト、表示文言、日本語PNG焼き込みは変更なし。検証: `fight_visual_qa.sh`、`surface_weather_visual_qa.sh`、`fishing_reveal_smoke.tscn`、`fishing_harbor_return_smoke.tscn`、`catch_fanfare_smoke.tscn`、`save_system_verify.sh`、`validate_project.sh` green。証拠: `docs/qa/evidence/underwater_fight/2026-07-05_rf2_palette_fight_compare.png`, `2026-07-05_rf2_palette_surface_weather_compare.png`, `2026-07-05_rf2_palette_catch_fanfare.png`。
 - 2026-07-05: RF5棚卸しとして `./tools/fight_visual_qa.sh` を再実行し、静的比較を永続証拠へコピー。フォントAA待ちTODOは、`game_fonts.gd` AA有効統一と旧 `fight_fonts.gd` 削除により解消済みとして削除した。ランタイム実スクショ再判定は引き続きTODOに残す。

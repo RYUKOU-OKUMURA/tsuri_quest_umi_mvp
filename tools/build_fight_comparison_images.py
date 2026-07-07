@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw
 
 
 ROOT = Path(__file__).resolve().parents[1]
-REFERENCE = ROOT / "reference" / "02_underwater_fight_mockup.png"
+REFERENCE = ROOT / "reference" / "14_underwater_fight_simple_mockup.png"
 CAPTURE = Path("/tmp/tsuri_fishing_fight.png")
 STATIC_CAPTURE = Path("/tmp/tsuri_fishing_fight_static.png")
 OUT_FULL = Path("/tmp/tsuri_fight_compare.png")
@@ -46,7 +46,7 @@ def build_full(reference: Image.Image, capture: Image.Image, capture_path: Path)
     cur = _fit_height(capture, scale_h)
     out = Image.new("RGB", (ref.width + cur.width + 24, scale_h + label_h + 16), BG)
     draw = ImageDraw.Draw(out)
-    _label(draw, (8, 8), "REFERENCE: 02_underwater_fight_mockup.png")
+    _label(draw, (8, 8), "REFERENCE: 14_underwater_fight_simple_mockup.png")
     _label(draw, (ref.width + 24, 8), f"CURRENT: {capture_path}")
     out.paste(ref, (8, label_h))
     out.paste(cur, (ref.width + 16, label_h))
@@ -54,27 +54,27 @@ def build_full(reference: Image.Image, capture: Image.Image, capture_path: Path)
 
 
 def build_frame_focus(reference: Image.Image, capture: Image.Image, capture_path: Path) -> None:
-    ref_ui = reference.crop((0, 610, reference.width, reference.height))
+    ref_ui = reference.crop((0, 430, reference.width, reference.height))
     cur_ui = capture.crop((0, 430, capture.width, capture.height))
     ref = _fit_height(ref_ui, 330)
     cur = _fit_height(cur_ui, 330)
     out = Image.new("RGB", (ref.width + cur.width + 28, 390), BG)
     draw = ImageDraw.Draw(out)
-    _label(draw, (8, 8), "REFERENCE HUD / RIGHT PANEL REGION")
-    _label(draw, (ref.width + 20, 8), f"CURRENT HUD / RIGHT PANEL REGION: {capture_path.name}")
+    _label(draw, (8, 8), "REFERENCE SLIM HUD / FLOATING CARD REGION")
+    _label(draw, (ref.width + 20, 8), f"CURRENT SLIM HUD / FLOATING CARD REGION: {capture_path.name}")
     out.paste(ref, (8, 40))
     out.paste(cur, (ref.width + 20, 40))
     out.save(OUT_FRAME)
 
 
 def build_fish_focus(reference: Image.Image, capture: Image.Image, capture_path: Path) -> None:
-    ref_fish = reference.crop((0, 85, 1260, 612))
-    cur_fish = capture.crop((0, 84, 980, 455))
+    ref_fish = reference.crop((0, 84, reference.width, 570))
+    cur_fish = capture.crop((0, 84, capture.width, 570))
     ref = _fit_width(ref_fish, 720)
     cur = _fit_width(cur_fish, 720)
     out = Image.new("RGB", (1460, max(ref.height, cur.height) + 80), BG)
     draw = ImageDraw.Draw(out)
-    _label(draw, (12, 12), "REFERENCE FISH/HIT REGION")
+    _label(draw, (12, 12), "REFERENCE WATER / FISH REGION")
     _label(draw, (740, 12), f"CURRENT WATER REGION: {capture_path.name}")
     out.paste(ref, (12, 40))
     out.paste(cur, (740, 40))

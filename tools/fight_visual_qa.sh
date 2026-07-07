@@ -20,7 +20,7 @@ python3 tools/build_fight_top_status_static_compare.py || exit 1
 python3 tools/build_fight_full_static_compare.py || exit 1
 python3 tools/build_fish_asset_contact_sheet.py || exit 1
 
-if [[ "${TSURI_FIGHT_RUNTIME_CAPTURE:-0}" == "1" ]]; then
+if [[ "${TSURI_FIGHT_RUNTIME_CAPTURE:-1}" == "1" ]]; then
   if [[ -z "$GODOT" ]]; then
     echo "Runtime capture skipped: Godot 4.x was not found." >&2
   else
