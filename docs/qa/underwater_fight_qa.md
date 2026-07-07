@@ -1,7 +1,7 @@
 # 水中ファイト画面 QA判断ログ
 
-最終更新: 2026-07-05 / 状態: **v1 showcase 合格・freeze中**（2026-06-26 判定）+ 写真風釣り上げ結果画面 + 水面天候5系統 + catch fanfare RarityStyles移行済み
-参照画像: `reference/02_underwater_fight_mockup.png`
+最終更新: 2026-07-07 / 状態: **docs/39 水中ファイト基盤UI刷新 作業中**（旧v1 freezeは docs/39 採用により一部上書き予定）
+参照画像: `reference/14_underwater_fight_simple_mockup.png`（基盤レイアウト） / `reference/02_underwater_fight_mockup.png`（旧v1素材・質感参照）
 QA更新コマンド: `./tools/fight_visual_qa.sh` / 水面天候確認: `./tools/surface_weather_visual_qa.sh` / 釣り上げ結果確認: `godot --path . res://tools/catch_fanfare_preview.tscn`（通常魚確認は `TSURI_CATCH_FANFARE_FISH_ID=aji`）
 詳細な経過履歴: `docs/qa/archive/underwater_fight_design_qa_2026-06.md`（旧 `design-qa.md`）
 
@@ -140,7 +140,30 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-（現在作業中のフェーズなし）
+2026-07-07 docs/39 水中ファイト基盤UI刷新。
+
+参照との差分Top3:
+
+1. **構成P2**: 右サイドバー常設により中央水中シーンが狭い。docs/39ではサイドバーを廃止し、必要情報はシーン右上フローティングカード1枚へ集約する。
+2. **構成P2**: FIGHT下段HUDが224pxで、使用中のエサ・操作ヒント・メニューボタンを含む。docs/39では約140pxのスリムバーへ上書きし、テンション／主操作／魚の体力に絞る。
+3. **情報階層P2**: CASTING〜BITEの操作導線が旧HUD/右サイドに分散している。docs/39では主操作（アワセ）と餌魚主語の行動行をスリムバー＋フローティングカードへ移す。
+
+今回動かすパラメータ:
+
+- スライス1: `fight_hud.gd` のFIGHT描画レイアウト、FIGHT時のHUD高さ（約140px、実測±10px）、必要最小限の `fishing_screen.gd` 下段配分。
+- スライス2: 右326pxサイドバー廃止、`fight_sidebar.gd` のフローティングカード化、`fishing_screen.gd` のシーン拡大。
+- スライス3: CASTING / WAITING / APPROACH / BITE の下段スリムバー表示、アワセ主操作、餌魚主語文言の表示先。
+
+触らないfreeze値:
+
+- 上部ステータスバー（76px・スロット比率・時刻/天候/所持金/釣り場表示）。
+- ゲージ分割数18・既存ゲージ配色。
+- 水中/水面ビューの背景・魚素材・天候オーバーレイ・非晴天魚影・晴天状態別プレート。
+- 釣果ファンファーレ、結果オーバーレイ、離脱オーバーレイ。
+- `FishingSimulator` の状態遷移・テンション/体力/キャッチ/逃走ロジック。
+- docs/38のREADY専用下段バー、危険海域餌魚セレクタ、通常READY表示、CASTING以降の餌魚残回数の意味論。
+
+スライス1ではサイドバー廃止、フローティングカード、中間状態表示は触らない。FIGHT中の「使用中のエサ」「操作のヒント」「釣り場変更」「港へ戻る」復活禁止はスライス2以降の回帰条件に含める。
 
 ## 7. 判断ログ（直近パスのみ）
 

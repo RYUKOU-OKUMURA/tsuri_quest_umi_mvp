@@ -146,7 +146,7 @@ func _build_screen() -> void:
 
 	_fight_hud = FightHudScript.new()
 	_fight_hud.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_fight_hud.custom_minimum_size = Vector2(0.0, 224.0)
+	_fight_hud.custom_minimum_size = Vector2(0.0, FightHudScript.DEFAULT_HUD_HEIGHT)
 	_fight_hud.main_action_pressed.connect(_on_main_action_pressed)
 	_fight_hud.reel_changed.connect(func(active: bool) -> void: _simulator.set_reeling(active))
 	_fight_hud.give_line_changed.connect(func(active: bool) -> void: _simulator.set_giving_line(active))
@@ -1059,6 +1059,7 @@ func _retry() -> void:
 func _update_ui() -> void:
 	if _simulator == null:
 		return
+	_update_fight_hud_height()
 	var message := _simulator.action_message
 	if _trip_event_message_timer > 0.0 and not _trip_event_message.is_empty():
 		message = _trip_event_message
@@ -1071,6 +1072,18 @@ func _update_ui() -> void:
 		_info_title_label.visible = show_spot_panel
 	if _spot_panel != null:
 		_spot_panel.visible = show_spot_panel
+
+
+func _update_fight_hud_height() -> void:
+	if _fight_hud == null or _simulator == null:
+		return
+	var target_height := FightHudScript.DEFAULT_HUD_HEIGHT
+	if _simulator.state == FishingSimulator.State.FIGHT:
+		target_height = FightHudScript.FIGHT_SLIM_HUD_HEIGHT
+	if is_equal_approx(_fight_hud.custom_minimum_size.y, target_height):
+		return
+	_fight_hud.custom_minimum_size = Vector2(0.0, target_height)
+	_fight_hud.queue_redraw()
 
 
 func _set_message_text(message: String) -> void:

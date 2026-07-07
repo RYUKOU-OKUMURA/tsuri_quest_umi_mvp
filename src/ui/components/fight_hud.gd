@@ -20,6 +20,8 @@ const HUD_TENSION_ICON_PATH := "res://assets/showcase/underwater/hud_tension_ico
 const HUD_STAMINA_ICON_PATH := "res://assets/showcase/underwater/hud_stamina_icon.png"
 const HUD_KEY_PLUS_PATH := "res://assets/showcase/underwater/hud_key_plus.png"
 const HUD_KEY_MINUS_PATH := "res://assets/showcase/underwater/hud_key_minus.png"
+const DEFAULT_HUD_HEIGHT := 224.0
+const FIGHT_SLIM_HUD_HEIGHT := 140.0
 const ICON_TENSION := 4
 const ICON_STAMINA := 5
 const ICON_BAIT := 6
@@ -72,7 +74,7 @@ func set_shark_lure_selector(data: Dictionary) -> void:
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	custom_minimum_size = Vector2(0.0, 224.0)
+	custom_minimum_size = Vector2(0.0, DEFAULT_HUD_HEIGHT)
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	if ResourceLoader.exists(HUD_FRAME_PATH):
 		_hud_frame = load(HUD_FRAME_PATH) as Texture2D
@@ -151,16 +153,25 @@ func _draw() -> void:
 	if rect.size.x <= 0.0 or rect.size.y <= 0.0:
 		return
 
-	if _hud_frame != null:
+	var state := _simulator_state()
+	if state == FishingSimulator.State.FIGHT:
+		_draw_fight_bar_background(rect)
+	elif _hud_frame != null:
 		draw_texture_rect(_hud_frame, rect, false, Color.WHITE)
 	else:
 		_draw_panel(rect, Palette.FIGHT_HUD_FALLBACK_PANEL_FILL, Palette.GOLD_DEEP, Palette.GOLD)
 
-	if _simulator_state() == FishingSimulator.State.READY:
+	if state == FishingSimulator.State.READY:
 		var ready_rect := Rect2(size.x * 0.014, size.y * 0.065, size.x * 0.972, size.y * 0.875)
 		if _hud_frame == null:
 			ready_rect = rect.grow(-10.0)
 		_draw_ready_controls(font, ready_rect)
+		return
+	if state == FishingSimulator.State.FIGHT:
+		var fight_rect := Rect2(size.x * 0.014, size.y * 0.085, size.x * 0.972, size.y * 0.83)
+		if _hud_frame == null:
+			fight_rect = rect.grow(-10.0)
+		_draw_fight_slim_controls(font, fight_rect)
 		return
 
 	var gap := 10.0
@@ -183,6 +194,102 @@ func _draw() -> void:
 	_draw_depth(font, depth_rect)
 	_draw_stamina(font, stamina_rect)
 	_draw_bottom_controls(font, bottom)
+
+
+func _draw_fight_slim_controls(font: Font, rect: Rect2) -> void:
+	var gap := 10.0
+	var action_w := clampf(rect.size.x * 0.34, 360.0, 430.0)
+	var side_w := (rect.size.x - action_w - gap * 2.0) * 0.5
+	var tension_rect := Rect2(rect.position, Vector2(side_w, rect.size.y))
+	var action_rect := Rect2(Vector2(tension_rect.end.x + gap, rect.position.y), Vector2(action_w, rect.size.y))
+	var stamina_rect := Rect2(Vector2(action_rect.end.x + gap, rect.position.y), Vector2(side_w, rect.size.y))
+
+	_main_rect = Rect2()
+	_lure_prev_rect = Rect2()
+	_lure_next_rect = Rect2()
+	_change_spot_rect = Rect2()
+	_harbor_rect = Rect2()
+	_reel_rect = Rect2()
+	_give_rect = Rect2()
+
+	_draw_tension(font, tension_rect)
+	_draw_fight_action_zone(font, action_rect)
+	_draw_stamina(font, stamina_rect)
+
+
+func _draw_fight_bar_background(rect: Rect2) -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(Palette.FIGHT_HUD_FALLBACK_PANEL_FILL, 0.96)
+	style.border_color = Color(Palette.GOLD_DEEP, 0.92)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(4)
+	style.shadow_color = Color(Color.BLACK, 0.32)
+	style.shadow_size = 2
+	draw_style_box(style, rect.grow(-2.0))
+	draw_rect(rect.grow(-7.0), Color(Palette.GOLD_BRIGHT, 0.10), false, 1.0)
+
+
+func _draw_fight_action_zone(font: Font, rect: Rect2) -> void:
+	_draw_ready_panel(rect, Color(Palette.FIGHT_HUD_PANEL_BLUE_FILL, 0.88), Palette.FIGHT_HUD_PANEL_BLUE_BORDER, Palette.GOLD)
+	var depth_chip := Rect2(
+		rect.position + Vector2(rect.size.x * 0.5 - 72.0, 7.0),
+		Vector2(144.0, 28.0)
+	)
+	_draw_fight_depth_chip(font, depth_chip)
+	var gap := 8.0
+	var button_y := rect.position.y + 42.0
+	var button_h := rect.size.y - 52.0
+	var button_w := (rect.size.x - 26.0 - gap) * 0.5
+	_reel_rect = Rect2(rect.position + Vector2(13.0, button_y - rect.position.y), Vector2(button_w, button_h))
+	_give_rect = Rect2(Vector2(_reel_rect.end.x + gap, button_y), Vector2(button_w, button_h))
+	_draw_fight_action_button(font, _reel_rect, "Space", "巻く", _is_reeling_active())
+	_draw_fight_action_button(font, _give_rect, "Shift", "糸を出す", _is_giving_active())
+
+
+func _draw_fight_depth_chip(font: Font, rect: Rect2) -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(Palette.FIGHT_HUD_MENU_BUTTON_FRAME_FILL, 0.92)
+	style.border_color = Color(Palette.FIGHT_HUD_MENU_BUTTON_BORDER, 0.86)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(5)
+	style.shadow_color = Color(Color.BLACK, 0.26)
+	style.shadow_size = 2
+	draw_style_box(style, rect)
+	var depth := 0.0
+	if simulator != null:
+		depth = simulator.depth
+	var text := "タナ %.1fm" % depth
+	var text_size := 16
+	var text_w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, text_size).x
+	_draw_text(font, text, rect.position + Vector2((rect.size.x - text_w) * 0.5 - 7.0, 20.0), text_size, Palette.TEXT_BONE, 1)
+	var arrow_x := rect.end.x - 16.0
+	_draw_triangle(Vector2(arrow_x, rect.position.y + 9.0), 5.0, Palette.FIGHT_HUD_DEPTH_UP_ARROW, true)
+	_draw_triangle(Vector2(arrow_x, rect.position.y + 19.0), 5.0, Palette.FIGHT_HUD_DEPTH_DOWN_ARROW, false)
+
+
+func _draw_fight_action_button(font: Font, rect: Rect2, key: String, label: String, active: bool) -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(Palette.FIGHT_HUD_KEY_SPACE_FILL if key == "Space" else Palette.FIGHT_HUD_KEY_SHIFT_FILL, 0.94)
+	if active:
+		style.bg_color = style.bg_color.lightened(0.18)
+	style.border_color = Palette.FIGHT_HUD_KEY_BORDER_ACTIVE if active else Color(Palette.FIGHT_HUD_KEY_BORDER, 0.90)
+	style.set_border_width_all(2 if active else 1)
+	style.set_corner_radius_all(6)
+	style.shadow_color = Color(Color.BLACK, 0.30)
+	style.shadow_size = 3
+	draw_style_box(style, rect)
+	draw_line(rect.position + Vector2(10.0, 6.0), rect.position + Vector2(rect.size.x - 10.0, 6.0), Color(Color.WHITE, 0.14), 1.0)
+	var key_rect := Rect2(rect.position + Vector2(12.0, rect.size.y * 0.5 - 13.0), Vector2(_keyboard_key_width(key), 26.0))
+	_draw_keyboard_key_cap(font, key_rect, key, active, true)
+	var label_size := 24 if label.length() <= 2 else 20
+	var label_w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
+	var label_x := key_rect.end.x + maxf(8.0, (rect.end.x - key_rect.end.x - label_w) * 0.5)
+	while label_x + label_w > rect.end.x - 8.0 and label_size > 17:
+		label_size -= 1
+		label_w = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
+	if label_x + label_w > rect.end.x - 8.0:
+		label_x = rect.end.x - label_w - 8.0
+	_draw_text(font, label, Vector2(label_x, rect.position.y + rect.size.y * 0.5 + 9.0), label_size, Palette.TEXT_BONE, 2)
 
 
 func _draw_tension(font: Font, rect: Rect2) -> void:
