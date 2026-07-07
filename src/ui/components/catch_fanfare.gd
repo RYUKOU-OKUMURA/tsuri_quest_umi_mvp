@@ -278,7 +278,11 @@ func _bonus_text() -> String:
 	var reward_money := int(reward.get("money", 0))
 	if reward_money > 0:
 		lines.append("撃破報酬 +%s G" % ScreenBase.format_money(reward_money))
-	for title_id_variant in Array(_catch_result.get("new_titles", [])).slice(0, 2):
+	var discovery_text := String(_catch_result.get("favorite_bait_discovery_text", "")).strip_edges()
+	if not discovery_text.is_empty():
+		lines.append(discovery_text)
+	var title_limit := 1 if not discovery_text.is_empty() and lines.size() >= 3 else 2
+	for title_id_variant in Array(_catch_result.get("new_titles", [])).slice(0, title_limit):
 		lines.append("称号獲得　「%s」" % _title_name(String(title_id_variant)))
 	if bool(_catch_result.get("first_catch", false)) and lines.is_empty():
 		lines.append("初回記録　図鑑に登録")

@@ -211,7 +211,11 @@ func _tick_waiting(delta: float) -> void:
 	if _phase_timer <= 0.0:
 		_phase_timer = _rng.randf_range(1.0, 1.7)
 		action_name = "接近"
-		_set_message("魚影がエサへ近づいている……")
+		var lure_name := _shark_lure_fish_name()
+		if lure_name.is_empty():
+			_set_message("魚影がエサへ近づいている……")
+		else:
+			_set_message("魚影が餌の%sへ近づいている……" % lure_name)
 		_set_state(State.APPROACH)
 
 
@@ -223,7 +227,11 @@ func _tick_approach(delta: float) -> void:
 	if _phase_timer <= 0.0:
 		_bite_timer = 1.05 + float(player_stats.get("bite_window_bonus", 0.0))
 		action_name = "食いつき"
-		_set_message("食いついた！ E / Enterでアワセ！")
+		var lure_name := _shark_lure_fish_name()
+		if lure_name.is_empty():
+			_set_message("食いついた！ E / Enterでアワセ！")
+		else:
+			_set_message("%sに何かが食いついた！ E / Enterでアワセ！" % lure_name)
 		_set_state(State.BITE)
 
 
@@ -367,6 +375,15 @@ func _update_visual_position(delta: float, fish_speed: float) -> void:
 func _motion_value(key: String, fallback: float) -> float:
 	var motion: Dictionary = fish_data.get("motion", {})
 	return float(motion.get(key, fallback))
+
+
+func _shark_lure_fish_name() -> String:
+	if String(player_stats.get("spot_id", "")) != "danger_reef":
+		return ""
+	var fish_id := String(player_stats.get("shark_lure_fish_id", ""))
+	if fish_id.is_empty():
+		return ""
+	return String(player_stats.get("shark_lure_fish_name", fish_id)).strip_edges()
 
 
 func _catch_fish() -> void:

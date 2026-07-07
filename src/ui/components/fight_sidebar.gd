@@ -545,6 +545,7 @@ func _unknown_reaction_color() -> Color:
 func _unknown_description() -> String:
 	if simulator == null:
 		return "仕掛けへの反応を見ながら、魚影が見える瞬間を待とう。"
+	var lure_name := _shark_lure_fish_name()
 	match simulator.state:
 		FishingSimulator.State.READY:
 			return "狙いを決めて仕掛けを投げると、水中の反応を探り始める。"
@@ -553,8 +554,12 @@ func _unknown_description() -> String:
 		FishingSimulator.State.WAITING:
 			return "水面と糸の変化を見ながら、魚の気配を探っている。"
 		FishingSimulator.State.APPROACH:
+			if not lure_name.is_empty():
+				return "餌の%sの近くに魚影がある。正体はまだ水中で確認できない。" % lure_name
 			return "エサの近くに魚影がある。正体はまだ水中で確認できない。"
 		FishingSimulator.State.BITE:
+			if not lure_name.is_empty():
+				return "%sに何かが食いついた。アワセるまで魚の正体は分からない。" % lure_name
 			return "何かが食いついた。アワセるまで魚の正体は分からない。"
 		FishingSimulator.State.ESCAPED:
 			return "魚影を確認する前に反応が消えた。次のアタリを待とう。"
@@ -585,6 +590,7 @@ func _unknown_action_title() -> String:
 func _unknown_action_message() -> String:
 	if simulator == null:
 		return "水面と糸の変化から反応を読もう。"
+	var lure_name := _shark_lure_fish_name()
 	match simulator.state:
 		FishingSimulator.State.READY:
 			return "狙いを決めて仕掛けを投げよう。"
@@ -593,8 +599,12 @@ func _unknown_action_message() -> String:
 		FishingSimulator.State.WAITING:
 			return "水中の反応を探っている。"
 		FishingSimulator.State.APPROACH:
+			if not lure_name.is_empty():
+				return "魚影が餌の%sへ近づいている。" % lure_name
 			return "魚影がエサへ近づいている。"
 		FishingSimulator.State.BITE:
+			if not lure_name.is_empty():
+				return "%sに何かが食いついた！すぐにアワセよう。" % lure_name
 			return "食いついた！すぐにアワセよう。"
 		FishingSimulator.State.ESCAPED:
 			return "反応が消えた。正体は分からないままだ。"
@@ -619,6 +629,15 @@ func _bait_text() -> String:
 	if not baits.is_empty():
 		return String(baits[0])
 	return String(fish_data.get("preferred_bait", "オキアミ"))
+
+
+func _shark_lure_fish_name() -> String:
+	if String(trip_stats.get("spot_id", "")) != "danger_reef":
+		return ""
+	var fish_id := String(trip_stats.get("shark_lure_fish_id", ""))
+	if fish_id.is_empty():
+		return ""
+	return String(trip_stats.get("shark_lure_fish_name", fish_id)).strip_edges()
 
 
 func _current_depth_text() -> String:

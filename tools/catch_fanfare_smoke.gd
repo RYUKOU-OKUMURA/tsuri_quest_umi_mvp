@@ -68,10 +68,25 @@ func _ready() -> void:
 	_expect(_harbor_count == 1, "harbor action should emit once")
 	_expect(not fanfare.visible, "fanfare should hide after harbor request")
 	_expect(not fanfare.is_playing(), "fanfare should stop after harbor request")
+
+	fanfare.play(GameData.get_fish("hoshizame"), 92.0, {
+		"record_broken": true,
+		"previous_best_cm": 88.0,
+		"boss_first_clear_reward": {"money": 3000},
+		"favorite_bait_discovery_text": "ホシザメはマアジが大好物みたいだ！",
+		"new_titles": ["total_10", "species_10"],
+	})
+	await get_tree().process_frame
+	_expect(fanfare._bonus_label.text.contains("自己記録更新"), "favorite discovery should keep record line")
+	_expect(fanfare._bonus_label.text.contains("撃破報酬"), "favorite discovery should keep reward line")
+	_expect(fanfare._bonus_label.text.contains("ホシザメはマアジが大好物みたいだ！"), "favorite discovery line should be visible")
+	_expect(fanfare._bonus_label.text.contains("駆け出し釣り人"), "favorite discovery should keep one title when the bonus panel is full")
+	_expect(not fanfare._bonus_label.text.contains("図鑑の入り口"), "favorite discovery should cap title lines when the bonus panel is full")
 	fanfare.queue_free()
 	await get_tree().process_frame
 
 	await _verify_fishing_screen_result_flow()
+	await _verify_shark_bait_discovery_result_flow()
 
 	if _failed:
 		return
@@ -170,3 +185,44 @@ func _verify_fishing_screen_result_flow() -> void:
 	_expect(not screen._catch_fanfare.is_playing(), "escaped result should not start catch fanfare")
 	screen.queue_free()
 	await get_tree().process_frame
+
+
+func _verify_shark_bait_discovery_result_flow() -> void:
+	PlayerProgress.inventory = {}
+	PlayerProgress.caught_counts = {}
+	PlayerProgress.spot_caught_counts = {}
+	PlayerProgress.best_sizes = {}
+	PlayerProgress.eaten_recipes = {}
+	PlayerProgress.shark_bonds = {}
+	PlayerProgress._remember_current_titles()
+
+	var favorite_text := await _catch_bonus_text_for("hoshizame", "aji")
+	_expect(favorite_text.contains("ホシザメはアジが大好物みたいだ！"), "favorite shark bait catch should add discovery line")
+
+	var non_favorite_text := await _catch_bonus_text_for("nekozame", "madai")
+	_expect(not non_favorite_text.contains("大好物"), "non-favorite shark bait catch should not add discovery line")
+
+	var megalodon_text := await _catch_bonus_text_for("megalodon", "nushi_deep_ocean")
+	_expect(not megalodon_text.contains("大好物"), "megalodon catch should not add favorite bait discovery line")
+
+
+func _catch_bonus_text_for(fish_id: String, bait_fish_id: String) -> String:
+	var screen := FishingScreenScript.new()
+	screen.theme = ThemeFactory.build_theme()
+	screen.configure({})
+	screen.size = Vector2(1280.0, 720.0)
+	add_child(screen)
+	await get_tree().process_frame
+	var bait := GameData.get_fish(bait_fish_id)
+	screen._spot_id = "danger_reef"
+	screen._trip_stats["spot_id"] = "danger_reef"
+	screen._trip_stats["shark_lure_fish_id"] = bait_fish_id
+	screen._trip_stats["shark_lure_fish_name"] = String(bait.get("name", bait_fish_id))
+	screen._current_fish = GameData.get_fish(fish_id)
+	screen._simulator.result_size_cm = float(screen._current_fish.get("size_min", 80.0))
+	screen._on_fight_finished(true, "釣り上げ成功")
+	await get_tree().process_frame
+	var text := screen._catch_fanfare._bonus_label.text
+	screen.queue_free()
+	await get_tree().process_frame
+	return text

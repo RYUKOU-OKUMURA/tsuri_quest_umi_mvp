@@ -795,6 +795,7 @@ func _on_fight_finished(caught: bool, reason: String) -> void:
 				_spot_id
 			)
 			_result_recorded = true
+		_add_favorite_bait_discovery(catch_result)
 		if _catch_fanfare != null:
 			_result_overlay.visible = false
 			_catch_fanfare.play(_current_fish, _simulator.result_size_cm, catch_result)
@@ -817,6 +818,27 @@ func _on_catch_fanfare_continue_requested() -> void:
 
 func _on_catch_fanfare_harbor_requested() -> void:
 	navigate("harbor")
+
+
+func _add_favorite_bait_discovery(catch_result: Dictionary) -> void:
+	var fish_id := String(_current_fish.get("id", ""))
+	if fish_id.is_empty() or fish_id == "megalodon":
+		return
+	if not bool(_current_fish.get("shark", false)):
+		return
+	var lure_fish := _trip_shark_lure_fish_data()
+	if lure_fish.is_empty():
+		return
+	if not GameData.is_favorite_food(fish_id, lure_fish):
+		return
+	var shark_name := String(_current_fish.get("name", fish_id))
+	var lure_fish_id := String(lure_fish.get("id", ""))
+	var lure_name := String(
+		_trip_stats.get("shark_lure_fish_name", lure_fish.get("name", lure_fish_id))
+	).strip_edges()
+	if lure_name.is_empty():
+		lure_name = lure_fish_id
+	catch_result["favorite_bait_discovery_text"] = "%sは%sが大好物みたいだ！" % [shark_name, lure_name]
 
 
 func _retry() -> void:
