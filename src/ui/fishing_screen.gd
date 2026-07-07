@@ -26,6 +26,7 @@ var _current_fish: Dictionary = {}
 var _result_recorded: bool = false
 var _spot_id: String = GameData.DEFAULT_FISHING_SPOT_ID
 var _spot: Dictionary = {}
+var _selected_shark_lure_fish_id := ""
 var _shark_ambush_plan: Dictionary = {}
 var _shark_ambush_triggered := false
 var _shark_ambush_flash_timer := 0.0
@@ -230,23 +231,25 @@ func _resolve_trip_stats() -> void:
 		if not stats_dict.is_empty():
 			_trip_stats = stats_dict.duplicate(true)
 			_init_trip_event_state()
+			_resolve_initial_shark_lure_selection()
 			return
 	_trip_stats = PlayerProgress.begin_fishing_trip()
-	_apply_route_shark_lure_to_trip_stats()
 	_init_trip_event_state()
+	_resolve_initial_shark_lure_selection()
 
 
-func _apply_route_shark_lure_to_trip_stats() -> void:
+func _resolve_initial_shark_lure_selection() -> void:
+	_selected_shark_lure_fish_id = ""
 	if _spot_id != "danger_reef":
 		return
-	var fish_id := String(route_payload.get("shark_lure_fish_id", ""))
-	if fish_id.is_empty():
-		return
-	var fish := GameData.get_fish(fish_id)
-	if fish.is_empty() or bool(fish.get("shark", false)):
-		return
-	_trip_stats["shark_lure_fish_id"] = fish_id
-	_trip_stats["shark_lure_fish_name"] = String(route_payload.get("shark_lure_fish_name", fish.get("name", fish_id)))
+	for fish_id_variant in [
+		route_payload.get("shark_lure_fish_id", ""),
+		_trip_stats.get("shark_lure_fish_id", ""),
+	]:
+		var fish_id := _valid_shark_lure_selection_id(String(fish_id_variant))
+		if not fish_id.is_empty():
+			_selected_shark_lure_fish_id = fish_id
+			return
 
 
 func _init_trip_event_state() -> void:
@@ -254,6 +257,8 @@ func _init_trip_event_state() -> void:
 		_trip_stats["trip_fired_event_ids"] = []
 	if not _trip_stats.has("bird_swarm_hits_remaining"):
 		_trip_stats["bird_swarm_hits_remaining"] = 0
+	if typeof(_trip_stats.get("shark_lure_charges", {})) != TYPE_DICTIONARY:
+		_trip_stats["shark_lure_charges"] = {}
 
 
 func _trip_fired_event_ids() -> Array[String]:
@@ -377,6 +382,10 @@ func _rig_summary_text() -> String:
 func _shark_lure_summary_text() -> String:
 	if _spot_id != "danger_reef":
 		return ""
+	if not _selected_shark_lure_fish_id.is_empty():
+		var selected_fish := GameData.get_fish(_selected_shark_lure_fish_id)
+		if not selected_fish.is_empty():
+			return String(selected_fish.get("name", _selected_shark_lure_fish_id))
 	var fish_id := String(_trip_stats.get("shark_lure_fish_id", ""))
 	if fish_id.is_empty():
 		return ""
@@ -562,32 +571,47 @@ func _prepare_new_attempt() -> void:
 	if _quit_overlay != null:
 		_quit_overlay.visible = false
 	_play_fishing_bgm()
-	if bool(_spot.get("boss_spot", false)):
-		_current_fish = GameData.get_fish("boss_kurodai")
+	if _delays_hook_roll_until_cast():
+		_current_fish = {}
 	else:
-		var extra_modifiers := _trip_extra_fish_weight_modifiers()
-		_current_fish = GameData.roll_hooked_fish(
-			PlayerProgress.level,
-			_spot_id,
-			String(_trip_stats.get("rig_id", PlayerProgress.equipped_rig_id)),
-			String(_trip_stats.get("environment_id", GameData.DEFAULT_FISHING_ENVIRONMENT_ID)),
-			String(_trip_stats.get("time_slot_id", "")),
-			extra_modifiers,
-			PlayerProgress.shark_bonds,
-			_trip_shark_lure_fish_data()
-		)
-		if int(_trip_stats.get("bird_swarm_hits_remaining", 0)) > 0:
-			_trip_stats["bird_swarm_hits_remaining"] = int(_trip_stats.get("bird_swarm_hits_remaining", 0)) - 1
-	_prepare_shark_ambush_plan()
+		_current_fish = _roll_hooked_fish_for_current_cast()
+		_prepare_shark_ambush_plan()
+	_prepare_simulator_with_current_fish()
+	# 新規挑戦時は水上ビューから（水中は淡出状態で待機）
+	_view.modulate.a = 0.0
+	_surface_view.modulate.a = 1.0
+	_refresh_fish_info()
+
+
+func _prepare_simulator_with_current_fish() -> void:
 	_simulator.prepare(_current_fish, _trip_stats)
 	_view.bind_simulator(_simulator)
 	_surface_view.bind_simulator(_simulator)
 	_fight_sidebar.bind(_simulator, _current_fish, _trip_stats)
 	_fight_hud.bind(_simulator, _current_fish, _trip_stats)
-	# 新規挑戦時は水上ビューから（水中は淡出状態で待機）
-	_view.modulate.a = 0.0
-	_surface_view.modulate.a = 1.0
-	_refresh_fish_info()
+
+
+func _delays_hook_roll_until_cast() -> bool:
+	return _spot_id == "danger_reef" and not bool(_spot.get("boss_spot", false))
+
+
+func _roll_hooked_fish_for_current_cast() -> Dictionary:
+	if bool(_spot.get("boss_spot", false)):
+		return GameData.get_fish("boss_kurodai")
+	var extra_modifiers := _trip_extra_fish_weight_modifiers()
+	var fish := GameData.roll_hooked_fish(
+		PlayerProgress.level,
+		_spot_id,
+		String(_trip_stats.get("rig_id", PlayerProgress.equipped_rig_id)),
+		String(_trip_stats.get("environment_id", GameData.DEFAULT_FISHING_ENVIRONMENT_ID)),
+		String(_trip_stats.get("time_slot_id", "")),
+		extra_modifiers,
+		PlayerProgress.shark_bonds,
+		_trip_shark_lure_fish_data()
+	)
+	if int(_trip_stats.get("bird_swarm_hits_remaining", 0)) > 0:
+		_trip_stats["bird_swarm_hits_remaining"] = int(_trip_stats.get("bird_swarm_hits_remaining", 0)) - 1
+	return fish
 
 
 func _refresh_fish_info() -> void:
@@ -625,6 +649,88 @@ func _trip_shark_lure_fish_data() -> Dictionary:
 	if bool(fish.get("shark", false)):
 		return {}
 	return fish
+
+
+func _valid_shark_lure_selection_id(fish_id: String) -> String:
+	if fish_id.strip_edges().is_empty():
+		return ""
+	var fish := GameData.get_fish(fish_id)
+	if fish.is_empty() or bool(fish.get("shark", false)):
+		return ""
+	if PlayerProgress.fish_count(fish_id) <= 0 and _shark_lure_remaining_charges(fish_id) <= 0:
+		return ""
+	return fish_id
+
+
+func _shark_lure_charges() -> Dictionary:
+	var charges_variant = _trip_stats.get("shark_lure_charges", {})
+	if typeof(charges_variant) != TYPE_DICTIONARY:
+		charges_variant = {}
+		_trip_stats["shark_lure_charges"] = charges_variant
+	return charges_variant
+
+
+func _shark_lure_remaining_charges(fish_id: String) -> int:
+	if fish_id.is_empty():
+		return 0
+	return maxi(0, int(_shark_lure_charges().get(fish_id, 0)))
+
+
+func _set_shark_lure_remaining_charges(fish_id: String, remaining: int) -> void:
+	if fish_id.is_empty():
+		return
+	var charges := _shark_lure_charges()
+	if remaining <= 0:
+		charges.erase(fish_id)
+	else:
+		charges[fish_id] = remaining
+	_trip_stats["shark_lure_charges"] = charges
+
+
+func _set_effective_shark_lure(fish_id: String, fish: Dictionary) -> void:
+	_trip_stats["shark_lure_fish_id"] = fish_id
+	_trip_stats["shark_lure_fish_name"] = String(fish.get("name", fish_id))
+
+
+func _clear_effective_shark_lure() -> void:
+	_trip_stats.erase("shark_lure_fish_id")
+	_trip_stats.erase("shark_lure_fish_name")
+
+
+func _apply_selected_shark_lure_for_cast() -> bool:
+	if _spot_id != "danger_reef":
+		return true
+	var fish_id := _selected_shark_lure_fish_id
+	if fish_id.is_empty():
+		_clear_effective_shark_lure()
+		return true
+	var fish := GameData.get_fish(fish_id)
+	if fish.is_empty() or bool(fish.get("shark", false)):
+		_selected_shark_lure_fish_id = ""
+		_show_trip_event_message("餌魚がありません")
+		return false
+	var remaining := _shark_lure_remaining_charges(fish_id)
+	if remaining > 0:
+		_set_shark_lure_remaining_charges(fish_id, remaining - 1)
+		_set_effective_shark_lure(fish_id, fish)
+		if PlayerProgress.fish_count(fish_id) <= 0 and _shark_lure_remaining_charges(fish_id) <= 0:
+			_selected_shark_lure_fish_id = ""
+		return true
+	if PlayerProgress.fish_count(fish_id) <= 0:
+		_selected_shark_lure_fish_id = ""
+		_show_trip_event_message("餌魚がありません")
+		return false
+	var consume_result := PlayerProgress.consume_fish_for_shark_lure(fish_id)
+	if not bool(consume_result.get("ok", false)):
+		_selected_shark_lure_fish_id = ""
+		_show_trip_event_message(String(consume_result.get("message", "餌魚がありません")))
+		return false
+	var charges_total := GameData.shark_lure_charges_for(fish)
+	_set_shark_lure_remaining_charges(fish_id, maxi(0, charges_total - 1))
+	_set_effective_shark_lure(fish_id, fish)
+	if PlayerProgress.fish_count(fish_id) <= 0 and _shark_lure_remaining_charges(fish_id) <= 0:
+		_selected_shark_lure_fish_id = ""
+	return true
 
 
 func _prepare_shark_ambush_plan() -> void:
@@ -675,10 +781,25 @@ func _sync_fish_info_scroll_size() -> void:
 func _on_main_action_pressed() -> void:
 	match _simulator.state:
 		FishingSimulator.State.READY:
-			_nushi_omen_shown = true
-			_simulator.cast()
+			if _delays_hook_roll_until_cast():
+				_cast_delayed_shark_lure_attempt()
+			else:
+				_nushi_omen_shown = true
+				_simulator.cast()
 		FishingSimulator.State.BITE:
 			_simulator.hook()
+
+
+func _cast_delayed_shark_lure_attempt() -> void:
+	if not _apply_selected_shark_lure_for_cast():
+		_update_ui()
+		return
+	_current_fish = _roll_hooked_fish_for_current_cast()
+	_prepare_shark_ambush_plan()
+	_prepare_simulator_with_current_fish()
+	_nushi_omen_shown = true
+	_simulator.cast()
+	_update_ui()
 
 
 func _request_harbor_return() -> void:
@@ -876,7 +997,11 @@ func _set_message_text(message: String) -> void:
 				and message == _trip_event_message
 			)
 			var ready_nushi_omen := _simulator.state == FishingSimulator.State.READY and message == "……ヌシの気配がする。"
-			show_message = has_text and (_simulator.state != FishingSimulator.State.READY or ready_nushi_omen)
+			show_message = has_text and (
+				_simulator.state != FishingSimulator.State.READY
+				or ready_nushi_omen
+				or trip_event_active
+			)
 			if (
 				_simulator.state == FishingSimulator.State.CASTING
 				or _simulator.state == FishingSimulator.State.WAITING

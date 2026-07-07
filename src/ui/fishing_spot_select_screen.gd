@@ -1119,18 +1119,9 @@ func _select_spot(spot_id: String) -> void:
 		_apply_current_rig_to_stats(stats)
 		payload["trip_stats"] = stats
 	elif spot_id == "danger_reef" and not _selected_shark_lure_fish_id.is_empty():
-		var lure_result := PlayerProgress.consume_fish_for_shark_lure(_selected_shark_lure_fish_id)
-		if not bool(lure_result.get("ok", false)):
-			if _message_label != null:
-				_message_label.text = "餌魚をセットできません"
-			if _message_detail_label != null:
-				_message_detail_label.text = String(lure_result.get("message", "餌魚を確認してください。"))
-			_selected_shark_lure_fish_id = ""
-			_refresh_detail()
-			return
-		var consumed_id := String(lure_result.get("fish_id", _selected_shark_lure_fish_id))
-		payload["shark_lure_fish_id"] = consumed_id
-		payload["shark_lure_fish_name"] = String(lure_result.get("fish_name", consumed_id))
+		var lure_fish := GameData.get_fish(_selected_shark_lure_fish_id)
+		payload["shark_lure_fish_id"] = _selected_shark_lure_fish_id
+		payload["shark_lure_fish_name"] = String(lure_fish.get("name", _selected_shark_lure_fish_id))
 	navigate("fishing", payload)
 
 

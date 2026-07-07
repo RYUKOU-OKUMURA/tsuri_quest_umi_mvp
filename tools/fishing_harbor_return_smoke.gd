@@ -31,7 +31,8 @@ func _ready() -> void:
 	_verify_keyboard_confirmation_flow()
 	_verify_bite_escape_sfx()
 	await _verify_continue_trip_does_not_consume_pending_buff()
-	await _verify_shark_lure_route_stats()
+	await _verify_shark_lure_cast_stats()
+	await _verify_shark_lure_charge_flow()
 
 	if _failed:
 		return
@@ -222,11 +223,12 @@ func _verify_continue_trip_does_not_consume_pending_buff() -> void:
 	PlayerProgress.pending_buff = {}
 
 
-func _verify_shark_lure_route_stats() -> void:
+func _verify_shark_lure_cast_stats() -> void:
 	PlayerProgress.level = GameData.MAX_LEVEL
 	PlayerProgress.pending_buff = {}
 	PlayerProgress.owned_boats = ["bluewater_boat"]
 	PlayerProgress.sea_chart_fragments = 3
+	PlayerProgress.inventory = {"kihada": 2, "nushi_deep_ocean": 1}
 	PlayerProgress.shark_bonds = {}
 	for shark_id in GameData.get_normal_shark_ids():
 		PlayerProgress.shark_bonds[shark_id] = 100
@@ -242,16 +244,31 @@ func _verify_shark_lure_route_stats() -> void:
 	add_child(lure_screen)
 	await get_tree().process_frame
 	_expect(
-		String(lure_screen._trip_stats.get("shark_lure_fish_id", "")) == "kihada",
-		"new danger reef fishing screen should store shark lure fish in trip_stats"
+		String(lure_screen._selected_shark_lure_fish_id) == "kihada",
+		"new danger reef fishing screen should store shark lure fish as initial selection"
 	)
 	_expect(
-		String(lure_screen._trip_stats.get("shark_lure_fish_name", "")) == lure_name,
-		"new danger reef fishing screen should store shark lure fish name"
+		String(lure_screen._trip_stats.get("shark_lure_fish_id", "")).is_empty(),
+		"new danger reef fishing screen should not store effective lure before cast"
 	)
 	_expect(
 		lure_screen._spot_detail_label.text.contains(lure_name),
-		"new danger reef fishing detail should show shark lure fish"
+		"new danger reef fishing detail should show selected shark lure fish"
+	)
+	_expect(PlayerProgress.fish_count("kihada") == 2, "danger reef entry should not consume selected lure fish")
+	lure_screen._on_main_action_pressed()
+	_expect(PlayerProgress.fish_count("kihada") == 1, "danger reef cast should consume selected lure fish")
+	_expect(
+		String(lure_screen._trip_stats.get("shark_lure_fish_id", "")) == "kihada",
+		"danger reef cast should store effective shark lure fish"
+	)
+	_expect(
+		String(lure_screen._trip_stats.get("shark_lure_fish_name", "")) == lure_name,
+		"danger reef cast should store effective shark lure fish name"
+	)
+	_expect(
+		int(Dictionary(lure_screen._trip_stats.get("shark_lure_charges", {})).get("kihada", 0)) == 2,
+		"rare lure should keep two remaining charges after first cast"
 	)
 	var modifiers: Dictionary = lure_screen._trip_extra_fish_weight_modifiers()
 	var expected: Dictionary = GameData.shark_lure_weights(GameData.get_fish("kihada"))
@@ -288,14 +305,105 @@ func _verify_shark_lure_route_stats() -> void:
 	mega_screen.size = Vector2(1280.0, 720.0)
 	add_child(mega_screen)
 	await get_tree().process_frame
+	mega_screen._on_main_action_pressed()
 	var mega_lure: Dictionary = mega_screen._trip_shark_lure_fish_data()
 	_expect(not mega_lure.is_empty(), "megalodon route should expose nushi-grade lure data")
+	_expect(PlayerProgress.fish_count("nushi_deep_ocean") == 0, "nushi lure should be consumed on cast")
+	_expect(
+		int(Dictionary(mega_screen._trip_stats.get("shark_lure_charges", {})).get("nushi_deep_ocean", 0)) == 4,
+		"nushi lure should keep four remaining charges after first cast"
+	)
 	_expect(
 		GameData.can_encounter_megalodon(PlayerProgress.level, "danger_reef", PlayerProgress.shark_bonds, mega_lure),
 		"megalodon route should satisfy encounter gate with nushi-grade lure"
 	)
 	mega_screen.queue_free()
 	await get_tree().process_frame
+
+
+func _verify_shark_lure_charge_flow() -> void:
+	PlayerProgress.level = GameData.MAX_LEVEL
+	PlayerProgress.pending_buff = {}
+	PlayerProgress.owned_boats = ["bluewater_boat"]
+	PlayerProgress.sea_chart_fragments = 3
+	PlayerProgress.shark_bonds = {}
+	for shark_id in GameData.get_normal_shark_ids():
+		PlayerProgress.shark_bonds[shark_id] = 100
+
+	PlayerProgress.inventory = {"aji": 2}
+	var common_screen: Variant = _danger_screen_with_lure("aji")
+	add_child(common_screen)
+	await get_tree().process_frame
+	common_screen._on_main_action_pressed()
+	_expect(PlayerProgress.fish_count("aji") == 1, "common lure first cast should consume one fish")
+	_expect(
+		not Dictionary(common_screen._trip_stats.get("shark_lure_charges", {})).has("aji"),
+		"common lure should not keep charges after cast"
+	)
+	common_screen._prepare_new_attempt()
+	common_screen._on_main_action_pressed()
+	_expect(PlayerProgress.fish_count("aji") == 0, "common lure second cast should consume the next fish")
+	_expect(String(common_screen._selected_shark_lure_fish_id).is_empty(), "spent common lure should clear selection")
+	common_screen.queue_free()
+	await get_tree().process_frame
+
+	PlayerProgress.inventory = {"nushi_deep_ocean": 1}
+	var nushi_screen: Variant = _danger_screen_with_lure("nushi_deep_ocean")
+	add_child(nushi_screen)
+	await get_tree().process_frame
+	nushi_screen._on_main_action_pressed()
+	_expect(PlayerProgress.fish_count("nushi_deep_ocean") == 0, "nushi lure first cast should consume one fish")
+	_expect(
+		int(Dictionary(nushi_screen._trip_stats.get("shark_lure_charges", {})).get("nushi_deep_ocean", 0)) == 4,
+		"nushi lure first cast should keep four charges"
+	)
+	for expected_remaining in [3, 2, 1, 0]:
+		nushi_screen._prepare_new_attempt()
+		nushi_screen._on_main_action_pressed()
+		_expect(PlayerProgress.fish_count("nushi_deep_ocean") == 0, "nushi charge cast should not consume another fish")
+		_expect(
+			int(Dictionary(nushi_screen._trip_stats.get("shark_lure_charges", {})).get("nushi_deep_ocean", 0)) == expected_remaining,
+			"nushi remaining charge mismatch"
+		)
+	_expect(String(nushi_screen._selected_shark_lure_fish_id).is_empty(), "nushi selection should clear after final charge")
+	nushi_screen.queue_free()
+	await get_tree().process_frame
+
+	PlayerProgress.inventory = {}
+	var stale_screen := FishingScreenScript.new()
+	stale_screen.theme = ThemeFactory.build_theme()
+	stale_screen.configure({
+		"spot_id": "danger_reef",
+		"continue_trip": true,
+		"trip_stats": {
+			"shark_lure_fish_id": "aji",
+			"shark_lure_fish_name": "アジ",
+			"spot_depth_range": [30.0, 40.0],
+		},
+	})
+	stale_screen.size = Vector2(1280.0, 720.0)
+	add_child(stale_screen)
+	await get_tree().process_frame
+	_expect(String(stale_screen._selected_shark_lure_fish_id).is_empty(), "stale no-inventory lure should not become selected")
+	stale_screen._on_main_action_pressed()
+	_expect(
+		String(stale_screen._trip_stats.get("shark_lure_fish_id", "")).is_empty(),
+		"casting with no lure should clear stale effective lure"
+	)
+	stale_screen.queue_free()
+	await get_tree().process_frame
+
+
+func _danger_screen_with_lure(fish_id: String) -> Variant:
+	var screen := FishingScreenScript.new()
+	screen.theme = ThemeFactory.build_theme()
+	screen.configure({
+		"spot_id": "danger_reef",
+		"shark_lure_fish_id": fish_id,
+		"shark_lure_fish_name": String(GameData.get_fish(fish_id).get("name", fish_id)),
+	})
+	screen.size = Vector2(1280.0, 720.0)
+	return screen
 
 
 func _advance_until_bite() -> void:

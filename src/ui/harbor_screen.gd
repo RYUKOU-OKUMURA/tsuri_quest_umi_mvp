@@ -170,7 +170,7 @@ func _preparation_card_text() -> String:
 		return megalodon_omen
 	var hint := _nushi_hint_text()
 	if hint.is_empty():
-		return "釣る → 売る／料理する → 強化\n危険海域では餌魚で大物サメを狙う"
+		return "釣る → 売る／料理する → 強化\n餌魚は危険海域で投げるときに使う"
 	return "釣る → 売る／料理する → 強化\n目撃談：%s" % hint
 
 

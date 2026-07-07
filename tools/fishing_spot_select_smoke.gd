@@ -170,7 +170,7 @@ func _ready() -> void:
 	_expect(_navigated_to == "fishing", "danger reef with lure should navigate")
 	_expect(String(_payload.get("shark_lure_fish_id", "")) == "kihada", "danger reef lure payload mismatch")
 	_expect(String(_payload.get("shark_lure_fish_name", "")) == lure_name, "danger reef lure name payload mismatch")
-	_expect(PlayerProgress.fish_count("kihada") == 1, "danger reef lure should consume one selected fish")
+	_expect(PlayerProgress.fish_count("kihada") == 2, "danger reef selection should not consume the initial lure fish")
 	_expect(PlayerProgress.fish_count("nekozame") == 1, "shark inventory entry should not be consumed as lure")
 
 	_screen.queue_free()
