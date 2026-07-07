@@ -7,6 +7,7 @@ var _failed := false
 
 func _ready() -> void:
 	_check_lure_weight_tables()
+	_check_lure_charges()
 	_check_megalodon_gate()
 	_check_megalodon_roll_route()
 	_check_megalodon_metadata()
@@ -68,6 +69,40 @@ func _check_lure_weight_tables() -> void:
 				"%.2f" % _total_weight(pelagic_weights),
 			],
 		]
+		)
+
+
+func _check_lure_charges() -> void:
+	_expect_eq(GameData.shark_lure_charges_for({}), 0, "empty bait should have no shark lure charges")
+	_expect_eq(
+		GameData.shark_lure_charges_for(GameData.get_fish("nekozame")),
+		0,
+		"shark bait should have no shark lure charges"
+	)
+	_expect_eq(
+		GameData.shark_lure_charges_for(GameData.get_fish("aji")),
+		1,
+		"common bait should have 1 shark lure charge"
+	)
+	_expect_eq(
+		GameData.shark_lure_charges_for(GameData.get_fish("kaiwari")),
+		2,
+		"uncommon bait should have 2 shark lure charges"
+	)
+	_expect_eq(
+		GameData.shark_lure_charges_for(GameData.get_fish("kihada")),
+		3,
+		"rare bait should have 3 shark lure charges"
+	)
+	_expect_eq(
+		GameData.shark_lure_charges_for(GameData.get_fish("boss_kurodai")),
+		5,
+		"rarity nushi bait should have 5 shark lure charges"
+	)
+	_expect_eq(
+		GameData.shark_lure_charges_for(GameData.get_fish("nushi_deep_ocean")),
+		5,
+		"nushi flag bait should have 5 shark lure charges"
 	)
 
 

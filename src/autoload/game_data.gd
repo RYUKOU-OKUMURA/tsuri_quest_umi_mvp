@@ -236,6 +236,22 @@ func is_favorite_food(shark_id: String, fish_data: Dictionary) -> bool:
 			return false
 
 
+func shark_lure_charges_for(fish_data: Dictionary) -> int:
+	if fish_data.is_empty() or bool(fish_data.get("shark", false)):
+		return 0
+	if bool(fish_data.get("nushi", false)) or String(fish_data.get("rarity", "")) == "ぬし":
+		return 5
+	match String(fish_data.get("rarity", "")):
+		"レア":
+			return 3
+		"アンコモン":
+			return 2
+		"コモン":
+			return 1
+		_:
+			return 0
+
+
 func shark_lure_weights(bait_fish_data: Dictionary) -> Dictionary:
 	var weights: Dictionary = {}
 	if bait_fish_data.is_empty():
