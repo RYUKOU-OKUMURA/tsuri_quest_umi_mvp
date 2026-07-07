@@ -46,7 +46,9 @@ EXPLICIT_OWNERS: dict[Path, set[str]] = {
     Path("src/ui/components/fishing_spot_map_view.gd"): {"fishing_spots"},
     Path("src/ui/components/catch_fanfare.gd"): {"underwater"},
     Path("src/ui/components/surface_cast_view.gd"): {"surface"},
-    Path("src/ui/components/fight_hud.gd"): {"underwater"},
+    # docs/40 READY専用下段バーは、FIGHT用underwater枠ではなく共通キットの
+    # カード/ボタンフレームで構成するため common を明示許可する。
+    Path("src/ui/components/fight_hud.gd"): {"underwater", "common"},
     Path("src/ui/components/fight_status_bar.gd"): {"underwater"},
     Path("src/ui/components/fight_sidebar.gd"): {"underwater"},
     Path("src/ui/components/underwater_view.gd"): {"underwater"},

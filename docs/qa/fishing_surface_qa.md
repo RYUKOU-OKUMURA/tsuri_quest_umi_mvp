@@ -1,8 +1,8 @@
 # 水上キャスト画面 QA判断ログ
 
-最終更新: 2026-07-07 / 状態: サメ餌魚READYセレクタ 採用
+最終更新: 2026-07-07 / 状態: READY専用下段バー品質改善 採用
 参照画像: `reference/01_surface_fishing_mockup.png` / `reference/13_fishing_ready_danger_mockup.png`
-QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `tools/fishing_surface_states_preview.gd`
+QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `godot --path . res://tools/fishing_surface_states_preview.tscn` / `godot --path . res://tools/catch_fanfare_preview.tscn` / `./tools/fight_visual_qa.sh`
 
 ## 1. freeze値（正本）
 
@@ -13,8 +13,9 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `tools/fishing_su
 | 非晴天魚影ステージング | WAITING=小・薄、APPROACH=拡大+alpha上昇、BITE=縮小+低alpha | `_draw_asset_fish_shadow()` | BITEで魚影を濃くせず、スプラッシュを主役にする |
 | 非晴天航跡 | 固定楕円なし、進行方向V字航跡+後方リップル | `_draw_asset_fish_wake()` | 旧楕円アウトラインの照準レティクル感を解消 |
 | rain/fogオーバーレイ | rain=2枚縦スクロール、fog=横ドリフト+alpha揺らぎ | `_draw_weather_texture_overlay()` | 静止合成をやめ、天候の動きを出す |
-| サメ餌魚READYセレクタ | `spot_id == "danger_reef"` のREADY時だけ下段HUD左をサメ餌魚セレクタに差し替え。`餌魚なし`・所持魚・残チャージ中の魚を左右で選ぶ | `src/ui/fishing_screen.gd` / `src/ui/components/fight_hud.gd` | docs/38準拠。餌魚は釣り場選択では消費せず、投げる時に1匹消費してチャージを付与する |
-| サメ餌魚チャージ表示 | READYでは `所持 xN` と `あとN回` / `1匹で最大N回` を表示。CASTING以降は下段HUDに `餌魚：<魚名>（あとN回）` を表示 | `src/ui/components/fight_hud.gd` | レア=3回、ぬし=5回の耐久をUI上で追えるようにする。通常魚は1投ごとに1匹消費 |
+| READY専用下段バー品質 | READY時は `fight_hud_frame.png` を背景に描かない。下段バーは `common/button_frame_primary.png`、セレクタ/通常エサカードは `common/parchment_card.png` + `common/card_frame.png`、投げるボタンは `common/action_button_frame.png`、矢印と右メニューは `common/button_frame*.png` で構成する | `src/ui/components/fight_hud.gd` / `tools/audit_showcase_asset_refs.py` | docs/40準拠。FIGHT用の焼き込み区画・分割線がREADYバー背面に覗かないことをfreeze。監査allowlistはこのため `fight_hud.gd` に common を明示許可 |
+| サメ餌魚READYセレクタ | `spot_id == "danger_reef"` のREADY時だけ下段HUD左をサメ餌魚セレクタに差し替え。`餌魚なし`・所持魚・残チャージ中の魚を左右で選ぶ。表示は `魚名 xN` 1行、チャージありはピップ＋`あとN回`、在庫0残チャージはフッターに `在庫0` を出す | `src/ui/fishing_screen.gd` / `src/ui/components/fight_hud.gd` | docs/38・docs/40準拠。餌魚は釣り場選択では消費せず、投げる時に1匹消費してチャージを付与する |
+| サメ餌魚チャージ表示 | READYでは旧 `所持 xN` / `1匹で最大N回` 表記を廃止し、`魚名 xN` + ピップ + `あとN回` / `投げると1匹つかう` に集約。CASTING以降は下段HUDに `餌魚：<魚名>（あとN回）` を表示 | `src/ui/components/fight_hud.gd` | レア=3回、ぬし=5回の耐久をUI上で追えるようにする。READYの情報階層を参照13へ寄せたため旧freezeを上書き |
 | サメ餌魚APPROACH/BITE文 | 餌魚ありの時だけ `魚影が餌の<魚名>へ近づいている` / `<魚名>に何かが食いついた`。ヒット魚名・サメ名は出さない | `src/core/fishing_simulator.gd` / `src/ui/components/fight_sidebar.gd` | 上部メッセージパネルはAPPROACH/BITEで非表示のため、実表示される右サイドカードにも反映 |
 | 未確認魚影カード詳細行 | signal art比率を compact=0.36 / 通常=0.34、詳細2行を下端から逆算して配置 | `src/ui/components/fight_sidebar.gd` | 「釣り場」「タナ / エサ」2行の下端見切れP1を解消 |
 | 好物発見ファンファーレ | `favorite_bait_discovery_text` を記録更新・撃破報酬の下、称号の上に表示。`megalodon` は除外 | `src/ui/fishing_screen.gd` / `src/ui/components/catch_fanfare.gd` | 好物一致サメだけポジティブな発見行を返す。不一致・非サメ・メガロドンは無言 |
@@ -31,7 +32,8 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `tools/fishing_su
 
 | パラメータ | 回数 | 直近の変更内容 | 状態 |
 |---|---|---|---|
-| 装飾パス累計 | 1 | 非晴天魚影の2パス描画、V字航跡、rain/fogオーバーレイアニメ化 | 採用 |
+| 装飾パス累計 | 2 | READY下段バーのゾーンセパレータのみruntime直線。枠・カード・ボタンの質感はcommon PNGへ移管 | 採用 |
+| READY下段バー品質改善 | 1 | FIGHT枠重ね描きを廃止し、共通キット配線・投げるボタン主役化・餌魚カード情報階層を改定 | 採用・close |
 | 魚影tint/alpha | 2 | rainで沈みすぎたため、環境色tintを明るめの青灰へ戻しAPPROACHのみalpha/scaleを増加 | 採用・close |
 | 未確認魚影カード下部詰め | 1 | signal art比率を圧縮し、詳細2行を下端から逆算配置 | 採用・close |
 
@@ -43,12 +45,62 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `tools/fishing_su
 
 - WAITING魚影は遠景扱いでかなり控えめ。P1/P2ではなく、必要なら別フェーズで「待機時の水面反応」演出として扱う。
 - 右サイドカード内の魚影図は既存UI表示で、今回の水面合成パスとは別対象。
+- READYセレクタ内の長い魚名（例: `キハダマグロ`、`深淵の重鎮`）は1行維持のため縮小表示する。見切れはないためP3。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
 完了済みのためなし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-07 READY専用下段バー品質改善を採用。
+
+差分Top3:
+- P2-1: READY背面にFIGHT用 `fight_hud_frame.png` の区画・分割線が覗き、READYバーが「貼り付け」に見えていた。
+- P2-2: セレクタ・投げるボタン・矢印・右メニューがStyleBoxFlat主体で、共通キットPNGの金縁・紙質感が未配線だった。
+- P2-3: `仕掛け投入` 見出しと小さめCTA、`所持 xN` / `1匹で最大N回` 行により、参照13の主操作主役感・カード階層から離れていた。
+
+スコープ:
+- 今回動かしたもの: READY状態の下段バー背景、3ゾーン内の素材配線、投げるボタンのサイズとキーチップ位置、餌魚カードの表示形式、素材参照監査のcommon許可。
+- 触っていないもの: 抽選遅延・チャージ消費ロジック、CASTING以降のFIGHT HUD描画経路、水面ビュー素材、右サイドカードの既存情報設計。
+
+変更したもの:
+- READY時の `_draw()` を先頭分岐にし、`fight_hud_frame.png` を描く経路から切り離した。
+- 下段バー外周・カード・矢印・投げるボタン・右メニューを `assets/showcase/common/` のPNGキットへ配線した。
+- 中央の `投げる` を大型化し、`仕掛け投入` 見出しを撤去。`E / Enter` キーチップをボタン上部中央へ移した。
+- 餌魚カードを `魚名 xN` 1行 + ピップ + `あとN回` / `投げると1匹つかう` に整理し、旧 `所持 xN` / `1匹で最大N回` freezeを上書きした。
+- `tools/audit_showcase_asset_refs.py` で、docs/40のREADYバー共通キット化を理由に `fight_hud.gd` からの `common` 参照を明示許可した。
+
+共通キット未配線リスト:
+- セレクタカード: 解消（`common/parchment_card.png` + `common/card_frame.png`）。
+- 投げるボタン: 解消（`common/action_button_frame.png`）。
+- ◀▶矢印: 解消（`common/button_frame.png`）。
+- 右メニュー: 解消（`common/button_frame_primary.png`）。
+- READYバー背面: 解消（`common/button_frame_primary.png`。専用PNG待ちP2なし）。
+
+検証:
+- `./tools/validate_project.sh`: showcase素材参照監査、魚シート監査、Godotロード確認すべて通過。
+- `fishing_harbor_return_smoke.tscn`: green。
+- `fishing_spot_select_smoke.tscn`: green。
+- `harbor_screen_smoke.tscn`: green。
+- `catch_fanfare_smoke.tscn`: green。
+- `tools/fishing_surface_states_preview.tscn`: 非headless通常起動で危険海域READY、CASTING/WAITING/APPROACH/BITEを取得。
+- `tools/catch_fanfare_preview.tscn`: 非headless通常起動で釣果ファンファーレを取得。
+- 一時QAシーンで docs/38 §4-2 の4状態（チャージあり / チャージなし所持あり / 餌魚なし / 所持0残チャージあり）＋通常釣り場READYを取得。一時シーンは削除済み。
+- `./tools/fight_visual_qa.sh`: FIGHT runtime captureと比較画像生成まで通過。
+
+判断根拠:
+- 参照/Before/After比較: `docs/qa/evidence/fishing_surface/2026-07-07_ready_bottom_bar_quality_reference_compare.png`
+- READY状態別比較: `docs/qa/evidence/fishing_surface/2026-07-07_ready_bottom_bar_quality_states.png`
+- CASTING〜BITE・釣果回帰比較: `docs/qa/evidence/fishing_surface/2026-07-07_ready_bottom_bar_quality_casting_regression.png`
+- FIGHT回帰比較: `docs/qa/evidence/fishing_surface/2026-07-07_ready_bottom_bar_quality_fight_regression.png`
+- 釣果個別証拠: `docs/qa/evidence/fishing_surface/2026-07-07_ready_bottom_bar_quality_catch_fanfare.png`
+- 個別READY証拠: `docs/qa/evidence/fishing_surface/2026-07-07_ready_bottom_bar_quality_ready_common.png` / `2026-07-07_ready_bottom_bar_quality_ready_empty.png` / `2026-07-07_ready_bottom_bar_quality_ready_charged.png` / `2026-07-07_ready_bottom_bar_quality_ready_zero_stock_charge.png`
+
+採用理由:
+- afterはREADY下段にFIGHT用HUDの焼き込み区画・分割線が覗かず、1本のREADY専用バーとして見える。
+- 参照13との縮小比較で、バーの一体感・金縁質感・主操作の主役感・カード階層がbeforeより明確に近づいた。
+- 機能・状態遷移・CASTING以降のHUD経路はsmokeとFIGHT visual QAで回帰なし。
 
 2026-07-07 サメ餌魚READYセレクタ＋チャージ表示を採用。
 

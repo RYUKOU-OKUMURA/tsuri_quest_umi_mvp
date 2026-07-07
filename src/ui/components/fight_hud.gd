@@ -20,11 +20,20 @@ const HUD_TENSION_ICON_PATH := "res://assets/showcase/underwater/hud_tension_ico
 const HUD_STAMINA_ICON_PATH := "res://assets/showcase/underwater/hud_stamina_icon.png"
 const HUD_KEY_PLUS_PATH := "res://assets/showcase/underwater/hud_key_plus.png"
 const HUD_KEY_MINUS_PATH := "res://assets/showcase/underwater/hud_key_minus.png"
+const COMMON_ACTION_BUTTON_PATH := "res://assets/showcase/common/action_button_frame.png"
+const COMMON_BUTTON_PATH := "res://assets/showcase/common/button_frame.png"
+const COMMON_BUTTON_PRIMARY_PATH := "res://assets/showcase/common/button_frame_primary.png"
+const COMMON_CARD_FRAME_PATH := "res://assets/showcase/common/card_frame.png"
+const COMMON_PARCHMENT_CARD_PATH := "res://assets/showcase/common/parchment_card.png"
 const DEFAULT_HUD_HEIGHT := 224.0
 const FIGHT_SLIM_HUD_HEIGHT := 140.0
 const ICON_TENSION := 4
 const ICON_STAMINA := 5
 const ICON_BAIT := 6
+const KIT_ACTION_MARGINS := Vector4(36.0, 18.0, 36.0, 18.0)
+const KIT_BUTTON_MARGINS := Vector4(42.0, 22.0, 42.0, 22.0)
+const KIT_CARD_MARGINS := Vector4(30.0, 30.0, 30.0, 30.0)
+const KIT_PARCHMENT_MARGINS := Vector4(34.0, 16.0, 34.0, 16.0)
 
 var simulator: FishingSimulator
 var fish_data: Dictionary = {}
@@ -38,6 +47,11 @@ var _tension_icon: Texture2D
 var _stamina_icon: Texture2D
 var _key_plus_icon: Texture2D
 var _key_minus_icon: Texture2D
+var _common_action_button_frame: Texture2D
+var _common_button_frame: Texture2D
+var _common_button_primary_frame: Texture2D
+var _common_card_frame: Texture2D
+var _common_parchment_card: Texture2D
 
 var _main_rect := Rect2()
 var _reel_rect := Rect2()
@@ -90,6 +104,16 @@ func _ready() -> void:
 		_key_plus_icon = load(HUD_KEY_PLUS_PATH) as Texture2D
 	if ResourceLoader.exists(HUD_KEY_MINUS_PATH):
 		_key_minus_icon = load(HUD_KEY_MINUS_PATH) as Texture2D
+	if ResourceLoader.exists(COMMON_ACTION_BUTTON_PATH):
+		_common_action_button_frame = load(COMMON_ACTION_BUTTON_PATH) as Texture2D
+	if ResourceLoader.exists(COMMON_BUTTON_PATH):
+		_common_button_frame = load(COMMON_BUTTON_PATH) as Texture2D
+	if ResourceLoader.exists(COMMON_BUTTON_PRIMARY_PATH):
+		_common_button_primary_frame = load(COMMON_BUTTON_PRIMARY_PATH) as Texture2D
+	if ResourceLoader.exists(COMMON_CARD_FRAME_PATH):
+		_common_card_frame = load(COMMON_CARD_FRAME_PATH) as Texture2D
+	if ResourceLoader.exists(COMMON_PARCHMENT_CARD_PATH):
+		_common_parchment_card = load(COMMON_PARCHMENT_CARD_PATH) as Texture2D
 
 
 func _load_texture_if_exists(path: String) -> Texture2D:
@@ -154,6 +178,12 @@ func _draw() -> void:
 		return
 
 	var state := _simulator_state()
+	if state == FishingSimulator.State.READY:
+		_draw_ready_bar_background(rect)
+		var ready_rect := Rect2(size.x * 0.014, size.y * 0.070, size.x * 0.972, size.y * 0.840)
+		_draw_ready_controls(font, ready_rect)
+		return
+
 	if state == FishingSimulator.State.FIGHT or _is_intermediate_state(state):
 		_draw_fight_bar_background(rect)
 	elif _hud_frame != null:
@@ -161,12 +191,6 @@ func _draw() -> void:
 	else:
 		_draw_panel(rect, Palette.FIGHT_HUD_FALLBACK_PANEL_FILL, Palette.GOLD_DEEP, Palette.GOLD)
 
-	if state == FishingSimulator.State.READY:
-		var ready_rect := Rect2(size.x * 0.014, size.y * 0.065, size.x * 0.972, size.y * 0.875)
-		if _hud_frame == null:
-			ready_rect = rect.grow(-10.0)
-		_draw_ready_controls(font, ready_rect)
-		return
 	if state == FishingSimulator.State.FIGHT:
 		var fight_rect := Rect2(size.x * 0.014, size.y * 0.085, size.x * 0.972, size.y * 0.83)
 		if _hud_frame == null:
@@ -519,9 +543,9 @@ func _draw_bottom_controls(font: Font, rect: Rect2) -> void:
 
 
 func _draw_ready_controls(font: Font, rect: Rect2) -> void:
-	var gap := 10.0
-	var menu_w := rect.size.x * (0.175 if _hud_frame != null else 0.210)
-	var lure_w := rect.size.x * (0.405 if _hud_frame != null else 0.375)
+	var gap := 12.0
+	var menu_w := clampf(rect.size.x * 0.205, 185.0, 225.0)
+	var lure_w := clampf(rect.size.x * 0.405, 365.0, 440.0)
 	var cast_w := rect.size.x - lure_w - menu_w - gap * 2.0
 	var lure_rect := Rect2(rect.position, Vector2(lure_w, rect.size.y))
 	var cast_rect := Rect2(Vector2(lure_rect.end.x + gap, rect.position.y), Vector2(cast_w, rect.size.y))
@@ -531,6 +555,8 @@ func _draw_ready_controls(font: Font, rect: Rect2) -> void:
 	_give_rect = Rect2()
 	_lure_prev_rect = Rect2()
 	_lure_next_rect = Rect2()
+	_change_spot_rect = Rect2()
+	_harbor_rect = Rect2()
 
 	if bool(shark_lure_selector.get("danger", false)):
 		_draw_ready_shark_lure_panel(font, lure_rect)
@@ -538,30 +564,39 @@ func _draw_ready_controls(font: Font, rect: Rect2) -> void:
 		_draw_ready_bait_panel(font, lure_rect)
 	_draw_ready_cast_panel(font, cast_rect)
 	_draw_ready_menu_panel(font, menu_rect)
+	_draw_ready_zone_divider(lure_rect.end.x + gap * 0.5, rect.position.y + 8.0, rect.size.y - 16.0)
+	_draw_ready_zone_divider(cast_rect.end.x + gap * 0.5, rect.position.y + 8.0, rect.size.y - 16.0)
 
 
 func _draw_ready_shark_lure_panel(font: Font, rect: Rect2) -> void:
-	_draw_ready_panel(rect, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
-	var inner := rect.grow(-10.0)
-	_draw_text(font, "サメ餌魚", inner.position + Vector2(6.0, 21.0), 17 if _hud_frame != null else 18, Palette.FIGHT_HUD_DARK_INK, 0)
+	var title_font := GameFontsScript.extra_bold(font)
+	_draw_text_center(title_font, "サメ餌魚", Rect2(rect.position + Vector2(0.0, 0.0), Vector2(rect.size.x, 34.0)), 24, Palette.GOLD_BRIGHT, 2)
+	var inner := rect.grow(-5.0)
 	var count := int(shark_lure_selector.get("candidate_count", 0))
 	var arrows_enabled := count > 1
-	var arrow_w := 34.0
-	_lure_prev_rect = Rect2(inner.position + Vector2(2.0, 42.0), Vector2(arrow_w, inner.size.y - 54.0))
-	_lure_next_rect = Rect2(Vector2(inner.end.x - arrow_w - 2.0, inner.position.y + 42.0), Vector2(arrow_w, inner.size.y - 54.0))
-	_draw_ready_arrow(font, _lure_prev_rect, "<", arrows_enabled)
-	_draw_ready_arrow(font, _lure_next_rect, ">", arrows_enabled)
+	var arrow_w := 42.0
+	var card_y := inner.position.y + 48.0
+	var card_h := inner.size.y - 70.0
+	var arrow_h := minf(106.0, card_h)
+	var arrow_y := card_y + (card_h - arrow_h) * 0.5
+	_lure_prev_rect = Rect2(inner.position + Vector2(0.0, arrow_y - inner.position.y), Vector2(arrow_w, arrow_h))
+	_lure_next_rect = Rect2(Vector2(inner.end.x - arrow_w, arrow_y), Vector2(arrow_w, arrow_h))
+	_draw_ready_arrow(font, _lure_prev_rect, "◀", arrows_enabled)
+	_draw_ready_arrow(font, _lure_next_rect, "▶", arrows_enabled)
 
 	var card := Rect2(
-		Vector2(_lure_prev_rect.end.x + 8.0, inner.position.y + 34.0),
-		Vector2(_lure_next_rect.position.x - _lure_prev_rect.end.x - 16.0, inner.size.y - 40.0)
+		Vector2(_lure_prev_rect.end.x + 9.0, card_y),
+		Vector2(_lure_next_rect.position.x - _lure_prev_rect.end.x - 18.0, card_h)
 	)
-	_draw_ready_panel(card, Color(Palette.PARCHMENT_DEEP, 0.92), Palette.GOLD_DEEP, Palette.GOLD_BRIGHT)
+	_draw_ready_card_frame(card)
 	var fish_id := String(shark_lure_selector.get("fish_id", ""))
 	if fish_id.is_empty():
-		_draw_bait_icon(card.position + Vector2(56.0, card.size.y * 0.57))
-		_draw_text(font, "餌魚なし", card.position + Vector2(112.0, 42.0), 22, Palette.FIGHT_HUD_DARK_INK, 0)
-		_draw_text(font, "通常サメ狙い", card.position + Vector2(112.0, 66.0), 14, Palette.FIGHT_HUD_HINT_NOTE, 0)
+		var empty_icon := Rect2(card.position + Vector2(18.0, 18.0), Vector2(minf(card.size.x * 0.36, 96.0), card.size.y - 36.0))
+		_draw_bait_icon(empty_icon.position + empty_icon.size * 0.5)
+		var empty_text_x := empty_icon.end.x + 14.0
+		var empty_text_w := card.end.x - empty_text_x - 16.0
+		_draw_text_fit(title_font, "餌魚なし", Vector2(empty_text_x, card.position.y + 48.0), empty_text_w, 25, 17, Palette.FIGHT_HUD_DARK_INK, 0)
+		_draw_text_fit(GameFontsScript.regular(font), "通常サメ狙い", Vector2(empty_text_x, card.position.y + 75.0), empty_text_w, 15, 11, Palette.FIGHT_HUD_HINT_NOTE, 0)
 		return
 
 	var fish: Dictionary = shark_lure_selector.get("fish", {})
@@ -569,92 +604,145 @@ func _draw_ready_shark_lure_panel(font: Font, rect: Rect2) -> void:
 	var inventory_count := int(shark_lure_selector.get("count", 0))
 	var remaining := int(shark_lure_selector.get("remaining", 0))
 	var total_charges := int(shark_lure_selector.get("total_charges", 0))
-	var portrait := Rect2(card.position + Vector2(14.0, 17.0), Vector2(86.0, card.size.y - 30.0))
-	_draw_ready_panel(portrait, Color(Palette.FIGHT_HUD_PANEL_BLUE_FILL, 0.82), Palette.GOLD_DEEP, Palette.GOLD)
+	var portrait := Rect2(card.position + Vector2(16.0, 16.0), Vector2(minf(card.size.x * 0.38, 112.0), card.size.y - 32.0))
 	if _lure_portrait != null:
-		_draw_texture_icon(_lure_portrait, portrait.grow(-5.0))
+		_draw_texture_icon(_lure_portrait, portrait)
 	else:
 		_draw_bait_icon(portrait.position + portrait.size * 0.5)
-	_draw_text_fit(font, fish_name, card.position + Vector2(112.0, 35.0), card.size.x - 126.0, 21, 15, Palette.FIGHT_HUD_DARK_INK, 0)
-	_draw_text(font, "所持 x%d" % inventory_count, card.position + Vector2(112.0, 58.0), 14, Palette.FIGHT_HUD_HINT_NOTE, 0)
+	var text_x := portrait.end.x + 14.0
+	var text_w := card.end.x - text_x - 16.0
+	_draw_text_fit(title_font, "%s x%d" % [fish_name, inventory_count], Vector2(text_x, card.position.y + 42.0), text_w, 24, 12, Palette.FIGHT_HUD_DARK_INK, 0)
 	var charge_text := "投げると1匹つかう"
+	var stock_empty_note := false
 	if remaining > 0:
 		charge_text = "あと%d回" % remaining
 		if inventory_count <= 0:
-			charge_text = "%s（在庫0）" % charge_text
-	elif total_charges > 1:
-		charge_text = "1匹で最大%d回" % total_charges
-	_draw_text_fit(font, charge_text, card.position + Vector2(112.0, 82.0), card.size.x - 126.0, 15, 11, Palette.FIGHT_HUD_DARK_INK, 0)
+			stock_empty_note = true
+	var charge_font := GameFontsScript.regular(font)
+	var footer_note := ""
 	if total_charges > 1:
-		var pips := Rect2(card.position + Vector2(112.0, 96.0), Vector2(card.size.x - 126.0, 16.0))
+		var pips_w := minf(66.0, text_w * 0.46)
+		var pips := Rect2(Vector2(text_x, card.position.y + 60.0), Vector2(pips_w, 20.0))
 		var displayed_charges := remaining if remaining > 0 else total_charges if inventory_count > 0 else 0
 		_draw_lure_charge_pips(font, pips, displayed_charges, total_charges)
+		if remaining > 0:
+			_draw_text_fit(charge_font, charge_text, Vector2(text_x + pips_w + 8.0, card.position.y + 76.0), text_w - pips_w - 8.0, 15, 10, Palette.FIGHT_HUD_DARK_INK, 0)
+			if stock_empty_note:
+				footer_note = "在庫0"
+		else:
+			footer_note = charge_text
+	else:
+		footer_note = charge_text
+	if not footer_note.is_empty():
+		_draw_text_center(charge_font, footer_note, Rect2(Vector2(rect.position.x + 18.0, rect.end.y - 30.0), Vector2(rect.size.x - 36.0, 22.0)), 16, Palette.TEXT_BONE, 1)
 
 
 func _draw_ready_arrow(font: Font, rect: Rect2, label: String, enabled: bool) -> void:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(Palette.FIGHT_HUD_MENU_BUTTON_FRAME_FILL, 0.82 if enabled else 0.34)
-	style.border_color = Color(Palette.FIGHT_HUD_MENU_BUTTON_BORDER, 0.82 if enabled else 0.28)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(5)
-	style.shadow_color = Color(Color.BLACK, 0.20)
-	style.shadow_size = 1
-	draw_style_box(style, rect)
-	var text_size := 22
+	if not _draw_kit_frame(_common_button_frame, rect, KIT_BUTTON_MARGINS, Color(Color.WHITE, 1.0 if enabled else 0.46)):
+		_draw_ready_panel(rect, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
+	var text_size := 25
 	var text_w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, text_size).x
-	var color := Palette.TEXT_BONE if enabled else Color(Palette.TEXT_BONE, 0.38)
+	var color := Palette.FIGHT_HUD_DARK_INK if enabled else Color(Palette.FIGHT_HUD_DARK_INK, 0.42)
 	_draw_text(font, label, rect.position + Vector2((rect.size.x - text_w) * 0.5, rect.size.y * 0.5 + 8.0), text_size, color, 1 if enabled else 0)
 
 
 func _draw_ready_bait_panel(font: Font, rect: Rect2) -> void:
-	_draw_ready_panel(rect, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
-	var icon_center := rect.position + Vector2(82.0, rect.size.y * 0.58)
-	_draw_text(font, "使用中のエサ", rect.position + Vector2(18.0, 27.0), 18, Palette.FIGHT_HUD_DARK_INK, 0)
+	var title_font := GameFontsScript.extra_bold(font)
+	_draw_text_center(title_font, "使用中のエサ", Rect2(rect.position, Vector2(rect.size.x, 34.0)), 23, Palette.GOLD_BRIGHT, 2)
+	var card := Rect2(rect.position + Vector2(22.0, 44.0), Vector2(rect.size.x - 44.0, rect.size.y - 52.0))
+	_draw_ready_card_frame(card)
+	var portrait := Rect2(card.position + Vector2(18.0, 18.0), Vector2(minf(card.size.x * 0.36, 128.0), card.size.y - 36.0))
 	if _bait_icon != null:
-		_draw_bait_texture_icon(Rect2(icon_center - Vector2(42.0, 38.0), Vector2(84.0, 76.0)))
+		_draw_bait_texture_icon(portrait)
 	else:
-		_draw_bait_icon(icon_center)
-	_draw_text_fit(font, _rig_name_text(), rect.position + Vector2(142.0, 68.0), rect.size.x - 160.0, 24, 16, Palette.FIGHT_HUD_DARK_INK, 0)
-	_draw_text_fit(font, _rig_bait_text(), rect.position + Vector2(142.0, 96.0), rect.size.x - 160.0, 16, 12, Palette.FIGHT_HUD_HINT_NOTE, 0)
+		_draw_bait_icon(portrait.position + portrait.size * 0.5)
+	var text_x := portrait.end.x + 16.0
+	var text_w := card.end.x - text_x - 18.0
+	_draw_text_fit(title_font, _rig_name_text(), Vector2(text_x, card.position.y + 56.0), text_w, 27, 16, Palette.FIGHT_HUD_DARK_INK, 0)
+	_draw_text_fit(GameFontsScript.regular(font), _rig_bait_text(), Vector2(text_x, card.position.y + 86.0), text_w, 16, 12, Palette.FIGHT_HUD_HINT_NOTE, 0)
 
 
 func _draw_ready_cast_panel(font: Font, rect: Rect2) -> void:
-	_draw_ready_panel(rect, Color(Palette.FIGHT_HUD_PANEL_BLUE_FILL, 0.84), Palette.FIGHT_HUD_PANEL_BLUE_BORDER, Palette.GOLD)
-	var title := "仕掛け投入"
-	var title_size := 17
-	var title_w := font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x
-	_draw_text(font, title, rect.position + Vector2((rect.size.x - title_w) * 0.5, 30.0), title_size, Palette.TEXT_BONE, 1)
-	_main_rect = Rect2(rect.position + Vector2(34.0, 46.0), Vector2(rect.size.x - 68.0, rect.size.y - 66.0))
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(Palette.FIGHT_HUD_KEY_ENTER_FILL, 0.96)
-	style.border_color = Palette.FIGHT_HUD_KEY_BORDER_ACTIVE
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(6)
-	style.shadow_color = Color(Color.BLACK, 0.28)
-	style.shadow_size = 3
-	draw_style_box(style, _main_rect)
-	draw_line(_main_rect.position + Vector2(14.0, 7.0), _main_rect.position + Vector2(_main_rect.size.x - 14.0, 7.0), Color(Color.WHITE, 0.18), 1.0)
-	var key_rect := Rect2(_main_rect.position + Vector2(22.0, _main_rect.size.y * 0.5 - 13.0), Vector2(78.0, 26.0))
+	_main_rect = Rect2(rect.position + Vector2(12.0, 12.0), Vector2(rect.size.x - 24.0, rect.size.y - 24.0))
+	if not _draw_kit_frame(_common_action_button_frame, _main_rect, KIT_ACTION_MARGINS):
+		_draw_ready_panel(_main_rect, Color(Palette.FIGHT_HUD_PANEL_BLUE_FILL, 0.84), Palette.FIGHT_HUD_PANEL_BLUE_BORDER, Palette.GOLD)
+	var key_rect := Rect2(
+		_main_rect.position + Vector2((_main_rect.size.x - 92.0) * 0.5, 18.0),
+		Vector2(92.0, 29.0)
+	)
 	_draw_keyboard_key_cap(font, key_rect, "E / Enter", false, true)
 	var label := "投げる"
-	var label_size := 30
-	var label_w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
-	_draw_text(font, label, _main_rect.position + Vector2((_main_rect.size.x - label_w) * 0.5 + 42.0, _main_rect.size.y * 0.5 + 10.0), label_size, Palette.TEXT_BONE, 2)
+	var label_font := GameFontsScript.extra_bold(font)
+	var label_size := 56
+	while label_size > 34 and label_font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x > _main_rect.size.x - 48.0:
+		label_size -= 2
+	_draw_text_center(label_font, label, Rect2(_main_rect.position + Vector2(0.0, _main_rect.size.y * 0.37), Vector2(_main_rect.size.x, _main_rect.size.y * 0.58)), label_size, Palette.TEXT_BONE, 3)
 
 
 func _draw_ready_menu_panel(font: Font, rect: Rect2) -> void:
-	_draw_ready_panel(rect, Palette.FIGHT_HUD_PANEL_BLUE_FILL, Palette.FIGHT_HUD_PANEL_BLUE_BORDER, Palette.GOLD)
-	var gap := 8.0
-	var button_h := (rect.size.y - 22.0 - gap) * 0.5
-	_change_spot_rect = Rect2(rect.position + Vector2(10.0, 11.0), Vector2(rect.size.x - 20.0, button_h))
+	var gap := 10.0
+	var button_h := (rect.size.y - 28.0 - gap) * 0.5
+	_change_spot_rect = Rect2(rect.position + Vector2(8.0, 14.0), Vector2(rect.size.x - 16.0, button_h))
 	_harbor_rect = Rect2(
-		rect.position + Vector2(10.0, 11.0 + button_h + gap),
-		Vector2(rect.size.x - 20.0, button_h)
+		rect.position + Vector2(8.0, 14.0 + button_h + gap),
+		Vector2(rect.size.x - 16.0, button_h)
 	)
-	_draw_menu_button(_change_spot_rect)
-	_draw_menu_button(_harbor_rect)
-	_draw_menu_row(font, _change_spot_rect.position + Vector2(25.0, _change_spot_rect.size.y * 0.62), "+", "釣り場変更")
-	_draw_menu_row(font, _harbor_rect.position + Vector2(25.0, _harbor_rect.size.y * 0.62), "-", "港へ戻る")
+	_draw_ready_menu_button(_change_spot_rect)
+	_draw_ready_menu_button(_harbor_rect)
+	_draw_ready_menu_row(font, _change_spot_rect, "+", "釣り場変更")
+	_draw_ready_menu_row(font, _harbor_rect, "-", "港へ戻る")
+
+
+func _draw_ready_bar_background(rect: Rect2) -> void:
+	if _draw_kit_frame(_common_button_primary_frame, rect.grow(-2.0), KIT_BUTTON_MARGINS):
+		return
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(Palette.FIGHT_HUD_FALLBACK_PANEL_FILL, 0.96)
+	style.border_color = Color(Palette.GOLD_DEEP, 0.92)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(4)
+	style.shadow_color = Color(Color.BLACK, 0.32)
+	style.shadow_size = 2
+	draw_style_box(style, rect.grow(-2.0))
+
+
+func _draw_ready_card_frame(rect: Rect2) -> void:
+	var drew := _draw_kit_frame(_common_parchment_card, rect, KIT_PARCHMENT_MARGINS)
+	if _common_card_frame != null:
+		drew = _draw_kit_frame(_common_card_frame, rect, KIT_CARD_MARGINS, Color(Color.WHITE, 0.96)) or drew
+	if not drew:
+		_draw_ready_panel(rect, Palette.PARCHMENT, Palette.WOOD_DARK, Palette.GOLD)
+
+
+func _draw_ready_menu_button(rect: Rect2) -> void:
+	if _draw_kit_frame(_common_button_primary_frame, rect, KIT_BUTTON_MARGINS):
+		return
+	_draw_menu_button(rect)
+
+
+func _draw_ready_menu_row(font: Font, rect: Rect2, key: String, label: String) -> void:
+	var center_y := rect.position.y + rect.size.y * 0.5
+	var icon_rect := Rect2(Vector2(rect.position.x + 16.0, center_y - 13.0), Vector2(26.0, 26.0))
+	var key_texture := _key_plus_icon if key == "+" else _key_minus_icon
+	if key_texture != null:
+		_draw_texture_icon(key_texture, icon_rect)
+	else:
+		draw_circle(icon_rect.position + icon_rect.size * 0.5, 13.0, Palette.FIGHT_HUD_MENU_KEY_BORDER)
+		draw_circle(icon_rect.position + icon_rect.size * 0.5, 10.5, Palette.FIGHT_HUD_MENU_KEY_FILL)
+		var key_w := font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x
+		_draw_text(font, key, Vector2(icon_rect.position.x + (icon_rect.size.x - key_w) * 0.5, icon_rect.position.y + 19.0), 18, Palette.FIGHT_HUD_DARK_INK, 0)
+	var label_font := GameFontsScript.extra_bold(font)
+	var label_size := 17
+	var label_x := icon_rect.end.x + 9.0
+	var max_w := rect.end.x - label_x - 6.0
+	while label_size > 13 and label_font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x > max_w:
+		label_size -= 1
+	_draw_text(label_font, label, Vector2(label_x, center_y + 7.0), label_size, Palette.TEXT_BONE, 1)
+
+
+func _draw_ready_zone_divider(x: float, top: float, height: float) -> void:
+	draw_line(Vector2(x, top), Vector2(x, top + height), Color(Palette.GOLD_DEEP, 0.58), 1.2)
+	draw_line(Vector2(x + 1.5, top + 7.0), Vector2(x + 1.5, top + height - 7.0), Color(Palette.FIGHT_HUD_PANEL_BLUE_BORDER, 0.44), 1.0)
 
 
 func _draw_ready_panel(rect: Rect2, fill: Color, border: Color, highlight: Color) -> void:
@@ -688,12 +776,51 @@ func _draw_text_fit(
 	_draw_text(font, text, baseline, fitted_size, color, outline)
 
 
+func _draw_text_center(font: Font, text: String, rect: Rect2, font_size: int, color: Color, outline: int) -> void:
+	var text_size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
+	var baseline := rect.position + Vector2((rect.size.x - text_size.x) * 0.5, (rect.size.y + text_size.y) * 0.5 - 2.0)
+	_draw_text(font, text, baseline, font_size, color, outline)
+
+
+func _draw_kit_frame(texture: Texture2D, rect: Rect2, margins: Vector4, modulate: Color = Color.WHITE) -> bool:
+	if texture == null or rect.size.x <= 0.0 or rect.size.y <= 0.0:
+		return false
+	var tex_size := texture.get_size()
+	var left_src := minf(margins.x, tex_size.x * 0.45)
+	var top_src := minf(margins.y, tex_size.y * 0.45)
+	var right_src := minf(margins.z, tex_size.x - left_src)
+	var bottom_src := minf(margins.w, tex_size.y - top_src)
+	var left_dst := minf(left_src, rect.size.x * 0.5)
+	var top_dst := minf(top_src, rect.size.y * 0.5)
+	var right_dst := minf(right_src, rect.size.x - left_dst)
+	var bottom_dst := minf(bottom_src, rect.size.y - top_dst)
+	var src_x := [0.0, left_src, tex_size.x - right_src]
+	var src_y := [0.0, top_src, tex_size.y - bottom_src]
+	var src_w := [left_src, maxf(0.0, tex_size.x - left_src - right_src), right_src]
+	var src_h := [top_src, maxf(0.0, tex_size.y - top_src - bottom_src), bottom_src]
+	var dst_x := [rect.position.x, rect.position.x + left_dst, rect.end.x - right_dst]
+	var dst_y := [rect.position.y, rect.position.y + top_dst, rect.end.y - bottom_dst]
+	var dst_w := [left_dst, maxf(0.0, rect.size.x - left_dst - right_dst), right_dst]
+	var dst_h := [top_dst, maxf(0.0, rect.size.y - top_dst - bottom_dst), bottom_dst]
+	for row in range(3):
+		for col in range(3):
+			if src_w[col] <= 0.0 or src_h[row] <= 0.0 or dst_w[col] <= 0.0 or dst_h[row] <= 0.0:
+				continue
+			draw_texture_rect_region(
+				texture,
+				Rect2(Vector2(dst_x[col], dst_y[row]), Vector2(dst_w[col], dst_h[row])),
+				Rect2(Vector2(src_x[col], src_y[row]), Vector2(src_w[col], src_h[row])),
+				modulate
+			)
+	return true
+
+
 func _draw_lure_charge_pips(_font: Font, rect: Rect2, remaining: int, total: int) -> void:
 	var pip_count := clampi(total, 0, 5)
 	if pip_count <= 1:
 		return
 	var gap := 5.0
-	var size := minf(12.0, (rect.size.x - gap * float(pip_count - 1)) / float(pip_count))
+	var size := minf(16.0, (rect.size.x - gap * float(pip_count - 1)) / float(pip_count))
 	for index in range(pip_count):
 		var center := rect.position + Vector2(float(index) * (size + gap) + size * 0.5, size * 0.5)
 		var filled := index < remaining
