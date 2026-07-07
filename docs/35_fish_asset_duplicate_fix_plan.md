@@ -143,6 +143,7 @@ Date: 2026-07-07
 - 2026-07-08: 再発防止監査 `tools/audit_fish_asset_duplicates.py` を `./tools/validate_project.sh` に組み込み済み。通常モードはdocs/35の既知pendingだけを許容し、`--strict` は全pending解消確認用として残す。
 - 2026-07-08: P1バッチ1として8種（`houbou`, `kanagashira`, `kyusen`, `kobudai`, `ojisan`, `sayori`, `binnaga`, `konoshiro`）を新規OpenAI生成コンタクトシート由来に差し替え。監査結果は pending 26→14 / unexpected 0。残P1は `ira`, `kinmedai`, `akamutsu`, `medai`, `sawara`, `mahaze`, `nenbutsudai` の7種。
 - 2026-07-08: P1バッチ2として残7種（`ira`, `kinmedai`, `akamutsu`, `medai`, `sawara`, `mahaze`, `nenbutsudai`）を新規OpenAI生成コンタクトシート由来に差し替え、P1 A群15種を完了。監査結果は pending 14→8 / unexpected 0。残pending 8件はP2/P3で扱う。
+- 2026-07-08: P2バッチ1として9種（`meichidai`, `murasoi`, `onikasago`, `kihada`, `mebachi`, `hirasouda`, `suma`, `takabe`, `makogarei`）を新規OpenAI生成コンタクトシート由来に差し替え。監査結果は pending 8→0 / unexpected 0、`--strict` も通過。P2の `source` + `contact_crop` 化は残8種（`shimaaji`, `gingameaji`, `kaiwari`, `ishigarei`, `umitanago`, `ishigakidai`, `oomonhata`, `ara`）を次バッチで継続。P3（`megochi`, `kurosoi/takenokomebaru`, `mejina`）はP2完了後に再評価。
 
 ### 検証（各バッチ後に必須）
 

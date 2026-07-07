@@ -68,18 +68,9 @@ ALLOWED_PAIRS: dict[frozenset[str], str] = {
 }
 
 
-# Exact docs/35 baseline pairs observed in the current assets. This is
+# Exact docs/35 baseline pairs observed in the current assets. Keep this
 # pair-specific so any new near-duplicate fails, even inside a known family.
-PENDING_PAIRS: dict[frozenset[str], str] = {
-    _pair("madai", "meichidai"): "docs/35 P1/P2 madai family",
-    _pair("kasago", "murasoi"): "docs/35 P1/P2 kasago family",
-    _pair("kasago", "onikasago"): "docs/35 P1/P2 kasago family",
-    _pair("kihada", "mebachi"): "docs/35 P1/P2 katsuo family",
-    _pair("murasoi", "onikasago"): "docs/35 P1/P2 kasago family",
-    _pair("hirasouda", "suma"): "docs/35 P1/P2 katsuo family",
-    _pair("isaki", "takabe"): "docs/35 P2 takabe",
-    _pair("hirame", "makogarei"): "docs/35 C/P1/P2 hirame family",
-}
+PENDING_PAIRS: dict[frozenset[str], str] = {}
 
 
 def main() -> int:
