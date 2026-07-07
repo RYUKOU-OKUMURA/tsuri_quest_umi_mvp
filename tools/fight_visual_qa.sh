@@ -20,9 +20,11 @@ python3 tools/build_fight_top_status_static_compare.py || exit 1
 python3 tools/build_fight_full_static_compare.py || exit 1
 python3 tools/build_fish_asset_contact_sheet.py || exit 1
 
-if [[ "${TSURI_FIGHT_RUNTIME_CAPTURE:-1}" == "1" ]]; then
+runtime_capture="${TSURI_FIGHT_RUNTIME_CAPTURE:-1}"
+if [[ "$runtime_capture" == "1" ]]; then
   if [[ -z "$GODOT" ]]; then
-    echo "Runtime capture skipped: Godot 4.x was not found." >&2
+    echo "Runtime capture is required for docs/39 visual QA, but Godot 4.x was not found." >&2
+    exit 1
   else
     echo "==> Try runtime fight capture"
     rm -f /tmp/tsuri_fishing_fight.png
@@ -30,9 +32,16 @@ if [[ "${TSURI_FIGHT_RUNTIME_CAPTURE:-1}" == "1" ]]; then
     capture_status=$?
     if [[ "$capture_status" -ne 0 ]]; then
       rm -f /tmp/tsuri_fishing_fight.png
-      echo "Runtime capture failed with exit code $capture_status; static fallback will be used." >&2
+      echo "Runtime capture failed with exit code $capture_status; docs/39 visual QA cannot use the legacy static fallback." >&2
+      exit "$capture_status"
+    fi
+    if [[ ! -f /tmp/tsuri_fishing_fight.png ]]; then
+      echo "Runtime capture completed without /tmp/tsuri_fishing_fight.png; docs/39 visual QA cannot continue." >&2
+      exit 1
     fi
   fi
+else
+  echo "Runtime capture disabled via TSURI_FIGHT_RUNTIME_CAPTURE=0; comparison boards will use legacy static fallback and are not a docs/39 acceptance run." >&2
 fi
 
 echo "==> Build side-by-side QA outputs"
