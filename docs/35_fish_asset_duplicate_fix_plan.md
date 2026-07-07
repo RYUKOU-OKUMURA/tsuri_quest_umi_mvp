@@ -142,6 +142,7 @@ Date: 2026-07-07
 
 - 2026-07-08: 再発防止監査 `tools/audit_fish_asset_duplicates.py` を `./tools/validate_project.sh` に組み込み済み。通常モードはdocs/35の既知pendingだけを許容し、`--strict` は全pending解消確認用として残す。
 - 2026-07-08: P1バッチ1として8種（`houbou`, `kanagashira`, `kyusen`, `kobudai`, `ojisan`, `sayori`, `binnaga`, `konoshiro`）を新規OpenAI生成コンタクトシート由来に差し替え。監査結果は pending 26→14 / unexpected 0。残P1は `ira`, `kinmedai`, `akamutsu`, `medai`, `sawara`, `mahaze`, `nenbutsudai` の7種。
+- 2026-07-08: P1バッチ2として残7種（`ira`, `kinmedai`, `akamutsu`, `medai`, `sawara`, `mahaze`, `nenbutsudai`）を新規OpenAI生成コンタクトシート由来に差し替え、P1 A群15種を完了。監査結果は pending 14→8 / unexpected 0。残pending 8件はP2/P3で扱う。
 
 ### 検証（各バッチ後に必須）
 

@@ -1,6 +1,6 @@
 # 魚図鑑画面 QA判断ログ
 
-最終更新: 2026-07-08 / 状態: **docs/35 P1バッチ1 魚素材8種差し替え済み**
+最終更新: 2026-07-08 / 状態: **docs/35 P1 A群15種差し替え済み**
 参照画像: `reference/07_fish_book_mockup.png`
 QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
@@ -88,7 +88,7 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 
 ## 5. 現在の残ギャップ
 
-- **P2**: 魚ポートレート素材そのものの専用描き起こし・魚ごとの見せ方、フォント全体方針は継続。2026-07-08 に docs/35 P1バッチ1の8種は採用済みだが、P1残7種とP2群は未完了。
+- **P2**: 魚ポートレート素材そのものの専用描き起こし・魚ごとの見せ方、フォント全体方針は継続。2026-07-08 に docs/35 P1 A群15種は採用済みだが、P2群とP3再評価は未完了。
 - 文字収まりの採用値（レアリティチップ幅・段階的フォント縮小）を、P1再発なしに動かさないこと。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
@@ -101,3 +101,4 @@ QA更新コマンド: `./tools/fish_book_visual_qa.sh`
 - 2026-07-05: R5/R1魚図鑑スライス。`src/ui/fish_book_screen.gd` の hardcoded hex / 数値 `Color(...)` を表示色同値の `Palette.FISH_BOOK_*` へ移行し、`rg -n "#[0-9a-fA-F]{6}|Color\\([0-9]" src/ui/fish_book_screen.gd` が空であることを確認した。実スクショ比較でP1再発はなし。contact sheetでは既存 `card_portrait` 系が現行の左カードtight crop/右詳細高解像度cropを明確に上回らないため、素材採用は見送り、専用描き起こしP2は新規候補待ちとして継続。判断根拠: `docs/qa/evidence/fish_book/2026-07-05_palette_gate_compare.png`、`docs/qa/evidence/fish_book/2026-07-05_portrait_contact_sheet.png`。検証: `git diff --check` exit 0、contact sheet再生成 exit 0、`./tools/fish_book_visual_qa.sh` exit 0、`fish_book_smoke: ok`、`./tools/save_system_verify.sh` exit 0、`./tools/validate_project.sh` exit 0（Godot終了時のObjectDB Snapshots directory警告は既存ベースライン枠）。
 - 2026-07-06: E2ヌシ図鑑スライス。機能追加に伴い下部索引を7列freezeへ改訂し、`ヌシ` タブを追加。捕獲済みヌシは基準魚ページへ金ピン、詳細ページへ金線と `ヌシ記録` 行を表示する。未捕獲ヌシの気配表示は不採用として記録。判断根拠: `docs/qa/evidence/fish_book/2026-07-06_e2_nushi_tab_compare.png`、`docs/qa/evidence/fish_book/2026-07-06_e2_nushi_record_compare.png`、`docs/qa/evidence/fish_book/2026-07-06_e2_nushi_record.png`。検証: `./tools/fish_book_visual_qa.sh` exit 0、`TSURI_FISH_BOOK_PREVIEW_MODE=nushi ./tools/fish_book_visual_qa.sh` exit 0、`fish_book_smoke: ok`。
 - 2026-07-08: docs/35 P1バッチ1魚素材差し替え。`houbou`, `kanagashira`, `kyusen`, `kobudai`, `ojisan`, `sayori`, `binnaga`, `konoshiro` を新規OpenAI生成コンタクトシート由来へ置き換え、図鑑カード/詳細で魚種識別特徴（ホウボウ大胸鰭、コブダイ額コブ、オジサンあごひげ、サヨリ下顎、ビンナガ長胸鰭、コノシロ黒斑と背鰭糸状延長など）が読めるため採用。画面freeze値・魚clip座標・文字配置は変更なし。判断根拠: `docs/qa/evidence/fish_assets/2026-07-08_p1_batch1_before_after.png`、`docs/qa/evidence/fish_book/2026-07-08_p1_batch1_portrait_contact.png`、`docs/qa/evidence/fish_book/2026-07-08_p1_batch1_fish_book_compare.png`。検証: `./tools/fish_book_visual_qa.sh` exit 0、`python3 tools/audit_fish_asset_duplicates.py` exit 0（pending 26→14、unexpected 0）、`python3 tools/audit_fish_sheet_contract.py` exit 0。
+- 2026-07-08: docs/35 P1バッチ2魚素材差し替え。`ira`, `kinmedai`, `akamutsu`, `medai`, `sawara`, `mahaze`, `nenbutsudai` を新規OpenAI生成コンタクトシート由来へ置き換え、図鑑カード/詳細で魚種識別特徴（イラの斜帯、キンメダイの大きな金眼、アカムツの赤い鰓、メダイの丸い灰色体、サワラの細長い体と斑点、マハゼの底物体型、ネンブツダイの黒線）が読めるため採用。画面freeze値・魚clip座標・文字配置は変更なし。判断根拠: `docs/qa/evidence/fish_assets/2026-07-08_p1_batch2_before_after.png`、`docs/qa/evidence/fish_assets/2026-07-08_p1_batch2_card_contact.png`、`docs/qa/evidence/fish_book/2026-07-08_p1_batch2_fish_book_compare.png`。検証: `./tools/fish_book_visual_qa.sh` exit 0、`python3 tools/audit_fish_asset_duplicates.py` exit 0（pending 14→8、unexpected 0）、`python3 tools/audit_fish_sheet_contract.py` exit 0、`./tools/validate_project.sh` exit 0。

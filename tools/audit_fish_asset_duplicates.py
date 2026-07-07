@@ -76,15 +76,9 @@ PENDING_PAIRS: dict[frozenset[str], str] = {
     _pair("kasago", "onikasago"): "docs/35 P1/P2 kasago family",
     _pair("kihada", "mebachi"): "docs/35 P1/P2 katsuo family",
     _pair("murasoi", "onikasago"): "docs/35 P1/P2 kasago family",
-    _pair("medai", "shimaaji"): "docs/35 P1/P2 rouninaji family",
     _pair("hirasouda", "suma"): "docs/35 P1/P2 katsuo family",
-    _pair("ishidai", "ishigakidai"): "docs/35 P2 ishigakidai",
-    _pair("gingameaji", "rouninaji"): "docs/35 P1/P2 rouninaji family",
     _pair("isaki", "takabe"): "docs/35 P2 takabe",
-    _pair("kinmedai", "madai"): "docs/35 P1/P2 madai family",
-    _pair("kinmedai", "meichidai"): "docs/35 P1/P2 madai family",
     _pair("hirame", "makogarei"): "docs/35 C/P1/P2 hirame family",
-    _pair("aobudai", "ira"): "docs/35 P1/P2 aobudai family",
 }
 
 
