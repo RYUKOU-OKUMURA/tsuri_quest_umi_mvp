@@ -34,6 +34,7 @@
 | 作業 | 従う手順 |
 |---|---|
 | **V2拡張フェーズの実装（E0〜E10）** | `docs/30_v2_expansion_overview.md` §4 ＋ `docs/v2/<当該フェーズ>.md`（新画面を含むフェーズは下記UIスキルを併用） |
+| **釣行画面の基盤UI刷新（現在の最優先作業）** | `docs/38_shark_bait_ready_selector_spec.md`（READY餌魚セレクタ＋耐久チャージ。先行）→ `docs/39_underwater_fight_ui_redesign_spec.md`（水中ファイト刷新）。基盤原則は `docs/19` §4.6。**読み順は docs/39 §0 のドキュメントマップに従う** |
 | 新しい画面UIをゼロから実装 | `skills/ui-screen-build/SKILL.md` |
 | 既存画面UIの品質向上 | `skills/ui-screen-uplift/SKILL.md` |
 | 調理・食事・レベルアップフロー | `skills/tsuri-cooking-showcase-uplift/SKILL.md`（専用。上記2つより優先） |
