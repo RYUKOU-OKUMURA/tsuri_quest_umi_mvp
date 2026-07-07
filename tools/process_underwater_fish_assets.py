@@ -21,6 +21,7 @@ FISH_EXPANSION_CONTACT_SOURCE_2 = FISH_SOURCE_ASSET_DIR / "fish_expansion_contac
 FISH_DEDUP_CONTACT_SOURCE_20260708_1 = FISH_SOURCE_ASSET_DIR / "fish_dedup_2026-07-08_contact_sheet_1.png"
 FISH_DEDUP_CONTACT_SOURCE_20260708_2 = FISH_SOURCE_ASSET_DIR / "fish_dedup_2026-07-08_contact_sheet_2.png"
 FISH_DEDUP_CONTACT_SOURCE_20260708_3 = FISH_SOURCE_ASSET_DIR / "fish_dedup_2026-07-08_contact_sheet_3.png"
+FISH_DEDUP_CONTACT_SOURCE_20260708_4 = FISH_SOURCE_ASSET_DIR / "fish_dedup_2026-07-08_contact_sheet_4.png"
 FISH_SHEET = FISH_VARIANT_DIR / "kurodai_showcase_sheet.png"
 FISH_CARD_PORTRAIT = FISH_VARIANT_DIR / "kurodai_card_portrait.png"
 HIT_BURST = OUT_DIR / "hit_burst.png"
@@ -151,7 +152,12 @@ FISH_ART_SOURCES = {
         "contact_crop": (430, 500, 880, 790),
         "flip_runtime_source": True,
     },
-    "umitanago": {"template": "mejina", "tint": "#91a8ad", "tint_strength": 0.28, "scale_x": 0.82, "scale_y": 0.86, "markings": "soft_lateral"},
+    "umitanago": {
+        "source": "dedup_20260708_4",
+        "contact_crop": (0, 484, 464, 751),
+        "flip_runtime_source": True,
+        "runtime_offset_x": 55,
+    },
     "sappa": {"template": "iwashi", "tint": "#d8e4e7", "tint_strength": 0.72, "scale_x": 0.50, "scale_y": 0.54, "markings": "sappa_plain"},
     "konoshiro": {
         "source": "dedup_20260708_1",
@@ -174,7 +180,12 @@ FISH_ART_SOURCES = {
         "flip_runtime_source": True,
         "runtime_offset_x": 45,
     },
-    "ishigarei": {"template": "hirame", "tint": "#746f59", "tint_strength": 0.50, "scale_x": 0.92, "scale_y": 0.88, "markings": "dark_spots"},
+    "ishigarei": {
+        "source": "dedup_20260708_4",
+        "contact_crop": (1308, 112, 1762, 391),
+        "flip_runtime_source": True,
+        "runtime_offset_x": 45,
+    },
     "shitabirame": {"template": "hirame", "tint": "#a08362", "tint_strength": 0.58, "scale_x": 0.70, "scale_y": 0.46, "markings": "sand_mottle"},
     "houbou": {
         "source": "dedup_20260708_1",
@@ -190,12 +201,9 @@ FISH_ART_SOURCES = {
     },
     "megochi": {"template": "kochi", "tint": "#907556", "tint_strength": 0.34, "scale_x": 0.58, "scale_y": 0.58, "markings": "sand_mottle"},
     "ishigakidai": {
-        "template": "ishidai",
-        "tint": "#6a6656",
-        "tint_strength": 0.36,
-        "scale_x": 0.92,
-        "scale_y": 0.94,
-        "markings": "dark_spots",
+        "source": "dedup_20260708_4",
+        "contact_crop": (421, 448, 908, 767),
+        "flip_runtime_source": True,
         "runtime_offset_x": 55,
     },
     "kurosoi": {"template": "mebaru", "tint": "#3e4039", "tint_strength": 0.70, "scale_x": 0.86, "scale_y": 0.90, "markings": "dark_spots"},
@@ -206,7 +214,12 @@ FISH_ART_SOURCES = {
         "runtime_offset_x": 50,
     },
     "takenokomebaru": {"template": "mebaru", "tint": "#7b5a34", "tint_strength": 0.58, "scale_x": 0.90, "scale_y": 0.86, "markings": "dark_spots"},
-    "oomonhata": {"template": "akahata", "tint": "#98683d", "tint_strength": 0.38, "scale_x": 1.02, "scale_y": 0.96, "markings": "dark_spots"},
+    "oomonhata": {
+        "source": "dedup_20260708_4",
+        "contact_crop": (865, 487, 1351, 749),
+        "flip_runtime_source": True,
+        "runtime_offset_x": 45,
+    },
     "onikasago": {
         "source": "dedup_20260708_3",
         "contact_crop": (1021, 34, 1530, 360),
@@ -256,32 +269,23 @@ FISH_ART_SOURCES = {
         "runtime_offset_x": 45,
     },
     "shimaaji": {
-        "template": "rouninaji",
-        "tint": "#93a0a5",
-        "tint_strength": 0.24,
-        "scale_x": 0.90,
-        "scale_y": 1.00,
-        "markings": "yellow_lateral",
-        "runtime_offset_x": 80,
+        "source": "dedup_20260708_4",
+        "contact_crop": (3, 76, 464, 396),
+        "flip_runtime_source": True,
+        "runtime_offset_x": 85,
     },
     "tsumuburi": {"template": "hiramasa", "tint": "#4f8c86", "tint_strength": 0.34, "scale_x": 1.05, "scale_y": 0.90, "markings": "yellow_lateral"},
     "gingameaji": {
-        "template": "rouninaji",
-        "tint": "#788a91",
-        "tint_strength": 0.34,
-        "scale_x": 0.96,
-        "scale_y": 0.96,
-        "markings": "clean_silver",
-        "runtime_offset_x": 55,
+        "source": "dedup_20260708_4",
+        "contact_crop": (421, 102, 908, 393),
+        "flip_runtime_source": True,
+        "runtime_offset_x": 70,
     },
     "kaiwari": {
-        "template": "rouninaji",
-        "tint": "#b2babe",
-        "tint_strength": 0.32,
-        "scale_x": 0.62,
-        "scale_y": 0.72,
-        "markings": "yellow_lateral",
-        "runtime_offset_x": 80,
+        "source": "dedup_20260708_4",
+        "contact_crop": (865, 115, 1351, 400),
+        "flip_runtime_source": True,
+        "runtime_offset_x": 95,
     },
     "kihada": {
         "source": "dedup_20260708_3",
@@ -313,7 +317,12 @@ FISH_ART_SOURCES = {
         "flip_runtime_source": True,
         "runtime_offset_x": 45,
     },
-    "ara": {"template": "kue", "tint": "#7a5f48", "tint_strength": 0.36, "scale_x": 1.12, "scale_y": 1.02, "markings": "dark_spots"},
+    "ara": {
+        "source": "dedup_20260708_4",
+        "contact_crop": (1308, 502, 1764, 751),
+        "flip_runtime_source": True,
+        "runtime_offset_x": 15,
+    },
     "medai": {
         "source": "dedup_20260708_2",
         "contact_crop": (1300, 50, 1774, 350),
@@ -329,6 +338,7 @@ FISH_CONTACT_SOURCES = {
     "dedup_20260708_1": FISH_DEDUP_CONTACT_SOURCE_20260708_1,
     "dedup_20260708_2": FISH_DEDUP_CONTACT_SOURCE_20260708_2,
     "dedup_20260708_3": FISH_DEDUP_CONTACT_SOURCE_20260708_3,
+    "dedup_20260708_4": FISH_DEDUP_CONTACT_SOURCE_20260708_4,
 }
 
 
