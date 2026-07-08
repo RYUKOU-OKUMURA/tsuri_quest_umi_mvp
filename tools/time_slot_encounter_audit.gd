@@ -46,6 +46,7 @@ func _check_encounter_weight_ratios(rows: Array[Array]) -> void:
 	_expect_weight_ratio(rows, "asa_mazume", "kaiwari", 1.12)
 	_expect_weight_ratio(rows, "night", "tachiuo", 2.20)
 	_expect_weight_ratio(rows, "night", "kinmedai", 1.60)
+	_expect_weight_ratio(rows, "asa_mazume+extra", "aji", 3.25, "asa_mazume", {"aji": 2.5})
 
 
 func _expect_modifier(
@@ -64,7 +65,9 @@ func _expect_weight_ratio(
 	rows: Array[Array],
 	time_slot_id: String,
 	fish_id: String,
-	expected: float
+	expected: float,
+	actual_time_slot_id: String = "",
+	extra_fish_weight_modifiers: Dictionary = {}
 ) -> void:
 	var spot_id := _first_spot_for_fish(fish_id)
 	_expect(not spot_id.is_empty(), "%s should be allowed by a normal spot" % fish_id)
@@ -74,7 +77,12 @@ func _expect_weight_ratio(
 		GameData.MAX_LEVEL, spot_id, "", "", {}, GameData.DEFAULT_TIME_SLOT_ID
 	)
 	var slot_weights := GameData.encounter_weights(
-		GameData.MAX_LEVEL, spot_id, "", "", {}, time_slot_id
+		GameData.MAX_LEVEL,
+		spot_id,
+		"",
+		"",
+		extra_fish_weight_modifiers,
+		actual_time_slot_id if not actual_time_slot_id.is_empty() else time_slot_id
 	)
 	var base := float(base_weights.get(fish_id, 0.0))
 	var actual := 0.0 if base <= 0.0 else float(slot_weights.get(fish_id, 0.0)) / base
