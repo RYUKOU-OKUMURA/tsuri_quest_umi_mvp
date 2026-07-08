@@ -1,6 +1,6 @@
 # 水上キャスト画面 QA判断ログ
 
-最終更新: 2026-07-08 / 状態: E5 Stage 2（時間帯最小素材）freeze改定済み・素材生成前
+最終更新: 2026-07-08 / 状態: E5 Stage 2（時間帯最小素材）採用
 参照画像: `reference/01_surface_fishing_mockup.png` / `reference/13_fishing_ready_danger_mockup.png`
 QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `./tools/fishing_time_slot_visual_qa.sh` / `godot --path . res://tools/fishing_surface_states_preview.tscn` / `godot --path . res://tools/catch_fanfare_preview.tscn` / `./tools/fight_visual_qa.sh`
 
@@ -44,8 +44,7 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `./tools/fishing_
 
 ## 4. 暫定判定・再検証TODO
 
-- E5 Stage 2はfreeze改定済み。素材生成・配線後に `./tools/fishing_time_slot_visual_qa.sh` で3時間帯比較を再生成し、夜READYが「夜に見えるか」を実スクショで判定する。
-- 釣果ファンファーレ夜版は `TSURI_FISHING_TIME_SLOT_MODE=fanfare TSURI_FISHING_TIME_SLOT_ID=night godot --path . res://tools/fishing_time_slot_preview.tscn` で取得し、昼写真ベースが残っていないことを確認する（headless不可）。
+なし。
 
 ## 5. 現在の残ギャップ
 
@@ -55,19 +54,47 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `./tools/fishing_
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-2026-07-08 E5 Stage 2（時間帯最小素材）素材パス。
-
-今回動かすもの:
-- READY水面ベースの時間帯差し替え2枚（朝まずめ/夜釣り）。日中は既存READYを使う。
-- 釣果写真ベースの時間帯差し替え2枚（朝まずめ/夜釣り）。魚・記録文・報酬文はruntime描画を維持する。
-- `SurfaceCastView` のREADYベース選択と `CatchFanfare` の写真ベース選択。
-
-触らないもの:
-- WAITING/APPROACH/BITEの晴天状態別プレート、非晴天魚影素材、rain/fog overlay、既存天候grade。
-- 水中背景、FIGHT HUD、READY下段バー、サメ餌魚セレクタ、文字位置・ボタンサイズなどの既存freeze値。
-- 天候別×時間帯別や状態別×時間帯別のPNG量産。
+完了済みのためなし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-08 E5 Stage 2（時間帯最小素材）を採用。
+
+差分Top1:
+- P2-1: Stage 1では夜READYに焼き込みの太陽・昼海面が残り、縮小比較でも夜釣りとして読めなかった。
+
+スコープ:
+- 今回動かしたもの: READY水面ベースの朝まずめ/夜釣り2枚、釣果写真ベースの朝まずめ/夜釣り2枚、`SurfaceCastView` の時間帯READYベース選択、`CatchFanfare` の写真ベース選択。
+- 触っていないもの: 日中READY、WAITING/APPROACH/BITEの晴天状態別プレート、水中背景、FIGHT HUD、READY下段バー、サメ餌魚セレクタ、既存文字位置・ボタンサイズ。
+
+変更したもの:
+- OpenAI生成ソースを `tools/source_assets/fishing_time_slots/` に保存し、`tools/process_fishing_time_slot_assets.py` で既存解像度へ正規化した。
+- `surface_scene_ready_asa_mazume.png` / `surface_scene_ready_night.png` を追加し、時間帯READYベースとして配線した。
+- `catch_photo_base_asa.png` / `catch_photo_base_night.png` を追加し、釣果ファンファーレの写真ベースを `trip_stats.time_slot_id` で差し替えるようにした。
+- 時間帯READYベースの上には、既存の天候grade/overlayと状態演出（魚影・波紋・スプラッシュ）を重ねる。天候別×時間帯別PNGは作っていない。
+
+検証:
+- `./tools/validate_project.sh`: green。
+- `godot --headless --path . res://tools/fishing_reveal_smoke.tscn`: `fishing_reveal_smoke: ok`。
+- `godot --headless --path . res://tools/fishing_harbor_return_smoke.tscn`: `fishing_harbor_return_smoke: ok`。
+- `godot --headless --path . res://tools/catch_fanfare_smoke.tscn`: `catch_fanfare_smoke: ok`。
+- `./tools/fishing_time_slot_visual_qa.sh`: 3時間帯READY比較を再生成。
+- `TSURI_FISHING_TIME_SLOT_MODE=fanfare TSURI_FISHING_TIME_SLOT_ID=night godot --path . res://tools/fishing_time_slot_preview.tscn`: 夜釣果ファンファーレを取得。
+- `./tools/save_system_verify.sh`: `Save system verification passed.`。
+
+判断根拠:
+- 素材候補contact sheet: `docs/qa/evidence/fishing_surface/2026-07-08_e5_stage2_asset_contact_sheet.png`
+- 3時間帯READY比較: `docs/qa/evidence/fishing_surface/2026-07-08_e5_stage2_time_slot_ready_compare.png`
+- 朝READY: `docs/qa/evidence/fishing_surface/2026-07-08_e5_stage2_asa_ready.png`
+- 夜READY: `docs/qa/evidence/fishing_surface/2026-07-08_e5_stage2_night_ready.png`
+- 朝・釣果ファンファーレ: `docs/qa/evidence/fishing_surface/2026-07-08_e5_stage2_asa_fanfare.png`
+- 夜・釣果ファンファーレ: `docs/qa/evidence/fishing_surface/2026-07-08_e5_stage2_night_fanfare.png`
+
+採用理由:
+- 夜READYは昼太陽と昼海面が消え、月光・暗い海面・桟橋のシルエットで縮小比較でも夜釣りとして読める。
+- 朝READYは日中と明確に区別でき、夕方/夜釣りには寄りすぎていない。
+- 釣果ファンファーレは朝/夜の写真ベースへ切り替わり、runtimeの魚・記録文・報酬文の可読性を落としていない。
+- 4枚の最小素材だけでStage 1不合格原因を解消し、状態別×時間帯別・天候別×時間帯別の量産を避けられている。
 
 2026-07-08 E5 Stage 1（グレード適用拡張＋ビネット）を採用。夜の成立判定は不合格。
 

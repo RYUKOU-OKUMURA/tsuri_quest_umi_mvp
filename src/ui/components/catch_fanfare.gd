@@ -21,6 +21,10 @@ const FANFARE_NOTES := [
 	{"start": 0.81, "duration": 0.24, "freq": 1318.51},
 ]
 const CATCH_PHOTO_BASE_PATH := "res://assets/showcase/underwater/catch_photo_base.png"
+const CATCH_PHOTO_BASE_TIME_SLOT_PATHS := {
+	"asa_mazume": "res://assets/showcase/underwater/catch_photo_base_asa.png",
+	"night": "res://assets/showcase/underwater/catch_photo_base_night.png",
+}
 const PHOTO_TITLE_SLOT := Rect2(326.0, 28.0, 628.0, 112.0)
 const PHOTO_INFO_SLOT := Rect2(150.0, 496.0, 284.0, 90.0)
 const PHOTO_RECORD_BADGE_SLOT := Rect2(286.0, 472.0, 136.0, 24.0)
@@ -95,6 +99,7 @@ func play(
 	_elapsed = 0.0
 	_playing = true
 	_rare_mode = RarityStylesScript.is_rare_or_boss(_fish_data)
+	_apply_photo_base_texture(String(trip_stats.get("time_slot_id", "daytime")))
 	_apply_time_slot_grade(String(trip_stats.get("time_slot_grade", "none")))
 	visible = true
 	modulate = Color.WHITE
@@ -233,6 +238,18 @@ func _build_nodes() -> void:
 	_audio_player.name = "CatchFanfareAudio"
 	_audio_player.volume_db = -10.0
 	add_child(_audio_player)
+
+
+func _apply_photo_base_texture(time_slot_id: String) -> void:
+	if _photo_base_texture == null:
+		return
+	var texture: Texture2D = null
+	var time_slot_path := String(CATCH_PHOTO_BASE_TIME_SLOT_PATHS.get(time_slot_id, ""))
+	if not time_slot_path.is_empty():
+		texture = ShowcaseAssetsScript.load_texture(time_slot_path)
+	if texture == null:
+		texture = ShowcaseAssetsScript.load_texture(CATCH_PHOTO_BASE_PATH)
+	_photo_base_texture.texture = texture
 
 
 func _apply_time_slot_grade(time_slot_grade: String) -> void:

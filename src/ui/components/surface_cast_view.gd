@@ -40,6 +40,10 @@ const READY_WEATHER_SCENE_PATHS := {
 	"rain": "res://assets/showcase/surface/surface_scene_ready_rain.png",
 	"fog": "res://assets/showcase/surface/surface_scene_ready_fog.png",
 }
+const READY_TIME_SLOT_SCENE_PATHS := {
+	"asa_mazume": "res://assets/showcase/surface/surface_scene_ready_asa_mazume.png",
+	"night": "res://assets/showcase/surface/surface_scene_ready_night.png",
+}
 const WEATHER_GRADE_PATHS := {
 	"partly_cloudy": "res://assets/showcase/surface/surface_weather_partly_cloudy_grade.png",
 	"cloudy": "res://assets/showcase/surface/surface_weather_cloudy_grade.png",
@@ -78,6 +82,7 @@ var _surface_scene_waiting: Texture2D
 var _surface_scene_approach: Texture2D
 var _surface_scene_bite: Texture2D
 var _surface_scene_ready_weather: Dictionary = {}
+var _surface_scene_ready_time_slot: Dictionary = {}
 var _weather_grades: Dictionary = {}
 var _weather_overlays: Dictionary = {}
 var _surface_bird_swarm: Texture2D
@@ -190,6 +195,8 @@ func _load_surface_assets() -> void:
 	_surface_scene_bite = _load_texture_if_exists(SURFACE_SCENE_BITE_PATH)
 	for weather_id in READY_WEATHER_SCENE_PATHS.keys():
 		_surface_scene_ready_weather[weather_id] = _load_texture_if_exists(String(READY_WEATHER_SCENE_PATHS[weather_id]))
+	for time_slot_id in READY_TIME_SLOT_SCENE_PATHS.keys():
+		_surface_scene_ready_time_slot[time_slot_id] = _load_texture_if_exists(String(READY_TIME_SLOT_SCENE_PATHS[time_slot_id]))
 	for weather_id in WEATHER_GRADE_PATHS.keys():
 		_weather_grades[weather_id] = _load_texture_if_exists(String(WEATHER_GRADE_PATHS[weather_id]))
 	for weather_id in WEATHER_OVERLAY_PATHS.keys():
@@ -229,6 +236,16 @@ func _draw_asset_scene() -> void:
 
 func _draw_state_plate_scene() -> void:
 	var rect := Rect2(Vector2.ZERO, size)
+	var time_slot_scene_texture := _time_slot_scene_texture()
+	if time_slot_scene_texture != null:
+		_draw_cover_texture(time_slot_scene_texture, rect, Color.WHITE, Vector2(0.5, 0.50))
+		_draw_weather_overlay(rect)
+		_draw_ready_base_state_effects(rect)
+		if _state() == FishingSimulator.State.BITE:
+			_draw_hit_flash()
+		_draw_bird_swarm_overlay()
+		_draw_frame()
+		return
 	var weather_scene_texture := _weather_scene_texture_for_state()
 	var texture := weather_scene_texture if weather_scene_texture != null else _surface_scene_texture_for_state()
 	_draw_cover_texture(texture, rect, Color.WHITE, Vector2(0.5, 0.50))
@@ -263,15 +280,7 @@ func _draw_weather_effect_overlay(rect: Rect2) -> void:
 
 func _draw_weather_scene_state_effects(rect: Rect2) -> void:
 	_draw_weather_effect_overlay(rect)
-	var state := _state()
-	if state == FishingSimulator.State.READY or state == FishingSimulator.State.CASTING:
-		return
-	var horizon := _asset_horizon()
-	if state == FishingSimulator.State.WAITING:
-		_draw_bobber_ripples(_bobber_target_position(horizon), horizon)
-	_draw_asset_fish_shadow(horizon)
-	if state == FishingSimulator.State.BITE:
-		_draw_asset_bite_splash(_bobber_target_position(horizon))
+	_draw_ready_base_state_effects(rect)
 
 
 func _weather_id() -> String:
@@ -279,6 +288,17 @@ func _weather_id() -> String:
 	if weather_id.strip_edges().is_empty():
 		return "sunny"
 	return weather_id
+
+
+func _time_slot_id() -> String:
+	var time_slot_id := String(trip_stats.get("time_slot_id", "daytime"))
+	if time_slot_id.strip_edges().is_empty():
+		return "daytime"
+	return time_slot_id
+
+
+func _time_slot_scene_texture() -> Texture2D:
+	return _surface_scene_ready_time_slot.get(_time_slot_id(), null) as Texture2D
 
 
 func _ready_weather_scene_texture() -> Texture2D:
@@ -294,6 +314,18 @@ func _weather_scene_texture_for_state() -> Texture2D:
 	if _weather_id() == "sunny":
 		return null
 	return texture
+
+
+func _draw_ready_base_state_effects(rect: Rect2) -> void:
+	var state := _state()
+	if state == FishingSimulator.State.READY or state == FishingSimulator.State.CASTING:
+		return
+	var horizon := _asset_horizon()
+	if state == FishingSimulator.State.WAITING:
+		_draw_bobber_ripples(_bobber_target_position(horizon), horizon)
+	_draw_asset_fish_shadow(horizon)
+	if state == FishingSimulator.State.BITE:
+		_draw_asset_bite_splash(_bobber_target_position(horizon))
 
 
 func _surface_scene_texture_for_state() -> Texture2D:
