@@ -7,6 +7,21 @@
 
 目的: 同じ釣り場を別の顔にしてコンテンツを実質倍増する。決定#1: **時間帯は港画面で出港前に選択**（天候=自然の運、時間帯=プレイヤーの選択、の対比）。
 
+## E5-0. 新UIブロック分解（ui-screen-build適用）
+
+対象は新画面ではなく、既存 `harbor_screen.gd` の「今日の支度」カードへ追加する新UIブロック。
+
+| 観点 | 内容 |
+|---|---|
+| 状態 | 3状態（朝まずめ / 日中 / 夜釣り）。各状態は選択済み・選択可能・未解放のいずれか |
+| 存在する領域 | 「今日の支度」内の時間帯セレクタ、ヘッダー状況行の `時間帯：{選択中}`、出港時 `trip_stats` への反映 |
+| 存在しない領域 | 釣り場マップの「よく釣れる魚」差し替え、時間帯ごとの全背景素材、潮位/風の実データ化 |
+| 主操作 | 時間帯ボタンを1つ選ぶ |
+| 補助操作 | 既存のサメ餌魚ボタン（危険海域用初期選択）は維持 |
+| runtime描画 | 日本語ラベル、ロック文言、選択状態、保存状態 |
+| PNG素材 | 既存港カード/ボタン素材を使い、新規専用PNGは作らない |
+| smoke観点 | 選択保存、未解放ロック、出港stats反映、既存サメ餌魚UIが消えないこと |
+
 ## E5-1. データ（`game_catalog_data.gd` に `TIME_SLOT_ORDER` / `TIME_SLOTS`）
 
 | id | 名称 | 解放 | rarity_weight_modifiers | fish_weight_modifiers（主なもの） | 画面効果 |
@@ -20,7 +35,7 @@
 
 ## E5-2. 抽選への接続
 
-`encounter_weights()` に任意引数 `time_slot_id: String = ""` を追加（5軸目。既存呼び出し互換）。適用は environment と同じパターン: `_time_slot_weight_modifier(fish_id, fish, time_slot_id)` を掛ける。`roll_hooked_fish`（E2）にも `time_slot_id` を通し、`nushi` 節の `time_slot_id` が非空ならヌシ条件に含める。
+`encounter_weights()` / `roll_normal_fish()` に任意引数 `time_slot_id: String = ""` を**末尾追加**する。現行コードでは5番目に `extra_fish_weight_modifiers` があり、鳥山・サメ餌魚がこの引数を使うため、途中挿入は禁止。適用は environment と同じパターン: `_time_slot_weight_modifier(fish_id, fish, time_slot_id)` を掛ける。`roll_hooked_fish`（E2）の `time_slot_id` 受け口は既にあるため、通常魚抽選にも通す。`nushi` 節の `time_slot_id` が非空ならヌシ条件に含める。
 
 ## E5-3. 港画面の選択UI
 

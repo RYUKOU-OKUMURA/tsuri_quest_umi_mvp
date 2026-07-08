@@ -17,6 +17,7 @@ static func is_qa_deterministic() -> bool:
 var route_payload: Dictionary = {}
 var _screen_bgm_player: AudioStreamPlayer
 var _screen_bgm_path := ""
+var _screen_bgm_delegated := false
 var _last_sfx_path := ""
 
 
@@ -44,6 +45,12 @@ func navigate(screen_id: String, payload: Dictionary = {}) -> void:
 func play_screen_bgm(path: String, volume_db: float = -10.0) -> void:
 	if path.strip_edges().is_empty():
 		stop_screen_bgm()
+		return
+	var app_bgm_owner := _app_bgm_owner()
+	if app_bgm_owner != null:
+		app_bgm_owner.call("play_app_bgm", path, volume_db)
+		_screen_bgm_path = path
+		_screen_bgm_delegated = true
 		return
 	if (
 		_screen_bgm_player != null
@@ -75,6 +82,13 @@ func play_screen_bgm(path: String, volume_db: float = -10.0) -> void:
 
 
 func stop_screen_bgm() -> void:
+	if _screen_bgm_delegated:
+		var app_bgm_owner := _app_bgm_owner()
+		if app_bgm_owner != null:
+			app_bgm_owner.call("stop_app_bgm", _screen_bgm_path)
+		_screen_bgm_delegated = false
+		_screen_bgm_path = ""
+		return
 	if _screen_bgm_player == null or not is_instance_valid(_screen_bgm_player):
 		_screen_bgm_player = null
 		_screen_bgm_path = ""
@@ -89,6 +103,15 @@ func stop_screen_bgm() -> void:
 func _on_screen_bgm_finished() -> void:
 	if _screen_bgm_player != null and is_instance_valid(_screen_bgm_player) and is_inside_tree():
 		_screen_bgm_player.play()
+
+
+func _app_bgm_owner() -> Node:
+	var node := get_parent()
+	while node != null:
+		if node.has_method("play_app_bgm") and node.has_method("stop_app_bgm"):
+			return node
+		node = node.get_parent()
+	return null
 
 
 func play_screen_sfx(path: String, volume_db: float = -3.0) -> void:
