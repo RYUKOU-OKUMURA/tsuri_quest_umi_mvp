@@ -30,6 +30,9 @@ func _check_catalog() -> void:
 	_expect(GameData.is_time_slot_unlocked("asa_mazume", 12), "asa_mazume should unlock at Lv12")
 	_expect(not GameData.is_time_slot_unlocked("night", 14), "night should require Lv15")
 	_expect(GameData.is_time_slot_unlocked("night", 15), "night should unlock at Lv15")
+	_expect_eq(String(GameData.get_time_slot("asa_mazume").get("surface_bgm_key_override", "")), "", "asa_mazume surface BGM override")
+	_expect_eq(String(GameData.get_time_slot("daytime").get("surface_bgm_key_override", "")), "", "daytime surface BGM override")
+	_expect_eq(String(GameData.get_time_slot("night").get("surface_bgm_key_override", "")), "calm", "night surface BGM override")
 
 
 func _check_direct_modifiers(rows: Array[Array]) -> void:

@@ -28,7 +28,7 @@
 |---|---|---|---|---|---|
 | asa_mazume | 朝まずめ | Lv12 | レア×1.30、アンコモン×1.12 | aji 1.3 / iwashi 1.3 / katsuo 1.2 / buri 1.2 / kanpachi 1.2 / madai 1.15 | 暖色グレーディング（橙） |
 | daytime | 日中 | 最初から（デフォルト） | なし | なし | なし（現行そのまま） |
-| night | 夜 | Lv15 | なし | tachiuo 2.2 / maanago 2.4 / kinmedai 1.6 / akamutsu 1.5 / mebaru 1.5 / kurosoi 1.5 / suzuki 1.4 / ara 1.3 | 寒色グレーディング（紺）＋暗め |
+| night | 夜釣り | Lv15 | なし | tachiuo 2.2 / maanago 2.4 / kinmedai 1.6 / akamutsu 1.5 / mebaru 1.5 / kurosoi 1.5 / suzuki 1.4 / ara 1.3 | 寒色グレーディング（紺）＋暗め |
 
 - `rarity_weight_modifiers` は新概念: 魚の `rarity` 文字列で引く倍率。`fish_weight_modifiers`（魚ID別）と両方適用
 - BGM: 各slotに `"surface_bgm_key_override": ""`（空=天候由来のまま）。夜のみ `"calm"` 固定を初期値にする

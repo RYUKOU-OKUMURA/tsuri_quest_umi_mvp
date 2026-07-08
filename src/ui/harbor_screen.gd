@@ -278,7 +278,7 @@ func _refresh_time_slot_buttons() -> void:
 		button.disabled = locked
 		button.theme_type_variation = "GoldButton" if selected and not locked else ""
 		if locked:
-			button.text = "%s Lv.%d" % [label, unlock_level]
+			button.text = "Lv.%dで解放" % unlock_level
 		elif selected:
 			button.text = "%s 選択中" % label
 		else:
