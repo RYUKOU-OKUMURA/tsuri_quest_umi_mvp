@@ -1,6 +1,6 @@
 # 水中ファイト画面 QA判断ログ
 
-最終更新: 2026-07-08 / 状態: **docs/39 水中ファイト基盤UI刷新 採用・freeze改定済み / docs/35 魚素材重複修正 完了**
+最終更新: 2026-07-09 / 状態: **docs/39 水中ファイト基盤UI刷新 採用・freeze改定済み / docs/35 魚素材重複修正 完了 / アラ右端見切れP1修正済み**
 参照画像: `reference/14_underwater_fight_simple_mockup.png`（基盤レイアウト） / `reference/02_underwater_fight_mockup.png`（旧v1素材・質感参照）
 QA更新コマンド: `./tools/fight_visual_qa.sh`（reference/14 + runtime capture標準） / 水面天候確認: `./tools/surface_weather_visual_qa.sh` / 釣り上げ結果確認: `godot --path . res://tools/catch_fanfare_preview.tscn`（通常魚確認は `TSURI_CATCH_FANFARE_FISH_ID=aji`）
 詳細な経過履歴: `docs/qa/archive/underwater_fight_design_qa_2026-06.md`（旧 `design-qa.md`）
@@ -49,7 +49,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 
 | 項目 | 値 | 場所 | 理由・備考 |
 |---|---|---|---|
-| 水中魚表示の上下安全域 | `UnderwaterView._target_fish_center()` で、泳ぎシートの実描画高さから上下margin（8px以上）を逆算してY中心をclamp | `src/ui/components/underwater_view.gd` | シマアジを含む大きい魚が水面側/海底側へ寄ったときの上端・下端見切れP1を防ぐ。`FishingSimulator.visual_position` は変更しない |
+| 水中魚表示の上下/左右安全域 | `UnderwaterView._target_fish_center()` で、泳ぎシートの描画サイズから上下/左右margin（8px以上）を逆算してX/Y中心をclamp | `src/ui/components/underwater_view.gd` | シマアジを含む大きい魚が水面側/海底側へ寄ったときの上端・下端見切れと、アラのような横長魚が右端へ寄ったときの顔見切れP1を防ぐ。`FishingSimulator.visual_position` は変更しない |
 | 旧派生crop修正とP2新規ソース化 | `rouninaji.contact_crop` 上端修正は `rouninaji/ishidai/akahata/kajiki` 系の残存派生向けfreeze。docs/35 P2対象の `shimaaji/gingameaji/kaiwari/ishigakidai/oomonhata` は2026-07-08バッチ2で `dedup_20260708_4` の `source + contact_crop` に置換済み。`medai` / `nenbutsudai` は2026-07-08 P1バッチ2で新規ソース化済み | `tools/process_underwater_fish_assets.py` / `assets/showcase/fish/*_{showcase_sheet,card_portrait}.png` | 旧cropは背びれ・背中を水平切断していたため修正したが、docs/35対象魚は形状差が主目的なのでtemplate派生へ戻さない |
 | docs/35 P3魚素材 | `megochi/kurosoi/takenokomebaru/mejina` は `dedup_20260708_5` の `source + contact_crop` に置換済み。P3暫定allowlistは削除し、監査で残る類似は意図的派生のみ | `tools/process_underwater_fish_assets.py` / `assets/showcase/fish/{megochi,kurosoi,takenokomebaru,mejina}_*` | コチ/メバル派生の色替え境界を、配置値ではなく新規source artで解消。カードは頭左向き、泳ぎシート先頭フレームは頭右向き |
 
@@ -136,6 +136,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 | 水面天気専用ベース | 3 | READY用の5天気フル画像を生成後、`SurfaceCastView` で `weather_id` に応じてruntime採用。非快晴はキャスト後も同じ天気ベースを維持 | 採用 |
 | 上部天気アイコン | 1 | `weather_id` 未参照で晴れ固定だったため、5天気シートを追加して上部アイコンだけを天気追従に変更 | 採用 |
 | 魚表示上下安全域 | 1 | 描画時に泳ぎシートの実描画高さからY中心をclampし、上端/下端見切れを防止 | 採用 |
+| 魚表示左右安全域 | 1 | 横長魚が右端/左端へ寄ったときに顔や尾が水窓外へ切れないよう、描画サイズからX中心をclamp | 採用 |
 | 旧派生crop修正とP2新規ソース化 | 1 | `rouninaji.contact_crop` 上端切断を修正し、rouninaji/ishidai/akahata/kajiki系を再生成。後続のdocs/35 P2バッチ2で `shimaaji/gingameaji/kaiwari/ishigakidai/oomonhata` は新規 `source + contact_crop` に置換済み。ヌシ派生はdocs/35対象外の意図的派生として扱う | 採用 |
 | docs/35 P3魚素材 | 1 | `megochi/kurosoi/takenokomebaru/mejina` を新規source化し、P3暫定allowlistを削除 | 採用 |
 | フローティングカード・レアリティ帯 | 1 | 固定50pxから文字幅+paddingへ変更し、「アンコモン」が緑帯内に収まるようにした | 採用 |
@@ -156,6 +157,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 
 ## 7. 判断ログ（直近パスのみ）
 
+- 2026-07-09: アラがファイト中に右端へ寄ったとき、顔が水窓外へ切れるP1を修正。`UnderwaterView._clamp_showcase_fish_center()` を上下だけでなく左右にも適用し、泳ぎシートの描画サイズからX/Y中心を水窓内へclampする。`FishingSimulator.visual_position`、魚素材、ラインアンカー、上部ステータス、下段HUD、釣行ロジックは変更なし。再現用に `tools/fishing_fight_preview.gd` へ `TSURI_FIGHT_VISUAL_X/Y/DIRECTION` を追加し、通常のQAキャプチャ既定値は維持した。検証: `TSURI_FIGHT_FISH_ID=ara TSURI_FIGHT_VISUAL_X=0.86 TSURI_FIGHT_VISUAL_Y=0.46 TSURI_FIGHT_VISUAL_DIRECTION=1 ./tools/fight_visual_qa.sh` exit 0。証拠: `docs/qa/evidence/underwater_fight/2026-07-09_ara_right_edge_clip_fix.png`、`docs/qa/evidence/underwater_fight/2026-07-09_ara_right_edge_reference_compare.png`。
 - 2026-07-08: E5時間帯対応として上部ステータス1枠目を固定の `AM 08:47` から `時間帯` + 選択ラベルへ変更。夜釣りで時計表示が矛盾しないようにするためで、スロット比率、アイコンサイズ、天候/所持金/ロケーション枠は維持した。検証: `./tools/fight_visual_qa.sh` exit 0。証拠: `docs/qa/evidence/underwater_fight/2026-07-08_e5_time_slot_top_status_compare.png`。
 - 2026-07-08: docs/35 P3魚素材差し替え。対象4種（`megochi`, `kurosoi`, `takenokomebaru`, `mejina`）の泳ぎシートは頭右向き、カード肖像は頭左向きで整形した。コチ/メバル派生の境界ケースと縞の強いメジナ元絵を新規source artで解消し、P3暫定allowlistを削除。画面freeze値、`UnderwaterView`、`FightSidebar`、釣行ロジックは変更なし。検証: `./tools/fight_visual_qa.sh` exit 0、`python3 tools/audit_fish_sheet_contract.py` exit 0、`python3 tools/audit_fish_asset_duplicates.py --strict` exit 0（allowed 1、pending 0、unexpected 0）。証拠: `docs/qa/evidence/underwater_fight/2026-07-08_p3_fight_targets.png`、`docs/qa/evidence/underwater_fight/2026-07-08_p3_fight_compare.png`、`docs/qa/evidence/underwater_fight/2026-07-08_p3_fish_asset_contact.png`。
 - 2026-07-08: docs/35 P1バッチ2魚素材差し替え。対象7種（`ira`, `kinmedai`, `akamutsu`, `medai`, `sawara`, `mahaze`, `nenbutsudai`）の泳ぎシートは頭右向き、カード肖像は頭左向きで整形した。小型/丸型魚は `runtime_offset_x` でline_anchor近傍に口元が乗るよう調整し、fish sheet contract監査と `TSURI_FIGHT_FISH_ID=<fish_id>` 指定の実キャプチャでライン/ルアー接続を確認。画面freeze値、`UnderwaterView`、`FightSidebar`、釣行ロジックは変更なし。検証: `./tools/fight_visual_qa.sh` exit 0、`python3 tools/audit_fish_sheet_contract.py` exit 0、`python3 tools/audit_fish_asset_duplicates.py` exit 0（pending 14→8、unexpected 0）、`./tools/validate_project.sh` exit 0。証拠: `docs/qa/evidence/underwater_fight/2026-07-08_p1_batch2_fight_targets.png`、`docs/qa/evidence/underwater_fight/2026-07-08_p1_batch2_fight_compare.png`。

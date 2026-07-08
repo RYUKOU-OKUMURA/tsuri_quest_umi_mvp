@@ -583,11 +583,20 @@ func _target_fish_center() -> Vector2:
 
 func _clamp_showcase_fish_center(center: Vector2) -> Vector2:
 	var draw_size := _showcase_fish_draw_size()
-	if draw_size.y <= 0.0 or size.y <= 0.0:
+	if draw_size.x <= 0.0 or draw_size.y <= 0.0 or size.x <= 0.0 or size.y <= 0.0:
 		return center
-	var margin := maxf(8.0, size.y * 0.012)
-	var min_y := draw_size.y * 0.5 + margin
-	var max_y := size.y - draw_size.y * 0.5 - margin
+	# 横長魚がファイト中の端寄り移動で顔を切らないよう、水窓内に中心を収める。
+	var margin_x := maxf(8.0, size.x * 0.012)
+	var min_x := draw_size.x * 0.5 + margin_x
+	var max_x := size.x - draw_size.x * 0.5 - margin_x
+	if min_x > max_x:
+		center.x = size.x * 0.5
+	else:
+		center.x = clampf(center.x, min_x, max_x)
+
+	var margin_y := maxf(8.0, size.y * 0.012)
+	var min_y := draw_size.y * 0.5 + margin_y
+	var max_y := size.y - draw_size.y * 0.5 - margin_y
 	if min_y > max_y:
 		center.y = size.y * 0.5
 	else:

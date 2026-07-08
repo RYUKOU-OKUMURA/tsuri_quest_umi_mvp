@@ -45,6 +45,11 @@ func _ready() -> void:
 		showcase_fish["size_max"] = 48.2
 		showcase_fish["start_distance"] = 38.0
 		showcase_fish["start_depth"] = 18.0
+	var capture_visual_position := Vector2(
+		_env_float("TSURI_FIGHT_VISUAL_X", 0.42),
+		_env_float("TSURI_FIGHT_VISUAL_Y", 0.46)
+	)
+	var capture_visual_direction := 1.0 if _env_float("TSURI_FIGHT_VISUAL_DIRECTION", 1.0) >= 0.0 else -1.0
 	s._current_fish = showcase_fish
 	s._simulator.prepare(showcase_fish, s._trip_stats)
 	s._view.bind_simulator(s._simulator)
@@ -59,8 +64,8 @@ func _ready() -> void:
 			break
 	s._simulator.hook()
 	s._simulator.action_name = "突進"
-	s._simulator.visual_position = Vector2(0.42, 0.46)
-	s._simulator.visual_direction = 1.0
+	s._simulator.visual_position = capture_visual_position
+	s._simulator.visual_direction = capture_visual_direction
 	s._simulator.depth = 18.6
 	s._simulator.tension = 0.66
 	s._view._fish_flash = 0.96
@@ -76,8 +81,8 @@ func _ready() -> void:
 	s._fight_status_bar.set_process(false)
 	s._simulator.action_name = "突進"
 	s._simulator.action_message = "一気に深く潜ろうとしている！ラインを緩めず耐えよう！"
-	s._simulator.visual_position = Vector2(0.42, 0.46)
-	s._simulator.visual_direction = 1.0
+	s._simulator.visual_position = capture_visual_position
+	s._simulator.visual_direction = capture_visual_direction
 	s._simulator.depth = 18.6
 	s._simulator.tension = 0.66
 	s._view._fish_flash = 0.88
@@ -96,3 +101,10 @@ func _ready() -> void:
 		return
 	img.save_png(out)
 	get_tree().quit()
+
+
+func _env_float(name: String, fallback: float) -> float:
+	var text := OS.get_environment(name).strip_edges()
+	if text.is_empty() or not text.is_valid_float():
+		return fallback
+	return float(text)
