@@ -1,6 +1,6 @@
 # 水上キャスト画面 QA判断ログ
 
-最終更新: 2026-07-08 / 状態: E5時間帯グレード 採用
+最終更新: 2026-07-08 / 状態: E5 Stage 1（グレード拡張＋ビネット）採用・夜成立は不合格判定
 参照画像: `reference/01_surface_fishing_mockup.png` / `reference/13_fishing_ready_danger_mockup.png`
 QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `./tools/fishing_time_slot_visual_qa.sh` / `godot --path . res://tools/fishing_surface_states_preview.tscn` / `godot --path . res://tools/catch_fanfare_preview.tscn` / `./tools/fight_visual_qa.sh`
 
@@ -19,13 +19,15 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `./tools/fishing_
 | サメ餌魚APPROACH/BITE文 | 餌魚ありの時だけ `魚影が餌の<魚名>へ近づいている` / `<魚名>に何かが食いついた`。ヒット魚名・サメ名は出さない | `src/core/fishing_simulator.gd` / `src/ui/components/fight_sidebar.gd` | 上部メッセージパネルはAPPROACH/BITEで非表示のため、実表示される右サイドカードにも反映 |
 | 未確認魚影カード詳細行 | signal art比率を compact=0.36 / 通常=0.34、詳細2行を下端から逆算して配置 | `src/ui/components/fight_sidebar.gd` | 「釣り場」「タナ / エサ」2行の下端見切れP1を解消 |
 | 好物発見ファンファーレ | `favorite_bait_discovery_text` を記録更新・撃破報酬の下、称号の上に表示。`megalodon` は除外 | `src/ui/fishing_screen.gd` / `src/ui/components/catch_fanfare.gd` | 好物一致サメだけポジティブな発見行を返す。不一致・非サメ・メガロドンは無言 |
-| E5時間帯グレード | 朝まずめ=暖色薄乗せ、日中=なし、夜釣り=寒色暗め薄乗せ。水面READYから水中FIGHTまで、プレイシーン領域に同じグレードを重ねる | `src/ui/fishing_screen.gd` / `src/ui/palette.gd` | 背景素材は作らず、まずグレーディングで時間帯差を出す。HUD/カード/メッセージレイヤーは上に置き、文字可読性を落とさない |
+| E5時間帯グレード | 朝まずめ=暖色薄乗せ、日中=なし、夜釣り=寒色暗め薄乗せ。水面READYから水中FIGHTまで、プレイシーン領域に同じグレードを重ねる。Stage 1で外縁グラデ（薄めEDGE定数）・逃走リザルトの時間帯別ディム・釣果ファンファーレ写真ベース・水面パネル内ビネット（per-pixel Image拡大描画、帯状draw_rect禁止）へ拡張 | `src/ui/fishing_screen.gd` / `src/ui/components/catch_fanfare.gd` / `src/ui/palette.gd` | 背景素材は作らず、まずグレーディングで時間帯差を出す。HUD/カード/メッセージレイヤーは上に置き、文字可読性を落とさない |
 
 ## 2. 不採用・再試行禁止リスト
 
 | 案 | 却下理由 | 判断日 |
 |---|---|---|
 | 旧 `surface_fish_shadow.png` の白modulate合成を継続 | 目穴・泡・ヒレが見え、霧/雨の水面上でデカール調に浮く | 2026-07-06 |
+| ビネットを帯状 `draw_rect` の重ね塗りで描く | alpha累積で階段状のバンディングが出る。低解像度Image＋linear filter拡大へ置換済み | 2026-07-08 |
+| 夜をグレード強化だけで成立させる（alpha引き上げ） | 水面READYの焼き込み太陽・昼の海面は色乗算では消えず、暗くすると文字周辺の視認性だけ落ちる。Stage 2の時間帯READY素材で解消する | 2026-07-08 |
 | BITE時に魚影alphaを0.82へ上げる | ヒット時に魚影が主役化し、スプラッシュに隠れるべき演出と逆 | 2026-07-06 |
 | 魚影周辺の固定楕円アウトライン | レティクルに見えるため、魚の進行方向を示す航跡に置換 | 2026-07-06 |
 
@@ -41,7 +43,7 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `./tools/fishing_
 
 ## 4. 暫定判定・再検証TODO
 
-なし。
+- E5 Stage 2（時間帯READY素材2枚＋釣果写真ベース2枚、docs/41 §3-4）着手時に、本docの「晴天状態別プレート変更しない」「背景PNG差し替えスコープ外」freezeの改定判断を先に行うこと。
 
 ## 5. 現在の残ギャップ
 
@@ -54,6 +56,26 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `./tools/fishing_
 完了済みのためなし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-08 E5 Stage 1（グレード適用拡張＋ビネット）を採用。夜の成立判定は不合格。
+
+変更したもの:
+- 全画面の外縁グラデ直上に薄めの時間帯グレード（`FISHING_TIME_GRADE_EDGE_*`）を追加。
+- 逃走リザルトのディムを時間帯別（`FISHING_RESULT_OVERLAY_DIM_WARM/COOL`）に変更。
+- `CatchFanfare.play()` に `trip_stats` 引数を末尾追加し、写真ベース上に時間帯グレードを1枚挿入。
+- 水面パネル内にコード描画ビネット（夜=強め0.38 / 朝=弱め0.20 / 日中=なし）を追加。初回の帯状draw_rect実装はバンディングが出たため、per-pixel Image＋linear拡大へ差し戻し修正。
+
+変更していないもの:
+- 既存の `FISHING_TIME_GRADE_*` 値、water_panel内グレード、水面/水中ビューの天候・背景ロジック、背景PNG。
+
+判断根拠:
+- 3時間帯READY比較: `docs/qa/evidence/fishing_surface/2026-07-08_e5_stage1_time_slot_ready_compare.png`
+- 夜・釣果ファンファーレ: `docs/qa/evidence/fishing_surface/2026-07-08_e5_stage1_night_fanfare.png`
+- 夜・逃走リザルト: `docs/qa/evidence/fishing_surface/2026-07-08_e5_stage1_night_escape.png`
+
+採用理由と不合格判定:
+- 逃走リザルト・外縁・ファンファーレの「昼に戻る」遮蔽問題は解消し、ビネットも滑らかに出ている。コードのみの改善としては採用。
+- ただし夜READYは焼き込みの太陽・昼の明るい海面が残り、「夜に見えるか」は**不合格**（空・海面の平均輝度は日中比7〜8割で夜として読めない）。docs/41 §3-4 の想定どおり、この記録を Stage 2（`surface_scene_ready_asa_mazume/night.png` ＋ `catch_photo_base_asa/night.png` の最小素材4枚）の投資根拠とする。
 
 2026-07-08 E5時間帯グレードを採用。
 

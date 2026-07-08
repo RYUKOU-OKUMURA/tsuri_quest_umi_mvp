@@ -38,6 +38,7 @@ var _rare_mode := false
 var _particles: Array[Dictionary] = []
 
 var _flash: ColorRect
+var _time_slot_grade_overlay: ColorRect
 var _photo_base_texture: TextureRect
 var _banner: PanelContainer
 var _banner_label: Label
@@ -81,7 +82,12 @@ func is_playing() -> bool:
 	return _playing
 
 
-func play(fish_data: Dictionary, size_cm: float, catch_result: Dictionary = {}) -> void:
+func play(
+	fish_data: Dictionary,
+	size_cm: float,
+	catch_result: Dictionary = {},
+	trip_stats: Dictionary = {}
+) -> void:
 	_stop_tweens()
 	_fish_data = fish_data.duplicate(true)
 	_catch_result = catch_result.duplicate(true)
@@ -89,6 +95,7 @@ func play(fish_data: Dictionary, size_cm: float, catch_result: Dictionary = {}) 
 	_elapsed = 0.0
 	_playing = true
 	_rare_mode = RarityStylesScript.is_rare_or_boss(_fish_data)
+	_apply_time_slot_grade(String(trip_stats.get("time_slot_grade", "none")))
 	visible = true
 	modulate = Color.WHITE
 	_update_content()
@@ -138,6 +145,13 @@ func _build_nodes() -> void:
 	_photo_base_texture = ShowcaseAssetsScript.texture_rect(CATCH_PHOTO_BASE_PATH, TextureRect.STRETCH_SCALE)
 	_photo_base_texture.name = "CatchPhotoBase"
 	add_child(_photo_base_texture)
+
+	_time_slot_grade_overlay = ColorRect.new()
+	_time_slot_grade_overlay.name = "CatchTimeSlotGrade"
+	_time_slot_grade_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_time_slot_grade_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_time_slot_grade_overlay.color = Palette.FISHING_TIME_GRADE_CLEAR
+	add_child(_time_slot_grade_overlay)
 
 	_fish_card = Control.new()
 	_fish_card.name = "CatchPhotoFishLayer"
@@ -219,6 +233,18 @@ func _build_nodes() -> void:
 	_audio_player.name = "CatchFanfareAudio"
 	_audio_player.volume_db = -10.0
 	add_child(_audio_player)
+
+
+func _apply_time_slot_grade(time_slot_grade: String) -> void:
+	if _time_slot_grade_overlay == null:
+		return
+	match time_slot_grade:
+		"warm":
+			_time_slot_grade_overlay.color = Palette.FISHING_TIME_GRADE_WARM
+		"cool":
+			_time_slot_grade_overlay.color = Palette.FISHING_TIME_GRADE_COOL
+		_:
+			_time_slot_grade_overlay.color = Palette.FISHING_TIME_GRADE_CLEAR
 
 
 func _layout_nodes() -> void:

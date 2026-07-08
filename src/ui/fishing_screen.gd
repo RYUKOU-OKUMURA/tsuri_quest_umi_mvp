@@ -46,7 +46,9 @@ var _depth_label: Label
 var _safe_zone_label: Label
 var _view: UnderwaterView
 var _surface_view: SurfaceCastView
+var _screen_time_slot_grade_overlay: ColorRect
 var _time_slot_grade_overlay: ColorRect
+var _time_slot_vignette: FishingTimeSlotVignette
 var _fight_sidebar: FightSidebar
 var _fight_floating_card: FightSidebar
 var _fight_hud: FightHud
@@ -75,6 +77,7 @@ func _build_screen() -> void:
 	_apply_spot_to_trip_stats()
 	_ensure_trip_environment()
 	_ensure_trip_time_slot()
+	_build_screen_time_slot_grade_overlay()
 	_ensure_trip_rig()
 	_play_fishing_bgm()
 	_simulator = FishingSimulatorScript.new()
@@ -121,6 +124,7 @@ func _build_screen() -> void:
 	_surface_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	water_panel.add_child(_surface_view)
 	_build_time_slot_grade_overlay(water_panel)
+	_build_time_slot_vignette(water_panel)
 
 	var message_layer := Control.new()
 	message_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -358,12 +362,37 @@ func _fight_bgm_path() -> String:
 	return FIGHT_BGM_PATH_NORMAL
 
 
+func _build_screen_time_slot_grade_overlay() -> void:
+	_screen_time_slot_grade_overlay = ColorRect.new()
+	_screen_time_slot_grade_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_screen_time_slot_grade_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_screen_time_slot_grade_overlay.color = _screen_time_slot_grade_color()
+	add_child(_screen_time_slot_grade_overlay)
+
+
 func _build_time_slot_grade_overlay(parent: Control) -> void:
 	_time_slot_grade_overlay = ColorRect.new()
 	_time_slot_grade_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_time_slot_grade_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_time_slot_grade_overlay.color = _time_slot_grade_color()
 	parent.add_child(_time_slot_grade_overlay)
+
+
+func _build_time_slot_vignette(parent: Control) -> void:
+	_time_slot_vignette = FishingTimeSlotVignette.new()
+	_time_slot_vignette.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_time_slot_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_time_slot_vignette.grade = String(_trip_stats.get("time_slot_grade", "none"))
+	parent.add_child(_time_slot_vignette)
+
+
+func _screen_time_slot_grade_color() -> Color:
+	match String(_trip_stats.get("time_slot_grade", "none")):
+		"warm":
+			return Palette.FISHING_TIME_GRADE_EDGE_WARM
+		"cool":
+			return Palette.FISHING_TIME_GRADE_EDGE_COOL
+	return Palette.FISHING_TIME_GRADE_CLEAR
 
 
 func _time_slot_grade_color() -> Color:
@@ -373,6 +402,15 @@ func _time_slot_grade_color() -> Color:
 		"cool":
 			return Palette.FISHING_TIME_GRADE_COOL
 	return Palette.FISHING_TIME_GRADE_CLEAR
+
+
+func _result_overlay_dim_color() -> Color:
+	match String(_trip_stats.get("time_slot_grade", "none")):
+		"warm":
+			return Palette.FISHING_RESULT_OVERLAY_DIM_WARM
+		"cool":
+			return Palette.FISHING_RESULT_OVERLAY_DIM_COOL
+	return Palette.FISHING_RESULT_OVERLAY_DIM
 
 
 func _spot_summary_text() -> String:
@@ -444,7 +482,7 @@ func _shark_lure_summary_text() -> String:
 
 func _create_result_overlay() -> void:
 	_result_overlay = ColorRect.new()
-	_result_overlay.color = Palette.FISHING_RESULT_OVERLAY_DIM
+	_result_overlay.color = _result_overlay_dim_color()
 	_result_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_result_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	_result_overlay.visible = false
@@ -1064,7 +1102,7 @@ func _on_fight_finished(caught: bool, reason: String) -> void:
 		_add_favorite_bait_discovery(catch_result)
 		if _catch_fanfare != null:
 			_result_overlay.visible = false
-			_catch_fanfare.play(_current_fish, _simulator.result_size_cm, catch_result)
+			_catch_fanfare.play(_current_fish, _simulator.result_size_cm, catch_result, _trip_stats)
 			return
 	else:
 		if reason == SHARK_AMBUSH_REASON:
@@ -1279,3 +1317,56 @@ func _update_view_visibility(delta: float) -> void:
 	var k := 1.0 - exp(-10.0 * delta)
 	_surface_view.modulate.a = lerpf(_surface_view.modulate.a, 0.0 if underwater else 1.0, k)
 	_view.modulate.a = lerpf(_view.modulate.a, 1.0 if underwater else 0.0, k)
+
+
+class FishingTimeSlotVignette extends Control:
+	const VIGNETTE_IMAGE_SIZE := Vector2i(96, 54)
+	# 縁からこの割合（min辺基準）までを減光域とする。旧帯状実装の max_span と同じ値。
+	const VIGNETTE_EDGE_SPAN_RATIO := 0.40
+
+	var grade: String = "none":
+		set(value):
+			grade = value
+			_vignette_texture = null
+			queue_redraw()
+
+	var _vignette_texture: ImageTexture
+
+	func _draw() -> void:
+		var tint := Color.WHITE
+		var strength := 0.0
+		match grade:
+			"warm":
+				tint = Palette.FISHING_TIME_VIGNETTE_WARM
+				strength = Palette.FISHING_TIME_VIGNETTE_WARM_STRENGTH
+			"cool":
+				tint = Palette.FISHING_TIME_VIGNETTE_COOL
+				strength = Palette.FISHING_TIME_VIGNETTE_COOL_STRENGTH
+			_:
+				return
+		if strength <= 0.0 or size.x <= 0.0 or size.y <= 0.0:
+			return
+		if _vignette_texture == null:
+			_vignette_texture = _build_vignette_texture(tint, strength)
+		texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		draw_texture_rect(_vignette_texture, Rect2(Vector2.ZERO, size), false)
+
+	# 低解像度Imageへ per-pixel でビネット alpha（縁からの距離の2乗カーブ）を書き込み、
+	# linear filter の拡大描画で滑らかなグラデーションにする（PNGは追加しない）。
+	static func _build_vignette_texture(tint: Color, strength: float) -> ImageTexture:
+		var width := VIGNETTE_IMAGE_SIZE.x
+		var height := VIGNETTE_IMAGE_SIZE.y
+		var span := float(mini(width, height)) * VIGNETTE_EDGE_SPAN_RATIO
+		var image := Image.create(width, height, false, Image.FORMAT_RGBA8)
+		for y in range(height):
+			var edge_y := minf(float(y) + 0.5, float(height) - (float(y) + 0.5))
+			var ty := clampf(1.0 - edge_y / span, 0.0, 1.0)
+			var falloff_y := ty * ty
+			for x in range(width):
+				var edge_x := minf(float(x) + 0.5, float(width) - (float(x) + 0.5))
+				var tx := clampf(1.0 - edge_x / span, 0.0, 1.0)
+				var falloff_x := tx * tx
+				# 辺では単軸の2乗カーブ、四隅では両軸が合成されて濃くなる
+				var falloff := 1.0 - (1.0 - falloff_x) * (1.0 - falloff_y)
+				image.set_pixel(x, y, Color(tint.r, tint.g, tint.b, strength * falloff))
+		return ImageTexture.create_from_image(image)
