@@ -1,6 +1,6 @@
 # 水上キャスト画面 QA判断ログ
 
-最終更新: 2026-07-08 / 状態: E5 Stage 2（時間帯最小素材）採用
+最終更新: 2026-07-09 / 状態: E5 Stage 2（釣果ボタン位置補正済み）
 参照画像: `reference/01_surface_fishing_mockup.png` / `reference/13_fishing_ready_danger_mockup.png`
 QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `./tools/fishing_time_slot_visual_qa.sh` / `godot --path . res://tools/fishing_surface_states_preview.tscn` / `godot --path . res://tools/catch_fanfare_preview.tscn` / `./tools/fight_visual_qa.sh`
 
@@ -20,7 +20,7 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `./tools/fishing_
 | 未確認魚影カード詳細行 | signal art比率を compact=0.36 / 通常=0.34、詳細2行を下端から逆算して配置 | `src/ui/components/fight_sidebar.gd` | 「釣り場」「タナ / エサ」2行の下端見切れP1を解消 |
 | 好物発見ファンファーレ | `favorite_bait_discovery_text` を記録更新・撃破報酬の下、称号の上に表示。`megalodon` は除外 | `src/ui/fishing_screen.gd` / `src/ui/components/catch_fanfare.gd` | 好物一致サメだけポジティブな発見行を返す。不一致・非サメ・メガロドンは無言 |
 | E5時間帯グレード | 朝まずめ=暖色薄乗せ、日中=なし、夜釣り=寒色暗め薄乗せ。水面READYから水中FIGHTまで、プレイシーン領域に同じグレードを重ねる。Stage 1で外縁グラデ（薄めEDGE定数）・逃走リザルトの時間帯別ディム・釣果ファンファーレ写真ベース・水面パネル内ビネット（per-pixel Image拡大描画、帯状draw_rect禁止）へ拡張 | `src/ui/fishing_screen.gd` / `src/ui/components/catch_fanfare.gd` / `src/ui/palette.gd` | HUD/カード/メッセージレイヤーは上に置き、文字可読性を落とさない。Stage 2では下記4枚のみ背景/写真ベース差し替え例外とする |
-| E5 Stage 2時間帯素材例外 | 追加・差し替え可能なPNGは `surface_scene_ready_asa_mazume.png` / `surface_scene_ready_night.png` / `catch_photo_base_asa.png` / `catch_photo_base_night.png` の4枚のみ。水中背景は差し替えない。天候別×時間帯別READYや状態別×時間帯別PNGは作らない | `src/ui/components/surface_cast_view.gd` / `src/ui/components/catch_fanfare.gd` / `assets/showcase/surface/` / `assets/showcase/underwater/` | docs/41 §3-4の最小素材セット。Stage 1不合格原因（太陽・昼海面・昼写真ベース）だけを素材で解消し、既存天候grade/overlayと合成する |
+| E5 Stage 2時間帯素材例外 | 追加・差し替え可能なPNGは `surface_scene_ready_asa_mazume.png` / `surface_scene_ready_night.png` / `catch_photo_base_asa.png` / `catch_photo_base_night.png` の4枚のみ。水中背景は差し替えない。天候別×時間帯別READYや状態別×時間帯別PNGは作らない。釣果写真ベース下段のボタンクロームは日中版 `catch_photo_base.png` 基準へ正規化し、runtimeの `PHOTO_CONTINUE_SLOT` / `PHOTO_HARBOR_SLOT` は3時間帯共通で固定する | `src/ui/components/surface_cast_view.gd` / `src/ui/components/catch_fanfare.gd` / `assets/showcase/surface/` / `assets/showcase/underwater/` / `tools/process_fishing_time_slot_assets.py` | docs/41 §3-4の最小素材セット。Stage 1不合格原因（太陽・昼海面・昼写真ベース）だけを素材で解消し、既存天候grade/overlayと合成する。朝版だけ焼き込みボタン枠が下へ落ちたため、位置値の時間帯分岐ではなく素材クロームを正本に揃える |
 
 ## 2. 不採用・再試行禁止リスト
 
@@ -57,6 +57,35 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `./tools/fishing_
 完了済みのためなし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-09 E5 Stage 2釣果ファンファーレの時間帯別ボタン位置を補正。
+
+差分Top1:
+- P1-1: 朝まずめ釣果写真ベースだけ下段の焼き込みボタン枠が下へ落ち、runtimeの「続けて釣る」「港へ戻る」が枠上寄りに見えた。昼・夜は同条件確認で大きなズレなし。
+
+スコープ:
+- 今回動かしたもの: `tools/process_fishing_time_slot_assets.py` の釣果写真ベース後処理、`catch_photo_base_asa.png` / `catch_photo_base_night.png` の下段ボタンクローム、`tools/fishing_time_slot_preview.gd` のファンファーレ待機秒数指定。
+- 触っていないもの: `CatchFanfare` の `PHOTO_CONTINUE_SLOT` / `PHOTO_HARBOR_SLOT`、ボタンフォントサイズ、ラベル位置、READY水面素材、水中背景。
+
+変更したもの:
+- `catch_photo_base_asa.png` / `catch_photo_base_night.png` の下段2ボタン領域を日中版 `catch_photo_base.png` から正規化し、3時間帯のボタン枠位置を揃えた。
+- `TSURI_FISHING_TIME_SLOT_FANFARE_WAIT_SECONDS` を追加し、ラベル表示後の釣果ファンファーレをQAキャプチャできるようにした。
+
+検証:
+- `HOME=/tmp/tsuri-catch-fanfare-smoke "/Applications/Godot.app/Contents/MacOS/Godot" --headless --path . res://tools/catch_fanfare_smoke.tscn`: `catch_fanfare_smoke: ok`。
+- `./tools/fishing_time_slot_visual_qa.sh`: 3時間帯READY比較を再生成。
+- `./tools/validate_project.sh`: green（素材参照監査・Godot import込み）。
+- `TSURI_FISHING_TIME_SLOT_MODE=fanfare TSURI_FISHING_TIME_SLOT_FANFARE_WAIT_SECONDS=1.35 TSURI_FISHING_TIME_SLOT_ID=<asa_mazume|daytime|night> "/Applications/Godot.app/Contents/MacOS/Godot" --path . res://tools/fishing_time_slot_preview.tscn`: 3時間帯釣果ファンファーレを取得。
+
+判断根拠:
+- 3時間帯釣果ファンファーレ比較: `docs/qa/evidence/fishing_surface/2026-07-09_catch_fanfare_time_slot_buttons_compare.png`
+- 3時間帯ボタン実寸クロップ: `docs/qa/evidence/fishing_surface/2026-07-09_catch_fanfare_time_slot_buttons_crops.png`
+- 朝まずめ補正後: `docs/qa/evidence/fishing_surface/2026-07-09_catch_fanfare_asa_buttons_fixed.png`
+
+採用理由:
+- 朝まずめのボタン枠が昼・夜と同じ高さへ戻り、「続けて釣る」「港へ戻る」が枠内で中央に読める。
+- 昼・夜も同じ1.35秒地点で確認し、大きなズレは出ていない。
+- runtimeのボタン矩形やフォントを時間帯分岐させず、素材の同構図条件を保ったまま解消できた。
 
 2026-07-08 E5 Stage 2（時間帯最小素材）を採用。
 

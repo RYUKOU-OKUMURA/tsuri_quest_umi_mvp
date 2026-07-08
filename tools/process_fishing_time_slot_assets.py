@@ -10,6 +10,12 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE_DIR = ROOT / "tools" / "source_assets" / "fishing_time_slots"
 SURFACE_DIR = ROOT / "assets" / "showcase" / "surface"
 UNDERWATER_DIR = ROOT / "assets" / "showcase" / "underwater"
+DEFAULT_CATCH_PHOTO_BASE = UNDERWATER_DIR / "catch_photo_base.png"
+# Runtime button labels use the daytime base slots; keep generated variants' chrome identical.
+CATCH_BUTTON_CHROME_RECTS = (
+    (220, 618, 640, 720),
+    (620, 618, 1040, 720),
+)
 
 ASSETS = [
     (
@@ -84,6 +90,14 @@ def build_contact_sheet(outputs: list[Path]) -> None:
     print(out.relative_to(ROOT))
 
 
+def normalize_catch_button_chrome(image: Image.Image) -> Image.Image:
+    base = Image.open(DEFAULT_CATCH_PHOTO_BASE).convert("RGBA")
+    normalized = image.copy()
+    for rect in CATCH_BUTTON_CHROME_RECTS:
+        normalized.alpha_composite(base.crop(rect), rect[:2])
+    return normalized
+
+
 def main() -> None:
     outputs: list[Path] = []
     for source, out, target_size in ASSETS:
@@ -91,6 +105,8 @@ def main() -> None:
             raise SystemExit(f"missing source: {source.relative_to(ROOT)}")
         out.parent.mkdir(parents=True, exist_ok=True)
         image = cover_resize(Image.open(source), target_size)
+        if out.parent == UNDERWATER_DIR and out.name.startswith("catch_photo_base_"):
+            image = normalize_catch_button_chrome(image)
         image.save(out)
         outputs.append(out)
         print(out.relative_to(ROOT))
@@ -99,4 +115,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

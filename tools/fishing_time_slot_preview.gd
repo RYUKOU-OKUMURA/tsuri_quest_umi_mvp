@@ -63,10 +63,17 @@ func _capture_fanfare() -> void:
 	screen._simulator.result_size_cm = 24.5
 	screen._on_fight_finished(true, "釣り上げ成功")
 	await get_tree().process_frame
-	await get_tree().create_timer(0.55).timeout
+	await get_tree().create_timer(_fanfare_wait_seconds()).timeout
 	await get_tree().process_frame
 
 	_save_viewport(vp, "/tmp/tsuri_fishing_time_slot_fanfare.png")
+
+
+func _fanfare_wait_seconds() -> float:
+	var raw := OS.get_environment("TSURI_FISHING_TIME_SLOT_FANFARE_WAIT_SECONDS").strip_edges()
+	if raw.is_valid_float():
+		return maxf(raw.to_float(), 0.05)
+	return 0.55
 
 
 func _capture_escape() -> void:
