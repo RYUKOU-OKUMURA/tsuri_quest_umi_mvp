@@ -69,6 +69,8 @@
 | `37_shark_bait_in_trip_management_design_note.md` | サメ餌魚の釣行中管理 再設計メモ（経緯・判断記録）。**docs/38 実装完了後に履歴へ移す予定。消費仕様の正本は docs/38** | 現行 |
 | `38_shark_bait_ready_selector_spec.md` | サメ餌魚READYセレクタ＋レア度耐久チャージ 実装仕様（最優先） | 現行 |
 | `39_underwater_fight_ui_redesign_spec.md` | 水中ファイト画面 基盤UI刷新 実装仕様（docs/38 完了後） | 現行 |
+| `40_ready_bottom_bar_quality_priority_brief.md` | READY 下段バー品質優先 brief | 現行 |
+| `41_e5_time_slots_implementation_review.md` | E5 時間帯 実装レビュー・港画面 UX / 釣行ビジュアル改善提案 | 現行 |
 
 **番号体系外の正本**
 

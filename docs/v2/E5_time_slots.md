@@ -2,7 +2,7 @@
 
 正本: `docs/30_v2_expansion_overview.md`（読む順: docs/30 §4 共通仕様 → 本doc）
 前提フェーズ: E0（朝まずめ=Lv12・夜=Lv15ゲート）
-状態: 実装完了（2026-07-08）
+状態: 実装完了（2026-07-08）。実装レビュー・改善提案は `docs/41_e5_time_slots_implementation_review.md`
 **着手前の必須スライス**: 完了。`main.gd` にアプリ共通BGM境界を置き、`ScreenBase.play_screen_bgm` は上位境界へ委譲する形へ整理済み。本フェーズの `surface_bgm_key_override` はその境界上で実装した。
 
 目的: 同じ釣り場を別の顔にしてコンテンツを実質倍増する。決定#1: **時間帯は港画面で出港前に選択**（天候=自然の運、時間帯=プレイヤーの選択、の対比）。
