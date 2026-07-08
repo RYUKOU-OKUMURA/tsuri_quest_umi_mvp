@@ -9,9 +9,10 @@ var _failed := false
 
 
 func _ready() -> void:
-	await _verify_locked_shark_pen_and_lure()
-	await _verify_lure_payload()
+	await _verify_locked_shark_pen()
+	await _verify_preparation_hint_and_meal_row()
 	await _verify_time_slot_selector()
+	await _verify_hint_recomputes_on_time_slot_change()
 	await _verify_shark_pen_navigation()
 	await _verify_megalodon_omen()
 
@@ -21,7 +22,7 @@ func _ready() -> void:
 	get_tree().quit(0)
 
 
-func _verify_locked_shark_pen_and_lure() -> void:
+func _verify_locked_shark_pen() -> void:
 	_navigated_to = ""
 	_payload = {}
 	PlayerProgress.level = 29
@@ -32,7 +33,6 @@ func _verify_locked_shark_pen_and_lure() -> void:
 	var screen := _make_screen()
 	await get_tree().process_frame
 	_expect(not screen._can_open_shark_pen(), "shark pen should stay locked below Lv.30")
-	_expect(screen._shark_lure_button.disabled, "shark lure button should stay locked before danger reef access")
 	screen._open_shark_pen()
 	_expect(_navigated_to.is_empty(), "locked shark pen should not navigate")
 	_expect(screen._facility_detail_body_label.text.contains("Lv.30"), "locked shark pen action should show lock detail")
@@ -51,7 +51,7 @@ func _verify_locked_shark_pen_and_lure() -> void:
 	await get_tree().process_frame
 
 
-func _verify_lure_payload() -> void:
+func _verify_preparation_hint_and_meal_row() -> void:
 	_navigated_to = ""
 	_payload = {}
 	PlayerProgress.level = 30
@@ -59,15 +59,19 @@ func _verify_lure_payload() -> void:
 	PlayerProgress.sea_chart_fragments = 3
 	PlayerProgress.inventory = {"kihada": 2, "nekozame": 1}
 	PlayerProgress.caught_counts = {}
+	PlayerProgress.quest_board = []
+	PlayerProgress.pending_buff = {}
 	var screen := _make_screen()
 	await get_tree().process_frame
-	var lure_name := String(GameData.get_fish("kihada").get("name", "kihada"))
-	_expect(not screen._shark_lure_button.disabled, "shark lure button should unlock with danger reef access and food fish")
-	screen._cycle_shark_lure_fish()
-	_expect(screen._shark_lure_button.text.contains(lure_name), "shark lure button should show selected fish")
-	var payload: Dictionary = screen._fishing_spots_payload()
-	_expect(String(payload.get("shark_lure_fish_id", "")) == "kihada", "harbor should pass selected shark lure fish to fishing spots")
-	_expect(String(payload.get("shark_lure_fish_id", "")) != "nekozame", "harbor should not pass shark as lure fish")
+	_expect(not screen._preparation_body_label.text.is_empty(), "preparation card hint should never be empty")
+	_expect(not screen._meal_effect_row_label.visible, "meal effect row should hide without a pending buff")
+	_expect(not screen._buff_name_label.visible, "meal effect value should hide without a pending buff")
+
+	PlayerProgress.pending_buff = {"name": "元気な食事", "text": "釣果+10%"}
+	screen._refresh_labels()
+	_expect(screen._meal_effect_row_label.visible, "meal effect row should show once a buff is pending")
+	_expect(screen._buff_name_label.visible, "meal effect value should show once a buff is pending")
+	_expect(screen._buff_name_label.text.contains("元気な食事"), "meal effect value should show the buff name")
 	screen.queue_free()
 	await get_tree().process_frame
 
@@ -101,6 +105,27 @@ func _verify_time_slot_selector() -> void:
 	screen._select_time_slot("night")
 	_expect(PlayerProgress.selected_time_slot_id == "night", "Lv15 should select night")
 	_expect(screen._context_label.text.contains("夜釣り"), "harbor context should show night")
+	screen.queue_free()
+	await get_tree().process_frame
+
+
+func _verify_hint_recomputes_on_time_slot_change() -> void:
+	PlayerProgress.level = 15
+	PlayerProgress.owned_boats = ["bluewater_boat"]
+	PlayerProgress.sea_chart_fragments = 3
+	PlayerProgress.inventory = {}
+	PlayerProgress.caught_counts = {}
+	PlayerProgress.quest_board = []
+	PlayerProgress.pending_buff = {}
+	var screen := _make_screen()
+	await get_tree().process_frame
+	screen._select_time_slot("asa_mazume")
+	var asa_hint: String = screen._preparation_body_label.text
+	_expect(not asa_hint.is_empty(), "asa_mazume hint should not be empty")
+	screen._select_time_slot("night")
+	var night_hint: String = screen._preparation_body_label.text
+	_expect(not night_hint.is_empty(), "night hint should not be empty")
+	_expect(asa_hint != night_hint, "switching time slot should recompute the target hint")
 	screen.queue_free()
 	await get_tree().process_frame
 

@@ -31,14 +31,12 @@ var _buff_name_label: Label
 var _facility_detail_title_label: Label
 var _facility_detail_body_label: Label
 var _preparation_body_label: Label
-var _shark_lure_button: Button
-var _selected_shark_lure_fish_id := ""
+var _meal_effect_row_label: Label
 var _time_slot_buttons: Dictionary = {}
 var _time_slot_grade_overlay: ColorRect
 
 
 func _build_screen() -> void:
-	_resolve_shark_lure_selection()
 	var backdrop := HarborBackdropScript.new()
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(backdrop)
@@ -119,19 +117,15 @@ func _build_departure_plan_card(main: Control) -> void:
 
 	_preparation_body_label = _harbor_label("", 13, Palette.HARBOR_PARCHMENT_BODY, true, 0)
 	_preparation_body_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_preparation_body_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_preparation_body_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	_preparation_body_label.clip_text = true
 	_preparation_body_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_place_control(card, _preparation_body_label, 0.050, 0.190, 0.950, 0.300)
+	_place_control(card, _preparation_body_label, 0.050, 0.190, 0.950, 0.480)
 
-	_build_plan_row_label(card, 0.335, 0.490, "時間帯")
-	_build_time_slot_selector(card, 0.335, 0.490)
+	_build_plan_row_label(card, 0.530, 0.685, "時間帯")
+	_build_time_slot_selector(card, 0.530, 0.685)
 
-	_build_plan_row_label(card, 0.530, 0.685, "餌魚")
-	_shark_lure_button = _make_plan_row_button("", _cycle_shark_lure_fish)
-	_place_control(card, _shark_lure_button, 0.190, 0.530, 0.950, 0.685)
-
-	_build_plan_row_label(card, 0.725, 0.880, "食事効果")
+	_meal_effect_row_label = _build_plan_row_label(card, 0.725, 0.880, "食事効果")
 	_buff_name_label = _harbor_label("", 14, Palette.HARBOR_PLAN_MEAL_INACTIVE, false, 0)
 	_buff_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_buff_name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -175,7 +169,7 @@ func _build_time_slot_selector(card: Control, top: float, bottom: float) -> void
 func _build_departure_primary_button(main: Control) -> void:
 	var button := make_button(
 		"釣り場へ向かう",
-		func() -> void: navigate("fishing_spots", _fishing_spots_payload()),
+		func() -> void: navigate("fishing_spots"),
 		0.0,
 		true
 	)
@@ -202,10 +196,137 @@ func _preparation_card_text() -> String:
 	var megalodon_omen := _megalodon_omen_text()
 	if not megalodon_omen.is_empty():
 		return megalodon_omen
-	var hint := _nushi_hint_text()
-	if hint.is_empty():
-		return "釣る → 売る／料理する → 強化\n餌魚は危険海域で投げるときに使う"
-	return "釣る → 売る／料理する → 強化\n目撃談：%s" % hint
+	var first_line := _target_hint_text()
+	var nushi_hint := _nushi_hint_text()
+	if nushi_hint.is_empty():
+		return first_line
+	return "%s\n目撃談：%s" % [first_line, nushi_hint]
+
+
+func _unlocked_normal_spot_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for spot_id in GameData.NORMAL_FISHING_SPOT_IDS:
+		if PlayerProgress.can_access_fishing_spot(spot_id):
+			ids.append(spot_id)
+	return ids
+
+
+func _quest_target_hint_text() -> String:
+	var spot_ids := _unlocked_normal_spot_ids()
+	for index in range(PlayerProgress.quest_board.size()):
+		var progress := PlayerProgress.quest_progress(index)
+		if progress.is_empty() or bool(progress.get("completed", true)):
+			continue
+		var fish_id := String(progress.get("fish_id", ""))
+		if fish_id.is_empty():
+			continue
+		var best_spot_id := ""
+		var best_weight := 0.0
+		for spot_id in spot_ids:
+			var weights := GameData.encounter_weights(
+				PlayerProgress.level, spot_id, "", "", {}, PlayerProgress.selected_time_slot_id
+			)
+			var weight := float(weights.get(fish_id, 0.0))
+			if weight > best_weight:
+				best_weight = weight
+				best_spot_id = spot_id
+		if best_spot_id.is_empty():
+			continue
+		var fish_name := String(GameData.get_fish(fish_id).get("name", fish_id))
+		var spot_name := String(GameData.get_fishing_spot(best_spot_id).get("name", best_spot_id))
+		return "依頼の%sは%sが狙い目だ" % [fish_name, spot_name]
+	return ""
+
+
+func _time_slot_boost_hint_text() -> String:
+	var spot_ids := _unlocked_normal_spot_ids()
+	var candidates: Array[Dictionary] = []
+	for spot_id in spot_ids:
+		var weights_with := GameData.encounter_weights(
+			PlayerProgress.level, spot_id, "", "", {}, PlayerProgress.selected_time_slot_id
+		)
+		var weights_without := GameData.encounter_weights(PlayerProgress.level, spot_id)
+		for fish_id_variant in weights_with.keys():
+			var fish_id := String(fish_id_variant)
+			var base_weight := float(weights_without.get(fish_id, 0.0))
+			if base_weight <= 0.0:
+				continue
+			var boost := float(weights_with[fish_id]) / base_weight
+			if boost <= 1.0:
+				continue
+			candidates.append(
+				{
+					"fish_id": fish_id,
+					"spot_id": spot_id,
+					"boost": boost,
+					"uncaught": int(PlayerProgress.caught_counts.get(fish_id, 0)) <= 0,
+				}
+			)
+	if candidates.is_empty():
+		return ""
+	var has_uncaught := false
+	for candidate in candidates:
+		if bool(candidate["uncaught"]):
+			has_uncaught = true
+			break
+	var filtered: Array[Dictionary] = []
+	if has_uncaught:
+		for candidate in candidates:
+			if bool(candidate["uncaught"]):
+				filtered.append(candidate)
+	else:
+		filtered = candidates
+	filtered.sort_custom(
+		func(a: Dictionary, b: Dictionary) -> bool:
+			if float(a["boost"]) != float(b["boost"]):
+				return float(a["boost"]) > float(b["boost"])
+			return String(a["fish_id"]) < String(b["fish_id"])
+	)
+	var best := filtered[0]
+	var time_slot_name := String(
+		GameData.get_time_slot(PlayerProgress.selected_time_slot_id).get("name", "")
+	)
+	var spot_name := String(GameData.get_fishing_spot(String(best["spot_id"])).get("name", ""))
+	var fish_name := String(GameData.get_fish(String(best["fish_id"])).get("name", ""))
+	return "%sは%sで%sが活発なようだ" % [time_slot_name, spot_name, fish_name]
+
+
+func _uncaught_sighting_hint_text() -> String:
+	var spot_ids := _unlocked_normal_spot_ids()
+	var best_fish_id := ""
+	var best_spot_id := ""
+	var best_weight := 0.0
+	for spot_id in spot_ids:
+		var weights := GameData.encounter_weights(
+			PlayerProgress.level, spot_id, "", "", {}, PlayerProgress.selected_time_slot_id
+		)
+		for fish_id_variant in weights.keys():
+			var fish_id := String(fish_id_variant)
+			if int(PlayerProgress.caught_counts.get(fish_id, 0)) > 0:
+				continue
+			var weight := float(weights[fish_id])
+			if weight > best_weight:
+				best_weight = weight
+				best_fish_id = fish_id
+				best_spot_id = spot_id
+	if best_fish_id.is_empty():
+		return ""
+	var spot_name := String(GameData.get_fishing_spot(best_spot_id).get("name", best_spot_id))
+	var fish_name := String(GameData.get_fish(best_fish_id).get("name", best_fish_id))
+	return "%sで%sの姿を見かけたそうだ" % [spot_name, fish_name]
+
+
+func _target_hint_text() -> String:
+	var quest_hint := _quest_target_hint_text()
+	if not quest_hint.is_empty():
+		return quest_hint
+	var boost_hint := _time_slot_boost_hint_text()
+	if not boost_hint.is_empty():
+		return boost_hint
+	var sighting_hint := _uncaught_sighting_hint_text()
+	if not sighting_hint.is_empty():
+		return sighting_hint
+	return "海は穏やか。どこへ出ても釣り日和だ"
 
 
 func _megalodon_omen_text() -> String:
@@ -235,37 +356,9 @@ func _nushi_hint_text() -> String:
 	return candidates[rng.randi_range(0, candidates.size() - 1)]
 
 
-func _resolve_shark_lure_selection() -> void:
-	_selected_shark_lure_fish_id = String(route_payload.get("shark_lure_fish_id", ""))
-	if not _eligible_shark_lure_fish_ids().has(_selected_shark_lure_fish_id):
-		_selected_shark_lure_fish_id = ""
-
-
 func _refresh_preparation_card() -> void:
 	if _preparation_body_label != null:
-		# 行高1行分のため改行を全角スペースへ潰して収める（はみ出しは省略記号）。
-		_preparation_body_label.text = _preparation_card_text().replace("\n", "　")
-	if _shark_lure_button == null:
-		return
-	var unlocked := PlayerProgress.can_access_fishing_spot("danger_reef")
-	var ids := _eligible_shark_lure_fish_ids()
-	if not unlocked:
-		_selected_shark_lure_fish_id = ""
-		_shark_lure_button.text = "危険海域で解放"
-		_shark_lure_button.disabled = true
-		return
-	if ids.is_empty():
-		_selected_shark_lure_fish_id = ""
-		_shark_lure_button.text = "餌魚なし"
-		_shark_lure_button.disabled = true
-		return
-	_shark_lure_button.disabled = false
-	if _selected_shark_lure_fish_id.is_empty():
-		_shark_lure_button.text = "餌魚を選ぶ"
-		return
-	var fish := GameData.get_fish(_selected_shark_lure_fish_id)
-	var count := PlayerProgress.fish_count(_selected_shark_lure_fish_id)
-	_shark_lure_button.text = "%s x%d" % [String(fish.get("name", _selected_shark_lure_fish_id)), count]
+		_preparation_body_label.text = _preparation_card_text()
 
 
 func _select_time_slot(time_slot_id: String) -> void:
@@ -290,49 +383,6 @@ func _refresh_time_slot_buttons() -> void:
 			button.text = "Lv.%dで解放" % unlock_level
 		else:
 			button.text = label
-
-
-func _cycle_shark_lure_fish() -> void:
-	var ids := _eligible_shark_lure_fish_ids()
-	if ids.is_empty() or not PlayerProgress.can_access_fishing_spot("danger_reef"):
-		return
-	var current_index := ids.find(_selected_shark_lure_fish_id)
-	if current_index < 0:
-		_selected_shark_lure_fish_id = ids[0]
-	elif current_index >= ids.size() - 1:
-		_selected_shark_lure_fish_id = ""
-	else:
-		_selected_shark_lure_fish_id = ids[current_index + 1]
-	_refresh_preparation_card()
-
-
-func _eligible_shark_lure_fish_ids() -> Array[String]:
-	var ids: Array[String] = []
-	for fish_id_variant in PlayerProgress.inventory.keys():
-		var fish_id := String(fish_id_variant)
-		if PlayerProgress.fish_count(fish_id) <= 0:
-			continue
-		var fish := GameData.get_fish(fish_id)
-		if fish.is_empty() or bool(fish.get("shark", false)):
-			continue
-		ids.append(fish_id)
-	ids.sort_custom(
-		func(a: String, b: String) -> bool:
-			var fish_a := GameData.get_fish(a)
-			var fish_b := GameData.get_fish(b)
-			var price_a := int(fish_a.get("sell_price", 0))
-			var price_b := int(fish_b.get("sell_price", 0))
-			if price_a == price_b:
-				return String(fish_a.get("name", a)) < String(fish_b.get("name", b))
-			return price_a > price_b
-	)
-	return ids
-
-
-func _fishing_spots_payload() -> Dictionary:
-	if _selected_shark_lure_fish_id.is_empty():
-		return {}
-	return {"shark_lure_fish_id": _selected_shark_lure_fish_id}
 
 
 func _has_caught_raiseable_shark() -> bool:
@@ -371,7 +421,7 @@ func _build_facility_menu(root: Control) -> void:
 	var row_top := 0.126
 	var shark_pen_locked := not _can_open_shark_pen()
 	var shark_pen_detail := "捕獲したサメを育てる" if not shark_pen_locked else "Lv.30／危険海域で解放"
-	_build_facility_button(menu, row_top + row_step * 0.0, "釣り場へ向かう", "狙う魚に合わせてポイントを選ぶ", ICON_FISHING_PATH, func() -> void: navigate("fishing_spots", _fishing_spots_payload()), true, button_height)
+	_build_facility_button(menu, row_top + row_step * 0.0, "釣り場へ向かう", "狙う魚に合わせてポイントを選ぶ", ICON_FISHING_PATH, func() -> void: navigate("fishing_spots"), true, button_height)
 	_build_facility_button(menu, row_top + row_step * 1.0, "サメの生簀", shark_pen_detail, FightFishAssets.card_portrait_path({"id": "nekozame"}), _open_shark_pen, false, button_height, shark_pen_locked)
 	_build_facility_button(menu, row_top + row_step * 2.0, "依頼ボード", "釣果を届けて報酬を受け取る", ICON_QUEST_PATH, func() -> void: navigate("quest_board"), false, button_height)
 	_build_facility_button(menu, row_top + row_step * 3.0, "調理場", "魚を料理して食事にする", ICON_COOKING_PATH, func() -> void: navigate("cooking"), false, button_height)
@@ -528,10 +578,12 @@ func _refresh_labels() -> void:
 			format_play_time(PlayerProgress.play_seconds),
 		]
 	)
-	if PlayerProgress.pending_buff.is_empty():
-		_buff_name_label.text = "なし"
-		_buff_name_label.add_theme_color_override("font_color", Palette.HARBOR_PLAN_MEAL_INACTIVE)
-		_buff_name_label.add_theme_font_size_override("font_size", 14)
+	var has_pending_buff := not PlayerProgress.pending_buff.is_empty()
+	if _meal_effect_row_label != null:
+		_meal_effect_row_label.visible = has_pending_buff
+	_buff_name_label.visible = has_pending_buff
+	if not has_pending_buff:
+		_buff_name_label.text = ""
 	else:
 		var buff_name := String(PlayerProgress.pending_buff.get("name", "料理"))
 		var buff_text := String(PlayerProgress.pending_buff.get("text", ""))
