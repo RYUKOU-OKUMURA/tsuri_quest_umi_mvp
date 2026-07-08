@@ -1,6 +1,6 @@
 # AGENTS.md — tsuri_quest_umi_mvp
 
-本ファイルはコーディングエージェント共通の指示書（Codex は AGENTS.md を直接、Claude Code は symlink の CLAUDE.md 経由、Cursor は Cursor rules と併読）。ツール固有の運用ルールはここに書かず、各ツールのルールファイル（例: `.cursor/rules/`）に置く。
+本ファイルはコーディングエージェント共通の指示書（Codex は AGENTS.md を直接、Claude Code は CLAUDE.md の `@AGENTS.md` import 経由、Cursor は Cursor rules と併読）。ツール固有の運用ルールはここに書かず、各ツールのルールファイル（Cursor は `.cursor/rules/`、Claude Code は `CLAUDE.md` の固有セクション）に置く。
 
 海釣りRPG（Godot 4 / GDScript / 1280x720固定）。**MVPと最終リファクタ（docs/26）は完了済み。現在はV2拡張（`docs/30_v2_expansion_overview.md`）を進行中**。UIは「AI生成PNG素材 + Godot runtime描画（テキスト・状態・ゲージ）」の分担で作る方針。ドキュメント・コミットメッセージ・UI文言は日本語。
 
@@ -44,7 +44,7 @@
 
 作戦台帳: リファクタ = `docs/26_refactor_orchestration_plan.md`（完了済み）/ **V2拡張 = `docs/30_v2_expansion_overview.md`**（進行状況・確定事項はこちらで管理）
 
-本節はサブエージェント機能の有無に関わらず守る共通原則。Cursor 固有の運用（Fable=オーケストレーター / Composer=ワーカーの役割分担、`model: composer-2.5-fast` の明示指定など）は `.cursor/rules/orchestration.mdc` が正本。サブエージェントを使わないツール（Codex 等）は fan-out せず、下記の brief 粒度（1 concern・触るファイル・DoD）とマージ前検証を自分自身のタスク分割に適用する。
+本節はサブエージェント機能の有無に関わらず守る共通原則。Cursor 固有の運用（Fable=オーケストレーター / Composer=ワーカーの役割分担、`model: composer-2.5-fast` の明示指定など）は `.cursor/rules/orchestration.mdc` が正本。Claude Code 固有の運用（メイン会話=オーケストレーター / サブエージェント=ワーカー、`model: claude-sonnet-5` の明示指定）は `CLAUDE.md` の「オーケストレーション（Claude Code 固有）」節が正本。サブエージェントを使わないツール（Codex 等）は fan-out せず、下記の brief 粒度（1 concern・触るファイル・DoD）とマージ前検証を自分自身のタスク分割に適用する。
 
 ### 親エージェント単体で行う（fan-out しない）
 
