@@ -28,7 +28,6 @@ var _top_money_label: Label
 var _top_rod_label: Label
 var _top_exp_label: Label
 var _buff_name_label: Label
-var _buff_text_label: Label
 var _facility_detail_title_label: Label
 var _facility_detail_body_label: Label
 var _preparation_body_label: Label
@@ -88,106 +87,115 @@ func _build_main_panel(root: Control) -> void:
 
 	var scene := _texture_rect(HARBOR_SCENE_WINDOW_PATH)
 	scene.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	_place_control(main, scene, 0.060, 0.068, 0.940, 0.432)
+	_place_control(main, scene, 0.060, 0.068, 0.940, 0.288)
 
 	var scene_shadow := ColorRect.new()
 	scene_shadow.color = Palette.HARBOR_SCENE_SHADOW
 	scene_shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(main, scene_shadow, 0.060, 0.068, 0.940, 0.432)
+	_place_control(main, scene_shadow, 0.060, 0.068, 0.940, 0.288)
 
-	var scene_title := _harbor_label("潮風が吹く、小さな漁港", 34, Palette.HARBOR_SCENE_TITLE, true, 4, Palette.HARBOR_SCENE_TITLE_OUTLINE)
+	var scene_title := _harbor_label("潮風が吹く、小さな漁港", 32, Palette.HARBOR_SCENE_TITLE, true, 4, Palette.HARBOR_SCENE_TITLE_OUTLINE)
 	scene_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	scene_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(main, scene_title, 0.090, 0.104, 0.910, 0.205)
+	_place_control(main, scene_title, 0.090, 0.108, 0.910, 0.248)
 
-	var scene_text := _harbor_label(
-		"沖では魚影が濃くなっている。\n釣った魚は市場で売るか、調理場で食べて成長できる。\n準備ができたら海へ出よう。",
-		17,
-		Palette.HARBOR_SCENE_TEXT,
-		false,
-		2,
-		Palette.HARBOR_SCENE_TEXT_OUTLINE
-	)
-	scene_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	scene_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	scene_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_place_control(main, scene_text, 0.130, 0.215, 0.870, 0.415)
-
-	_build_preparation_card(main)
-	_build_buff_card(main)
+	_build_departure_plan_card(main)
+	_build_departure_primary_button(main)
 
 
-func _build_preparation_card(main: Control) -> void:
-	var card := _anchored_control(main, 0.066, 0.452, 0.934, 0.704)
+func _build_departure_plan_card(main: Control) -> void:
+	var card := _anchored_control(main, 0.066, 0.330, 0.934, 0.820)
 	var frame := _texture_rect(HARBOR_PARCHMENT_CARD_PATH)
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	card.add_child(frame)
 
 	var icon := _icon_rect(ICON_FISHING_PATH)
-	_place_control(card, icon, 0.030, 0.145, 0.112, 0.575)
+	_place_control(card, icon, 0.030, 0.050, 0.100, 0.180)
 
-	var title := _harbor_label("今日の支度", 15, Palette.HARBOR_PARCHMENT_TITLE, true, 0)
+	var title := _harbor_label("出港プラン", 15, Palette.HARBOR_PARCHMENT_TITLE, true, 0)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(card, title, 0.140, 0.070, 0.930, 0.270)
+	_place_control(card, title, 0.125, 0.050, 0.930, 0.180)
 
-	_preparation_body_label = _harbor_label("", 16, Palette.HARBOR_PARCHMENT_BODY, true, 0)
+	_preparation_body_label = _harbor_label("", 13, Palette.HARBOR_PARCHMENT_BODY, true, 0)
 	_preparation_body_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_preparation_body_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_preparation_body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_preparation_body_label.clip_text = true
-	_place_control(card, _preparation_body_label, 0.140, 0.285, 0.675, 0.555)
+	_preparation_body_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_place_control(card, _preparation_body_label, 0.050, 0.190, 0.950, 0.300)
 
-	_shark_lure_button = make_button("", _cycle_shark_lure_fish, 0.0, false)
-	_shark_lure_button.add_theme_font_size_override("font_size", 13)
-	_place_control(card, _shark_lure_button, 0.700, 0.215, 0.940, 0.555)
-	_build_time_slot_selector(card)
+	_build_plan_row_label(card, 0.335, 0.490, "時間帯")
+	_build_time_slot_selector(card, 0.335, 0.490)
 
+	_build_plan_row_label(card, 0.530, 0.685, "餌魚")
+	_shark_lure_button = _make_plan_row_button("", _cycle_shark_lure_fish)
+	_place_control(card, _shark_lure_button, 0.190, 0.530, 0.950, 0.685)
 
-func _build_buff_card(main: Control) -> void:
-	var card := _anchored_control(main, 0.066, 0.735, 0.934, 0.895)
-	var frame := _texture_rect(HARBOR_PARCHMENT_CARD_PATH)
-	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	card.add_child(frame)
-
-	var icon := _icon_rect(ICON_COOKING_PATH)
-	_place_control(card, icon, 0.030, 0.160, 0.118, 0.840)
-
-	var title := _harbor_label("次の釣行の食事効果", 15, Palette.HARBOR_PARCHMENT_TITLE, true, 0)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(card, title, 0.145, 0.100, 0.930, 0.365)
-
-	_buff_name_label = _harbor_label("", 20, Palette.HARBOR_BUFF_NAME, true, 0)
+	_build_plan_row_label(card, 0.725, 0.880, "食事効果")
+	_buff_name_label = _harbor_label("", 14, Palette.HARBOR_PLAN_MEAL_INACTIVE, false, 0)
 	_buff_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_buff_name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(card, _buff_name_label, 0.145, 0.345, 0.930, 0.635)
-
-	_buff_text_label = _harbor_label("", 15, Palette.HARBOR_BUFF_BODY, false, 0)
-	_buff_text_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_buff_text_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(card, _buff_text_label, 0.145, 0.625, 0.930, 0.900)
+	_buff_name_label.clip_text = true
+	_buff_name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_place_control(card, _buff_name_label, 0.190, 0.725, 0.950, 0.880)
 
 
-func _build_time_slot_selector(card: Control) -> void:
-	var label := _harbor_label("時間帯", 13, Palette.HARBOR_PARCHMENT_TITLE, true, 0)
+func _build_plan_row_label(parent: Control, top: float, bottom: float, text: String) -> Label:
+	var label := _harbor_label(text, 13, Palette.HARBOR_PARCHMENT_TITLE, true, 0)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(card, label, 0.140, 0.655, 0.255, 0.900)
+	_place_control(parent, label, 0.050, top, 0.180, bottom)
+	return label
+
+
+func _make_plan_row_button(text: String, callback: Callable) -> Button:
+	var button := make_button(text, callback, 0.0, false)
+	# 行の高さ（約38px）が make_button の最小高 50px を下回るため、行からのはみ出しを防ぐ。
+	button.custom_minimum_size = Vector2.ZERO
+	button.add_theme_font_size_override("font_size", 13)
+	button.clip_text = true
+	button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	return button
+
+
+func _build_time_slot_selector(card: Control, top: float, bottom: float) -> void:
 	var ids := GameData.get_all_time_slot_ids()
-	var left := 0.270
-	var right := 0.940
-	var gap := 0.012
+	var left := 0.190
+	var right := 0.950
+	var gap := 0.014
 	var width := (right - left - gap * float(ids.size() - 1)) / float(ids.size())
 	for index in range(ids.size()):
 		var time_slot_id := String(ids[index])
-		var button := make_button("", _select_time_slot.bind(time_slot_id), 0.0, false)
-		button.add_theme_font_size_override("font_size", 12)
-		button.clip_text = true
-		button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		var button := _make_plan_row_button("", _select_time_slot.bind(time_slot_id))
 		_time_slot_buttons[time_slot_id] = button
 		var x0 := left + float(index) * (width + gap)
-		_place_control(card, button, x0, 0.625, x0 + width, 0.915)
+		_place_control(card, button, x0, top, x0 + width, bottom)
+
+
+func _build_departure_primary_button(main: Control) -> void:
+	var button := make_button(
+		"釣り場へ向かう",
+		func() -> void: navigate("fishing_spots", _fishing_spots_payload()),
+		0.0,
+		true
+	)
+	button.custom_minimum_size = Vector2.ZERO
+	button.add_theme_font_size_override("font_size", 21)
+	var style := ShowcaseAssetsScript.texture_style(
+		"res://assets/showcase/common/action_button_frame.png",
+		Vector4(46.0, 24.0, 46.0, 24.0)
+	)
+	if style != null:
+		button.add_theme_stylebox_override("normal", style)
+		button.add_theme_stylebox_override("hover", style)
+		button.add_theme_stylebox_override("pressed", style)
+		button.add_theme_stylebox_override("focus", style)
+		button.add_theme_color_override("font_color", Palette.TEXT_BONE)
+		button.add_theme_color_override("font_hover_color", Palette.GOLD_BRIGHT)
+		button.add_theme_color_override("font_pressed_color", Palette.GOLD_BRIGHT)
+		button.add_theme_color_override("font_outline_color", Palette.TEXT_OUTLINE_DARK)
+		button.add_theme_constant_override("outline_size", 2)
+	_place_control(main, button, 0.270, 0.848, 0.730, 0.952)
 
 
 func _preparation_card_text() -> String:
@@ -235,7 +243,8 @@ func _resolve_shark_lure_selection() -> void:
 
 func _refresh_preparation_card() -> void:
 	if _preparation_body_label != null:
-		_preparation_body_label.text = _preparation_card_text()
+		# 行高1行分のため改行を全角スペースへ潰して収める（はみ出しは省略記号）。
+		_preparation_body_label.text = _preparation_card_text().replace("\n", "　")
 	if _shark_lure_button == null:
 		return
 	var unlocked := PlayerProgress.can_access_fishing_spot("danger_reef")
@@ -279,8 +288,6 @@ func _refresh_time_slot_buttons() -> void:
 		button.theme_type_variation = "GoldButton" if selected and not locked else ""
 		if locked:
 			button.text = "Lv.%dで解放" % unlock_level
-		elif selected:
-			button.text = "%s 選択中" % label
 		else:
 			button.text = label
 
@@ -511,23 +518,26 @@ func _refresh_labels() -> void:
 	_top_exp_label.text = "EXP %s" % next_text.replace(" EXP", "")
 	_top_money_label.text = "%s G" % ScreenBase.format_money(PlayerProgress.money)
 	_top_rod_label.text = rod_name
-	_context_label.text = "時間帯：%s　潮位：満ち始め　風：弱" % String(
+	_context_label.text = "時間帯：%s" % String(
 		GameData.get_time_slot(PlayerProgress.selected_time_slot_id).get("name", "日中")
 	)
 	_status_label.text = (
-		"クーラーボックス：%d匹　｜　食経験値：%s　｜　プレイ時間：%s"
+		"クーラーボックス：%d匹　｜　プレイ時間：%s"
 		% [
 			fish_total,
-			next_text,
 			format_play_time(PlayerProgress.play_seconds),
 		]
 	)
 	if PlayerProgress.pending_buff.is_empty():
-		_buff_name_label.text = "食事効果：なし"
-		_buff_text_label.text = "調理場で料理を食べると、次の釣行が有利になる。"
+		_buff_name_label.text = "なし"
+		_buff_name_label.add_theme_color_override("font_color", Palette.HARBOR_PLAN_MEAL_INACTIVE)
+		_buff_name_label.add_theme_font_size_override("font_size", 14)
 	else:
-		_buff_name_label.text = String(PlayerProgress.pending_buff.get("name", "料理"))
-		_buff_text_label.text = String(PlayerProgress.pending_buff.get("text", ""))
+		var buff_name := String(PlayerProgress.pending_buff.get("name", "料理"))
+		var buff_text := String(PlayerProgress.pending_buff.get("text", ""))
+		_buff_name_label.text = buff_name if buff_text.is_empty() else "%s（%s）" % [buff_name, buff_text]
+		_buff_name_label.add_theme_color_override("font_color", Palette.HARBOR_PLAN_MEAL_ACTIVE)
+		_buff_name_label.add_theme_font_size_override("font_size", 14)
 
 
 func _build_time_slot_grade_overlay() -> void:
