@@ -76,7 +76,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 |---|---|---|---|
 | スロット比率 | 23.5% / 30.0% / 25.0% / 21.5% | `top_status_frame.png` ＋ `fight_status_bar.gd` | |
 | アイコン | 38–44px、時計/風/コインは `top_status_icon_sheet.png`（128pxセル）、天気は `weather_status_icon_sheet.png`（5天気128pxセル） | 同上 | スロット比率と文字位置は変更なし。天気アイコンのみ `trip_stats.weather_id` に追従 |
-| タイポ | AM 16px（濃色）、時刻/所持金 24px、AM→時刻オフセット 31px、天候/風 21/19px、ロケーションカード 14px＋16/19px | `fight_status_bar.gd` | AM/時刻間隔は再調整禁止 |
+| タイポ | E5以降の1枠目は `時間帯` 14px + 選択ラベル 24px。所持金 24px、天候/風 21/19px、ロケーションカード 14px＋16/19px | `fight_status_bar.gd` | 固定の `AM 08:47` は夜釣りと矛盾するためE5で廃止。スロット比率とアイコン位置は維持 |
 
 ### 右カラム / フローティングカード
 
@@ -156,6 +156,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 
 ## 7. 判断ログ（直近パスのみ）
 
+- 2026-07-08: E5時間帯対応として上部ステータス1枠目を固定の `AM 08:47` から `時間帯` + 選択ラベルへ変更。夜釣りで時計表示が矛盾しないようにするためで、スロット比率、アイコンサイズ、天候/所持金/ロケーション枠は維持した。検証: `./tools/fight_visual_qa.sh` exit 0。証拠: `docs/qa/evidence/underwater_fight/2026-07-08_e5_time_slot_top_status_compare.png`。
 - 2026-07-08: docs/35 P3魚素材差し替え。対象4種（`megochi`, `kurosoi`, `takenokomebaru`, `mejina`）の泳ぎシートは頭右向き、カード肖像は頭左向きで整形した。コチ/メバル派生の境界ケースと縞の強いメジナ元絵を新規source artで解消し、P3暫定allowlistを削除。画面freeze値、`UnderwaterView`、`FightSidebar`、釣行ロジックは変更なし。検証: `./tools/fight_visual_qa.sh` exit 0、`python3 tools/audit_fish_sheet_contract.py` exit 0、`python3 tools/audit_fish_asset_duplicates.py --strict` exit 0（allowed 1、pending 0、unexpected 0）。証拠: `docs/qa/evidence/underwater_fight/2026-07-08_p3_fight_targets.png`、`docs/qa/evidence/underwater_fight/2026-07-08_p3_fight_compare.png`、`docs/qa/evidence/underwater_fight/2026-07-08_p3_fish_asset_contact.png`。
 - 2026-07-08: docs/35 P1バッチ2魚素材差し替え。対象7種（`ira`, `kinmedai`, `akamutsu`, `medai`, `sawara`, `mahaze`, `nenbutsudai`）の泳ぎシートは頭右向き、カード肖像は頭左向きで整形した。小型/丸型魚は `runtime_offset_x` でline_anchor近傍に口元が乗るよう調整し、fish sheet contract監査と `TSURI_FIGHT_FISH_ID=<fish_id>` 指定の実キャプチャでライン/ルアー接続を確認。画面freeze値、`UnderwaterView`、`FightSidebar`、釣行ロジックは変更なし。検証: `./tools/fight_visual_qa.sh` exit 0、`python3 tools/audit_fish_sheet_contract.py` exit 0、`python3 tools/audit_fish_asset_duplicates.py` exit 0（pending 14→8、unexpected 0）、`./tools/validate_project.sh` exit 0。証拠: `docs/qa/evidence/underwater_fight/2026-07-08_p1_batch2_fight_targets.png`、`docs/qa/evidence/underwater_fight/2026-07-08_p1_batch2_fight_compare.png`。
 - 2026-07-08: docs/35 P2バッチ1魚素材差し替え。対象9種（`meichidai`, `murasoi`, `onikasago`, `kihada`, `mebachi`, `hirasouda`, `suma`, `takabe`, `makogarei`）の泳ぎシートは頭右向き、カード肖像は頭左向きで整形した。`runtime_offset_x` でline_anchor近傍に口元が乗るよう調整し、fish sheet contract監査と `TSURI_FIGHT_FISH_ID=<fish_id>` 指定の実キャプチャでライン/ルアー接続を確認。画面freeze値、`UnderwaterView`、`FightSidebar`、釣行ロジックは変更なし。検証: `./tools/fight_visual_qa.sh` exit 0、`python3 tools/audit_fish_sheet_contract.py` exit 0、`python3 tools/audit_fish_asset_duplicates.py --strict` exit 0（pending 8→0、unexpected 0）。証拠: `docs/qa/evidence/underwater_fight/2026-07-08_p2_batch1_fight_targets.png`、`docs/qa/evidence/underwater_fight/2026-07-08_p2_batch1_fight_compare.png`。

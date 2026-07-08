@@ -135,11 +135,8 @@ def _draw_status_slot(base: Image.Image, draw: ImageDraw.ImageDraw, slot: tuple[
     icon_space = min(max(h * 0.96, 60.0), 68.0)
     text_x = x0 + icon_space
     max_width = x1 - text_x - 10.0
-    if title == "AM":
-        baseline = y0 + h * 0.56
-        _draw_text(draw, (text_x - 4, baseline), title, 16, "#21170f", max_width=max_width)
-        _draw_text(draw, (text_x + 31, baseline + 1), body, 24, "#21170f", max_width=max_width - 31)
-        return
+    title_size = 14
+    body_size = 22 if (x1 - x0) < 230.0 else 24
     if title == "快晴":
         baseline = y0 + h * 0.57
         _draw_text(draw, (text_x - 2, baseline), title, 21, "#21170f", max_width=max_width)
@@ -150,6 +147,9 @@ def _draw_status_slot(base: Image.Image, draw: ImageDraw.ImageDraw, slot: tuple[
         return
     if title == "所持金":
         _draw_text(draw, (text_x - 2, y0 + h * 0.57), body, 24, "#21170f", max_width=max_width + 2)
+        return
+    _draw_text(draw, (text_x, y0 + h * 0.40), title, title_size, "#21170f", max_width=max_width)
+    _draw_text(draw, (text_x, y0 + h * 0.72), body, body_size, "#21170f", max_width=max_width)
 
 
 def build_current_status() -> Image.Image:
@@ -159,7 +159,7 @@ def build_current_status() -> Image.Image:
     _draw_top_icon(frame, 0, slots[0])
     _draw_top_icon(frame, 1, slots[1])
     _draw_top_icon(frame, 3, slots[2])
-    _draw_status_slot(frame, draw, slots[0], "AM", "08:47")
+    _draw_status_slot(frame, draw, slots[0], "時間帯", "日中")
     _draw_status_slot(frame, draw, slots[1], "快晴", "風 弱")
     _draw_status_slot(frame, draw, slots[2], "所持金", "12,450 G")
     _draw_centered_dark_slot(draw, slots[3], "南の島・沖", "水深 18.6m")

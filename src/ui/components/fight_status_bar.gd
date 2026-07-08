@@ -71,7 +71,7 @@ func _draw() -> void:
 	_draw_status_icon(slots[0], ICON_TIME)
 	_draw_weather_status_icon(slots[1])
 	_draw_status_icon(slots[2], ICON_COIN)
-	_draw_status_slot(font, regular_font, slots[0], "AM", "08:47", false)
+	_draw_status_slot(font, regular_font, slots[0], "時間帯", _time_slot_label(), false)
 	_draw_status_slot(font, regular_font, slots[1], _weather_label(), _wind_label(), false)
 	_draw_status_slot(font, regular_font, slots[2], "所持金", "%s G" % ScreenBase.format_money(PlayerProgress.money), false)
 	var depth := 0.0
@@ -111,11 +111,6 @@ func _draw_status_slot(font: Font, regular_font: Font, rect: Rect2, title: Strin
 	var outline := 0 if not dark else 3
 	var title_y := rect.position.y + rect.size.y * 0.40
 	var body_y := rect.position.y + rect.size.y * 0.72
-	if not dark and title == "AM":
-		var am_y := rect.position.y + rect.size.y * 0.56
-		_draw_text_clipped(font, title, Vector2(text_x - 4.0, am_y), 16, Palette.FIGHT_STATUS_BODY_TEXT, max_width, outline)
-		_draw_text_clipped(font, body, Vector2(text_x + 31.0, am_y + 1.0), 24, body_color, max_width - 31.0, outline)
-		return
 	if not dark and body.begins_with("風"):
 		var inline_y := rect.position.y + rect.size.y * 0.57
 		_draw_text_clipped(font, title, Vector2(text_x - 2.0, inline_y), 21, body_color, max_width, outline)
@@ -270,6 +265,13 @@ func _wind_label() -> String:
 	var label := String(trip_stats.get("wind_label", "風 弱"))
 	if label.strip_edges().is_empty():
 		return "風 弱"
+	return label
+
+
+func _time_slot_label() -> String:
+	var label := String(trip_stats.get("time_slot_label", "日中"))
+	if label.strip_edges().is_empty():
+		return "日中"
 	return label
 
 

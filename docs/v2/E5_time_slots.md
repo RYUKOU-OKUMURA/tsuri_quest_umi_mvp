@@ -2,8 +2,8 @@
 
 正本: `docs/30_v2_expansion_overview.md`（読む順: docs/30 §4 共通仕様 → 本doc）
 前提フェーズ: E0（朝まずめ=Lv12・夜=Lv15ゲート）
-状態: 仕様確定・未着手
-**着手前の必須スライス**: BGM二重実装の整理（docs/26 の意図的残件）。`main.gd` の opening BGM と `ScreenBase.play_screen_bgm` の境界を先に設計・統合してから、本フェーズの `surface_bgm_key_override` を実装する（境界設計は Fable 単体向き。E11-1 のBGM/SEバス分離とも整合させる）
+状態: 実装完了（2026-07-08）
+**着手前の必須スライス**: 完了。`main.gd` にアプリ共通BGM境界を置き、`ScreenBase.play_screen_bgm` は上位境界へ委譲する形へ整理済み。本フェーズの `surface_bgm_key_override` はその境界上で実装した。
 
 目的: 同じ釣り場を別の顔にしてコンテンツを実質倍増する。決定#1: **時間帯は港画面で出港前に選択**（天候=自然の運、時間帯=プレイヤーの選択、の対比）。
 
@@ -56,4 +56,4 @@
 ## E5-6. 触ってよいファイル / DoD
 
 - 触る: `game_catalog_data.gd`, `game_data.gd`, `harbor_screen.gd`, `player_progress.gd`, `fishing_screen.gd`（グレーディング）, 監査シーン
-- DoD: 時間帯別出現監査（asa_mazume でレア重み計が約1.3倍になること等）+ `fishing_reveal_smoke` + 港・釣行のvisual QA（3時間帯スクショ）+ `save_system_verify.sh` + validate green
+- DoD: `time_slot_encounter_audit.tscn`（asa_mazume でレア重み計が約1.3倍になること等）+ `fishing_reveal_smoke` + `harbor_screen_smoke` + 港・釣行のvisual QA（3時間帯スクショ）+ `save_system_verify.sh` + validate green

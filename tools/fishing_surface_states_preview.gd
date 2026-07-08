@@ -9,6 +9,7 @@ const DEFAULT_OUT_PREFIX := "/tmp/tsuri_fishing_surface"
 
 
 func _ready() -> void:
+	PlayerProgress.level = GameData.MAX_LEVEL
 	PlayerProgress.money = 12450
 
 	var vp := SubViewport.new()
@@ -81,17 +82,26 @@ func _preview_config() -> Dictionary:
 	var config := {}
 	var spot_id := OS.get_environment("TSURI_SURFACE_STATE_SPOT_ID").strip_edges()
 	var environment_id := OS.get_environment("TSURI_SURFACE_STATE_ENVIRONMENT_ID").strip_edges()
+	var time_slot_id := OS.get_environment("TSURI_SURFACE_STATE_TIME_SLOT_ID").strip_edges()
 	var lure_fish_id := OS.get_environment("TSURI_SURFACE_STATE_SHARK_LURE_FISH_ID").strip_edges()
 	var lure_count := maxi(0, int(OS.get_environment("TSURI_SURFACE_STATE_SHARK_LURE_COUNT")))
 	if not spot_id.is_empty():
 		config["spot_id"] = spot_id
-	if spot_id.is_empty() and environment_id.is_empty() and lure_fish_id.is_empty():
+	if spot_id.is_empty() and environment_id.is_empty() and time_slot_id.is_empty() and lure_fish_id.is_empty():
 		return config
 
 	var environment := GameData.get_fishing_environment(
 		environment_id if not environment_id.is_empty() else GameData.DEFAULT_FISHING_ENVIRONMENT_ID
 	)
 	var stats := _trip_stats_for_environment(environment)
+	if not time_slot_id.is_empty():
+		var time_slot := GameData.get_time_slot(time_slot_id)
+		stats["time_slot_id"] = String(time_slot.get("id", GameData.DEFAULT_TIME_SLOT_ID))
+		stats["time_slot_label"] = String(time_slot.get("name", "日中"))
+		stats["time_slot_grade"] = String(time_slot.get("grade", "none"))
+		var bgm_override := String(time_slot.get("surface_bgm_key_override", ""))
+		if not bgm_override.strip_edges().is_empty():
+			stats["surface_bgm_key"] = bgm_override
 	if spot_id == "danger_reef" or not lure_fish_id.is_empty():
 		var nomase := GameData.get_rig("nomase")
 		if not nomase.is_empty():
@@ -118,6 +128,9 @@ func _trip_stats_for_environment(environment: Dictionary) -> Dictionary:
 	stats["wind_id"] = String(environment.get("wind_id", "weak"))
 	stats["wind_label"] = String(environment.get("wind_label", "風 弱"))
 	stats["surface_bgm_key"] = String(environment.get("surface_bgm_key", "calm"))
+	stats["time_slot_id"] = GameData.DEFAULT_TIME_SLOT_ID
+	stats["time_slot_label"] = String(GameData.get_time_slot(GameData.DEFAULT_TIME_SLOT_ID).get("name", "日中"))
+	stats["time_slot_grade"] = "none"
 	stats["trip_fired_event_ids"] = ["bird_swarm", "driftwood", "bottle_mail"]
 	stats["bird_swarm_hits_remaining"] = 0
 	var rig := GameData.get_rig(GameData.DEFAULT_RIG_ID)

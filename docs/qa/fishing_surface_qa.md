@@ -1,8 +1,8 @@
 # 水上キャスト画面 QA判断ログ
 
-最終更新: 2026-07-08 / 状態: READY餌魚カードの余白圧縮 採用
+最終更新: 2026-07-08 / 状態: E5時間帯グレード 採用
 参照画像: `reference/01_surface_fishing_mockup.png` / `reference/13_fishing_ready_danger_mockup.png`
-QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `godot --path . res://tools/fishing_surface_states_preview.tscn` / `godot --path . res://tools/catch_fanfare_preview.tscn` / `./tools/fight_visual_qa.sh`
+QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `./tools/fishing_time_slot_visual_qa.sh` / `godot --path . res://tools/fishing_surface_states_preview.tscn` / `godot --path . res://tools/catch_fanfare_preview.tscn` / `./tools/fight_visual_qa.sh`
 
 ## 1. freeze値（正本）
 
@@ -19,6 +19,7 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `godot --path . r
 | サメ餌魚APPROACH/BITE文 | 餌魚ありの時だけ `魚影が餌の<魚名>へ近づいている` / `<魚名>に何かが食いついた`。ヒット魚名・サメ名は出さない | `src/core/fishing_simulator.gd` / `src/ui/components/fight_sidebar.gd` | 上部メッセージパネルはAPPROACH/BITEで非表示のため、実表示される右サイドカードにも反映 |
 | 未確認魚影カード詳細行 | signal art比率を compact=0.36 / 通常=0.34、詳細2行を下端から逆算して配置 | `src/ui/components/fight_sidebar.gd` | 「釣り場」「タナ / エサ」2行の下端見切れP1を解消 |
 | 好物発見ファンファーレ | `favorite_bait_discovery_text` を記録更新・撃破報酬の下、称号の上に表示。`megalodon` は除外 | `src/ui/fishing_screen.gd` / `src/ui/components/catch_fanfare.gd` | 好物一致サメだけポジティブな発見行を返す。不一致・非サメ・メガロドンは無言 |
+| E5時間帯グレード | 朝まずめ=暖色薄乗せ、日中=なし、夜釣り=寒色暗め薄乗せ。水面READYから水中FIGHTまで、プレイシーン領域に同じグレードを重ねる | `src/ui/fishing_screen.gd` / `src/ui/palette.gd` | 背景素材は作らず、まずグレーディングで時間帯差を出す。HUD/カード/メッセージレイヤーは上に置き、文字可読性を落とさない |
 
 ## 2. 不採用・再試行禁止リスト
 
@@ -53,6 +54,22 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `godot --path . r
 完了済みのためなし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-08 E5時間帯グレードを採用。
+
+変更したもの:
+- `trip_stats.time_slot_grade` に応じ、釣行シーン領域へ朝まずめ/夜釣りの薄い色グレードを追加。
+- 時間帯READY比較用に `tools/fishing_time_slot_preview.tscn` と `./tools/fishing_time_slot_visual_qa.sh` を追加。
+
+変更していないもの:
+- READY下段バー、サメ餌魚セレクタ、天候専用READY画像、抽選/消費ロジック、釣果ファンファーレ。
+
+判断根拠:
+- `docs/qa/evidence/fishing_surface/2026-07-08_e5_time_slot_ready_compare.png`
+
+採用理由:
+- 原寸スクショで、朝/日中/夜釣りの差が水面シーンに出ている。
+- グレードはプレイシーン領域に限定され、下段HUDと右カードの文字を潰していない。
 
 2026-07-08 READY餌魚カードの余白圧縮を採用。
 

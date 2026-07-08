@@ -11,6 +11,7 @@ var _failed := false
 func _ready() -> void:
 	await _verify_locked_shark_pen_and_lure()
 	await _verify_lure_payload()
+	await _verify_time_slot_selector()
 	await _verify_shark_pen_navigation()
 	await _verify_megalodon_omen()
 
@@ -67,6 +68,39 @@ func _verify_lure_payload() -> void:
 	var payload: Dictionary = screen._fishing_spots_payload()
 	_expect(String(payload.get("shark_lure_fish_id", "")) == "kihada", "harbor should pass selected shark lure fish to fishing spots")
 	_expect(String(payload.get("shark_lure_fish_id", "")) != "nekozame", "harbor should not pass shark as lure fish")
+	screen.queue_free()
+	await get_tree().process_frame
+
+
+func _verify_time_slot_selector() -> void:
+	PlayerProgress.level = 11
+	PlayerProgress.selected_time_slot_id = "night"
+	var screen := _make_screen()
+	await get_tree().process_frame
+	_expect(PlayerProgress.selected_time_slot_id == GameData.DEFAULT_TIME_SLOT_ID, "locked saved time slot should fall back in harbor")
+	_expect((screen._time_slot_buttons["asa_mazume"] as Button).disabled, "asa_mazume should stay locked below Lv12")
+	_expect((screen._time_slot_buttons["night"] as Button).disabled, "night should stay locked below Lv15")
+	_expect(screen._context_label.text.contains("日中"), "harbor context should show selected daytime")
+	screen.queue_free()
+	await get_tree().process_frame
+
+	PlayerProgress.level = 12
+	PlayerProgress.selected_time_slot_id = GameData.DEFAULT_TIME_SLOT_ID
+	screen = _make_screen()
+	await get_tree().process_frame
+	screen._select_time_slot("asa_mazume")
+	_expect(PlayerProgress.selected_time_slot_id == "asa_mazume", "Lv12 should select asa_mazume")
+	_expect(screen._context_label.text.contains("朝まずめ"), "harbor context should show asa_mazume")
+	_expect((screen._time_slot_buttons["night"] as Button).disabled, "night should stay locked at Lv12")
+	screen.queue_free()
+	await get_tree().process_frame
+
+	PlayerProgress.level = 15
+	screen = _make_screen()
+	await get_tree().process_frame
+	screen._select_time_slot("night")
+	_expect(PlayerProgress.selected_time_slot_id == "night", "Lv15 should select night")
+	_expect(screen._context_label.text.contains("夜釣り"), "harbor context should show night")
 	screen.queue_free()
 	await get_tree().process_frame
 

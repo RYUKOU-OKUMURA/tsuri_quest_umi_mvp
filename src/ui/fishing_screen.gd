@@ -46,6 +46,7 @@ var _depth_label: Label
 var _safe_zone_label: Label
 var _view: UnderwaterView
 var _surface_view: SurfaceCastView
+var _time_slot_grade_overlay: ColorRect
 var _fight_sidebar: FightSidebar
 var _fight_floating_card: FightSidebar
 var _fight_hud: FightHud
@@ -73,6 +74,7 @@ func _build_screen() -> void:
 	_resolve_trip_stats()
 	_apply_spot_to_trip_stats()
 	_ensure_trip_environment()
+	_ensure_trip_time_slot()
 	_ensure_trip_rig()
 	_play_fishing_bgm()
 	_simulator = FishingSimulatorScript.new()
@@ -118,6 +120,7 @@ func _build_screen() -> void:
 	_surface_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_surface_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	water_panel.add_child(_surface_view)
+	_build_time_slot_grade_overlay(water_panel)
 
 	var message_layer := Control.new()
 	message_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -313,6 +316,21 @@ func _ensure_trip_environment() -> void:
 		_trip_stats["surface_bgm_key"] = String(environment.get("surface_bgm_key", "calm"))
 
 
+func _ensure_trip_time_slot() -> void:
+	var time_slot_id := String(_trip_stats.get("time_slot_id", PlayerProgress.selected_time_slot_id))
+	var time_slot := GameData.get_time_slot(time_slot_id)
+	time_slot_id = String(time_slot.get("id", GameData.DEFAULT_TIME_SLOT_ID))
+	if not GameData.is_time_slot_unlocked(time_slot_id, PlayerProgress.level):
+		time_slot_id = GameData.DEFAULT_TIME_SLOT_ID
+		time_slot = GameData.get_time_slot(time_slot_id)
+	_trip_stats["time_slot_id"] = time_slot_id
+	_trip_stats["time_slot_label"] = String(time_slot.get("name", "日中"))
+	_trip_stats["time_slot_grade"] = String(time_slot.get("grade", "none"))
+	var bgm_override := String(time_slot.get("surface_bgm_key_override", ""))
+	if not bgm_override.strip_edges().is_empty():
+		_trip_stats["surface_bgm_key"] = bgm_override
+
+
 func _ensure_trip_rig() -> void:
 	var rig_id := String(_trip_stats.get("rig_id", ""))
 	if rig_id.strip_edges().is_empty() or GameData.get_rig(rig_id).is_empty():
@@ -338,6 +356,23 @@ func _play_fight_bgm() -> void:
 
 func _fight_bgm_path() -> String:
 	return FIGHT_BGM_PATH_NORMAL
+
+
+func _build_time_slot_grade_overlay(parent: Control) -> void:
+	_time_slot_grade_overlay = ColorRect.new()
+	_time_slot_grade_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_time_slot_grade_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_time_slot_grade_overlay.color = _time_slot_grade_color()
+	parent.add_child(_time_slot_grade_overlay)
+
+
+func _time_slot_grade_color() -> Color:
+	match String(_trip_stats.get("time_slot_grade", "none")):
+		"warm":
+			return Palette.FISHING_TIME_GRADE_WARM
+		"cool":
+			return Palette.FISHING_TIME_GRADE_COOL
+	return Palette.FISHING_TIME_GRADE_CLEAR
 
 
 func _spot_summary_text() -> String:

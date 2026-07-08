@@ -22,6 +22,7 @@ const ICON_TITLE_PATH := "res://assets/showcase/common/nav_title_icon.png"
 const ICON_QUEST_PATH := "res://assets/showcase/common/nav_status_icon.png"
 
 var _status_label: Label
+var _context_label: Label
 var _top_level_label: Label
 var _top_money_label: Label
 var _top_rod_label: Label
@@ -33,6 +34,8 @@ var _facility_detail_body_label: Label
 var _preparation_body_label: Label
 var _shark_lure_button: Button
 var _selected_shark_lure_fish_id := ""
+var _time_slot_buttons: Dictionary = {}
+var _time_slot_grade_overlay: ColorRect
 
 
 func _build_screen() -> void:
@@ -41,6 +44,7 @@ func _build_screen() -> void:
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(backdrop)
 	move_child(backdrop, 0)
+	_build_time_slot_grade_overlay()
 
 	var root := Control.new()
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -65,10 +69,10 @@ func _build_top_bar(root: Control) -> void:
 	location.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(top, location, 0.026, 0.15, 0.265, 0.67)
 
-	var context := _harbor_label("潮位：満ち始め　天候：快晴　風：弱", 15, Palette.HARBOR_CONTEXT_TEXT, false, 2, Palette.HARBOR_LABEL_OUTLINE)
-	context.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	context.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(top, context, 0.030, 0.62, 0.395, 0.92)
+	_context_label = _harbor_label("", 15, Palette.HARBOR_CONTEXT_TEXT, false, 2, Palette.HARBOR_LABEL_OUTLINE)
+	_context_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_context_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(top, _context_label, 0.030, 0.62, 0.395, 0.92)
 
 	_top_level_label = _top_metric(top, 0.395, 0.145, 0.485, 0.825, "Lv.1")
 	_top_exp_label = _top_metric(top, 0.495, 0.145, 0.660, 0.825, "EXP 0 / 60")
@@ -114,33 +118,34 @@ func _build_main_panel(root: Control) -> void:
 
 
 func _build_preparation_card(main: Control) -> void:
-	var card := _anchored_control(main, 0.066, 0.482, 0.934, 0.654)
+	var card := _anchored_control(main, 0.066, 0.452, 0.934, 0.704)
 	var frame := _texture_rect(HARBOR_PARCHMENT_CARD_PATH)
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	card.add_child(frame)
 
 	var icon := _icon_rect(ICON_FISHING_PATH)
-	_place_control(card, icon, 0.030, 0.185, 0.112, 0.815)
+	_place_control(card, icon, 0.030, 0.145, 0.112, 0.575)
 
 	var title := _harbor_label("今日の支度", 15, Palette.HARBOR_PARCHMENT_TITLE, true, 0)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(card, title, 0.140, 0.100, 0.930, 0.375)
+	_place_control(card, title, 0.140, 0.070, 0.930, 0.270)
 
 	_preparation_body_label = _harbor_label("", 16, Palette.HARBOR_PARCHMENT_BODY, true, 0)
 	_preparation_body_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_preparation_body_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_preparation_body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_preparation_body_label.clip_text = true
-	_place_control(card, _preparation_body_label, 0.140, 0.390, 0.675, 0.850)
+	_place_control(card, _preparation_body_label, 0.140, 0.285, 0.675, 0.555)
 
 	_shark_lure_button = make_button("", _cycle_shark_lure_fish, 0.0, false)
 	_shark_lure_button.add_theme_font_size_override("font_size", 13)
-	_place_control(card, _shark_lure_button, 0.700, 0.245, 0.940, 0.800)
+	_place_control(card, _shark_lure_button, 0.700, 0.215, 0.940, 0.555)
+	_build_time_slot_selector(card)
 
 
 func _build_buff_card(main: Control) -> void:
-	var card := _anchored_control(main, 0.066, 0.684, 0.934, 0.855)
+	var card := _anchored_control(main, 0.066, 0.735, 0.934, 0.895)
 	var frame := _texture_rect(HARBOR_PARCHMENT_CARD_PATH)
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	card.add_child(frame)
@@ -162,6 +167,27 @@ func _build_buff_card(main: Control) -> void:
 	_buff_text_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_buff_text_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(card, _buff_text_label, 0.145, 0.625, 0.930, 0.900)
+
+
+func _build_time_slot_selector(card: Control) -> void:
+	var label := _harbor_label("時間帯", 13, Palette.HARBOR_PARCHMENT_TITLE, true, 0)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(card, label, 0.140, 0.655, 0.255, 0.900)
+	var ids := GameData.get_all_time_slot_ids()
+	var left := 0.270
+	var right := 0.940
+	var gap := 0.012
+	var width := (right - left - gap * float(ids.size() - 1)) / float(ids.size())
+	for index in range(ids.size()):
+		var time_slot_id := String(ids[index])
+		var button := make_button("", _select_time_slot.bind(time_slot_id), 0.0, false)
+		button.add_theme_font_size_override("font_size", 12)
+		button.clip_text = true
+		button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		_time_slot_buttons[time_slot_id] = button
+		var x0 := left + float(index) * (width + gap)
+		_place_control(card, button, x0, 0.625, x0 + width, 0.915)
 
 
 func _preparation_card_text() -> String:
@@ -231,6 +257,32 @@ func _refresh_preparation_card() -> void:
 	var fish := GameData.get_fish(_selected_shark_lure_fish_id)
 	var count := PlayerProgress.fish_count(_selected_shark_lure_fish_id)
 	_shark_lure_button.text = "%s x%d" % [String(fish.get("name", _selected_shark_lure_fish_id)), count]
+
+
+func _select_time_slot(time_slot_id: String) -> void:
+	if not PlayerProgress.select_time_slot(time_slot_id):
+		return
+	_refresh_labels()
+
+
+func _refresh_time_slot_buttons() -> void:
+	for time_slot_id in GameData.get_all_time_slot_ids():
+		var button := _time_slot_buttons.get(time_slot_id, null) as Button
+		if button == null:
+			continue
+		var time_slot := GameData.get_time_slot(time_slot_id)
+		var label := String(time_slot.get("name", time_slot_id))
+		var unlock_level := int(time_slot.get("unlock_level", 1))
+		var locked := not GameData.is_time_slot_unlocked(time_slot_id, PlayerProgress.level)
+		var selected := PlayerProgress.selected_time_slot_id == time_slot_id
+		button.disabled = locked
+		button.theme_type_variation = "GoldButton" if selected and not locked else ""
+		if locked:
+			button.text = "%s Lv.%d" % [label, unlock_level]
+		elif selected:
+			button.text = "%s 選択中" % label
+		else:
+			button.text = label
 
 
 func _cycle_shark_lure_fish() -> void:
@@ -438,6 +490,14 @@ func _build_footer(root: Control) -> void:
 
 func _refresh_labels() -> void:
 	_refresh_preparation_card()
+	var normalized_time_slot_id := String(
+		GameData.get_time_slot(PlayerProgress.selected_time_slot_id).get("id", GameData.DEFAULT_TIME_SLOT_ID)
+	)
+	if not GameData.is_time_slot_unlocked(normalized_time_slot_id, PlayerProgress.level):
+		normalized_time_slot_id = GameData.DEFAULT_TIME_SLOT_ID
+	PlayerProgress.selected_time_slot_id = normalized_time_slot_id
+	_refresh_time_slot_buttons()
+	_refresh_time_slot_grade_overlay()
 	var fish_total := 0
 	for count in PlayerProgress.inventory.values():
 		fish_total += int(count)
@@ -451,6 +511,9 @@ func _refresh_labels() -> void:
 	_top_exp_label.text = "EXP %s" % next_text.replace(" EXP", "")
 	_top_money_label.text = "%s G" % ScreenBase.format_money(PlayerProgress.money)
 	_top_rod_label.text = rod_name
+	_context_label.text = "時間帯：%s　潮位：満ち始め　風：弱" % String(
+		GameData.get_time_slot(PlayerProgress.selected_time_slot_id).get("name", "日中")
+	)
 	_status_label.text = (
 		"クーラーボックス：%d匹　｜　食経験値：%s　｜　プレイ時間：%s"
 		% [
@@ -465,6 +528,27 @@ func _refresh_labels() -> void:
 	else:
 		_buff_name_label.text = String(PlayerProgress.pending_buff.get("name", "料理"))
 		_buff_text_label.text = String(PlayerProgress.pending_buff.get("text", ""))
+
+
+func _build_time_slot_grade_overlay() -> void:
+	_time_slot_grade_overlay = ColorRect.new()
+	_time_slot_grade_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_time_slot_grade_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_time_slot_grade_overlay)
+	_refresh_time_slot_grade_overlay()
+
+
+func _refresh_time_slot_grade_overlay() -> void:
+	if _time_slot_grade_overlay == null:
+		return
+	var time_slot := GameData.get_time_slot(PlayerProgress.selected_time_slot_id)
+	match String(time_slot.get("grade", "none")):
+		"warm":
+			_time_slot_grade_overlay.color = Palette.HARBOR_TIME_GRADE_WARM
+		"cool":
+			_time_slot_grade_overlay.color = Palette.HARBOR_TIME_GRADE_COOL
+		_:
+			_time_slot_grade_overlay.color = Palette.FISHING_TIME_GRADE_CLEAR
 
 
 func _return_to_title() -> void:
