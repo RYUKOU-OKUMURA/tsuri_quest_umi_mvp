@@ -1852,6 +1852,61 @@ const FISHING_ENVIRONMENTS: Dictionary = {
 	},
 }
 
+const TIME_SLOT_ORDER: Array[String] = [
+	"asa_mazume",
+	"daytime",
+	"night",
+]
+
+const TIME_SLOTS: Dictionary = {
+	"asa_mazume":
+	{
+		"id": "asa_mazume",
+		"name": "朝まずめ",
+		"unlock_level": 12,
+		"rarity_weight_modifiers": {"レア": 1.30, "アンコモン": 1.12},
+		"fish_weight_modifiers": {
+			"aji": 1.30,
+			"iwashi": 1.30,
+			"katsuo": 1.20,
+			"buri": 1.20,
+			"kanpachi": 1.20,
+			"madai": 1.15,
+		},
+		"surface_bgm_key_override": "",
+		"grade": "warm",
+	},
+	"daytime":
+	{
+		"id": "daytime",
+		"name": "日中",
+		"unlock_level": 1,
+		"rarity_weight_modifiers": {},
+		"fish_weight_modifiers": {},
+		"surface_bgm_key_override": "",
+		"grade": "none",
+	},
+	"night":
+	{
+		"id": "night",
+		"name": "夜釣り",
+		"unlock_level": 15,
+		"rarity_weight_modifiers": {},
+		"fish_weight_modifiers": {
+			"tachiuo": 2.20,
+			"maanago": 2.40,
+			"kinmedai": 1.60,
+			"akamutsu": 1.50,
+			"mebaru": 1.50,
+			"kurosoi": 1.50,
+			"suzuki": 1.40,
+			"ara": 1.30,
+		},
+		"surface_bgm_key_override": "calm",
+		"grade": "cool",
+	},
+}
+
 const RECIPES: Dictionary = {
 	"salt_grill":
 		{

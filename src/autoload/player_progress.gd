@@ -95,6 +95,7 @@ var quest_board: Array[Dictionary] = []
 var quest_completed_count: int = 0
 var sea_chart_fragments: int = 0
 var shark_bonds: Dictionary = {}
+var selected_time_slot_id: String = GameData.DEFAULT_TIME_SLOT_ID
 
 # smoke / preview / audit（res://tools/ 配下のシーン起動）から本番セーブを守るフラグ。
 # true の間はディスクへの読み書きを一切行わない。
@@ -213,6 +214,7 @@ func _reset_runtime_state() -> void:
 	quest_completed_count = 0
 	sea_chart_fragments = 0
 	shark_bonds = {}
+	selected_time_slot_id = GameData.DEFAULT_TIME_SLOT_ID
 
 
 func add_sea_chart_fragments(amount: int = 1) -> int:
@@ -690,6 +692,8 @@ func get_base_stats() -> Dictionary:
 func begin_fishing_trip() -> Dictionary:
 	var stats := get_base_stats()
 	var environment := GameData.roll_fishing_environment()
+	selected_time_slot_id = _normalized_time_slot_id(selected_time_slot_id)
+	var time_slot := GameData.get_time_slot(selected_time_slot_id)
 	var applied_buff := pending_buff.duplicate(true)
 	if not applied_buff.is_empty():
 		match String(applied_buff.get("stat", "")):
@@ -715,6 +719,12 @@ func begin_fishing_trip() -> Dictionary:
 	stats["wind_id"] = String(environment.get("wind_id", "weak"))
 	stats["wind_label"] = String(environment.get("wind_label", "風 弱"))
 	stats["surface_bgm_key"] = String(environment.get("surface_bgm_key", "calm"))
+	stats["time_slot_id"] = selected_time_slot_id
+	stats["time_slot_label"] = String(time_slot.get("name", "日中"))
+	stats["time_slot_grade"] = String(time_slot.get("grade", "none"))
+	var surface_bgm_override := String(time_slot.get("surface_bgm_key_override", ""))
+	if not surface_bgm_override.strip_edges().is_empty():
+		stats["surface_bgm_key"] = surface_bgm_override
 	var rig := GameData.get_rig(equipped_rig_id)
 	if rig.is_empty():
 		equipped_rig_id = GameData.DEFAULT_RIG_ID
@@ -726,6 +736,22 @@ func begin_fishing_trip() -> Dictionary:
 	save_game()
 	progress_changed.emit()
 	return stats
+
+
+func can_select_time_slot(time_slot_id: String) -> bool:
+	var time_slot := GameData.get_time_slot(time_slot_id)
+	if time_slot.is_empty():
+		return false
+	return String(time_slot.get("id", GameData.DEFAULT_TIME_SLOT_ID)) == time_slot_id and GameData.is_time_slot_unlocked(time_slot_id, level)
+
+
+func select_time_slot(time_slot_id: String) -> bool:
+	if not can_select_time_slot(time_slot_id):
+		return false
+	selected_time_slot_id = time_slot_id
+	save_game()
+	progress_changed.emit()
+	return true
 
 
 func title_stats_snapshot() -> Dictionary:
@@ -797,6 +823,7 @@ func save_game() -> void:
 		"quest_completed_count": quest_completed_count,
 		"sea_chart_fragments": sea_chart_fragments,
 		"shark_bonds": shark_bonds,
+		"selected_time_slot_id": selected_time_slot_id,
 	}
 	var save_path := current_save_path()
 	var backup_path := current_backup_path()
@@ -942,6 +969,7 @@ func _apply_save_data(data: Dictionary) -> void:
 	quest_completed_count = maxi(0, int(data.get("quest_completed_count", 0)))
 	sea_chart_fragments = clampi(int(data.get("sea_chart_fragments", 0)), 0, SEA_CHART_FRAGMENT_MAX)
 	shark_bonds = _normalized_shark_bonds(loaded_shark_bonds)
+	selected_time_slot_id = _normalized_time_slot_id(data.get("selected_time_slot_id", GameData.DEFAULT_TIME_SLOT_ID))
 	owned_rods = []
 	var loaded_rods = data.get("owned_rods", ["starter"])
 	if typeof(loaded_rods) == TYPE_ARRAY:
@@ -1013,6 +1041,15 @@ func _normalized_shark_bonds(value: Variant) -> Dictionary:
 			continue
 		normalized[shark_id] = clampi(int(Dictionary(value)[key]), 0, 100)
 	return normalized
+
+
+func _normalized_time_slot_id(value: Variant) -> String:
+	var time_slot_id := String(value)
+	if not GameData.TIME_SLOTS.has(time_slot_id):
+		return GameData.DEFAULT_TIME_SLOT_ID
+	if not GameData.is_time_slot_unlocked(time_slot_id, level):
+		return GameData.DEFAULT_TIME_SLOT_ID
+	return time_slot_id
 
 
 func _remember_current_titles() -> void:

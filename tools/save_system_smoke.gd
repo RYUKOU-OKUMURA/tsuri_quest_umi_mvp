@@ -72,6 +72,11 @@ func _ready() -> void:
 	_expect_eq(int(saved.get("version", -1)), PlayerProgress.SAVE_VERSION, "saved version")
 	_expect_eq(int(saved.get("money", -1)), 500, "saved initial money")
 	_expect(typeof(saved.get("shark_bonds", {})) == TYPE_DICTIONARY, "saved data should include shark_bonds")
+	_expect_eq(
+		String(saved.get("selected_time_slot_id", "")),
+		GameData.DEFAULT_TIME_SLOT_ID,
+		"saved data should include default selected_time_slot_id"
+	)
 
 	# 2回目の保存でバックアップ世代が残る
 	PlayerProgress.money = 1234
@@ -134,6 +139,45 @@ func _ready() -> void:
 	_expect(
 		not PlayerProgress.shark_bonds.has("nushi_danger_reef"),
 		"non-raiseable shark bond should be dropped on load"
+	)
+
+	# E5: selected_time_slot_id は欠損時に日中へ補完され、未解放値はロード時に戻される
+	_write_text(
+		PlayerProgress.current_save_path(),
+		JSON.stringify({"version": PlayerProgress.SAVE_VERSION, "level": 20})
+	)
+	PlayerProgress.load_game()
+	_expect_eq(
+		PlayerProgress.selected_time_slot_id,
+		GameData.DEFAULT_TIME_SLOT_ID,
+		"missing selected_time_slot_id should default to daytime"
+	)
+	_expect(PlayerProgress.select_time_slot("night"), "Lv20 should be able to select night")
+	_expect_eq(
+		String(_read_json(PlayerProgress.current_save_path()).get("selected_time_slot_id", "")),
+		"night",
+		"selected night should be saved"
+	)
+	var night_stats := PlayerProgress.begin_fishing_trip()
+	_expect_eq(String(night_stats.get("time_slot_id", "")), "night", "trip stats should include night")
+	_expect_eq(String(night_stats.get("time_slot_label", "")), "夜釣り", "trip stats should include night label")
+	_expect_eq(String(night_stats.get("surface_bgm_key", "")), "calm", "night should override surface BGM")
+
+	_write_text(
+		PlayerProgress.current_save_path(),
+		JSON.stringify(
+			{
+				"version": PlayerProgress.SAVE_VERSION,
+				"level": 1,
+				"selected_time_slot_id": "night",
+			}
+		)
+	)
+	PlayerProgress.load_game()
+	_expect_eq(
+		PlayerProgress.selected_time_slot_id,
+		GameData.DEFAULT_TIME_SLOT_ID,
+		"locked selected_time_slot_id should fall back to daytime"
 	)
 
 	# V2 E0: 旧上限だったLv10セーブは維持され、Lv11以降へ進行できる

@@ -7,6 +7,7 @@ const MAX_LEVEL: int = 50
 const BOSS_UNLOCK_LEVEL: int = 5
 const DEFAULT_FISHING_SPOT_ID := "harbor_pier"
 const BOSS_FISHING_SPOT_ID := "harbor_boulder"
+const DEFAULT_TIME_SLOT_ID := "daytime"
 const NO_BOAT_RANK := 0
 const DEFAULT_RIG_ID := "sabiki"
 const RIG_MATCH_WEIGHT_MULTIPLIER := 2.5
@@ -27,6 +28,8 @@ const FISHING_SPOT_ORDER: Array[String] = GameCatalogData.FISHING_SPOT_ORDER
 const FISHING_SPOTS: Dictionary = GameCatalogData.FISHING_SPOTS
 const FISHING_ENVIRONMENT_ORDER: Array[String] = GameCatalogData.FISHING_ENVIRONMENT_ORDER
 const FISHING_ENVIRONMENTS: Dictionary = GameCatalogData.FISHING_ENVIRONMENTS
+const TIME_SLOT_ORDER: Array[String] = GameCatalogData.TIME_SLOT_ORDER
+const TIME_SLOTS: Dictionary = GameCatalogData.TIME_SLOTS
 const TITLES: Array[Dictionary] = GameCatalogData.TITLES
 const RECIPES: Dictionary = GameCatalogData.RECIPES
 const QUEST_TEMPLATES: Dictionary = GameCatalogData.QUEST_TEMPLATES
@@ -86,6 +89,12 @@ func get_fishing_environment(environment_id: String) -> Dictionary:
 	if not FISHING_ENVIRONMENTS.has(environment_id):
 		environment_id = DEFAULT_FISHING_ENVIRONMENT_ID
 	return FISHING_ENVIRONMENTS[environment_id].duplicate(true)
+
+
+func get_time_slot(time_slot_id: String) -> Dictionary:
+	if not TIME_SLOTS.has(time_slot_id):
+		time_slot_id = DEFAULT_TIME_SLOT_ID
+	return TIME_SLOTS[time_slot_id].duplicate(true)
 
 
 func roll_fishing_environment() -> Dictionary:
@@ -339,6 +348,19 @@ func get_all_fishing_environment_ids() -> Array[String]:
 	return ids
 
 
+func get_all_time_slot_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for time_slot_id in TIME_SLOT_ORDER:
+		if TIME_SLOTS.has(time_slot_id):
+			ids.append(time_slot_id)
+	return ids
+
+
+func is_time_slot_unlocked(time_slot_id: String, player_level: int) -> bool:
+	var time_slot := get_time_slot(time_slot_id)
+	return int(time_slot.get("unlock_level", 1)) <= player_level
+
+
 func compute_earned_titles(stats: Dictionary) -> Array[String]:
 	var earned: Array[String] = []
 	for title in TITLES:
@@ -398,6 +420,13 @@ func fishing_environment_fish_modifier(environment_id: String, fish_id: String) 
 	if fish.is_empty():
 		return 1.0
 	return _environment_weight_modifier(fish_id, fish, environment_id)
+
+
+func fishing_time_slot_fish_modifier(time_slot_id: String, fish_id: String) -> float:
+	var fish := get_fish(fish_id)
+	if fish.is_empty():
+		return 1.0
+	return _time_slot_weight_modifier(fish_id, fish, time_slot_id)
 
 
 func get_all_boat_ids() -> Array[String]:
@@ -945,7 +974,8 @@ func encounter_weights(
 	spot_id: String = DEFAULT_FISHING_SPOT_ID,
 	rig_id: String = "",
 	environment_id: String = "",
-	extra_fish_weight_modifiers: Dictionary = {}
+	extra_fish_weight_modifiers: Dictionary = {},
+	time_slot_id: String = ""
 ) -> Dictionary:
 	var requested_spot_id := _resolved_spot_id(spot_id)
 	var requested_spot: Dictionary = FISHING_SPOTS[requested_spot_id]
@@ -961,6 +991,10 @@ func encounter_weights(
 	)
 	var apply_environment_modifier := (
 		not environment_id.strip_edges().is_empty()
+		and not bool(requested_spot.get("boss_spot", false))
+	)
+	var apply_time_slot_modifier := (
+		not time_slot_id.strip_edges().is_empty()
 		and not bool(requested_spot.get("boss_spot", false))
 	)
 	for fish_id in get_all_fish_ids():
@@ -980,6 +1014,8 @@ func encounter_weights(
 			modifier *= _rig_weight_modifier(fish, rig_id)
 		if apply_environment_modifier:
 			modifier *= _environment_weight_modifier(fish_id, fish, environment_id)
+		if apply_time_slot_modifier:
+			modifier *= _time_slot_weight_modifier(fish_id, fish, time_slot_id)
 		if extra_fish_weight_modifiers.has(fish_id):
 			modifier *= float(extra_fish_weight_modifiers[fish_id])
 		var weight := float(fish.get("weight", 0.0)) * maxf(0.0, modifier)
@@ -1008,7 +1044,9 @@ func roll_hooked_fish(
 	var nushi := nushi_candidate(spot_id, environment_id, rig_id, time_slot_id, player_level)
 	if not nushi.is_empty() and _rng.randf() < NUSHI_ENCOUNTER_CHANCE:
 		return nushi
-	return roll_normal_fish(player_level, spot_id, rig_id, environment_id, extra_fish_weight_modifiers)
+	return roll_normal_fish(
+		player_level, spot_id, rig_id, environment_id, extra_fish_weight_modifiers, time_slot_id
+	)
 
 
 func roll_normal_fish(
@@ -1016,10 +1054,11 @@ func roll_normal_fish(
 	spot_id: String = DEFAULT_FISHING_SPOT_ID,
 	rig_id: String = "",
 	environment_id: String = "",
-	extra_fish_weight_modifiers: Dictionary = {}
+	extra_fish_weight_modifiers: Dictionary = {},
+	time_slot_id: String = ""
 ) -> Dictionary:
 	var weights := encounter_weights(
-		player_level, spot_id, rig_id, environment_id, extra_fish_weight_modifiers
+		player_level, spot_id, rig_id, environment_id, extra_fish_weight_modifiers, time_slot_id
 	)
 	var candidate_ids: Array[String] = []
 	var total_weight := 0.0
@@ -1229,3 +1268,18 @@ func _environment_weight_modifier(fish_id: String, _fish: Dictionary, environmen
 	if not modifiers.has(fish_id):
 		return 1.0
 	return maxf(0.0, float(modifiers[fish_id]))
+
+
+func _time_slot_weight_modifier(fish_id: String, fish: Dictionary, time_slot_id: String) -> float:
+	var time_slot := get_time_slot(time_slot_id)
+	if time_slot.is_empty():
+		return 1.0
+	var modifier := 1.0
+	var rarity_modifiers: Dictionary = time_slot.get("rarity_weight_modifiers", {})
+	var rarity := String(fish.get("rarity", ""))
+	if rarity_modifiers.has(rarity):
+		modifier *= maxf(0.0, float(rarity_modifiers[rarity]))
+	var fish_modifiers: Dictionary = time_slot.get("fish_weight_modifiers", {})
+	if fish_modifiers.has(fish_id):
+		modifier *= maxf(0.0, float(fish_modifiers[fish_id]))
+	return modifier
