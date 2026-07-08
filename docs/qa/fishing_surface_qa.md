@@ -1,6 +1,6 @@
 # 水上キャスト画面 QA判断ログ
 
-最終更新: 2026-07-08 / 状態: E5 Stage 1（グレード拡張＋ビネット）採用・夜成立は不合格判定
+最終更新: 2026-07-08 / 状態: E5 Stage 2（時間帯最小素材）freeze改定済み・素材生成前
 参照画像: `reference/01_surface_fishing_mockup.png` / `reference/13_fishing_ready_danger_mockup.png`
 QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `./tools/fishing_time_slot_visual_qa.sh` / `godot --path . res://tools/fishing_surface_states_preview.tscn` / `godot --path . res://tools/catch_fanfare_preview.tscn` / `./tools/fight_visual_qa.sh`
 
@@ -8,7 +8,7 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `./tools/fishing_
 
 | 項目 | 値 | 場所 | 理由・備考 |
 |---|---|---|---|
-| 晴天の状態別プレート | 変更しない | `assets/showcase/surface/surface_scene_waiting.png` / `surface_scene_approach.png` / `surface_scene_bite.png` | 晴天は焼き込み魚影の品質が高く、今回の対象外 |
+| 晴天の状態別プレート | WAITING/APPROACH/BITE は変更しない。READY だけはE5 Stage 2例外として時間帯別ベース2枚（`surface_scene_ready_asa_mazume.png` / `surface_scene_ready_night.png`）の追加を許可し、日中は既存READYを維持する | `assets/showcase/surface/surface_scene_ready*.png` / `surface_scene_waiting.png` / `surface_scene_approach.png` / `surface_scene_bite.png` | Stage 1で夜READYの焼き込み太陽・昼海面が不合格。例外はREADY時間帯ベースのみで、状態別×時間帯の量産はしない |
 | 非晴天魚影素材 | `surface_fish_shadow_soft.png` 3フレーム横並びシート、無ければ `surface_fish_shadow.png` | `src/ui/components/surface_cast_view.gd` | 新素材未import時も `ImageTexture.create_from_image()` 経由で表示、欠落時は旧素材へフォールバック |
 | 非晴天魚影ステージング | WAITING=小・薄、APPROACH=拡大+alpha上昇、BITE=縮小+低alpha | `_draw_asset_fish_shadow()` | BITEで魚影を濃くせず、スプラッシュを主役にする |
 | 非晴天航跡 | 固定楕円なし、進行方向V字航跡+後方リップル | `_draw_asset_fish_wake()` | 旧楕円アウトラインの照準レティクル感を解消 |
@@ -19,7 +19,8 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `./tools/fishing_
 | サメ餌魚APPROACH/BITE文 | 餌魚ありの時だけ `魚影が餌の<魚名>へ近づいている` / `<魚名>に何かが食いついた`。ヒット魚名・サメ名は出さない | `src/core/fishing_simulator.gd` / `src/ui/components/fight_sidebar.gd` | 上部メッセージパネルはAPPROACH/BITEで非表示のため、実表示される右サイドカードにも反映 |
 | 未確認魚影カード詳細行 | signal art比率を compact=0.36 / 通常=0.34、詳細2行を下端から逆算して配置 | `src/ui/components/fight_sidebar.gd` | 「釣り場」「タナ / エサ」2行の下端見切れP1を解消 |
 | 好物発見ファンファーレ | `favorite_bait_discovery_text` を記録更新・撃破報酬の下、称号の上に表示。`megalodon` は除外 | `src/ui/fishing_screen.gd` / `src/ui/components/catch_fanfare.gd` | 好物一致サメだけポジティブな発見行を返す。不一致・非サメ・メガロドンは無言 |
-| E5時間帯グレード | 朝まずめ=暖色薄乗せ、日中=なし、夜釣り=寒色暗め薄乗せ。水面READYから水中FIGHTまで、プレイシーン領域に同じグレードを重ねる。Stage 1で外縁グラデ（薄めEDGE定数）・逃走リザルトの時間帯別ディム・釣果ファンファーレ写真ベース・水面パネル内ビネット（per-pixel Image拡大描画、帯状draw_rect禁止）へ拡張 | `src/ui/fishing_screen.gd` / `src/ui/components/catch_fanfare.gd` / `src/ui/palette.gd` | 背景素材は作らず、まずグレーディングで時間帯差を出す。HUD/カード/メッセージレイヤーは上に置き、文字可読性を落とさない |
+| E5時間帯グレード | 朝まずめ=暖色薄乗せ、日中=なし、夜釣り=寒色暗め薄乗せ。水面READYから水中FIGHTまで、プレイシーン領域に同じグレードを重ねる。Stage 1で外縁グラデ（薄めEDGE定数）・逃走リザルトの時間帯別ディム・釣果ファンファーレ写真ベース・水面パネル内ビネット（per-pixel Image拡大描画、帯状draw_rect禁止）へ拡張 | `src/ui/fishing_screen.gd` / `src/ui/components/catch_fanfare.gd` / `src/ui/palette.gd` | HUD/カード/メッセージレイヤーは上に置き、文字可読性を落とさない。Stage 2では下記4枚のみ背景/写真ベース差し替え例外とする |
+| E5 Stage 2時間帯素材例外 | 追加・差し替え可能なPNGは `surface_scene_ready_asa_mazume.png` / `surface_scene_ready_night.png` / `catch_photo_base_asa.png` / `catch_photo_base_night.png` の4枚のみ。水中背景は差し替えない。天候別×時間帯別READYや状態別×時間帯別PNGは作らない | `src/ui/components/surface_cast_view.gd` / `src/ui/components/catch_fanfare.gd` / `assets/showcase/surface/` / `assets/showcase/underwater/` | docs/41 §3-4の最小素材セット。Stage 1不合格原因（太陽・昼海面・昼写真ベース）だけを素材で解消し、既存天候grade/overlayと合成する |
 
 ## 2. 不採用・再試行禁止リスト
 
@@ -43,7 +44,8 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `./tools/fishing_
 
 ## 4. 暫定判定・再検証TODO
 
-- E5 Stage 2（時間帯READY素材2枚＋釣果写真ベース2枚、docs/41 §3-4）着手時に、本docの「晴天状態別プレート変更しない」「背景PNG差し替えスコープ外」freezeの改定判断を先に行うこと。
+- E5 Stage 2はfreeze改定済み。素材生成・配線後に `./tools/fishing_time_slot_visual_qa.sh` で3時間帯比較を再生成し、夜READYが「夜に見えるか」を実スクショで判定する。
+- 釣果ファンファーレ夜版は `TSURI_FISHING_TIME_SLOT_MODE=fanfare TSURI_FISHING_TIME_SLOT_ID=night godot --path . res://tools/fishing_time_slot_preview.tscn` で取得し、昼写真ベースが残っていないことを確認する（headless不可）。
 
 ## 5. 現在の残ギャップ
 
@@ -53,7 +55,17 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `./tools/fishing_
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-完了済みのためなし。
+2026-07-08 E5 Stage 2（時間帯最小素材）素材パス。
+
+今回動かすもの:
+- READY水面ベースの時間帯差し替え2枚（朝まずめ/夜釣り）。日中は既存READYを使う。
+- 釣果写真ベースの時間帯差し替え2枚（朝まずめ/夜釣り）。魚・記録文・報酬文はruntime描画を維持する。
+- `SurfaceCastView` のREADYベース選択と `CatchFanfare` の写真ベース選択。
+
+触らないもの:
+- WAITING/APPROACH/BITEの晴天状態別プレート、非晴天魚影素材、rain/fog overlay、既存天候grade。
+- 水中背景、FIGHT HUD、READY下段バー、サメ餌魚セレクタ、文字位置・ボタンサイズなどの既存freeze値。
+- 天候別×時間帯別や状態別×時間帯別のPNG量産。
 
 ## 7. 判断ログ（直近パスのみ）
 
