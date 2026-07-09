@@ -13,6 +13,7 @@ func _ready() -> void:
 	await _verify_preparation_hint_and_meal_row()
 	await _verify_time_slot_selector()
 	await _verify_hint_recomputes_on_time_slot_change()
+	await _verify_info_board_v3()
 	await _verify_shark_pen_navigation()
 	await _verify_megalodon_omen()
 
@@ -128,6 +129,53 @@ func _verify_hint_recomputes_on_time_slot_change() -> void:
 	_expect(asa_hint != night_hint, "switching time slot should recompute the target hint")
 	screen.queue_free()
 	await get_tree().process_frame
+
+
+func _verify_info_board_v3() -> void:
+	PlayerProgress.level = 15
+	PlayerProgress.owned_boats = ["bluewater_boat"]
+	PlayerProgress.sea_chart_fragments = 3
+	PlayerProgress.inventory = {}
+	PlayerProgress.caught_counts = {}
+	PlayerProgress.quest_board = []
+	PlayerProgress.pending_buff = {}
+	var screen := _make_screen()
+	await get_tree().process_frame
+	_expect(screen._info_board_root != null, "info board root should exist")
+	_expect(screen._info_board_slots.size() == 3, "info board should reserve 3 slots")
+	var candidates: Array = screen._harbor_highlight_candidates(3)
+	_expect(candidates is Array, "highlight candidates should return Array")
+	_expect(candidates.size() <= 3, "highlight candidates should cap at 3")
+	var seen_fish: Dictionary = {}
+	for candidate in candidates:
+		var fish_id := String((candidate as Dictionary).get("fish_id", ""))
+		_expect(not fish_id.is_empty(), "candidate fish_id should not be empty")
+		_expect(not seen_fish.has(fish_id), "highlight candidates should not duplicate fish_id")
+		seen_fish[fish_id] = true
+	_expect(not _has_left_departure_cta(screen), "left departure CTA should be removed")
+	_expect(screen._preparation_body_label.text.contains("今日は雨の気配"), "preparation card should include weather stub")
+	screen.queue_free()
+	await get_tree().process_frame
+
+
+func _has_left_departure_cta(screen: Control) -> bool:
+	return _control_uses_action_button_frame(screen)
+
+
+func _control_uses_action_button_frame(node: Node) -> bool:
+	if node is Button:
+		var button := node as Button
+		var style := button.get_theme_stylebox("normal")
+		if style is StyleBoxTexture:
+			var texture_style := style as StyleBoxTexture
+			if texture_style.texture != null:
+				var path := String(texture_style.texture.resource_path)
+				if path.contains("action_button_frame"):
+					return true
+	for child in node.get_children():
+		if _control_uses_action_button_frame(child):
+			return true
+	return false
 
 
 func _verify_shark_pen_navigation() -> void:

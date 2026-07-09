@@ -268,7 +268,9 @@ def main() -> int:
     build_scene_window(bg)
     build_frames()
     build_buttons()
-    for path in [
+    from generate_harbor_info_board_assets import build_all as build_info_board_assets
+
+    outputs = [
         BG_OUT,
         GRADE_OUT,
         SCENE_OUT,
@@ -280,7 +282,9 @@ def main() -> int:
         FACILITY_CARD_OUT,
         FACILITY_CARD_HOVER_OUT,
         FACILITY_CARD_PRIMARY_OUT,
-    ]:
+        *build_info_board_assets(),
+    ]
+    for path in outputs:
         print(path.relative_to(ROOT))
     return 0
 

@@ -7,8 +7,19 @@ const HARBOR_TOP_FRAME_PATH := "res://assets/showcase/harbor/harbor_top_frame.pn
 const HARBOR_MAIN_FRAME_PATH := "res://assets/showcase/harbor/harbor_main_frame.png"
 const HARBOR_MENU_FRAME_PATH := "res://assets/showcase/harbor/harbor_menu_frame.png"
 const HARBOR_FOOTER_FRAME_PATH := "res://assets/showcase/harbor/harbor_footer_frame.png"
-const HARBOR_SCENE_WINDOW_PATH := "res://assets/showcase/harbor/harbor_scene_window.png"
-const HARBOR_PARCHMENT_CARD_PATH := "res://assets/showcase/harbor/harbor_parchment_card.png"
+const HARBOR_INFO_BOARD_FRAME_PATH := "res://assets/showcase/harbor/harbor_info_board_frame.png"
+const HARBOR_INFO_FISH_CARD_PATH := "res://assets/showcase/harbor/harbor_info_fish_card.png"
+const HARBOR_PLAN_PANEL_PATH := "res://assets/showcase/harbor/harbor_plan_panel.png"
+const HARBOR_PLAN_ICON_GUIDE_PATH := "res://assets/showcase/harbor/harbor_plan_icon_guide.png"
+const HARBOR_PLAN_ICON_PIN_PATH := "res://assets/showcase/harbor/harbor_plan_icon_pin.png"
+const HARBOR_PLAN_ICON_RUMOR_PATH := "res://assets/showcase/harbor/harbor_plan_icon_rumor.png"
+const HARBOR_TIME_SLOT_BTN_NORMAL_PATH := "res://assets/showcase/harbor/harbor_time_slot_btn_normal.png"
+const HARBOR_TIME_SLOT_BTN_SELECTED_PATH := "res://assets/showcase/harbor/harbor_time_slot_btn_selected.png"
+const HARBOR_TIME_SLOT_BTN_LOCKED_PATH := "res://assets/showcase/harbor/harbor_time_slot_btn_locked.png"
+const HARBOR_TIME_SLOT_ICON_ASA_PATH := "res://assets/showcase/harbor/harbor_time_slot_icon_asa.png"
+const HARBOR_TIME_SLOT_ICON_DAY_PATH := "res://assets/showcase/harbor/harbor_time_slot_icon_day.png"
+const HARBOR_TIME_SLOT_ICON_NIGHT_PATH := "res://assets/showcase/harbor/harbor_time_slot_icon_night.png"
+const HARBOR_WEATHER_STUB_ICON_PATH := "res://assets/showcase/harbor/harbor_weather_stub_icon.png"
 const HARBOR_BUTTON_PATH := "res://assets/showcase/harbor/harbor_facility_card.png"
 const HARBOR_BUTTON_HOVER_PATH := "res://assets/showcase/harbor/harbor_facility_card_hover.png"
 const HARBOR_BUTTON_PRIMARY_PATH := "res://assets/showcase/harbor/harbor_facility_card_primary.png"
@@ -19,7 +30,7 @@ const ICON_SHOP_PATH := "res://assets/showcase/common/nav_shop_icon.png"
 const ICON_SHIPYARD_PATH := "res://assets/showcase/common/nav_shipyard_icon.png"
 const ICON_STATUS_PATH := "res://assets/showcase/common/nav_status_icon.png"
 const ICON_TITLE_PATH := "res://assets/showcase/common/nav_title_icon.png"
-const ICON_QUEST_PATH := "res://assets/showcase/common/nav_status_icon.png"
+const ICON_QUEST_PATH := "res://assets/showcase/common/nav_quest_icon.png"
 
 var _status_label: Label
 var _context_label: Label
@@ -32,7 +43,18 @@ var _facility_detail_title_label: Label
 var _facility_detail_body_label: Label
 var _preparation_body_label: Label
 var _meal_effect_row_label: Label
+var _plan_rows_root: Control
+var _plan_guide_label: Label
+var _plan_weather_label: Label
+var _plan_pin_row: Control
+var _plan_pin_label: Label
+var _plan_rumor_row: Control
+var _plan_rumor_label: Label
+var _time_slot_zone_root: Control
+var _info_board_root: Control
+var _info_board_slots: Array[Dictionary] = []
 var _time_slot_buttons: Dictionary = {}
+var _time_slot_icons: Dictionary = {}
 var _time_slot_grade_overlay: ColorRect
 
 
@@ -83,63 +105,156 @@ func _build_main_panel(root: Control) -> void:
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	main.add_child(frame)
 
-	var scene := _texture_rect(HARBOR_SCENE_WINDOW_PATH)
-	scene.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	_place_control(main, scene, 0.060, 0.068, 0.940, 0.288)
-
-	var scene_shadow := ColorRect.new()
-	scene_shadow.color = Palette.HARBOR_SCENE_SHADOW
-	scene_shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(main, scene_shadow, 0.060, 0.068, 0.940, 0.288)
-
-	var scene_title := _harbor_label("潮風が吹く、小さな漁港", 32, Palette.HARBOR_SCENE_TITLE, true, 4, Palette.HARBOR_SCENE_TITLE_OUTLINE)
-	scene_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	scene_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(main, scene_title, 0.090, 0.108, 0.910, 0.248)
-
+	_build_info_board(main)
 	_build_departure_plan_card(main)
-	_build_departure_primary_button(main)
+	_build_time_slot_zone(main)
+
+
+func _build_info_board(main: Control) -> void:
+	# 掲示板へ縦を譲るため、情報板は少し圧縮（完成イメージ v4 の面積配分）。
+	_info_board_root = _anchored_control(main, 0.050, 0.035, 0.950, 0.305)
+	var board_frame := _texture_rect(HARBOR_INFO_BOARD_FRAME_PATH)
+	board_frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_info_board_root.add_child(board_frame)
+
+	var title := _harbor_label("本日の狙い目", 22, Palette.HARBOR_SCENE_TITLE, true, 3, Palette.HARBOR_SCENE_TITLE_OUTLINE)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(_info_board_root, title, 0.050, 0.020, 0.950, 0.150)
+
+	_info_board_slots.clear()
+	var slot_left := 0.055
+	var slot_width := 0.285
+	var slot_gap := 0.025
+	for index in range(3):
+		var left := slot_left + float(index) * (slot_width + slot_gap)
+		var slot := _anchored_control(_info_board_root, left, 0.160, left + slot_width, 0.970)
+		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+		var card_bg := _texture_rect(HARBOR_INFO_FISH_CARD_PATH)
+		card_bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		slot.add_child(card_bg)
+
+		var portrait := _icon_rect("")
+		_place_control(slot, portrait, 0.080, 0.030, 0.920, 0.600)
+
+		var name_label := _harbor_label("", 15, Palette.HARBOR_PARCHMENT_TITLE, true, 0)
+		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		name_label.clip_text = true
+		name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		_place_control(slot, name_label, 0.050, 0.610, 0.950, 0.750)
+
+		var badge_panel := Panel.new()
+		badge_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		badge_panel.add_theme_stylebox_override(
+			"panel",
+			_make_flat_panel_style(Palette.HARBOR_INFO_BADGE_QUEST_FILL, Color.TRANSPARENT, 6, 0)
+		)
+		_place_control(slot, badge_panel, 0.100, 0.760, 0.900, 0.960)
+
+		var badge_label := _harbor_label("", 12, Palette.HARBOR_INFO_BADGE_QUEST_TEXT, true, 1, Palette.HARBOR_LABEL_OUTLINE)
+		badge_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		badge_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		badge_label.clip_text = true
+		badge_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		_place_control(badge_panel, badge_label, 0.050, 0.080, 0.950, 0.920)
+
+		_info_board_slots.append(
+			{
+				"slot": slot,
+				"portrait": portrait,
+				"name_label": name_label,
+				"badge_panel": badge_panel,
+				"badge_label": badge_label,
+			}
+		)
 
 
 func _build_departure_plan_card(main: Control) -> void:
-	var card := _anchored_control(main, 0.066, 0.330, 0.934, 0.820)
-	var frame := _texture_rect(HARBOR_PARCHMENT_CARD_PATH)
-	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	card.add_child(frame)
+	# 時間帯を下端へ寄せた分、掲示板を縦に広げて行間・文字を読みやすくする。
+	# 紙面は AI 一点物 PNG（StyleBoxFlat wash / ColorRect 区切りは使わない）。
+	var card := _anchored_control(main, 0.050, 0.320, 0.950, 0.805)
+	var panel := _texture_rect(HARBOR_PLAN_PANEL_PATH)
+	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	card.add_child(panel)
 
-	var icon := _icon_rect(ICON_FISHING_PATH)
-	_place_control(card, icon, 0.030, 0.050, 0.100, 0.180)
-
-	var title := _harbor_label("出港プラン", 15, Palette.HARBOR_PARCHMENT_TITLE, true, 0)
+	# ヘッダー帯は素材側。タイトルは runtime（日本語焼き込み禁止）。
+	var title := _harbor_label("出港プラン", 17, Palette.HARBOR_SCENE_TITLE, true, 2, Palette.HARBOR_SCENE_TITLE_OUTLINE)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(card, title, 0.125, 0.050, 0.930, 0.180)
+	_place_control(card, title, 0.095, 0.025, 0.940, 0.155)
 
-	_preparation_body_label = _harbor_label("", 13, Palette.HARBOR_PARCHMENT_BODY, true, 0)
+	_preparation_body_label = _harbor_label("", 16, Palette.HARBOR_BUFF_BODY, true, 0)
 	_preparation_body_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_preparation_body_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	_preparation_body_label.clip_text = true
 	_preparation_body_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_place_control(card, _preparation_body_label, 0.050, 0.190, 0.950, 0.480)
+	_preparation_body_label.visible = false
+	_place_control(card, _preparation_body_label, 0.100, 0.180, 0.950, 0.950)
 
-	_build_plan_row_label(card, 0.530, 0.685, "時間帯")
-	_build_time_slot_selector(card, 0.530, 0.685)
+	_plan_rows_root = _anchored_control(card, 0.040, 0.175, 0.960, 0.960)
+	_plan_rows_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# 4行を等間隔で広げ、余白を行の読みやすさに使う（区切り線は紙面の罫線に任せる）。
+	var guide_row := _build_plan_content_row(_plan_rows_root, 0.000, 0.240, HARBOR_PLAN_ICON_GUIDE_PATH)
+	_plan_guide_label = guide_row["label"] as Label
+	var weather_row := _build_plan_content_row(_plan_rows_root, 0.250, 0.490, HARBOR_WEATHER_STUB_ICON_PATH)
+	_plan_weather_label = weather_row["label"] as Label
+	_plan_weather_label.text = "今日は雨の気配……潮目が立ちやすい"
+	var pin_row := _build_plan_content_row(_plan_rows_root, 0.500, 0.740, HARBOR_PLAN_ICON_PIN_PATH)
+	_plan_pin_row = pin_row["row"] as Control
+	_plan_pin_label = pin_row["label"] as Label
+	var rumor_row := _build_plan_content_row(_plan_rows_root, 0.750, 0.990, HARBOR_PLAN_ICON_RUMOR_PATH, true)
+	_plan_rumor_row = rumor_row["row"] as Control
+	_plan_rumor_label = rumor_row["label"] as Label
 
-	_meal_effect_row_label = _build_plan_row_label(card, 0.725, 0.880, "食事効果")
-	_buff_name_label = _harbor_label("", 14, Palette.HARBOR_PLAN_MEAL_INACTIVE, false, 0)
+
+func _build_plan_content_row(
+	parent: Control, top: float, bottom: float, icon_path: String, allow_wrap := false
+) -> Dictionary:
+	var row := _anchored_control(parent, 0.000, top, 1.000, bottom)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var icon := _icon_rect(icon_path)
+	_place_control(row, icon, 0.015, 0.080, 0.105, 0.920)
+	var label := _harbor_label("", 16, Palette.HARBOR_BUFF_BODY, true, 0)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	if allow_wrap:
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		label.clip_text = false
+		label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+	else:
+		label.clip_text = true
+		label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_place_control(row, label, 0.125, 0.060, 0.980, 0.940)
+	return {"row": row, "label": label}
+
+
+func _build_time_slot_zone(main: Control) -> void:
+	# 完成イメージどおり下端へ寄せ、ゾーン内の上下空きを潰す。
+	_time_slot_zone_root = _anchored_control(main, 0.050, 0.820, 0.950, 0.985)
+	_time_slot_zone_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	# メイン枠の暗い地の上なので、羊皮紙用の茶ではなく明るいラベル色を使う。
+	var time_label := _harbor_label("時間帯", 12, Palette.HARBOR_SCENE_TITLE, true, 2, Palette.HARBOR_SCENE_TITLE_OUTLINE)
+	time_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	time_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(_time_slot_zone_root, time_label, 0.015, 0.020, 0.145, 0.280)
+
+	# ボタンをゾーンの大半に密着させ、下の食事効果だけ薄く残す。
+	_build_time_slot_selector(_time_slot_zone_root, 0.040, 0.700)
+
+	_meal_effect_row_label = _harbor_label("食事効果", 11, Palette.HARBOR_SCENE_TEXT, true, 1, Palette.HARBOR_SCENE_TEXT_OUTLINE)
+	_meal_effect_row_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_meal_effect_row_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(_time_slot_zone_root, _meal_effect_row_label, 0.015, 0.740, 0.145, 0.980)
+
+	_buff_name_label = _harbor_label("", 12, Palette.HARBOR_SCENE_TEXT, false, 1, Palette.HARBOR_SCENE_TEXT_OUTLINE)
 	_buff_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_buff_name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_buff_name_label.clip_text = true
 	_buff_name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_place_control(card, _buff_name_label, 0.190, 0.725, 0.950, 0.880)
-
-
-func _build_plan_row_label(parent: Control, top: float, bottom: float, text: String) -> Label:
-	var label := _harbor_label(text, 13, Palette.HARBOR_PARCHMENT_TITLE, true, 0)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(parent, label, 0.050, top, 0.180, bottom)
-	return label
+	_place_control(_time_slot_zone_root, _buff_name_label, 0.155, 0.740, 0.985, 0.980)
 
 
 func _make_plan_row_button(text: String, callback: Callable) -> Button:
@@ -154,53 +269,102 @@ func _make_plan_row_button(text: String, callback: Callable) -> Button:
 
 func _build_time_slot_selector(card: Control, top: float, bottom: float) -> void:
 	var ids := GameData.get_all_time_slot_ids()
-	var left := 0.190
-	var right := 0.950
-	var gap := 0.014
+	var left := 0.170
+	var right := 0.980
+	var gap := 0.016
 	var width := (right - left - gap * float(ids.size() - 1)) / float(ids.size())
 	for index in range(ids.size()):
 		var time_slot_id := String(ids[index])
 		var button := _make_plan_row_button("", _select_time_slot.bind(time_slot_id))
+		button.add_theme_font_size_override("font_size", 16)
+		_apply_time_slot_button_defaults(button)
 		_time_slot_buttons[time_slot_id] = button
+		var icon := _icon_rect(_time_slot_icon_path(time_slot_id))
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_place_control(button, icon, 0.040, 0.100, 0.340, 0.900)
+		_time_slot_icons[time_slot_id] = icon
 		var x0 := left + float(index) * (width + gap)
 		_place_control(card, button, x0, top, x0 + width, bottom)
 
 
-func _build_departure_primary_button(main: Control) -> void:
-	var button := make_button(
-		"釣り場へ向かう",
-		func() -> void: navigate("fishing_spots"),
-		0.0,
-		true
-	)
-	button.custom_minimum_size = Vector2.ZERO
-	button.add_theme_font_size_override("font_size", 21)
-	var style := ShowcaseAssetsScript.texture_style(
-		"res://assets/showcase/common/action_button_frame.png",
-		Vector4(46.0, 24.0, 46.0, 24.0)
-	)
-	if style != null:
-		button.add_theme_stylebox_override("normal", style)
-		button.add_theme_stylebox_override("hover", style)
-		button.add_theme_stylebox_override("pressed", style)
-		button.add_theme_stylebox_override("focus", style)
-		button.add_theme_color_override("font_color", Palette.TEXT_BONE)
-		button.add_theme_color_override("font_hover_color", Palette.GOLD_BRIGHT)
-		button.add_theme_color_override("font_pressed_color", Palette.GOLD_BRIGHT)
-		button.add_theme_color_override("font_outline_color", Palette.TEXT_OUTLINE_DARK)
-		button.add_theme_constant_override("outline_size", 2)
-	_place_control(main, button, 0.270, 0.848, 0.730, 0.952)
+func _apply_time_slot_button_defaults(button: Button) -> void:
+	button.add_theme_font_override("font", GameFontsScript.bold(get_theme_default_font()))
+	button.add_theme_constant_override("outline_size", 1)
+	_apply_time_slot_button_colors(button, false, false)
+
+
+func _apply_time_slot_button_colors(button: Button, selected: bool, locked: bool) -> void:
+	var dark_text := Palette.HARBOR_PARCHMENT_TITLE
+	if locked:
+		button.add_theme_color_override("font_color", Palette.HARBOR_BUFF_BODY)
+		button.add_theme_color_override("font_hover_color", Palette.HARBOR_BUFF_BODY)
+		button.add_theme_color_override("font_pressed_color", Palette.HARBOR_BUFF_BODY)
+		button.add_theme_color_override("font_disabled_color", Palette.HARBOR_BUFF_BODY)
+		button.add_theme_color_override("font_outline_color", Palette.HARBOR_LABEL_OUTLINE)
+		return
+	if selected:
+		button.add_theme_color_override("font_color", dark_text)
+		button.add_theme_color_override("font_hover_color", dark_text)
+		button.add_theme_color_override("font_pressed_color", dark_text)
+		button.add_theme_color_override("font_outline_color", Palette.HARBOR_SCENE_TITLE_OUTLINE)
+		return
+	button.add_theme_color_override("font_color", dark_text)
+	button.add_theme_color_override("font_hover_color", dark_text)
+	button.add_theme_color_override("font_pressed_color", dark_text)
+	button.add_theme_color_override("font_disabled_color", Palette.HARBOR_DETAIL_BODY_SECONDARY)
+	button.add_theme_color_override("font_outline_color", Palette.HARBOR_LABEL_OUTLINE)
+
+
+func _time_slot_icon_path(time_slot_id: String) -> String:
+	match time_slot_id:
+		"asa_mazume":
+			return HARBOR_TIME_SLOT_ICON_ASA_PATH
+		"night":
+			return HARBOR_TIME_SLOT_ICON_NIGHT_PATH
+		_:
+			return HARBOR_TIME_SLOT_ICON_DAY_PATH
 
 
 func _preparation_card_text() -> String:
 	var megalodon_omen := _megalodon_omen_text()
 	if not megalodon_omen.is_empty():
 		return megalodon_omen
-	var first_line := _target_hint_text()
+	var lines: Array[String] = []
+	var guide_text := _beginner_guide_text()
+	lines.append(guide_text if not guide_text.is_empty() else _target_hint_text())
+	lines.append("今日は雨の気配……潮目が立ちやすい")
+	var third_parts: Array[String] = []
+	var candidates := _harbor_highlight_candidates(1)
+	if not candidates.is_empty():
+		var spot_id := String(candidates[0].get("spot_id", ""))
+		if not spot_id.is_empty():
+			var spot_name := String(GameData.get_fishing_spot(spot_id).get("name", spot_id))
+			third_parts.append("狙いポイント：%s" % spot_name)
 	var nushi_hint := _nushi_hint_text()
-	if nushi_hint.is_empty():
-		return first_line
-	return "%s\n目撃談：%s" % [first_line, nushi_hint]
+	if not nushi_hint.is_empty():
+		third_parts.append("目撃談：%s" % nushi_hint)
+	if not third_parts.is_empty():
+		lines.append("　".join(third_parts))
+	return "\n".join(lines)
+
+
+func _beginner_guide_text() -> String:
+	if PlayerProgress.level > PlayerProgress.GROWTH_SOFT_CAP:
+		return ""
+	if PlayerProgress.eaten_recipes.is_empty():
+		return "まずは調理場で魚を食べてみよう"
+	if _has_incomplete_quest():
+		return "依頼ボードで魚を届けよう"
+	return ""
+
+
+func _has_incomplete_quest() -> bool:
+	for index in range(PlayerProgress.quest_board.size()):
+		var progress := PlayerProgress.quest_progress(index)
+		if progress.is_empty() or bool(progress.get("completed", true)):
+			continue
+		return true
+	return false
 
 
 func _unlocked_normal_spot_ids() -> Array[String]:
@@ -211,8 +375,28 @@ func _unlocked_normal_spot_ids() -> Array[String]:
 	return ids
 
 
-func _quest_target_hint_text() -> String:
+func _harbor_highlight_candidates(max_count := 3) -> Array:
 	var spot_ids := _unlocked_normal_spot_ids()
+	var merged: Array = []
+	var seen_fish: Dictionary = {}
+	for bucket in [
+		_collect_quest_candidates(spot_ids),
+		_collect_time_boost_candidates(spot_ids),
+		_collect_uncaught_candidates(spot_ids),
+	]:
+		for candidate in bucket:
+			var fish_id := String(candidate.get("fish_id", ""))
+			if fish_id.is_empty() or seen_fish.has(fish_id):
+				continue
+			seen_fish[fish_id] = true
+			merged.append(candidate)
+			if merged.size() >= max_count:
+				return merged
+	return merged
+
+
+func _collect_quest_candidates(spot_ids: Array[String]) -> Array[Dictionary]:
+	var candidates: Array[Dictionary] = []
 	for index in range(PlayerProgress.quest_board.size()):
 		var progress := PlayerProgress.quest_progress(index)
 		if progress.is_empty() or bool(progress.get("completed", true)):
@@ -234,13 +418,20 @@ func _quest_target_hint_text() -> String:
 			continue
 		var fish_name := String(GameData.get_fish(fish_id).get("name", fish_id))
 		var spot_name := String(GameData.get_fishing_spot(best_spot_id).get("name", best_spot_id))
-		return "依頼の%sは%sが狙い目だ" % [fish_name, spot_name]
-	return ""
+		candidates.append(
+			{
+				"fish_id": fish_id,
+				"spot_id": best_spot_id,
+				"reason": "quest",
+				"reason_label": "依頼",
+				"hint_text": "依頼の%sは%sが狙い目だ" % [fish_name, spot_name],
+			}
+		)
+	return candidates
 
 
-func _time_slot_boost_hint_text() -> String:
-	var spot_ids := _unlocked_normal_spot_ids()
-	var candidates: Array[Dictionary] = []
+func _collect_time_boost_candidates(spot_ids: Array[String]) -> Array[Dictionary]:
+	var raw_candidates: Array[Dictionary] = []
 	for spot_id in spot_ids:
 		var weights_with := GameData.encounter_weights(
 			PlayerProgress.level, spot_id, "", "", {}, PlayerProgress.selected_time_slot_id
@@ -254,7 +445,7 @@ func _time_slot_boost_hint_text() -> String:
 			var boost := float(weights_with[fish_id]) / base_weight
 			if boost <= 1.0:
 				continue
-			candidates.append(
+			raw_candidates.append(
 				{
 					"fish_id": fish_id,
 					"spot_id": spot_id,
@@ -262,40 +453,50 @@ func _time_slot_boost_hint_text() -> String:
 					"uncaught": int(PlayerProgress.caught_counts.get(fish_id, 0)) <= 0,
 				}
 			)
-	if candidates.is_empty():
-		return ""
+	if raw_candidates.is_empty():
+		return []
 	var has_uncaught := false
-	for candidate in candidates:
+	for candidate in raw_candidates:
 		if bool(candidate["uncaught"]):
 			has_uncaught = true
 			break
 	var filtered: Array[Dictionary] = []
 	if has_uncaught:
-		for candidate in candidates:
+		for candidate in raw_candidates:
 			if bool(candidate["uncaught"]):
 				filtered.append(candidate)
 	else:
-		filtered = candidates
+		filtered = raw_candidates
 	filtered.sort_custom(
 		func(a: Dictionary, b: Dictionary) -> bool:
 			if float(a["boost"]) != float(b["boost"]):
 				return float(a["boost"]) > float(b["boost"])
 			return String(a["fish_id"]) < String(b["fish_id"])
 	)
-	var best := filtered[0]
 	var time_slot_name := String(
 		GameData.get_time_slot(PlayerProgress.selected_time_slot_id).get("name", "")
 	)
-	var spot_name := String(GameData.get_fishing_spot(String(best["spot_id"])).get("name", ""))
-	var fish_name := String(GameData.get_fish(String(best["fish_id"])).get("name", ""))
-	return "%sは%sで%sが活発なようだ" % [time_slot_name, spot_name, fish_name]
+	var reason_label := time_slot_name if not time_slot_name.is_empty() else "時間帯"
+	var candidates: Array[Dictionary] = []
+	for candidate in filtered:
+		var fish_id := String(candidate["fish_id"])
+		var spot_id := String(candidate["spot_id"])
+		var spot_name := String(GameData.get_fishing_spot(spot_id).get("name", spot_id))
+		var fish_name := String(GameData.get_fish(fish_id).get("name", fish_id))
+		candidates.append(
+			{
+				"fish_id": fish_id,
+				"spot_id": spot_id,
+				"reason": "time_boost",
+				"reason_label": reason_label,
+				"hint_text": "%sは%sで%sが活発なようだ" % [time_slot_name, spot_name, fish_name],
+			}
+		)
+	return candidates
 
 
-func _uncaught_sighting_hint_text() -> String:
-	var spot_ids := _unlocked_normal_spot_ids()
-	var best_fish_id := ""
-	var best_spot_id := ""
-	var best_weight := 0.0
+func _collect_uncaught_candidates(spot_ids: Array[String]) -> Array[Dictionary]:
+	var weighted: Array[Dictionary] = []
 	for spot_id in spot_ids:
 		var weights := GameData.encounter_weights(
 			PlayerProgress.level, spot_id, "", "", {}, PlayerProgress.selected_time_slot_id
@@ -305,28 +506,67 @@ func _uncaught_sighting_hint_text() -> String:
 			if int(PlayerProgress.caught_counts.get(fish_id, 0)) > 0:
 				continue
 			var weight := float(weights[fish_id])
-			if weight > best_weight:
-				best_weight = weight
-				best_fish_id = fish_id
-				best_spot_id = spot_id
-	if best_fish_id.is_empty():
-		return ""
-	var spot_name := String(GameData.get_fishing_spot(best_spot_id).get("name", best_spot_id))
-	var fish_name := String(GameData.get_fish(best_fish_id).get("name", best_fish_id))
-	return "%sで%sの姿を見かけたそうだ" % [spot_name, fish_name]
+			if weight <= 0.0:
+				continue
+			weighted.append(
+				{
+					"fish_id": fish_id,
+					"spot_id": spot_id,
+					"weight": weight,
+				}
+			)
+	if weighted.is_empty():
+		return []
+	weighted.sort_custom(
+		func(a: Dictionary, b: Dictionary) -> bool:
+			if float(a["weight"]) != float(b["weight"]):
+				return float(a["weight"]) > float(b["weight"])
+			return String(a["fish_id"]) < String(b["fish_id"])
+	)
+	var candidates: Array[Dictionary] = []
+	for entry in weighted:
+		var fish_id := String(entry["fish_id"])
+		var spot_id := String(entry["spot_id"])
+		var spot_name := String(GameData.get_fishing_spot(spot_id).get("name", spot_id))
+		var fish_name := String(GameData.get_fish(fish_id).get("name", fish_id))
+		candidates.append(
+			{
+				"fish_id": fish_id,
+				"spot_id": spot_id,
+				"reason": "uncaught",
+				"reason_label": "まだ見ぬ魚",
+				"hint_text": "%sで%sの姿を見かけたそうだ" % [spot_name, fish_name],
+			}
+		)
+	return candidates
+
+
+func _quest_target_hint_text() -> String:
+	for candidate in _harbor_highlight_candidates(3):
+		if String(candidate.get("reason", "")) == "quest":
+			return String(candidate.get("hint_text", ""))
+	return ""
+
+
+func _time_slot_boost_hint_text() -> String:
+	for candidate in _harbor_highlight_candidates(3):
+		if String(candidate.get("reason", "")) == "time_boost":
+			return String(candidate.get("hint_text", ""))
+	return ""
+
+
+func _uncaught_sighting_hint_text() -> String:
+	for candidate in _harbor_highlight_candidates(3):
+		if String(candidate.get("reason", "")) == "uncaught":
+			return String(candidate.get("hint_text", ""))
+	return ""
 
 
 func _target_hint_text() -> String:
-	var quest_hint := _quest_target_hint_text()
-	if not quest_hint.is_empty():
-		return quest_hint
-	var boost_hint := _time_slot_boost_hint_text()
-	if not boost_hint.is_empty():
-		return boost_hint
-	var sighting_hint := _uncaught_sighting_hint_text()
-	if not sighting_hint.is_empty():
-		return sighting_hint
-	return "海は穏やか。どこへ出ても釣り日和だ"
+	var candidates := _harbor_highlight_candidates(1)
+	if candidates.is_empty():
+		return "海は穏やか。どこへ出ても釣り日和だ"
+	return String(candidates[0].get("hint_text", "海は穏やか。どこへ出ても釣り日和だ"))
 
 
 func _megalodon_omen_text() -> String:
@@ -359,6 +599,71 @@ func _nushi_hint_text() -> String:
 func _refresh_preparation_card() -> void:
 	if _preparation_body_label != null:
 		_preparation_body_label.text = _preparation_card_text()
+	var megalodon_omen := not _megalodon_omen_text().is_empty()
+	if _plan_rows_root != null:
+		_plan_rows_root.visible = not megalodon_omen
+	if _preparation_body_label != null:
+		_preparation_body_label.visible = megalodon_omen
+	if megalodon_omen:
+		return
+	var guide_text := _beginner_guide_text()
+	_plan_guide_label.text = guide_text if not guide_text.is_empty() else _target_hint_text()
+	_plan_weather_label.text = "今日は雨の気配……潮目が立ちやすい"
+	var pin_text := ""
+	var candidates := _harbor_highlight_candidates(1)
+	if not candidates.is_empty():
+		var spot_id := String(candidates[0].get("spot_id", ""))
+		if not spot_id.is_empty():
+			var spot_name := String(GameData.get_fishing_spot(spot_id).get("name", spot_id))
+			pin_text = "狙いポイント：%s" % spot_name
+	_plan_pin_label.text = pin_text
+	_plan_pin_row.visible = not pin_text.is_empty()
+	var rumor_text := _nushi_hint_text()
+	if rumor_text.is_empty():
+		_plan_rumor_row.visible = false
+	else:
+		_plan_rumor_label.text = "目撃談：%s" % rumor_text
+		_plan_rumor_row.visible = true
+
+
+func _refresh_info_board() -> void:
+	if _info_board_root == null:
+		return
+	var candidates := _harbor_highlight_candidates(3)
+	for index in range(_info_board_slots.size()):
+		var slot_data: Dictionary = _info_board_slots[index]
+		var slot := slot_data.get("slot", null) as Control
+		var portrait := slot_data.get("portrait", null) as TextureRect
+		var name_label := slot_data.get("name_label", null) as Label
+		var badge_panel := slot_data.get("badge_panel", null) as Panel
+		var badge_label := slot_data.get("badge_label", null) as Label
+		if slot == null or portrait == null or name_label == null or badge_panel == null or badge_label == null:
+			continue
+		if index >= candidates.size():
+			slot.visible = false
+			continue
+		slot.visible = true
+		var candidate: Dictionary = candidates[index]
+		var fish_id := String(candidate.get("fish_id", ""))
+		var fish_data := GameData.get_fish(fish_id)
+		portrait.texture = _load_texture_if_exists(FightFishAssets.card_portrait_path(fish_data))
+		name_label.text = String(fish_data.get("name", fish_id))
+		var reason := String(candidate.get("reason", ""))
+		badge_label.text = String(candidate.get("reason_label", ""))
+		var badge_fill := Palette.HARBOR_INFO_BADGE_UNCAUGHT_FILL
+		var badge_text := Palette.HARBOR_INFO_BADGE_UNCAUGHT_TEXT
+		match reason:
+			"quest":
+				badge_fill = Palette.HARBOR_INFO_BADGE_QUEST_FILL
+				badge_text = Palette.HARBOR_INFO_BADGE_QUEST_TEXT
+			"time_boost":
+				badge_fill = Palette.HARBOR_INFO_BADGE_BOOST_FILL
+				badge_text = Palette.HARBOR_INFO_BADGE_BOOST_TEXT
+		badge_panel.add_theme_stylebox_override(
+			"panel",
+			_make_flat_panel_style(badge_fill, Color.TRANSPARENT, 5, 0)
+		)
+		badge_label.add_theme_color_override("font_color", badge_text)
 
 
 func _select_time_slot(time_slot_id: String) -> void:
@@ -378,11 +683,26 @@ func _refresh_time_slot_buttons() -> void:
 		var locked := not GameData.is_time_slot_unlocked(time_slot_id, PlayerProgress.level)
 		var selected := PlayerProgress.selected_time_slot_id == time_slot_id
 		button.disabled = locked
-		button.theme_type_variation = "GoldButton" if selected and not locked else ""
 		if locked:
 			button.text = "Lv.%dで解放" % unlock_level
 		else:
 			button.text = label
+		_apply_time_slot_button_colors(button, selected, locked)
+		var style_path := HARBOR_TIME_SLOT_BTN_NORMAL_PATH
+		if locked:
+			style_path = HARBOR_TIME_SLOT_BTN_LOCKED_PATH
+		elif selected:
+			style_path = HARBOR_TIME_SLOT_BTN_SELECTED_PATH
+		var style := _make_time_slot_button_style(style_path)
+		if style != null:
+			button.add_theme_stylebox_override("normal", style)
+			button.add_theme_stylebox_override("hover", style)
+			button.add_theme_stylebox_override("pressed", style)
+			button.add_theme_stylebox_override("focus", style)
+			button.add_theme_stylebox_override("disabled", style)
+		var icon := _time_slot_icons.get(time_slot_id, null) as TextureRect
+		if icon != null:
+			icon.modulate = Palette.HARBOR_ICON_MODULATE if not locked else Color(0.72, 0.72, 0.72, 0.72)
 
 
 func _has_caught_raiseable_shark() -> bool:
@@ -547,6 +867,7 @@ func _build_footer(root: Control) -> void:
 
 func _refresh_labels() -> void:
 	_refresh_preparation_card()
+	_refresh_info_board()
 	var normalized_time_slot_id := String(
 		GameData.get_time_slot(PlayerProgress.selected_time_slot_id).get("id", GameData.DEFAULT_TIME_SLOT_ID)
 	)
@@ -588,7 +909,7 @@ func _refresh_labels() -> void:
 		var buff_name := String(PlayerProgress.pending_buff.get("name", "料理"))
 		var buff_text := String(PlayerProgress.pending_buff.get("text", ""))
 		_buff_name_label.text = buff_name if buff_text.is_empty() else "%s（%s）" % [buff_name, buff_text]
-		_buff_name_label.add_theme_color_override("font_color", Palette.HARBOR_PLAN_MEAL_ACTIVE)
+		_buff_name_label.add_theme_color_override("font_color", Palette.GOLD_BRIGHT)
 		_buff_name_label.add_theme_font_size_override("font_size", 14)
 
 
@@ -677,6 +998,25 @@ func _apply_facility_button_skin(button: Button, primary: bool) -> void:
 	button.add_theme_color_override("font_disabled_color", Color.TRANSPARENT)
 	button.add_theme_constant_override("outline_size", 0)
 	button.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+
+
+func _make_time_slot_button_style(path: String) -> StyleBoxTexture:
+	var texture := _load_texture_if_exists(path)
+	if texture == null:
+		return null
+	var style := StyleBoxTexture.new()
+	style.texture = texture
+	style.texture_margin_left = 18
+	style.texture_margin_top = 12
+	style.texture_margin_right = 18
+	style.texture_margin_bottom = 12
+	style.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+	style.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+	style.content_margin_left = 34.0
+	style.content_margin_top = 4.0
+	style.content_margin_right = 8.0
+	style.content_margin_bottom = 4.0
+	return style
 
 
 func _make_button_style(path: String) -> StyleBoxTexture:
