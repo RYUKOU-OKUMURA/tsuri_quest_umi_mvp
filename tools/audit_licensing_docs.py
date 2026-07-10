@@ -28,10 +28,25 @@ def main() -> int:
 
         for marker in ("## Scope", "Original project-owned visual and audio assets"):
             assert marker in license_text, f"LICENSE.md missing marker: {marker}"
+        evidence_ids = re.findall(r"^\| (U-\d{2}) \|", evidence, flags=re.MULTILINE)
+        assert len(evidence_ids) == len(set(evidence_ids)), f"duplicate evidence IDs: {evidence_ids}"
+
         unresolved_holder = "RIGHTS HOLDER NAME" in license_text
         if unresolved_holder:
-            assert "U-05" in evidence, "unresolved LICENSE holder must map to evidence U-05"
+            assert set(evidence_ids) == {f"U-{number:02d}" for number in range(1, 9)}, (
+                f"unresolved licensing evidence must contain U-01..U-08 exactly once: {evidence_ids}"
+            )
+            assert "legal rights holder remains a\nrelease blocker" in license_text, (
+                "unresolved LICENSE holder must retain the release-blocker statement"
+            )
         else:
+            assert set(evidence_ids) == ({f"U-{number:02d}" for number in range(1, 9)} - {"U-05"}), (
+                "resolved LICENSE holder requires U-05 removal while preserving other open IDs"
+            )
+            assert "placeholder" not in license_text.lower(), "resolved LICENSE must remove placeholder prose"
+            assert "legal rights holder remains a\nrelease blocker" not in license_text, (
+                "resolved LICENSE must remove holder release-blocker prose"
+            )
             copyright_line = next(
                 (line for line in license_text.splitlines() if line.startswith("Copyright (c) 2026 ")),
                 "",
@@ -45,9 +60,15 @@ def main() -> int:
             assert marker in line_seed_ofl, f"LINE Seed OFL missing: {marker}"
         for marker in ("Copyright 2016 The M+ Project Authors", "SIL OPEN FONT LICENSE Version 1.1"):
             assert marker in mplus_ofl, f"M PLUS OFL missing: {marker}"
-        for marker in ("U-01", "U-08", "ユーザー入力・保存待ち"):
+        for marker in ("ユーザー入力・保存待ち",):
             assert marker in evidence, f"licensing evidence index missing: {marker}"
-        for marker in ("THIRD_PARTY_NOTICES.md", "加入期間証拠待ち", "Pre-Generated AI"):
+        for marker in (
+            "THIRD_PARTY_NOTICES.md",
+            "加入期間証拠待ち",
+            "Pre-Generated AI",
+            "source-consuming pipeline",
+            "U-03/U-08",
+        ):
             assert marker in ledger, f"asset ledger missing: {marker}"
 
         expected_fonts = {

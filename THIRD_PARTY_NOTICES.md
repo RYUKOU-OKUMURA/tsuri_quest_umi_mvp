@@ -46,12 +46,15 @@ Seed JP.
 
 ## Service-generated media
 
-The game contains pre-generated images and audio made with external AI
-services. These are not third-party runtime libraries and the reviewed service
-terms do not establish an attribution notice requirement for the recorded paid
-uses. Their provenance, commercial-use conditions, and unresolved account
-evidence are tracked in `docs/31_asset_ledger.md`. They must be disclosed in a
-store content survey when required by the selected distribution channel.
+The repository records that pre-generated images and audio may have been made
+with external AI services. These are not third-party runtime libraries. Only
+the services' general terms have been reviewed; this does **not** establish
+that each bundled asset satisfies the applicable paid-plan, input-rights, or
+non-infringement conditions. Suno asset/date/subscription evidence remains open
+under U-01/U-02, and input-rights clearance for Suno and OpenAI material remains
+open under U-08 in `docs/qa/evidence/licensing/README.md`. OpenAI's contractual
+assignment of its rights in Output is separate from third-party rights
+clearance. Required store disclosure is also channel-dependent.
 
 ## Repository dependency boundary
 
