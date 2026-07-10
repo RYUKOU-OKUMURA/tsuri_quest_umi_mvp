@@ -35,6 +35,11 @@ const KIT_BUTTON_MARGINS := Vector4(42.0, 22.0, 42.0, 22.0)
 const KIT_KEY_CAP_MARGINS := Vector4(28.0, 14.0, 28.0, 14.0)
 const KIT_CARD_MARGINS := Vector4(30.0, 30.0, 30.0, 30.0)
 const KIT_PARCHMENT_MARGINS := Vector4(34.0, 16.0, 34.0, 16.0)
+const READY_LURE_PORTRAIT_WIDTH := 82.0
+const READY_LURE_NAME_FONT_SIZE := 16
+const READY_LURE_NAME_MIN_FONT_SIZE := 14
+const READY_LURE_NAME_MAX_LINES := 2
+const READY_LURE_COUNT_WIDTH := 74.0
 
 var simulator: FishingSimulator
 var fish_data: Dictionary = {}
@@ -608,24 +613,26 @@ func _draw_ready_shark_lure_panel(font: Font, rect: Rect2) -> void:
 	var inventory_count := int(shark_lure_selector.get("count", 0))
 	var remaining := int(shark_lure_selector.get("remaining", 0))
 	var total_charges := int(shark_lure_selector.get("total_charges", 0))
-	var left_w := clampf(card.size.x * 0.58, 150.0, 176.0)
-	var name_rect := Rect2(card.position + Vector2(12.0, card.size.y - 39.0), Vector2(left_w, 20.0))
+	var content := card.grow(-9.0)
 	var portrait := Rect2(
-		card.position + Vector2(10.0, 15.0),
-		Vector2(left_w + 4.0, maxf(52.0, name_rect.position.y - card.position.y - 18.0))
+		content.position + Vector2(0.0, 4.0),
+		Vector2(READY_LURE_PORTRAIT_WIDTH, content.size.y - 8.0)
 	)
 	if _lure_portrait != null:
 		_draw_texture_icon(_lure_portrait, portrait)
 	else:
 		_draw_ready_bait_asset(portrait)
-	_draw_text_center_fit(title_font, fish_name, name_rect, 14, 10, Palette.FIGHT_HUD_DARK_INK, 0)
-	var right_x := card.position.x + card.size.x * 0.56
-	var right_rect := Rect2(
-		Vector2(right_x, card.position.y + 14.0),
-		Vector2(maxf(1.0, card.end.x - right_x - 14.0), maxf(1.0, name_rect.position.y - card.position.y - 20.0))
+	var info_rect := Rect2(
+		Vector2(portrait.end.x + 8.0, content.position.y),
+		Vector2(maxf(1.0, content.end.x - portrait.end.x - 8.0), content.size.y)
 	)
-	var count_rect := Rect2(right_rect.position, Vector2(right_rect.size.x, 34.0))
-	_draw_text_left_fit(title_font, "x%d" % inventory_count, count_rect, 30, 20, Palette.FIGHT_HUD_DARK_INK, 0)
+	var name_rect := Rect2(info_rect.position + Vector2(0.0, 2.0), Vector2(info_rect.size.x, 39.0))
+	_draw_ready_lure_name(title_font, fish_name, name_rect)
+	var count_rect := Rect2(
+		Vector2(info_rect.end.x - READY_LURE_COUNT_WIDTH, info_rect.end.y - 26.0),
+		Vector2(READY_LURE_COUNT_WIDTH, 26.0)
+	)
+	_draw_text_center(title_font, "x%d" % inventory_count, count_rect, 24, Palette.FIGHT_HUD_DARK_INK, 0)
 	var charge_text := "投げると1匹つかう"
 	var stock_empty_note := false
 	if remaining > 0:
@@ -635,24 +642,67 @@ func _draw_ready_shark_lure_panel(font: Font, rect: Rect2) -> void:
 	var charge_font := GameFontsScript.regular(font)
 	var footer_note := ""
 	if total_charges > 1:
-		var pips_w := maxf(1.0, minf(74.0, right_rect.size.x))
-		var pips := Rect2(Vector2(right_rect.position.x, card.position.y + 58.0), Vector2(pips_w, 20.0))
+		var pips := Rect2(
+			Vector2(info_rect.position.x, count_rect.position.y + 5.0),
+			Vector2(maxf(1.0, count_rect.position.x - info_rect.position.x - 5.0), 16.0)
+		)
 		var displayed_charges := remaining if remaining > 0 else total_charges if inventory_count > 0 else 0
 		_draw_lure_charge_pips(font, pips, displayed_charges, total_charges)
 		if remaining > 0:
-			var charge_text_w := card.end.x - pips.end.x - 24.0
-			if charge_text_w >= 44.0:
-				_draw_text_fit(charge_font, charge_text, Vector2(pips.end.x + 8.0, card.position.y + 74.0), charge_text_w, 15, 10, Palette.FIGHT_HUD_DARK_INK, 0)
-				if stock_empty_note:
-					footer_note = "在庫0"
-			else:
-				footer_note = "%s（在庫0）" % charge_text if stock_empty_note else charge_text
+			footer_note = "%s（在庫0）" % charge_text if stock_empty_note else charge_text
 		else:
 			footer_note = charge_text
 	else:
 		footer_note = charge_text
 	if not footer_note.is_empty():
 		_draw_text_center(charge_font, footer_note, Rect2(Vector2(rect.position.x + 18.0, rect.end.y - 30.0), Vector2(rect.size.x - 36.0, 22.0)), 16, Palette.TEXT_BONE, 1)
+
+
+func _draw_ready_lure_name(font: Font, text: String, rect: Rect2) -> void:
+	var font_size := READY_LURE_NAME_FONT_SIZE
+	var lines := _ready_lure_name_lines(font, text, font_size, rect.size.x)
+	while font_size > READY_LURE_NAME_MIN_FONT_SIZE and lines.size() > READY_LURE_NAME_MAX_LINES:
+		font_size -= 1
+		lines = _ready_lure_name_lines(font, text, font_size, rect.size.x)
+	var line_height := float(font.get_height(font_size))
+	var first_baseline := rect.position.y + (rect.size.y - line_height * float(lines.size())) * 0.5 + font.get_ascent(font_size)
+	for index in lines.size():
+		var line := lines[index]
+		var line_width := font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+		_draw_text(
+			font,
+			line,
+			Vector2(rect.position.x + (rect.size.x - line_width) * 0.5, first_baseline + line_height * float(index)),
+			font_size,
+			Palette.FIGHT_HUD_DARK_INK,
+			0
+		)
+
+
+func _ready_lure_name_lines(font: Font, text: String, font_size: int, max_width: float) -> PackedStringArray:
+	var separator_index := text.find("・")
+	if separator_index >= 0:
+		var first := text.left(separator_index + 1)
+		var second := text.substr(separator_index + 1)
+		if (
+			not second.is_empty()
+			and font.get_string_size(first, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x <= max_width
+			and font.get_string_size(second, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x <= max_width
+		):
+			return PackedStringArray([first, second])
+	var lines := PackedStringArray()
+	var current_line := ""
+	for index in text.length():
+		var character := text.substr(index, 1)
+		var candidate := current_line + character
+		if not current_line.is_empty() and font.get_string_size(candidate, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x > max_width:
+			lines.append(current_line)
+			current_line = character
+		else:
+			current_line = candidate
+	if not current_line.is_empty():
+		lines.append(current_line)
+	return lines
 
 
 func _draw_ready_arrow(font: Font, rect: Rect2, label: String, enabled: bool) -> void:
