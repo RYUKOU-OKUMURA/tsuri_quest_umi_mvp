@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-GODOT_HOME="${TSURI_GODOT_HOME:-/tmp/tsuri_quest_board_home}"
+GODOT_HOME="${TSURI_GODOT_HOME:-/tmp/tsuri_quest_board_qa_home}"
 
 if [[ -n "${GODOT_BIN:-}" ]]; then
   GODOT="$GODOT_BIN"
@@ -17,7 +17,13 @@ else
   exit 1
 fi
 
-mkdir -p "$GODOT_HOME"
+prepare_godot_home() {
+  if [[ -z "${TSURI_GODOT_HOME:-}" ]]; then
+    rm -rf "$GODOT_HOME"
+  fi
+  mkdir -p "$GODOT_HOME"
+}
+
 rm -f \
   /tmp/tsuri_quest_board.png \
   /tmp/tsuri_quest_board_compare.png \
@@ -32,10 +38,15 @@ else
 fi
 
 echo "==> Capture quest board preview"
+prepare_godot_home
 HOME="$GODOT_HOME" "$GODOT" --path "$ROOT" "res://tools/quest_board_preview.tscn"
+sleep 1
 
 echo "==> Capture long condition cases"
+prepare_godot_home
 QUEST_BOARD_PREVIEW_MODE=long_text_a HOME="$GODOT_HOME" "$GODOT" --path "$ROOT" "res://tools/quest_board_preview.tscn"
+sleep 1
+prepare_godot_home
 QUEST_BOARD_PREVIEW_MODE=long_text_b HOME="$GODOT_HOME" "$GODOT" --path "$ROOT" "res://tools/quest_board_preview.tscn"
 
 python3 - <<'PY'

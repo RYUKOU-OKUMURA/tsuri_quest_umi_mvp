@@ -1,6 +1,6 @@
 # 依頼ボード QA判断ログ
 
-最終更新: 2026-07-10 / 状態: UI-QUEST-01（本文省略P1）close、v1 freeze維持
+最終更新: 2026-07-11 / 状態: UI-QUEST-01（本文省略・下段可読性P1）close、v1 freeze維持
 参照画像: reference/11_quest_board_mockup.png
 QA更新コマンド: ./tools/quest_board_visual_qa.sh
 
@@ -11,7 +11,9 @@ QA更新コマンド: ./tools/quest_board_visual_qa.sh
 | 依頼札枚数 | 3枚固定 | `src/ui/quest_board_screen.gd` | E3仕様。掲示中3件は常時進行中 |
 | 札配置 | 横3列 | `QuestBoardPanel` | 1280x720で依頼文・進捗・報酬を同時に読ませるため |
 | 帰港ボタン | 右下 | `QuestBoardFooter` | 他画面の右下規約に合わせる |
-| 主条件本文 | 左右 `0.078–0.912`、上下 `0.430–0.625`、18px・最大3行 | `QuestText` | P1再オープン。肖像・魚名の下へ全幅を確保し、現行最長条件を省略なしで表示する |
+| 主条件本文 | 左右 `0.078–0.912`、上下 `0.375–0.570`、18px・最大3行 | `QuestText` | P1再オープン。肖像下の全幅3行を維持し、現行最長条件を省略なしで表示する |
+| 肖像と下段情報 | 肖像下端 `0.370`、進捗見出し/値 `0.575–0.630`、ゲージ `0.648–0.677`、報酬 `0.681–0.736` | `QuestFishPortrait` / `QuestProgress*` / `QuestReward` | 進捗の実行高（見出し24px、値27px）がゲージに重ならず、ゲージ→報酬も実矩形で分離する |
+| 行動ボタン | 上下 `0.765–0.905`、最小高54px、縦テクスチャmargin `14 + 14`、20px文字＋outline 2px | `QuestActionButton*` | 必要高52pxに2px余裕を置き、報酬・札下木枠との干渉を防ぐ |
 
 ## 2. 不採用・再試行禁止リスト
 
@@ -23,11 +25,11 @@ QA更新コマンド: ./tools/quest_board_visual_qa.sh
 | パラメータ | 回数 | 直近の変更内容 | 状態 |
 |---|---|---|---|
 | 装飾パス累計 | 1 | 共通素材とruntime木板でv1掲示板を構成 | v1確認中 |
-| 主条件本文の領域再配分 | 1 | 右上の狭い2行領域から、肖像下の全幅3行領域へ移設 | freeze |
+| 主条件本文・下段クラスタの再配分 | 2 | 本文/肖像を上げ、進捗実行高・ゲージ・報酬・CTAを実矩形で順に分離 | freeze |
 
 ## 4. 暫定判定・再検証TODO
 
-なし。1280x720実キャプチャで再確認済み。
+なし。1280x720実キャプチャと実矩形smokeで再確認済み。
 
 ## 5. 現在の残ギャップ
 
@@ -36,14 +38,15 @@ QA更新コマンド: ./tools/quest_board_visual_qa.sh
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-P1再オープン範囲は主条件本文だけ。動かす値は `QuestText` の矩形のみで、3列・外枠・依頼札枚数・肖像/魚名の領域・進捗/報酬/操作の順序・フッター右下の帰港導線・依頼生成/納品ロジックは不動とする。
+P1再オープン範囲は主条件本文と、それを安全に収める依頼札内の下段クラスタだけ。動かした値は `QuestText`、肖像下端、`QuestProgressTitle` / `QuestProgressText`、`QuestProgressTrack`、`QuestReward`、`QuestActionButton*` の矩形とCTA縦style margin・最小高。3列・外枠・依頼札枚数・魚名領域・下段の読み順（進捗→ゲージ→報酬→操作）・フッター右下の帰港導線・依頼生成/納品ロジックは不動とする。
 
 ## 7. 判断ログ（直近パスのみ）
 
-2026-07-10:
+2026-07-11:
 
-- `docs/45_release_readiness_code_review.md` の UI-QUEST-01 を、通常データで主条件が省略されるP1再発として局所再オープンした。局所uplift判定: 主操作・3列の読み順・外枠は成立し、本文領域だけが原因であるため構成再設計にはしない。
-- 同一seed（アジ/メジナ/カサゴの3件、Lv9・12,450G・依頼達成9件）で before / after を撮影。`2026-07-10_ui-quest-before.png` では「45cm以上のメジナを…」「磯の活力丼にするカサ…」が省略され、`2026-07-10_ui-quest-after.png` では全文表示を確認した。横並び比較はそれぞれの `_compare.png`。
-- 高リスク状態は、現行で最長の依頼対象魚 `タケノコメバル` と最長料理名を組み合わせた5種の動的テンプレート。`2026-07-10_ui-quest-long-text-a.png`（bulk_common / bulk_uncommon / cuisine）と `2026-07-10_ui-quest-long-text-b.png`（size_record / rare_order）で確認し、`quest_board_smoke` は全5種で `get_visible_line_count() == get_line_count()` と最大3行を検証する。
-- 採用値は freeze表の主条件本文。本文を肖像右の狭い領域から肖像下の全幅へ移し、進捗・報酬・操作を下へ再配分した。3列・外枠・主要アンカーと依頼ロジックは不変。1280x720の原寸・縮小比較でP1消滅を確認したため採用する。
-- `tools/quest_board_visual_qa.sh` は通常状態と最長条件2状態を別プロセスで取得し、全画像の全体/ヘッダー可視率を検証する。参照画像は既定で再生成せず、明示した `QUEST_BOARD_REFRESH_REFERENCE=1` のときだけ更新する。
+- `docs/45_release_readiness_code_review.md` の UI-QUEST-01 を、本文省略に加えてCTAの札下木枠干渉、進捗文字のゲージ干渉として再オープンした。3列・外枠・依頼ロジックは成立しているため、依頼札内だけを再配分した。
+- 同一データ（アジ/メジナ/カサゴの3件、Lv9・12,450G・依頼達成9件）・同一preview harness（0.60秒待機、force draw、追加3 frame）・同一capture timingで、親 `a66cdbe` とafterを撮影した。before/afterとも魚肖像を含み、`evidence/quest_board/2026-07-11_ui-quest-before_after.png` で、beforeの省略とafterの全文表示、CTA下枠干渉の解消を比較した。
+- 不動値は3列、外枠、札枚数、魚名領域、下段の読み順、フッター右下帰港、依頼生成/納品ロジック。移動値は本文（`0.430–0.625`→`0.375–0.570`）、肖像下端（`0.395`→`0.370`）、進捗（`0.655–0.700`→`0.575–0.630`）、ゲージ（`0.715–0.770`→`0.648–0.677`）、報酬（`0.790–0.860`→`0.681–0.736`）、CTA（`0.885–0.980`→`0.765–0.905`）。CTAは縦marginを `24 + 24` から `14 + 14`、最小高を54pxへ採用し、20px文字とoutlineを実高内に収めた。
+- `quest_board_smoke` は本番の有効テンプレート一覧を列挙する。通常4種は本番候補カタログを絞って最長の本番出力を使い、料理は本番 `_quest_cuisine_options` の全recipe_id×fish_id期待値を固定seedで各魚へ決定的に網羅し、現行190/190の本番出力を確認する。各出力は実画面の `QuestText` で最大3行・省略なしを検証する。
+- 同smokeは、進捗見出し/値の実矩形が各minimum line height以上であること、両者の末端がゲージ開始以前であること、ゲージ末端が報酬開始以前であること、報酬→CTAとCTA→札下木枠も非重なりであることを検証する。`QUEST_BOARD_SMOKE_FORCE_FAILURE=1` は即時exit 1、通常はexit 0を確認した。
+- `tools/quest_board_visual_qa.sh` は通常・最長条件A/Bの各capture前に既定の専用tmp HOMEだけを初期化し、レンダラー終了を1秒待つ。`TSURI_GODOT_HOME` を指定した場合は削除せず、常に `mkdir -p` を保証する。これにより3状態とも1280x720原寸で取得し、長文A/B（`2026-07-11_ui-quest-long-text-a.png` / `...-b.png`）でも本文・進捗・ゲージ・報酬・CTAを目視確認した。
