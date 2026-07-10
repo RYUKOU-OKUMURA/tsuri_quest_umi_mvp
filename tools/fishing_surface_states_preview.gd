@@ -84,7 +84,10 @@ func _preview_config() -> Dictionary:
 	var environment_id := OS.get_environment("TSURI_SURFACE_STATE_ENVIRONMENT_ID").strip_edges()
 	var time_slot_id := OS.get_environment("TSURI_SURFACE_STATE_TIME_SLOT_ID").strip_edges()
 	var lure_fish_id := OS.get_environment("TSURI_SURFACE_STATE_SHARK_LURE_FISH_ID").strip_edges()
-	var lure_count := maxi(0, int(OS.get_environment("TSURI_SURFACE_STATE_SHARK_LURE_COUNT")))
+	var lure_count_text := OS.get_environment("TSURI_SURFACE_STATE_SHARK_LURE_COUNT").strip_edges()
+	var lure_remaining_text := OS.get_environment("TSURI_SURFACE_STATE_SHARK_LURE_REMAINING").strip_edges()
+	var lure_count := maxi(0, int(lure_count_text))
+	var lure_remaining := maxi(0, int(lure_remaining_text))
 	if not spot_id.is_empty():
 		config["spot_id"] = spot_id
 	if spot_id.is_empty() and environment_id.is_empty() and time_slot_id.is_empty() and lure_fish_id.is_empty():
@@ -111,9 +114,11 @@ func _preview_config() -> Dictionary:
 	if not lure_fish_id.is_empty():
 		var lure_fish := GameData.get_fish(lure_fish_id)
 		if not lure_fish.is_empty() and not bool(lure_fish.get("shark", false)):
-			PlayerProgress.inventory[lure_fish_id] = lure_count if lure_count > 0 else max(1, PlayerProgress.fish_count(lure_fish_id))
+			PlayerProgress.inventory[lure_fish_id] = lure_count if not lure_count_text.is_empty() else max(1, PlayerProgress.fish_count(lure_fish_id))
 			stats["shark_lure_fish_id"] = lure_fish_id
 			stats["shark_lure_fish_name"] = String(lure_fish.get("name", lure_fish_id))
+			if not lure_remaining_text.is_empty() and lure_remaining > 0:
+				stats["shark_lure_charges"] = {lure_fish_id: lure_remaining}
 	config["continue_trip"] = true
 	config["trip_stats"] = stats
 	return config
