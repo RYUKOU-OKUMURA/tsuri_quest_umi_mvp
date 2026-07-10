@@ -1,6 +1,6 @@
 # 依頼ボード QA判断ログ
 
-最終更新: 2026-07-06 / 状態: v1確認済み
+最終更新: 2026-07-10 / 状態: UI-QUEST-01（本文省略P1）close、v1 freeze維持
 参照画像: reference/11_quest_board_mockup.png
 QA更新コマンド: ./tools/quest_board_visual_qa.sh
 
@@ -11,6 +11,7 @@ QA更新コマンド: ./tools/quest_board_visual_qa.sh
 | 依頼札枚数 | 3枚固定 | `src/ui/quest_board_screen.gd` | E3仕様。掲示中3件は常時進行中 |
 | 札配置 | 横3列 | `QuestBoardPanel` | 1280x720で依頼文・進捗・報酬を同時に読ませるため |
 | 帰港ボタン | 右下 | `QuestBoardFooter` | 他画面の右下規約に合わせる |
+| 主条件本文 | 左右 `0.078–0.912`、上下 `0.430–0.625`、18px・最大3行 | `QuestText` | P1再オープン。肖像・魚名の下へ全幅を確保し、現行最長条件を省略なしで表示する |
 
 ## 2. 不採用・再試行禁止リスト
 
@@ -22,12 +23,11 @@ QA更新コマンド: ./tools/quest_board_visual_qa.sh
 | パラメータ | 回数 | 直近の変更内容 | 状態 |
 |---|---|---|---|
 | 装飾パス累計 | 1 | 共通素材とruntime木板でv1掲示板を構成 | v1確認中 |
+| 主条件本文の領域再配分 | 1 | 右上の狭い2行領域から、肖像下の全幅3行領域へ移設 | freeze |
 
 ## 4. 暫定判定・再検証TODO
 
-- 専用PNG素材は未投入。v1は共通キットでの機能実装を優先し、専用木製掲示板・依頼札タグはP2候補。
-- 実キャプチャ証拠: `docs/qa/evidence/quest_board/2026-07-06_quest_board.png`
-- 横並び比較: `docs/qa/evidence/quest_board/2026-07-06_quest_board_compare.png`
+なし。1280x720実キャプチャで再確認済み。
 
 ## 5. 現在の残ギャップ
 
@@ -36,12 +36,14 @@ QA更新コマンド: ./tools/quest_board_visual_qa.sh
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-E3 v1では、画面構成・進捗可読性・納品/報告操作を確定対象にする。専用PNG素材の品質追求は今回のfreeze対象外。
+P1再オープン範囲は主条件本文だけ。動かす値は `QuestText` の矩形のみで、3列・外枠・依頼札枚数・肖像/魚名の領域・進捗/報酬/操作の順序・フッター右下の帰港導線・依頼生成/納品ロジックは不動とする。
 
 ## 7. 判断ログ（直近パスのみ）
 
-2026-07-06:
+2026-07-10:
 
-- `reference/11_quest_board_mockup.png` をv1参照として追加。
-- `tools/quest_board_visual_qa.sh` で実キャプチャと横並び比較を生成し、`docs/qa/evidence/quest_board/2026-07-06_quest_board_compare.png` に保存。
-- 3枚の依頼札、進捗、報酬、未達成disabled表示、右下帰港ボタンが確認できるためv1確認済みとする。
+- `docs/45_release_readiness_code_review.md` の UI-QUEST-01 を、通常データで主条件が省略されるP1再発として局所再オープンした。局所uplift判定: 主操作・3列の読み順・外枠は成立し、本文領域だけが原因であるため構成再設計にはしない。
+- 同一seed（アジ/メジナ/カサゴの3件、Lv9・12,450G・依頼達成9件）で before / after を撮影。`2026-07-10_ui-quest-before.png` では「45cm以上のメジナを…」「磯の活力丼にするカサ…」が省略され、`2026-07-10_ui-quest-after.png` では全文表示を確認した。横並び比較はそれぞれの `_compare.png`。
+- 高リスク状態は、現行で最長の依頼対象魚 `タケノコメバル` と最長料理名を組み合わせた5種の動的テンプレート。`2026-07-10_ui-quest-long-text-a.png`（bulk_common / bulk_uncommon / cuisine）と `2026-07-10_ui-quest-long-text-b.png`（size_record / rare_order）で確認し、`quest_board_smoke` は全5種で `get_visible_line_count() == get_line_count()` と最大3行を検証する。
+- 採用値は freeze表の主条件本文。本文を肖像右の狭い領域から肖像下の全幅へ移し、進捗・報酬・操作を下へ再配分した。3列・外枠・主要アンカーと依頼ロジックは不変。1280x720の原寸・縮小比較でP1消滅を確認したため採用する。
+- `tools/quest_board_visual_qa.sh` は通常状態と最長条件2状態を別プロセスで取得し、全画像の全体/ヘッダー可視率を検証する。参照画像は既定で再生成せず、明示した `QUEST_BOARD_REFRESH_REFERENCE=1` のときだけ更新する。

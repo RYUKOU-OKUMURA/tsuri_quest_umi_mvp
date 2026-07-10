@@ -117,25 +117,26 @@ func _build_quest_card(parent: Control, index: int, left: float, top: float, rig
 	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	body.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_place_control(card, body, 0.340, 0.250, 0.912, 0.405)
+	# 主条件は依頼札の最優先情報。魚名・肖像の下へ全幅3行分を確保し、通常データで省略させない。
+	_place_control(card, body, 0.078, 0.430, 0.912, 0.625)
 
 	var progress_title := _quest_label("進捗", 14, Palette.TEXT_BODY, true, 0, Palette.TEXT_OUTLINE_DARK, Color.TRANSPARENT)
 	progress_title.name = "QuestProgressTitle"
 	progress_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	progress_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(card, progress_title, 0.078, 0.455, 0.250, 0.500)
+	_place_control(card, progress_title, 0.078, 0.655, 0.250, 0.700)
 
 	var progress_text := _quest_label("", 16, Palette.TEXT_DARK, true, 0, Palette.TEXT_OUTLINE_DARK, Color.TRANSPARENT)
 	progress_text.name = "QuestProgressText"
 	progress_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	progress_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(card, progress_text, 0.390, 0.455, 0.912, 0.500)
+	_place_control(card, progress_text, 0.390, 0.655, 0.912, 0.700)
 
 	var progress_track := Panel.new()
 	progress_track.name = "QuestProgressTrack"
 	progress_track.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	progress_track.add_theme_stylebox_override("panel", _flat_style(Palette.DARK_PANEL_DEEP, Palette.WOOD_DARK, 5, 1))
-	_place_control(card, progress_track, 0.078, 0.520, 0.912, 0.575)
+	_place_control(card, progress_track, 0.078, 0.715, 0.912, 0.770)
 
 	var progress_fill := ColorRect.new()
 	progress_fill.name = "QuestProgressFill"
@@ -147,12 +148,12 @@ func _build_quest_card(parent: Control, index: int, left: float, top: float, rig
 	reward.name = "QuestReward"
 	reward.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	reward.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(card, reward, 0.078, 0.620, 0.912, 0.690)
+	_place_control(card, reward, 0.078, 0.790, 0.912, 0.860)
 
 	var button := _textured_button("", Callable(self, "_complete_quest").bind(index))
 	button.name = "QuestActionButton%d" % (index + 1)
 	button.set_meta("quest_index", index)
-	_place_control(card, button, 0.210, 0.785, 0.790, 0.900)
+	_place_control(card, button, 0.210, 0.885, 0.790, 0.980)
 
 	return {
 		"root": card,

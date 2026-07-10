@@ -15,6 +15,7 @@ func _ready() -> void:
 	_verify_shokunin_reward()
 	_verify_save_type_normalization()
 	await _verify_screen_build()
+	await _verify_full_condition_text_layout()
 
 	if _failed:
 		return
@@ -177,6 +178,119 @@ func _verify_screen_build() -> void:
 	_expect(return_button != null, "quest board screen should expose return button")
 	viewport.queue_free()
 	await get_tree().process_frame
+
+
+func _verify_full_condition_text_layout() -> void:
+	_seed_progress()
+	var fish_id := _longest_quest_fish_id()
+	_expect(not fish_id.is_empty(), "longest quest fish should exist")
+	var fish_name := String(GameData.get_fish(fish_id).get("name", fish_id))
+	var recipe_name := _longest_recipe_name()
+	var cases := [
+		{
+			"template_id": "bulk_common",
+			"kind": "delivery",
+			"text": "%sを5匹届けてほしい" % fish_name,
+		},
+		{
+			"template_id": "bulk_uncommon",
+			"kind": "delivery",
+			"text": "%sを3匹。上物を頼む" % fish_name,
+		},
+		{
+			"template_id": "cuisine",
+			"kind": "delivery",
+			"text": "%sにする%sを1匹" % [recipe_name, fish_name],
+		},
+		{
+			"template_id": "size_record",
+			"kind": "record",
+			"text": "35cm以上の%sを釣り上げてくれ" % fish_name,
+		},
+		{
+			"template_id": "rare_order",
+			"kind": "delivery",
+			"text": "%sを探している。金は弾む" % fish_name,
+		},
+	]
+	for case_data_variant in cases:
+		var case_data: Dictionary = case_data_variant
+		PlayerProgress.quest_board = [
+			_build_long_text_quest(case_data, fish_id),
+			_build_long_text_quest({"template_id": "bulk_common", "kind": "delivery", "text": "アジを3匹届けてほしい"}, "aji"),
+			_build_long_text_quest({"template_id": "bulk_common", "kind": "delivery", "text": "メジナを3匹届けてほしい"}, "mejina"),
+		]
+		await _expect_first_quest_text_fits(String(case_data["template_id"]), String(case_data["text"]))
+
+
+func _build_long_text_quest(case_data: Dictionary, fish_id: String) -> Dictionary:
+	var is_record := String(case_data.get("kind", "delivery")) == "record"
+	return {
+		"template_id": String(case_data.get("template_id", "bulk_common")),
+		"kind": String(case_data.get("kind", "delivery")),
+		"fish_id": fish_id,
+		"count": 5,
+		"target_size_cm": 35.0 if is_record else 0.0,
+		"posted_best_cm": 20.0 if is_record else 0.0,
+		"reward_money": 1000,
+		"text": String(case_data.get("text", "")),
+	}
+
+
+func _expect_first_quest_text_fits(template_id: String, expected_text: String) -> void:
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(1280, 720)
+	viewport.disable_3d = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(viewport)
+	var screen := QuestBoardScreen.new()
+	screen.theme = ThemeFactory.build_theme()
+	screen.configure({})
+	viewport.add_child(screen)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var body := screen.find_child("QuestText", true, false) as Label
+	_expect(body != null, "%s should expose condition text" % template_id)
+	if body != null:
+		_expect_eq(body.text, expected_text, "%s should keep the full condition text" % template_id)
+		_expect(body.get_line_count() <= 3, "%s condition should fit within three lines" % template_id)
+		_expect(
+			body.get_visible_line_count() == body.get_line_count(),
+			"%s condition should not be clipped or ellipsized" % template_id
+		)
+	viewport.queue_free()
+	await get_tree().process_frame
+
+
+func _longest_quest_fish_id() -> String:
+	var longest_id := ""
+	var longest_name := ""
+	var seen_ids: Array[String] = []
+	for spot_id in GameData.FISHING_SPOT_ORDER:
+		var spot := GameData.get_fishing_spot(spot_id)
+		for fish_id_variant in Array(spot.get("allowed_fish", [])):
+			var fish_id := String(fish_id_variant)
+			if seen_ids.has(fish_id):
+				continue
+			seen_ids.append(fish_id)
+			var fish := GameData.get_fish(fish_id)
+			if fish.is_empty() or bool(fish.get("shark", false)) or bool(fish.get("nushi", false)) or bool(fish.get("boss", false)):
+				continue
+			var fish_name := String(fish.get("name", fish_id))
+			if fish_name.length() > longest_name.length():
+				longest_id = fish_id
+				longest_name = fish_name
+	return longest_id
+
+
+func _longest_recipe_name() -> String:
+	var longest_name := ""
+	for recipe_id_variant in GameData.RECIPES.keys():
+		var recipe := GameData.get_recipe(String(recipe_id_variant))
+		var recipe_name := String(recipe.get("name", ""))
+		if recipe_name.length() > longest_name.length():
+			longest_name = recipe_name
+	return longest_name
 
 
 func _quest_context(template_id: String = "") -> Dictionary:
