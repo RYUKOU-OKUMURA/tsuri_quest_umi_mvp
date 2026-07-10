@@ -110,6 +110,11 @@ func _ready() -> void:
 	PlayerProgress.load_game()
 	_expect_eq(PlayerProgress.money, 777, "both corrupt should keep in-memory values")
 
+	# version欠損の疎な旧saveは従来どおり読み込める。
+	_verify_versionless_sparse_save_is_allowed()
+	_verify_unknown_version_type_guards()
+	await _verify_title_future_slot_guard_ui()
+
 	# 将来版を含むslotは、main / backup / tmpを一切変えずに利用を止める。
 	_remove_all_save_files()
 	var future_main := {
@@ -311,6 +316,91 @@ func _verify_title_future_slot_guard_ui() -> void:
 	viewport.queue_free()
 	await get_tree().process_frame
 	await get_tree().process_frame
+
+
+func _verify_versionless_sparse_save_is_allowed() -> void:
+	_remove_all_save_files()
+	_write_text(
+		_slot_save_path(1),
+		JSON.stringify({"level": 7, "money": 321, "sparse_payload": "keep compatible"})
+	)
+	_expect(
+		not PlayerProgress.is_future_save_version_guarded(1),
+		"versionless sparse save should remain compatible"
+	)
+	_expect(PlayerProgress.set_active_save_slot(1), "versionless sparse save should load")
+	_expect_eq(PlayerProgress.level, 7, "versionless sparse save should preserve level")
+	_expect_eq(PlayerProgress.money, 321, "versionless sparse save should preserve money")
+	_remove_all_save_files()
+
+
+func _verify_unknown_version_type_guards() -> void:
+	var invalid_cases: Array[Dictionary] = [
+		{"label": "String", "version": "future-v2"},
+		{"label": "null", "version": null},
+		{"label": "Array", "version": [PlayerProgress.SAVE_VERSION + 1]},
+		{"label": "Dictionary", "version": {"major": PlayerProgress.SAVE_VERSION + 1}},
+		{"label": "bool", "version": true},
+	]
+	for invalid_case in invalid_cases:
+		var label := String(invalid_case["label"])
+		var invalid_version = invalid_case["version"]
+		_remove_all_save_files()
+		_write_text(
+			_slot_save_path(1),
+			JSON.stringify(
+				{
+					"version": invalid_version,
+					"level": 3,
+					"unknown_version_payload": label,
+				}
+			)
+		)
+		# 不正mainに加えて数値future backupを置いても、slot全体を安全側で停止する。
+		_write_text(
+			_slot_backup_path(1),
+			JSON.stringify({"version": PlayerProgress.SAVE_VERSION + 2, "future_backup_payload": label})
+		)
+		_write_text(
+			_slot_tmp_path(1),
+			JSON.stringify({"version": PlayerProgress.SAVE_VERSION + 3, "future_tmp_payload": label})
+		)
+		var guarded_hashes := {
+			"main": _file_hash(_slot_save_path(1)),
+			"backup": _file_hash(_slot_backup_path(1)),
+			"tmp": _file_hash(_slot_tmp_path(1)),
+		}
+		var guard_status := PlayerProgress.future_save_guard_status(1)
+		_expect(bool(guard_status.get("guarded", false)), "%s version should guard the slot" % label)
+		_expect_eq(
+			String(guard_status.get("reason", "")),
+			"unknown_version_type",
+			"%s version should report unknown type" % label
+		)
+		_expect_eq(
+			int(guard_status.get("version_type", -1)),
+			typeof(invalid_version),
+			"%s version should preserve its type in guard status" % label
+		)
+		var summary := PlayerProgress.save_slot_summary(1)
+		_expect(bool(summary.get("future_guarded", false)), "%s version should not break slot summary" % label)
+		_expect_eq(
+			typeof(summary.get("future_version", null)),
+			typeof(invalid_version),
+			"%s version should not be coerced in slot summary" % label
+		)
+		_expect(not PlayerProgress.set_active_save_slot(1), "%s version should refuse activation" % label)
+		PlayerProgress.save_game()
+		PlayerProgress.reset_game()
+		_expect_future_slot_hashes(guarded_hashes, "%s version should preserve guarded files" % label)
+		_expect(not PlayerProgress.is_future_save_version_guarded(2), "%s guard should not affect slot 2" % label)
+		_expect(PlayerProgress.set_active_save_slot(2, false), "%s case should activate slot 2" % label)
+		PlayerProgress.reset_game()
+		PlayerProgress.money = 2000 + invalid_cases.find(invalid_case)
+		PlayerProgress.save_game()
+		_expect_future_slot_hashes(guarded_hashes, "%s case should keep slot 1 unchanged after slot 2 save" % label)
+		_expect(not PlayerProgress.set_active_save_slot(1), "%s guard should re-evaluate on slot switch" % label)
+		_expect_future_slot_hashes(guarded_hashes, "%s case should keep slot 1 unchanged after re-evaluation" % label)
 
 
 func _verify_future_guard_blocks_legacy_migration_on_startup() -> void:

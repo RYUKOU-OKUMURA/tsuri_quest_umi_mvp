@@ -161,18 +161,35 @@ func future_save_guard_status(slot_id: int = -1) -> Dictionary:
 	var resolved_slot := active_save_slot if slot_id < 1 else _normalized_slot(slot_id)
 	for path in _slot_save_paths(resolved_slot):
 		var data := _read_save_dictionary(path)
-		var version := float(data.get("version", 0))
+		if not data.has("version"):
+			continue
+		var version_value = data["version"]
+		var version_type := typeof(version_value)
+		if version_type != TYPE_INT and version_type != TYPE_FLOAT:
+			return {
+				"guarded": true,
+				"slot_id": resolved_slot,
+				"version": version_value,
+				"version_type": version_type,
+				"reason": "unknown_version_type",
+				"path": path,
+			}
+		var version := float(version_value)
 		if version > SAVE_VERSION:
 			return {
 				"guarded": true,
 				"slot_id": resolved_slot,
 				"version": version,
+				"version_type": version_type,
+				"reason": "future_version",
 				"path": path,
 			}
 	return {
 		"guarded": false,
 		"slot_id": resolved_slot,
 		"version": 0,
+		"version_type": TYPE_NIL,
+		"reason": "",
 		"path": "",
 	}
 
@@ -222,7 +239,7 @@ func save_slot_summary(slot_id: int) -> Dictionary:
 		"play_seconds": float(data.get("play_seconds", 0.0)),
 		"updated_unix": updated_unix,
 		"future_guarded": bool(future_guard.get("guarded", false)),
-		"future_version": float(future_guard.get("version", 0.0)),
+		"future_version": future_guard.get("version", null),
 	}
 
 
