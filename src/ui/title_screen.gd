@@ -269,13 +269,21 @@ func _refresh_slot_ui() -> void:
 		_apply_title_button_skin(button, selected)
 	var active_summary := PlayerProgress.save_slot_summary(_selected_slot_id)
 	var has_save := bool(active_summary.get("has_save", false))
+	var future_guarded := bool(active_summary.get("future_guarded", false))
 	_slot_status_label.text = _slot_status_text(active_summary)
-	_continue_button.disabled = not has_save
-	_new_button.text = "最初から" if has_save else "ゲームを始める"
+	_continue_button.disabled = not has_save or future_guarded
+	_new_button.disabled = future_guarded
+	_new_button.text = (
+		"このスロットは利用できません"
+		if future_guarded
+		else ("最初から" if has_save else "ゲームを始める")
+	)
 
 
 func _slot_button_text(summary: Dictionary) -> String:
 	var slot_id := int(summary.get("slot_id", 1))
+	if bool(summary.get("future_guarded", false)):
+		return "スロット%d　新しい版（対応版が必要）" % slot_id
 	if not bool(summary.get("has_save", false)):
 		return "スロット%d　空き" % slot_id
 	return "スロット%d　Lv.%d　%s" % [
@@ -287,6 +295,8 @@ func _slot_button_text(summary: Dictionary) -> String:
 
 func _slot_status_text(summary: Dictionary) -> String:
 	var slot_id := int(summary.get("slot_id", 1))
+	if bool(summary.get("future_guarded", false)):
+		return "スロット%d　%s" % [slot_id, future_save_guard_message()]
 	if not bool(summary.get("has_save", false)):
 		return "スロット%dを選択中　新しく始められます" % slot_id
 	return "スロット%dを選択中　最終保存 %s　%s" % [
@@ -318,6 +328,9 @@ func _format_updated_time(unix_time: int) -> String:
 
 
 func _on_new_game_pressed() -> void:
+	if PlayerProgress.is_future_save_version_guarded(_selected_slot_id):
+		_refresh_slot_ui()
+		return
 	if PlayerProgress.has_save_file(_selected_slot_id):
 		_confirm_reset.dialog_text = "スロット%dの進行を消して、最初から始めます。よろしいですか？" % _selected_slot_id
 		_confirm_reset.popup_centered(Vector2i(620, 220))
@@ -326,11 +339,15 @@ func _on_new_game_pressed() -> void:
 
 
 func _continue_selected_slot() -> void:
-	PlayerProgress.set_active_save_slot(_selected_slot_id)
+	if not PlayerProgress.set_active_save_slot(_selected_slot_id):
+		_refresh_slot_ui()
+		return
 	navigate("harbor")
 
 
 func _start_new_game() -> void:
-	PlayerProgress.set_active_save_slot(_selected_slot_id, false)
+	if not PlayerProgress.set_active_save_slot(_selected_slot_id, false):
+		_refresh_slot_ui()
+		return
 	PlayerProgress.reset_game()
 	navigate("harbor")

@@ -42,6 +42,10 @@ func navigate(screen_id: String, payload: Dictionary = {}) -> void:
 	navigate_requested.emit(screen_id, payload)
 
 
+static func future_save_guard_message() -> String:
+	return "新しい版のセーブです。対応版で開いてください。"
+
+
 func play_screen_bgm(path: String, volume_db: float = -10.0) -> void:
 	if path.strip_edges().is_empty():
 		stop_screen_bgm()

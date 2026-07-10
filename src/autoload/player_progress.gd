@@ -16,6 +16,7 @@ const LEGACY_SAVE_PATH := "user://tsuri_quest_save.json"
 const LEGACY_SAVE_BACKUP_PATH := "user://tsuri_quest_save.json.bak"
 const LEGACY_SAVE_TMP_PATH := "user://tsuri_quest_save.json.tmp"
 const SAVE_VERSION := 1
+const FUTURE_SAVE_GUARD_MESSAGE := "新しい版で作られたセーブのため、対応する新しい版で開いてください。"
 const SEA_CHART_FRAGMENT_MAX := 3
 const EXP_REQUIREMENTS: Array[int] = [
 	0,
@@ -109,7 +110,12 @@ func _ready() -> void:
 		print("PlayerProgress: サンドボックスモードで起動（セーブファイルの読み書きを無効化）")
 		_remember_current_titles()
 		return
-	_migrate_legacy_save_files()
+	_initialize_save_storage()
+
+
+func _initialize_save_storage() -> void:
+	if not is_future_save_version_guarded(DEFAULT_SAVE_SLOT):
+		_migrate_legacy_save_files()
 	load_game()
 
 
@@ -151,21 +157,52 @@ func has_save_file(slot_id: int = -1) -> bool:
 	)
 
 
-func set_active_save_slot(slot_id: int, load_slot := true) -> void:
+func future_save_guard_status(slot_id: int = -1) -> Dictionary:
+	var resolved_slot := active_save_slot if slot_id < 1 else _normalized_slot(slot_id)
+	for path in _slot_save_paths(resolved_slot):
+		var data := _read_save_dictionary(path)
+		var version := float(data.get("version", 0))
+		if version > SAVE_VERSION:
+			return {
+				"guarded": true,
+				"slot_id": resolved_slot,
+				"version": version,
+				"path": path,
+			}
+	return {
+		"guarded": false,
+		"slot_id": resolved_slot,
+		"version": 0,
+		"path": "",
+	}
+
+
+func is_future_save_version_guarded(slot_id: int = -1) -> bool:
+	return bool(future_save_guard_status(slot_id).get("guarded", false))
+
+
+func set_active_save_slot(slot_id: int, load_slot := true) -> bool:
 	active_save_slot = _normalized_slot(slot_id)
+	if is_future_save_version_guarded(active_save_slot):
+		_reset_runtime_state()
+		_remember_current_titles()
+		progress_changed.emit()
+		return false
 	_ensure_slot_dir(active_save_slot)
 	if not load_slot:
-		return
+		return true
 	_reset_runtime_state()
 	if has_save_file(active_save_slot):
 		load_game()
 	else:
 		_remember_current_titles()
 		progress_changed.emit()
+	return true
 
 
 func save_slot_summary(slot_id: int) -> Dictionary:
 	var resolved_slot := _normalized_slot(slot_id)
+	var future_guard := future_save_guard_status(resolved_slot)
 	var data := _read_save_dictionary(_slot_save_path(resolved_slot))
 	if data.is_empty():
 		data = _read_save_dictionary(_slot_backup_path(resolved_slot))
@@ -184,10 +221,15 @@ func save_slot_summary(slot_id: int) -> Dictionary:
 		"money": int(data.get("money", 0)),
 		"play_seconds": float(data.get("play_seconds", 0.0)),
 		"updated_unix": updated_unix,
+		"future_guarded": bool(future_guard.get("guarded", false)),
+		"future_version": float(future_guard.get("version", 0.0)),
 	}
 
 
 func reset_game() -> void:
+	if is_future_save_version_guarded():
+		push_warning(FUTURE_SAVE_GUARD_MESSAGE)
+		return
 	_reset_runtime_state()
 	_remember_current_titles()
 	save_game()
@@ -801,6 +843,9 @@ func _award_quest_reward_rig() -> bool:
 func save_game() -> void:
 	if _sandbox_mode:
 		return
+	if is_future_save_version_guarded():
+		push_warning(FUTURE_SAVE_GUARD_MESSAGE)
+		return
 	_ensure_slot_dir(active_save_slot)
 	var data := {
 		"version": SAVE_VERSION,
@@ -848,6 +893,10 @@ func save_game() -> void:
 
 func load_game() -> void:
 	if _sandbox_mode:
+		_remember_current_titles()
+		return
+	if is_future_save_version_guarded():
+		push_warning(FUTURE_SAVE_GUARD_MESSAGE)
 		_remember_current_titles()
 		return
 	var save_path := current_save_path()
@@ -913,6 +962,14 @@ func _slot_tmp_path(slot_id: int) -> String:
 	return "%s/%s" % [_slot_dir(slot_id), SAVE_TMP_FILE_NAME]
 
 
+func _slot_save_paths(slot_id: int) -> Array[String]:
+	return [
+		_slot_save_path(slot_id),
+		_slot_backup_path(slot_id),
+		_slot_tmp_path(slot_id),
+	]
+
+
 func _ensure_slot_dir(slot_id: int) -> void:
 	var err := DirAccess.make_dir_recursive_absolute(_slot_dir(slot_id))
 	if err != OK and err != ERR_ALREADY_EXISTS:
@@ -920,13 +977,7 @@ func _ensure_slot_dir(slot_id: int) -> void:
 
 
 func _migrate_save_data(data: Dictionary) -> Dictionary:
-	var version := int(data.get("version", 0))
-	if version > SAVE_VERSION:
-		push_warning(
-			"新しいバージョンのセーブデータです（version %d > %d）。読み込みを試みます。"
-			% [version, SAVE_VERSION]
-		)
-		return data
+	# version > SAVE_VERSION は load_game() より前のguardで遮断する。
 	# version が上がったらここに旧版→新版の変換を追加する。
 	# _apply_save_data() は欠損フィールドをデフォルト値で補完するため、
 	# フィールド追加だけの変更なら変換は不要。
