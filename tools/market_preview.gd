@@ -135,7 +135,7 @@ func _make_screen(viewport_size: Vector2i) -> Control:
 
 
 func _capture_screen(screen: Control, out_path: String) -> void:
-	await get_tree().create_timer(0.35).timeout
+	await get_tree().create_timer(0.5).timeout
 	RenderingServer.force_draw()
 	await get_tree().process_frame
 
