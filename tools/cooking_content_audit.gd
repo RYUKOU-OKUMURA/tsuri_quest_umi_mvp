@@ -368,6 +368,10 @@ func _audit_exp_gain() -> void:
 	_expect_named_node("EXP_GAIN", screen, "NextEffectArt")
 	_expect_reward_status_strip("EXP_GAIN", screen)
 	_expect_named_node("EXP_GAIN", screen, "RewardConfirmButton")
+	_expect_c0_reward_stage_base("EXP_GAIN", screen, false)
+	_expect_c0_single_flow_cue(
+		"EXP_GAIN", screen, "RewardConfirmButton", "RewardConfirmCue", "summary", 88.0
+	)
 	_expect_named_controls_not_visible(
 		"EXP_GAIN",
 		screen,
@@ -447,6 +451,10 @@ func _audit_exp_gain_level_up() -> void:
 	_expect_named_node("EXP_GAIN_LEVELUP", screen, "NextEffectArt")
 	_expect_reward_status_strip("EXP_GAIN_LEVELUP", screen)
 	_expect_named_node("EXP_GAIN_LEVELUP", screen, "RewardConfirmButton")
+	_expect_c0_reward_stage_base("EXP_GAIN_LEVELUP", screen, false)
+	_expect_c0_single_flow_cue(
+		"EXP_GAIN_LEVELUP", screen, "RewardConfirmButton", "RewardConfirmCue", "level", 88.0
+	)
 	_expect_named_controls_not_visible(
 		"EXP_GAIN_LEVELUP",
 		screen,
@@ -572,6 +580,10 @@ func _audit_meal_result() -> void:
 	_expect_named_node("MEAL_RESULT", screen, "RewardCardNextEffect")
 	_expect_reward_status_strip("MEAL_RESULT", screen)
 	_expect_named_node("MEAL_RESULT", screen, "RewardConfirmButton")
+	_expect_c0_reward_stage_base("MEAL_RESULT", screen, true)
+	_expect_c0_single_flow_cue(
+		"MEAL_RESULT", screen, "RewardConfirmButton", "RewardConfirmCue", "meal", 88.0
+	)
 	_expect_named_controls_not_visible(
 		"MEAL_RESULT",
 		screen,
@@ -636,6 +648,9 @@ func _audit_level_up() -> void:
 	)
 	_expect_named_node("LEVEL_UP_OVERLAY", panel, "LevelToSummaryCue")
 	_expect_named_node("LEVEL_UP_OVERLAY", panel, "LevelUpConfirmButton")
+	_expect_c0_single_flow_cue(
+		"LEVEL_UP_OVERLAY", panel, "LevelUpConfirmButton", "LevelUpConfirmCue", "summary", 92.0
+	)
 	_expect_named_node("LEVEL_UP_OVERLAY", panel, "LevelUpDimmer")
 	_expect_named_node("LEVEL_UP_OVERLAY", panel, "LevelUpDialog")
 	_expect_named_node("LEVEL_UP_OVERLAY", panel, "LevelUpTitleBand")
@@ -696,7 +711,7 @@ func _audit_status_summary() -> void:
 			"クーラーボックス",
 			"10 / 20",
 			"所持金",
-			"1250 G",
+			"1,250 G",
 			"プレイ時間",
 			"03:25:45",
 			"Lv.5到達！ 港のぬしに挑めます！",
@@ -811,6 +826,110 @@ func _expect_flow_connector_modes(state: String, root: Node, expected_modes: Arr
 func _expect_named_node(state: String, root: Node, node_name: String) -> void:
 	if _find_named(root, node_name) == null:
 		_failures.append("%s: missing named node '%s'." % [state, node_name])
+
+
+func _expect_c0_reward_stage_base(state: String, root: Node, should_be_visible: bool) -> void:
+	var node := _find_named(root, "RewardStageBase")
+	if not (node is ColorRect):
+		_failures.append("%s: RewardStageBase should be a ColorRect." % state)
+		return
+	var stage_base := node as ColorRect
+	if stage_base.is_visible_in_tree() != should_be_visible:
+		_failures.append(
+			"%s: RewardStageBase visibility should be %s."
+			% [state, str(should_be_visible)]
+		)
+		return
+	if should_be_visible:
+		if stage_base.size != VIEWPORT_SIZE or not _is_c0_stage_base_fully_opaque(stage_base):
+			_failures.append(
+				"%s: visible RewardStageBase must be fully opaque 1280x720, got size=%s color=%s modulate=%s self_modulate=%s."
+				% [
+					state,
+					stage_base.size,
+					stage_base.color.a,
+					stage_base.modulate.a,
+					stage_base.self_modulate.a,
+				]
+			)
+
+
+func _is_c0_stage_base_fully_opaque(stage_base: ColorRect) -> bool:
+	if (
+		stage_base.color.a != 1.0
+		or stage_base.modulate.a != 1.0
+		or stage_base.self_modulate.a != 1.0
+	):
+		return false
+	var parent := stage_base.get_parent()
+	while parent != null:
+		if parent is CanvasItem and (parent as CanvasItem).modulate.a != 1.0:
+			return false
+		parent = parent.get_parent()
+	return true
+
+
+func _expect_c0_single_flow_cue(
+	state: String,
+	root: Node,
+	button_name: String,
+	cue_name: String,
+	expected_glyph_id: String,
+	expected_left_margin: float
+) -> void:
+	var node := _find_named(root, button_name)
+	if not (node is Button):
+		_failures.append("%s: C0 flow button '%s' is missing." % [state, button_name])
+		return
+	var button := node as Button
+	var style := button.get_theme_stylebox("normal")
+	if style == null:
+		_failures.append("%s: C0 flow button '%s' has no normal style." % [state, button_name])
+		return
+	var actual_left_margin := style.get_content_margin(SIDE_LEFT)
+	if actual_left_margin != expected_left_margin:
+		_failures.append(
+			"%s: C0 flow button '%s' left margin must be %.0fpx, got %.1fpx."
+			% [state, button_name, expected_left_margin, actual_left_margin]
+		)
+	var cue := button.get_node_or_null(NodePath(cue_name))
+	if cue == null:
+		_failures.append("%s: C0 flow button '%s' lacks cue '%s'." % [state, button_name, cue_name])
+		return
+	if button.get_child_count() != 1 or cue.get_child_count() != 0:
+		_failures.append(
+			"%s: C0 flow button '%s' must contain exactly one direct cue and no nested glyph nodes."
+			% [state, button_name]
+		)
+		return
+	if not button.draw.get_connections().is_empty():
+		_failures.append(
+			"%s: C0 flow button '%s' must not use Button.draw for an additional glyph."
+			% [state, button_name]
+		)
+		return
+	if not (cue is Label) or not (cue as Label).is_visible_in_tree():
+		_failures.append("%s: C0 cue '%s' must be one visible Label glyph." % [state, cue_name])
+		return
+	if not (cue as Label).draw.get_connections().is_empty():
+		_failures.append(
+			"%s: C0 cue '%s' must not use Label.draw for additional glyph rendering."
+			% [state, cue_name]
+		)
+		return
+	if int(cue.get_meta("c0_glyph_count", 0)) != 1:
+		_failures.append("%s: C0 cue '%s' must declare exactly one glyph." % [state, cue_name])
+	if String(cue.get_meta("c0_glyph_id", "")) != expected_glyph_id:
+		_failures.append(
+			"%s: C0 cue '%s' should be '%s', got '%s'."
+			% [state, cue_name, expected_glyph_id, String(cue.get_meta("c0_glyph_id", ""))]
+		)
+	var expected_glyph_text := "▲" if expected_glyph_id == "level" else "▶"
+	if (cue as Label).text != expected_glyph_text:
+		_failures.append(
+			"%s: C0 cue '%s' should render one '%s' glyph, got '%s'."
+			% [state, cue_name, expected_glyph_text, (cue as Label).text]
+		)
 
 
 func _expect_reward_status_strip(state: String, root: Node) -> void:

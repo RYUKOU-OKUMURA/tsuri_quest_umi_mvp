@@ -451,6 +451,7 @@ var _spot_tag: Label
 var _spot_title: Label
 var _spot_subtitle: Label
 var _confirm_button: Button
+var _confirm_cue: Label
 
 
 func _build_screen() -> void:
@@ -640,7 +641,22 @@ func _build_screen() -> void:
 	_confirm_button.custom_minimum_size = Vector2(300.0, 42.0)
 	_confirm_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_apply_flow_button_style(_confirm_button)
-	_confirm_button.draw.connect(func() -> void: _draw_confirm_button_cue(_confirm_button))
+	_confirm_cue = Label.new()
+	_confirm_cue.name = "LevelUpConfirmCue"
+	_confirm_cue.set_meta("c0_glyph_count", 1)
+	_confirm_cue.set_meta("c0_glyph_id", "summary")
+	_confirm_cue.text = "▶"
+	_confirm_cue.set_anchors_preset(Control.PRESET_LEFT_WIDE)
+	_confirm_cue.offset_left = 20.0
+	_confirm_cue.offset_right = 60.0
+	_confirm_cue.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_confirm_cue.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_confirm_cue.add_theme_font_size_override("font_size", 24)
+	_confirm_cue.add_theme_color_override("font_color", Palette.GOLD_BRIGHT)
+	_confirm_cue.add_theme_color_override("font_outline_color", Palette.COOKING_LEVEL_DARK_INK)
+	_confirm_cue.add_theme_constant_override("outline_size", 2)
+	_confirm_cue.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_confirm_button.add_child(_confirm_cue)
 	box.add_child(_confirm_button)
 
 
@@ -998,7 +1014,8 @@ func _close() -> void:
 
 
 func _apply_flow_button_style(button: Button) -> void:
-	CookingAssets.apply_flow_button_style(button, 76.0, 7.0)
+	# 左端の完了グリフを本文から離し、40px高でも潰れない導線幅を確保する。
+	CookingAssets.apply_flow_button_style(button, 92.0, 7.0)
 
 
 func _set_label_min_height(label: Label, font_size: int, lines := 1) -> void:
@@ -1007,58 +1024,6 @@ func _set_label_min_height(label: Label, font_size: int, lines := 1) -> void:
 	var outline := label.get_theme_constant("outline_size")
 	var height := float(font_size * maxi(1, lines)) * 1.35 + float(outline * 2)
 	label.custom_minimum_size.y = maxf(label.custom_minimum_size.y, ceilf(height))
-
-
-func _draw_confirm_button_cue(button: Button) -> void:
-	var h := maxf(button.size.y, 1.0)
-	var center_y := h * 0.5
-	var gold := Palette.GOLD_BRIGHT
-	var ink := Palette.COOKING_LEVEL_DARK_INK
-	var glow := Palette.COOKING_LEVEL_IVORY
-	glow.a = 0.24
-
-	var crown_center := Vector2(24.0, center_y)
-	var crown := PackedVector2Array(
-		[
-			crown_center + Vector2(-11.0, 4.0),
-			crown_center + Vector2(-7.0, -6.0),
-			crown_center + Vector2(-2.0, 1.0),
-			crown_center + Vector2(0.0, -8.0),
-			crown_center + Vector2(2.0, 1.0),
-			crown_center + Vector2(7.0, -6.0),
-			crown_center + Vector2(11.0, 4.0),
-		]
-	)
-	button.draw_polyline(crown, ink, 4.0)
-	button.draw_polyline(crown, gold, 2.0)
-	button.draw_rect(Rect2(crown_center.x - 10.0, crown_center.y + 4.0, 20.0, 5.0), ink)
-	button.draw_rect(Rect2(crown_center.x - 8.0, crown_center.y + 5.0, 16.0, 2.0), glow)
-
-	var arrow_from := Vector2(42.0, center_y)
-	var arrow_to := Vector2(64.0, center_y)
-	button.draw_line(arrow_from, arrow_to, glow, 6.0)
-	button.draw_line(arrow_from, arrow_to, gold, 2.0)
-	button.draw_polygon(
-		PackedVector2Array(
-			[
-				arrow_to + Vector2(7.0, 0.0),
-				arrow_to + Vector2(-3.0, -5.0),
-				arrow_to + Vector2(-3.0, 5.0),
-			]
-		),
-		PackedColorArray([gold, gold, gold])
-	)
-
-	var card := Rect2(82.0, center_y - 8.0, 12.0, 16.0)
-	button.draw_rect(card.grow(1.5), ink)
-	button.draw_rect(card, Palette.COOKING_LEVEL_SUMMARY_CARD_FILL)
-	button.draw_line(
-		card.position + Vector2(1.0, 3.0),
-		card.position + Vector2(card.size.x - 1.0, 3.0),
-		Palette.COOKING_LEVEL_SUMMARY_CARD_HEAD,
-		2.0
-	)
-	button.draw_circle(card.position + Vector2(6.0, 10.0), 3.5, gold)
 
 
 func _clear_container(container: Container) -> void:
