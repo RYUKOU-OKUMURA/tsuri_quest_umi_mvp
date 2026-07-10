@@ -27,6 +27,8 @@ var _save_exit_dialog: ConfirmationDialog
 
 func _ready() -> void:
 	theme = ThemeFactory.build_theme()
+	# close requestを保存結果に応じて制御するため、SceneTreeの自動終了を無効化する。
+	get_tree().auto_accept_quit = false
 	PlayerProgress.save_failed.connect(_on_save_failed)
 	# 画面遷移フェード（最前面）
 	_fade = ColorRect.new()

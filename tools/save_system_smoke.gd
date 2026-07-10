@@ -349,6 +349,7 @@ func _verify_common_save_failure_ui() -> void:
 	var main := MainScript.new()
 	add_child(main)
 	await get_tree().create_timer(0.4).timeout
+	_expect(not get_tree().auto_accept_quit, "main should disable automatic close request acceptance")
 	main._on_save_failed("保存失敗テスト")
 	_expect(
 		main._current_screen._common_notification != null,
@@ -359,8 +360,16 @@ func _verify_common_save_failure_ui() -> void:
 		"保存失敗テスト",
 		"common notification should show the failure reason"
 	)
-	main._show_save_exit_dialog()
-	_expect(main._save_exit_dialog != null, "close failure should show a retry dialog")
+	PlayerProgress._save_failure_injection_stage = "tmp_open"
+	var title_screen = main._current_screen
+	var gameplay_screen := ScreenBase.new()
+	main._current_screen = gameplay_screen
+	main._notification(NOTIFICATION_WM_CLOSE_REQUEST)
+	PlayerProgress._save_failure_injection_stage = ""
+	main._current_screen = title_screen
+	gameplay_screen.free()
+	_expect(main._save_exit_dialog != null, "close request save failure should show a retry dialog")
+	_expect(main._save_exit_dialog.visible, "close request save failure dialog should remain visible")
 	_expect_eq(main._save_exit_dialog.ok_button_text, "再試行", "close dialog should offer retry")
 	var has_quit_without_save := false
 	for child in main._save_exit_dialog.find_children("*", "Button", true, false):
