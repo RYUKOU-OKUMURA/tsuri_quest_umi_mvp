@@ -49,13 +49,12 @@
 | `harbor/harbor_info_board_frame_source.png`, `harbor/harbor_info_fish_card_source.png` | `process_harbor_info_board_assets.py` | Phase B AI一点物候補はQAで**不採用・製品未使用**。現行製品はPIL版を維持 | 不採用証拠: `docs/qa/harbor_qa.md` §2。再採用しない限り製品出力なし |
 | `tackle_shop_*_backplate_source.png` | `generate_tackle_shop_assets.py` | `shop_rod_backplate.png`, `shop_rig_backplate.png`, `shop_item_icon_sheet.png`, `shop_detail_item_sheet.png`（採用済み） | 生成元・日付・入力権利はU-03/U-08待ち |
 | `title_opening_bg_source.png` | `generate_title_showcase_assets.py` | `title_ocean_bg.png`, `title_color_grade.png`（採用済み） | 生成元・日付・入力権利はU-03/U-08待ち |
-| `underwater_battle_bg_source.png` | `enhance_underwater_battle_bg.py` | `assets/showcase/underwater/underwater_battle_bg.png`（採用済み） | 生成元・日付・入力権利はU-03/U-08待ち |
+| `underwater_battle_bg_source.png` | `enhance_underwater_battle_bg.py` | 履歴上の旧採用経路（`bba599ee` 以前）。現行 `underwater_battle_bg.png` には未使用 | sourceがrepoに残るため、再採用時は生成元・日付・入力権利をU-03/U-08で確認 |
 | `sidebar_frame_material_source.png`, `fight_hud_material_source.png`, `top_status_material_source.png` | `generate_underwater_ui_frame_assets.py` | `assets/showcase/underwater/sidebar_frame.png`, `fight_hud_frame.png`, `top_status_frame.png`（採用済み） | 生成元・日付・入力権利はU-03/U-08待ち |
-| `underwater_center_paintover_candidate.png` | `build_reference_underwater_background.py` | 条件付き合成から `assets/showcase/underwater/underwater_battle_bg.png` へ到達し得るため、製品採否を要確認 | 生成元・日付・入力権利・実行時採否をU-03/U-08で確認 |
+| `reference/02_underwater_fight_mockup.png` + `tools/source_assets/underwater_center_paintover_candidate.png` | `build_reference_underwater_background.py` | `72038061`以降referenceから再構築し、`b6cb03ec`以降はrepoに存在するcenter paintoverも合成。最新更新`463edcbb`までこの経路の `underwater_battle_bg.png` が**現行採用済み** | 両入力の生成元・日付・入力権利と派生利用権はU-03/U-08待ち |
 | `reference/02_underwater_fight_mockup.png` | `process_underwater_fish_assets.py` | `hit_badge_full.png`, `fight_lure.png`, `hud_bait_icon.png`, `hud_tension_icon.png`, `hud_stamina_icon.png`, `hud_key_a.png`, `hud_key_b.png`, `hud_key_lr.png`, `hud_key_plus.png`, `hud_key_minus.png`（crop/合成して採用済み） | referenceの生成元・日付・入力権利と派生利用権はU-03/U-08待ち |
 | `reference/02_underwater_fight_mockup.png` | `generate_underwater_ui_frame_assets.py` | 紙質crop/blend由来の `top_status_frame.png`, `sidebar_frame.png`, `fight_hud_frame.png`、直接cropの `fight_action_card_icon.png`, `fight_tackle_card_icon.png`（採用済み） | referenceの生成元・日付・入力権利と派生利用権はU-03/U-08待ち |
 | `reference/02_underwater_fight_mockup.png` | `extract_top_status_icons.py` | `top_status_icon_sheet.png`（時計・太陽・風・コインをcrop、採用済み） | referenceの生成元・日付・入力権利と派生利用権はU-03/U-08待ち |
-| `reference/02_underwater_fight_mockup.png` | `build_reference_underwater_background.py` | reference画素をcrop/stitch/polishして `underwater_battle_bg.png` へ保存する経路あり。現製品への採否を要確認 | referenceの生成元・日付・入力権利・実行時採否はU-03/U-08待ち |
 | `reference/cooking_flow/01_cook_select_concept.png` | `generate_cooking_showcase_assets.py` | `cooking_room_bg.png`, `fish_icon_sheet.png`, `dish_feature_aji_shioyaki.png`、紙質blendを使う各frame、二次派生 `meal_table_spread.png`（採用済み） | referenceの生成元・日付・入力権利と派生利用権はU-03/U-08待ち |
 
 ## 3. 音源（BGM / SE） — 条件確認済み・加入期間証拠待ち

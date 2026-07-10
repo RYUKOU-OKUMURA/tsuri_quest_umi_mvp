@@ -71,11 +71,6 @@ def main() -> int:
             assert marker in ledger, f"asset ledger missing: {marker}"
 
         reference_pipeline_contract = {
-            "tools/build_reference_underwater_background.py": (
-                "reference/02_underwater_fight_mockup.png",
-                "underwater_battle_bg.png",
-                "実行時採否",
-            ),
             "tools/process_underwater_fish_assets.py": (
                 "reference/02_underwater_fight_mockup.png",
                 "hit_badge_full.png",
@@ -104,6 +99,41 @@ def main() -> int:
             assert Path(script).name in ledger, f"reference-consuming script missing from ledger: {script}"
             for marker in markers:
                 assert marker in ledger, f"reference pipeline marker missing from ledger: {marker}"
+
+        ledger_lines = ledger.splitlines()
+        current_bg_rows = [
+            line for line in ledger_lines
+            if "build_reference_underwater_background.py" in line and "underwater_battle_bg.png" in line
+        ]
+        assert len(current_bg_rows) == 1, f"expected one current underwater background row: {current_bg_rows}"
+        current_bg_row = current_bg_rows[0]
+        for marker in (
+            "reference/02_underwater_fight_mockup.png",
+            "underwater_center_paintover_candidate.png",
+            "build_reference_underwater_background.py",
+            "underwater_battle_bg.png",
+            "現行採用済み",
+            "U-03/U-08待ち",
+        ):
+            assert marker in current_bg_row, f"current underwater background relation missing: {marker}"
+
+        legacy_bg_rows = [
+            line for line in ledger_lines
+            if "enhance_underwater_battle_bg.py" in line and "underwater_battle_bg_source.png" in line
+        ]
+        assert len(legacy_bg_rows) == 1, f"expected one legacy underwater background row: {legacy_bg_rows}"
+        legacy_bg_row = legacy_bg_rows[0]
+        for marker in ("履歴上の旧採用経路", "現行", "未使用", "再採用時"):
+            assert marker in legacy_bg_row, f"legacy underwater background relation missing: {marker}"
+
+        current_bg_script = require_file("tools/build_reference_underwater_background.py")
+        for marker in (
+            'REFERENCE = ROOT / "reference" / "02_underwater_fight_mockup.png"',
+            'GENERATED_CENTER_PAINTOVER = ROOT / "tools" / "source_assets" / "underwater_center_paintover_candidate.png"',
+            "background = _add_generated_canvas_paintover",
+            "background.save(OUTPUT",
+        ):
+            assert marker in current_bg_script, f"current underwater background code relation changed: {marker}"
         assert "不採用・製品未使用" in ledger, "harbor Phase B rejection is not recorded"
         harbor_qa = require_file("docs/qa/harbor_qa.md")
         assert "情報板外枠＋魚カード枠の Phase B AI一点物候補" in harbor_qa, (
