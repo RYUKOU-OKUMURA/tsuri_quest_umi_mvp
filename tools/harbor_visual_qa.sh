@@ -35,6 +35,7 @@ mkdir -p "$GODOT_HOME"
 
 rm -f /tmp/tsuri_harbor_asa_mazume.png \
   /tmp/tsuri_harbor_daytime.png \
+  /tmp/tsuri_harbor_daytime_no_meal.png \
   /tmp/tsuri_harbor_night.png \
   /tmp/tsuri_harbor_time_slot_compare.png \
   /tmp/tsuri_harbor_daytime_after_mock.png \
@@ -50,6 +51,15 @@ for slot in asa_mazume daytime night; do
     TSURI_HARBOR_OUT="/tmp/tsuri_harbor_${slot}.png" \
     "$GODOT" --path "$ROOT" "res://tools/harbor_preview.tscn"
 done
+
+echo "==> Capture daytime preview without a meal effect"
+HOME="$GODOT_HOME" \
+  TSURI_HARBOR_SEED=departure_spacing_compare \
+  TSURI_HARBOR_LEVEL=30 \
+  TSURI_HARBOR_TIME_SLOT_ID=daytime \
+  TSURI_HARBOR_NO_MEAL=1 \
+  TSURI_HARBOR_OUT=/tmp/tsuri_harbor_daytime_no_meal.png \
+  "$GODOT" --path "$ROOT" "res://tools/harbor_preview.tscn"
 
 echo "==> Build harbor time slot comparison"
 python3 - <<'PY'
@@ -106,6 +116,7 @@ echo "==> Build adopted-mock comparisons"
 echo "Harbor visual QA outputs:"
 echo "/tmp/tsuri_harbor_asa_mazume.png"
 echo "/tmp/tsuri_harbor_daytime.png"
+echo "/tmp/tsuri_harbor_daytime_no_meal.png"
 echo "/tmp/tsuri_harbor_night.png"
 echo "/tmp/tsuri_harbor_time_slot_compare.png"
 echo "/tmp/tsuri_harbor_daytime_after_mock.png"

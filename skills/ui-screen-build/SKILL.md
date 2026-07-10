@@ -43,7 +43,7 @@ description: Zero-to-one implementation of a game screen UI in this repo, OR for
    新UX契約として「存在すべき要素」「存在してはいけない要素」「接続するゲームフロー（trip_stats等）」を列挙し、`tools/<screen>_smoke.gd` の検証観点にする。
 
 4. **構成フェーズ**
-   領域構成・主導線・情報階層を組む。**パネル・枠・帯・ボタン・ゲージ・キーキャップは、この時点から共通キット（`assets/showcase/common/` + 昇格素材）のPNGを配線する（§3.2）。プレースホルダにしてよいのは一点物スロット（背景・キャラ・料理・魚アート等）だけで、キット部品をStyleBoxFlat / draw_rect で仮組みして後回しにしない**（後回しにした仮組みがそのまま合格・freezeされるのが再発パターン。docs/33 §2）。`tools/<screen>_visual_qa.sh` を最初に作り（`fight_visual_qa.sh` が雛形）、実スクショ+参照横並びで構成一致を確認。
+   領域構成・主導線・情報階層を組む。**パネル・枠・帯・ボタン・ゲージ・キーキャップは、この時点から共通キット（`assets/showcase/common/` + 昇格素材）の画像素材（PNG/SVGを用途で使い分け）を配線する（§3.2）。不足する幾何部品だけはPIL/SVG等で生成し、画面専用品にせずcommonへ昇格してから使う。プレースホルダにしてよいのは一点物スロット（背景・キャラ・料理・魚アート等）だけで、キット部品をStyleBoxFlat / draw_rect で仮組みして後回しにしない**（後回しにした仮組みがそのまま合格・freezeされるのが再発パターン。docs/33 §2）。`tools/<screen>_visual_qa.sh` を最初に作り（`fight_visual_qa.sh` が雛形）、実スクショ+参照横並びで構成一致を確認。
    - **preview seed は参照密度に合わせて設計する**（visual QA作成と同時。空データや数件だけの簡易seedでは完成イメージとの比較にならない）。所持品・ログ・発見済み/未発見・装備中などを参照画像と同程度の密度で入れ、さらに**現実的に最長のデータ**（長い船名・食事効果名・魚名など）を必ず含めて、文字省略P1が初回スクショで発火するようにする。
    - 文字の見切れ・省略をゼロにする（全Labelに `clip_text` + `text_overrun_behavior`、ただし通常データで省略が発動しない幅設計）。カード・バッジ等の複合部品**内部**のテキストも対象。
 
@@ -57,7 +57,7 @@ description: Zero-to-one implementation of a game screen UI in this repo, OR for
 
 プレイブック §2.1 の全項目。特に落としやすいもの:
 
-- **パネル・枠・帯・主操作ボタンが共通キット（`assets/showcase/common/` + 昇格素材）のPNGで構成されており、StyleBoxFlat / draw_rect のフラット描画で金縁・紙面・CTAの質感を代替していない**（§2.1「質感が必要な部位がPNG素材化済み」・§3.2）
+- **パネル・枠・帯・主操作ボタンが共通キット（`assets/showcase/common/` + 昇格素材）の画像素材（PNG/SVGを用途で使い分け）で構成されており、StyleBoxFlat / draw_rect のフラット描画で金縁・紙面・CTAの質感を代替していない**（§2.1・§3.2）
 - 同一情報を同一画面に2箇所表示していない
 - 行レベルに金縁フレーム・行端飾りが無い（§4.4）
 - 一覧系なら背景が密閉型かスクリム減光型になっている（§4.5）
@@ -74,5 +74,5 @@ description: Zero-to-one implementation of a game screen UI in this repo, OR for
 - 参照に在っても docs/19 と矛盾する要素（情報重複等）はそのまま実装しない。非採用として分解ドキュメントに記録する
 - 分解ドキュメントなしで `.gd` を書き始めない
 - v1で専用PNG生成に着手しない（ユーザー合意がある場合を除く）
-- **キット部品（パネル・枠・帯・ボタン・ゲージ）をStyleBoxFlat / draw_rect / PILの再発明で代替しない**。既存キットの配線が常に先。キットに無ければcommonへ追加/昇格してから使う
+- **既存キット部品（パネル・枠・帯・ボタン・ゲージ）をStyleBoxFlat / draw_rect / PIL / SVGで画面ごとに再発明しない**。既存キットの配線が常に先。キットに無い幾何部品だけはPIL/SVG等で生成し、commonへ追加/昇格してから使う
 - 既存画面への新UIブロック追加を「新画面ではない」ことを理由に本スキルのゲート適用外にしない

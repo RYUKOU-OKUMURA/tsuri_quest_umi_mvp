@@ -9,6 +9,8 @@ const DEFAULT_OUT := "/tmp/tsuri_harbor_screen.png"
 func _ready() -> void:
 	theme = ThemeFactory.build_theme()
 	_setup_preview_progress()
+	if OS.get_environment("TSURI_HARBOR_NO_MEAL") == "1":
+		PlayerProgress.pending_buff = {}
 	var screen := HarborScreenScript.new()
 	screen.configure({})
 	add_child(screen)
@@ -26,8 +28,12 @@ func _ready() -> void:
 
 func _setup_preview_progress() -> void:
 	var level_override := int(OS.get_environment("TSURI_HARBOR_LEVEL"))
-	if OS.get_environment("TSURI_HARBOR_SEED") == "legacy_compare":
+	var seed := OS.get_environment("TSURI_HARBOR_SEED")
+	if seed == "legacy_compare":
 		_setup_legacy_compare_progress(level_override)
+		return
+	if seed == "departure_spacing_compare":
+		_setup_departure_spacing_compare_progress(level_override)
 		return
 	PlayerProgress.level = level_override if level_override > 0 else 30
 	PlayerProgress.exp = 0
@@ -95,14 +101,43 @@ func _setup_legacy_compare_progress(level_override: int) -> void:
 	}
 
 
-func _fix_rumor_to_single_harbor_nushi() -> void:
+func _setup_departure_spacing_compare_progress(level_override: int) -> void:
+	# ユーザー提示の食事効果なしbeforeと同じ密度で、余白再配分だけを比較する固定seed。
+	PlayerProgress.level = level_override if level_override > 0 else 30
+	PlayerProgress.exp = 0
+	PlayerProgress.money = 50080
+	PlayerProgress.inventory = {"aji": 5, "iwashi": 5, "madai": 3, "hirame": 2, "kihada": 1, "kasago": 4}
+	PlayerProgress.equipped_rod_id = "big_game"
+	PlayerProgress.play_seconds = 3220.0
+	PlayerProgress.owned_boats = ["bluewater_boat"]
+	PlayerProgress.sea_chart_fragments = 3
+	PlayerProgress.eaten_recipes = {"shioyaki": 1}
+	PlayerProgress.quest_board = [
+		{"kind": "delivery", "fish_id": "sappa", "count": 99, "reward_money": 500, "text": "サッパを届ける"},
+		{"kind": "delivery", "fish_id": "mejina", "count": 99, "reward_money": 500, "text": "メジナを届ける"},
+		{"kind": "delivery", "fish_id": "murasoi", "count": 99, "reward_money": 500, "text": "ムラソイを届ける"},
+	]
+	PlayerProgress.caught_counts = {"nekozame": 1}
+	_fix_rumor_to_single_harbor_nushi("nushi_outer_tide")
+	PlayerProgress.shark_bonds = {}
+	var time_slot_id := OS.get_environment("TSURI_HARBOR_TIME_SLOT_ID").strip_edges()
+	if not time_slot_id.is_empty() and GameData.is_time_slot_unlocked(time_slot_id, PlayerProgress.level):
+		PlayerProgress.selected_time_slot_id = time_slot_id
+	else:
+		PlayerProgress.selected_time_slot_id = GameData.DEFAULT_TIME_SLOT_ID
+	PlayerProgress.pending_buff = {}
+
+
+func _fix_rumor_to_single_harbor_nushi(rumor_override := "") -> void:
 	# 保存済みbeforeと時間帯ごとの目撃談まで一致させ、比較文言を決定的にする。
 	var time_slot_id := OS.get_environment("TSURI_HARBOR_TIME_SLOT_ID").strip_edges()
-	var rumor_nushi_id := "nushi_bluewater_route"
-	if time_slot_id == "asa_mazume":
-		rumor_nushi_id = "nushi_shallow_sand"
-	elif time_slot_id == "night":
-		rumor_nushi_id = "nushi_outer_tide"
+	var rumor_nushi_id := rumor_override
+	if rumor_nushi_id.is_empty():
+		rumor_nushi_id = "nushi_bluewater_route"
+		if time_slot_id == "asa_mazume":
+			rumor_nushi_id = "nushi_shallow_sand"
+		elif time_slot_id == "night":
+			rumor_nushi_id = "nushi_outer_tide"
 	PlayerProgress.caught_counts.erase(rumor_nushi_id)
 	for spot_id in GameData.NORMAL_FISHING_SPOT_IDS:
 		var nushi: Dictionary = GameData.get_fishing_spot(spot_id).get("nushi", {})

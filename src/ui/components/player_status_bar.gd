@@ -31,6 +31,10 @@ func refresh() -> void:
 	queue_redraw()
 
 
+func harbor_command_text_rects() -> Dictionary:
+	return _harbor_command_text_rects(Rect2(Vector2.ZERO, size))
+
+
 func _draw() -> void:
 	if size.x <= 0.0 or size.y <= 0.0:
 		return
@@ -54,13 +58,13 @@ func _draw() -> void:
 func _draw_harbor_command_status(rect: Rect2) -> void:
 	var font := GameFontsScript.extra_bold(get_theme_default_font())
 	var regular_font := GameFontsScript.bold(get_theme_default_font())
-	var w := rect.size.x
-	var level_rect := Rect2(rect.position + Vector2(w * 0.036, 6.0), Vector2(w * 0.218, 31.0))
-	var exp_rect := Rect2(rect.position + Vector2(w * 0.036, 37.0), Vector2(w * 0.218, 24.0))
-	var rod_caption_rect := Rect2(rect.position + Vector2(w * 0.309, 6.0), Vector2(w * 0.314, 22.0))
-	var rod_rect := Rect2(rect.position + Vector2(w * 0.309, 27.0), Vector2(w * 0.314, 34.0))
-	var money_caption_rect := Rect2(rect.position + Vector2(w * 0.681, 6.0), Vector2(w * 0.244, 22.0))
-	var money_rect := Rect2(rect.position + Vector2(w * 0.681, 27.0), Vector2(w * 0.244, 34.0))
+	var text_rects := _harbor_command_text_rects(rect)
+	var level_rect: Rect2 = text_rects["level"]
+	var exp_rect: Rect2 = text_rects["exp"]
+	var rod_caption_rect: Rect2 = text_rects["rod_caption"]
+	var rod_rect: Rect2 = text_rects["rod"]
+	var money_caption_rect: Rect2 = text_rects["money_caption"]
+	var money_rect: Rect2 = text_rects["money"]
 	var rod_name := String(GameData.get_rod(PlayerProgress.equipped_rod_id).get("name", "入門竿"))
 	var exp_text := "EXP MAX"
 	if PlayerProgress.level < GameData.MAX_LEVEL:
@@ -75,6 +79,18 @@ func _draw_harbor_command_status(rect: Rect2) -> void:
 	_draw_command_text(regular_font, "所持金", money_caption_rect, 11, HORIZONTAL_ALIGNMENT_RIGHT, Palette.HARBOR_CONTEXT_TEXT)
 	var money_text := "%s G" % ScreenBase.format_money(PlayerProgress.money)
 	_draw_command_text(font, money_text, money_rect, _fit_font_size(font, money_text, 22, 14, money_rect.size.x), HORIZONTAL_ALIGNMENT_RIGHT)
+
+
+func _harbor_command_text_rects(rect: Rect2) -> Dictionary:
+	var w := rect.size.x
+	return {
+		"level": Rect2(rect.position + Vector2(w * 0.036, 7.0), Vector2(w * 0.218, 31.0)),
+		"exp": Rect2(rect.position + Vector2(w * 0.036, 38.0), Vector2(w * 0.218, 24.0)),
+		"rod_caption": Rect2(rect.position + Vector2(w * 0.309, 8.0), Vector2(w * 0.314, 22.0)),
+		"rod": Rect2(rect.position + Vector2(w * 0.309, 29.0), Vector2(w * 0.314, 34.0)),
+		"money_caption": Rect2(rect.position + Vector2(w * 0.681, 6.0), Vector2(w * 0.244, 22.0)),
+		"money": Rect2(rect.position + Vector2(w * 0.681, 27.0), Vector2(w * 0.244, 34.0)),
+	}
 
 
 func _draw_command_text(

@@ -43,6 +43,15 @@ func _verify_command_board_structure() -> void:
 	await _settle()
 	_expect_rect(screen._top_bar_root, Rect2(32.0, 24.0, 1216.0, 80.0), "top bar")
 	_expect(screen._player_status_bar != null, "top metrics should use the shared PlayerStatusBar component")
+	_expect(screen._location_label.get_global_rect().position.distance_to(Vector2(68.0, 27.0)) <= 1.0, "location title should use the corrected header origin")
+	_expect(screen._context_label.get_global_rect().position.distance_to(Vector2(70.0, 65.0)) <= 1.0, "location subtitle should use the corrected header origin")
+	var top_text_rects: Dictionary = screen._player_status_bar.harbor_command_text_rects()
+	_expect(is_equal_approx((top_text_rects["level"] as Rect2).position.y, 7.0), "level should use the corrected first-row baseline")
+	_expect(is_equal_approx((top_text_rects["exp"] as Rect2).position.y, 38.0), "EXP should use the corrected second-row baseline")
+	_expect(is_equal_approx((top_text_rects["rod_caption"] as Rect2).position.y, 8.0), "rod caption should use the corrected first-row baseline")
+	_expect(is_equal_approx((top_text_rects["rod"] as Rect2).position.y, 29.0), "rod name should use the corrected second-row baseline")
+	_expect(is_equal_approx((top_text_rects["money_caption"] as Rect2).position.y, 6.0), "money caption should remain unchanged")
+	_expect(is_equal_approx((top_text_rects["money"] as Rect2).position.y, 27.0), "money value should remain unchanged")
 	_expect_rect(screen._command_board_root, Rect2(40.0, 120.0, 788.0, 512.0), "command board")
 	_expect_rect(screen._operation_board_root, Rect2(844.0, 120.0, 396.0, 512.0), "operation board")
 	_expect_rect(screen._footer_root, Rect2(40.0, 648.0, 1200.0, 48.0), "footer")
@@ -54,6 +63,14 @@ func _verify_command_board_structure() -> void:
 	var hero := screen._hero_target_slot.get("slot", null) as Control
 	var secondary := screen._secondary_target_slots[0].get("slot", null) as Control
 	_expect(hero.size.x >= secondary.size.x * 1.8, "hero target should be materially wider than a secondary target")
+	_expect_rect(screen._plan_guide_label.get_parent() as Control, Rect2(60.0, 364.0, 270.0, 78.0), "departure guide")
+	_expect_rect(screen._plan_weather_label.get_parent() as Control, Rect2(338.0, 364.0, 270.0, 78.0), "departure weather")
+	_expect_rect(screen._plan_pin_row, Rect2(616.0, 364.0, 192.0, 78.0), "departure target point")
+	_expect_rect(screen._plan_rumor_row, Rect2(60.0, 450.0, 748.0, 114.0), "departure rumor without meal")
+	_expect_rect(screen._meal_effect_panel, Rect2(60.0, 532.0, 748.0, 36.0), "meal effect")
+	_expect_rect(screen._time_slot_buttons.get("asa_mazume") as Control, Rect2(132.0, 576.0, 216.0, 44.0), "asa time slot")
+	_expect_rect(screen._time_slot_buttons.get("daytime") as Control, Rect2(356.0, 576.0, 216.0, 44.0), "daytime time slot")
+	_expect_rect(screen._time_slot_buttons.get("night") as Control, Rect2(580.0, 576.0, 228.0, 44.0), "night time slot")
 	_expect(not _tree_has_label(screen, "出港プラン"), "legacy departure-plan heading must be removed")
 	_expect(not _tree_has_label(screen, "港の施設"), "legacy facility heading must be removed")
 	_expect(not _tree_has_label(screen, "システム"), "legacy system section must be removed")
@@ -238,12 +255,32 @@ func _verify_departure_intel_meal_and_omen() -> void:
 	var screen := _make_screen()
 	await _settle()
 	_expect(not screen._meal_effect_panel.visible, "meal strip should hide when no buff is active")
+	var daytime_button := screen._time_slot_buttons.get("daytime", null) as Button
+	_expect(is_equal_approx(daytime_button.get_global_rect().position.y, 576.0), "time slots should stay on the lower baseline without a meal buff")
+	_expect(is_equal_approx(screen._plan_rumor_row.size.y, 114.0), "rumor should expand into the unused meal area when no buff is active")
+	_expect(is_equal_approx(daytime_button.get_global_rect().position.y - screen._plan_rumor_row.get_global_rect().end.y, 12.0), "expanded rumor should stop 12px above the time slots")
+	_expect(is_equal_approx(screen._plan_rumor_eyebrow_label.position.y, 28.0), "expanded rumor eyebrow should stay vertically centered")
+	_expect(is_equal_approx(screen._plan_rumor_icon.position.y, 41.0), "expanded rumor icon should stay vertically centered")
+	_expect(is_equal_approx(screen._plan_rumor_label.position.y, 50.0), "expanded rumor body should stay vertically centered")
 	_expect(not screen._plan_guide_label.text.is_empty(), "guide card should never be empty")
 	_expect(screen._plan_weather_label.text.contains("雨"), "weather card should keep the rain stub")
+	_expect(screen._plan_guide_label.get_theme_font_size("font_size") >= 15, "departure body text should use the enlarged readable size")
 	PlayerProgress.pending_buff = {"name": "カサゴの塩焼き", "text": "次の釣行で最大体力 +5%"}
 	screen._refresh_labels()
 	_expect(screen._meal_effect_panel.visible, "meal strip should show for a pending buff")
+	_expect(is_equal_approx(screen._plan_rumor_row.size.y, 78.0), "rumor should return to its compact height when a meal buff is active")
+	_expect(is_equal_approx(screen._plan_rumor_eyebrow_label.position.y, 10.0), "compact rumor eyebrow should restore its original position")
+	_expect(is_equal_approx(screen._plan_rumor_icon.position.y, 23.0), "compact rumor icon should restore its original position")
+	_expect(is_equal_approx(screen._plan_rumor_label.position.y, 32.0), "compact rumor body should restore its original position")
+	_expect(is_equal_approx(daytime_button.get_global_rect().position.y, 576.0), "time slots should not jump when a meal buff appears")
 	_expect(screen._buff_name_label.text.contains("カサゴの塩焼き"), "meal strip should show the buff name")
+	_expect(not screen._plan_rumor_row.get_global_rect().intersects(screen._meal_effect_panel.get_global_rect()), "rumor and meal rows must not overlap")
+	_expect(not screen._meal_effect_panel.get_global_rect().intersects(daytime_button.get_global_rect()), "meal row and time slots must not overlap")
+	_expect(is_equal_approx(screen._command_board_root.get_global_rect().end.y - daytime_button.get_global_rect().end.y, 12.0), "time slots should leave a 12px lower inset")
+	PlayerProgress.pending_buff = {}
+	screen._refresh_labels()
+	_expect(is_equal_approx(screen._plan_rumor_row.size.y, 114.0), "rumor should expand again after a meal buff clears")
+	_expect(is_equal_approx(screen._plan_rumor_label.position.y, 50.0), "expanded rumor content should restore after a meal buff clears")
 	await _free_screen(screen)
 
 	_seed_base(GameData.MAX_LEVEL)
@@ -255,6 +292,7 @@ func _verify_departure_intel_meal_and_omen() -> void:
 	await _settle()
 	_expect(screen._plan_rumor_row.visible, "megalodon omen should keep the rumor strip visible")
 	_expect(screen._plan_rumor_label.text.contains("深海の何か"), "megalodon omen should appear in the rumor strip")
+	_assert_wrapped_label_height(screen._plan_rumor_label, "megalodon rumor")
 	await _free_screen(screen)
 
 
@@ -279,6 +317,10 @@ func _verify_long_text_fit_and_assets() -> void:
 	var screen := _make_screen()
 	await _settle()
 	_expect_targets_match(screen, screen._harbor_highlight_candidates(3))
+	_assert_wrapped_label_height(screen._plan_guide_label, "long departure guide")
+	_assert_wrapped_label_height(screen._plan_weather_label, "departure weather")
+	_assert_wrapped_label_height(screen._plan_pin_label, "departure target point")
+	_assert_wrapped_label_height(screen._plan_rumor_label, "departure rumor")
 	_assert_visible_label_widths(screen)
 	_assert_visible_textures(screen)
 	await _free_screen(screen)
@@ -309,6 +351,17 @@ func _assert_visible_label_widths(node: Node) -> void:
 			_expect(width <= label.size.x + 1.5, "visible label should fit without clipping: %s (%.1f > %.1f)" % [label.text, width, label.size.x])
 	for child in node.get_children():
 		_assert_visible_label_widths(child)
+
+
+func _assert_wrapped_label_height(label: Label, label_name: String) -> void:
+	var font_size := label.get_theme_font_size("font_size")
+	var line_count := maxi(1, label.get_line_count())
+	var outline := label.get_theme_constant("outline_size")
+	var needed_height := float(font_size * line_count) * 1.18 + float(outline * 2)
+	_expect(
+		needed_height <= label.size.y + 1.5,
+		"%s should show all wrapped lines (%.1f > %.1f)" % [label_name, needed_height, label.size.y]
+	)
 
 
 func _assert_visible_textures(node: Node) -> void:

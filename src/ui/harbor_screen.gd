@@ -39,11 +39,14 @@ var _buff_name_label: Label
 var _facility_detail_title_label: Label
 var _facility_detail_body_label: Label
 var _meal_effect_row_label: Label
+var _location_label: Label
 var _plan_guide_label: Label
 var _plan_weather_label: Label
 var _plan_pin_row: Control
 var _plan_pin_label: Label
 var _plan_rumor_row: Control
+var _plan_rumor_icon: TextureRect
+var _plan_rumor_eyebrow_label: Label
 var _plan_rumor_label: Label
 var _time_slot_zone_root: Control
 var _info_board_root: Control
@@ -102,15 +105,16 @@ func _build_top_bar(root: Control) -> void:
 	accent.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control_px(top, accent, Rect2(22.0, 15.0, 2.0, 50.0))
 
-	var location := _harbor_label("南の島・港", 30, Palette.HARBOR_LOCATION_TEXT, true, 3, Palette.HARBOR_LOCATION_OUTLINE)
-	location.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	location.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control_px(top, location, Rect2(36.0, 5.0, 360.0, 38.0))
+	_location_label = _harbor_label("南の島・港", 30, Palette.HARBOR_LOCATION_TEXT, true, 3, Palette.HARBOR_LOCATION_OUTLINE)
+	_location_label.name = "HarborLocationTitle"
+	_location_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_location_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control_px(top, _location_label, Rect2(36.0, 3.0, 360.0, 38.0))
 
 	_context_label = _harbor_label("HARBOR COMMAND", 11, Palette.HARBOR_CONTEXT_TEXT, true, 1, Palette.HARBOR_LABEL_OUTLINE)
 	_context_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_context_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control_px(top, _context_label, Rect2(38.0, 43.0, 320.0, 22.0))
+	_place_control_px(top, _context_label, Rect2(38.0, 41.0, 320.0, 22.0))
 
 	_add_vertical_rule(top, 446.0)
 	_add_vertical_rule(top, 658.0)
@@ -273,9 +277,9 @@ func _build_departure_plan_card(main: Control) -> void:
 	var card := Control.new()
 	card.name = "HarborDepartureIntel"
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control_px(main, card, Rect2(20.0, 210.0, 748.0, 164.0))
+	_place_control_px(main, card, Rect2(20.0, 210.0, 748.0, 198.0))
 
-	var title := _harbor_label("出港情報", 18, Palette.HARBOR_SCENE_TITLE, true, 2, Palette.HARBOR_SCENE_TITLE_OUTLINE)
+	var title := _harbor_label("出港情報", 20, Palette.HARBOR_SCENE_TITLE, true, 2, Palette.HARBOR_SCENE_TITLE_OUTLINE)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control_px(card, title, Rect2(0.0, 0.0, 120.0, 34.0))
@@ -284,20 +288,22 @@ func _build_departure_plan_card(main: Control) -> void:
 	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control_px(card, rule, Rect2(94.0, 20.0, 654.0, 1.0))
 
-	var guide_row := _build_departure_intel_card(card, Rect2(0.0, 34.0, 270.0, 64.0), COMMAND_ICON_GUIDE, "ガイド")
+	var guide_row := _build_departure_intel_card(card, Rect2(0.0, 34.0, 270.0, 78.0), COMMAND_ICON_GUIDE, "ガイド")
 	_plan_guide_label = guide_row["label"] as Label
-	var weather_row := _build_departure_intel_card(card, Rect2(278.0, 34.0, 270.0, 64.0), COMMAND_ICON_WEATHER, "天気の気配")
+	var weather_row := _build_departure_intel_card(card, Rect2(278.0, 34.0, 270.0, 78.0), COMMAND_ICON_WEATHER, "天気の気配")
 	_plan_weather_label = weather_row["label"] as Label
-	var pin_row := _build_departure_intel_card(card, Rect2(556.0, 34.0, 192.0, 64.0), COMMAND_ICON_PIN, "狙いポイント")
+	var pin_row := _build_departure_intel_card(card, Rect2(556.0, 34.0, 192.0, 78.0), COMMAND_ICON_PIN, "狙いポイント")
 	_plan_pin_row = pin_row["row"] as Control
 	_plan_pin_label = pin_row["label"] as Label
-	var rumor_row := _build_departure_intel_card(card, Rect2(0.0, 106.0, 748.0, 58.0), COMMAND_ICON_RUMOR, "港の目撃談", true)
+	var rumor_row := _build_departure_intel_card(card, Rect2(0.0, 120.0, 748.0, 78.0), COMMAND_ICON_RUMOR, "港の目撃談")
 	_plan_rumor_row = rumor_row["row"] as Control
+	_plan_rumor_icon = rumor_row["icon"] as TextureRect
+	_plan_rumor_eyebrow_label = rumor_row["eyebrow_label"] as Label
 	_plan_rumor_label = rumor_row["label"] as Label
 
 
 func _build_departure_intel_card(
-	parent: Control, rect: Rect2, icon_index: int, eyebrow: String, allow_wrap := false
+	parent: Control, rect: Rect2, icon_index: int, eyebrow: String
 ) -> Dictionary:
 	var row := Control.new()
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -307,57 +313,56 @@ func _build_departure_intel_card(
 	row.add_child(panel)
 	var icon := _command_icon_rect(icon_index)
 	icon.modulate = Palette.HARBOR_PARCHMENT_TITLE
-	_place_control_px(row, icon, Rect2(12.0, 14.0, 30.0, 30.0))
-	var eyebrow_label := _harbor_label(eyebrow, 10, Palette.HARBOR_PARCHMENT_TITLE, true, 0)
+	_place_control_px(row, icon, Rect2(12.0, 23.0, 32.0, 32.0))
+	var eyebrow_label := _harbor_label(eyebrow, 11, Palette.HARBOR_PARCHMENT_TITLE, true, 0)
 	eyebrow_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	eyebrow_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	eyebrow_label.clip_text = false
 	eyebrow_label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
-	_place_control_px(row, eyebrow_label, Rect2(52.0, 11.0, rect.size.x - 64.0, 20.0))
-	var label := _harbor_label("", 13 if not allow_wrap else 14, Palette.HARBOR_BUFF_NAME, true, 0)
+	_place_control_px(row, eyebrow_label, Rect2(52.0, 10.0, rect.size.x - 64.0, 20.0))
+	var label := _harbor_label("", 15, Palette.HARBOR_BUFF_NAME, true, 0)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER if not allow_wrap else VERTICAL_ALIGNMENT_TOP
-	if allow_wrap:
-		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		label.clip_text = false
-		label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
-	_place_control_px(row, label, Rect2(52.0, 24.0, rect.size.x - 64.0, rect.size.y - 30.0))
-	return {"row": row, "label": label}
+	label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.clip_text = false
+	label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+	_place_control_px(row, label, Rect2(52.0, 32.0, rect.size.x - 64.0, rect.size.y - 38.0))
+	return {"row": row, "icon": icon, "eyebrow_label": eyebrow_label, "label": label}
 
 
 func _build_time_slot_zone(main: Control) -> void:
 	_time_slot_zone_root = Control.new()
 	_time_slot_zone_root.name = "HarborTimeAndMeal"
 	_time_slot_zone_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control_px(main, _time_slot_zone_root, Rect2(20.0, 384.0, 748.0, 108.0))
+	_place_control_px(main, _time_slot_zone_root, Rect2(20.0, 412.0, 748.0, 88.0))
 
 	var time_label := _harbor_label("時間帯", 12, Palette.HARBOR_SCENE_TITLE, true, 2, Palette.HARBOR_SCENE_TITLE_OUTLINE)
 	time_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	time_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control_px(_time_slot_zone_root, time_label, Rect2(0.0, 0.0, 66.0, 44.0))
+	_place_control_px(_time_slot_zone_root, time_label, Rect2(0.0, 44.0, 66.0, 44.0))
 
 	_build_time_slot_selector(_time_slot_zone_root)
 
 	_meal_effect_panel = Control.new()
 	_meal_effect_panel.name = "HarborMealEffect"
 	_meal_effect_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control_px(_time_slot_zone_root, _meal_effect_panel, Rect2(0.0, 56.0, 748.0, 52.0))
+	_place_control_px(_time_slot_zone_root, _meal_effect_panel, Rect2(0.0, 0.0, 748.0, 36.0))
 	var meal_frame := _nine_patch_rect(COMMON_HARBOR_COMMAND_DARK_FRAME_PATH, Vector4(12.0, 12.0, 12.0, 12.0))
 	meal_frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_meal_effect_panel.add_child(meal_frame)
 	var meal_accent := ColorRect.new()
 	meal_accent.color = Palette.HARBOR_INFO_BADGE_UNCAUGHT_FILL
 	meal_accent.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control_px(_meal_effect_panel, meal_accent, Rect2(1.0, 2.0, 5.0, 48.0))
+	_place_control_px(_meal_effect_panel, meal_accent, Rect2(1.0, 2.0, 5.0, 32.0))
 	_meal_effect_row_label = _harbor_label("食事効果", 11, Palette.HARBOR_SCENE_TEXT, true, 1, Palette.HARBOR_SCENE_TEXT_OUTLINE)
 	_meal_effect_row_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_meal_effect_row_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control_px(_meal_effect_panel, _meal_effect_row_label, Rect2(20.0, 4.0, 130.0, 20.0))
+	_place_control_px(_meal_effect_panel, _meal_effect_row_label, Rect2(20.0, 4.0, 82.0, 28.0))
 
 	_buff_name_label = _harbor_label("", 13, Palette.HARBOR_SCENE_TEXT, true, 1, Palette.HARBOR_SCENE_TEXT_OUTLINE)
 	_buff_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_buff_name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control_px(_meal_effect_panel, _buff_name_label, Rect2(20.0, 22.0, 708.0, 24.0))
+	_place_control_px(_meal_effect_panel, _buff_name_label, Rect2(108.0, 4.0, 620.0, 28.0))
 
 
 func _make_plan_row_button(text: String, callback: Callable) -> Button:
@@ -373,9 +378,9 @@ func _make_plan_row_button(text: String, callback: Callable) -> Button:
 func _build_time_slot_selector(card: Control) -> void:
 	var ids := GameData.get_all_time_slot_ids()
 	var rects := [
-		Rect2(72.0, 0.0, 216.0, 44.0),
-		Rect2(296.0, 0.0, 216.0, 44.0),
-		Rect2(520.0, 0.0, 228.0, 44.0),
+		Rect2(72.0, 44.0, 216.0, 44.0),
+		Rect2(296.0, 44.0, 216.0, 44.0),
+		Rect2(520.0, 44.0, 228.0, 44.0),
 	]
 	for index in range(ids.size()):
 		var time_slot_id := String(ids[index])
@@ -1300,6 +1305,7 @@ func _refresh_labels() -> void:
 	_status_label.text = "クーラーボックス　%d匹" % fish_total
 	_play_time_label.text = "プレイ時間　%s" % format_play_time(PlayerProgress.play_seconds)
 	var has_pending_buff := not PlayerProgress.pending_buff.is_empty()
+	_apply_meal_dependent_departure_layout(has_pending_buff)
 	if _meal_effect_panel != null:
 		_meal_effect_panel.visible = has_pending_buff
 	if _meal_effect_row_label != null:
@@ -1314,6 +1320,22 @@ func _refresh_labels() -> void:
 		var buff_text := String(PlayerProgress.pending_buff.get("text", ""))
 		_buff_name_label.text = buff_name if buff_text.is_empty() else "%s　%s" % [buff_name, buff_text]
 		_buff_name_label.add_theme_color_override("font_color", Palette.HARBOR_DETAIL_BODY_TEXT)
+
+
+func _apply_meal_dependent_departure_layout(has_pending_buff: bool) -> void:
+	if _plan_rumor_row == null:
+		return
+	var expanded := not has_pending_buff
+	var rumor_height := 114.0 if expanded else 78.0
+	var content_shift := 18.0 if expanded else 0.0
+	_plan_rumor_row.size = Vector2(748.0, rumor_height)
+	if _plan_rumor_icon != null:
+		_plan_rumor_icon.position = Vector2(12.0, 23.0 + content_shift)
+	if _plan_rumor_eyebrow_label != null:
+		_plan_rumor_eyebrow_label.position = Vector2(52.0, 10.0 + content_shift)
+	if _plan_rumor_label != null:
+		_plan_rumor_label.position = Vector2(52.0, 32.0 + content_shift)
+		_plan_rumor_label.size = Vector2(684.0, rumor_height - 38.0 - content_shift)
 
 
 func _build_time_slot_grade_overlay() -> void:

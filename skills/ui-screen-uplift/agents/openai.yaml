@@ -1,7 +1,7 @@
 interface:
   display_name: "UI Screen Uplift"
-  short_description: "既存画面UIの品質向上をトリアージ→1フェーズ→全画面比較採用の手順で進める"
-  default_prompt: "Use $ui-screen-uplift to raise the visual quality of the target screen toward its reference image, following docs/19_ui_production_playbook.md."
+  short_description: "既存UIを構成再設計と状態別収束で看板品質へ引き上げる"
+  default_prompt: "Use $ui-screen-uplift to improve this existing game screen from full-screen structure through dynamic-state convergence and evidence-backed freeze."
 
 policy:
   allow_implicit_invocation: true
