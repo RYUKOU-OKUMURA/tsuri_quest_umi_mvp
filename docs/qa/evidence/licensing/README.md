@@ -29,7 +29,7 @@
 |---|---|---|
 | U-01 | Suno 10音源それぞれの生成日時または曲詳細URL/画面 | 全ファイルとSuno生成物を一対一対応できる |
 | U-02 | 生成期間を覆うSuno Billing HistoryとPro/Premier加入画面 | U-01の全生成日時が有料加入期間内に含まれる。決済番号・住所等はマスク可 |
-| U-03 | 各 `assets/showcase/` generate外PNG、および `tools/source_assets/**` を読むsource-consuming pipeline全件の採否・生成サービス・生成日・作成者申告・製品出力先 | 全sourceと製品出力が一対一または派生関係で追跡でき、推定が残らず、OpenAI以外のサービス利用も記録される |
+| U-03 | 各 `assets/showcase/` generate外PNG、および `tools/source_assets/**` / `reference/**` を画素入力として読むsource/reference-consuming pipeline全件の採否・生成サービス・生成日・作成者申告・製品出力先 | 全source/referenceと製品出力が一対一または派生関係で追跡でき、原本非同梱を理由に派生製品を除外せず、推定が残らない。OpenAI以外のサービス利用も記録される |
 | U-04 | `assets/icon.svg` の作者・作成手段・権利者、および製品採否 | 採用なら権利者申告、非採用なら差し替え側の証拠を台帳化 |
 | U-05 | MITでライセンスするコードの法的権利者名 | `LICENSE.md` のplaceholderを実名または法人名へ置換 |
 | U-06 | 正式製品名、販売地域、商標の対象区分 | J-PlatPat等の公式DBと必要地域で専門家確認を含む調査範囲を確定 |

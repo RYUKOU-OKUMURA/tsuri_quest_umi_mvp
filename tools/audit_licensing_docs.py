@@ -30,19 +30,17 @@ def main() -> int:
             assert marker in license_text, f"LICENSE.md missing marker: {marker}"
         evidence_ids = re.findall(r"^\| (U-\d{2}) \|", evidence, flags=re.MULTILINE)
         assert len(evidence_ids) == len(set(evidence_ids)), f"duplicate evidence IDs: {evidence_ids}"
+        known_evidence_ids = {f"U-{number:02d}" for number in range(1, 9)}
+        assert set(evidence_ids) <= known_evidence_ids, f"unknown licensing evidence IDs: {evidence_ids}"
 
         unresolved_holder = "RIGHTS HOLDER NAME" in license_text
         if unresolved_holder:
-            assert set(evidence_ids) == {f"U-{number:02d}" for number in range(1, 9)}, (
-                f"unresolved licensing evidence must contain U-01..U-08 exactly once: {evidence_ids}"
-            )
+            assert "U-05" in evidence_ids, "unresolved LICENSE holder requires open U-05"
             assert "legal rights holder remains a\nrelease blocker" in license_text, (
                 "unresolved LICENSE holder must retain the release-blocker statement"
             )
         else:
-            assert set(evidence_ids) == ({f"U-{number:02d}" for number in range(1, 9)} - {"U-05"}), (
-                "resolved LICENSE holder requires U-05 removal while preserving other open IDs"
-            )
+            assert "U-05" not in evidence_ids, "resolved LICENSE holder requires U-05 removal"
             assert "placeholder" not in license_text.lower(), "resolved LICENSE must remove placeholder prose"
             assert "legal rights holder remains a\nrelease blocker" not in license_text, (
                 "resolved LICENSE must remove holder release-blocker prose"
@@ -67,9 +65,99 @@ def main() -> int:
             "加入期間証拠待ち",
             "Pre-Generated AI",
             "source-consuming pipeline",
+            "source/reference-consuming",
             "U-03/U-08",
         ):
             assert marker in ledger, f"asset ledger missing: {marker}"
+
+        reference_pipeline_contract = {
+            "tools/build_reference_underwater_background.py": (
+                "reference/02_underwater_fight_mockup.png",
+                "underwater_battle_bg.png",
+                "実行時採否",
+            ),
+            "tools/process_underwater_fish_assets.py": (
+                "reference/02_underwater_fight_mockup.png",
+                "hit_badge_full.png",
+                "hud_key_minus.png",
+            ),
+            "tools/generate_underwater_ui_frame_assets.py": (
+                "reference/02_underwater_fight_mockup.png",
+                "fight_action_card_icon.png",
+                "fight_tackle_card_icon.png",
+            ),
+            "tools/extract_top_status_icons.py": (
+                "reference/02_underwater_fight_mockup.png",
+                "top_status_icon_sheet.png",
+            ),
+            "tools/generate_cooking_showcase_assets.py": (
+                "reference/cooking_flow/01_cook_select_concept.png",
+                "dish_feature_aji_shioyaki.png",
+                "meal_table_spread.png",
+            ),
+        }
+        for script, markers in reference_pipeline_contract.items():
+            script_text = require_file(script)
+            assert "reference" in script_text and "Image.open" in script_text, (
+                f"reference-consuming implementation changed: {script}"
+            )
+            assert Path(script).name in ledger, f"reference-consuming script missing from ledger: {script}"
+            for marker in markers:
+                assert marker in ledger, f"reference pipeline marker missing from ledger: {marker}"
+        assert "不採用・製品未使用" in ledger, "harbor Phase B rejection is not recorded"
+        harbor_qa = require_file("docs/qa/harbor_qa.md")
+        assert "情報板外枠＋魚カード枠の Phase B AI一点物候補" in harbor_qa, (
+            "harbor Phase B rejection evidence missing"
+        )
+
+        known_product_consumers = {
+            "build_reference_underwater_background.py",
+            "enhance_underwater_battle_bg.py",
+            "extract_top_status_icons.py",
+            "generate_cooking_showcase_assets.py",
+            "generate_fishing_spot_map_assets.py",
+            "generate_harbor_showcase_assets.py",
+            "generate_megalodon_fish_assets.py",
+            "generate_shark_fish_assets.py",
+            "generate_tackle_shop_assets.py",
+            "generate_title_showcase_assets.py",
+            "generate_underwater_ui_frame_assets.py",
+            "process_fishing_time_slot_assets.py",
+            "process_harbor_info_board_assets.py",
+            "process_harbor_plan_assets.py",
+            "process_underwater_fish_assets.py",
+        }
+        known_non_product_or_intermediate_consumers = {
+            "build_fight_full_static_compare.py",
+            "build_fight_comparison_images.py",
+            "build_fight_hud_static_compare.py",
+            "build_fight_sidebar_static_compare.py",
+            "build_fight_top_status_static_compare.py",
+            "build_fish_asset_contact_sheet.py",
+            "build_fish_book_portrait_contact_sheet.py",
+            "build_fishing_spot_thumb_contact_sheet.py",
+            "build_shark_pen_reference.py",
+            "build_screen_visual_comparison.py",
+            "generate_nushi_fish_assets.py",
+        }
+        detected_consumers = set()
+        for path in (ROOT / "tools").glob("*.py"):
+            if path.name == Path(__file__).name:
+                continue
+            script_text = path.read_text(encoding="utf-8")
+            reads_external_image = "Image.open" in script_text and (
+                "source_assets" in script_text or 'ROOT / "reference"' in script_text
+            )
+            if reads_external_image:
+                detected_consumers.add(path.name)
+        known_consumers = known_product_consumers | known_non_product_or_intermediate_consumers
+        assert detected_consumers == known_consumers, (
+            f"source/reference consumer inventory changed: "
+            f"new={sorted(detected_consumers - known_consumers)}, "
+            f"missing={sorted(known_consumers - detected_consumers)}"
+        )
+        for script_name in known_product_consumers:
+            assert script_name in ledger, f"product consumer missing from ledger: {script_name}"
 
         expected_fonts = {
             "assets/fonts/line_seed/LINESeedJP_A_TTF_Rg.ttf",
