@@ -119,8 +119,9 @@ func _ready() -> void:
 	_remove_all_save_files()
 	var future_main := {
 		"version": PlayerProgress.SAVE_VERSION + 0.5,
-		"level": 3,
-		"money": 4242,
+		"level": {},
+		"money": [],
+		"play_seconds": null,
 		"future_main_payload": {"preserve": "main"},
 	}
 	var future_backup := {
@@ -152,7 +153,6 @@ func _ready() -> void:
 	PlayerProgress.save_game()
 	PlayerProgress.reset_game()
 	_expect_future_slot_hashes(future_hashes, "guarded save/reset should preserve every source file")
-	await _verify_title_future_slot_guard_ui()
 
 	# 他slotは通常利用でき、対象slotへ戻るとguardを再評価する。
 	_expect(not PlayerProgress.is_future_save_version_guarded(2), "other slot should not inherit guard")
@@ -162,6 +162,7 @@ func _ready() -> void:
 	PlayerProgress.save_game()
 	_expect_eq(PlayerProgress.money, 2468, "other slot should remain saveable")
 	_expect_future_slot_hashes(future_hashes, "other slot saves must not change guarded slot files")
+	await _verify_title_future_slot_guard_ui()
 	_expect(not PlayerProgress.set_active_save_slot(1), "switching back should re-evaluate the future guard")
 	_expect_future_slot_hashes(future_hashes, "re-evaluating the guard must not change guarded slot files")
 	_remove_all_save_files()
@@ -293,6 +294,11 @@ func _verify_title_empty_slot_selection_is_non_committal() -> void:
 
 
 func _verify_title_future_slot_guard_ui() -> void:
+	var guarded_hashes := {
+		"main": _file_hash(_slot_save_path(1)),
+		"backup": _file_hash(_slot_backup_path(1)),
+		"tmp": _file_hash(_slot_tmp_path(1)),
+	}
 	var viewport := SubViewport.new()
 	viewport.size = Vector2i(1280, 720)
 	viewport.disable_3d = true
@@ -303,16 +309,24 @@ func _verify_title_future_slot_guard_ui() -> void:
 	viewport.add_child(title)
 	await get_tree().process_frame
 	await get_tree().process_frame
+	_expect_eq(title._slot_buttons.size(), PlayerProgress.SAVE_SLOT_COUNT, "title should update all save slots")
+	_expect(title._slot_buttons[1].text.contains("Lv."), "title should render the safe occupied slot")
+	_expect(title._slot_buttons[2].text.contains("空き"), "title should render the empty slot")
 	title._select_slot(1)
 	_expect(title._continue_button.disabled, "future slot should disable continue in title UI")
 	_expect(title._new_button.disabled, "future slot should disable new game in title UI")
+	_expect(title._slot_buttons[0].text.contains("対応版"), "future slot should render a guarded slot label")
 	_expect(
 		title._slot_status_label.text.contains("新しい版")
 		and title._slot_status_label.text.contains("対応版"),
 		"future slot should show a compatible-version notice"
 	)
 	title._select_slot(2)
+	_expect(not title._continue_button.disabled, "safe slot should enable continue in title UI")
 	_expect(not title._new_button.disabled, "safe slot should re-enable new game in title UI")
+	title._continue_selected_slot()
+	_expect_eq(PlayerProgress.active_save_slot, 2, "safe slot should remain usable from title UI")
+	_expect_future_slot_hashes(guarded_hashes, "title refresh should preserve guarded files")
 	viewport.queue_free()
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -351,7 +365,9 @@ func _verify_unknown_version_type_guards() -> void:
 			JSON.stringify(
 				{
 					"version": invalid_version,
-					"level": 3,
+					"level": {},
+					"money": [],
+					"play_seconds": null,
 					"unknown_version_payload": label,
 				}
 			)
@@ -384,6 +400,9 @@ func _verify_unknown_version_type_guards() -> void:
 		)
 		var summary := PlayerProgress.save_slot_summary(1)
 		_expect(bool(summary.get("future_guarded", false)), "%s version should not break slot summary" % label)
+		_expect_eq(int(summary.get("level", -1)), 1, "%s summary should use safe level" % label)
+		_expect_eq(int(summary.get("money", -1)), 0, "%s summary should use safe money" % label)
+		_expect_eq(float(summary.get("play_seconds", -1.0)), 0.0, "%s summary should use safe play time" % label)
 		_expect_eq(
 			typeof(summary.get("future_version", null)),
 			typeof(invalid_version),

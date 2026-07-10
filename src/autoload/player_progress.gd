@@ -220,6 +220,7 @@ func set_active_save_slot(slot_id: int, load_slot := true) -> bool:
 func save_slot_summary(slot_id: int) -> Dictionary:
 	var resolved_slot := _normalized_slot(slot_id)
 	var future_guard := future_save_guard_status(resolved_slot)
+	var future_guarded := bool(future_guard.get("guarded", false))
 	var data := _read_save_dictionary(_slot_save_path(resolved_slot))
 	if data.is_empty():
 		data = _read_save_dictionary(_slot_backup_path(resolved_slot))
@@ -230,15 +231,22 @@ func save_slot_summary(slot_id: int) -> Dictionary:
 		updated_unix = int(FileAccess.get_modified_time(save_path))
 	elif FileAccess.file_exists(backup_path):
 		updated_unix = int(FileAccess.get_modified_time(backup_path))
+	var summary_level := 1
+	var summary_money := 0
+	var summary_play_seconds := 0.0
+	if not future_guarded:
+		summary_level = int(data.get("level", summary_level))
+		summary_money = int(data.get("money", summary_money))
+		summary_play_seconds = float(data.get("play_seconds", summary_play_seconds))
 	return {
 		"slot_id": resolved_slot,
 		"active": resolved_slot == active_save_slot,
 		"has_save": not data.is_empty(),
-		"level": int(data.get("level", 1)),
-		"money": int(data.get("money", 0)),
-		"play_seconds": float(data.get("play_seconds", 0.0)),
+		"level": summary_level,
+		"money": summary_money,
+		"play_seconds": summary_play_seconds,
 		"updated_unix": updated_unix,
-		"future_guarded": bool(future_guard.get("guarded", false)),
+		"future_guarded": future_guarded,
 		"future_version": future_guard.get("version", null),
 	}
 
