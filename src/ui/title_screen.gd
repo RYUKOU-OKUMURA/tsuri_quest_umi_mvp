@@ -349,5 +349,7 @@ func _start_new_game() -> void:
 	if not PlayerProgress.set_active_save_slot(_selected_slot_id, false):
 		_refresh_slot_ui()
 		return
-	PlayerProgress.reset_game()
+	if not PlayerProgress.reset_game():
+		_refresh_slot_ui()
+		return
 	navigate("harbor")

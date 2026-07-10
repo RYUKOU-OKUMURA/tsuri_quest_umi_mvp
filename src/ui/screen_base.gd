@@ -19,6 +19,8 @@ var _screen_bgm_player: AudioStreamPlayer
 var _screen_bgm_path := ""
 var _screen_bgm_delegated := false
 var _last_sfx_path := ""
+var _common_notification: Label
+var _common_notification_tween: Tween
 
 
 func configure(payload: Dictionary) -> void:
@@ -36,6 +38,29 @@ func _exit_tree() -> void:
 
 func _build_screen() -> void:
 	pass
+
+
+func show_common_notification(message: String) -> void:
+	if _common_notification == null:
+		_common_notification = make_label("", 20, Palette.TEXT_BONE, 2, Palette.TEXT_OUTLINE_DARK)
+		_common_notification.name = "CommonNotification"
+		_common_notification.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_common_notification.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_common_notification.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_common_notification.set_anchors_preset(Control.PRESET_CENTER_TOP)
+		_common_notification.position = Vector2(-310.0, 20.0)
+		_common_notification.size = Vector2(620.0, 54.0)
+		add_child(_common_notification)
+	_common_notification.text = message
+	_common_notification.modulate.a = 1.0
+	_common_notification.visible = true
+	move_child(_common_notification, get_child_count() - 1)
+	if _common_notification_tween != null:
+		_common_notification_tween.kill()
+	_common_notification_tween = create_tween()
+	_common_notification_tween.tween_interval(3.0)
+	_common_notification_tween.tween_property(_common_notification, "modulate:a", 0.0, 0.25)
+	_common_notification_tween.tween_callback(func() -> void: _common_notification.visible = false)
 
 
 func navigate(screen_id: String, payload: Dictionary = {}) -> void:

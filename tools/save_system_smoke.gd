@@ -263,6 +263,12 @@ func _ready() -> void:
 	PlayerProgress.load_game()
 	_expect_eq(PlayerProgress.money, 9999, "sandbox load_game must not touch memory")
 
+	PlayerProgress._sandbox_mode = false
+	# SAVE-02: 各I/O段階の失敗をfalse・signal・原本維持として呼出側へ返す。
+	await _verify_save_failure_propagation()
+	await _verify_title_stays_on_initial_save_failure()
+	await _verify_common_save_failure_ui()
+
 	if _failed:
 		return
 	print("save_system_smoke: ok")
@@ -290,6 +296,103 @@ func _verify_title_empty_slot_selection_is_non_committal() -> void:
 	main.free()
 	viewport.queue_free()
 	await get_tree().process_frame
+	await get_tree().process_frame
+
+
+func _verify_save_failure_propagation() -> void:
+	_remove_all_save_files()
+	PlayerProgress.set_active_save_slot(1, false)
+	_expect(PlayerProgress.reset_game(), "reset_game should return initial save success")
+	PlayerProgress.money = 1357
+	_expect(PlayerProgress.save_game(), "baseline save should succeed")
+	var baseline_main_hash := _file_hash(PlayerProgress.current_save_path())
+	var baseline_backup_hash := _file_hash(PlayerProgress.current_backup_path())
+	var failure_messages: Array[String] = []
+	var collect_failure := func(message: String) -> void: failure_messages.append(message)
+	PlayerProgress.save_failed.connect(collect_failure)
+	for stage in ["tmp_open", "write_unavailable", "backup_rename", "final_rename"]:
+		PlayerProgress._save_failure_injection_stage = stage
+		PlayerProgress.money += 1
+		var message_count_before := failure_messages.size()
+		_expect(not PlayerProgress.save_game(), "%s failure should return false" % stage)
+		_expect_eq(
+			failure_messages.size(),
+			message_count_before + 1,
+			"%s failure should emit save_failed once" % stage
+		)
+		_expect(not failure_messages[-1].is_empty(), "%s failure should include a message" % stage)
+		_expect_eq(
+			_file_hash(PlayerProgress.current_save_path()),
+			baseline_main_hash,
+			"%s failure should preserve main" % stage
+		)
+		var expected_backup_hash := baseline_main_hash if stage == "final_rename" else baseline_backup_hash
+		_expect_eq(
+			_file_hash(PlayerProgress.current_backup_path()),
+			expected_backup_hash,
+			"%s failure should preserve a valid backup generation" % stage
+		)
+		if stage == "final_rename":
+			baseline_backup_hash = expected_backup_hash
+		_expect(
+			not FileAccess.file_exists(PlayerProgress.current_tmp_path()),
+			"%s failure should clean tmp" % stage
+		)
+	PlayerProgress._save_failure_injection_stage = "tmp_open"
+	_expect(not PlayerProgress.reset_game(), "reset_game should return initial save failure")
+	PlayerProgress._save_failure_injection_stage = ""
+	PlayerProgress.save_failed.disconnect(collect_failure)
+	_expect(PlayerProgress.save_game(), "save should recover after failure injection is cleared")
+
+
+func _verify_common_save_failure_ui() -> void:
+	var main := MainScript.new()
+	add_child(main)
+	await get_tree().create_timer(0.4).timeout
+	main._on_save_failed("保存失敗テスト")
+	_expect(
+		main._current_screen._common_notification != null,
+		"save_failed should reach the current screen common notification"
+	)
+	_expect_eq(
+		main._current_screen._common_notification.text,
+		"保存失敗テスト",
+		"common notification should show the failure reason"
+	)
+	main._show_save_exit_dialog()
+	_expect(main._save_exit_dialog != null, "close failure should show a retry dialog")
+	_expect_eq(main._save_exit_dialog.ok_button_text, "再試行", "close dialog should offer retry")
+	var has_quit_without_save := false
+	for child in main._save_exit_dialog.find_children("*", "Button", true, false):
+		if String(child.text) == "保存せず終了":
+			has_quit_without_save = true
+	_expect(has_quit_without_save, "close dialog should offer quit without saving")
+	main.queue_free()
+	await get_tree().process_frame
+
+
+func _verify_title_stays_on_initial_save_failure() -> void:
+	_remove_all_save_files()
+	PlayerProgress.set_active_save_slot(1, false)
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(1280, 720)
+	viewport.disable_3d = true
+	add_child(viewport)
+	var title: TitleScreen = TitleScreen.new()
+	title.theme = ThemeFactory.build_theme()
+	viewport.add_child(title)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var navigations: Array[String] = []
+	title.navigate_requested.connect(
+		func(screen_id: String, _payload: Dictionary) -> void: navigations.append(screen_id)
+	)
+	PlayerProgress._save_failure_injection_stage = "tmp_open"
+	title._start_new_game()
+	PlayerProgress._save_failure_injection_stage = ""
+	_expect(navigations.is_empty(), "initial save failure should keep the player on title")
+	_expect(not FileAccess.file_exists(_slot_save_path(1)), "initial save failure should not create a slot save")
+	viewport.queue_free()
 	await get_tree().process_frame
 
 

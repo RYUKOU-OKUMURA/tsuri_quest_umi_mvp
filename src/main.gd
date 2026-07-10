@@ -22,10 +22,12 @@ var _current_screen
 var _fade: ColorRect
 var _app_bgm_player: AudioStreamPlayer
 var _app_bgm_path := ""
+var _save_exit_dialog: ConfirmationDialog
 
 
 func _ready() -> void:
 	theme = ThemeFactory.build_theme()
+	PlayerProgress.save_failed.connect(_on_save_failed)
 	# 画面遷移フェード（最前面）
 	_fade = ColorRect.new()
 	_fade.color = Color(0.0, 0.0, 0.0, 1.0)
@@ -38,12 +40,40 @@ func _ready() -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		if _should_save_on_close():
-			PlayerProgress.save_game()
+			if not PlayerProgress.save_game():
+				_show_save_exit_dialog()
+				return
 		get_tree().quit()
 
 
 func _should_save_on_close() -> bool:
 	return _current_screen == null or _current_screen.get_script() != TitleScreen
+
+
+func _on_save_failed(message: String) -> void:
+	if _current_screen != null and _current_screen.has_method("show_common_notification"):
+		_current_screen.call("show_common_notification", message)
+
+
+func _show_save_exit_dialog() -> void:
+	if _save_exit_dialog == null:
+		_save_exit_dialog = ConfirmationDialog.new()
+		_save_exit_dialog.title = "保存できませんでした"
+		_save_exit_dialog.dialog_text = "進行を保存できませんでした。再試行しますか？"
+		_save_exit_dialog.ok_button_text = "再試行"
+		_save_exit_dialog.cancel_button_text = "戻る"
+		_save_exit_dialog.confirmed.connect(_retry_save_and_quit)
+		var quit_without_save := _save_exit_dialog.add_button("保存せず終了", false, "quit_without_save")
+		quit_without_save.pressed.connect(func() -> void: get_tree().quit())
+		add_child(_save_exit_dialog)
+	_save_exit_dialog.popup_centered(Vector2i(520, 220))
+
+
+func _retry_save_and_quit() -> void:
+	if PlayerProgress.save_game():
+		get_tree().quit()
+	else:
+		_show_save_exit_dialog()
 
 
 func _show_screen(screen_id: String, payload: Dictionary = {}) -> void:
