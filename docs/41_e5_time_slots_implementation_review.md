@@ -1,12 +1,12 @@
 # 41. E5 時間帯 実装レビュー・改善提案
 
 作成日: 2026-07-08  
-状態: スライス1〜4 実装完了（2026-07-08）
+状態: 全4スライス実装・QA完了（2026-07-08、履歴）
 関連: `docs/v2/E5_time_slots.md`（実装仕様） / `docs/42_fishing_time_slot_asset_brief.md` / `docs/qa/harbor_qa.md` / `docs/qa/fishing_surface_qa.md` / `docs/qa/underwater_fight_qa.md`
 
 ## 0. この文書の位置づけ
 
-E5「時間帯（朝まずめ・夜釣り）」実装（2026-07-08 完了）に対するコード監査・港画面 UX 見直し・釣行ビジュアル改善案を1本にまとめたレビュー報告書。実装仕様の正本は `docs/v2/E5_time_slots.md` のまま。本 doc は**レビュー結果と次スライスの提案**を記録する。
+E5「時間帯（朝まずめ・夜釣り）」実装（2026-07-08 完了）に対するコード監査・港画面 UX 見直し・釣行ビジュアル改善案と、その全4スライスの完了記録。実装仕様の正本は `docs/v2/E5_time_slots.md` のまま。§1〜3は監査当時の提案であり、結果は本doc後半の完了記録と画面QAを正とする。港レイアウト案はdocs/44により更新済み。
 
 検証は親エージェントが `./tools/validate_project.sh`・`time_slot_encounter_audit`・`harbor_screen_smoke`・`fishing_reveal_smoke`・`save_system_verify.sh` を実行して green を確認済み。
 

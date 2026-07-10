@@ -1,5 +1,7 @@
 # 検証メモ
 
+> **注意（2026-07-10）:** 本文は初期MVP時点の履歴で、現行の検証範囲を表しません。現在の監査結果、25本のsmoke / audit、既知の終了時ERROR、発売用release verifierの不足は `docs/45_release_readiness_code_review.md` を正とします。
+
 ## 実施済み
 
 - `gdformat` によるGDScript整形

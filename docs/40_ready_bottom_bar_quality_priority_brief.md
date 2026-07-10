@@ -1,8 +1,8 @@
 # 40. READY専用下段バー品質改善 — 優先指示書
 
 作成日: 2026-07-07
-状態: 未着手（Codex投入用）
-位置づけ: `docs/38_shark_bait_ready_selector_spec.md` §4 のREADY UIは機能実装済みだが、参照品質・一体感とも未達。本書は品質改善作業の**優先指示書**（Codex / ワーカー brief の正本）。スキル改訂（`skills/ui-screen-uplift/SKILL.md`・`skills/ui-screen-build/SKILL.md` 2026-07-07版）の初回適用例とする。
+状態: 実装・QA採用完了（2026-07-07、履歴）。新規投入しない。freezeの正本は `docs/qa/fishing_surface_qa.md`
+位置づけ: `docs/38_shark_bait_ready_selector_spec.md` §4 のREADY UIを品質改善した当時のbrief。最長餌魚名のP1再発は本書全体を再実行せず、docs/45のUI-READY briefで名前スロットだけを局所再オープンする。
 
 関連: `reference/13_fishing_ready_danger_mockup.png` / `docs/39_underwater_fight_ui_redesign_spec.md` §3 / `docs/qa/fishing_surface_qa.md`
 

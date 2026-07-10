@@ -1,6 +1,6 @@
 # docs 索引
 
-最終更新: 2026-07-07
+最終更新: 2026-07-10
 
 ## 1. 分類の定義
 
@@ -20,8 +20,9 @@
 
 1. `docs/19_ui_production_playbook.md` — UI作業ルールの正本
 2. `docs/30_v2_expansion_overview.md` — V2拡張台帳・現在地
-3. 実装対象の仕様doc（現在は `docs/39_underwater_fight_ui_redesign_spec.md` §0 のドキュメントマップ）
-4. `docs/qa/` — 画面別freeze値・不採用リスト
+3. `docs/45_release_readiness_code_review.md` — リリース前監査・優先順位・次タスクbrief
+4. 実装対象の仕様doc（現在の本線は `docs/v2/E7_difficulty.md`、発売外周は `docs/v2/E11_launch_readiness.md`）
+5. `docs/qa/` — 画面別freeze値・不採用リスト
 
 ## 4. 索引本体
 
@@ -65,12 +66,16 @@
 | `33_cooking_market_ui_uplift_plan.md` | 調理・魚市場UIクオリティ向上計画（現状監査＋作戦） | 現行 |
 | `34_shark_pen_screen_spec.md` | サメの生簀画面 v1 実装仕様 | 現行 |
 | `35_fish_asset_duplicate_fix_plan.md` | 魚素材の同一画像使い回し調査結果と修正計画 | 現行 |
-| `36_shark_bait_ux_visibility_spec.md` | サメ餌魚の釣行中UX改善（演出・表示レイヤー）。**docs/38 実装完了後に履歴へ移す予定。消費仕様の正本は docs/38** | 現行 |
-| `37_shark_bait_in_trip_management_design_note.md` | サメ餌魚の釣行中管理 再設計メモ（経緯・判断記録）。**docs/38 実装完了後に履歴へ移す予定。消費仕様の正本は docs/38** | 現行 |
-| `38_shark_bait_ready_selector_spec.md` | サメ餌魚READYセレクタ＋レア度耐久チャージ 実装仕様（最優先） | 現行 |
-| `39_underwater_fight_ui_redesign_spec.md` | 水中ファイト画面 基盤UI刷新 実装仕様（docs/38 完了後） | 現行 |
-| `40_ready_bottom_bar_quality_priority_brief.md` | READY 下段バー品質優先 brief | 現行 |
-| `41_e5_time_slots_implementation_review.md` | E5 時間帯 実装レビュー・港画面 UX / 釣行ビジュアル改善提案 | 現行 |
+| `36_shark_bait_ux_visibility_spec.md` | サメ餌魚の釣行中UX改善（実装完了）。消費仕様はdocs/38により更新 | 履歴 |
+| `37_shark_bait_in_trip_management_design_note.md` | サメ餌魚の釣行中管理をdocs/38へ確定するまでの判断記録 | 履歴 |
+| `38_shark_bait_ready_selector_spec.md` | サメ餌魚READYセレクタ＋レア度耐久チャージの現行メカニクス契約（実装済み） | 現行 |
+| `39_underwater_fight_ui_redesign_spec.md` | 水中ファイト画面の現行レイアウト契約（実装済み） | 現行 |
+| `40_ready_bottom_bar_quality_priority_brief.md` | READY下段バー品質改善brief（実装・QA採用完了） | 履歴 |
+| `41_e5_time_slots_implementation_review.md` | E5時間帯の実装レビューと全4スライスの完了記録 | 履歴 |
+| `42_fishing_time_slot_asset_brief.md` | E5時間帯Stage 2素材ブリーフ（採用・実装完了） | 履歴 |
+| `43_harbor_info_board_plan.md` | 港情報板の旧レイアウト計画。画面仕様はdocs/44へ移行。天候先読み案のみ未決メモ | 履歴 |
+| `44_harbor_command_board_spec.md` | 港の司令盤の現行route / focus / layout契約（実装済み）。freeze正本はharbor_qa | 現行 |
+| `45_release_readiness_code_review.md` | リリース前全体監査、阻害要因、優先順位、次タスクbrief | 現行 |
 
 **番号体系外の正本**
 

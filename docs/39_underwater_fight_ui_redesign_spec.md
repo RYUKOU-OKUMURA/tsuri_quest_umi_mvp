@@ -6,17 +6,17 @@
 参照画像: `reference/14_underwater_fight_simple_mockup.png`（FIGHT）/ `reference/13_fishing_ready_danger_mockup.png`（READY。実装は docs/38）
 根拠: `docs/19_ui_production_playbook.md` §4.6（基盤レイアウト原則。2026-07-07ユーザー決定）
 
-## 0. 実装者（Codex）向けドキュメントマップ
+## 0. 回帰確認時のドキュメントマップ
 
-釣行画面まわりの実装に着手する前に、以下をこの順で読む。これ以外の文書は必要になったときに引けばよい。
+docs/38・39・40は実装完了済み。本節の旧実装順を新規タスクとして再実行しない。現在地と発売前優先順位はdocs/30・docs/45を先に読み、釣行画面の回帰確認またはP1再発時だけ以下を参照する。
 
 | 順 | 文書 | 読む目的 |
 |---|---|---|
 | 1 | `AGENTS.md` | プロジェクト全体の不変ルール・検証コマンド・ディレクトリ地図 |
 | 2 | `docs/19_ui_production_playbook.md` §0・§4.6・§5・§6 | UI作業の正本。特に §4.6 基盤レイアウト原則（今回の刷新の根拠） |
-| 3 | `docs/30_v2_expansion_overview.md` §現在地 | 今どのフェーズか・作業順（docs/38 → docs/39 → E5） |
-| 4 | `docs/38_shark_bait_ready_selector_spec.md` | **先に実装するもの**。READY餌魚セレクタ＋耐久チャージ＋抽選遅延。§9 に実装順あり |
-| 5 | 本doc（docs/39） | docs/38 完了後の水中ファイト刷新 |
+| 3 | `docs/30_v2_expansion_overview.md` §現在地 / `docs/45_release_readiness_code_review.md` | 現フェーズと局所再オープン対象 |
+| 4 | `docs/38_shark_bait_ready_selector_spec.md` | READY餌魚セレクタ＋耐久チャージ＋抽選遅延の実装済み契約 |
+| 5 | 本doc（docs/39） | 水中ファイト刷新の実装済み契約 |
 | 6 | `docs/qa/underwater_fight_qa.md` / `docs/qa/fishing_surface_qa.md` | 既存freeze値。本docで上書きする項目は §5 参照。上書き時は判断ログ必須 |
 | 7 | `reference/13` / `reference/14` | 方向性の真実（最終アートではない。分解して実装する） |
 

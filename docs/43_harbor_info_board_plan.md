@@ -4,6 +4,8 @@
 状態: **旧レイアウト計画（superseded）**。候補選定などの情報設計ロジックだけ継続し、画面・素材・freezeの正本は `docs/44_harbor_command_board_spec.md` と `docs/qa/harbor_qa.md`（天気先読みロジックは未着手）
 関連: `docs/41_e5_time_slots_implementation_review.md` §2（港画面UX再構成）/ `docs/38_shark_bait_ready_selector_spec.md` §6（餌魚UI撤去）/ `docs/qa/harbor_qa.md`（港画面freeze）/ `docs/19_ui_production_playbook.md` §4.6・§4.5（基盤レイアウト原則）/ `docs/31_asset_ledger.md`（素材台帳）
 
+注意: 本物の天候先読み（§2）以外は完了済み経緯であり、新規実装指示に使わない。港レイアウト・素材・freezeはdocs/44とharbor_qaを正とする。§2はローンチ必須外backlogで、着手時は独立した設計判断が必要。
+
 ## 0.0 「港の司令盤」への移行（2026-07-10）
 
 本書の候補選定、初心者ガイド、天候スタブ、ヌシ/メガロドン、時間帯のデータ契約は継続する。一方、旧v4の「3魚同格＋大きな出港プラン紙面＋右10行メニュー」という画面構成、v4完成イメージ、Phase A/Bの素材計画は、採用モック `docs/qa/evidence/harbor/2026-07-10_harbor_command_board_mockup_v1.png` と実装仕様 `docs/44_harbor_command_board_spec.md` に置き換えた。現在の画面・素材分担・freeze値は `docs/44` / `docs/qa/harbor_qa.md` を正とし、本書の旧レイアウト節を新規作業の指示に使わない。
@@ -207,7 +209,7 @@ outside the card (for chroma-key removal).
 
 ## 4. 優先順位と進め方
 
-**v3実装の着手順（確定）:** freeze改訂（済）→ 候補リストAPI → 素材生成（並列可）→ UI配線（§1＋§3＋天気スタブ＋CTA削除）→ visual QA。
+**旧v3の完了記録（再実行禁止）:** freeze改訂 → 候補リストAPI → 素材生成 → UI配線（§1＋§3＋天気スタブ＋CTA削除）→ visual QA。
 
 本物の§2（先読み抽選・セーブ）は v3 UI 完了後に独立の設計レビューから始める。
 

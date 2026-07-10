@@ -22,6 +22,7 @@
 | `.cursor/rules/` | Cursor 専用の常時ルール（Fable×Composer 運用など Cursor 固有の取り決め。他ツールは読まない） |
 | `docs/26_refactor_orchestration_plan.md` | 全体リファクタの作戦台帳（スライス・ベースライン・DoD） |
 | `docs/30_v2_expansion_overview.md` | **V2拡張（MVP後）の台帳**。フェーズ順・確定事項・共通仕様・進行状況 |
+| `docs/45_release_readiness_code_review.md` | **リリース前監査・引継ぎ**。発売阻害要因、優先順位、brief、Launch Gate |
 | `docs/v2/` | V2のフェーズ別実装仕様（`E*.md`）。実装は「docs/30 §4 ＋ 当該フェーズdoc」だけ読めば着手できる |
 | `docs/31_asset_ledger.md` | 素材台帳（作者・ライセンス・入手元）。**新素材・音源・フォントの追加時は同じコミットで記入** |
 
@@ -33,8 +34,8 @@
 
 | 作業 | 従う手順 |
 |---|---|
-| **V2拡張フェーズの実装（E0〜E10）** | `docs/30_v2_expansion_overview.md` §4 ＋ `docs/v2/<当該フェーズ>.md`（新画面を含むフェーズは下記UIスキルを併用） |
-| **釣行画面の基盤UI刷新（現在の最優先作業）** | `docs/38_shark_bait_ready_selector_spec.md`（READY餌魚セレクタ＋耐久チャージ。先行）→ `docs/39_underwater_fight_ui_redesign_spec.md`（水中ファイト刷新）。基盤原則は `docs/19` §4.6。**読み順は docs/39 §0 のドキュメントマップに従う** |
+| **V2拡張フェーズの実装（E0〜E11）** | `docs/30_v2_expansion_overview.md` §4 ＋ `docs/v2/<当該フェーズ>.md`（新画面を含むフェーズは下記UIスキルを併用） |
+| **リリース前ハードニング（現在の最優先）** | `docs/45_release_readiness_code_review.md` のRelease Gate 0/1 → `docs/v2/E7_difficulty.md` → `docs/v2/E11_launch_readiness.md`＋docs/33 M0/C0。完了済みdocs/38〜40は回帰確認時のみ参照 |
 | 新しい画面UIをゼロから実装 | `skills/ui-screen-build/SKILL.md` |
 | 既存画面UIの品質向上 | `skills/ui-screen-uplift/SKILL.md` |
 | 調理・食事・レベルアップフロー | `skills/tsuri-cooking-showcase-uplift/SKILL.md`（専用。上記2つより優先） |
@@ -44,7 +45,7 @@
 
 作戦台帳: リファクタ = `docs/26_refactor_orchestration_plan.md`（完了済み）/ **V2拡張 = `docs/30_v2_expansion_overview.md`**（進行状況・確定事項はこちらで管理）
 
-本節はサブエージェント機能の有無に関わらず守る共通原則。Cursor 固有の運用（Fable=オーケストレーター / Composer=ワーカーの役割分担、`model: composer-2.5-fast` の明示指定など）は `.cursor/rules/orchestration.mdc` が正本。Claude Code 固有の運用（メイン会話=オーケストレーター / サブエージェント=ワーカー、`model: claude-sonnet-5` の明示指定）は `CLAUDE.md` の「オーケストレーション（Claude Code 固有）」節が正本。サブエージェントを使わないツール（Codex 等）は fan-out せず、下記の brief 粒度（1 concern・触るファイル・DoD）とマージ前検証を自分自身のタスク分割に適用する。
+本節はサブエージェント機能の有無に関わらず守る共通原則。Cursor 固有の運用（Fable=オーケストレーター / Composer=ワーカーの役割分担、`model: composer-2.5-fast` の明示指定など）は `.cursor/rules/orchestration.mdc` が正本。Claude Code 固有の運用（メイン会話=オーケストレーター / サブエージェント=ワーカー、`model: claude-sonnet-5` の明示指定）は `CLAUDE.md` の「オーケストレーション（Claude Code 固有）」節が正本。サブエージェント機能がないツールだけは fan-out せず、下記の brief 粒度（1 concern・触るファイル・DoD）とマージ前検証を自分自身のタスク分割に適用する。
 
 ### 親エージェント単体で行う（fan-out しない）
 
