@@ -5,6 +5,9 @@ const ThemeFactory = preload("res://src/ui/ui_theme.gd")
 
 const EXPANDED_VIEWPORT := Vector2i(2124, 1507)
 const DESIGN_SIZE := Vector2(1280.0, 720.0)
+const DETAIL_TRAY_DECORATION_RECT := Rect2(738.0, 184.0, 380.0, 188.0)
+const DETAIL_RARITY_DECORATION_RECT := Rect2(1138.0, 152.0, 62.0, 90.0)
+const DETAIL_LOWER_DECORATION_RECT := Rect2(724.0, 382.0, 494.0, 104.0)
 
 var _screen: Variant
 var _navigated_to := ""
@@ -37,7 +40,7 @@ func _ready() -> void:
 	_screen._set_quantity("saba", 2)
 	_screen._show_confirm_overlay()
 	_expect(_screen._confirm_overlay.visible, "confirm overlay should open for selected fish")
-	_expect(_screen._confirm_overlay.z_index > _screen._detail_body_label.z_index, "confirm overlay should draw above market detail labels")
+	_expect(_screen._confirm_overlay.z_index > _screen._normal_detail_label.z_index, "confirm overlay should draw above market detail labels")
 	_expect(String(_screen._confirm_body_label.text).contains("最後の1匹"), "last-fish warning should be shown")
 	_screen._confirm_sell()
 	_expect_eq(PlayerProgress.fish_count("aji"), 1, "batch sell should subtract aji")
@@ -51,7 +54,50 @@ func _ready() -> void:
 	_expect(_screen._confirm_overlay.visible, "select all should create a sellable cart")
 	_screen._confirm_sell()
 	_expect(_screen._fish_ids.is_empty(), "selling everything should leave the market empty")
-	_expect(String(_screen._detail_title_label.text).contains("売れる魚がありません"), "empty state should update detail title")
+	_expect(String(_screen._empty_detail_label.text).contains("査定台は空です"), "empty state should update the dedicated message")
+	_expect(_screen._inventory_empty_panel.visible, "empty inventory panel should be visible")
+	var inventory_cover := _control_rect(_screen._inventory_empty_panel)
+	for row_index in range(_screen._row_nodes.size()):
+		var row: Dictionary = _screen._row_nodes[row_index]
+		var row_residual := _control_rect(row["highlight"] as Control)
+		row_residual = row_residual.merge(_control_rect(row["pointer"] as Control))
+		row_residual = row_residual.merge(_control_rect(row["select_button"] as Control))
+		_expect_rect_contains(inventory_cover, row_residual, "empty inventory cover must contain row %d in both axes" % row_index)
+		for key in row.keys():
+			var control := row[key] as Control
+			_expect(control == null or not control.visible, "empty inventory must hide row %d control %s" % [row_index, key])
+	_expect(_screen._detail_fish_image.texture == null and not _screen._detail_fish_image.visible, "empty state should remove the fish tray")
+	_expect(_screen._empty_detail_label.visible, "empty state should display the dedicated detail message")
+	_expect(not _screen._detail_title_label.visible, "empty state should hide the normal detail title")
+	_expect(not _screen._detail_rarity_label.visible, "empty state should hide the normal rarity label")
+	_expect(not _screen._normal_detail_label.visible, "empty state should hide the normal detail body")
+	_expect(not _screen._detail_price_label.visible and not _screen._detail_count_label.visible and not _screen._detail_subtotal_label.visible, "empty state should hide the normal detail prices")
+	var detail_cover := _control_rect(_screen._empty_detail_label)
+	_expect_rect_contains(detail_cover, _control_rect(_screen._detail_title_label), "empty detail cover must contain the detail title")
+	_expect_rect_contains(detail_cover, _control_rect(_screen._detail_fish_image), "empty detail cover must contain the fish tray")
+	_expect_rect_contains(detail_cover, _control_rect(_screen._detail_rarity_label), "empty detail cover must contain the rarity frame")
+	_expect_rect_contains(detail_cover, _control_rect(_screen._normal_detail_label), "empty detail cover must contain the detail body")
+	_expect_rect_contains(detail_cover, _control_rect(_screen._detail_price_label), "empty detail cover must contain the unit price")
+	_expect_rect_contains(detail_cover, _control_rect(_screen._detail_count_label), "empty detail cover must contain the owned count")
+	_expect_rect_contains(detail_cover, _control_rect(_screen._detail_subtotal_label), "empty detail cover must contain the selected total")
+	_expect_rect_contains(detail_cover, DETAIL_TRAY_DECORATION_RECT, "empty detail cover must contain the ice tray and leaf decoration")
+	_expect_rect_contains(detail_cover, DETAIL_RARITY_DECORATION_RECT, "empty detail cover must contain the rarity frame and diamonds")
+	_expect_rect_contains(detail_cover, DETAIL_LOWER_DECORATION_RECT, "empty detail cover must contain the price frame, coin, and wave decoration")
+	_expect(String(_screen._empty_detail_label.text).contains("次の釣果を待っています"), "empty state should explain the next action")
+
+	PlayerProgress.inventory = {"aji": 1}
+	_screen._refresh()
+	await _tick()
+	_expect(not _screen._inventory_empty_panel.visible, "inventory panel should hide after fish return")
+	_expect(_screen._detail_fish_image.texture != null and _screen._detail_fish_image.visible, "fish tray should return after fish return")
+	_expect(not _screen._empty_detail_label.visible, "empty detail message should hide after fish return")
+	_expect(_screen._detail_title_label.visible and _screen._detail_rarity_label.visible, "normal detail header should return after fish return")
+	_expect(_screen._normal_detail_label.visible, "normal detail message should return after fish return")
+	_expect(_screen._detail_price_label.visible and _screen._detail_count_label.visible and _screen._detail_subtotal_label.visible, "normal detail prices should return after fish return")
+	PlayerProgress.inventory = {}
+	_screen._refresh()
+	await _tick()
+	_expect(_screen._empty_detail_label.visible, "empty detail message should return after fish are sold again")
 
 	_screen._return_button.pressed.emit()
 	_expect(_navigated_to == "harbor", "return button should navigate to harbor")
@@ -148,6 +194,16 @@ func _collect_item_lists(node: Node, lists: Array[ItemList]) -> void:
 
 func _tick() -> void:
 	await get_tree().process_frame
+
+
+func _control_rect(control: Control) -> Rect2:
+	return Rect2(control.position, control.size)
+
+
+func _expect_rect_contains(cover: Rect2, target: Rect2, message: String) -> void:
+	var contains_horizontally := cover.position.x <= target.position.x and cover.end.x >= target.end.x
+	var contains_vertically := cover.position.y <= target.position.y and cover.end.y >= target.end.y
+	_expect(contains_horizontally and contains_vertically, "%s: cover=%s target=%s" % [message, cover, target])
 
 
 func _expect(condition: bool, message: String) -> void:

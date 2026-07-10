@@ -17,6 +17,7 @@ const PAGE_NEXT_RECT := Rect2(582.0, 136.0, 44.0, 36.0)
 const ROW_START_Y := 198.0
 const ROW_STEP_Y := 66.0
 const ROW_HEIGHT := 62.0
+const INVENTORY_EMPTY_RECT := Rect2(54.0, 192.0, 618.0, 470.0)
 
 const DETAIL_TITLE_RECT := Rect2(760.0, 142.0, 338.0, 40.0)
 const DETAIL_FISH_RECT := Rect2(772.0, 198.0, 312.0, 166.0)
@@ -25,6 +26,7 @@ const DETAIL_BODY_RECT := Rect2(790.0, 388.0, 360.0, 58.0)
 const DETAIL_PRICE_RECT := Rect2(724.0, 456.0, 140.0, 26.0)
 const DETAIL_COUNT_RECT := Rect2(888.0, 456.0, 144.0, 26.0)
 const DETAIL_SUBTOTAL_RECT := Rect2(1056.0, 456.0, 150.0, 26.0)
+const EMPTY_DETAIL_RECT := Rect2(724.0, 142.0, 494.0, 344.0)
 
 const CART_TITLE_RECT := Rect2(790.0, 526.0, 238.0, 32.0)
 const CART_SELECT_ALL_RECT := Rect2(1040.0, 526.0, 118.0, 32.0)
@@ -49,10 +51,11 @@ var _inventory_empty_panel: Control
 var _detail_title_label: Label
 var _detail_fish_image: TextureRect
 var _detail_rarity_label: Label
-var _detail_body_label: Label
+var _normal_detail_label: Label
 var _detail_price_label: Label
 var _detail_count_label: Label
 var _detail_subtotal_label: Label
+var _empty_detail_label: Label
 var _cart_title_label: Label
 var _cart_total_label: Label
 var _select_all_button: Button
@@ -279,7 +282,7 @@ func _build_inventory_empty_panel(parent: Control) -> void:
 	var empty_style := _panel_style(Palette.PARCHMENT, Palette.GOLD_DEEP, 2, 8)
 	empty_style.bg_color = Palette.PARCHMENT
 	_inventory_empty_panel.add_theme_stylebox_override("panel", empty_style)
-	_place(parent, _inventory_empty_panel, Rect2(86.0, 204.0, 582.0, 422.0))
+	_place(parent, _inventory_empty_panel, INVENTORY_EMPTY_RECT)
 
 	var box := VBoxContainer.new()
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -318,9 +321,19 @@ func _build_detail(parent: Control) -> void:
 	_detail_rarity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_place(parent, _detail_rarity_label, DETAIL_RARITY_RECT)
 
-	_detail_body_label = _market_label("", 16, Palette.TEXT_BONE, 1)
-	_detail_body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_place(parent, _detail_body_label, DETAIL_BODY_RECT)
+	_normal_detail_label = _market_label("", 14, Palette.TEXT_BONE, 1)
+	_normal_detail_label.name = "MarketNormalDetailLabel"
+	_normal_detail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_normal_detail_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_normal_detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var normal_detail_style := _panel_style(Palette.DARK_PANEL, Palette.GOLD_DEEP, 1, 4)
+	normal_detail_style.bg_color = _with_alpha(Palette.DARK_PANEL, 0.98)
+	normal_detail_style.content_margin_left = 8
+	normal_detail_style.content_margin_right = 8
+	normal_detail_style.content_margin_top = 0
+	normal_detail_style.content_margin_bottom = 0
+	_normal_detail_label.add_theme_stylebox_override("normal", normal_detail_style)
+	_place(parent, _normal_detail_label, DETAIL_BODY_RECT)
 
 	_detail_price_label = _market_label("", 14, Palette.TEXT_BONE, 1)
 	_detail_price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -333,6 +346,17 @@ func _build_detail(parent: Control) -> void:
 	_detail_subtotal_label = _market_label("", 14, Palette.TEXT_BONE, 1)
 	_detail_subtotal_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_place(parent, _detail_subtotal_label, DETAIL_SUBTOTAL_RECT)
+
+	_empty_detail_label = _market_label("", 19, Palette.TEXT_BONE, 1)
+	_empty_detail_label.name = "MarketEmptyDetailLabel"
+	_empty_detail_label.visible = false
+	_empty_detail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_empty_detail_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_empty_detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var empty_detail_style := _panel_style(Palette.DARK_PANEL, Palette.GOLD_DEEP, 2, 8)
+	empty_detail_style.bg_color = Palette.DARK_PANEL
+	_empty_detail_label.add_theme_stylebox_override("normal", empty_detail_style)
+	_place(parent, _empty_detail_label, EMPTY_DETAIL_RECT)
 
 
 func _build_cart(parent: Control) -> void:
@@ -520,15 +544,32 @@ func _refresh_inventory() -> void:
 
 func _refresh_detail() -> void:
 	if _selected_fish_id.is_empty():
-		_detail_title_label.text = "売れる魚がありません"
+		_detail_title_label.visible = false
+		_detail_title_label.text = ""
+		_detail_fish_image.visible = false
 		_detail_fish_image.texture = null
+		_detail_rarity_label.visible = false
 		_detail_rarity_label.text = ""
-		_detail_body_label.text = "釣った魚はここで売却できます。\n釣り場へ向かいましょう。"
-		_detail_price_label.text = "-"
-		_detail_count_label.text = "-"
-		_detail_subtotal_label.text = "-"
+		_normal_detail_label.visible = false
+		_normal_detail_label.text = ""
+		_detail_price_label.visible = false
+		_detail_price_label.text = ""
+		_detail_count_label.visible = false
+		_detail_count_label.text = ""
+		_detail_subtotal_label.visible = false
+		_detail_subtotal_label.text = ""
+		_empty_detail_label.text = "査定台は空です\n\n次の釣果を待っています\n\n釣った魚はここでまとめて売却できます。\nまずは釣り場へ向かいましょう。"
+		_empty_detail_label.visible = true
 		return
 
+	_empty_detail_label.visible = false
+	_detail_title_label.visible = true
+	_detail_fish_image.visible = true
+	_detail_rarity_label.visible = true
+	_normal_detail_label.visible = true
+	_detail_price_label.visible = true
+	_detail_count_label.visible = true
+	_detail_subtotal_label.visible = true
 	var fish := GameData.get_fish(_selected_fish_id)
 	var count := PlayerProgress.fish_count(_selected_fish_id)
 	var price := int(fish.get("sell_price", 0))
@@ -538,14 +579,13 @@ func _refresh_detail() -> void:
 	var rarity := String(fish.get("rarity", ""))
 	_detail_rarity_label.text = rarity
 	_detail_rarity_label.add_theme_color_override("font_color", RarityStyles.text_color(rarity))
-	_detail_body_label.text = "%s\n%s" % [
+	_normal_detail_label.text = "%s\n%s" % [
 		String(fish.get("habitat", "")),
 		"料理素材に残すか、装備資金へ。",
 	]
 	_detail_price_label.text = "単価 %s G" % ScreenBase.format_money(price)
 	_detail_count_label.text = "所持 %d匹" % count
 	_detail_subtotal_label.text = "選択 %s G" % ScreenBase.format_money(price * quantity)
-
 
 func _refresh_cart() -> void:
 	var summary := _cart_summary()
