@@ -2,49 +2,43 @@ extends ScreenBase
 
 const HarborBackdropScript = preload("res://src/ui/components/harbor_backdrop.gd")
 const FightFishAssets = preload("res://src/ui/fight_fish_assets.gd")
+const PlayerStatusBarScript = preload("res://src/ui/components/player_status_bar.gd")
 
 const HARBOR_TOP_FRAME_PATH := "res://assets/showcase/harbor/harbor_top_frame.png"
-const HARBOR_MAIN_FRAME_PATH := "res://assets/showcase/harbor/harbor_main_frame.png"
-const HARBOR_MENU_FRAME_PATH := "res://assets/showcase/harbor/harbor_menu_frame.png"
-const HARBOR_FOOTER_FRAME_PATH := "res://assets/showcase/harbor/harbor_footer_frame.png"
-const HARBOR_INFO_BOARD_FRAME_PATH := "res://assets/showcase/harbor/harbor_info_board_frame.png"
 const HARBOR_INFO_FISH_CARD_PATH := "res://assets/showcase/harbor/harbor_info_fish_card.png"
-const HARBOR_PLAN_PANEL_PATH := "res://assets/showcase/harbor/harbor_plan_panel.png"
-const HARBOR_PLAN_ICON_GUIDE_PATH := "res://assets/showcase/harbor/harbor_plan_icon_guide.png"
-const HARBOR_PLAN_ICON_PIN_PATH := "res://assets/showcase/harbor/harbor_plan_icon_pin.png"
-const HARBOR_PLAN_ICON_RUMOR_PATH := "res://assets/showcase/harbor/harbor_plan_icon_rumor.png"
-const HARBOR_TIME_SLOT_BTN_NORMAL_PATH := "res://assets/showcase/harbor/harbor_time_slot_btn_normal.png"
-const HARBOR_TIME_SLOT_BTN_SELECTED_PATH := "res://assets/showcase/harbor/harbor_time_slot_btn_selected.png"
 const HARBOR_TIME_SLOT_BTN_LOCKED_PATH := "res://assets/showcase/harbor/harbor_time_slot_btn_locked.png"
 const HARBOR_TIME_SLOT_ICON_ASA_PATH := "res://assets/showcase/harbor/harbor_time_slot_icon_asa.png"
 const HARBOR_TIME_SLOT_ICON_DAY_PATH := "res://assets/showcase/harbor/harbor_time_slot_icon_day.png"
 const HARBOR_TIME_SLOT_ICON_NIGHT_PATH := "res://assets/showcase/harbor/harbor_time_slot_icon_night.png"
-const HARBOR_WEATHER_STUB_ICON_PATH := "res://assets/showcase/harbor/harbor_weather_stub_icon.png"
-const HARBOR_BUTTON_PATH := "res://assets/showcase/harbor/harbor_facility_card.png"
-const HARBOR_BUTTON_HOVER_PATH := "res://assets/showcase/harbor/harbor_facility_card_hover.png"
-const HARBOR_BUTTON_PRIMARY_PATH := "res://assets/showcase/harbor/harbor_facility_card_primary.png"
-const ICON_FISHING_PATH := "res://assets/showcase/common/nav_fishing_icon.png"
-const ICON_COOKING_PATH := "res://assets/showcase/common/nav_cooking_icon.png"
-const ICON_MARKET_PATH := "res://assets/showcase/common/nav_market_icon.png"
-const ICON_SHOP_PATH := "res://assets/showcase/common/nav_shop_icon.png"
-const ICON_SHIPYARD_PATH := "res://assets/showcase/common/nav_shipyard_icon.png"
-const ICON_STATUS_PATH := "res://assets/showcase/common/nav_status_icon.png"
-const ICON_TITLE_PATH := "res://assets/showcase/common/nav_title_icon.png"
-const ICON_QUEST_PATH := "res://assets/showcase/common/nav_quest_icon.png"
-const ICON_LOCK_PATH := "res://assets/showcase/common/nav_lock_icon.png"
+const COMMON_PARCHMENT_CARD_PATH := "res://assets/showcase/common/parchment_card.png"
+const COMMON_HARBOR_COMMAND_DARK_FRAME_PATH := "res://assets/showcase/common/harbor_command_dark_frame.svg"
+const COMMON_HARBOR_COMMAND_CTA_PATH := "res://assets/showcase/common/harbor_command_cta.png"
+const HARBOR_COMMAND_ICON_SHEET_PATH := "res://assets/showcase/common/harbor_command_icon_sheet.svg"
+
+const COMMAND_ICON_DEPARTURE := 0
+const COMMAND_ICON_QUEST := 1
+const COMMAND_ICON_COOKING := 2
+const COMMAND_ICON_MARKET := 3
+const COMMAND_ICON_SHOP := 4
+const COMMAND_ICON_SHIPYARD := 5
+const COMMAND_ICON_SHARK := 6
+const COMMAND_ICON_STATUS := 7
+const COMMAND_ICON_BOOK := 8
+const COMMAND_ICON_BACK := 9
+const COMMAND_ICON_WEATHER := 10
+const COMMAND_ICON_PIN := 11
+const COMMAND_ICON_GUIDE := 12
+const COMMAND_ICON_RUMOR := 13
+const COMMAND_ICON_LOCK := 14
 
 var _status_label: Label
+var _play_time_label: Label
 var _context_label: Label
-var _top_level_label: Label
-var _top_money_label: Label
-var _top_rod_label: Label
-var _top_exp_label: Label
+var _player_status_bar
 var _buff_name_label: Label
 var _facility_detail_title_label: Label
 var _facility_detail_body_label: Label
-var _preparation_body_label: Label
 var _meal_effect_row_label: Label
-var _plan_rows_root: Control
 var _plan_guide_label: Label
 var _plan_weather_label: Label
 var _plan_pin_row: Control
@@ -57,6 +51,16 @@ var _info_board_slots: Array[Dictionary] = []
 var _time_slot_buttons: Dictionary = {}
 var _time_slot_icons: Dictionary = {}
 var _time_slot_grade_overlay: ColorRect
+var _meal_effect_panel: Control
+var _route_buttons: Dictionary = {}
+var _notification_badges: Dictionary = {}
+var _lock_icons: Dictionary = {}
+var _hero_target_slot: Dictionary = {}
+var _secondary_target_slots: Array[Dictionary] = []
+var _command_board_root: Control
+var _operation_board_root: Control
+var _footer_root: Control
+var _top_bar_root: Control
 
 
 func _build_screen() -> void:
@@ -65,6 +69,12 @@ func _build_screen() -> void:
 	add_child(backdrop)
 	move_child(backdrop, 0)
 	_build_time_slot_grade_overlay()
+	var screen_scrim := ColorRect.new()
+	screen_scrim.name = "HarborScreenScrim"
+	screen_scrim.color = Palette.HARBOR_BACKDROP_FRAME
+	screen_scrim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	screen_scrim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(screen_scrim)
 
 	var root := Control.new()
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -79,183 +89,275 @@ func _build_screen() -> void:
 
 
 func _build_top_bar(root: Control) -> void:
-	var top := _anchored_control(root, 0.020, 0.028, 0.980, 0.150)
+	var top := Control.new()
+	_top_bar_root = top
+	top.name = "HarborTopBar"
+	_place_control_px(root, top, Rect2(32.0, 24.0, 1216.0, 80.0))
 	var frame := _texture_rect(HARBOR_TOP_FRAME_PATH)
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	top.add_child(frame)
 
-	var location := _harbor_label("南の島・港", 32, Palette.HARBOR_LOCATION_TEXT, true, 4, Palette.HARBOR_LOCATION_OUTLINE)
+	var accent := ColorRect.new()
+	accent.color = Palette.HARBOR_FACILITY_ACCENT_PRIMARY
+	accent.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control_px(top, accent, Rect2(22.0, 15.0, 2.0, 50.0))
+
+	var location := _harbor_label("南の島・港", 30, Palette.HARBOR_LOCATION_TEXT, true, 3, Palette.HARBOR_LOCATION_OUTLINE)
 	location.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	location.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(top, location, 0.026, 0.15, 0.265, 0.67)
+	_place_control_px(top, location, Rect2(36.0, 5.0, 360.0, 38.0))
 
-	_context_label = _harbor_label("", 15, Palette.HARBOR_CONTEXT_TEXT, false, 2, Palette.HARBOR_LABEL_OUTLINE)
+	_context_label = _harbor_label("HARBOR COMMAND", 11, Palette.HARBOR_CONTEXT_TEXT, true, 1, Palette.HARBOR_LABEL_OUTLINE)
 	_context_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_context_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(top, _context_label, 0.030, 0.62, 0.395, 0.92)
+	_place_control_px(top, _context_label, Rect2(38.0, 43.0, 320.0, 22.0))
 
-	_top_level_label = _top_metric(top, 0.395, 0.145, 0.485, 0.825, "Lv.1")
-	_top_exp_label = _top_metric(top, 0.495, 0.145, 0.660, 0.825, "EXP 0 / 60")
-	_top_money_label = _top_metric(top, 0.670, 0.145, 0.810, 0.825, "500 G")
-	_top_rod_label = _top_metric(top, 0.820, 0.145, 0.972, 0.825, "入門竿")
+	_add_vertical_rule(top, 446.0)
+	_add_vertical_rule(top, 658.0)
+	_add_vertical_rule(top, 942.0)
+
+	_player_status_bar = PlayerStatusBarScript.new()
+	_player_status_bar.name = "HarborPlayerStatusBar"
+	_player_status_bar.use_harbor_command_layout()
+	_place_control_px(top, _player_status_bar, Rect2(446.0, 0.0, 770.0, 80.0))
 
 
 func _build_main_panel(root: Control) -> void:
-	var main := _anchored_control(root, 0.026, 0.170, 0.660, 0.882)
-	var frame := _texture_rect(HARBOR_MAIN_FRAME_PATH)
+	_command_board_root = Control.new()
+	_command_board_root.name = "HarborCommandBoard"
+	_command_board_root.clip_contents = true
+	_place_control_px(root, _command_board_root, Rect2(40.0, 120.0, 788.0, 512.0))
+	var fill := ColorRect.new()
+	fill.color = _with_alpha(Palette.DARK_PANEL_DEEP, 0.86)
+	fill.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_command_board_root.add_child(fill)
+	var frame := _nine_patch_rect(COMMON_HARBOR_COMMAND_DARK_FRAME_PATH, Vector4(12.0, 12.0, 12.0, 12.0))
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	main.add_child(frame)
+	_command_board_root.add_child(frame)
 
-	_build_info_board(main)
-	_build_departure_plan_card(main)
-	_build_time_slot_zone(main)
+	_build_info_board(_command_board_root)
+	_build_departure_plan_card(_command_board_root)
+	_build_time_slot_zone(_command_board_root)
 
 
 func _build_info_board(main: Control) -> void:
-	# 掲示板へ縦を譲るため、情報板は少し圧縮（完成イメージ v4 の面積配分）。
-	_info_board_root = _anchored_control(main, 0.050, 0.035, 0.950, 0.305)
-	var board_frame := _texture_rect(HARBOR_INFO_BOARD_FRAME_PATH)
-	board_frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_info_board_root.add_child(board_frame)
+	_info_board_root = Control.new()
+	_info_board_root.name = "HarborTargetBoard"
+	_info_board_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control_px(main, _info_board_root, Rect2(20.0, 14.0, 748.0, 192.0))
 
-	var title := _harbor_label("本日の狙い目", 22, Palette.HARBOR_SCENE_TITLE, true, 3, Palette.HARBOR_SCENE_TITLE_OUTLINE)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var title := _harbor_label("本日の狙い目", 20, Palette.HARBOR_SCENE_TITLE, true, 2, Palette.HARBOR_SCENE_TITLE_OUTLINE)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(_info_board_root, title, 0.050, 0.020, 0.950, 0.150)
+	_place_control_px(_info_board_root, title, Rect2(0.0, 0.0, 240.0, 34.0))
+	var priority_caption := _harbor_label("TARGET PRIORITY", 10, Palette.HARBOR_CONTEXT_TEXT, true, 0)
+	priority_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	priority_caption.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control_px(_info_board_root, priority_caption, Rect2(520.0, 0.0, 228.0, 34.0))
+	var rule := ColorRect.new()
+	rule.color = _with_alpha(Palette.GOLD, 0.42)
+	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control_px(_info_board_root, rule, Rect2(0.0, 32.0, 748.0, 1.0))
 
 	_info_board_slots.clear()
-	var slot_left := 0.055
-	var slot_width := 0.285
-	var slot_gap := 0.025
-	for index in range(3):
-		var left := slot_left + float(index) * (slot_width + slot_gap)
-		var slot := _anchored_control(_info_board_root, left, 0.160, left + slot_width, 0.970)
-		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_secondary_target_slots.clear()
+	_hero_target_slot = _build_target_slot(_info_board_root, Rect2(0.0, 38.0, 364.0, 154.0), true, 0)
+	_info_board_slots.append(_hero_target_slot)
+	for entry in [
+		{"rect": Rect2(376.0, 38.0, 180.0, 154.0), "index": 1},
+		{"rect": Rect2(568.0, 38.0, 180.0, 154.0), "index": 2},
+	]:
+		var target_rect: Rect2 = entry["rect"]
+		var secondary := _build_target_slot(_info_board_root, target_rect, false, int(entry["index"]))
+		_secondary_target_slots.append(secondary)
+		_info_board_slots.append(secondary)
 
-		var card_bg := _texture_rect(HARBOR_INFO_FISH_CARD_PATH)
-		card_bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		slot.add_child(card_bg)
 
-		var portrait := _icon_rect("")
-		_place_control(slot, portrait, 0.080, 0.030, 0.920, 0.600)
+func _build_target_slot(parent: Control, rect: Rect2, hero: bool, index: int) -> Dictionary:
+	var slot := Control.new()
+	slot.name = "HarborHeroTarget" if hero else "HarborSecondaryTarget%d" % index
+	slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	slot.clip_contents = true
+	_place_control_px(parent, slot, rect)
 
-		var name_label := _harbor_label("", 15, Palette.HARBOR_PARCHMENT_TITLE, true, 0)
-		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		name_label.clip_text = true
-		name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		_place_control(slot, name_label, 0.050, 0.610, 0.950, 0.750)
+	var frame: Control
+	if hero:
+		frame = _nine_patch_rect(COMMON_HARBOR_COMMAND_DARK_FRAME_PATH, Vector4(12.0, 12.0, 12.0, 12.0))
+	else:
+		frame = _nine_patch_rect(HARBOR_INFO_FISH_CARD_PATH, Vector4(40.0, 38.0, 40.0, 38.0))
+	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	slot.add_child(frame)
 
-		var badge_panel := Panel.new()
-		badge_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		badge_panel.add_theme_stylebox_override(
-			"panel",
-			_make_flat_panel_style(Palette.HARBOR_INFO_BADGE_QUEST_FILL, Color.TRANSPARENT, 6, 0)
-		)
-		_place_control(slot, badge_panel, 0.100, 0.760, 0.900, 0.960)
+	var portrait_clip := Control.new()
+	portrait_clip.name = "PortraitClip"
+	portrait_clip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	portrait_clip.clip_contents = true
+	_place_control_px(
+		slot,
+		portrait_clip,
+		Rect2(8.0, 8.0, 238.0, 138.0) if hero else Rect2(8.0, 7.0, 164.0, 88.0)
+	)
+	var portrait := _icon_rect("")
+	portrait.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait_clip.add_child(portrait)
 
-		var badge_label := _harbor_label("", 12, Palette.HARBOR_INFO_BADGE_QUEST_TEXT, true, 1, Palette.HARBOR_LABEL_OUTLINE)
-		badge_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		badge_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		badge_label.clip_text = true
-		badge_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		_place_control(badge_panel, badge_label, 0.050, 0.080, 0.950, 0.920)
+	var name_label := _harbor_label(
+		"",
+		26 if hero else 18,
+		Palette.HARBOR_MENU_HEADER if hero else Palette.HARBOR_PARCHMENT_TITLE,
+		true,
+		2 if hero else 0,
+		Palette.HARBOR_MENU_OUTLINE
+	)
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if hero else HORIZONTAL_ALIGNMENT_CENTER
+	name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control_px(
+		slot,
+		name_label,
+		Rect2(250.0, 54.0, 104.0, 34.0) if hero else Rect2(12.0, 98.0, 156.0, 28.0)
+	)
 
-		_info_board_slots.append(
-			{
-				"slot": slot,
-				"portrait": portrait,
-				"name_label": name_label,
-				"badge_panel": badge_panel,
-				"badge_label": badge_label,
-			}
-		)
+	var badge_panel := Panel.new()
+	badge_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	badge_panel.add_theme_stylebox_override(
+		"panel",
+		_make_flat_panel_style(Palette.HARBOR_INFO_BADGE_QUEST_FILL, Color.TRANSPARENT, 8, 0)
+	)
+	_place_control_px(
+		slot,
+		badge_panel,
+		Rect2(246.0, 16.0, 108.0, 24.0) if hero else Rect2(16.0, 126.0, 148.0, 20.0)
+	)
+	var badge_label := _harbor_label("", 11 if hero else 10, Palette.HARBOR_INFO_BADGE_QUEST_TEXT, true, 1, Palette.HARBOR_LABEL_OUTLINE)
+	badge_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	badge_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	badge_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	badge_panel.add_child(badge_label)
+
+	var detail_label: Label = null
+	var candidate_label: Label = null
+	if hero:
+		var accent := ColorRect.new()
+		accent.color = Palette.HARBOR_FACILITY_ACCENT_PRIMARY
+		accent.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_place_control_px(slot, accent, Rect2(6.0, 8.0, 4.0, 138.0))
+		detail_label = _harbor_label("", 11, Palette.HARBOR_CONTEXT_TEXT, true, 0)
+		detail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		detail_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_place_control_px(slot, detail_label, Rect2(250.0, 89.0, 104.0, 25.0))
+		var mini_rule := ColorRect.new()
+		mini_rule.color = _with_alpha(Palette.GOLD, 0.45)
+		mini_rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_place_control_px(slot, mini_rule, Rect2(250.0, 112.0, 104.0, 1.0))
+		candidate_label = _harbor_label("", 11, Palette.HARBOR_DETAIL_BODY_SECONDARY, true, 0)
+		candidate_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		candidate_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_place_control_px(slot, candidate_label, Rect2(250.0, 116.0, 104.0, 24.0))
+
+	return {
+		"slot": slot,
+		"portrait": portrait,
+		"name_label": name_label,
+		"badge_panel": badge_panel,
+		"badge_label": badge_label,
+		"detail_label": detail_label,
+		"candidate_label": candidate_label,
+		"hero": hero,
+		"index": index,
+	}
 
 
 func _build_departure_plan_card(main: Control) -> void:
-	# 時間帯を下端へ寄せた分、掲示板を縦に広げて行間・文字を読みやすくする。
-	# 紙面は AI 一点物 PNG（StyleBoxFlat wash / ColorRect 区切りは使わない）。
-	var card := _anchored_control(main, 0.050, 0.320, 0.950, 0.805)
-	var panel := _texture_rect(HARBOR_PLAN_PANEL_PATH)
-	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	card.add_child(panel)
+	var card := Control.new()
+	card.name = "HarborDepartureIntel"
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control_px(main, card, Rect2(20.0, 210.0, 748.0, 164.0))
 
-	# ヘッダー帯は素材側。タイトルは runtime（日本語焼き込み禁止）。
-	var title := _harbor_label("出港プラン", 17, Palette.HARBOR_SCENE_TITLE, true, 2, Palette.HARBOR_SCENE_TITLE_OUTLINE)
+	var title := _harbor_label("出港情報", 18, Palette.HARBOR_SCENE_TITLE, true, 2, Palette.HARBOR_SCENE_TITLE_OUTLINE)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(card, title, 0.095, 0.025, 0.940, 0.155)
+	_place_control_px(card, title, Rect2(0.0, 0.0, 120.0, 34.0))
+	var rule := ColorRect.new()
+	rule.color = _with_alpha(Palette.GOLD, 0.35)
+	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control_px(card, rule, Rect2(94.0, 20.0, 654.0, 1.0))
 
-	_preparation_body_label = _harbor_label("", 16, Palette.HARBOR_BUFF_BODY, true, 0)
-	_preparation_body_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_preparation_body_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	_preparation_body_label.clip_text = true
-	_preparation_body_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_preparation_body_label.visible = false
-	_place_control(card, _preparation_body_label, 0.100, 0.180, 0.950, 0.950)
-
-	_plan_rows_root = _anchored_control(card, 0.040, 0.175, 0.960, 0.960)
-	_plan_rows_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# 4行を等間隔で広げ、余白を行の読みやすさに使う（区切り線は紙面の罫線に任せる）。
-	var guide_row := _build_plan_content_row(_plan_rows_root, 0.000, 0.240, HARBOR_PLAN_ICON_GUIDE_PATH)
+	var guide_row := _build_departure_intel_card(card, Rect2(0.0, 34.0, 270.0, 64.0), COMMAND_ICON_GUIDE, "ガイド")
 	_plan_guide_label = guide_row["label"] as Label
-	var weather_row := _build_plan_content_row(_plan_rows_root, 0.250, 0.490, HARBOR_WEATHER_STUB_ICON_PATH)
+	var weather_row := _build_departure_intel_card(card, Rect2(278.0, 34.0, 270.0, 64.0), COMMAND_ICON_WEATHER, "天気の気配")
 	_plan_weather_label = weather_row["label"] as Label
-	_plan_weather_label.text = "今日は雨の気配……潮目が立ちやすい"
-	var pin_row := _build_plan_content_row(_plan_rows_root, 0.500, 0.740, HARBOR_PLAN_ICON_PIN_PATH)
+	var pin_row := _build_departure_intel_card(card, Rect2(556.0, 34.0, 192.0, 64.0), COMMAND_ICON_PIN, "狙いポイント")
 	_plan_pin_row = pin_row["row"] as Control
 	_plan_pin_label = pin_row["label"] as Label
-	var rumor_row := _build_plan_content_row(_plan_rows_root, 0.750, 0.990, HARBOR_PLAN_ICON_RUMOR_PATH, true)
+	var rumor_row := _build_departure_intel_card(card, Rect2(0.0, 106.0, 748.0, 58.0), COMMAND_ICON_RUMOR, "港の目撃談", true)
 	_plan_rumor_row = rumor_row["row"] as Control
 	_plan_rumor_label = rumor_row["label"] as Label
 
 
-func _build_plan_content_row(
-	parent: Control, top: float, bottom: float, icon_path: String, allow_wrap := false
+func _build_departure_intel_card(
+	parent: Control, rect: Rect2, icon_index: int, eyebrow: String, allow_wrap := false
 ) -> Dictionary:
-	var row := _anchored_control(parent, 0.000, top, 1.000, bottom)
+	var row := Control.new()
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var icon := _icon_rect(icon_path)
-	_place_control(row, icon, 0.015, 0.080, 0.105, 0.920)
-	var label := _harbor_label("", 16, Palette.HARBOR_BUFF_BODY, true, 0)
+	_place_control_px(parent, row, rect)
+	var panel := _nine_patch_rect(COMMON_PARCHMENT_CARD_PATH, Vector4(34.0, 16.0, 34.0, 16.0))
+	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	row.add_child(panel)
+	var icon := _command_icon_rect(icon_index)
+	icon.modulate = Palette.HARBOR_PARCHMENT_TITLE
+	_place_control_px(row, icon, Rect2(12.0, 14.0, 30.0, 30.0))
+	var eyebrow_label := _harbor_label(eyebrow, 10, Palette.HARBOR_PARCHMENT_TITLE, true, 0)
+	eyebrow_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	eyebrow_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	eyebrow_label.clip_text = false
+	eyebrow_label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+	_place_control_px(row, eyebrow_label, Rect2(52.0, 11.0, rect.size.x - 64.0, 20.0))
+	var label := _harbor_label("", 13 if not allow_wrap else 14, Palette.HARBOR_BUFF_NAME, true, 0)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER if not allow_wrap else VERTICAL_ALIGNMENT_TOP
 	if allow_wrap:
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		label.clip_text = false
 		label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
-	else:
-		label.clip_text = true
-		label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_place_control(row, label, 0.125, 0.060, 0.980, 0.940)
+	_place_control_px(row, label, Rect2(52.0, 24.0, rect.size.x - 64.0, rect.size.y - 30.0))
 	return {"row": row, "label": label}
 
 
 func _build_time_slot_zone(main: Control) -> void:
-	# 完成イメージどおり下端へ寄せ、ゾーン内の上下空きを潰す。
-	_time_slot_zone_root = _anchored_control(main, 0.050, 0.820, 0.950, 0.985)
+	_time_slot_zone_root = Control.new()
+	_time_slot_zone_root.name = "HarborTimeAndMeal"
 	_time_slot_zone_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control_px(main, _time_slot_zone_root, Rect2(20.0, 384.0, 748.0, 108.0))
 
-	# メイン枠の暗い地の上なので、羊皮紙用の茶ではなく明るいラベル色を使う。
 	var time_label := _harbor_label("時間帯", 12, Palette.HARBOR_SCENE_TITLE, true, 2, Palette.HARBOR_SCENE_TITLE_OUTLINE)
 	time_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	time_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(_time_slot_zone_root, time_label, 0.015, 0.020, 0.145, 0.280)
+	_place_control_px(_time_slot_zone_root, time_label, Rect2(0.0, 0.0, 66.0, 44.0))
 
-	# ボタンをゾーンの大半に密着させ、下の食事効果だけ薄く残す。
-	_build_time_slot_selector(_time_slot_zone_root, 0.040, 0.700)
+	_build_time_slot_selector(_time_slot_zone_root)
 
+	_meal_effect_panel = Control.new()
+	_meal_effect_panel.name = "HarborMealEffect"
+	_meal_effect_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control_px(_time_slot_zone_root, _meal_effect_panel, Rect2(0.0, 56.0, 748.0, 52.0))
+	var meal_frame := _nine_patch_rect(COMMON_HARBOR_COMMAND_DARK_FRAME_PATH, Vector4(12.0, 12.0, 12.0, 12.0))
+	meal_frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_meal_effect_panel.add_child(meal_frame)
+	var meal_accent := ColorRect.new()
+	meal_accent.color = Palette.HARBOR_INFO_BADGE_UNCAUGHT_FILL
+	meal_accent.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control_px(_meal_effect_panel, meal_accent, Rect2(1.0, 2.0, 5.0, 48.0))
 	_meal_effect_row_label = _harbor_label("食事効果", 11, Palette.HARBOR_SCENE_TEXT, true, 1, Palette.HARBOR_SCENE_TEXT_OUTLINE)
 	_meal_effect_row_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_meal_effect_row_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(_time_slot_zone_root, _meal_effect_row_label, 0.015, 0.740, 0.145, 0.980)
+	_place_control_px(_meal_effect_panel, _meal_effect_row_label, Rect2(20.0, 4.0, 130.0, 20.0))
 
-	_buff_name_label = _harbor_label("", 12, Palette.HARBOR_SCENE_TEXT, false, 1, Palette.HARBOR_SCENE_TEXT_OUTLINE)
+	_buff_name_label = _harbor_label("", 13, Palette.HARBOR_SCENE_TEXT, true, 1, Palette.HARBOR_SCENE_TEXT_OUTLINE)
 	_buff_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_buff_name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_buff_name_label.clip_text = true
-	_buff_name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_place_control(_time_slot_zone_root, _buff_name_label, 0.155, 0.740, 0.985, 0.980)
+	_place_control_px(_meal_effect_panel, _buff_name_label, Rect2(20.0, 22.0, 708.0, 24.0))
 
 
 func _make_plan_row_button(text: String, callback: Callable) -> Button:
@@ -268,24 +370,28 @@ func _make_plan_row_button(text: String, callback: Callable) -> Button:
 	return button
 
 
-func _build_time_slot_selector(card: Control, top: float, bottom: float) -> void:
+func _build_time_slot_selector(card: Control) -> void:
 	var ids := GameData.get_all_time_slot_ids()
-	var left := 0.170
-	var right := 0.980
-	var gap := 0.016
-	var width := (right - left - gap * float(ids.size() - 1)) / float(ids.size())
+	var rects := [
+		Rect2(72.0, 0.0, 216.0, 44.0),
+		Rect2(296.0, 0.0, 216.0, 44.0),
+		Rect2(520.0, 0.0, 228.0, 44.0),
+	]
 	for index in range(ids.size()):
 		var time_slot_id := String(ids[index])
 		var button := _make_plan_row_button("", _select_time_slot.bind(time_slot_id))
+		button.name = "HarborTimeSlot_%s" % time_slot_id
+		button.set_meta("harbor_time_slot_id", time_slot_id)
+		button.focus_mode = Control.FOCUS_ALL
 		button.add_theme_font_size_override("font_size", 16)
 		_apply_time_slot_button_defaults(button)
 		_time_slot_buttons[time_slot_id] = button
 		var icon := _icon_rect(_time_slot_icon_path(time_slot_id))
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_place_control(button, icon, 0.040, 0.100, 0.340, 0.900)
+		_place_control_px(button, icon, Rect2(10.0, 7.0, 30.0, 30.0))
 		_time_slot_icons[time_slot_id] = icon
-		var x0 := left + float(index) * (width + gap)
-		_place_control(card, button, x0, top, x0 + width, bottom)
+		if index < rects.size():
+			_place_control_px(card, button, rects[index])
 
 
 func _apply_time_slot_button_defaults(button: Button) -> void:
@@ -309,9 +415,9 @@ func _apply_time_slot_button_colors(button: Button, selected: bool, locked: bool
 		button.add_theme_color_override("font_pressed_color", dark_text)
 		button.add_theme_color_override("font_outline_color", Palette.HARBOR_SCENE_TITLE_OUTLINE)
 		return
-	button.add_theme_color_override("font_color", dark_text)
-	button.add_theme_color_override("font_hover_color", dark_text)
-	button.add_theme_color_override("font_pressed_color", dark_text)
+	button.add_theme_color_override("font_color", Palette.HARBOR_DETAIL_BODY_SECONDARY)
+	button.add_theme_color_override("font_hover_color", Palette.HARBOR_MENU_HEADER)
+	button.add_theme_color_override("font_pressed_color", Palette.HARBOR_MENU_HEADER)
 	button.add_theme_color_override("font_disabled_color", Palette.HARBOR_DETAIL_BODY_SECONDARY)
 	button.add_theme_color_override("font_outline_color", Palette.HARBOR_LABEL_OUTLINE)
 
@@ -324,29 +430,6 @@ func _time_slot_icon_path(time_slot_id: String) -> String:
 			return HARBOR_TIME_SLOT_ICON_NIGHT_PATH
 		_:
 			return HARBOR_TIME_SLOT_ICON_DAY_PATH
-
-
-func _preparation_card_text() -> String:
-	var megalodon_omen := _megalodon_omen_text()
-	if not megalodon_omen.is_empty():
-		return megalodon_omen
-	var lines: Array[String] = []
-	var guide_text := _beginner_guide_text()
-	lines.append(guide_text if not guide_text.is_empty() else _target_hint_text())
-	lines.append("今日は雨の気配……潮目が立ちやすい")
-	var third_parts: Array[String] = []
-	var candidates := _harbor_highlight_candidates(1)
-	if not candidates.is_empty():
-		var spot_id := String(candidates[0].get("spot_id", ""))
-		if not spot_id.is_empty():
-			var spot_name := String(GameData.get_fishing_spot(spot_id).get("name", spot_id))
-			third_parts.append("狙いポイント：%s" % spot_name)
-	var nushi_hint := _nushi_hint_text()
-	if not nushi_hint.is_empty():
-		third_parts.append("目撃談：%s" % nushi_hint)
-	if not third_parts.is_empty():
-		lines.append("　".join(third_parts))
-	return "\n".join(lines)
 
 
 func _beginner_guide_text() -> String:
@@ -446,8 +529,9 @@ func _collect_quest_candidates(spot_ids: Array[String]) -> Array[Dictionary]:
 	var candidates: Array[Dictionary] = []
 	for index in range(PlayerProgress.quest_board.size()):
 		var progress := PlayerProgress.quest_progress(index)
-		if progress.is_empty() or bool(progress.get("completed", true)):
+		if progress.is_empty():
 			continue
+		var deliverable := bool(progress.get("completed", false))
 		var fish_id := String(progress.get("fish_id", ""))
 		if fish_id.is_empty():
 			continue
@@ -471,6 +555,7 @@ func _collect_quest_candidates(spot_ids: Array[String]) -> Array[Dictionary]:
 				"spot_id": best_spot_id,
 				"reason": "quest",
 				"reason_label": "依頼",
+				"deliverable": deliverable,
 				"hint_text": "依頼の%sは%sが狙い目だ" % [fish_name, spot_name],
 			}
 		)
@@ -588,34 +673,6 @@ func _collect_uncaught_candidates(spot_ids: Array[String]) -> Array[Dictionary]:
 	return candidates
 
 
-func _quest_target_hint_text() -> String:
-	for candidate in _harbor_highlight_candidates(3):
-		if String(candidate.get("reason", "")) == "quest":
-			return String(candidate.get("hint_text", ""))
-	return ""
-
-
-func _time_slot_boost_hint_text() -> String:
-	for candidate in _harbor_highlight_candidates(3):
-		if String(candidate.get("reason", "")) == "time_boost":
-			return String(candidate.get("hint_text", ""))
-	return ""
-
-
-func _uncaught_sighting_hint_text() -> String:
-	for candidate in _harbor_highlight_candidates(3):
-		if String(candidate.get("reason", "")) == "uncaught":
-			return String(candidate.get("hint_text", ""))
-	return ""
-
-
-func _target_hint_text() -> String:
-	var candidates := _harbor_highlight_candidates(1)
-	if candidates.is_empty():
-		return "海は穏やか。どこへ出ても釣り日和だ"
-	return String(candidates[0].get("hint_text", "海は穏やか。どこへ出ても釣り日和だ"))
-
-
 func _megalodon_omen_text() -> String:
 	if int(PlayerProgress.caught_counts.get("megalodon", 0)) > 0:
 		return ""
@@ -644,33 +701,47 @@ func _nushi_hint_text() -> String:
 
 
 func _refresh_preparation_card() -> void:
-	if _preparation_body_label != null:
-		_preparation_body_label.text = _preparation_card_text()
-	var megalodon_omen := not _megalodon_omen_text().is_empty()
-	if _plan_rows_root != null:
-		_plan_rows_root.visible = not megalodon_omen
-	if _preparation_body_label != null:
-		_preparation_body_label.visible = megalodon_omen
-	if megalodon_omen:
+	if _plan_guide_label == null or _plan_weather_label == null or _plan_pin_label == null or _plan_rumor_label == null:
 		return
-	var guide_text := _beginner_guide_text()
-	_plan_guide_label.text = guide_text if not guide_text.is_empty() else _target_hint_text()
-	_plan_weather_label.text = "今日は雨の気配……潮目が立ちやすい"
+	_plan_guide_label.text = _departure_guide_summary()
+	_plan_weather_label.text = "雨・潮目が立ちやすい"
 	var pin_text := ""
 	var candidates := _harbor_highlight_candidates(1)
 	if not candidates.is_empty():
 		var spot_id := String(candidates[0].get("spot_id", ""))
 		if not spot_id.is_empty():
 			var spot_name := String(GameData.get_fishing_spot(spot_id).get("name", spot_id))
-			pin_text = "狙いポイント：%s" % spot_name
+			pin_text = spot_name
 	_plan_pin_label.text = pin_text
 	_plan_pin_row.visible = not pin_text.is_empty()
-	var rumor_text := _nushi_hint_text()
+	var rumor_text := _megalodon_omen_text()
+	if rumor_text.is_empty():
+		rumor_text = _nushi_hint_text()
 	if rumor_text.is_empty():
 		_plan_rumor_row.visible = false
 	else:
-		_plan_rumor_label.text = "目撃談：%s" % rumor_text
+		_plan_rumor_label.text = rumor_text.replace("\n", "　")
 		_plan_rumor_row.visible = true
+
+
+func _departure_guide_summary() -> String:
+	var beginner := _beginner_guide_text()
+	if not beginner.is_empty():
+		return beginner
+	var candidates := _harbor_highlight_candidates(1)
+	if candidates.is_empty():
+		return "時間帯で出現率が変わる"
+	var candidate: Dictionary = candidates[0]
+	var fish_id := String(candidate.get("fish_id", ""))
+	var fish_name := String(GameData.get_fish(fish_id).get("name", fish_id))
+	match String(candidate.get("reason", "")):
+		"quest":
+			return "%sを依頼で狙おう" % fish_name
+		"time_boost":
+			return "%sで出現率アップ" % String(candidate.get("reason_label", "時間帯"))
+		"uncaught":
+			return "まだ見ぬ魚の目撃あり"
+	return "時間帯で出現率が変わる"
 
 
 func _refresh_info_board() -> void:
@@ -684,6 +755,9 @@ func _refresh_info_board() -> void:
 		var name_label := slot_data.get("name_label", null) as Label
 		var badge_panel := slot_data.get("badge_panel", null) as Panel
 		var badge_label := slot_data.get("badge_label", null) as Label
+		var detail_label := slot_data.get("detail_label", null) as Label
+		var candidate_label := slot_data.get("candidate_label", null) as Label
+		var hero := bool(slot_data.get("hero", false))
 		if slot == null or portrait == null or name_label == null or badge_panel == null or badge_label == null:
 			continue
 		if index >= candidates.size():
@@ -695,8 +769,28 @@ func _refresh_info_board() -> void:
 		var fish_data := GameData.get_fish(fish_id)
 		portrait.texture = _load_texture_if_exists(FightFishAssets.card_portrait_path(fish_data))
 		name_label.text = String(fish_data.get("name", fish_id))
+		_fit_label_font(name_label, name_label.text, 26 if hero else 18, 12 if hero else 13, 104.0 if hero else 156.0)
 		var reason := String(candidate.get("reason", ""))
-		badge_label.text = String(candidate.get("reason_label", ""))
+		var reason_label := String(candidate.get("reason_label", ""))
+		var reason_summary := reason_label
+		var detail_text := "目撃情報あり"
+		match reason:
+			"quest":
+				reason_summary = "依頼対象"
+				detail_text = "納品できる依頼あり" if bool(candidate.get("deliverable", false)) else "依頼対象の魚"
+			"time_boost":
+				reason_summary = "%sで出やすい" % reason_label
+				detail_text = "出現率アップ"
+			"uncaught":
+				reason_summary = "目撃情報あり"
+		if hero:
+			badge_label.text = "最優先・%s" % ("依頼" if reason == "quest" else reason_label)
+		else:
+			badge_label.text = reason_summary
+		if detail_label != null:
+			detail_label.text = detail_text
+		if candidate_label != null:
+			candidate_label.text = "候補 %d / %d" % [index + 1, candidates.size()]
 		var badge_fill := Palette.HARBOR_INFO_BADGE_UNCAUGHT_FILL
 		var badge_text := Palette.HARBOR_INFO_BADGE_UNCAUGHT_TEXT
 		match reason:
@@ -735,21 +829,17 @@ func _refresh_time_slot_buttons() -> void:
 		else:
 			button.text = label
 		_apply_time_slot_button_colors(button, selected, locked)
-		var style_path := HARBOR_TIME_SLOT_BTN_NORMAL_PATH
+		var style_path := COMMON_HARBOR_COMMAND_DARK_FRAME_PATH
 		if locked:
 			style_path = HARBOR_TIME_SLOT_BTN_LOCKED_PATH
 		elif selected:
-			style_path = HARBOR_TIME_SLOT_BTN_SELECTED_PATH
+			style_path = COMMON_HARBOR_COMMAND_CTA_PATH
 		var style := _make_time_slot_button_style(style_path)
 		if style != null:
-			button.add_theme_stylebox_override("normal", style)
-			button.add_theme_stylebox_override("hover", style)
-			button.add_theme_stylebox_override("pressed", style)
-			button.add_theme_stylebox_override("focus", style)
-			button.add_theme_stylebox_override("disabled", style)
+			_apply_interactive_button_styles(button, style, "time")
 		var icon := _time_slot_icons.get(time_slot_id, null) as TextureRect
 		if icon != null:
-			icon.modulate = Palette.HARBOR_ICON_MODULATE if not locked else Color(0.72, 0.72, 0.72, 0.72)
+			icon.modulate = Palette.HARBOR_ICON_MODULATE if not locked else Palette.HARBOR_LOCKED_ICON_MODULATE
 
 
 func _has_caught_raiseable_shark() -> bool:
@@ -770,30 +860,6 @@ func _open_shark_pen() -> void:
 	navigate("shark_pen")
 
 
-## 右メニュー「A案: セクション見出し付き4グループ」のレイアウト定数。
-## メニュー枠は約383x513px（root比率 0.675-0.974 / 0.170-0.882）。
-## 値はメニュー矩形の高さに対する比率で、pxコメントはメニュー高513pxでの目安。
-const FACILITY_MENU_CONTENT_TOP := 0.128          # 施設ヘッダー直下の開始位置
-const FACILITY_MENU_ROW_GAP := 0.0098             # ボタン間ギャップ 約5px
-const FACILITY_MENU_SECTION_GAP_BEFORE := 0.0117  # 見出し直前の空き 約6px
-const FACILITY_MENU_SECTION_GAP_AFTER := 0.0059   # 見出し直後の空き 約3px
-const FACILITY_MENU_HEADING_HEIGHT := 0.0273      # 見出し行 約14px
-const FACILITY_MENU_DEPARTURE_HEIGHT := 0.0702    # primary行 約36px
-const FACILITY_MENU_NORMAL_HEIGHT := 0.0526       # 通常行 約27px
-const FACILITY_MENU_SYSTEM_HEIGHT := 0.0468      # システム小型ボタン 約24px
-const FACILITY_MENU_DETAIL_GAP := 0.0156          # 最終行と詳細パネルの空き 約8px（最低でも約4pxの可視ギャップを保証）
-const FACILITY_MENU_DETAIL_MIN_HEIGHT := 0.1000   # 詳細パネル最低高さ（2行本文が収まる目安）
-const FACILITY_MENU_DETAIL_BOTTOM_MARGIN := 0.0156 # 詳細パネル下端とメニュー枠下端の余白
-
-## セクション定義（表示順・見出しテキスト・ボタン高さ）。空文字は見出しなし。
-const FACILITY_MENU_SECTION_DEFS := {
-	"departure": {"heading": "", "height": FACILITY_MENU_DEPARTURE_HEIGHT},
-	"facility": {"heading": "施設", "height": FACILITY_MENU_NORMAL_HEIGHT},
-	"record": {"heading": "記録", "height": FACILITY_MENU_NORMAL_HEIGHT},
-	"system": {"heading": "システム", "height": FACILITY_MENU_SYSTEM_HEIGHT},
-}
-
-
 func _facility_menu_items() -> Array[Dictionary]:
 	var shark_pen_locked := not _can_open_shark_pen()
 	var shark_pen_detail := "捕獲したサメを育てる" if not shark_pen_locked else "Lv.30／危険海域で解放"
@@ -804,7 +870,7 @@ func _facility_menu_items() -> Array[Dictionary]:
 			"id": "fishing_spots",
 			"title": "釣り場へ向かう",
 			"body": "狙う魚に合わせてポイントを選ぶ",
-			"icon_path": ICON_FISHING_PATH,
+			"icon_index": COMMAND_ICON_DEPARTURE,
 			"callback": func() -> void: navigate("fishing_spots"),
 			"primary": true,
 			"locked": false,
@@ -814,7 +880,7 @@ func _facility_menu_items() -> Array[Dictionary]:
 			"id": "quest_board",
 			"title": "依頼ボード",
 			"body": "釣果を届けて報酬を受け取る",
-			"icon_path": ICON_QUEST_PATH,
+			"icon_index": COMMAND_ICON_QUEST,
 			"callback": func() -> void: navigate("quest_board"),
 			"primary": false,
 			"locked": false,
@@ -825,7 +891,7 @@ func _facility_menu_items() -> Array[Dictionary]:
 			"id": "cooking",
 			"title": "調理場",
 			"body": "魚を料理して食事にする",
-			"icon_path": ICON_COOKING_PATH,
+			"icon_index": COMMAND_ICON_COOKING,
 			"callback": func() -> void: navigate("cooking"),
 			"primary": false,
 			"locked": false,
@@ -835,7 +901,7 @@ func _facility_menu_items() -> Array[Dictionary]:
 			"id": "market",
 			"title": "魚市場",
 			"body": "釣果を売って資金にする",
-			"icon_path": ICON_MARKET_PATH,
+			"icon_index": COMMAND_ICON_MARKET,
 			"callback": func() -> void: navigate("market"),
 			"primary": false,
 			"locked": false,
@@ -846,7 +912,7 @@ func _facility_menu_items() -> Array[Dictionary]:
 			"id": "shop",
 			"title": "釣具店",
 			"body": "竿を購入・装備する",
-			"icon_path": ICON_SHOP_PATH,
+			"icon_index": COMMAND_ICON_SHOP,
 			"callback": func() -> void: navigate("shop"),
 			"primary": false,
 			"locked": false,
@@ -856,7 +922,7 @@ func _facility_menu_items() -> Array[Dictionary]:
 			"id": "shipyard",
 			"title": "船着き場",
 			"body": "船を購入して沖へ出る",
-			"icon_path": ICON_SHIPYARD_PATH,
+			"icon_index": COMMAND_ICON_SHIPYARD,
 			"callback": func() -> void: navigate("shipyard"),
 			"primary": false,
 			"locked": false,
@@ -866,7 +932,7 @@ func _facility_menu_items() -> Array[Dictionary]:
 			"id": "shark_pen",
 			"title": "サメの生簀",
 			"body": shark_pen_detail,
-			"icon_path": FightFishAssets.card_portrait_path({"id": "nekozame"}),
+			"icon_index": COMMAND_ICON_SHARK,
 			"callback": _open_shark_pen,
 			"primary": false,
 			"locked": shark_pen_locked,
@@ -876,7 +942,7 @@ func _facility_menu_items() -> Array[Dictionary]:
 			"id": "status",
 			"title": "ステータス",
 			"body": "成長と装備を確認する",
-			"icon_path": ICON_STATUS_PATH,
+			"icon_index": COMMAND_ICON_STATUS,
 			"callback": func() -> void: navigate("status"),
 			"primary": false,
 			"locked": false,
@@ -886,7 +952,7 @@ func _facility_menu_items() -> Array[Dictionary]:
 			"id": "fish_book",
 			"title": "魚図鑑",
 			"body": "釣った魚の記録を見る",
-			"icon_path": FightFishAssets.card_portrait_path({"id": "aji"}),
+			"icon_index": COMMAND_ICON_BOOK,
 			"callback": func() -> void: navigate("fish_book"),
 			"primary": false,
 			"locked": false,
@@ -896,7 +962,7 @@ func _facility_menu_items() -> Array[Dictionary]:
 			"id": "title",
 			"title": "タイトルへ戻る",
 			"body": "進行を保存して戻る",
-			"icon_path": ICON_TITLE_PATH,
+			"icon_index": COMMAND_ICON_BACK,
 			"callback": _return_to_title,
 			"primary": false,
 			"locked": false,
@@ -906,290 +972,284 @@ func _facility_menu_items() -> Array[Dictionary]:
 
 
 func _build_facility_menu(root: Control) -> void:
-	var menu := _anchored_control(root, 0.675, 0.170, 0.974, 0.882)
-	var frame := _texture_rect(HARBOR_MENU_FRAME_PATH)
+	_operation_board_root = Control.new()
+	_operation_board_root.name = "HarborOperationBoard"
+	_operation_board_root.clip_contents = true
+	_place_control_px(root, _operation_board_root, Rect2(844.0, 120.0, 396.0, 512.0))
+	var fill := ColorRect.new()
+	fill.color = _with_alpha(Palette.DARK_PANEL_DEEP, 0.86)
+	fill.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_operation_board_root.add_child(fill)
+	var frame := _nine_patch_rect(COMMON_HARBOR_COMMAND_DARK_FRAME_PATH, Vector4(12.0, 12.0, 12.0, 12.0))
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	menu.add_child(frame)
+	_operation_board_root.add_child(frame)
 
-	var header := _harbor_label("港の施設", 27, Palette.HARBOR_MENU_HEADER, true, 3, Palette.HARBOR_MENU_OUTLINE)
-	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_route_buttons.clear()
+	_notification_badges.clear()
+	_lock_icons.clear()
+	var items := _facility_menu_items()
+
+	var header := _harbor_label("港メニュー", 20, Palette.HARBOR_MENU_HEADER, true, 2, Palette.HARBOR_MENU_OUTLINE)
+	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	header.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(menu, header, 0.100, 0.030, 0.900, 0.120)
+	_place_control_px(_operation_board_root, header, Rect2(20.0, 8.0, 170.0, 36.0))
 
-	var content_bottom := _build_facility_menu_rows(menu, _facility_menu_items())
-	_build_facility_detail_panel(menu, content_bottom)
+	_build_command_route_button(
+		_operation_board_root,
+		_menu_item_by_id(items, "title"),
+		Rect2(220.0, 20.0, 156.0, 28.0),
+		"compact"
+	)
+	_build_command_route_button(
+		_operation_board_root,
+		_menu_item_by_id(items, "fishing_spots"),
+		Rect2(20.0, 56.0, 356.0, 64.0),
+		"cta"
+	)
+
+	_build_section_rule(_operation_board_root, "施設", 128.0)
+	var facility_layout := [
+		{"id": "quest_board", "rect": Rect2(20.0, 152.0, 174.0, 58.0)},
+		{"id": "cooking", "rect": Rect2(202.0, 152.0, 174.0, 58.0)},
+		{"id": "market", "rect": Rect2(20.0, 218.0, 174.0, 58.0)},
+		{"id": "shop", "rect": Rect2(202.0, 218.0, 174.0, 58.0)},
+		{"id": "shipyard", "rect": Rect2(20.0, 284.0, 174.0, 58.0)},
+		{"id": "shark_pen", "rect": Rect2(202.0, 284.0, 174.0, 58.0)},
+	]
+	for entry in facility_layout:
+		var route_rect: Rect2 = entry["rect"]
+		_build_command_route_button(
+			_operation_board_root,
+			_menu_item_by_id(items, String(entry["id"])),
+			route_rect,
+			"tile"
+		)
+
+	_build_section_rule(_operation_board_root, "記録", 350.0)
+	_build_command_route_button(
+		_operation_board_root,
+		_menu_item_by_id(items, "status"),
+		Rect2(20.0, 374.0, 174.0, 42.0),
+		"record"
+	)
+	_build_command_route_button(
+		_operation_board_root,
+		_menu_item_by_id(items, "fish_book"),
+		Rect2(202.0, 374.0, 174.0, 42.0),
+		"record"
+	)
+	_build_recommendation_panel(_operation_board_root, Rect2(20.0, 424.0, 356.0, 68.0))
+	_wire_command_focus()
+	var hint := _facility_menu_hint()
+	_set_facility_detail(String(hint.get("title", "")), String(hint.get("body", "")), bool(hint.get("primary", true)))
+	var primary := _route_buttons.get("fishing_spots", null) as Button
+	if primary != null:
+		primary.call_deferred("grab_focus")
+
+
+func _menu_item_by_id(items: Array[Dictionary], id: String) -> Dictionary:
+	for item in items:
+		if String(item.get("id", "")) == id:
+			return item
+	return {}
+
+
+func _build_section_rule(parent: Control, text: String, y: float) -> void:
+	var label := _harbor_label(text, 11, Palette.HARBOR_CONTEXT_TEXT, true, 0)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control_px(parent, label, Rect2(20.0, y, 54.0, 20.0))
+	var rule := ColorRect.new()
+	rule.color = _with_alpha(Palette.GOLD, 0.30)
+	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control_px(parent, rule, Rect2(68.0, y + 10.0, 308.0, 1.0))
+
+
+func _build_command_route_button(
+	parent: Control, item: Dictionary, rect: Rect2, role: String
+) -> Button:
+	var id := String(item.get("id", ""))
+	var title_text := String(item.get("title", ""))
+	var body_text := String(item.get("body", ""))
+	var callback: Callable = item.get("callback", Callable())
+	var locked := bool(item.get("locked", false))
+	var primary := bool(item.get("primary", false))
+	var button := make_button("", callback)
+	button.name = "HarborRoute_%s" % id
+	button.set_meta("harbor_route_id", id)
+	button.custom_minimum_size = Vector2.ZERO
+	button.focus_mode = Control.FOCUS_ALL
+	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	button.clip_contents = true
+	_apply_command_button_skin(button, role)
+	_place_control_px(parent, button, rect)
+	_route_buttons[id] = button
+	if id == "fishing_spots":
+		button.mouse_entered.connect(_restore_facility_hint)
+		button.focus_entered.connect(_restore_facility_hint)
+	else:
+		button.mouse_entered.connect(func() -> void: _set_facility_detail(title_text, body_text, primary))
+		button.focus_entered.connect(func() -> void: _set_facility_detail(title_text, body_text, primary))
+	button.mouse_exited.connect(_restore_facility_hint)
+	button.focus_exited.connect(_restore_facility_hint)
+
+	var icon_index := int(item.get("icon_index", COMMAND_ICON_DEPARTURE))
+	var text_color := Palette.HARBOR_FACILITY_PRIMARY_TEXT
+	if role == "cta" or role == "compact":
+		text_color = Palette.HARBOR_BUFF_NAME if role == "cta" else Palette.HARBOR_DETAIL_BODY_SECONDARY
+	if locked:
+		button.self_modulate = Palette.HARBOR_FACILITY_LOCKED_MODULATE
+		text_color = Palette.HARBOR_DETAIL_BODY_SECONDARY
+
+	if role == "cta":
+		var icon_plate := Panel.new()
+		icon_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon_plate.add_theme_stylebox_override(
+			"panel",
+			_make_flat_panel_style(Palette.DARK_PANEL_DEEP, Palette.GOLD_DEEP, 8, 1)
+		)
+		_place_control_px(button, icon_plate, Rect2(8.0, 8.0, 48.0, 48.0))
+		var icon := _command_icon_rect(icon_index)
+		icon.modulate = Palette.GOLD_BRIGHT
+		_place_control_px(button, icon, Rect2(16.0, 16.0, 32.0, 32.0))
+		var caption := _harbor_label("出港する", 10, Palette.HARBOR_PARCHMENT_TITLE, true, 0)
+		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		caption.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_place_control_px(button, caption, Rect2(74.0, 8.0, 210.0, 20.0))
+		var title := _harbor_label(title_text, 22, Palette.HARBOR_BUFF_NAME, true, 0)
+		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_place_control_px(button, title, Rect2(74.0, 25.0, 244.0, 31.0))
+		var arrow := _harbor_label("→", 25, Palette.HARBOR_PARCHMENT_TITLE, true, 0)
+		arrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		arrow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_place_control_px(button, arrow, Rect2(318.0, 12.0, 28.0, 40.0))
+	elif role == "compact":
+		var back_icon := _command_icon_rect(icon_index)
+		back_icon.modulate = Palette.HARBOR_DETAIL_BODY_SECONDARY
+		_place_control_px(button, back_icon, Rect2(10.0, 5.0, 18.0, 18.0))
+		var title := _harbor_label(title_text, 13, text_color, true, 0)
+		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_place_control_px(button, title, Rect2(30.0, 1.0, 120.0, 26.0))
+	else:
+		var icon_size := 24.0 if role == "record" else 26.0
+		var icon_x := 10.0 if role == "record" else 15.0
+		var icon_y := (rect.size.y - icon_size) * 0.5
+		if role == "tile":
+			var icon_plate := Panel.new()
+			icon_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			icon_plate.add_theme_stylebox_override(
+				"panel",
+				_make_flat_panel_style(Palette.DARK_PANEL_DEEP, Palette.GOLD_DEEP, 7, 1)
+			)
+			_place_control_px(button, icon_plate, Rect2(8.0, 9.0, 40.0, 40.0))
+			icon_x = 15.0
+			icon_y = 16.0
+		var icon := _command_icon_rect(icon_index)
+		icon.modulate = Palette.HARBOR_FACILITY_LOCKED_MODULATE if locked else Palette.GOLD_BRIGHT
+		_place_control_px(button, icon, Rect2(icon_x, icon_y, icon_size, icon_size))
+		var title_x := 44.0 if role == "record" else 61.0
+		var title := _harbor_label(title_text, 14 if role == "record" else 15, text_color, true, 1, Palette.HARBOR_MENU_OUTLINE)
+		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_place_control_px(button, title, Rect2(title_x, 4.0, rect.size.x - title_x - 8.0, rect.size.y - 8.0))
+
+	if locked:
+		var lock_icon := _command_icon_rect(COMMAND_ICON_LOCK)
+		lock_icon.modulate = Palette.GOLD_BRIGHT
+		_place_control_px(button, lock_icon, Rect2(rect.size.x - 30.0, 9.0, 20.0, 20.0))
+		_lock_icons[id] = lock_icon
+
+	if bool(item.get("badge", false)):
+		var badge_dot := Panel.new()
+		badge_dot.name = "FacilityMenuBadge_%s" % title_text
+		badge_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		badge_dot.add_theme_stylebox_override(
+			"panel",
+			_make_flat_panel_style(Palette.HARBOR_MENU_BADGE_FILL, Palette.HARBOR_MENU_BADGE_BORDER, 7, 2)
+		)
+		_place_control_px(parent, badge_dot, Rect2(rect.end.x - 18.0, rect.position.y + 4.0, 14.0, 14.0))
+		_notification_badges[id] = badge_dot
+	return button
+
+
+func _build_recommendation_panel(parent: Control, rect: Rect2) -> void:
+	var panel := Control.new()
+	panel.name = "HarborRecommendation"
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.clip_contents = true
+	_place_control_px(parent, panel, rect)
+	var frame := _nine_patch_rect(COMMON_HARBOR_COMMAND_DARK_FRAME_PATH, Vector4(12.0, 12.0, 12.0, 12.0))
+	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	panel.add_child(frame)
+	var accent := ColorRect.new()
+	accent.color = Palette.HARBOR_FACILITY_ACCENT_PRIMARY
+	accent.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control_px(panel, accent, Rect2(1.0, 2.0, 5.0, 64.0))
+	_facility_detail_title_label = _harbor_label("", 12, Palette.HARBOR_MENU_HEADER, true, 1, Palette.HARBOR_MENU_OUTLINE)
+	_facility_detail_title_label.name = "HarborRecommendationTitle"
+	_facility_detail_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_facility_detail_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control_px(panel, _facility_detail_title_label, Rect2(18.0, 5.0, 320.0, 22.0))
+	_facility_detail_body_label = _harbor_label("", 13, Palette.HARBOR_DETAIL_BODY_TEXT, true, 1, Palette.HARBOR_LABEL_OUTLINE)
+	_facility_detail_body_label.name = "HarborRecommendationBody"
+	_facility_detail_body_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_facility_detail_body_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control_px(panel, _facility_detail_body_label, Rect2(18.0, 27.0, 320.0, 34.0))
+
+
+func _restore_facility_hint() -> void:
 	var hint := _facility_menu_hint()
 	_set_facility_detail(String(hint.get("title", "")), String(hint.get("body", "")), bool(hint.get("primary", true)))
 
 
-## セクション定義から行位置を動的算出して配置する（row_step*indexのハードコード復活は禁止）。
-## 戻り値はセクション全体を配置し終えた後のy位置（詳細パネルの起点計算に使う）。
-## 縦が足りない場合は「ギャップ→行高」の順で比例圧縮して必ず枠内に収める。
-## 詳細パネルを最終ボタンの上へ食い込ませる方向のフォールバックは行わない。
-func _build_facility_menu_rows(menu: Control, items: Array[Dictionary]) -> float:
-	var grouped: Dictionary = {}
-	var section_order: Array[String] = []
-	for item in items:
-		var section_id := String(item.get("section", "facility"))
-		if not grouped.has(section_id):
-			grouped[section_id] = []
-			section_order.append(section_id)
-		(grouped[section_id] as Array).append(item)
-
-	# 1パス目: 必要な高さを集計し、圧縮係数（ギャップ優先→行高）を決める。
-	var rows_height := 0.0
-	var headings_height := 0.0
-	var gaps_total := 0.0
-	for section_id in section_order:
-		var section_def: Dictionary = FACILITY_MENU_SECTION_DEFS.get(
-			section_id, {"heading": "", "height": FACILITY_MENU_NORMAL_HEIGHT}
-		)
-		if not String(section_def.get("heading", "")).is_empty():
-			headings_height += FACILITY_MENU_HEADING_HEIGHT
-			gaps_total += FACILITY_MENU_SECTION_GAP_BEFORE + FACILITY_MENU_SECTION_GAP_AFTER
-		var count := (grouped[section_id] as Array).size()
-		rows_height += float(section_def.get("height", FACILITY_MENU_NORMAL_HEIGHT)) * float(count)
-		gaps_total += FACILITY_MENU_ROW_GAP * float(maxi(count - 1, 0))
-
-	var available := (
-		1.0
-		- FACILITY_MENU_CONTENT_TOP
-		- FACILITY_MENU_DETAIL_GAP
-		- FACILITY_MENU_DETAIL_MIN_HEIGHT
-		- FACILITY_MENU_DETAIL_BOTTOM_MARGIN
-	)
-	var gap_scale := 1.0
-	var height_scale := 1.0
-	var solid_height := rows_height + headings_height
-	if solid_height + gaps_total > available and gaps_total > 0.0:
-		gap_scale = clampf((available - solid_height) / gaps_total, 0.0, 1.0)
-	if solid_height + gaps_total * gap_scale > available and solid_height > 0.0:
-		height_scale = clampf((available - gaps_total * gap_scale) / solid_height, 0.5, 1.0)
-
-	# 2パス目: 圧縮係数を反映して配置。
-	var y := FACILITY_MENU_CONTENT_TOP
-	for section_id in section_order:
-		var section_def: Dictionary = FACILITY_MENU_SECTION_DEFS.get(
-			section_id, {"heading": "", "height": FACILITY_MENU_NORMAL_HEIGHT}
-		)
-		var heading_text := String(section_def.get("heading", ""))
-		if not heading_text.is_empty():
-			y += FACILITY_MENU_SECTION_GAP_BEFORE * gap_scale
-			_build_section_heading(menu, y, heading_text, FACILITY_MENU_HEADING_HEIGHT * height_scale)
-			y += FACILITY_MENU_HEADING_HEIGHT * height_scale + FACILITY_MENU_SECTION_GAP_AFTER * gap_scale
-
-		var row_height := float(section_def.get("height", FACILITY_MENU_NORMAL_HEIGHT)) * height_scale
-		var section_items: Array = grouped[section_id]
-		for index in range(section_items.size()):
-			var item: Dictionary = section_items[index]
-			_build_facility_button(
-				menu,
-				y,
-				String(item["title"]),
-				String(item["body"]),
-				String(item["icon_path"]),
-				item["callback"] as Callable,
-				bool(item["primary"]),
-				row_height,
-				bool(item["locked"]),
-				bool(item.get("badge", false))
-			)
-			y += row_height
-			if index < section_items.size() - 1:
-				y += FACILITY_MENU_ROW_GAP * gap_scale
-	return y
+func _wire_command_focus() -> void:
+	var cta := _route_buttons.get("fishing_spots", null) as Button
+	var title := _route_buttons.get("title", null) as Button
+	var quest := _route_buttons.get("quest_board", null) as Button
+	var cooking := _route_buttons.get("cooking", null) as Button
+	var market := _route_buttons.get("market", null) as Button
+	var shop := _route_buttons.get("shop", null) as Button
+	var shipyard := _route_buttons.get("shipyard", null) as Button
+	var shark := _route_buttons.get("shark_pen", null) as Button
+	var status := _route_buttons.get("status", null) as Button
+	var book := _route_buttons.get("fish_book", null) as Button
+	_link_focus_vertical(title, cta)
+	_link_focus_vertical(cta, quest)
+	_link_focus_horizontal(quest, cooking)
+	_link_focus_horizontal(market, shop)
+	_link_focus_horizontal(shipyard, shark)
+	_link_focus_horizontal(status, book)
+	_link_focus_vertical(quest, market)
+	_link_focus_vertical(market, shipyard)
+	_link_focus_vertical(shipyard, status)
+	_link_focus_vertical(cooking, shop)
+	_link_focus_vertical(shop, shark)
+	_link_focus_vertical(shark, book)
+	var asa := _time_slot_buttons.get("asa_mazume", null) as Button
+	var daytime := _time_slot_buttons.get("daytime", null) as Button
+	var night := _time_slot_buttons.get("night", null) as Button
+	_link_focus_horizontal(asa, daytime)
+	_link_focus_horizontal(daytime, night)
+	if cta != null and night != null:
+		cta.focus_neighbor_left = cta.get_path_to(night)
+		night.focus_neighbor_right = night.get_path_to(cta)
 
 
-## セクション見出し（暗めブロンズのラベル＋右側の薄い同系ヘアライン1px）。日本語はruntime描画のみ。
-## メニュー内部のクリーム地に対して暗色文字で置くため、アウトラインは付けない。
-func _build_section_heading(menu: Control, top: float, text: String, height := FACILITY_MENU_HEADING_HEIGHT) -> void:
-	var row := _anchored_control(menu, 0.088, top, 0.912, top + height)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-	var label := _harbor_label(text, 12, Palette.HARBOR_MENU_SECTION_LABEL, true, 0)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	# 字間広め（見出しは装飾でなくグループ境界を示す情報）。FontVariationでグリフ間隔を広げる。
-	var spaced_font := FontVariation.new()
-	spaced_font.base_font = GameFontsScript.bold(get_theme_default_font())
-	spaced_font.spacing_glyph = 2
-	label.add_theme_font_override("font", spaced_font)
-	label.clip_text = true
-	_place_control(row, label, 0.0, 0.0, 0.320, 1.0)
-
-	var hairline := ColorRect.new()
-	hairline.color = Palette.HARBOR_MENU_SECTION_HAIRLINE
-	hairline.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(row, hairline, 0.345, 0.460, 1.0, 0.540)
+func _link_focus_horizontal(left: Control, right: Control) -> void:
+	if left == null or right == null:
+		return
+	left.focus_neighbor_right = left.get_path_to(right)
+	right.focus_neighbor_left = right.get_path_to(left)
 
 
-func _build_facility_detail_panel(parent: Control, content_bottom: float) -> void:
-	# MIN_HEIGHT の確保は行側の圧縮（_build_facility_menu_rows）が担う。
-	# パネルを最終行の上へ動かすことは重なり禁止のため行わない。
-	var panel_top := content_bottom + FACILITY_MENU_DETAIL_GAP
-	var panel_bottom := 1.0 - FACILITY_MENU_DETAIL_BOTTOM_MARGIN
-
-	var panel := Panel.new()
-	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# 本文が想定外に折り返してもパネル外（メニュー枠外）へ漏れないよう保険で切り抜く。
-	panel.clip_contents = true
-	panel.add_theme_stylebox_override(
-		"panel",
-		_make_flat_panel_style(Palette.HARBOR_DETAIL_PANEL_FILL, Palette.HARBOR_DETAIL_PANEL_BORDER, 8, 2)
-	)
-	_place_control(parent, panel, 0.088, panel_top, 0.912, panel_bottom)
-
-	_facility_detail_title_label = _harbor_label("", 15, Palette.HARBOR_MENU_HEADER, true, 2, Palette.HARBOR_MENU_OUTLINE)
-	_facility_detail_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_facility_detail_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_facility_detail_title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(panel, _facility_detail_title_label, 0.055, 0.090, 0.945, 0.400)
-
-	_facility_detail_body_label = _harbor_label("", 13, Palette.HARBOR_DETAIL_BODY_TEXT, false, 1, Palette.HARBOR_LABEL_OUTLINE)
-	_facility_detail_body_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_facility_detail_body_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	_facility_detail_body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_facility_detail_body_label.clip_text = false
-	_facility_detail_body_label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
-	_facility_detail_body_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(panel, _facility_detail_body_label, 0.055, 0.420, 0.945, 0.920)
-
-
-func _build_facility_button(
-	parent: Control,
-	top: float,
-	title_text: String,
-	body_text: String,
-	icon_path: String,
-	callback: Callable,
-	primary := false,
-	height := 0.108,
-	locked := false,
-	badge := false
-) -> void:
-	# ボタン内の各要素比率（ボタンのローカル矩形に対する 0.0-1.0 の相対位置）。値は現行から不変。
-	const BUTTON_H_MARGIN := 0.088
-	const BUTTON_H_MARGIN_RIGHT := 0.912
-	const ACCENT_LEFT := 0.023
-	const ACCENT_TOP := 0.230
-	const ACCENT_RIGHT := 0.039
-	const ACCENT_BOTTOM := 0.770
-	const ICON_PLATE_LEFT := 0.055
-	const ICON_PLATE_TOP := 0.160
-	const ICON_PLATE_RIGHT := 0.165
-	const ICON_PLATE_BOTTOM := 0.840
-	const ICON_LEFT := 0.070
-	const ICON_TOP := 0.210
-	const ICON_RIGHT := 0.150
-	const ICON_BOTTOM := 0.790
-	const TITLE_LEFT := 0.205
-	const TITLE_TOP := 0.120
-	const TITLE_RIGHT_UNLOCKED := 0.900
-	const TITLE_RIGHT_WITH_LOCK_ICON := 0.775
-	const TITLE_BOTTOM := 0.880
-	const TITLE_FONT_SIZE_COMPACT := 19
-	const TITLE_FONT_SIZE_NORMAL := 21
-	const TITLE_FONT_SIZE_SMALL := 16
-	const COMPACT_HEIGHT_THRESHOLD := 0.064
-	const SMALL_HEIGHT_THRESHOLD := 0.050
-	# ロック錠前アイコン（右端。旧8px条件テキストの代わり。解放条件は詳細パネルのbodyへ集約）。
-	# 縦0.18-0.82（27px行で約17px）。減光の影響を受けず視認できるサイズを確保する。
-	const LOCK_ICON_LEFT := 0.790
-	const LOCK_ICON_TOP := 0.180
-	const LOCK_ICON_RIGHT := 0.905
-	const LOCK_ICON_BOTTOM := 0.820
-	# 通知バッジ（直径11pxの丸。ボタン右上角に完全収まる固定px矩形）。
-	# `parent`（メニュー）へ配置しボタンのclip_contentsの影響を受けないようにする。
-	const BADGE_DIAMETER := 11.0
-	const BADGE_INSET_RIGHT := 5.0
-	const BADGE_INSET_TOP := 4.0
-
-	var button := make_button("", callback)
-	button.custom_minimum_size = Vector2.ZERO
-	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	button.focus_mode = Control.FOCUS_ALL
-	button.clip_contents = true
-	_apply_facility_button_skin(button, primary)
-	if locked:
-		# ロック中はスキンのみ減光（self_modulate。子の錠前アイコンへは伝播させない）。
-		# 解放条件は詳細パネルのbodyへ集約（行内の8pxテキストは廃止）。
-		button.self_modulate = Palette.HARBOR_FACILITY_LOCKED_MODULATE
-	_place_control(parent, button, BUTTON_H_MARGIN, top, BUTTON_H_MARGIN_RIGHT, top + height)
-	button.mouse_entered.connect(func() -> void: _set_facility_detail(title_text, body_text, primary))
-	button.focus_entered.connect(func() -> void: _set_facility_detail(title_text, body_text, primary))
-
-	var accent := Panel.new()
-	accent.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	accent.add_theme_stylebox_override(
-		"panel",
-		_make_flat_panel_style(Palette.HARBOR_FACILITY_ACCENT_PRIMARY if primary else Palette.HARBOR_FACILITY_ACCENT_SECONDARY, Color.TRANSPARENT, 3, 0)
-	)
-	if locked:
-		accent.modulate = Palette.HARBOR_FACILITY_LOCKED_MODULATE
-	_place_control(button, accent, ACCENT_LEFT, ACCENT_TOP, ACCENT_RIGHT, ACCENT_BOTTOM)
-
-	var icon_plate := Panel.new()
-	icon_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	icon_plate.add_theme_stylebox_override(
-		"panel",
-		_make_flat_panel_style(
-			Palette.HARBOR_FACILITY_ICON_PRIMARY_FILL if primary else Palette.HARBOR_FACILITY_ICON_SECONDARY_FILL,
-			Palette.HARBOR_FACILITY_ICON_PRIMARY_BORDER if primary else Palette.HARBOR_FACILITY_ICON_SECONDARY_BORDER,
-			6,
-			1
-		)
-	)
-	if locked:
-		icon_plate.modulate = Palette.HARBOR_FACILITY_LOCKED_MODULATE
-	_place_control(button, icon_plate, ICON_PLATE_LEFT, ICON_PLATE_TOP, ICON_PLATE_RIGHT, ICON_PLATE_BOTTOM)
-
-	var icon := _icon_rect(icon_path)
-	# ロック中はメインアイコンも個別に減光する（錠前アイコンには適用しない）。
-	icon.modulate = Palette.HARBOR_FACILITY_LOCKED_MODULATE if locked else Palette.HARBOR_ICON_MODULATE
-	_place_control(button, icon, ICON_LEFT, ICON_TOP, ICON_RIGHT, ICON_BOTTOM)
-
-	var title_font_size := TITLE_FONT_SIZE_NORMAL
-	if height < COMPACT_HEIGHT_THRESHOLD:
-		title_font_size = TITLE_FONT_SIZE_SMALL if height < SMALL_HEIGHT_THRESHOLD else TITLE_FONT_SIZE_COMPACT
-	var title_color := (
-		Palette.HARBOR_DETAIL_BODY_SECONDARY
-		if locked
-		else (Palette.HARBOR_FACILITY_PRIMARY_TEXT if primary else Palette.HARBOR_FACILITY_SECONDARY_TEXT)
-	)
-	var title := _harbor_label(title_text, title_font_size, title_color, true, 2 if primary else 1, Palette.HARBOR_FACILITY_PRIMARY_OUTLINE if primary else Palette.HARBOR_FACILITY_SECONDARY_OUTLINE)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	title.clip_text = true
-	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(button, title, TITLE_LEFT, TITLE_TOP, TITLE_RIGHT_WITH_LOCK_ICON if locked else TITLE_RIGHT_UNLOCKED, TITLE_BOTTOM)
-
-	if locked:
-		var lock_icon := _icon_rect(ICON_LOCK_PATH)
-		lock_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_place_control(button, lock_icon, LOCK_ICON_LEFT, LOCK_ICON_TOP, LOCK_ICON_RIGHT, LOCK_ICON_BOTTOM)
-
-	if badge:
-		# ボタンではなくメニュー（parent）の子にして clip_contents の影響を避ける。
-		# アンカーをボタン右上角の1点（BUTTON_H_MARGIN_RIGHT, top）に固定し、
-		# offsetで直径11pxの丸をボタン内側へ収める（px指定なのでボタン高さに依存しない）。
-		var badge_dot := Panel.new()
-		# add_child() は同名衝突時に既定で読みにくい内部名（@Panel@id等）へ差し替えるため、
-		# 行ごとに一意な名前を明示して衝突を避ける（複数バッジ同時表示時の取得・カウント対策）。
-		badge_dot.name = "FacilityMenuBadge_%s" % title_text
-		badge_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		badge_dot.anchor_left = BUTTON_H_MARGIN_RIGHT
-		badge_dot.anchor_right = BUTTON_H_MARGIN_RIGHT
-		badge_dot.anchor_top = top
-		badge_dot.anchor_bottom = top
-		badge_dot.offset_left = -(BADGE_INSET_RIGHT + BADGE_DIAMETER)
-		badge_dot.offset_right = -BADGE_INSET_RIGHT
-		badge_dot.offset_top = BADGE_INSET_TOP
-		badge_dot.offset_bottom = BADGE_INSET_TOP + BADGE_DIAMETER
-		badge_dot.add_theme_stylebox_override(
-			"panel",
-			_make_flat_panel_style(Palette.HARBOR_MENU_BADGE_FILL, Palette.HARBOR_MENU_BADGE_BORDER, 6, 2)
-		)
-		parent.add_child(badge_dot)
+func _link_focus_vertical(top: Control, bottom: Control) -> void:
+	if top == null or bottom == null:
+		return
+	top.focus_neighbor_bottom = top.get_path_to(bottom)
+	bottom.focus_neighbor_top = bottom.get_path_to(top)
 
 
 func _set_facility_detail(title_text: String, body_text: String, primary := false) -> void:
@@ -1202,15 +1262,24 @@ func _set_facility_detail(title_text: String, body_text: String, primary := fals
 
 
 func _build_footer(root: Control) -> void:
-	var footer := _anchored_control(root, 0.026, 0.902, 0.974, 0.974)
-	var frame := _texture_rect(HARBOR_FOOTER_FRAME_PATH)
+	_footer_root = Control.new()
+	_footer_root.name = "HarborFooter"
+	_footer_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control_px(root, _footer_root, Rect2(40.0, 648.0, 1200.0, 48.0))
+	var frame := _nine_patch_rect(COMMON_HARBOR_COMMAND_DARK_FRAME_PATH, Vector4(12.0, 12.0, 12.0, 12.0))
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	footer.add_child(frame)
+	_footer_root.add_child(frame)
 
-	_status_label = _harbor_label("", 17, Palette.HARBOR_FOOTER_TEXT, false, 2, Palette.HARBOR_LABEL_OUTLINE)
-	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_status_label = _harbor_label("", 16, Palette.HARBOR_FOOTER_TEXT, true, 1, Palette.HARBOR_LABEL_OUTLINE)
+	_status_label.name = "HarborCoolerStatus"
+	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(footer, _status_label, 0.035, 0.050, 0.965, 0.950)
+	_place_control_px(_footer_root, _status_label, Rect2(24.0, 3.0, 500.0, 42.0))
+	_play_time_label = _harbor_label("", 15, Palette.HARBOR_FOOTER_TEXT, true, 1, Palette.HARBOR_LABEL_OUTLINE)
+	_play_time_label.name = "HarborPlayTime"
+	_play_time_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_play_time_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control_px(_footer_root, _play_time_label, Rect2(720.0, 3.0, 456.0, 42.0))
 
 
 func _refresh_labels() -> void:
@@ -1225,38 +1294,26 @@ func _refresh_labels() -> void:
 	_refresh_time_slot_buttons()
 	_refresh_time_slot_grade_overlay()
 	var fish_total := _cooler_fish_total()
-	var next_text := (
-		"MAX"
-		if PlayerProgress.level >= GameData.MAX_LEVEL
-		else "%d / %d EXP" % [PlayerProgress.exp, PlayerProgress.exp_to_next_level()]
-	)
-	var rod_name := String(GameData.get_rod(PlayerProgress.equipped_rod_id).get("name", "入門竿"))
-	_top_level_label.text = "Lv.%d" % PlayerProgress.level
-	_top_exp_label.text = "EXP %s" % next_text.replace(" EXP", "")
-	_top_money_label.text = "%s G" % ScreenBase.format_money(PlayerProgress.money)
-	_top_rod_label.text = rod_name
-	_context_label.text = "時間帯：%s" % String(
-		GameData.get_time_slot(PlayerProgress.selected_time_slot_id).get("name", "日中")
-	)
-	_status_label.text = (
-		"クーラーボックス：%d匹　｜　プレイ時間：%s"
-		% [
-			fish_total,
-			format_play_time(PlayerProgress.play_seconds),
-		]
-	)
+	if _player_status_bar != null:
+		_player_status_bar.refresh()
+	_context_label.text = "HARBOR COMMAND"
+	_status_label.text = "クーラーボックス　%d匹" % fish_total
+	_play_time_label.text = "プレイ時間　%s" % format_play_time(PlayerProgress.play_seconds)
 	var has_pending_buff := not PlayerProgress.pending_buff.is_empty()
+	if _meal_effect_panel != null:
+		_meal_effect_panel.visible = has_pending_buff
 	if _meal_effect_row_label != null:
 		_meal_effect_row_label.visible = has_pending_buff
-	_buff_name_label.visible = has_pending_buff
+	if _buff_name_label != null:
+		_buff_name_label.visible = has_pending_buff
 	if not has_pending_buff:
-		_buff_name_label.text = ""
+		if _buff_name_label != null:
+			_buff_name_label.text = ""
 	else:
 		var buff_name := String(PlayerProgress.pending_buff.get("name", "料理"))
 		var buff_text := String(PlayerProgress.pending_buff.get("text", ""))
-		_buff_name_label.text = buff_name if buff_text.is_empty() else "%s（%s）" % [buff_name, buff_text]
-		_buff_name_label.add_theme_color_override("font_color", Palette.GOLD_BRIGHT)
-		_buff_name_label.add_theme_font_size_override("font_size", 14)
+		_buff_name_label.text = buff_name if buff_text.is_empty() else "%s　%s" % [buff_name, buff_text]
+		_buff_name_label.add_theme_color_override("font_color", Palette.HARBOR_DETAIL_BODY_TEXT)
 
 
 func _build_time_slot_grade_overlay() -> void:
@@ -1285,12 +1342,123 @@ func _return_to_title() -> void:
 	navigate("title")
 
 
-func _top_metric(parent: Control, left: float, top: float, right: float, bottom: float, value: String) -> Label:
-	var label := _harbor_label(value, 17, Palette.HARBOR_TOP_METRIC_TEXT, true, 2, Palette.HARBOR_LABEL_OUTLINE)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(parent, label, left, top, right, bottom)
-	return label
+func _add_vertical_rule(parent: Control, x: float) -> void:
+	var rule := ColorRect.new()
+	rule.color = _with_alpha(Palette.THEME_PANEL_INNER_GOLD, 0.40)
+	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control_px(parent, rule, Rect2(x, 14.0, 1.0, 52.0))
+
+
+func _place_control_px(parent: Control, control: Control, rect: Rect2) -> void:
+	control.anchor_left = 0.0
+	control.anchor_top = 0.0
+	control.anchor_right = 0.0
+	control.anchor_bottom = 0.0
+	control.offset_left = rect.position.x
+	control.offset_top = rect.position.y
+	control.offset_right = rect.end.x
+	control.offset_bottom = rect.end.y
+	parent.add_child(control)
+
+
+func _nine_patch_rect(path: String, margins: Vector4) -> NinePatchRect:
+	var rect := NinePatchRect.new()
+	rect.texture = _load_texture_if_exists(path)
+	rect.patch_margin_left = int(margins.x)
+	rect.patch_margin_top = int(margins.y)
+	rect.patch_margin_right = int(margins.z)
+	rect.patch_margin_bottom = int(margins.w)
+	rect.axis_stretch_horizontal = NinePatchRect.AXIS_STRETCH_MODE_STRETCH
+	rect.axis_stretch_vertical = NinePatchRect.AXIS_STRETCH_MODE_STRETCH
+	rect.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return rect
+
+
+func _command_icon_rect(icon_index: int) -> TextureRect:
+	var icon := TextureRect.new()
+	icon.texture = ShowcaseAssetsScript.atlas_icon(HARBOR_COMMAND_ICON_SHEET_PATH, 32.0, icon_index)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return icon
+
+
+func _with_alpha(color: Color, alpha: float) -> Color:
+	var result := color
+	result.a = alpha
+	return result
+
+
+func _fit_label_font(label: Label, text: String, base_size: int, minimum_size: int, max_width: float) -> void:
+	var font := GameFontsScript.extra_bold(get_theme_default_font())
+	var outline := label.get_theme_constant("outline_size")
+	var text_budget := maxf(max_width - float(outline * 2), 1.0)
+	for font_size in range(base_size, minimum_size - 1, -1):
+		if font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x <= text_budget:
+			label.add_theme_font_size_override("font_size", font_size)
+			return
+	label.add_theme_font_size_override("font_size", minimum_size)
+
+
+func _apply_command_button_skin(button: Button, role: String) -> void:
+	var style: StyleBoxTexture
+	if role == "cta":
+		style = _make_time_slot_button_style(COMMON_HARBOR_COMMAND_CTA_PATH)
+	else:
+		style = ShowcaseAssetsScript.texture_style(
+			COMMON_HARBOR_COMMAND_DARK_FRAME_PATH,
+			Vector4(12.0, 12.0, 12.0, 12.0),
+			Vector4.ZERO
+		)
+	if style == null:
+		return
+	_apply_interactive_button_styles(button, style, role)
+	button.add_theme_font_override("font", GameFontsScript.bold(get_theme_default_font()))
+	button.add_theme_color_override("font_color", Color.TRANSPARENT)
+	button.add_theme_color_override("font_hover_color", Color.TRANSPARENT)
+	button.add_theme_color_override("font_pressed_color", Color.TRANSPARENT)
+	button.add_theme_color_override("font_disabled_color", Color.TRANSPARENT)
+	button.add_theme_constant_override("outline_size", 0)
+	button.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+
+
+func _apply_interactive_button_styles(button: Button, normal_style: StyleBoxTexture, role: String) -> void:
+	button.add_theme_stylebox_override("normal", normal_style)
+	button.add_theme_stylebox_override(
+		"hover",
+		_tinted_texture_style(normal_style, Palette.HARBOR_COMMAND_HOVER_MODULATE)
+	)
+	button.add_theme_stylebox_override(
+		"pressed",
+		_tinted_texture_style(normal_style, Palette.HARBOR_COMMAND_PRESSED_MODULATE)
+	)
+	button.add_theme_stylebox_override("focus", _make_command_focus_style(role))
+	button.add_theme_stylebox_override("disabled", normal_style)
+
+
+func _tinted_texture_style(source: StyleBoxTexture, tint: Color) -> StyleBoxTexture:
+	var style := source.duplicate() as StyleBoxTexture
+	style.modulate_color = tint
+	return style
+
+
+func _make_command_focus_style(role: String) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color.TRANSPARENT
+	style.border_color = Palette.GOLD_BRIGHT
+	var border_width := 3 if role == "cta" else 2
+	style.border_width_left = border_width
+	style.border_width_top = border_width
+	style.border_width_right = border_width
+	style.border_width_bottom = border_width
+	var radius := 10 if role == "cta" else 8
+	style.corner_radius_top_left = radius
+	style.corner_radius_top_right = radius
+	style.corner_radius_bottom_left = radius
+	style.corner_radius_bottom_right = radius
+	return style
 
 func _texture_rect(path: String) -> TextureRect:
 	var rect := TextureRect.new()
@@ -1309,9 +1477,7 @@ func _icon_rect(path: String) -> TextureRect:
 
 
 func _load_texture_if_exists(path: String) -> Texture2D:
-	if ResourceLoader.exists(path) or FileAccess.file_exists(path):
-		return load(path) as Texture2D
-	return null
+	return ShowcaseAssetsScript.load_texture(path)
 
 
 func _harbor_label(
@@ -1325,62 +1491,27 @@ func _harbor_label(
 	return make_screen_label(text, font_size, color, bold, outline, outline_color, Palette.HARBOR_LABEL_SHADOW)
 
 
-func _apply_facility_button_skin(button: Button, primary: bool) -> void:
-	var normal_path := HARBOR_BUTTON_PRIMARY_PATH if primary else HARBOR_BUTTON_PATH
-	var hover_path := HARBOR_BUTTON_PRIMARY_PATH if primary else HARBOR_BUTTON_HOVER_PATH
-	var normal := _make_button_style(normal_path)
-	var hover := _make_button_style(hover_path)
-	if normal == null or hover == null:
-		return
-	button.add_theme_stylebox_override("normal", normal)
-	button.add_theme_stylebox_override("hover", hover)
-	button.add_theme_stylebox_override("focus", hover)
-	button.add_theme_stylebox_override("pressed", hover)
-	button.add_theme_stylebox_override("disabled", normal)
-	button.add_theme_font_override("font", GameFontsScript.bold(get_theme_default_font()))
-	button.add_theme_color_override("font_color", Color.TRANSPARENT)
-	button.add_theme_color_override("font_hover_color", Color.TRANSPARENT)
-	button.add_theme_color_override("font_pressed_color", Color.TRANSPARENT)
-	button.add_theme_color_override("font_disabled_color", Color.TRANSPARENT)
-	button.add_theme_constant_override("outline_size", 0)
-	button.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-
-
 func _make_time_slot_button_style(path: String) -> StyleBoxTexture:
 	var texture := _load_texture_if_exists(path)
 	if texture == null:
 		return null
 	var style := StyleBoxTexture.new()
 	style.texture = texture
-	style.texture_margin_left = 18
-	style.texture_margin_top = 12
-	style.texture_margin_right = 18
-	style.texture_margin_bottom = 12
+	var margins := (
+		Vector4(12.0, 12.0, 12.0, 12.0)
+		if path == COMMON_HARBOR_COMMAND_DARK_FRAME_PATH
+		else Vector4(18.0, 12.0, 18.0, 12.0)
+	)
+	style.texture_margin_left = margins.x
+	style.texture_margin_top = margins.y
+	style.texture_margin_right = margins.z
+	style.texture_margin_bottom = margins.w
 	style.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
 	style.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
 	style.content_margin_left = 34.0
 	style.content_margin_top = 4.0
 	style.content_margin_right = 8.0
 	style.content_margin_bottom = 4.0
-	return style
-
-
-func _make_button_style(path: String) -> StyleBoxTexture:
-	var texture := _load_texture_if_exists(path)
-	if texture == null:
-		return null
-	var style := StyleBoxTexture.new()
-	style.texture = texture
-	style.texture_margin_left = 50
-	style.texture_margin_top = 28
-	style.texture_margin_right = 50
-	style.texture_margin_bottom = 28
-	style.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
-	style.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
-	style.content_margin_left = 22.0
-	style.content_margin_top = 8.0
-	style.content_margin_right = 22.0
-	style.content_margin_bottom = 8.0
 	return style
 
 

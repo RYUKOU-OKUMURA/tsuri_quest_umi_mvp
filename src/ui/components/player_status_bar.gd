@@ -9,6 +9,14 @@ const ICON_SHEET_PATH := "res://assets/showcase/common/status_icon_sheet.png"
 
 var _frame: Texture2D
 var _icons: Texture2D
+var _harbor_command_layout := false
+var _draw_frame := true
+
+
+func use_harbor_command_layout() -> void:
+	_harbor_command_layout = true
+	_draw_frame = false
+	queue_redraw()
 
 
 func _ready() -> void:
@@ -27,16 +35,68 @@ func _draw() -> void:
 	if size.x <= 0.0 or size.y <= 0.0:
 		return
 	var rect := Rect2(Vector2.ZERO, size)
-	if _frame != null:
-		draw_texture_rect(_frame, rect, false)
-	else:
-		_draw_fallback_frame(rect)
+	if _draw_frame:
+		if _frame != null:
+			draw_texture_rect(_frame, rect, false)
+		else:
+			_draw_fallback_frame(rect)
+	if _harbor_command_layout:
+		_draw_harbor_command_status(rect)
+		return
 
 	var font := GameFontsScript.extra_bold(get_theme_default_font())
 	var values := _status_values()
 	var slots := _slot_rects(rect, font, values)
 	for index in range(mini(values.size(), slots.size())):
 		_draw_slot(font, slots[index], index, String(values[index]))
+
+
+func _draw_harbor_command_status(rect: Rect2) -> void:
+	var font := GameFontsScript.extra_bold(get_theme_default_font())
+	var regular_font := GameFontsScript.bold(get_theme_default_font())
+	var w := rect.size.x
+	var level_rect := Rect2(rect.position + Vector2(w * 0.036, 6.0), Vector2(w * 0.218, 31.0))
+	var exp_rect := Rect2(rect.position + Vector2(w * 0.036, 37.0), Vector2(w * 0.218, 24.0))
+	var rod_caption_rect := Rect2(rect.position + Vector2(w * 0.309, 6.0), Vector2(w * 0.314, 22.0))
+	var rod_rect := Rect2(rect.position + Vector2(w * 0.309, 27.0), Vector2(w * 0.314, 34.0))
+	var money_caption_rect := Rect2(rect.position + Vector2(w * 0.681, 6.0), Vector2(w * 0.244, 22.0))
+	var money_rect := Rect2(rect.position + Vector2(w * 0.681, 27.0), Vector2(w * 0.244, 34.0))
+	var rod_name := String(GameData.get_rod(PlayerProgress.equipped_rod_id).get("name", "入門竿"))
+	var exp_text := "EXP MAX"
+	if PlayerProgress.level < GameData.MAX_LEVEL:
+		exp_text = "EXP %s / %s" % [
+			ScreenBase.format_money(PlayerProgress.exp),
+			ScreenBase.format_money(PlayerProgress.exp_to_next_level()),
+		]
+	_draw_command_text(font, "Lv.%d" % PlayerProgress.level, level_rect, 22, HORIZONTAL_ALIGNMENT_LEFT)
+	_draw_command_text(regular_font, exp_text, exp_rect, 13, HORIZONTAL_ALIGNMENT_LEFT)
+	_draw_command_text(regular_font, "装備中", rod_caption_rect, 11, HORIZONTAL_ALIGNMENT_LEFT, Palette.HARBOR_CONTEXT_TEXT)
+	_draw_command_text(font, rod_name, rod_rect, _fit_font_size(font, rod_name, 18, 13, rod_rect.size.x), HORIZONTAL_ALIGNMENT_LEFT)
+	_draw_command_text(regular_font, "所持金", money_caption_rect, 11, HORIZONTAL_ALIGNMENT_RIGHT, Palette.HARBOR_CONTEXT_TEXT)
+	var money_text := "%s G" % ScreenBase.format_money(PlayerProgress.money)
+	_draw_command_text(font, money_text, money_rect, _fit_font_size(font, money_text, 22, 14, money_rect.size.x), HORIZONTAL_ALIGNMENT_RIGHT)
+
+
+func _draw_command_text(
+	font: Font,
+	text: String,
+	rect: Rect2,
+	font_size: int,
+	alignment: HorizontalAlignment,
+	color := Palette.HARBOR_TOP_METRIC_TEXT
+) -> void:
+	var baseline := rect.position.y + rect.size.y * 0.72
+	draw_string_outline(
+		font,
+		Vector2(rect.position.x, baseline),
+		text,
+		alignment,
+		rect.size.x,
+		font_size,
+		1,
+		Palette.HARBOR_LABEL_OUTLINE
+	)
+	draw_string(font, Vector2(rect.position.x, baseline), text, alignment, rect.size.x, font_size, color)
 
 
 func _status_values() -> Array[String]:

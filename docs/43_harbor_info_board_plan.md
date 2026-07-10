@@ -1,12 +1,16 @@
 # 43. 港の情報板構想 — 初心者アシスト強化プラン
 
 作成日: 2026-07-09
-状態: v4 再現＋出港プラン紙面 Phase A（AI一点物）採用（天気先読みロジックは未着手）／前提: 出港プランカード再編（2026-07-09）完了
+状態: **旧レイアウト計画（superseded）**。候補選定などの情報設計ロジックだけ継続し、画面・素材・freezeの正本は `docs/44_harbor_command_board_spec.md` と `docs/qa/harbor_qa.md`（天気先読みロジックは未着手）
 関連: `docs/41_e5_time_slots_implementation_review.md` §2（港画面UX再構成）/ `docs/38_shark_bait_ready_selector_spec.md` §6（餌魚UI撤去）/ `docs/qa/harbor_qa.md`（港画面freeze）/ `docs/19_ui_production_playbook.md` §4.6・§4.5（基盤レイアウト原則）/ `docs/31_asset_ledger.md`（素材台帳）
 
-## 0.1 v4確定事項（2026-07-09）
+## 0.0 「港の司令盤」への移行（2026-07-10）
 
-完成イメージ正本: 会話生成の `harbor_info_board_vision_v4.png`（港情報板＋出港プラン可読性＋時間帯視認性）。
+本書の候補選定、初心者ガイド、天候スタブ、ヌシ/メガロドン、時間帯のデータ契約は継続する。一方、旧v4の「3魚同格＋大きな出港プラン紙面＋右10行メニュー」という画面構成、v4完成イメージ、Phase A/Bの素材計画は、採用モック `docs/qa/evidence/harbor/2026-07-10_harbor_command_board_mockup_v1.png` と実装仕様 `docs/44_harbor_command_board_spec.md` に置き換えた。現在の画面・素材分担・freeze値は `docs/44` / `docs/qa/harbor_qa.md` を正とし、本書の旧レイアウト節を新規作業の指示に使わない。
+
+## 0.1 旧v4確定事項（2026-07-09、2026-07-10失効）
+
+旧完成イメージ（正本から除外）: 会話生成の `harbor_info_board_vision_v4.png`（港情報板＋出港プラン可読性＋時間帯視認性）。以下は採用当時の記録であり、現行仕様ではない。
 
 | 項目 | 確定内容 |
 |---|---|
@@ -16,9 +20,9 @@
 | 左CTA「釣り場へ向かう」 | **削除**（v3から継続）。出港は右施設メニュー primary のみ |
 | §2 天気の気配 | **スタブのまま**（先読み抽選・セーブは後続） |
 
-## 0.2 v3確定事項（2026-07-09・v4で一部更新）
+## 0.2 旧v3確定事項（2026-07-09・v4で一部更新、現在は失効）
 
-完成イメージ正本: 会話生成の `harbor_info_board_vision_v3.png`（港情報板＋拡充出港プラン＋右メニュー主導線）。
+旧完成イメージ（正本から除外）: 会話生成の `harbor_info_board_vision_v3.png`（港情報板＋拡充出港プラン＋右メニュー主導線）。
 
 | 項目 | 確定内容 |
 |---|---|
@@ -75,9 +79,11 @@
 2. UI実装 — 情報板レイアウト・ポートレート表示・理由ラベル（`skills/ui-screen-uplift/` の距離ゲート併用、`docs/qa/harbor_qa.md` freeze改訂込み）
 3. QA証拠 — 実スクショ・`harbor_screen_smoke` 回帰・`docs/qa/evidence/harbor/` への証拠保存
 
-## 1.5 Phase B: 一点物化の生成指示
+## 1.5 旧Phase B: 一点物化の生成指示（実行済み・不採用）
 
-`docs/qa/harbor_qa.md` §5 既知ギャップ「情報板カード／枠素材の質感は完成イメージより簡素（PIL幾何）。Phase B でAI一点物へ。」に対応する準備。対象は `tools/generate_harbor_info_board_assets.py` が出力する下記2素材のみ（この2点はPhase A同様、AIソース画像から加工する運用へ切り替える）。
+2026-07-10に下記指示で生成・加工・3時間帯比較まで実施したが、現行PIL版に全画面で明確に勝たなかったため**不採用**とした。出力素材はPIL版へ戻しており、港の司令盤ではこのPhase Bを採用しない。判断の正本は `docs/qa/harbor_qa.md` §2。本節は生成条件の監査記録として残すもので、再実行指示ではない。
+
+当時の対象は `tools/generate_harbor_info_board_assets.py` が出力する下記2素材のみだった。
 
 | 素材 | 現行の役割・寸法 | 参照箇所 |
 |---|---|---|
@@ -86,7 +92,7 @@
 
 いずれも中央領域を透過でくり抜く必要はない（現行PIL版も不透明な板のまま。portrait/label は単に前面に重ねて表示される）。**アスペクト比を変えると港画面の縦横比が崩れるため、生成・加工の両方で上記比率を厳守する。**
 
-### 生成指示（Cursor GenerateImage / OpenAI で人手生成）
+### 当時の生成指示（監査記録）
 
 トーンは既存港画面素材（金縁×濃紺×羊皮紙の和洋折衷・海洋RPG調。`harbor_plan_panel.png` や `harbor_main_frame.png` と揃える）。**日本語・英語問わず文字/ロゴ/紋章の描き込みは禁止**（実行時にrun-time描画と二重になる／将来のローカライズに耐えない）。背景はクロマキー用にマゼンタ `#FF00FF` 単色で塗りつぶす。
 
@@ -127,13 +133,15 @@ outside the card (for chroma-key removal).
 - `tools/source_assets/harbor/harbor_info_board_frame_source.png`
 - `tools/source_assets/harbor/harbor_info_fish_card_source.png`
 
-### 生成後の手順
+### 当時の生成後手順（完了済み・再実行しない）
 
 1. 加工スクリプト実行: `python3 tools/process_harbor_info_board_assets.py`（マゼンタ透過 → トリム → 現行と同一ピクセル寸法へ cover-fit リサイズ → `assets/showcase/harbor/harbor_info_board_frame.png` / `harbor_info_fish_card.png` を上書き出力）
 2. Visual QA: 港画面を実機/smoke でスクリーンショットし、Phase A前（PIL版）・完成イメージ（`harbor_info_board_vision_v4.png`）と横並び比較する（AGENTS.md不変ルール「見た目の完了判断は実スクショ+参照画像との横並び比較」）
 3. 採用基準（`docs/19_ui_production_playbook.md` の基準どおり）: **現行PIL版に全画面比較で明確に勝つ場合のみ採用**。僅差・部分的な質感向上だけでは不採用とし、理由を `docs/qa/harbor_qa.md`（不採用リスト／freeze更新）に記録し、比較画像を `docs/qa/evidence/harbor/` へコピーする
-4. 採用した場合は同じコミットで `docs/31_asset_ledger.md`（77行目の「港出港プラン紙面＋行アイコン（Phase A）」行と同じ書式）に「港情報板の枠＋魚カード（Phase B）」行を追記し、生成サービス・日付・商用利用条件を記入する
+4. 採用した場合だけ素材台帳へ追記する条件だったが、不採用のため製品素材としての追記対象外とした（AI生成ソースは監査用に残してよい）
 5. `./tools/validate_project.sh` を通す（`tools/audit_showcase_asset_refs.py` の素材参照監査を含む）
+
+不採用の比較証拠は `docs/qa/evidence/harbor/2026-07-10_info_board_phase_b_all_slots_before_after.png`（3時間帯一覧）と、同接頭辞の `asa_mazume` / `daytime` / `night` 個別比較に保存済み。
 
 ## 2. 天気の気配（出港前の天候先読み）
 

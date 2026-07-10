@@ -3,309 +3,490 @@ extends Node
 const HarborScreenScript = preload("res://src/ui/harbor_screen.gd")
 const ThemeFactory = preload("res://src/ui/ui_theme.gd")
 
+const ROUTE_IDS := [
+	"fishing_spots",
+	"quest_board",
+	"cooking",
+	"market",
+	"shop",
+	"shipyard",
+	"shark_pen",
+	"status",
+	"fish_book",
+	"title",
+]
+
 var _navigated_to := ""
 var _payload: Dictionary = {}
 var _failed := false
 
 
 func _ready() -> void:
-	await _verify_locked_shark_pen()
-	await _verify_preparation_hint_and_meal_row()
-	await _verify_time_slot_selector()
-	await _verify_hint_recomputes_on_time_slot_change()
-	await _verify_info_board_v3()
-	await _verify_shark_pen_navigation()
-	await _verify_megalodon_omen()
-	await _verify_menu_badges_and_hint()
-
+	await _verify_command_board_structure()
+	await _verify_target_priority_one_plus_two()
+	await _verify_all_routes_and_focus()
+	await _verify_interaction_style_contract()
+	await _verify_notifications_and_recommendation()
+	await _verify_locked_and_unlocked_shark_pen()
+	await _verify_time_slots_and_dynamic_refresh()
+	await _verify_departure_intel_meal_and_omen()
+	await _verify_long_text_fit_and_assets()
 	if _failed:
 		return
 	print("harbor_screen_smoke: ok")
 	get_tree().quit(0)
 
 
-func _verify_locked_shark_pen() -> void:
-	_navigated_to = ""
-	_payload = {}
-	PlayerProgress.level = 29
-	PlayerProgress.owned_boats = ["bluewater_boat"]
-	PlayerProgress.sea_chart_fragments = 3
-	PlayerProgress.inventory = {"kihada": 1}
-	PlayerProgress.caught_counts = {"nekozame": 1}
+func _verify_command_board_structure() -> void:
+	_seed_base()
 	var screen := _make_screen()
-	await get_tree().process_frame
-	_expect(not screen._can_open_shark_pen(), "shark pen should stay locked below Lv.30")
-	screen._open_shark_pen()
-	_expect(_navigated_to.is_empty(), "locked shark pen should not navigate")
-	_expect(screen._facility_detail_body_label.text.contains("Lv.30"), "locked shark pen action should show lock detail")
-	screen.queue_free()
-	await get_tree().process_frame
-
-	PlayerProgress.level = 30
-	PlayerProgress.caught_counts = {}
-	screen = _make_screen()
-	await get_tree().process_frame
-	_expect(not screen._can_open_shark_pen(), "shark pen should stay locked when no shark has been caught")
-	screen._open_shark_pen()
-	_expect(_navigated_to.is_empty(), "no-shark locked shark pen should not navigate")
-	_expect(screen._facility_detail_body_label.text.contains("危険海域"), "no-shark locked shark pen should show lock detail")
-	screen.queue_free()
-	await get_tree().process_frame
-
-
-func _verify_preparation_hint_and_meal_row() -> void:
-	_navigated_to = ""
-	_payload = {}
-	PlayerProgress.level = 30
-	PlayerProgress.owned_boats = ["bluewater_boat"]
-	PlayerProgress.sea_chart_fragments = 3
-	PlayerProgress.inventory = {"kihada": 2, "nekozame": 1}
-	PlayerProgress.caught_counts = {}
-	PlayerProgress.quest_board = []
-	PlayerProgress.pending_buff = {}
-	var screen := _make_screen()
-	await get_tree().process_frame
-	_expect(not screen._preparation_body_label.text.is_empty(), "preparation card hint should never be empty")
-	_expect(not screen._meal_effect_row_label.visible, "meal effect row should hide without a pending buff")
-	_expect(not screen._buff_name_label.visible, "meal effect value should hide without a pending buff")
-
-	PlayerProgress.pending_buff = {"name": "元気な食事", "text": "釣果+10%"}
-	screen._refresh_labels()
-	_expect(screen._meal_effect_row_label.visible, "meal effect row should show once a buff is pending")
-	_expect(screen._buff_name_label.visible, "meal effect value should show once a buff is pending")
-	_expect(screen._buff_name_label.text.contains("元気な食事"), "meal effect value should show the buff name")
-	screen.queue_free()
-	await get_tree().process_frame
+	await _settle()
+	_expect_rect(screen._top_bar_root, Rect2(32.0, 24.0, 1216.0, 80.0), "top bar")
+	_expect(screen._player_status_bar != null, "top metrics should use the shared PlayerStatusBar component")
+	_expect_rect(screen._command_board_root, Rect2(40.0, 120.0, 788.0, 512.0), "command board")
+	_expect_rect(screen._operation_board_root, Rect2(844.0, 120.0, 396.0, 512.0), "operation board")
+	_expect_rect(screen._footer_root, Rect2(40.0, 648.0, 1200.0, 48.0), "footer")
+	var cta := screen._route_buttons.get("fishing_spots", null) as Button
+	_expect_rect(cta, Rect2(864.0, 176.0, 356.0, 64.0), "departure CTA")
+	_expect(cta.get_parent() == screen._operation_board_root, "departure CTA must exist only in the right operation board")
+	_expect(screen._hero_target_slot.size() > 0, "hero target slot should exist")
+	_expect(screen._secondary_target_slots.size() == 2, "two secondary target slots should exist")
+	var hero := screen._hero_target_slot.get("slot", null) as Control
+	var secondary := screen._secondary_target_slots[0].get("slot", null) as Control
+	_expect(hero.size.x >= secondary.size.x * 1.8, "hero target should be materially wider than a secondary target")
+	_expect(not _tree_has_label(screen, "出港プラン"), "legacy departure-plan heading must be removed")
+	_expect(not _tree_has_label(screen, "港の施設"), "legacy facility heading must be removed")
+	_expect(not _tree_has_label(screen, "システム"), "legacy system section must be removed")
+	_expect(not screen._context_label.text.contains("時間帯"), "time slot must not be duplicated in the header")
+	_expect(not screen._status_label.text.contains("｜"), "footer must use spatial separation instead of the legacy divider")
+	await _free_screen(screen)
 
 
-func _verify_time_slot_selector() -> void:
-	PlayerProgress.level = 11
-	PlayerProgress.selected_time_slot_id = "night"
-	var screen := _make_screen()
-	await get_tree().process_frame
-	_expect(PlayerProgress.selected_time_slot_id == GameData.DEFAULT_TIME_SLOT_ID, "locked saved time slot should fall back in harbor")
-	_expect((screen._time_slot_buttons["asa_mazume"] as Button).disabled, "asa_mazume should stay locked below Lv12")
-	_expect((screen._time_slot_buttons["night"] as Button).disabled, "night should stay locked below Lv15")
-	_expect(screen._context_label.text.contains("日中"), "harbor context should show selected daytime")
-	screen.queue_free()
-	await get_tree().process_frame
-
-	PlayerProgress.level = 12
-	PlayerProgress.selected_time_slot_id = GameData.DEFAULT_TIME_SLOT_ID
-	screen = _make_screen()
-	await get_tree().process_frame
-	screen._select_time_slot("asa_mazume")
-	_expect(PlayerProgress.selected_time_slot_id == "asa_mazume", "Lv12 should select asa_mazume")
-	_expect(screen._context_label.text.contains("朝まずめ"), "harbor context should show asa_mazume")
-	_expect((screen._time_slot_buttons["night"] as Button).disabled, "night should stay locked at Lv12")
-	screen.queue_free()
-	await get_tree().process_frame
-
-	PlayerProgress.level = 15
-	screen = _make_screen()
-	await get_tree().process_frame
-	screen._select_time_slot("night")
-	_expect(PlayerProgress.selected_time_slot_id == "night", "Lv15 should select night")
-	_expect(screen._context_label.text.contains("夜釣り"), "harbor context should show night")
-	screen.queue_free()
-	await get_tree().process_frame
-
-
-func _verify_hint_recomputes_on_time_slot_change() -> void:
-	PlayerProgress.level = 15
-	PlayerProgress.owned_boats = ["bluewater_boat"]
-	PlayerProgress.sea_chart_fragments = 3
-	PlayerProgress.inventory = {}
-	PlayerProgress.caught_counts = {}
-	PlayerProgress.quest_board = []
-	PlayerProgress.pending_buff = {}
-	var screen := _make_screen()
-	await get_tree().process_frame
-	screen._select_time_slot("asa_mazume")
-	var asa_hint: String = screen._preparation_body_label.text
-	_expect(not asa_hint.is_empty(), "asa_mazume hint should not be empty")
-	screen._select_time_slot("night")
-	var night_hint: String = screen._preparation_body_label.text
-	_expect(not night_hint.is_empty(), "night hint should not be empty")
-	_expect(asa_hint != night_hint, "switching time slot should recompute the target hint")
-	screen.queue_free()
-	await get_tree().process_frame
-
-
-func _verify_info_board_v3() -> void:
-	PlayerProgress.level = 15
-	PlayerProgress.owned_boats = ["bluewater_boat"]
-	PlayerProgress.sea_chart_fragments = 3
-	PlayerProgress.inventory = {}
-	PlayerProgress.caught_counts = {}
-	PlayerProgress.quest_board = []
-	PlayerProgress.pending_buff = {}
-	var screen := _make_screen()
-	await get_tree().process_frame
-	_expect(screen._info_board_root != null, "info board root should exist")
-	_expect(screen._info_board_slots.size() == 3, "info board should reserve 3 slots")
-	var candidates: Array = screen._harbor_highlight_candidates(3)
-	_expect(candidates is Array, "highlight candidates should return Array")
-	_expect(candidates.size() <= 3, "highlight candidates should cap at 3")
-	var seen_fish: Dictionary = {}
-	for candidate in candidates:
-		var fish_id := String((candidate as Dictionary).get("fish_id", ""))
-		_expect(not fish_id.is_empty(), "candidate fish_id should not be empty")
-		_expect(not seen_fish.has(fish_id), "highlight candidates should not duplicate fish_id")
-		seen_fish[fish_id] = true
-	_expect(not _has_left_departure_cta(screen), "left departure CTA should be removed")
-	_expect(screen._preparation_body_label.text.contains("今日は雨の気配"), "preparation card should include weather stub")
-	screen.queue_free()
-	await get_tree().process_frame
-
-
-func _has_left_departure_cta(screen: Control) -> bool:
-	return _control_uses_action_button_frame(screen)
-
-
-func _control_uses_action_button_frame(node: Node) -> bool:
-	if node is Button:
-		var button := node as Button
-		var style := button.get_theme_stylebox("normal")
-		if style is StyleBoxTexture:
-			var texture_style := style as StyleBoxTexture
-			if texture_style.texture != null:
-				var path := String(texture_style.texture.resource_path)
-				if path.contains("action_button_frame"):
-					return true
-	for child in node.get_children():
-		if _control_uses_action_button_frame(child):
-			return true
-	return false
-
-
-func _verify_shark_pen_navigation() -> void:
-	_navigated_to = ""
-	_payload = {}
-	PlayerProgress.level = 30
-	PlayerProgress.owned_boats = ["bluewater_boat"]
-	PlayerProgress.sea_chart_fragments = 3
-	PlayerProgress.inventory = {"kihada": 1}
-	PlayerProgress.caught_counts = {"nekozame": 1}
-	var screen := _make_screen()
-	await get_tree().process_frame
-	_expect(screen._can_open_shark_pen(), "shark pen should unlock after Lv.30 and a caught shark")
-	screen._open_shark_pen()
-	_expect(_navigated_to == "shark_pen", "unlocked shark pen should navigate")
-	screen.queue_free()
-	await get_tree().process_frame
-
-
-func _verify_megalodon_omen() -> void:
-	PlayerProgress.level = GameData.MAX_LEVEL
-	PlayerProgress.owned_boats = ["bluewater_boat"]
-	PlayerProgress.sea_chart_fragments = 3
-	PlayerProgress.inventory = {"nushi_deep_ocean": 1}
-	PlayerProgress.caught_counts = {"nekozame": 1}
-	PlayerProgress.shark_bonds = {}
-	for shark_id in GameData.get_normal_shark_ids():
-		PlayerProgress.shark_bonds[shark_id] = 100
-	var screen := _make_screen()
-	await get_tree().process_frame
-	_expect(screen._preparation_body_label.text.contains("深海の何か"), "harbor should show megalodon omen when unlocked and uncaught")
-	screen.queue_free()
-	await get_tree().process_frame
-
-
-func _verify_menu_badges_and_hint() -> void:
-	# ケースA: 納品できる依頼 + クーラーボックスに魚あり → 両バッジ表示・優先度1のヒント。
-	PlayerProgress.level = 15
-	PlayerProgress.owned_boats = ["bluewater_boat"]
-	PlayerProgress.sea_chart_fragments = 3
-	PlayerProgress.caught_counts = {}
-	PlayerProgress.pending_buff = {}
-	PlayerProgress.inventory = {"kihada": 1, "aji": 2}
+func _verify_target_priority_one_plus_two() -> void:
+	_seed_base()
+	PlayerProgress.inventory = {"aji": 2}
 	PlayerProgress.quest_board = [
-		{"kind": "delivery", "fish_id": "kihada", "count": 1, "reward_money": 50, "text": "テスト依頼"}
+		{"kind": "delivery", "fish_id": "aji", "count": 1, "reward_money": 50, "text": "アジを届ける"}
 	]
 	var screen := _make_screen()
-	await get_tree().process_frame
-	_expect(screen._has_deliverable_quest(), "quest with satisfied count should be deliverable")
-	_expect(screen._cooler_fish_total() == 3, "cooler total should sum inventory counts")
-	var items_a: Array[Dictionary] = screen._facility_menu_items()
-	_expect(bool(_menu_item_badge(items_a, "quest_board")), "quest_board should carry badge=true when deliverable")
-	_expect(bool(_menu_item_badge(items_a, "market")), "market should carry badge=true when cooler has fish")
-	_expect(_count_named_nodes(screen, "FacilityMenuBadge") == 2, "menu tree should render 2 badge dots")
-	_expect(
-		screen._facility_detail_title_label.text == "つぎのおすすめ",
-		"default detail title should switch to hint title when a quest is deliverable"
-	)
-	_expect(
-		screen._facility_detail_body_label.text.contains("納品できる依頼がある"),
-		"deliverable quest should take priority over cooler hint"
-	)
-	screen.queue_free()
-	await get_tree().process_frame
+	await _settle()
+	var candidates: Array = screen._harbor_highlight_candidates(3)
+	_expect(candidates.size() == 3, "dense preview state should fill hero plus two secondary targets")
+	_expect(String(candidates[0].get("fish_id", "")) == "aji", "deliverable quest fish should be the first target")
+	_expect(String(candidates[0].get("reason", "")) == "quest", "first target should keep the quest reason")
+	_expect(bool(candidates[0].get("deliverable", false)), "first target should expose the deliverable state")
+	_expect_targets_match(screen, candidates)
+	var hero_badge := screen._hero_target_slot.get("badge_label", null) as Label
+	var hero_detail := screen._hero_target_slot.get("detail_label", null) as Label
+	_expect(hero_badge.text.contains("最優先") and hero_badge.text.contains("依頼"), "hero badge should show highest quest priority")
+	_expect(hero_detail.text.contains("納品できる"), "hero detail should explain that the quest is deliverable")
+	var seen: Dictionary = {}
+	for candidate in candidates:
+		var fish_id := String(candidate.get("fish_id", ""))
+		_expect(not fish_id.is_empty() and not seen.has(fish_id), "target candidates must be non-empty and unique")
+		seen[fish_id] = true
+	await _free_screen(screen)
 
-	# ケースB: 依頼なし・クーラーボックスも空 → バッジなし・フォールバックヒント。
-	PlayerProgress.quest_board = []
+
+func _verify_all_routes_and_focus() -> void:
+	_seed_base()
+	PlayerProgress.caught_counts = {"nekozame": 1}
+	var screen := _make_screen()
+	await _settle()
+	var actual_ids: Array = screen._route_buttons.keys()
+	actual_ids.sort()
+	var expected_ids := ROUTE_IDS.duplicate()
+	expected_ids.sort()
+	_expect(actual_ids == expected_ids, "command board should expose exactly the ten route IDs")
+	for id in ROUTE_IDS:
+		var button := screen._route_buttons.get(id, null) as Button
+		_expect(button != null, "route button should exist: %s" % id)
+		if button == null:
+			continue
+		_expect(button.focus_mode == Control.FOCUS_ALL, "route button should accept focus: %s" % id)
+		_expect(_has_focus_neighbor(button), "route button should have an explicit focus neighbor: %s" % id)
+		_navigated_to = ""
+		button.pressed.emit()
+		_expect(_navigated_to == id, "route button should navigate to its matching route: %s" % id)
+	var cta := screen._route_buttons.get("fishing_spots", null) as Button
+	_expect(get_viewport().gui_get_focus_owner() == cta, "departure CTA should receive initial focus")
+	var tile := screen._route_buttons.get("quest_board", null) as Button
+	_expect(cta.size.x * cta.size.y >= tile.size.x * tile.size.y * 2.0, "departure CTA area should be at least twice a facility tile")
+	await _free_screen(screen)
+
+
+func _verify_interaction_style_contract() -> void:
+	_seed_base(30)
+	var screen := _make_screen()
+	await _settle()
+	for id in ROUTE_IDS:
+		var route_button := screen._route_buttons.get(id, null) as Button
+		if route_button != null:
+			_assert_distinct_interaction_styles(route_button, "route %s" % id)
+	for time_slot_id in GameData.get_all_time_slot_ids():
+		var time_button := screen._time_slot_buttons.get(time_slot_id, null) as Button
+		_expect(time_button != null, "time-slot button should exist: %s" % time_slot_id)
+		if time_button != null:
+			_assert_distinct_interaction_styles(time_button, "time slot %s" % time_slot_id)
+	await _free_screen(screen)
+
+
+func _verify_notifications_and_recommendation() -> void:
+	_seed_base()
+	PlayerProgress.inventory = {"aji": 2, "kihada": 1}
+	PlayerProgress.quest_board = [
+		{"kind": "delivery", "fish_id": "aji", "count": 1, "reward_money": 50, "text": "アジを届ける"}
+	]
+	var screen := _make_screen()
+	await _settle()
+	_expect(screen._notification_badges.keys().has("quest_board"), "deliverable quest should show the quest badge")
+	_expect(screen._notification_badges.keys().has("market"), "cooler fish should show the market badge")
+	_expect(screen._facility_detail_title_label.text == "つぎのおすすめ", "recommendation title should remain visible on initial CTA focus")
+	_expect(screen._facility_detail_body_label.text.contains("納品できる依頼"), "deliverable quest should win recommendation priority")
+	for id in ["quest_board", "market"]:
+		var badge := screen._notification_badges.get(id, null) as Control
+		var button := screen._route_buttons.get(id, null) as Button
+		_expect(button.get_global_rect().intersects(badge.get_global_rect()), "badge should sit inside its matching tile: %s" % id)
+	var cooking := screen._route_buttons.get("cooking", null) as Button
+	cooking.grab_focus()
+	await get_tree().process_frame
+	_expect(screen._facility_detail_title_label.text == "調理場", "focused facility should temporarily replace the recommendation")
+	cooking.release_focus()
+	await get_tree().process_frame
+	_expect(screen._facility_detail_title_label.text == "つぎのおすすめ", "recommendation should return after focus leaves a facility")
+	await _free_screen(screen)
+
+	_seed_base()
 	PlayerProgress.inventory = {}
-	screen = _make_screen()
-	await get_tree().process_frame
-	_expect(not screen._has_deliverable_quest(), "empty quest board should not be deliverable")
-	_expect(screen._cooler_fish_total() == 0, "empty inventory should sum to zero")
-	var items_b: Array[Dictionary] = screen._facility_menu_items()
-	_expect(not bool(_menu_item_badge(items_b, "quest_board")), "quest_board badge should be false without a deliverable quest")
-	_expect(not bool(_menu_item_badge(items_b, "market")), "market badge should be false with an empty cooler")
-	_expect(_count_named_nodes(screen, "FacilityMenuBadge") == 0, "menu tree should render no badge dots")
-	_expect(
-		screen._facility_detail_title_label.text == "釣り場へ向かう",
-		"fallback detail should keep the original guidance when no hint applies"
-	)
-	screen.queue_free()
-	await get_tree().process_frame
-
-	# ケースC: クーラーボックスのみ魚あり → 魚市場バッジのみ・優先度2のヒント。
 	PlayerProgress.quest_board = []
-	PlayerProgress.inventory = {"aji": 2}
 	screen = _make_screen()
-	await get_tree().process_frame
-	var items_c: Array[Dictionary] = screen._facility_menu_items()
-	_expect(not bool(_menu_item_badge(items_c, "quest_board")), "quest_board badge should stay false without a deliverable quest")
-	_expect(bool(_menu_item_badge(items_c, "market")), "market badge should be true with fish in the cooler")
-	_expect(_count_named_nodes(screen, "FacilityMenuBadge") == 1, "menu tree should render exactly 1 badge dot")
-	_expect(
-		screen._facility_detail_body_label.text.contains("クーラーボックスに2匹"),
-		"cooler-only state should show the priority-2 hint with the fish count"
-	)
-	screen.queue_free()
-	await get_tree().process_frame
+	await _settle()
+	_expect(screen._notification_badges.is_empty(), "empty state should render no notification badges")
+	_expect(screen._facility_detail_title_label.text == "釣り場へ向かう", "empty state should recommend departure")
+	await _free_screen(screen)
+
+	_seed_base()
+	PlayerProgress.inventory = {"aji": 2}
+	PlayerProgress.quest_board = []
+	screen = _make_screen()
+	await _settle()
+	_expect(screen._notification_badges.keys() == ["market"], "cooler-only state should render only the market badge")
+	_expect(screen._facility_detail_body_label.text.contains("クーラーボックスに2匹"), "cooler-only recommendation should include fish count")
+	await _free_screen(screen)
 
 
-func _menu_item_badge(items: Array[Dictionary], id: String) -> bool:
-	for item in items:
-		if String(item.get("id", "")) == id:
-			return bool(item.get("badge", false))
-	return false
+func _verify_locked_and_unlocked_shark_pen() -> void:
+	_seed_base(29)
+	var screen := _make_screen()
+	await _settle()
+	var shark := screen._route_buttons.get("shark_pen", null) as Button
+	_expect(not shark.disabled, "locked shark pen should stay pressable so its unlock condition can be read")
+	_expect(screen._lock_icons.has("shark_pen"), "locked shark pen should show a lock icon")
+	_navigated_to = ""
+	shark.pressed.emit()
+	_expect(_navigated_to.is_empty(), "locked shark pen must not navigate")
+	_expect(screen._facility_detail_body_label.text.contains("Lv.30"), "locked shark pen should explain its level requirement")
+	await _free_screen(screen)
+
+	_seed_base(30)
+	PlayerProgress.caught_counts = {"nekozame": 1}
+	screen = _make_screen()
+	await _settle()
+	_expect(not screen._lock_icons.has("shark_pen"), "unlocked shark pen should remove its lock icon")
+	_navigated_to = ""
+	(screen._route_buttons["shark_pen"] as Button).pressed.emit()
+	_expect(_navigated_to == "shark_pen", "unlocked shark pen should navigate")
+	await _free_screen(screen)
 
 
-func _count_named_nodes(node: Node, target_name: String) -> int:
-	# Godot は同名兄弟ノードへ自動で連番を振る（"FacilityMenuBadge2" 等）ため前方一致で数える。
-	var count := 0
-	if String(node.name).begins_with(target_name):
-		count += 1
+func _verify_time_slots_and_dynamic_refresh() -> void:
+	_seed_base(11)
+	PlayerProgress.selected_time_slot_id = "night"
+	var screen := _make_screen()
+	await _settle()
+	_expect(PlayerProgress.selected_time_slot_id == GameData.DEFAULT_TIME_SLOT_ID, "locked saved time slot should fall back to daytime")
+	_expect((screen._time_slot_buttons["asa_mazume"] as Button).disabled, "asa_mazume should be locked below Lv.12")
+	_expect((screen._time_slot_buttons["night"] as Button).disabled, "night should be locked below Lv.15")
+	_expect(not screen._context_label.text.contains("日中"), "selected time slot should not be duplicated in the header")
+	await _free_screen(screen)
+
+	_seed_base(12)
+	screen = _make_screen()
+	await _settle()
+	screen._select_time_slot("asa_mazume")
+	_expect(PlayerProgress.selected_time_slot_id == "asa_mazume", "Lv.12 should select asa_mazume")
+	_expect(not (screen._time_slot_buttons["asa_mazume"] as Button).disabled, "asa_mazume should unlock at Lv.12")
+	_expect((screen._time_slot_buttons["night"] as Button).disabled, "night should stay locked at Lv.12")
+	_expect(screen._time_slot_grade_overlay.color == Palette.HARBOR_TIME_GRADE_WARM, "asa_mazume should apply warm harbor grading")
+	_expect_targets_match(screen, screen._harbor_highlight_candidates(3))
+	_expect(not screen._plan_pin_label.text.is_empty(), "time-slot refresh should keep a target point")
+	await _free_screen(screen)
+
+	_seed_base(15)
+	screen = _make_screen()
+	await _settle()
+	screen._select_time_slot("night")
+	_expect(PlayerProgress.selected_time_slot_id == "night", "Lv.15 should select night")
+	_expect(screen._time_slot_grade_overlay.color == Palette.HARBOR_TIME_GRADE_COOL, "night should apply cool harbor grading")
+	_expect_targets_match(screen, screen._harbor_highlight_candidates(3))
+	await _free_screen(screen)
+
+
+func _verify_departure_intel_meal_and_omen() -> void:
+	_seed_base(30)
+	PlayerProgress.pending_buff = {}
+	var screen := _make_screen()
+	await _settle()
+	_expect(not screen._meal_effect_panel.visible, "meal strip should hide when no buff is active")
+	_expect(not screen._plan_guide_label.text.is_empty(), "guide card should never be empty")
+	_expect(screen._plan_weather_label.text.contains("雨"), "weather card should keep the rain stub")
+	PlayerProgress.pending_buff = {"name": "カサゴの塩焼き", "text": "次の釣行で最大体力 +5%"}
+	screen._refresh_labels()
+	_expect(screen._meal_effect_panel.visible, "meal strip should show for a pending buff")
+	_expect(screen._buff_name_label.text.contains("カサゴの塩焼き"), "meal strip should show the buff name")
+	await _free_screen(screen)
+
+	_seed_base(GameData.MAX_LEVEL)
+	PlayerProgress.inventory = {"nushi_deep_ocean": 1}
+	PlayerProgress.caught_counts = {"nekozame": 1}
+	for shark_id in GameData.get_normal_shark_ids():
+		PlayerProgress.shark_bonds[shark_id] = 100
+	screen = _make_screen()
+	await _settle()
+	_expect(screen._plan_rumor_row.visible, "megalodon omen should keep the rumor strip visible")
+	_expect(screen._plan_rumor_label.text.contains("深海の何か"), "megalodon omen should appear in the rumor strip")
+	await _free_screen(screen)
+
+
+func _verify_long_text_fit_and_assets() -> void:
+	_seed_base(30)
+	PlayerProgress.money = 999999999
+	PlayerProgress.play_seconds = 359999.0
+	PlayerProgress.inventory = {"takenokomebaru": 2}
+	PlayerProgress.quest_board = [
+		{
+			"kind": "delivery",
+			"fish_id": "takenokomebaru",
+			"count": 1,
+			"reward_money": 999999,
+			"text": "タケノコメバルを港の研究所へ届けてほしい",
+		}
+	]
+	PlayerProgress.pending_buff = {
+		"name": "香草と潮風のタケノコメバル特製塩焼き",
+		"text": "次の釣行で最大体力 +15%",
+	}
+	var screen := _make_screen()
+	await _settle()
+	_expect_targets_match(screen, screen._harbor_highlight_candidates(3))
+	_assert_visible_label_widths(screen)
+	_assert_visible_textures(screen)
+	await _free_screen(screen)
+
+
+func _expect_targets_match(screen: Control, candidates: Array) -> void:
+	for index in range(screen._info_board_slots.size()):
+		var slot_data: Dictionary = screen._info_board_slots[index]
+		var slot := slot_data.get("slot", null) as Control
+		if index >= candidates.size():
+			_expect(not slot.visible, "unused target slots should hide")
+			continue
+		_expect(slot.visible, "candidate target slots should be visible")
+		var fish_id := String((candidates[index] as Dictionary).get("fish_id", ""))
+		var expected_name := String(GameData.get_fish(fish_id).get("name", fish_id))
+		var name_label := slot_data.get("name_label", null) as Label
+		_expect(name_label.text == expected_name, "target slot should match candidate order at index %d" % index)
+
+
+func _assert_visible_label_widths(node: Node) -> void:
+	if node is Label:
+		var label := node as Label
+		if label.is_visible_in_tree() and not label.text.is_empty() and label.autowrap_mode == TextServer.AUTOWRAP_OFF:
+			var font := label.get_theme_font("font")
+			var font_size := label.get_theme_font_size("font_size")
+			var outline := label.get_theme_constant("outline_size")
+			var width := font.get_string_size(label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + float(outline * 2)
+			_expect(width <= label.size.x + 1.5, "visible label should fit without clipping: %s (%.1f > %.1f)" % [label.text, width, label.size.x])
 	for child in node.get_children():
-		count += _count_named_nodes(child, target_name)
-	return count
+		_assert_visible_label_widths(child)
+
+
+func _assert_visible_textures(node: Node) -> void:
+	if node is TextureRect:
+		var rect := node as TextureRect
+		if rect.is_visible_in_tree():
+			_expect(rect.texture != null, "visible TextureRect should have a loaded texture: %s" % rect.name)
+	if node is NinePatchRect:
+		var patch := node as NinePatchRect
+		if patch.is_visible_in_tree():
+			_expect(patch.texture != null, "visible NinePatchRect should have a loaded texture: %s" % patch.name)
+	for child in node.get_children():
+		_assert_visible_textures(child)
+
+
+func _assert_distinct_interaction_styles(button: Button, label: String) -> void:
+	var normal := button.get_theme_stylebox("normal")
+	var hover := button.get_theme_stylebox("hover")
+	var pressed := button.get_theme_stylebox("pressed")
+	var focus := button.get_theme_stylebox("focus")
+	_expect(normal != null, "%s should have a normal style" % label)
+	_expect(hover != null, "%s should have a hover style" % label)
+	_expect(pressed != null, "%s should have a pressed style" % label)
+	_expect(focus != null, "%s should have a focus style" % label)
+	if normal == null or hover == null or pressed == null or focus == null:
+		return
+	var states := [
+		{"name": "normal", "style": normal},
+		{"name": "hover", "style": hover},
+		{"name": "pressed", "style": pressed},
+		{"name": "focus", "style": focus},
+	]
+	for left_index in range(states.size()):
+		for right_index in range(left_index + 1, states.size()):
+			var left: StyleBox = states[left_index]["style"]
+			var right: StyleBox = states[right_index]["style"]
+			var pair_label := "%s/%s" % [states[left_index]["name"], states[right_index]["name"]]
+			_expect(
+				left.get_instance_id() != right.get_instance_id(),
+				"%s %s styles must not share one object" % [label, pair_label]
+			)
+			_expect(
+				_stylebox_visual_signature(left) != _stylebox_visual_signature(right),
+				"%s %s styles must not render identically" % [label, pair_label]
+			)
+	_expect(focus is StyleBoxFlat, "%s focus should use a border-only StyleBoxFlat" % label)
+	if focus is StyleBoxFlat:
+		var flat := focus as StyleBoxFlat
+		var border_width := maxi(
+			maxi(flat.border_width_left, flat.border_width_top),
+			maxi(flat.border_width_right, flat.border_width_bottom)
+		)
+		_expect(border_width > 0, "%s focus border should have visible width" % label)
+		_expect(flat.border_color.a > 0.05, "%s focus border should have visible alpha" % label)
+
+
+func _stylebox_visual_signature(style: StyleBox) -> String:
+	var common := [
+		style.content_margin_left,
+		style.content_margin_top,
+		style.content_margin_right,
+		style.content_margin_bottom,
+	]
+	if style is StyleBoxFlat:
+		var flat := style as StyleBoxFlat
+		return var_to_str([
+			"flat",
+			flat.bg_color,
+			flat.border_color,
+			flat.border_width_left,
+			flat.border_width_top,
+			flat.border_width_right,
+			flat.border_width_bottom,
+			flat.corner_radius_top_left,
+			flat.corner_radius_top_right,
+			flat.corner_radius_bottom_right,
+			flat.corner_radius_bottom_left,
+			flat.expand_margin_left,
+			flat.expand_margin_top,
+			flat.expand_margin_right,
+			flat.expand_margin_bottom,
+			flat.shadow_color,
+			flat.shadow_size,
+			flat.shadow_offset,
+			common,
+		])
+	if style is StyleBoxTexture:
+		var texture_style := style as StyleBoxTexture
+		var texture_path := ""
+		if texture_style.texture != null:
+			texture_path = texture_style.texture.resource_path
+		return var_to_str([
+			"texture",
+			texture_path,
+			texture_style.modulate_color,
+			texture_style.texture_margin_left,
+			texture_style.texture_margin_top,
+			texture_style.texture_margin_right,
+			texture_style.texture_margin_bottom,
+			texture_style.expand_margin_left,
+			texture_style.expand_margin_top,
+			texture_style.expand_margin_right,
+			texture_style.expand_margin_bottom,
+			texture_style.axis_stretch_horizontal,
+			texture_style.axis_stretch_vertical,
+			common,
+		])
+	return var_to_str([style.get_class(), style.resource_path, common])
+
+
+func _seed_base(level := 30) -> void:
+	PlayerProgress.level = level
+	PlayerProgress.exp = 0
+	PlayerProgress.money = 50080
+	PlayerProgress.inventory = {}
+	PlayerProgress.equipped_rod_id = "big_game"
+	PlayerProgress.play_seconds = 3178.0
+	PlayerProgress.selected_time_slot_id = GameData.DEFAULT_TIME_SLOT_ID
+	PlayerProgress.pending_buff = {}
+	PlayerProgress.caught_counts = {}
+	PlayerProgress.quest_board = []
+	PlayerProgress.eaten_recipes = {"shioyaki": 1}
+	PlayerProgress.owned_boats = ["bluewater_boat"]
+	PlayerProgress.sea_chart_fragments = 3
+	PlayerProgress.shark_bonds = {}
 
 
 func _make_screen(payload: Dictionary = {}) -> Control:
+	_navigated_to = ""
+	_payload = {}
 	var screen := HarborScreenScript.new()
 	screen.theme = ThemeFactory.build_theme()
 	screen.configure(payload)
 	screen.size = Vector2(1280.0, 720.0)
 	screen.navigate_requested.connect(
-		func(screen_id: String, payload: Dictionary) -> void:
+		func(screen_id: String, route_payload: Dictionary) -> void:
 			_navigated_to = screen_id
-			_payload = payload.duplicate(true)
+			_payload = route_payload.duplicate(true)
 	)
 	add_child(screen)
 	return screen
+
+
+func _settle() -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+
+func _free_screen(screen: Control) -> void:
+	screen.queue_free()
+	await get_tree().process_frame
+
+
+func _expect_rect(control: Control, expected: Rect2, label: String) -> void:
+	if control == null:
+		_expect(false, "%s control should exist" % label)
+		return
+	var actual := control.get_global_rect()
+	_expect(actual.position.distance_to(expected.position) <= 1.0, "%s position should match the adopted mock: %s" % [label, actual.position])
+	_expect(actual.size.distance_to(expected.size) <= 1.0, "%s size should match the adopted mock: %s" % [label, actual.size])
+
+
+func _tree_has_label(node: Node, text: String) -> bool:
+	if node is Label and (node as Label).text == text:
+		return true
+	for child in node.get_children():
+		if _tree_has_label(child, text):
+			return true
+	return false
+
+
+func _has_focus_neighbor(button: Control) -> bool:
+	return (
+		not String(button.focus_neighbor_left).is_empty()
+		or not String(button.focus_neighbor_right).is_empty()
+		or not String(button.focus_neighbor_top).is_empty()
+		or not String(button.focus_neighbor_bottom).is_empty()
+	)
 
 
 func _expect(condition: bool, message: String) -> void:

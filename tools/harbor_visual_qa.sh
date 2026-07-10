@@ -18,18 +18,34 @@ if [[ -z "$GODOT" ]]; then
   exit 1
 fi
 
+FFMPEG="$(command -v ffmpeg || true)"
+if [[ -z "$FFMPEG" ]]; then
+  echo "ffmpeg was not found." >&2
+  exit 1
+fi
+
+MOCK="$ROOT/docs/qa/evidence/harbor/2026-07-10_harbor_command_board_mockup_v1.png"
+if [[ ! -f "$MOCK" ]]; then
+  echo "Adopted harbor mock was not found: $MOCK" >&2
+  exit 1
+fi
+
 GODOT_HOME="${TSURI_GODOT_HOME:-/tmp/tsuri_harbor_visual_home}"
 mkdir -p "$GODOT_HOME"
 
 rm -f /tmp/tsuri_harbor_asa_mazume.png \
   /tmp/tsuri_harbor_daytime.png \
   /tmp/tsuri_harbor_night.png \
-  /tmp/tsuri_harbor_time_slot_compare.png
+  /tmp/tsuri_harbor_time_slot_compare.png \
+  /tmp/tsuri_harbor_daytime_after_mock.png \
+  /tmp/tsuri_harbor_daytime_after_mock_grayscale.png \
+  /tmp/tsuri_harbor_daytime_after_mock_thumbnail.png
 
 echo "==> Capture harbor time slot previews"
 for slot in asa_mazume daytime night; do
   HOME="$GODOT_HOME" \
-    TSURI_HARBOR_LEVEL=20 \
+    TSURI_HARBOR_SEED=standard \
+    TSURI_HARBOR_LEVEL=30 \
     TSURI_HARBOR_TIME_SLOT_ID="$slot" \
     TSURI_HARBOR_OUT="/tmp/tsuri_harbor_${slot}.png" \
     "$GODOT" --path "$ROOT" "res://tools/harbor_preview.tscn"
@@ -68,8 +84,30 @@ for index, (label, path) in enumerate(items):
 sheet.save("/tmp/tsuri_harbor_time_slot_compare.png")
 PY
 
+echo "==> Build adopted-mock comparisons"
+"$FFMPEG" -hide_banner -loglevel error -y \
+  -i /tmp/tsuri_harbor_daytime.png \
+  -i "$MOCK" \
+  -filter_complex \
+    "[0:v]scale=1280:720:flags=lanczos,setsar=1[after];[1:v]scale=1280:720:flags=lanczos,setsar=1[mock];[after][mock]hstack=inputs=2" \
+  -frames:v 1 -update 1 \
+  /tmp/tsuri_harbor_daytime_after_mock.png
+"$FFMPEG" -hide_banner -loglevel error -y \
+  -i /tmp/tsuri_harbor_daytime_after_mock.png \
+  -vf "format=gray" \
+  -frames:v 1 -update 1 \
+  /tmp/tsuri_harbor_daytime_after_mock_grayscale.png
+"$FFMPEG" -hide_banner -loglevel error -y \
+  -i /tmp/tsuri_harbor_daytime_after_mock.png \
+  -vf "scale=640:180:flags=lanczos" \
+  -frames:v 1 -update 1 \
+  /tmp/tsuri_harbor_daytime_after_mock_thumbnail.png
+
 echo "Harbor visual QA outputs:"
 echo "/tmp/tsuri_harbor_asa_mazume.png"
 echo "/tmp/tsuri_harbor_daytime.png"
 echo "/tmp/tsuri_harbor_night.png"
 echo "/tmp/tsuri_harbor_time_slot_compare.png"
+echo "/tmp/tsuri_harbor_daytime_after_mock.png"
+echo "/tmp/tsuri_harbor_daytime_after_mock_grayscale.png"
+echo "/tmp/tsuri_harbor_daytime_after_mock_thumbnail.png"

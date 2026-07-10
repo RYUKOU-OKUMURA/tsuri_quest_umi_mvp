@@ -1,50 +1,54 @@
 # 港画面 QA判断ログ
 
-最終更新: 2026-07-10 / 状態: 右メニューに通知バッジ＋詳細パネルのコンテキストヒントを追加
-参照画像: 完成イメージ `harbor_info_board_vision_v4.png`（会話生成。`docs/43`）。右メニューはHTMLモック（会話生成、本ファイル未保存）比較で決定
-QA更新コマンド: `./tools/harbor_visual_qa.sh`
+最終更新: 2026-07-10 / 状態: 「港の司令盤」採用・freeze
+参照画像: `docs/qa/evidence/harbor/2026-07-10_harbor_command_board_mockup_v1.png`
+実装仕様: `docs/44_harbor_command_board_spec.md`
+QA更新コマンド: `./tools/harbor_visual_qa.sh`（固定previewデータで3時間帯、モック横並び、grayscale、thumbnailを一括生成）
 
 ## 1. freeze値（正本）
 
 | 項目 | 値 | 場所 | 理由・備考 |
 |---|---|---|---|
-| 港の情報板 | 左カラム上段 **0.035〜0.305**。見出し「本日の狙い目」。3カード（`harbor_info_fish_card.png`）横並び＋ポートレート＋魚名＋理由バッジ。枠は `harbor_info_board_frame.png`。魚素材は `FightFishAssets` 経由のみ | `src/ui/harbor_screen.gd` | 掲示板へ縦を譲る（v4余白詰め） |
-| 出港プラン | 左カラム中段 **0.320〜0.805**。紙面は `harbor_plan_panel.png`（AI一点物）。行UI（ガイド／天気／狙いポイント／目撃談）＋行アイコン4種。本文16px。目撃談は折り返し可。StyleBoxFlat wash / ColorRect区切りは撤去。メガロドン前兆時は行を隠し `_preparation_body_label` で全文表示 | `src/ui/harbor_screen.gd` | Phase A: 仮置きwash→紙パネル |
-| 時間帯ゾーン | 左カラム下端 **0.820〜0.985**。ラベル＋3等幅ボタン（明色未選択／金選択）をゾーンに密配置し、食事効果は直下の薄行。ゾーン内の大きな上下余白は置かない | `src/ui/harbor_screen.gd` | 完成イメージどおり下端へ寄せる |
-| 狙い目候補 | `_harbor_highlight_candidates(max_count)`。依頼→時間帯ブースト→未捕獲。重複排除・乱数なし | `src/ui/harbor_screen.gd` | 情報板とプランで共有 |
-| 初心者ガイド | `level <= GROWTH_SOFT_CAP(10)` のみ。調理未経験→依頼未達成→なければ狙い目文言 | `src/ui/harbor_screen.gd` | プラン1行目 |
-| 天気気配 | スタブ固定文＋`harbor_weather_stub_icon.png`。先読み抽選は未実装 | `src/ui/harbor_screen.gd` | docs/43 §2 UI先行 |
-| 出港主導線 | 左CTAなし。右メニュー「釣り場へ向かう」primaryのみ | `src/ui/harbor_screen.gd` | v3確定 |
-| ヘッダー状況行 | `時間帯：{選択中}` のみ | `src/ui/harbor_screen.gd` | |
-| フッター | `クーラーボックス：N匹　｜　プレイ時間：…` | `src/ui/harbor_screen.gd` | |
-| 施設ナビアイコン | `nav_*`。依頼は `nav_quest_icon.png`、ロック中は `nav_lock_icon.png` | `src/ui/harbor_screen.gd` | nav全面刷新は未着手 |
-| 右メニュー構成 | A案「セクション見出し付き4グループ」。表示順: departure（見出しなし・primary・高さ約36px）→ facility見出し「施設」（依頼ボード/調理場/魚市場/釣具店/船着き場/サメの生簀）→ record見出し「記録」（ステータス/魚図鑑）→ system見出し「システム」（タイトルへ戻る・小型ボタン高さ約24px）。行位置はセクション定義（`FACILITY_MENU_SECTION_DEFS`）から動的算出。row_step*indexのハードコード禁止 | `src/ui/harbor_screen.gd` `_build_facility_menu_rows` | 2026-07-09採用。旧: 見出しなしの単一10行リスト |
-| 右メニュー見出しスタイル | フォント12px・字間広め（FontVariation spacing_glyph=2）・暗ブロンズ（`Palette.HARBOR_MENU_SECTION_LABEL` #7d5a1e。クリーム地に対しコントラスト比約5:1）・アウトラインなし。見出し右側に薄い同系ヘアライン1px（`Palette.HARBOR_MENU_SECTION_HAIRLINE`） | `src/ui/harbor_screen.gd` `_build_section_heading` | 初版の淡金#e0b568はクリーム地に溶けて不可読→暗色へ修正（2026-07-09） |
-| ロック行の表現 | 行内8px条件テキストは廃止。スキンのみ`self_modulate`で減光（子ノードへ伝播させない）し、メインアイコン・アクセント・アイコンプレートは個別`modulate`で減光。右端に`nav_lock_icon.png`（縦0.18-0.82、27px行で約17px、減光対象外で常時視認可）を表示。解放条件は詳細パネルのbodyへ集約 | `src/ui/harbor_screen.gd` `_build_facility_button` | 初版の`button.modulate`は錠前まで沈めた→`self_modulate`へ修正（2026-07-09）。サメの生簀のみ現状対象 |
-| 詳細パネル | 位置・高さは最終行位置から動的算出（`content_bottom + FACILITY_MENU_DETAIL_GAP`(約8px)〜メニュー下端-余白）。**最終ボタンより上への食い込みは禁止**（最終ボタン下端との可視ギャップ最低約4px）。縦不足時は`_build_facility_menu_rows`がセクションギャップ→行高の順で比例圧縮して全体を枠内へ収める。本文はautowrap | `src/ui/harbor_screen.gd` `_build_facility_detail_panel` | 初版の「MIN_HEIGHT優先でパネルを上へ動かす」フォールバックは撤去（2026-07-09） |
-| 右メニュー通知バッジ | 対象行（依頼ボード／魚市場）の右上角に直径11pxの丸（`Palette.HARBOR_MENU_BADGE_FILL` 朱色 + `HARBOR_MENU_BADGE_BORDER` 濃紺2px縁）。ボタンの`clip_contents`を避けるためメニュー（`parent`）側の子として配置し固定pxオフセットでボタン内側へ収める。表示条件は`_facility_menu_items()`内で計算: 依頼ボード=`_has_deliverable_quest()`（quest_board_screen.gdの納品ボタン活性条件`completed`と同じ`PlayerProgress.quest_progress(index)`を読むだけ）、魚市場=`_cooler_fish_total() > 0`。ノード名は`FacilityMenuBadge_<title>`（同名衝突時のGodot内部名`@Panel@id`化を避けるため一意化） | `src/ui/harbor_screen.gd` `_build_facility_button` | 2026-07-10新設 |
-| 右メニュー詳細パネルのデフォルト表示 | 純粋関数`_facility_menu_hint()`が優先度付きで返す: 1) 納品できる依頼あり→「つぎのおすすめ／納品できる依頼がある。依頼ボードへ」 2) クーラーボックスに魚あり→「つぎのおすすめ／クーラーボックスに{N}匹。魚市場で売ろう」 3) 該当なし→従来どおり「釣り場へ向かう／狙う魚に合わせてポイントを選ぶ」。hover/focus時の`_set_facility_detail`呼び出しは不変。新しい保存状態は作らない。パネルは`clip_contents=true`で本文が想定外に折り返しても枠外へ漏れない | `src/ui/harbor_screen.gd` `_facility_menu_hint` / `_build_facility_menu` | 2026-07-10新設 |
+| 上部ステータス | `(32,24,1216,80)`。港専用 `harbor_top_frame.png`。左に「南の島・港」＋`HARBOR COMMAND`、右は共通 `PlayerStatusBar` の港司令盤モードで Lv/EXP → 装備竿 → 所持金 | `src/ui/harbor_screen.gd` / `components/player_status_bar.gd` | 時間帯は重複表示しない |
+| 左・主情報盤 | `(40,120,788,512)`。共通 `harbor_command_dark_frame.svg`＋暗色スクリム | `src/ui/harbor_screen.gd` | 採用モック実寸 |
+| 狙い魚 | 最優先 `(60,172,364,154)`、副候補 `(436,172,180,154)` / `(628,172,180,154)`。魚素材は `FightFishAssets` 経由 | `_build_info_board` | 3件同格を廃止し1＋2の階層にする |
+| 狙い目候補 | `_harbor_highlight_candidates(max_count)`。依頼（納品可能を含む）→時間帯ブースト→未捕獲、重複排除・乱数なし | 候補収集関数群 | 情報盤と出港情報で共有 |
+| 出港情報 | 3カード `(60,364,270,64)` / `(338,364,270,64)` / `(616,364,192,64)`＋目撃談 `(60,436,748,58)` | `_build_departure_plan_card` | 旧大紙面4行を短い情報単位へ分解 |
+| 初心者ガイド | `level <= GROWTH_SOFT_CAP(10)` のみ。調理未経験→依頼未達成→狙い魚要約 | `_departure_guide_summary` | 子供向けの短文を維持 |
+| 天気気配 | 「雨・潮目が立ちやすい」の固定スタブ | `_refresh_preparation_card` | 本物の先読み抽選は別設計 |
+| 時間帯 | 朝 `(132,504,216,44)`、日中 `(356,504,216,44)`、夜 `(580,504,228,44)`。未選択=濃紺、選択=金、ロック=既存lockスキン | `_build_time_slot_selector` | 時間帯表示の正本はここだけ |
+| 食事効果 | `(60,560,748,52)`。効果なしは全体非表示 | `_build_time_slot_zone` | 次回釣行へ効く値だけ表示 |
+| 右・操作盤 | `(844,120,396,512)`。共通 `harbor_command_dark_frame.svg`＋暗色スクリム | `_build_facility_menu` | 採用モック実寸 |
+| 出港主導線 | `(864,176,356,64)` の共通 `harbor_command_cta.png`による金CTA 1件だけ。初期フォーカス | `_build_command_route_button` | 左CTAは置かない |
+| 施設 | 2列x3行、各`174x58`。依頼/調理 y272、魚市場/釣具 y338、船着き/生簀 y404。共通 `harbor_command_dark_frame.svg` | `_build_facility_menu` | 旧6行縦リストをタイル化 |
+| 記録・システム | ステータス/魚図鑑 `(864/1046,494,174,42)`。タイトル戻り `(1064,140,156,28)`。共通 `harbor_command_dark_frame.svg` | `_build_facility_menu` | タイトル戻りはヘッダーへ分離 |
+| 推薦 | `(864,544,356,68)`。共通 `harbor_command_dark_frame.svg`。納品可能依頼→クーラー内の魚→出港の優先順。施設hover/focus時だけ説明へ切替 | `_facility_menu_hint` | 常設の初心者契約 |
+| 通知・ロック | 依頼/市場は14px通知丸。生簀ロック中も押下可能で、推薦欄に解放条件を表示 | `_build_command_route_button` | 読めないdisabled導線にしない |
+| 10導線とフォーカス | `fishing_spots / quest_board / cooking / market / shop / shipyard / shark_pen / status / fish_book / title`。上下左右の隣接を明示。全route/timeはhover=明度差、pressed=暗化、focus=透明fill＋金色2px枠（CTAは3px） | `_route_buttons` / `_wire_command_focus` | ゲームパッドでも現在地を可視化 |
+| 共通ラインアイコン | `assets/showcase/common/harbor_command_icon_sheet.svg`（15セル×32px） | `_command_icon_rect` | モックの線画へ統一 |
+| フッター | `(40,648,1200,48)`。共通 `harbor_command_dark_frame.svg`。左にクーラー匹数、右にプレイ時間。区切り記号なし | `_build_footer` | 情報重複なし |
+| 背景 | 全画面減光スクリム＋朝/夜の既存時間帯グレード | `_build_screen` / `_refresh_time_slot_grade_overlay` | 背景と情報盤の競合を抑える |
 
 ## 2. 不採用・再試行禁止リスト
 
 | 案 | 却下理由 | 判断日 |
 |---|---|---|
 | 時間帯ごとの港背景PNGを先に作る | E5はグレーディング検証から | 2026-07-08 |
-| 左カラム「釣り場へ向かう」大ボタン維持 | 右メニューと重複 | 2026-07-09 |
-| 情報板枠へのポートレートスロット焼き込み | UIとずれて二重枠になる | 2026-07-09 |
-| 時間帯を出港プラン羊皮紙内に埋め込む | 完成イメージと構成がズレ、余白と埋没が起きる | 2026-07-09 |
-| 情報板を高さ約22%の細い帯のままポートレートだけ拡大 | 見切れ・主役不足。面積配分を先に直す | 2026-07-09 |
-| 情報板外枠＋魚カード枠の Phase B AI一点物候補 | 木目・紙粒子は増えたが、3時間帯の1280x720全画面比較では実表示サイズで差が縮み、現行PIL版に明確に勝たない | 2026-07-10 |
+| 左カラム「釣り場へ向かう」大ボタン維持 | 右CTAと重複する | 2026-07-09 |
+| 情報板枠へのポートレートスロット焼き込み | runtime UIとずれて二重枠になる | 2026-07-09 |
+| 時間帯を大きな出港プラン紙面へ埋め込む | 主導線と情報階層が弱くなる | 2026-07-09 |
+| 3魚を同じ寸法で並べる | 最優先魚が読めず、縮小時に主役不在になる | 2026-07-10 |
+| 施設10件の縦1列リスト | 主CTAが弱く、施設と記録とシステムの階層が潰れる | 2026-07-10 |
+| 情報板外枠＋魚カード枠の Phase B AI一点物候補 | 木目・紙粒子は増えたが、3時間帯の全画面比較で現行PIL版に明確に勝たない | 2026-07-10 |
 
 ## 3. 微調整カウンタ
 
 | パラメータ | 回数 | 直近の変更内容 | 状態 |
 |---|---|---|---|
-| 装飾パス累計 | 1 | 時間帯グレードColorRectのみ残存。出港プランwash/行区切りはPNG化で撤去 | 採用 |
-| 情報板スロット配置 | 2 | v3bでカード背景＋ポートレート拡大 | 採用 |
-| 時間帯ゾーンラベル色 | 1 | 暗い地向けに明るいラベルへ変更 | 採用 |
-| 時間帯未選択ボタン素材 | 1 | v4明色羊皮紙＋濃茶枠へ再生成 | 採用 |
-| 右メニュー行間隔・見出し | 1 | 単一10行リスト→A案4グループ（見出し3・行高/ギャップ動的算出）へ再構築 | 採用 |
+| 装飾パス累計 | 2 | 既存時間帯グレード＋一覧画面用の全画面減光スクリム | 採用 |
+| 司令盤レイアウト | 1 | 採用モックの実寸で全面再構成 | freeze |
+| 最長文字フィット | 1 | 最長魚名は26px→最小12pxで自動縮小、smokeで実測 | freeze |
+| 暗色フレーム共通化 | 2 | 既存footer再利用案から、端9px内に罫線を収めた `harbor_command_dark_frame.svg` へ切替 | freeze |
 
 ## 4. 暫定判定・再検証TODO
 
@@ -52,98 +56,35 @@ QA更新コマンド: `./tools/harbor_visual_qa.sh`
 
 ## 5. 現在の残ギャップ
 
-- 夜釣りの港背景は寒色グレードのみ。
-- 天気気配の本物先読みは未着手。
-- 右メニュー `nav_*` 本体の全面刷新は未実施（`nav_quest`・`nav_lock` のみ新設）。
-- 情報板カード／枠素材の質感は完成イメージより簡素（PIL幾何）。Phase B でAI一点物へ。
-- 出港プラン紙面・行アイコンは Phase A でAI一点物化済み（2026-07-09）。
-- 詳細パネルの本文は1行運用（優先度2ヒントの長文が2行折り返しで枠外へ漏れたため文言を短縮し、`clip_contents`の保険を追加。2026-07-10）。
+- 夜釣りの港背景は寒色グレードのみで、専用夜景ではない。
+- 天気気配は固定スタブで、本物の天候先読みは未着手。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
 完了済みのためなし。
 
-
 ## 7. 判断ログ（直近パスのみ）
 
-2026-07-09 右メニュー A案（セクション見出し付き4グループ）を採用。
+2026-07-10 「港の司令盤」採用モックをGodotへ実装し、freeze。
 
-スコープ宣言:
-- 対象: `src/ui/harbor_screen.gd` の右メニュー（`_facility_menu_items` / `_build_facility_menu` 系）のみ。
-- 対象外: 左カラム（情報板・出港プラン・時間帯）、ヘッダー、フッター、他画面素材。
-
-変更したもの:
-- 右メニューを見出しなし単一10行リストから「departure（primary・高さ約36px）→ facility見出し「施設」（6行）→ record見出し「記録」（2行）→ system見出し「システム」（小型ボタン約24px）」の4グループへ再構築。サメの生簀を施設グループ末尾へ移動。
-- 行位置・行高・ギャップをセクション定義（`FACILITY_MENU_SECTION_DEFS`）から動的算出する`_build_facility_menu_rows`を新設（`row_step*index`のハードコードを撤去）。
-- セクション見出しラベル（12px・字間広め・暗ブロンズ #7d5a1e・右に薄い同系ヘアライン1px）を新設。`Palette.HARBOR_MENU_SECTION_LABEL` / `HARBOR_MENU_SECTION_HAIRLINE` を追加（初版の淡金11pxはクリーム地で不可読のため同日修正）。
-- ロック行（サメの生簀）の表現を変更: 行内8px条件テキストを廃止し、ボタン全体を`Palette.HARBOR_FACILITY_LOCKED_MODULATE`で減光＋右端に錠前アイコン（新規`nav_lock_icon.png`、`tools/generate_harbor_info_board_assets.py`にジェネレーター追加）を表示。解放条件は既存の詳細パネルbodyに集約。
-- 詳細パネルの位置・高さを最終行位置から動的算出するよう変更（固定0.802開始→`content_bottom`起点）。本文をautowrap対応に変更。
-
-変更していないもの:
-- 左カラム（情報板・出港プラン・時間帯ゾーン）、ヘッダー、フッター、出港主導線ルール（右メニュー「釣り場へ向かう」primaryのみ）。
-- `nav_*`本体（依頼/調理/魚市場/釣具店/船着き場/ステータス/魚図鑑/タイトル）の素材自体は差し替えていない。
+- 変更: ヘッダー、左主情報盤、右操作盤、フッターを `docs/44` の実寸構成へ置換。最優先魚1＋副候補2、大型金CTA、施設2x3、記録2件、常設推薦を実装した。
+- 維持: 狙い魚の優先順、初心者ガイド、時間帯解放と背景グレード、食事効果、ヌシ/メガロドン、通知、サメロック、10 route/callback、魚素材の `FightFishAssets` 経由。
+- 素材: 共通 `harbor_command_dark_frame.svg`、既存選択時間帯素材をcommon昇格した `harbor_command_cta.png`、モックから分解した文字なしの共通ラインアイコンSVGを採用した。日本語と動的値はすべてruntime。
+- UX: 納品可能な依頼も最優先候補へ含め、主CTAを初期フォーカスに設定。全routeと時間帯ボタンの隣接を明示し、hover/pressed/focusの可視状態（金2px、CTAは3px）を追加した。
+- smoke: 新構成の実寸、旧構成の不在、10導線、1＋2候補、通知/推薦/ロック、3時間帯、食事/前兆、最長文字、全テクスチャ読込、可視focusを検証する契約へ更新。
+- 比較条件: previewデータを固定し、before/afterは `legacy_compare` の同一状態で3時間帯を比較。`./tools/harbor_visual_qa.sh` がモック横並び、grayscale、thumbnailまで生成する。
 
 判断根拠:
-- `docs/qa/evidence/harbor/2026-07-09_menu_sections_a_asa_mazume.png`
-- `docs/qa/evidence/harbor/2026-07-09_menu_sections_a_daytime.png`
-- `docs/qa/evidence/harbor/2026-07-09_menu_sections_a_night.png`
-- `docs/qa/evidence/harbor/2026-07-09_menu_sections_a_compare.png`
-- `harbor_screen_smoke` 緑、`validate_project.sh` 緑
 
----
-
-2026-07-10 右メニューに通知バッジ（依頼ボード／魚市場）と詳細パネルのコンテキストヒントを追加。
-
-スコープ宣言:
-- 対象: `src/ui/harbor_screen.gd` の右メニュー（`_facility_menu_items` / `_build_facility_button` / `_facility_menu_hint` / 詳細パネル初期表示）、`src/ui/palette.gd`（バッジ色2件追加のみ）、`tools/harbor_screen_smoke.gd`（バッジ・ヒットのケース追加）。
-- 対象外: 左カラム（情報板・出港プラン・時間帯）、ヘッダー、フッター、quest_board/market画面本体、既存freeze値、既存パレット定数の変更、PNG素材の新規追加。
-
-変更したもの:
-- 通知バッジ: `_facility_menu_items()`で`quest_badge := _has_deliverable_quest()` / `market_badge := _cooler_fish_total() > 0`を計算し、依頼ボード・魚市場の項目dictに`"badge"`キーとして持たせる。`_build_facility_button`に`badge`引数を追加し、trueのとき直径11px・朱色塗り＋濃紺2px縁の丸（`Panel` + `StyleBoxFlat`）をボタン右上角へ配置。ボタンの`clip_contents=true`を避けるため`menu`（`parent`）側の子として追加し、固定pxオフセット（アンカー=ボタン右上角の1点、offsetでボタン内側4-15pxに収める）でボタン高さに依存せず完全可視にした。
-- コンテキストヒント: 新規純粋関数`_facility_menu_hint() -> Dictionary`を追加（優先度1: 納品できる依頼あり→「つぎのおすすめ／納品できる依頼がある。依頼ボードへ」、優先度2: クーラーボックスに魚あり→「つぎのおすすめ／クーラーボックスに{N}匹。魚市場で売ろう」、優先度3: 該当なし→従来の「釣り場へ向かう／狙う魚に合わせてポイントを選ぶ」）。`_build_facility_menu`の初期`_set_facility_detail`呼び出しをこの関数の戻り値に差し替え。hover/focus時の`_set_facility_detail`呼び出し自体は無変更。
-- 判定用の純粋関数を新設: `_has_deliverable_quest()`（quest_board_screen.gdの納品ボタン活性条件`button.disabled = not completed`（`src/ui/quest_board_screen.gd:253`、`progress := PlayerProgress.quest_progress(index)`, `completed := bool(progress.get("completed", false))`）と同じ`PlayerProgress.quest_progress(index).completed`を読むだけで、判定ロジックの複製はしていない）、`_cooler_fish_total()`（既存の`_refresh_labels()`内フッター用ループを関数化して共有、フッター表示側もこの関数を呼ぶよう変更。ロジック・出力は不変）。
-- `Palette.HARBOR_MENU_BADGE_FILL`（朱色 #e8462c）・`Palette.HARBOR_MENU_BADGE_BORDER`（濃紺 #1c1a2e）を新設。既存パレット定数は変更していない。
-- `tools/harbor_screen_smoke.gd`に`_verify_menu_badges_and_hint()`を追加（既存7ケースは無変更）。ケースA: 納品可能な依頼＋クーラーボックスに魚→両バッジ`badge=true`・ノード数2・ヒント優先度1。ケースB: 依頼なし・クーラーボックス空→両バッジ`false`・ノード数0・フォールバックヒント。ケースC: クーラーボックスのみ→魚市場バッジのみ`true`・ノード数1・ヒント優先度2（匹数を本文に含む）。
-
-変更していないもの:
-- 左カラム（情報板・出港プラン・時間帯ゾーン）、ヘッダー、フッターのレイアウト、右メニューのセクション構成・行位置算出ロジック（`_build_facility_menu_rows`）、ロック行の表現、既存パレット定数、quest_board/market画面本体。
-- PNG素材は新規追加なし（バッジ・ヒントは完全runtime描画）。
-
-判断根拠:
-- `docs/qa/evidence/harbor/2026-07-10_menu_badges_daytime.png`（既定プレビュー状態＝クーラーボックス7匹・依頼なし。魚市場バッジのみ表示、ヒントは優先度2「クーラーボックスに7匹。魚市場で売ろう」を確認）
-- `docs/qa/evidence/harbor/2026-07-10_menu_badges_asa_mazume.png` / `2026-07-10_menu_badges_night.png`（時間帯を変えても表示が変わらないことを確認）
-- `docs/qa/evidence/harbor/2026-07-10_menu_badges_quest_supplement.png`（納品可能な依頼を追加した補足検証。依頼ボード・魚市場の両方にバッジが表示され、ヒントが優先度1「納品できる依頼がある。依頼ボードへ」に切り替わることを確認。`./tools/harbor_visual_qa.sh`本体は変更していないため、この1枚のみ検証専用の一時プレビューシーンで撮影し、リポジトリへは残していない）
-- `harbor_screen_smoke` 緑（既存7ケース＋新規`_verify_menu_badges_and_hint`3ケース）、`validate_project.sh` 緑
+- `docs/qa/evidence/harbor/2026-07-10_command_board_all_slots_before_after.png`（左=刷新前、右=刷新後。同一の固定 `legacy_compare` データ、朝/日中/夜）
+- `docs/qa/evidence/harbor/2026-07-10_command_board_daytime_after_mock.png`（左=実装、右=採用モック）
+- `docs/qa/evidence/harbor/2026-07-10_command_board_daytime_after_mock_grayscale.png` / `2026-07-10_command_board_daytime_after_mock_thumbnail.png`（明度階層・縮小1枚絵）
+- `docs/qa/evidence/harbor/2026-07-10_command_board_after_all_slots.png`（固定standard previewデータの3時間帯）
 
 採用理由:
-- HTMLモック比較で確定していたA案（セクション見出し付き4グループ）どおりに実装。3時間帯すべてで全項目がメニュー枠内に収まり、重なり・見切れなし。primary行の高さ強調とロック行の減光＋錠前アイコンで主導線と施設グループの視認性が向上した。
 
----
+- 同一固定データの3時間帯すべてで、旧画面より大型CTA・最優先魚・施設グループが先に読める。
+- 旧大紙面と10行縦リストの過密感が消え、縮小比較でも主操作と主役魚を判別できる。
+- 1280x720原寸で文字切れ・省略・重なりがなく、動的データと全導線を失っていない。
 
-2026-07-10 情報板外枠＋魚カード枠の Phase B AI一点物候補を不採用。
-
-スコープ宣言:
-- 対象: `harbor_info_board_frame.png` / `harbor_info_fish_card.png` のAI生成ソース作成、既定スクリプトによる一時差し替え、3時間帯の全画面比較のみ。
-- 対象外: `src/ui/**`、加工・QAスクリプト、§1 freeze値、レイアウト、他の港素材。
-
-試したもの:
-- `docs/43` §1.5 のプロンプト2本を原文どおり使用。外枠は文字・ロゴ・紋章状モチーフ／比率を検査し、3候補を破棄後、許可された否定語を追記した候補を使用。魚カードは初回候補を使用。
-- GenerateImageの固定出力キャンバスから描画本体を変えず、外周の単色マゼンタ余白だけをロスレスクロップ（リサイズなし）し、ソースを `tools/source_assets/harbor/harbor_info_board_frame_source.png`（1772x443、4:1）/ `harbor_info_fish_card_source.png`（1158x1351、6:7）に保存。`tools/process_harbor_info_board_assets.py` で 1280x320 / 240x280 に加工した。
-- 候補表示を朝まずめ・日中・夜釣りの3時間帯で撮影し、Phase B着手前の現行PIL版と全画面横並び比較した。
-
-変更していないもの:
-- 比較後、`assets/showcase/harbor/` は現行PIL版へ復元した。§1 freeze値、§5残ギャップ、素材台帳は変更していない。
-- AI生成ソース2枚は、同じ候補の再生成を避けるため残した。
-
-判断根拠:
-- `docs/qa/evidence/harbor/2026-07-10_info_board_phase_b_asa_mazume_before_after.png`
-- `docs/qa/evidence/harbor/2026-07-10_info_board_phase_b_daytime_before_after.png`
-- `docs/qa/evidence/harbor/2026-07-10_info_board_phase_b_night_before_after.png`
-- `docs/qa/evidence/harbor/2026-07-10_info_board_phase_b_all_slots_before_after.png`
-
-不採用理由:
-- AI候補はパーツ単体では木目・紙粒子・角金具の質感が増したが、情報板が占める実表示面積では差が小さくなる。3時間帯とも文字の見切れ・重なり等のP1は無い一方、全画面で現行PIL版に明確に勝つとは判定できず、僅差不採用の基準に該当した。
-
-検証結果:
-- `./tools/harbor_visual_qa.sh` 緑（候補適用中に3時間帯を再生成）。
-- `harbor_screen_smoke: ok`、`./tools/validate_project.sh` 緑（現行PIL版へ復元後）。
+検証結果: `harbor_screen_smoke: ok` / `./tools/validate_project.sh` green。
