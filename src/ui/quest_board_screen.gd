@@ -10,6 +10,9 @@ const COMMON_BUTTON_HOVER_PATH := "res://assets/showcase/common/button_frame_hov
 const COMMON_BUTTON_PRIMARY_PATH := "res://assets/showcase/common/button_frame_primary.png"
 const COMMON_CARD_FRAME_PATH := "res://assets/showcase/common/card_frame.png"
 const COMMON_PARCHMENT_CARD_PATH := "res://assets/showcase/common/parchment_card.png"
+const QUEST_ACTION_BUTTON_MIN_HEIGHT := 54.0
+const QUEST_ACTION_BUTTON_SAFE_BOTTOM := 0.905
+const QUEST_ACTION_BUTTON_STYLE_VERTICAL_MARGIN := 14.0
 
 var _player_status_bar: PlayerStatusBar
 var _quest_cards: Array[Dictionary] = []
@@ -102,8 +105,8 @@ func _build_quest_card(parent: Control, index: int, left: float, top: float, rig
 
 	var portrait := ShowcaseAssetsScript.texture_rect("", TextureRect.STRETCH_KEEP_ASPECT_CENTERED)
 	portrait.name = "QuestFishPortrait"
-	_place_control(card, portrait, 0.078, 0.168, 0.310, 0.395)
-	_add_portrait_backdrop(card, 0.078, 0.168, 0.310, 0.395)
+	_place_control(card, portrait, 0.078, 0.168, 0.310, 0.370)
+	_add_portrait_backdrop(card, 0.078, 0.168, 0.310, 0.370)
 	card.move_child(portrait, card.get_child_count() - 1)
 
 	var fish_name := _quest_label("", 23, Palette.TEXT_DARK, true, 0, Palette.TEXT_OUTLINE_DARK, Color.TRANSPARENT)
@@ -117,25 +120,26 @@ func _build_quest_card(parent: Control, index: int, left: float, top: float, rig
 	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	body.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_place_control(card, body, 0.340, 0.250, 0.912, 0.405)
+	# 主条件は依頼札の最優先情報。魚名・肖像の下へ全幅3行分を確保し、通常データで省略させない。
+	_place_control(card, body, 0.078, 0.375, 0.912, 0.570)
 
 	var progress_title := _quest_label("進捗", 14, Palette.TEXT_BODY, true, 0, Palette.TEXT_OUTLINE_DARK, Color.TRANSPARENT)
 	progress_title.name = "QuestProgressTitle"
 	progress_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	progress_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(card, progress_title, 0.078, 0.455, 0.250, 0.500)
+	_place_control(card, progress_title, 0.078, 0.575, 0.250, 0.630)
 
 	var progress_text := _quest_label("", 16, Palette.TEXT_DARK, true, 0, Palette.TEXT_OUTLINE_DARK, Color.TRANSPARENT)
 	progress_text.name = "QuestProgressText"
 	progress_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	progress_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(card, progress_text, 0.390, 0.455, 0.912, 0.500)
+	_place_control(card, progress_text, 0.390, 0.575, 0.912, 0.630)
 
 	var progress_track := Panel.new()
 	progress_track.name = "QuestProgressTrack"
 	progress_track.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	progress_track.add_theme_stylebox_override("panel", _flat_style(Palette.DARK_PANEL_DEEP, Palette.WOOD_DARK, 5, 1))
-	_place_control(card, progress_track, 0.078, 0.520, 0.912, 0.575)
+	_place_control(card, progress_track, 0.078, 0.648, 0.912, 0.677)
 
 	var progress_fill := ColorRect.new()
 	progress_fill.name = "QuestProgressFill"
@@ -143,16 +147,16 @@ func _build_quest_card(parent: Control, index: int, left: float, top: float, rig
 	progress_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	progress_track.add_child(progress_fill)
 
-	var reward := _quest_label("", 20, Palette.TEXT_DARK, true, 0, Palette.TEXT_OUTLINE_DARK, Color.TRANSPARENT)
+	var reward := _quest_label("", 18, Palette.TEXT_DARK, true, 0, Palette.TEXT_OUTLINE_DARK, Color.TRANSPARENT)
 	reward.name = "QuestReward"
 	reward.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	reward.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(card, reward, 0.078, 0.620, 0.912, 0.690)
+	_place_control(card, reward, 0.078, 0.681, 0.912, 0.736)
 
 	var button := _textured_button("", Callable(self, "_complete_quest").bind(index))
 	button.name = "QuestActionButton%d" % (index + 1)
 	button.set_meta("quest_index", index)
-	_place_control(card, button, 0.210, 0.785, 0.790, 0.900)
+	_place_control(card, button, 0.210, 0.765, 0.790, QUEST_ACTION_BUTTON_SAFE_BOTTOM)
 
 	return {
 		"root": card,
@@ -329,11 +333,24 @@ func _add_portrait_backdrop(parent: Control, left: float, top: float, right: flo
 
 func _textured_button(text: String, callback: Callable) -> Button:
 	var button := make_button(text, callback, 0.0, false)
+	button.custom_minimum_size.y = QUEST_ACTION_BUTTON_MIN_HEIGHT
 	button.clip_text = true
-	var normal := ShowcaseAssetsScript.texture_style(COMMON_BUTTON_PATH, Vector4(42.0, 24.0, 42.0, 24.0))
-	var hover := ShowcaseAssetsScript.texture_style(COMMON_BUTTON_HOVER_PATH, Vector4(42.0, 24.0, 42.0, 24.0))
-	var pressed := ShowcaseAssetsScript.texture_style(COMMON_BUTTON_PRIMARY_PATH, Vector4(42.0, 24.0, 42.0, 24.0))
-	var disabled := ShowcaseAssetsScript.texture_style(COMMON_ACTION_BUTTON_PATH, Vector4(46.0, 24.0, 46.0, 24.0))
+	var normal := ShowcaseAssetsScript.texture_style(
+		COMMON_BUTTON_PATH,
+		Vector4(42.0, QUEST_ACTION_BUTTON_STYLE_VERTICAL_MARGIN, 42.0, QUEST_ACTION_BUTTON_STYLE_VERTICAL_MARGIN)
+	)
+	var hover := ShowcaseAssetsScript.texture_style(
+		COMMON_BUTTON_HOVER_PATH,
+		Vector4(42.0, QUEST_ACTION_BUTTON_STYLE_VERTICAL_MARGIN, 42.0, QUEST_ACTION_BUTTON_STYLE_VERTICAL_MARGIN)
+	)
+	var pressed := ShowcaseAssetsScript.texture_style(
+		COMMON_BUTTON_PRIMARY_PATH,
+		Vector4(42.0, QUEST_ACTION_BUTTON_STYLE_VERTICAL_MARGIN, 42.0, QUEST_ACTION_BUTTON_STYLE_VERTICAL_MARGIN)
+	)
+	var disabled := ShowcaseAssetsScript.texture_style(
+		COMMON_ACTION_BUTTON_PATH,
+		Vector4(46.0, QUEST_ACTION_BUTTON_STYLE_VERTICAL_MARGIN, 46.0, QUEST_ACTION_BUTTON_STYLE_VERTICAL_MARGIN)
+	)
 	if normal != null:
 		button.add_theme_stylebox_override("normal", normal)
 	if hover != null:
@@ -344,7 +361,7 @@ func _textured_button(text: String, callback: Callable) -> Button:
 	if disabled != null:
 		button.add_theme_stylebox_override("disabled", disabled)
 	button.add_theme_font_override("font", GameFontsScript.extra_bold(get_theme_default_font()))
-	button.add_theme_font_size_override("font_size", 22)
+	button.add_theme_font_size_override("font_size", 20)
 	button.add_theme_color_override("font_color", Palette.TEXT_BONE)
 	button.add_theme_color_override("font_hover_color", Palette.GOLD_BRIGHT)
 	button.add_theme_color_override("font_pressed_color", Palette.GOLD_BRIGHT)

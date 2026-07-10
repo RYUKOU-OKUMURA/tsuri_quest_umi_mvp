@@ -2,11 +2,18 @@ extends Node
 
 const QuestBoardScreen = preload("res://src/ui/quest_board_screen.gd")
 const ThemeFactory = preload("res://src/ui/ui_theme.gd")
+const CUISINE_COVERAGE_SEED_START := 2026071100
+const CUISINE_COVERAGE_SEED_COUNT_PER_FISH := 256
 
 var _failed := false
 
 
 func _ready() -> void:
+	if OS.get_environment("QUEST_BOARD_SMOKE_FORCE_FAILURE") == "1":
+		_expect(false, "forced quest board smoke failure")
+	if _failed:
+		get_tree().quit(1)
+		return
 	_seed_progress()
 	_verify_board_generation()
 	_verify_delivery_flow()
@@ -15,8 +22,10 @@ func _ready() -> void:
 	_verify_shokunin_reward()
 	_verify_save_type_normalization()
 	await _verify_screen_build()
+	await _verify_full_condition_text_layout()
 
 	if _failed:
+		get_tree().quit(1)
 		return
 	print("quest_board_smoke: ok")
 	get_tree().quit(0)
@@ -165,6 +174,7 @@ func _verify_screen_build() -> void:
 	var screen := QuestBoardScreen.new()
 	screen.theme = ThemeFactory.build_theme()
 	screen.configure({})
+	screen.size = Vector2(viewport.size)
 	viewport.add_child(screen)
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -173,10 +183,241 @@ func _verify_screen_build() -> void:
 	_expect(action != null, "quest board screen should expose first action button")
 	if action != null:
 		_expect(not action.disabled, "ready delivery should enable first action button")
+		_assert_action_button_layout(screen, action)
 	var return_button := screen.find_child("QuestBoardReturnButton", true, false) as Button
 	_expect(return_button != null, "quest board screen should expose return button")
 	viewport.queue_free()
 	await get_tree().process_frame
+
+
+func _verify_full_condition_text_layout() -> void:
+	_seed_progress()
+	var template_ids: Array[String] = []
+	for template_id_variant in GameData.quest_template_weights(PlayerProgress.level).keys():
+		template_ids.append(String(template_id_variant))
+	template_ids.sort()
+	_expect(not template_ids.is_empty(), "active quest templates should exist")
+	for template_id in template_ids:
+		_seed_progress()
+		if template_id == "cuisine":
+			await _verify_all_production_cuisine_condition_texts()
+			continue
+		var quest := _longest_production_quest_for_template(template_id)
+		_expect(not quest.is_empty(), "%s should generate a production quest" % template_id)
+		if not quest.is_empty():
+			await _expect_generated_quest_text_fits(template_id, quest)
+
+
+func _longest_production_quest_for_template(template_id: String) -> Dictionary:
+	var template := GameData.get_quest_template(template_id)
+	var rarity := String(template.get("rarity", ""))
+	var source_context := _quest_context(template_id)
+	var candidates: Array[String] = GameData._quest_candidate_fish_ids(source_context, rarity)
+	var longest_quest := {}
+	for fish_id in candidates:
+		var context := source_context.duplicate(true)
+		context["exclude_fish_ids"] = _all_except(candidates, fish_id)
+		var quest := GameData.generate_quest(context)
+		if quest.is_empty():
+			continue
+		if String(quest.get("text", "")).length() > String(longest_quest.get("text", "")).length():
+			longest_quest = quest
+	return longest_quest
+
+
+func _verify_all_production_cuisine_condition_texts() -> void:
+	var context := _quest_context("cuisine")
+	# 本番生成器と同じ候補カタログを直接参照し、料理名×魚の全組合せを期待値にする。
+	var options: Array[Dictionary] = GameData._quest_cuisine_options(context)
+	_expect(not options.is_empty(), "cuisine should expose production options")
+	var expected_keys: Dictionary = {}
+	for option in options:
+		expected_keys[_cuisine_option_key(option)] = true
+	_expect_eq(expected_keys.size(), options.size(), "production cuisine options should not duplicate recipe/fish pairs")
+
+	var production_quests := _collect_all_production_cuisine_quests(context, expected_keys)
+	print(
+		"quest_board_smoke: deterministic cuisine coverage=%d/%d" % [
+			production_quests.size(),
+			expected_keys.size(),
+		]
+	)
+	_expect_eq(
+		production_quests.size(),
+		expected_keys.size(),
+		"deterministic production seeds should cover every cuisine recipe/fish pair"
+	)
+	var first_key := _cuisine_option_key(options[0]) if not options.is_empty() else ""
+	var first_quest: Dictionary = production_quests.get(first_key, {})
+	var harness := await _make_quest_layout_harness(first_quest)
+	var screen := harness["screen"] as QuestBoardScreen
+	for option in options:
+		var key := _cuisine_option_key(option)
+		_expect(production_quests.has(key), "production cuisine output should include %s" % key)
+		if production_quests.has(key):
+			var quest: Dictionary = production_quests[key]
+			_expect_eq(String(quest.get("recipe_id", "")), String(option.get("recipe_id", "")), "cuisine recipe id should match production option")
+			_expect_eq(String(quest.get("fish_id", "")), String(option.get("fish_id", "")), "cuisine fish id should match production option")
+			_expect_quest_text_in_screen("cuisine", quest, screen)
+	var viewport := harness["viewport"] as SubViewport
+	viewport.queue_free()
+	await get_tree().process_frame
+
+
+func _collect_all_production_cuisine_quests(context: Dictionary, expected_keys: Dictionary) -> Dictionary:
+	var quests_by_option: Dictionary = {}
+	var original_rng_state := GameData._rng.state
+	var candidates: Array[String] = GameData._quest_candidate_fish_ids(context)
+	var expected_by_fish: Dictionary = {}
+	for key_variant in expected_keys.keys():
+		var key := String(key_variant)
+		var fish_id := key.get_slice(":", 1)
+		if not expected_by_fish.has(fish_id):
+			expected_by_fish[fish_id] = {}
+		expected_by_fish[fish_id][key] = true
+	var fish_ids: Array[String] = []
+	for fish_id_variant in expected_by_fish.keys():
+		fish_ids.append(String(fish_id_variant))
+	fish_ids.sort()
+	for fish_index in fish_ids.size():
+		var fish_id := fish_ids[fish_index]
+		var expected_for_fish: Dictionary = expected_by_fish[fish_id]
+		var fish_context := context.duplicate(true)
+		fish_context["exclude_fish_ids"] = _all_except(candidates, fish_id)
+		var found_for_fish: Dictionary = {}
+		for offset in range(CUISINE_COVERAGE_SEED_COUNT_PER_FISH):
+			GameData._rng.seed = CUISINE_COVERAGE_SEED_START + fish_index * CUISINE_COVERAGE_SEED_COUNT_PER_FISH + offset
+			var quest := GameData.generate_quest(fish_context)
+			var key := _cuisine_option_key(quest)
+			if expected_for_fish.has(key):
+				quests_by_option[key] = quest
+				found_for_fish[key] = true
+			if found_for_fish.size() == expected_for_fish.size():
+				break
+		if quests_by_option.size() == expected_keys.size():
+			break
+	GameData._rng.state = original_rng_state
+	return quests_by_option
+
+
+func _cuisine_option_key(option: Dictionary) -> String:
+	return "%s:%s" % [String(option.get("recipe_id", "")), String(option.get("fish_id", ""))]
+
+
+func _all_except(values: Array[String], retained_value: String) -> Array[String]:
+	var excluded: Array[String] = []
+	for value in values:
+		if value != retained_value:
+			excluded.append(value)
+	return excluded
+
+
+func _expect_generated_quest_text_fits(template_id: String, quest: Dictionary) -> void:
+	var harness := await _make_quest_layout_harness(quest)
+	var screen := harness["screen"] as QuestBoardScreen
+	_expect_quest_text_in_screen(template_id, quest, screen)
+	var viewport := harness["viewport"] as SubViewport
+	viewport.queue_free()
+	await get_tree().process_frame
+
+
+func _make_quest_layout_harness(initial_quest: Dictionary = {}) -> Dictionary:
+	var board: Array[Dictionary] = []
+	if not initial_quest.is_empty():
+		board.append(initial_quest.duplicate(true))
+	PlayerProgress.quest_board = board
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(1280, 720)
+	viewport.disable_3d = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(viewport)
+	var screen := QuestBoardScreen.new()
+	screen.theme = ThemeFactory.build_theme()
+	screen.configure({})
+	screen.size = Vector2(viewport.size)
+	viewport.add_child(screen)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	return {"viewport": viewport, "screen": screen}
+
+
+func _expect_quest_text_in_screen(template_id: String, quest: Dictionary, screen: QuestBoardScreen) -> void:
+	var body := screen.find_child("QuestText", true, false) as Label
+	_expect(body != null, "%s should expose condition text" % template_id)
+	if body != null:
+		body.text = String(quest.get("text", ""))
+		_expect_eq(body.text, String(quest.get("text", "")), "%s should keep the production condition text" % template_id)
+		_expect(body.get_line_count() <= 3, "%s condition should fit within three lines" % template_id)
+		_expect(
+			body.get_visible_line_count() == body.get_line_count(),
+			"%s condition should not be clipped or ellipsized" % template_id
+		)
+
+
+func _assert_action_button_layout(screen: QuestBoardScreen, action: Button) -> void:
+	var card := screen.find_child("QuestCard1", true, false) as Control
+	var progress_title := screen.find_child("QuestProgressTitle", true, false) as Label
+	var progress_text := screen.find_child("QuestProgressText", true, false) as Label
+	var progress_track := screen.find_child("QuestProgressTrack", true, false) as Panel
+	var reward := screen.find_child("QuestReward", true, false) as Label
+	_expect(
+		card != null and progress_title != null and progress_text != null and progress_track != null and reward != null,
+		"action button should have all lower-card anchors"
+	)
+	if card == null or progress_title == null or progress_text == null or progress_track == null or reward == null:
+		return
+	var style := action.get_theme_stylebox("normal") as StyleBoxTexture
+	_expect(style != null, "action button should use a texture style")
+	if style == null:
+		return
+	var required_height := (
+		style.texture_margin_top
+		+ style.texture_margin_bottom
+		+ action.get_theme_font_size("font_size")
+		+ action.get_theme_constant("outline_size") * 2
+	)
+	_expect(action.size.y + 0.5 >= QuestBoardScreen.QUEST_ACTION_BUTTON_MIN_HEIGHT, "action button should reserve its minimum height")
+	_expect(action.size.y + 0.5 >= required_height, "action button should fit text and vertical texture margins")
+	var action_rect := action.get_global_rect()
+	var progress_title_rect := progress_title.get_global_rect()
+	var progress_text_rect := progress_text.get_global_rect()
+	var progress_track_rect := progress_track.get_global_rect()
+	var reward_rect := reward.get_global_rect()
+	var card_rect := card.get_global_rect()
+	_expect(
+		progress_title_rect.size.y + 0.5 >= progress_title.get_minimum_size().y,
+		"progress title should reserve its minimum line height: rect=%s minimum=%s" % [
+			progress_title_rect,
+			progress_title.get_minimum_size(),
+		]
+	)
+	_expect(
+		progress_text_rect.size.y + 0.5 >= progress_text.get_minimum_size().y,
+		"progress text should reserve its minimum line height: rect=%s minimum=%s" % [
+			progress_text_rect,
+			progress_text.get_minimum_size(),
+		]
+	)
+	_expect(
+		progress_text_rect.end.y <= progress_track_rect.position.y,
+		"progress text should clear the track: text=%s track=%s" % [progress_text_rect, progress_track_rect]
+	)
+	_expect(
+		progress_title_rect.end.y <= progress_track_rect.position.y,
+		"progress title should clear the track: title=%s track=%s" % [progress_title_rect, progress_track_rect]
+	)
+	_expect(
+		progress_track_rect.end.y <= reward_rect.position.y,
+		"progress track should clear the reward: track=%s reward=%s" % [progress_track_rect, reward_rect]
+	)
+	_expect(
+		action_rect.position.y + 1.0 >= reward_rect.end.y,
+		"action button should not overlap the reward: action=%s reward=%s" % [action_rect, reward_rect]
+	)
+	_expect(
+		action_rect.end.y <= card_rect.position.y + card_rect.size.y * QuestBoardScreen.QUEST_ACTION_BUTTON_SAFE_BOTTOM + 1.0,
+		"action button should clear the quest card lower frame"
+	)
 
 
 func _quest_context(template_id: String = "") -> Dictionary:
@@ -207,8 +448,8 @@ func _expect(condition: bool, message: String) -> void:
 	if condition or _failed:
 		return
 	_failed = true
+	printerr("quest_board_smoke failure: %s" % message)
 	push_error(message)
-	get_tree().quit(1)
 
 
 func _expect_eq(actual: Variant, expected: Variant, message: String) -> void:

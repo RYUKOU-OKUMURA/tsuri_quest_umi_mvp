@@ -1,6 +1,6 @@
 # 依頼ボード QA判断ログ
 
-最終更新: 2026-07-06 / 状態: v1確認済み
+最終更新: 2026-07-11 / 状態: UI-QUEST-01（本文省略・下段可読性P1）close、v1 freeze維持
 参照画像: reference/11_quest_board_mockup.png
 QA更新コマンド: ./tools/quest_board_visual_qa.sh
 
@@ -11,6 +11,9 @@ QA更新コマンド: ./tools/quest_board_visual_qa.sh
 | 依頼札枚数 | 3枚固定 | `src/ui/quest_board_screen.gd` | E3仕様。掲示中3件は常時進行中 |
 | 札配置 | 横3列 | `QuestBoardPanel` | 1280x720で依頼文・進捗・報酬を同時に読ませるため |
 | 帰港ボタン | 右下 | `QuestBoardFooter` | 他画面の右下規約に合わせる |
+| 主条件本文 | 左右 `0.078–0.912`、上下 `0.375–0.570`、18px・最大3行 | `QuestText` | P1再オープン。肖像下の全幅3行を維持し、現行最長条件を省略なしで表示する |
+| 肖像と下段情報 | 肖像下端 `0.370`、進捗見出し/値 `0.575–0.630`、ゲージ `0.648–0.677`、報酬 `0.681–0.736` | `QuestFishPortrait` / `QuestProgress*` / `QuestReward` | 進捗の実行高（見出し24px、値27px）がゲージに重ならず、ゲージ→報酬も実矩形で分離する |
+| 行動ボタン | 上下 `0.765–0.905`、最小高54px、縦テクスチャmargin `14 + 14`、20px文字＋outline 2px | `QuestActionButton*` | 必要高52pxに2px余裕を置き、報酬・札下木枠との干渉を防ぐ |
 
 ## 2. 不採用・再試行禁止リスト
 
@@ -22,12 +25,11 @@ QA更新コマンド: ./tools/quest_board_visual_qa.sh
 | パラメータ | 回数 | 直近の変更内容 | 状態 |
 |---|---|---|---|
 | 装飾パス累計 | 1 | 共通素材とruntime木板でv1掲示板を構成 | v1確認中 |
+| 主条件本文・下段クラスタの再配分 | 2 | 本文/肖像を上げ、進捗実行高・ゲージ・報酬・CTAを実矩形で順に分離 | freeze |
 
 ## 4. 暫定判定・再検証TODO
 
-- 専用PNG素材は未投入。v1は共通キットでの機能実装を優先し、専用木製掲示板・依頼札タグはP2候補。
-- 実キャプチャ証拠: `docs/qa/evidence/quest_board/2026-07-06_quest_board.png`
-- 横並び比較: `docs/qa/evidence/quest_board/2026-07-06_quest_board_compare.png`
+なし。1280x720実キャプチャと実矩形smokeで再確認済み。
 
 ## 5. 現在の残ギャップ
 
@@ -36,12 +38,15 @@ QA更新コマンド: ./tools/quest_board_visual_qa.sh
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-E3 v1では、画面構成・進捗可読性・納品/報告操作を確定対象にする。専用PNG素材の品質追求は今回のfreeze対象外。
+P1再オープン範囲は主条件本文と、それを安全に収める依頼札内の下段クラスタだけ。動かした値は `QuestText`、肖像下端、`QuestProgressTitle` / `QuestProgressText`、`QuestProgressTrack`、`QuestReward`、`QuestActionButton*` の矩形、`QuestReward` の文字（20→18px）、`QuestActionButton*` の文字（22→20px）、CTA縦style margin・最小高。3列・外枠・依頼札枚数・魚名領域・下段の読み順（進捗→ゲージ→報酬→操作）・フッター右下の帰港導線・依頼生成/納品ロジックは不動とする。
 
 ## 7. 判断ログ（直近パスのみ）
 
-2026-07-06:
+2026-07-11:
 
-- `reference/11_quest_board_mockup.png` をv1参照として追加。
-- `tools/quest_board_visual_qa.sh` で実キャプチャと横並び比較を生成し、`docs/qa/evidence/quest_board/2026-07-06_quest_board_compare.png` に保存。
-- 3枚の依頼札、進捗、報酬、未達成disabled表示、右下帰港ボタンが確認できるためv1確認済みとする。
+- `docs/45_release_readiness_code_review.md` の UI-QUEST-01 を、本文省略に加えてCTAの札下木枠干渉、進捗文字のゲージ干渉として再オープンした。3列・外枠・依頼ロジックは成立しているため、依頼札内だけを再配分した。
+- 同一データ（アジ/メジナ/カサゴの3件、Lv9・12,450G・依頼達成9件）・同一preview harness（0.60秒待機、force draw、追加3 frame）・同一capture timingで、親 `a66cdbe` とafterを撮影した。before/afterとも魚肖像を含み、`evidence/quest_board/2026-07-11_ui-quest-before_after.png` で、beforeの省略とafterの全文表示、CTA下枠干渉の解消を比較した。
+- 不動値は3列、外枠、札枚数、魚名領域、下段の読み順、フッター右下帰港、依頼生成/納品ロジック。比較元 `a66cdbe` からの移動値は、本文（左右 `0.340–0.912`・上下 `0.250–0.405`→左右 `0.078–0.912`・上下 `0.375–0.570`）、肖像下端（`0.395`→`0.370`）、進捗見出し/値（`0.455–0.500`→`0.575–0.630`）、ゲージ（`0.520–0.575`→`0.648–0.677`）、報酬（`0.620–0.690`→`0.681–0.736`・20→18px）、CTA（`0.785–0.900`→`0.765–0.905`・22→20px）。CTAは縦marginを `24 + 24` から `14 + 14`、最小高を54pxへ採用し、20px文字とoutlineを実高内に収めた。
+- `quest_board_smoke` は本番の有効テンプレート一覧を列挙する。通常4種は本番候補カタログを絞って最長の本番出力を使い、料理は本番 `_quest_cuisine_options` の全recipe_id×fish_id期待値を固定seedで各魚へ決定的に網羅し、現行190/190の本番出力を確認する。各出力は実画面の `QuestText` で最大3行・省略なしを検証する。
+- 同smokeは、進捗見出し/値の実矩形が各minimum line height以上であること、両者の末端がゲージ開始以前であること、ゲージ末端が報酬開始以前であること、報酬→CTAとCTA→札下木枠も非重なりであることを検証する。`QUEST_BOARD_SMOKE_FORCE_FAILURE=1` は即時exit 1、通常はexit 0を確認した。
+- `tools/quest_board_visual_qa.sh` は通常・最長条件A/Bの各capture前に既定の専用tmp HOMEだけを初期化し、レンダラー終了を1秒待つ。`TSURI_GODOT_HOME` を指定した場合は削除せず、常に `mkdir -p` を保証する。これにより3状態とも1280x720原寸で取得し、長文A/B（`2026-07-11_ui-quest-long-text-a.png` / `...-b.png`）でも本文・進捗・ゲージ・報酬・CTAを目視確認した。
