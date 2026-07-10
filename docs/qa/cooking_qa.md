@@ -1,6 +1,6 @@
 # 調理場 QA判断ログ
 
-最終更新: 2026-07-10 / 状態: 調理場cooking_screen R1完了 / C0 runtime P1修正完了 / EXP_GAIN P2構成改善完了 / STATUS_SUMMARY P2構成改善完了 / COOK_SELECT P2構成改善完了 / LEVEL_UP P2構成改善完了 / 残: P3素材密度
+最終更新: 2026-07-11 / 状態: 調理場cooking_screen R1完了 / C0 runtime P1修正・headless構造契約完了 / EXP_GAIN P2構成改善完了 / STATUS_SUMMARY P2構成改善完了 / COOK_SELECT P2構成改善完了 / LEVEL_UP P2構成改善完了 / 残: P3素材密度
 参照画像: reference/cooking_flow/01_cook_select_concept.png, reference/cooking_flow/02_meal_result_concept.png, reference/cooking_flow/03_exp_gain_concept.png, reference/cooking_flow/04_level_up_overlay_concept.png, reference/cooking_flow/05_status_summary_concept.png
 QA更新コマンド: ./tools/cooking_visual_qa.sh
 
@@ -21,7 +21,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 | MEAL_RESULT モードタブ位置 | `MealResultModeTabVisual` plate `x=18 y=6` | `src/ui/components/cooking_reward_visuals.gd` | 「食べる」タブが結果バナー本文に重なるP1寄り表示を避けるため |
 | MEAL_RESULT 不透明ステージ下地 | `RewardStageBase` はMEAL_RESULT時のみ画面全体 `1280x720`・alpha `1.0` | `src/ui/components/cooking_reward_panel.gd` | alpha付き `meal_scene_bg.png` の下から前状態が透けるP1を防ぎ、EXP_GAIN / LEVEL_UPでは背面の調理画面を維持する |
 | STATUS_SUMMARY カード見出し帯 | `StatusSummaryTitleBand*` は `PanelBox`（文字を横断するボタン枠PNGを使わない） | `src/ui/components/cooking_status_panel.gd` | 5カードのタイトルを原寸で常に読めるようにする。カード矩形・見出し文字サイズは不変 |
-| EXP_GAIN / LEVEL_UP 下部導線 | 本文左content margin `Reward=88px` / `LevelUp=92px`、単一矢印グリフ | `cooking_reward_panel.gd` / `level_up_panel.gd` | 40px高の導線で複数小グリフが本文と潰れるP1を防ぐ |
+| EXP_GAIN / LEVEL_UP 下部導線 | 本文左content margin `Reward=88px` / `LevelUp=92px`、各Button直下は単一の命名Label cue（`RewardConfirmCue` / `LevelUpConfirmCue`）のみ。`MEAL_RESULT` / `EXP_GAIN` / `LEVEL_UP` は `▶`、`EXP_GAIN_LEVELUP` は `▲` | `cooking_reward_panel.gd` / `level_up_panel.gd` / `tools/cooking_content_audit.gd` | 40px高の導線で複数小グリフが本文と潰れるP1を防ぐ。余白・cue名・単一Label構造・draw接続なし・状態別glyphはheadless監査する |
 | STATUS_SUMMARY 所持金 | 整数部は3桁カンマ区切り（例: `10,170 G`） | `src/ui/components/cooking_status_panel.gd` | docs/19 §4.3の金額表記規格 |
 
 ## 2. 不採用・再試行禁止リスト
@@ -62,11 +62,21 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 2026-07-10: `C0 runtime表示破綻` を、docs/33 C0 / docs/45 UI-C0-01 に基づく **P1再発** として局所再オープンし、同日完了。
 
 - 対象状態・差分: MEAL_RESULT（前状態の残像wash）、STATUS_SUMMARY（カードタイトル帯と文字の衝突）、EXP_GAIN / LEVEL_UP_OVERLAY（下部導線グリフ潰れ）、STATUS_SUMMARY所持金（3桁区切りなし）。
-- 動かすもの: 報酬画面の不透明ステージ下地、STATUS_SUMMARYカードタイトル帯の表示方式、上記2導線のランタイムグリフ、所持金表示format、決定的プレビューの表示契約。
+- 動かすもの: 報酬画面の不透明ステージ下地、STATUS_SUMMARYカードタイトル帯の表示方式、上記2導線のランタイムグリフ、所持金表示format、headless構造監査と決定的プレビューの表示契約。
 - 不動値: §1の全freeze値、調理/EXP/レベルアップの進行ロジック、料理・魚データ、既存素材、COOK_SELECT構成、C1〜C5の素材課題。
 - 比較条件: `tools/cooking_preview.gd` の固定Lv/所持金/料理状態で、5状態の1280x720 before / afterを保存し、参照02〜05との横並びでP1消失を確認する。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-11: `C0 runtime表示破綻` のレビュー差し戻しを反映。見た目の回帰は許容せず、C0契約をGUIキャプチャからheadless監査へ移した。
+
+- 再オープン理由: `cooking_verify.sh` がGUI/表示サーバ必須の `cooking_visual_qa.sh` を呼び、CI・SSH・強制headlessでC0検証が完走できなかった。加えて導線余白が `>=88px` の共通検査で、Reward `88px` とLevelUp `92px` のfreeze差を識別できず、複数glyph復活も構造上検知できなかった。
+- 変えたもの: `cooking_verify.sh` を純headless（content/layout/input/flow）へ分離し、`cooking_content_audit.gd` にMEAL_RESULT下地の状態別可視性・不透明性、Reward `88px` / LevelUp `92px` の個別余白、各Button直下の命名済み単一cue（子ノードなし・glyph数1・状態ID）の契約を追加。`cooking_preview.gd` はGUI visual QA専用の補助契約として同じ値を確認する。実装側は旧Button直描画を `RewardConfirmCue` / `LevelUpConfirmCue` の単一Controlへ置換した。
+- 変えていないもの: §1の既存freeze値、調理/EXP/レベルアップ進行ロジック、カード矩形・見出し文字サイズ、料理/魚データ、既存素材、COOK_SELECT、C1〜C5。
+- 証拠画像: `docs/qa/evidence/cooking/2026-07-11_c0_contract_before_{select,result,exp,levelup,status}.png` と `docs/qa/evidence/cooking/2026-07-11_c0_contract_after_{select,result,exp,levelup,status}.png`。同一の決定的5状態で比較し、COOK_SELECT / STATUS_SUMMARYはpixel同値、MEAL_RESULT / EXP_GAIN / LEVEL_UP_OVERLAYは導線cueの単一Label glyph化だけが差分で、残像・タイトル帯・金額formatのC0解消状態を維持した。
+- 判定: GUI表示を必要とするvisual QAをheadlessスモークから完全に切り離しても、C0構造契約はheadless content auditで失われない。RewardとLevelUpの余白を誤って共通化した場合、またはButtonへ2個目のcue/glyphノードを足した場合は監査が失敗する。
+- 検証: `./tools/cooking_verify.sh` green（強制`--headless`、visual QA非呼出）、`./tools/cooking_visual_qa.sh` green（実GUI 5状態キャプチャ）、`./tools/validate_project.sh` と `git diff --check` green。`validate_project.sh` のObjectDB / resource終了ログは既知ベースライン警告。
+- 固定条件: visual QAは `./tools/cooking_visual_qa.sh` として独立維持する。`cooking_verify.sh` へSubViewport/表示サーバ依存を戻さず、Reward `88px`、LevelUp `92px`、各Button直下の命名済み単一cue構造を変更しない。
 
 2026-07-10: `C0 runtime表示破綻` 完了。docs/45 UI-C0-01の4件を、素材や既存freezeを動かさずに解消した。
 

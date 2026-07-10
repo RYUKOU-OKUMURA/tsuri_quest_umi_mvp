@@ -77,6 +77,7 @@ var _exp_label: Label
 var _exp_progress_label: Label
 var _status_strip: CookingRewardStatusStripScript
 var _confirm_button: Button
+var _confirm_cue: Label
 var _flow_row: HBoxContainer
 var _flow_step_cards: Array[PanelContainer] = []
 var _flow_step_labels: Array[Label] = []
@@ -421,7 +422,20 @@ func _build_screen() -> void:
 	_confirm_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_apply_flow_button_style(_confirm_button)
 	_set_confirm_button_emphasis(false)
-	_confirm_button.draw.connect(func() -> void: _draw_confirm_button_cue(_confirm_button))
+	_confirm_cue = Label.new()
+	_confirm_cue.name = "RewardConfirmCue"
+	_confirm_cue.set_meta("c0_glyph_count", 1)
+	_confirm_cue.set_anchors_preset(Control.PRESET_LEFT_WIDE)
+	_confirm_cue.offset_left = 22.0
+	_confirm_cue.offset_right = 62.0
+	_confirm_cue.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_confirm_cue.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_confirm_cue.add_theme_font_size_override("font_size", 24)
+	_confirm_cue.add_theme_color_override("font_color", Palette.GOLD_BRIGHT)
+	_confirm_cue.add_theme_color_override("font_outline_color", Palette.COOKING_REWARD_BUTTON_ACTIVE_INK)
+	_confirm_cue.add_theme_constant_override("outline_size", 2)
+	_confirm_cue.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_confirm_button.add_child(_confirm_cue)
 	root.add_child(_confirm_button)
 
 
@@ -485,7 +499,7 @@ func show_meal_result(result: Dictionary) -> void:
 	_set_status_strip_emphasis(false)
 	_confirm_button.text = "食経験値へ進む"
 	_set_confirm_button_emphasis(true)
-	_confirm_button.queue_redraw()
+	_set_confirm_cue("meal")
 	_refresh_meal_steps()
 	_present()
 
@@ -538,6 +552,7 @@ func show_reward(
 	_exp_trail_visual.visible = true
 	_exp_trail_visual.queue_redraw()
 	_set_confirm_button_emphasis(false)
+	_set_confirm_cue("level" if leveled else "summary")
 	_scene_caption.text = "料理から食経験値が流れ込む。"
 	_scene_caption.visible = true
 	_scene_bonus_label.text = _meal_bonus_badge_text(result)
@@ -635,33 +650,6 @@ func _meal_bonus_badge_text(result: Dictionary) -> String:
 	return "初回 記録済み"
 
 
-func _draw_confirm_button_cue(button: Button) -> void:
-	var center := Vector2(32.0, button.size.y * 0.5)
-	var active := not button.disabled
-	var gold := Palette.GOLD_BRIGHT if active else Palette.COOKING_REWARD_BUTTON_DISABLED_GOLD
-	var ink := (
-		Palette.COOKING_REWARD_BUTTON_ACTIVE_INK
-		if active
-		else Palette.COOKING_REWARD_BUTTON_DISABLED_INK
-	)
-	var cyan := Palette.GAUGE_CYAN_HI if active else Palette.COOKING_REWARD_BUTTON_DISABLED_CYAN
-	var red := Palette.GAUGE_RED_HI if active else Palette.COOKING_REWARD_BUTTON_DISABLED_RED
-	var glow := (
-		Palette.COOKING_REWARD_BUTTON_ACTIVE_GLOW
-		if active
-		else Palette.COOKING_REWARD_BUTTON_DISABLED_GLOW
-	)
-	button.draw_circle(center, 22.0, glow)
-	match _preview_state:
-		"MEAL_RESULT":
-			_draw_meal_confirm_runway(button, gold, cyan)
-			_draw_button_meal_to_exp(button, center, ink, gold, cyan)
-		"EXP_GAIN_LEVELUP":
-			_draw_button_exp_to_level(button, center, ink, gold, red)
-		_:
-			_draw_button_exp_to_summary(button, center, ink, gold, cyan)
-
-
 func _apply_flow_button_style(button: Button) -> void:
 	# 左端の導線グリフと本文の描画領域を明確に分離する。
 	CookingAssets.apply_flow_button_style(button, 88.0, 6.0)
@@ -677,171 +665,10 @@ func _set_confirm_button_emphasis(is_meal_result: bool) -> void:
 	)
 
 
-func _draw_meal_confirm_runway(button: Button, gold: Color, cyan: Color) -> void:
-	var w := button.size.x
-	var h := button.size.y
-	if w <= 0.0 or h <= 0.0:
-		return
-	var mid_y := h * 0.50
-	var left := 76.0
-	var right := w - 44.0
-	button.draw_rect(
-		Rect2(Vector2(left - 5.0, h * 0.23), Vector2(maxf(0.0, right - left + 6.0), h * 0.54)),
-		Color(Palette.COOKING_REWARD_DARK_BACKDROP, 0.22)
-	)
-	button.draw_line(
-		Vector2(left + 18.0, mid_y - 14.0),
-		Vector2(right - 40.0, mid_y - 14.0),
-		Color(Palette.COOKING_REWARD_ACCENT_BONUS, 0.18),
-		2.0
-	)
-	button.draw_line(
-		Vector2(left + 18.0, mid_y + 14.0),
-		Vector2(right - 40.0, mid_y + 14.0),
-		Color(Palette.COOKING_REWARD_ACCENT_EXP, 0.12),
-		2.0
-	)
-	var rail := gold
-	rail.a = 0.42
-	button.draw_line(Vector2(left, 8.0), Vector2(right, 8.0), rail, 1.6)
-	button.draw_line(
-		Vector2(left, h - 8.0),
-		Vector2(right, h - 8.0),
-		Color(Palette.COOKING_REWARD_ACCENT_FALLBACK, 0.24),
-		1.6
-	)
-	button.draw_line(
-		Vector2(left + 6.0, mid_y),
-		Vector2(right - 24.0, mid_y),
-		Color(Palette.COOKING_REWARD_ACCENT_BONUS, 0.26),
-		6.0
-	)
-	button.draw_line(
-		Vector2(left + 6.0, mid_y),
-		Vector2(right - 24.0, mid_y),
-		Color(Palette.COOKING_REWARD_ACCENT_EXP, 0.24),
-		1.8
-	)
-	for i in range(4):
-		var x := left + 42.0 + float(i) * ((right - left - 110.0) / 3.0)
-		var drop := gold if i % 2 == 0 else cyan
-		drop.a = 0.34
-		button.draw_colored_polygon(
-			PackedVector2Array(
-				[
-					Vector2(x - 7.0, mid_y - 16.0),
-					Vector2(x + 7.0, mid_y - 16.0),
-					Vector2(x, mid_y - 7.0),
-				]
-			),
-			drop
-		)
-	for i in range(3):
-		var x := right - 86.0 + float(i) * 18.0
-		var arrow := gold
-		arrow.a = 0.50 - float(i) * 0.06
-		button.draw_colored_polygon(
-			PackedVector2Array(
-				[
-					Vector2(x + 9.0, mid_y),
-					Vector2(x - 2.0, mid_y - 6.0),
-					Vector2(x - 2.0, mid_y + 6.0),
-				]
-			),
-			arrow
-		)
-	var orb_center := Vector2(w - 30.0, mid_y)
-	button.draw_circle(orb_center, 12.0, Color(Palette.COOKING_REWARD_CARD_FRAME_BORDER, 0.58))
-	button.draw_circle(orb_center, 8.0, Color(Palette.COOKING_REWARD_EXP_ORB_FILL, 0.72))
-	var orb := cyan
-	orb.a = 0.86
-	button.draw_circle(orb_center, 4.5, orb)
-	for i in range(4):
-		var p := Vector2(w - 65.0 + float(i) * 10.0, mid_y - 15.0 + float(i % 2) * 30.0)
-		var spark := gold if i % 2 == 0 else cyan
-		spark.a = 0.46
-		button.draw_line(p + Vector2(-2.5, 0.0), p + Vector2(2.5, 0.0), spark, 1.2)
-		button.draw_line(p + Vector2(0.0, -2.5), p + Vector2(0.0, 2.5), spark, 1.2)
-
-
-func _draw_button_meal_to_exp(
-	button: Button, center: Vector2, ink: Color, gold: Color, cyan: Color
-) -> void:
-	button.draw_arc(
-		center + Vector2(-7.0, 6.0),
-		13.0,
-		0.0,
-		PI,
-		18,
-		Palette.COOKING_REWARD_IVORY_FILL,
-		5.0
-	)
-	button.draw_arc(center + Vector2(-7.0, 2.0), 10.0, 0.0, PI, 16, gold, 4.0)
-	for i in range(2):
-		var x := center.x - 15.0 + float(i) * 9.0
-		button.draw_arc(
-			Vector2(x, center.y - 12.0),
-			6.0,
-			-1.5,
-			0.9,
-			8,
-			Palette.COOKING_REWARD_BUTTON_STEAM,
-			2.0
-		)
-	button.draw_line(center + Vector2(10.0, 0.0), center + Vector2(34.0, 0.0), gold, 3.0)
-	button.draw_colored_polygon(
-		PackedVector2Array(
-			[
-				center + Vector2(40.0, 0.0),
-				center + Vector2(28.0, -7.0),
-				center + Vector2(28.0, 7.0),
-			]
-		),
-		gold
-	)
-	button.draw_circle(center + Vector2(57.0, 0.0), 12.0, Palette.COOKING_REWARD_EXP_ORB_FILL)
-	button.draw_circle(center + Vector2(57.0, 0.0), 7.0, cyan)
-	button.draw_line(center + Vector2(51.0, 0.0), center + Vector2(63.0, 0.0), ink, 2.0)
-
-
-func _draw_button_exp_to_level(
-	button: Button, center: Vector2, ink: Color, gold: Color, red: Color
-) -> void:
-	# 40px高の導線に複数の小グリフを詰めず、成長先を示す単一の上向き矢印にする。
-	var glyph_center := center + Vector2(2.0, 0.0)
-	button.draw_circle(glyph_center, 15.0, ink)
-	button.draw_circle(glyph_center, 12.0, Color(red, 0.82))
-	button.draw_line(glyph_center + Vector2(0.0, 8.0), glyph_center + Vector2(0.0, -7.0), gold, 3.0)
-	button.draw_colored_polygon(
-		PackedVector2Array(
-			[
-				glyph_center + Vector2(0.0, -13.0),
-				glyph_center + Vector2(-7.0, -4.0),
-				glyph_center + Vector2(7.0, -4.0),
-			]
-		),
-		gold
-	)
-
-
-func _draw_button_exp_to_summary(
-	button: Button, center: Vector2, ink: Color, gold: Color, cyan: Color
-) -> void:
-	# 準備画面へ戻る導線も、本文と競合しない単一の右向き矢印へ簡略化する。
-	var glyph_center := center + Vector2(2.0, 0.0)
-	button.draw_circle(glyph_center, 15.0, ink)
-	button.draw_circle(glyph_center, 12.0, Color(cyan, 0.76))
-	button.draw_line(glyph_center + Vector2(-7.0, 0.0), glyph_center + Vector2(7.0, 0.0), gold, 3.0)
-	button.draw_colored_polygon(
-		PackedVector2Array(
-			[
-				glyph_center + Vector2(13.0, 0.0),
-				glyph_center + Vector2(4.0, -7.0),
-				glyph_center + Vector2(4.0, 7.0),
-			]
-		),
-		gold
-	)
+func _set_confirm_cue(glyph_id: String) -> void:
+	if _confirm_cue != null:
+		_confirm_cue.set_meta("c0_glyph_id", glyph_id)
+		_confirm_cue.text = "▲" if glyph_id == "level" else "▶"
 
 
 func _draw_exp_focus_burst() -> void:

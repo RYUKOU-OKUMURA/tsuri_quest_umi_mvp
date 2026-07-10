@@ -59,6 +59,11 @@ func _ready() -> void:
 	if not _expect_c0_meal_result_contract(screen, "MEAL_RESULT capture"):
 		get_tree().quit(1)
 		return
+	if not _expect_c0_flow_button_contract(
+		screen, "RewardConfirmButton", "RewardConfirmCue", "meal", 88.0, "MEAL_RESULT capture"
+	):
+		get_tree().quit(1)
+		return
 	if not await _save_viewport(vp, OUT_RESULT):
 		get_tree().quit(1)
 		return
@@ -78,7 +83,9 @@ func _ready() -> void:
 	if not _expect_reward_state(screen, "EXP_GAIN", "EXP_GAIN capture"):
 		get_tree().quit(1)
 		return
-	if not _expect_c0_flow_button_contract(screen, "RewardConfirmButton", "EXP_GAIN capture"):
+	if not _expect_c0_flow_button_contract(
+		screen, "RewardConfirmButton", "RewardConfirmCue", "summary", 88.0, "EXP_GAIN capture"
+	):
 		get_tree().quit(1)
 		return
 	if not _expect_c0_non_meal_stage_contract(screen, "EXP_GAIN capture"):
@@ -106,6 +113,11 @@ func _ready() -> void:
 	if not _expect_c0_non_meal_stage_contract(screen, "LEVEL_UP transition"):
 		get_tree().quit(1)
 		return
+	if not _expect_c0_flow_button_contract(
+		screen, "RewardConfirmButton", "RewardConfirmCue", "level", 88.0, "LEVEL_UP transition"
+	):
+		get_tree().quit(1)
+		return
 	if not screen.preview_accept_reward_overlay():
 		push_error("Expected EXP_GAIN_LEVELUP overlay before LEVEL_UP capture.")
 		get_tree().quit(1)
@@ -120,7 +132,9 @@ func _ready() -> void:
 	if not _expect_c0_non_meal_stage_contract(screen, "LEVEL_UP capture"):
 		get_tree().quit(1)
 		return
-	if not _expect_c0_flow_button_contract(screen, "LevelUpConfirmButton", "LEVEL_UP capture"):
+	if not _expect_c0_flow_button_contract(
+		screen, "LevelUpConfirmButton", "LevelUpConfirmCue", "summary", 92.0, "LEVEL_UP capture"
+	):
 		get_tree().quit(1)
 		return
 	_debug_named_controls(
@@ -462,9 +476,25 @@ func _expect_reward_state(screen: Control, expected_state: String, context: Stri
 
 func _expect_c0_meal_result_contract(screen: Control, context: String) -> bool:
 	var base := _find_named(screen, "RewardStageBase") as ColorRect
-	if base == null or not base.is_visible_in_tree() or base.size != Vector2(VW) or base.color.a < 0.99:
+	if (
+		base == null
+		or not base.is_visible_in_tree()
+		or base.size != Vector2(VW)
+		or not _is_c0_stage_base_fully_opaque(base)
+	):
 		push_error("%s requires an opaque RewardStageBase behind MEAL_RESULT." % context)
 		return false
+	return true
+
+
+func _is_c0_stage_base_fully_opaque(base: ColorRect) -> bool:
+	if base.color.a != 1.0 or base.modulate.a != 1.0 or base.self_modulate.a != 1.0:
+		return false
+	var parent := base.get_parent()
+	while parent != null:
+		if parent is CanvasItem and (parent as CanvasItem).modulate.a != 1.0:
+			return false
+		parent = parent.get_parent()
 	return true
 
 
@@ -476,14 +506,47 @@ func _expect_c0_non_meal_stage_contract(screen: Control, context: String) -> boo
 	return true
 
 
-func _expect_c0_flow_button_contract(screen: Control, node_name: String, context: String) -> bool:
+func _expect_c0_flow_button_contract(
+	screen: Control,
+	node_name: String,
+	cue_name: String,
+	expected_glyph_id: String,
+	expected_left_margin: float,
+	context: String
+) -> bool:
 	var button := _find_named(screen, node_name) as Button
 	if button == null:
 		push_error("%s missing C0 flow button '%s'." % [context, node_name])
 		return false
 	var style := button.get_theme_stylebox("normal")
-	if style == null or style.get_content_margin(SIDE_LEFT) < 88.0:
-		push_error("%s requires at least 88px left glyph clearance on '%s'." % [context, node_name])
+	if style == null or style.get_content_margin(SIDE_LEFT) != expected_left_margin:
+		push_error(
+			"%s requires %.0fpx left glyph clearance on '%s'."
+			% [context, expected_left_margin, node_name]
+		)
+		return false
+	var cue := button.get_node_or_null(NodePath(cue_name)) as Label
+	if cue == null or button.get_child_count() != 1 or cue.get_child_count() != 0:
+		push_error("%s requires one direct C0 cue '%s' on '%s'." % [context, cue_name, node_name])
+		return false
+	if not button.draw.get_connections().is_empty():
+		push_error("%s requires '%s' to avoid Button.draw glyph rendering." % [context, node_name])
+		return false
+	if not cue.draw.get_connections().is_empty():
+		push_error("%s requires '%s' to avoid Label.draw glyph rendering." % [context, cue_name])
+		return false
+	if not cue.is_visible_in_tree() or int(cue.get_meta("c0_glyph_count", 0)) != 1:
+		push_error("%s requires exactly one visible glyph on '%s'." % [context, node_name])
+		return false
+	if String(cue.get_meta("c0_glyph_id", "")) != expected_glyph_id:
+		push_error(
+			"%s requires C0 cue '%s' to be '%s'."
+			% [context, cue_name, expected_glyph_id]
+		)
+		return false
+	var expected_glyph_text := "▲" if expected_glyph_id == "level" else "▶"
+	if cue.text != expected_glyph_text:
+		push_error("%s requires exactly one '%s' glyph on '%s'." % [context, expected_glyph_text, node_name])
 		return false
 	return true
 

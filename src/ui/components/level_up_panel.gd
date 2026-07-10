@@ -451,6 +451,7 @@ var _spot_tag: Label
 var _spot_title: Label
 var _spot_subtitle: Label
 var _confirm_button: Button
+var _confirm_cue: Label
 
 
 func _build_screen() -> void:
@@ -640,7 +641,22 @@ func _build_screen() -> void:
 	_confirm_button.custom_minimum_size = Vector2(300.0, 42.0)
 	_confirm_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_apply_flow_button_style(_confirm_button)
-	_confirm_button.draw.connect(func() -> void: _draw_confirm_button_cue(_confirm_button))
+	_confirm_cue = Label.new()
+	_confirm_cue.name = "LevelUpConfirmCue"
+	_confirm_cue.set_meta("c0_glyph_count", 1)
+	_confirm_cue.set_meta("c0_glyph_id", "summary")
+	_confirm_cue.text = "▶"
+	_confirm_cue.set_anchors_preset(Control.PRESET_LEFT_WIDE)
+	_confirm_cue.offset_left = 20.0
+	_confirm_cue.offset_right = 60.0
+	_confirm_cue.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_confirm_cue.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_confirm_cue.add_theme_font_size_override("font_size", 24)
+	_confirm_cue.add_theme_color_override("font_color", Palette.GOLD_BRIGHT)
+	_confirm_cue.add_theme_color_override("font_outline_color", Palette.COOKING_LEVEL_DARK_INK)
+	_confirm_cue.add_theme_constant_override("outline_size", 2)
+	_confirm_cue.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_confirm_button.add_child(_confirm_cue)
 	box.add_child(_confirm_button)
 
 
@@ -1008,29 +1024,6 @@ func _set_label_min_height(label: Label, font_size: int, lines := 1) -> void:
 	var outline := label.get_theme_constant("outline_size")
 	var height := float(font_size * maxi(1, lines)) * 1.35 + float(outline * 2)
 	label.custom_minimum_size.y = maxf(label.custom_minimum_size.y, ceilf(height))
-
-
-func _draw_confirm_button_cue(button: Button) -> void:
-	var center := Vector2(30.0, maxf(button.size.y, 1.0) * 0.5)
-	var gold := Palette.GOLD_BRIGHT
-	var ink := Palette.COOKING_LEVEL_DARK_INK
-	var glow := Palette.COOKING_LEVEL_IVORY
-	glow.a = 0.28
-	button.draw_circle(center, 16.0, ink)
-	button.draw_circle(center, 13.0, glow)
-	var arrow_from := center + Vector2(-7.0, 0.0)
-	var arrow_to := center + Vector2(7.0, 0.0)
-	button.draw_line(arrow_from, arrow_to, gold, 3.0)
-	button.draw_polygon(
-		PackedVector2Array(
-			[
-				arrow_to + Vector2(6.0, 0.0),
-				arrow_to + Vector2(-3.0, -6.0),
-				arrow_to + Vector2(-3.0, 6.0),
-			]
-		),
-		PackedColorArray([gold, gold, gold])
-	)
 
 
 func _clear_container(container: Container) -> void:
