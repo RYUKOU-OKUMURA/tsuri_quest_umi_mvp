@@ -34,6 +34,7 @@ QA更新コマンド: `./tools/harbor_visual_qa.sh`
 | 情報板枠へのポートレートスロット焼き込み | UIとずれて二重枠になる | 2026-07-09 |
 | 時間帯を出港プラン羊皮紙内に埋め込む | 完成イメージと構成がズレ、余白と埋没が起きる | 2026-07-09 |
 | 情報板を高さ約22%の細い帯のままポートレートだけ拡大 | 見切れ・主役不足。面積配分を先に直す | 2026-07-09 |
+| 情報板外枠＋魚カード枠の Phase B AI一点物候補 | 木目・紙粒子は増えたが、3時間帯の1280x720全画面比較では実表示サイズで差が縮み、現行PIL版に明確に勝たない | 2026-07-10 |
 
 ## 3. 微調整カウンタ
 
@@ -116,3 +117,33 @@ QA更新コマンド: `./tools/harbor_visual_qa.sh`
 
 採用理由:
 - HTMLモック比較で確定していたA案（セクション見出し付き4グループ）どおりに実装。3時間帯すべてで全項目がメニュー枠内に収まり、重なり・見切れなし。primary行の高さ強調とロック行の減光＋錠前アイコンで主導線と施設グループの視認性が向上した。
+
+---
+
+2026-07-10 情報板外枠＋魚カード枠の Phase B AI一点物候補を不採用。
+
+スコープ宣言:
+- 対象: `harbor_info_board_frame.png` / `harbor_info_fish_card.png` のAI生成ソース作成、既定スクリプトによる一時差し替え、3時間帯の全画面比較のみ。
+- 対象外: `src/ui/**`、加工・QAスクリプト、§1 freeze値、レイアウト、他の港素材。
+
+試したもの:
+- `docs/43` §1.5 のプロンプト2本を原文どおり使用。外枠は文字・ロゴ・紋章状モチーフ／比率を検査し、3候補を破棄後、許可された否定語を追記した候補を使用。魚カードは初回候補を使用。
+- GenerateImageの固定出力キャンバスから描画本体を変えず、外周の単色マゼンタ余白だけをロスレスクロップ（リサイズなし）し、ソースを `tools/source_assets/harbor/harbor_info_board_frame_source.png`（1772x443、4:1）/ `harbor_info_fish_card_source.png`（1158x1351、6:7）に保存。`tools/process_harbor_info_board_assets.py` で 1280x320 / 240x280 に加工した。
+- 候補表示を朝まずめ・日中・夜釣りの3時間帯で撮影し、Phase B着手前の現行PIL版と全画面横並び比較した。
+
+変更していないもの:
+- 比較後、`assets/showcase/harbor/` は現行PIL版へ復元した。§1 freeze値、§5残ギャップ、素材台帳は変更していない。
+- AI生成ソース2枚は、同じ候補の再生成を避けるため残した。
+
+判断根拠:
+- `docs/qa/evidence/harbor/2026-07-10_info_board_phase_b_asa_mazume_before_after.png`
+- `docs/qa/evidence/harbor/2026-07-10_info_board_phase_b_daytime_before_after.png`
+- `docs/qa/evidence/harbor/2026-07-10_info_board_phase_b_night_before_after.png`
+- `docs/qa/evidence/harbor/2026-07-10_info_board_phase_b_all_slots_before_after.png`
+
+不採用理由:
+- AI候補はパーツ単体では木目・紙粒子・角金具の質感が増したが、情報板が占める実表示面積では差が小さくなる。3時間帯とも文字の見切れ・重なり等のP1は無い一方、全画面で現行PIL版に明確に勝つとは判定できず、僅差不採用の基準に該当した。
+
+検証結果:
+- `./tools/harbor_visual_qa.sh` 緑（候補適用中に3時間帯を再生成）。
+- `harbor_screen_smoke: ok`、`./tools/validate_project.sh` 緑（現行PIL版へ復元後）。
