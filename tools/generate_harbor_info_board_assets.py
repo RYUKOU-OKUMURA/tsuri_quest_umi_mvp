@@ -29,6 +29,7 @@ PLAN_ICON_PIN_OUT = HARBOR_OUT / "harbor_plan_icon_pin.png"
 PLAN_ICON_RUMOR_OUT = HARBOR_OUT / "harbor_plan_icon_rumor.png"
 WEATHER_STUB_OUT = HARBOR_OUT / "harbor_weather_stub_icon.png"
 NAV_QUEST_ICON_OUT = COMMON_OUT / "nav_quest_icon.png"
+NAV_LOCK_ICON_OUT = COMMON_OUT / "nav_lock_icon.png"
 
 RNG_SEED = 20260709
 TIME_SLOT_BTN_SIZE = (220, 72)
@@ -378,6 +379,42 @@ def build_nav_quest_icon() -> None:
     img.save(NAV_QUEST_ICON_OUT)
 
 
+def build_nav_lock_icon() -> None:
+    """右メニューのロック中ボタン行末に置く小さな錠前アイコン（金色線画調、透過PNG）。"""
+    size = 96
+    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    outline = (74, 43, 22, 255)
+    fill = (223, 171, 83, 255)
+    inner = (255, 240, 200, 255)
+    dark = (47, 33, 18, 255)
+
+    # 弦（シャックル）。本体の背後にあるU字を先に描く。
+    shackle_box = (28, 14, 68, 56)
+    draw.arc(shackle_box, 180, 360, fill=outline, width=10)
+    draw.arc(
+        (shackle_box[0] + 3, shackle_box[1] + 3, shackle_box[2] - 3, shackle_box[3] - 3),
+        180,
+        360,
+        fill=fill,
+        width=5,
+    )
+
+    # 本体。
+    body = (18, 40, 78, 86)
+    draw.rounded_rectangle(body, radius=12, fill=fill, outline=outline, width=5)
+    draw.rounded_rectangle(
+        (body[0] + 6, body[1] + 6, body[2] - 6, body[3] - 6), radius=8, outline=inner, width=2
+    )
+
+    # 鍵穴。
+    draw.ellipse((42, 54, 54, 66), fill=dark)
+    draw.polygon([(45, 63), (51, 63), (49, 74), (47, 74)], fill=dark)
+
+    img.save(NAV_LOCK_ICON_OUT)
+
+
 def build_info_board_assets() -> list[Path]:
     HARBOR_OUT.mkdir(parents=True, exist_ok=True)
     COMMON_OUT.mkdir(parents=True, exist_ok=True)
@@ -386,6 +423,7 @@ def build_info_board_assets() -> list[Path]:
     build_time_slot_buttons()
     build_time_slot_icons()
     build_nav_quest_icon()
+    build_nav_lock_icon()
     # 出港プラン紙面・行アイコンは AI ソース加工（PIL 幾何で上書きしない）。
     from process_harbor_plan_assets import build_all as build_plan_ai_assets
 
@@ -401,6 +439,7 @@ def build_info_board_assets() -> list[Path]:
         TIME_SLOT_ICON_NIGHT_OUT,
         *plan_paths,
         NAV_QUEST_ICON_OUT,
+        NAV_LOCK_ICON_OUT,
     ]
 
 

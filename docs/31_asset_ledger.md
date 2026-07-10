@@ -27,7 +27,7 @@
 | `tools/generate_fish_market_assets.py` | `assets/showcase/fish_market/` |
 | `tools/generate_fishing_spot_map_assets.py` | `assets/showcase/fishing_spots/` |
 | `tools/generate_harbor_showcase_assets.py` | `assets/showcase/harbor/` |
-| `tools/generate_harbor_info_board_assets.py` | `assets/showcase/harbor/harbor_info_board_frame.png`, `harbor_info_fish_card.png`, `harbor_time_slot_btn_*.png`, `harbor_time_slot_icon_*.png`, `assets/showcase/common/nav_quest_icon.png`（出港プラン紙面・行アイコンは `process_harbor_plan_assets.py` 経由。`generate_harbor_showcase_assets.py` からも呼び出し可） |
+| `tools/generate_harbor_info_board_assets.py` | `assets/showcase/harbor/harbor_info_board_frame.png`, `harbor_info_fish_card.png`, `harbor_time_slot_btn_*.png`, `harbor_time_slot_icon_*.png`, `assets/showcase/common/nav_quest_icon.png`, `assets/showcase/common/nav_lock_icon.png`（2026-07-09追加。右メニューのロック行アイコン）（出港プラン紙面・行アイコンは `process_harbor_plan_assets.py` 経由。`generate_harbor_showcase_assets.py` からも呼び出し可） |
 | `tools/process_harbor_plan_assets.py` | `assets/showcase/harbor/harbor_plan_panel.png`, `harbor_plan_icon_guide.png`, `harbor_plan_icon_pin.png`, `harbor_plan_icon_rumor.png`, `harbor_weather_stub_icon.png`。AIソース `tools/source_assets/harbor/` をクロマキー・ヘッダークリーンアップ・リサイズ |
 | `tools/generate_nushi_fish_assets.py` | `assets/showcase/fish/nushi_*_card_portrait.png`, `assets/showcase/fish/nushi_*_showcase_sheet.png`（既存魚素材の派生） |
 | `tools/generate_surface_fish_shadow.py` | `assets/showcase/surface/surface_fish_shadow_soft.png`（3フレーム魚影シート） |

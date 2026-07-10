@@ -31,6 +31,7 @@ const ICON_SHIPYARD_PATH := "res://assets/showcase/common/nav_shipyard_icon.png"
 const ICON_STATUS_PATH := "res://assets/showcase/common/nav_status_icon.png"
 const ICON_TITLE_PATH := "res://assets/showcase/common/nav_title_icon.png"
 const ICON_QUEST_PATH := "res://assets/showcase/common/nav_quest_icon.png"
+const ICON_LOCK_PATH := "res://assets/showcase/common/nav_lock_icon.png"
 
 var _status_label: Label
 var _context_label: Label
@@ -365,6 +366,52 @@ func _has_incomplete_quest() -> bool:
 			continue
 		return true
 	return false
+
+
+## 「今すぐ納品・報告できる依頼が1件以上あるか」。quest_board_screen.gdの
+## 納品ボタン活性条件（`_refresh_card` の `button.disabled = not completed`）と同じ
+## `PlayerProgress.quest_progress(index).completed` を読むだけで、判定ロジックの複製はしない。
+func _has_deliverable_quest() -> bool:
+	for index in range(PlayerProgress.quest_board.size()):
+		var progress := PlayerProgress.quest_progress(index)
+		if not progress.is_empty() and bool(progress.get("completed", false)):
+			return true
+	return false
+
+
+## クーラーボックス（インベントリ）内の魚の総数。フッター表示（`_refresh_labels`）と
+## 右メニューの通知バッジ／ヒント判定で共有する。
+func _cooler_fish_total() -> int:
+	var total := 0
+	for count in PlayerProgress.inventory.values():
+		total += int(count)
+	return total
+
+
+## 右メニュー詳細パネルのデフォルト表示（コンテキストヒント）。優先度:
+## 1. 納品できる依頼がある → 依頼ボードへ誘導
+## 2. クーラーボックスに魚がいる → 魚市場へ誘導
+## 3. 該当なし → 従来どおり釣り場への案内
+## 新しい保存状態は作らず、既存状態の読み取りのみで決める純粋関数。
+func _facility_menu_hint() -> Dictionary:
+	if _has_deliverable_quest():
+		return {
+			"title": "つぎのおすすめ",
+			"body": "納品できる依頼がある。依頼ボードへ",
+			"primary": true,
+		}
+	var cooler_total := _cooler_fish_total()
+	if cooler_total > 0:
+		return {
+			"title": "つぎのおすすめ",
+			"body": "クーラーボックスに%d匹。魚市場で売ろう" % cooler_total,
+			"primary": true,
+		}
+	return {
+		"title": "釣り場へ向かう",
+		"body": "狙う魚に合わせてポイントを選ぶ",
+		"primary": true,
+	}
 
 
 func _unlocked_normal_spot_ids() -> Array[String]:
@@ -723,6 +770,141 @@ func _open_shark_pen() -> void:
 	navigate("shark_pen")
 
 
+## 右メニュー「A案: セクション見出し付き4グループ」のレイアウト定数。
+## メニュー枠は約383x513px（root比率 0.675-0.974 / 0.170-0.882）。
+## 値はメニュー矩形の高さに対する比率で、pxコメントはメニュー高513pxでの目安。
+const FACILITY_MENU_CONTENT_TOP := 0.128          # 施設ヘッダー直下の開始位置
+const FACILITY_MENU_ROW_GAP := 0.0098             # ボタン間ギャップ 約5px
+const FACILITY_MENU_SECTION_GAP_BEFORE := 0.0117  # 見出し直前の空き 約6px
+const FACILITY_MENU_SECTION_GAP_AFTER := 0.0059   # 見出し直後の空き 約3px
+const FACILITY_MENU_HEADING_HEIGHT := 0.0273      # 見出し行 約14px
+const FACILITY_MENU_DEPARTURE_HEIGHT := 0.0702    # primary行 約36px
+const FACILITY_MENU_NORMAL_HEIGHT := 0.0526       # 通常行 約27px
+const FACILITY_MENU_SYSTEM_HEIGHT := 0.0468      # システム小型ボタン 約24px
+const FACILITY_MENU_DETAIL_GAP := 0.0156          # 最終行と詳細パネルの空き 約8px（最低でも約4pxの可視ギャップを保証）
+const FACILITY_MENU_DETAIL_MIN_HEIGHT := 0.1000   # 詳細パネル最低高さ（2行本文が収まる目安）
+const FACILITY_MENU_DETAIL_BOTTOM_MARGIN := 0.0156 # 詳細パネル下端とメニュー枠下端の余白
+
+## セクション定義（表示順・見出しテキスト・ボタン高さ）。空文字は見出しなし。
+const FACILITY_MENU_SECTION_DEFS := {
+	"departure": {"heading": "", "height": FACILITY_MENU_DEPARTURE_HEIGHT},
+	"facility": {"heading": "施設", "height": FACILITY_MENU_NORMAL_HEIGHT},
+	"record": {"heading": "記録", "height": FACILITY_MENU_NORMAL_HEIGHT},
+	"system": {"heading": "システム", "height": FACILITY_MENU_SYSTEM_HEIGHT},
+}
+
+
+func _facility_menu_items() -> Array[Dictionary]:
+	var shark_pen_locked := not _can_open_shark_pen()
+	var shark_pen_detail := "捕獲したサメを育てる" if not shark_pen_locked else "Lv.30／危険海域で解放"
+	var quest_badge := _has_deliverable_quest()
+	var market_badge := _cooler_fish_total() > 0
+	return [
+		{
+			"id": "fishing_spots",
+			"title": "釣り場へ向かう",
+			"body": "狙う魚に合わせてポイントを選ぶ",
+			"icon_path": ICON_FISHING_PATH,
+			"callback": func() -> void: navigate("fishing_spots"),
+			"primary": true,
+			"locked": false,
+			"section": "departure",
+		},
+		{
+			"id": "quest_board",
+			"title": "依頼ボード",
+			"body": "釣果を届けて報酬を受け取る",
+			"icon_path": ICON_QUEST_PATH,
+			"callback": func() -> void: navigate("quest_board"),
+			"primary": false,
+			"locked": false,
+			"section": "facility",
+			"badge": quest_badge,
+		},
+		{
+			"id": "cooking",
+			"title": "調理場",
+			"body": "魚を料理して食事にする",
+			"icon_path": ICON_COOKING_PATH,
+			"callback": func() -> void: navigate("cooking"),
+			"primary": false,
+			"locked": false,
+			"section": "facility",
+		},
+		{
+			"id": "market",
+			"title": "魚市場",
+			"body": "釣果を売って資金にする",
+			"icon_path": ICON_MARKET_PATH,
+			"callback": func() -> void: navigate("market"),
+			"primary": false,
+			"locked": false,
+			"section": "facility",
+			"badge": market_badge,
+		},
+		{
+			"id": "shop",
+			"title": "釣具店",
+			"body": "竿を購入・装備する",
+			"icon_path": ICON_SHOP_PATH,
+			"callback": func() -> void: navigate("shop"),
+			"primary": false,
+			"locked": false,
+			"section": "facility",
+		},
+		{
+			"id": "shipyard",
+			"title": "船着き場",
+			"body": "船を購入して沖へ出る",
+			"icon_path": ICON_SHIPYARD_PATH,
+			"callback": func() -> void: navigate("shipyard"),
+			"primary": false,
+			"locked": false,
+			"section": "facility",
+		},
+		{
+			"id": "shark_pen",
+			"title": "サメの生簀",
+			"body": shark_pen_detail,
+			"icon_path": FightFishAssets.card_portrait_path({"id": "nekozame"}),
+			"callback": _open_shark_pen,
+			"primary": false,
+			"locked": shark_pen_locked,
+			"section": "facility",
+		},
+		{
+			"id": "status",
+			"title": "ステータス",
+			"body": "成長と装備を確認する",
+			"icon_path": ICON_STATUS_PATH,
+			"callback": func() -> void: navigate("status"),
+			"primary": false,
+			"locked": false,
+			"section": "record",
+		},
+		{
+			"id": "fish_book",
+			"title": "魚図鑑",
+			"body": "釣った魚の記録を見る",
+			"icon_path": FightFishAssets.card_portrait_path({"id": "aji"}),
+			"callback": func() -> void: navigate("fish_book"),
+			"primary": false,
+			"locked": false,
+			"section": "record",
+		},
+		{
+			"id": "title",
+			"title": "タイトルへ戻る",
+			"body": "進行を保存して戻る",
+			"icon_path": ICON_TITLE_PATH,
+			"callback": _return_to_title,
+			"primary": false,
+			"locked": false,
+			"section": "system",
+		},
+	]
+
+
 func _build_facility_menu(root: Control) -> void:
 	var menu := _anchored_control(root, 0.675, 0.170, 0.974, 0.882)
 	var frame := _texture_rect(HARBOR_MENU_FRAME_PATH)
@@ -734,46 +916,143 @@ func _build_facility_menu(root: Control) -> void:
 	header.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(menu, header, 0.100, 0.030, 0.900, 0.120)
 
-	_build_facility_detail_panel(menu)
-
-	var button_height := 0.058
-	var row_step := 0.064
-	var row_top := 0.126
-	var shark_pen_locked := not _can_open_shark_pen()
-	var shark_pen_detail := "捕獲したサメを育てる" if not shark_pen_locked else "Lv.30／危険海域で解放"
-	_build_facility_button(menu, row_top + row_step * 0.0, "釣り場へ向かう", "狙う魚に合わせてポイントを選ぶ", ICON_FISHING_PATH, func() -> void: navigate("fishing_spots"), true, button_height)
-	_build_facility_button(menu, row_top + row_step * 1.0, "サメの生簀", shark_pen_detail, FightFishAssets.card_portrait_path({"id": "nekozame"}), _open_shark_pen, false, button_height, shark_pen_locked)
-	_build_facility_button(menu, row_top + row_step * 2.0, "依頼ボード", "釣果を届けて報酬を受け取る", ICON_QUEST_PATH, func() -> void: navigate("quest_board"), false, button_height)
-	_build_facility_button(menu, row_top + row_step * 3.0, "調理場", "魚を料理して食事にする", ICON_COOKING_PATH, func() -> void: navigate("cooking"), false, button_height)
-	_build_facility_button(menu, row_top + row_step * 4.0, "魚市場", "釣果を売って資金にする", ICON_MARKET_PATH, func() -> void: navigate("market"), false, button_height)
-	_build_facility_button(menu, row_top + row_step * 5.0, "釣具店", "竿を購入・装備する", ICON_SHOP_PATH, func() -> void: navigate("shop"), false, button_height)
-	_build_facility_button(menu, row_top + row_step * 6.0, "船着き場", "船を購入して沖へ出る", ICON_SHIPYARD_PATH, func() -> void: navigate("shipyard"), false, button_height)
-	_build_facility_button(menu, row_top + row_step * 7.0, "ステータス", "成長と装備を確認する", ICON_STATUS_PATH, func() -> void: navigate("status"), false, button_height)
-	_build_facility_button(menu, row_top + row_step * 8.0, "魚図鑑", "釣った魚の記録を見る", FightFishAssets.card_portrait_path({"id": "aji"}), func() -> void: navigate("fish_book"), false, button_height)
-	_build_facility_button(menu, row_top + row_step * 9.0, "タイトルへ戻る", "進行を保存して戻る", ICON_TITLE_PATH, _return_to_title, false, button_height)
-	_set_facility_detail("釣り場へ向かう", "狙う魚に合わせてポイントを選ぶ", true)
+	var content_bottom := _build_facility_menu_rows(menu, _facility_menu_items())
+	_build_facility_detail_panel(menu, content_bottom)
+	var hint := _facility_menu_hint()
+	_set_facility_detail(String(hint.get("title", "")), String(hint.get("body", "")), bool(hint.get("primary", true)))
 
 
-func _build_facility_detail_panel(parent: Control) -> void:
+## セクション定義から行位置を動的算出して配置する（row_step*indexのハードコード復活は禁止）。
+## 戻り値はセクション全体を配置し終えた後のy位置（詳細パネルの起点計算に使う）。
+## 縦が足りない場合は「ギャップ→行高」の順で比例圧縮して必ず枠内に収める。
+## 詳細パネルを最終ボタンの上へ食い込ませる方向のフォールバックは行わない。
+func _build_facility_menu_rows(menu: Control, items: Array[Dictionary]) -> float:
+	var grouped: Dictionary = {}
+	var section_order: Array[String] = []
+	for item in items:
+		var section_id := String(item.get("section", "facility"))
+		if not grouped.has(section_id):
+			grouped[section_id] = []
+			section_order.append(section_id)
+		(grouped[section_id] as Array).append(item)
+
+	# 1パス目: 必要な高さを集計し、圧縮係数（ギャップ優先→行高）を決める。
+	var rows_height := 0.0
+	var headings_height := 0.0
+	var gaps_total := 0.0
+	for section_id in section_order:
+		var section_def: Dictionary = FACILITY_MENU_SECTION_DEFS.get(
+			section_id, {"heading": "", "height": FACILITY_MENU_NORMAL_HEIGHT}
+		)
+		if not String(section_def.get("heading", "")).is_empty():
+			headings_height += FACILITY_MENU_HEADING_HEIGHT
+			gaps_total += FACILITY_MENU_SECTION_GAP_BEFORE + FACILITY_MENU_SECTION_GAP_AFTER
+		var count := (grouped[section_id] as Array).size()
+		rows_height += float(section_def.get("height", FACILITY_MENU_NORMAL_HEIGHT)) * float(count)
+		gaps_total += FACILITY_MENU_ROW_GAP * float(maxi(count - 1, 0))
+
+	var available := (
+		1.0
+		- FACILITY_MENU_CONTENT_TOP
+		- FACILITY_MENU_DETAIL_GAP
+		- FACILITY_MENU_DETAIL_MIN_HEIGHT
+		- FACILITY_MENU_DETAIL_BOTTOM_MARGIN
+	)
+	var gap_scale := 1.0
+	var height_scale := 1.0
+	var solid_height := rows_height + headings_height
+	if solid_height + gaps_total > available and gaps_total > 0.0:
+		gap_scale = clampf((available - solid_height) / gaps_total, 0.0, 1.0)
+	if solid_height + gaps_total * gap_scale > available and solid_height > 0.0:
+		height_scale = clampf((available - gaps_total * gap_scale) / solid_height, 0.5, 1.0)
+
+	# 2パス目: 圧縮係数を反映して配置。
+	var y := FACILITY_MENU_CONTENT_TOP
+	for section_id in section_order:
+		var section_def: Dictionary = FACILITY_MENU_SECTION_DEFS.get(
+			section_id, {"heading": "", "height": FACILITY_MENU_NORMAL_HEIGHT}
+		)
+		var heading_text := String(section_def.get("heading", ""))
+		if not heading_text.is_empty():
+			y += FACILITY_MENU_SECTION_GAP_BEFORE * gap_scale
+			_build_section_heading(menu, y, heading_text, FACILITY_MENU_HEADING_HEIGHT * height_scale)
+			y += FACILITY_MENU_HEADING_HEIGHT * height_scale + FACILITY_MENU_SECTION_GAP_AFTER * gap_scale
+
+		var row_height := float(section_def.get("height", FACILITY_MENU_NORMAL_HEIGHT)) * height_scale
+		var section_items: Array = grouped[section_id]
+		for index in range(section_items.size()):
+			var item: Dictionary = section_items[index]
+			_build_facility_button(
+				menu,
+				y,
+				String(item["title"]),
+				String(item["body"]),
+				String(item["icon_path"]),
+				item["callback"] as Callable,
+				bool(item["primary"]),
+				row_height,
+				bool(item["locked"]),
+				bool(item.get("badge", false))
+			)
+			y += row_height
+			if index < section_items.size() - 1:
+				y += FACILITY_MENU_ROW_GAP * gap_scale
+	return y
+
+
+## セクション見出し（暗めブロンズのラベル＋右側の薄い同系ヘアライン1px）。日本語はruntime描画のみ。
+## メニュー内部のクリーム地に対して暗色文字で置くため、アウトラインは付けない。
+func _build_section_heading(menu: Control, top: float, text: String, height := FACILITY_MENU_HEADING_HEIGHT) -> void:
+	var row := _anchored_control(menu, 0.088, top, 0.912, top + height)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var label := _harbor_label(text, 12, Palette.HARBOR_MENU_SECTION_LABEL, true, 0)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	# 字間広め（見出しは装飾でなくグループ境界を示す情報）。FontVariationでグリフ間隔を広げる。
+	var spaced_font := FontVariation.new()
+	spaced_font.base_font = GameFontsScript.bold(get_theme_default_font())
+	spaced_font.spacing_glyph = 2
+	label.add_theme_font_override("font", spaced_font)
+	label.clip_text = true
+	_place_control(row, label, 0.0, 0.0, 0.320, 1.0)
+
+	var hairline := ColorRect.new()
+	hairline.color = Palette.HARBOR_MENU_SECTION_HAIRLINE
+	hairline.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place_control(row, hairline, 0.345, 0.460, 1.0, 0.540)
+
+
+func _build_facility_detail_panel(parent: Control, content_bottom: float) -> void:
+	# MIN_HEIGHT の確保は行側の圧縮（_build_facility_menu_rows）が担う。
+	# パネルを最終行の上へ動かすことは重なり禁止のため行わない。
+	var panel_top := content_bottom + FACILITY_MENU_DETAIL_GAP
+	var panel_bottom := 1.0 - FACILITY_MENU_DETAIL_BOTTOM_MARGIN
+
 	var panel := Panel.new()
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# 本文が想定外に折り返してもパネル外（メニュー枠外）へ漏れないよう保険で切り抜く。
+	panel.clip_contents = true
 	panel.add_theme_stylebox_override(
 		"panel",
 		_make_flat_panel_style(Palette.HARBOR_DETAIL_PANEL_FILL, Palette.HARBOR_DETAIL_PANEL_BORDER, 8, 2)
 	)
-	_place_control(parent, panel, 0.088, 0.802, 0.912, 0.956)
+	_place_control(parent, panel, 0.088, panel_top, 0.912, panel_bottom)
 
 	_facility_detail_title_label = _harbor_label("", 15, Palette.HARBOR_MENU_HEADER, true, 2, Palette.HARBOR_MENU_OUTLINE)
 	_facility_detail_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_facility_detail_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_facility_detail_title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(panel, _facility_detail_title_label, 0.055, 0.100, 0.945, 0.430)
+	_place_control(panel, _facility_detail_title_label, 0.055, 0.090, 0.945, 0.400)
 
 	_facility_detail_body_label = _harbor_label("", 13, Palette.HARBOR_DETAIL_BODY_TEXT, false, 1, Palette.HARBOR_LABEL_OUTLINE)
 	_facility_detail_body_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_facility_detail_body_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_facility_detail_body_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	_facility_detail_body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_facility_detail_body_label.clip_text = false
+	_facility_detail_body_label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 	_facility_detail_body_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(panel, _facility_detail_body_label, 0.055, 0.440, 0.945, 0.850)
+	_place_control(panel, _facility_detail_body_label, 0.055, 0.420, 0.945, 0.920)
 
 
 func _build_facility_button(
@@ -785,15 +1064,57 @@ func _build_facility_button(
 	callback: Callable,
 	primary := false,
 	height := 0.108,
-	locked := false
+	locked := false,
+	badge := false
 ) -> void:
+	# ボタン内の各要素比率（ボタンのローカル矩形に対する 0.0-1.0 の相対位置）。値は現行から不変。
+	const BUTTON_H_MARGIN := 0.088
+	const BUTTON_H_MARGIN_RIGHT := 0.912
+	const ACCENT_LEFT := 0.023
+	const ACCENT_TOP := 0.230
+	const ACCENT_RIGHT := 0.039
+	const ACCENT_BOTTOM := 0.770
+	const ICON_PLATE_LEFT := 0.055
+	const ICON_PLATE_TOP := 0.160
+	const ICON_PLATE_RIGHT := 0.165
+	const ICON_PLATE_BOTTOM := 0.840
+	const ICON_LEFT := 0.070
+	const ICON_TOP := 0.210
+	const ICON_RIGHT := 0.150
+	const ICON_BOTTOM := 0.790
+	const TITLE_LEFT := 0.205
+	const TITLE_TOP := 0.120
+	const TITLE_RIGHT_UNLOCKED := 0.900
+	const TITLE_RIGHT_WITH_LOCK_ICON := 0.775
+	const TITLE_BOTTOM := 0.880
+	const TITLE_FONT_SIZE_COMPACT := 19
+	const TITLE_FONT_SIZE_NORMAL := 21
+	const TITLE_FONT_SIZE_SMALL := 16
+	const COMPACT_HEIGHT_THRESHOLD := 0.064
+	const SMALL_HEIGHT_THRESHOLD := 0.050
+	# ロック錠前アイコン（右端。旧8px条件テキストの代わり。解放条件は詳細パネルのbodyへ集約）。
+	# 縦0.18-0.82（27px行で約17px）。減光の影響を受けず視認できるサイズを確保する。
+	const LOCK_ICON_LEFT := 0.790
+	const LOCK_ICON_TOP := 0.180
+	const LOCK_ICON_RIGHT := 0.905
+	const LOCK_ICON_BOTTOM := 0.820
+	# 通知バッジ（直径11pxの丸。ボタン右上角に完全収まる固定px矩形）。
+	# `parent`（メニュー）へ配置しボタンのclip_contentsの影響を受けないようにする。
+	const BADGE_DIAMETER := 11.0
+	const BADGE_INSET_RIGHT := 5.0
+	const BADGE_INSET_TOP := 4.0
+
 	var button := make_button("", callback)
 	button.custom_minimum_size = Vector2.ZERO
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.focus_mode = Control.FOCUS_ALL
 	button.clip_contents = true
 	_apply_facility_button_skin(button, primary)
-	_place_control(parent, button, 0.088, top, 0.912, top + height)
+	if locked:
+		# ロック中はスキンのみ減光（self_modulate。子の錠前アイコンへは伝播させない）。
+		# 解放条件は詳細パネルのbodyへ集約（行内の8pxテキストは廃止）。
+		button.self_modulate = Palette.HARBOR_FACILITY_LOCKED_MODULATE
+	_place_control(parent, button, BUTTON_H_MARGIN, top, BUTTON_H_MARGIN_RIGHT, top + height)
 	button.mouse_entered.connect(func() -> void: _set_facility_detail(title_text, body_text, primary))
 	button.focus_entered.connect(func() -> void: _set_facility_detail(title_text, body_text, primary))
 
@@ -803,7 +1124,9 @@ func _build_facility_button(
 		"panel",
 		_make_flat_panel_style(Palette.HARBOR_FACILITY_ACCENT_PRIMARY if primary else Palette.HARBOR_FACILITY_ACCENT_SECONDARY, Color.TRANSPARENT, 3, 0)
 	)
-	_place_control(button, accent, 0.023, 0.230, 0.039, 0.770)
+	if locked:
+		accent.modulate = Palette.HARBOR_FACILITY_LOCKED_MODULATE
+	_place_control(button, accent, ACCENT_LEFT, ACCENT_TOP, ACCENT_RIGHT, ACCENT_BOTTOM)
 
 	var icon_plate := Panel.new()
 	icon_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -816,13 +1139,18 @@ func _build_facility_button(
 			1
 		)
 	)
-	_place_control(button, icon_plate, 0.055, 0.160, 0.165, 0.840)
+	if locked:
+		icon_plate.modulate = Palette.HARBOR_FACILITY_LOCKED_MODULATE
+	_place_control(button, icon_plate, ICON_PLATE_LEFT, ICON_PLATE_TOP, ICON_PLATE_RIGHT, ICON_PLATE_BOTTOM)
 
 	var icon := _icon_rect(icon_path)
-	icon.modulate = Palette.HARBOR_ICON_MODULATE
-	_place_control(button, icon, 0.070, 0.210, 0.150, 0.790)
+	# ロック中はメインアイコンも個別に減光する（錠前アイコンには適用しない）。
+	icon.modulate = Palette.HARBOR_FACILITY_LOCKED_MODULATE if locked else Palette.HARBOR_ICON_MODULATE
+	_place_control(button, icon, ICON_LEFT, ICON_TOP, ICON_RIGHT, ICON_BOTTOM)
 
-	var title_font_size := 19 if height < 0.064 else 21
+	var title_font_size := TITLE_FONT_SIZE_NORMAL
+	if height < COMPACT_HEIGHT_THRESHOLD:
+		title_font_size = TITLE_FONT_SIZE_SMALL if height < SMALL_HEIGHT_THRESHOLD else TITLE_FONT_SIZE_COMPACT
 	var title_color := (
 		Palette.HARBOR_DETAIL_BODY_SECONDARY
 		if locked
@@ -831,17 +1159,37 @@ func _build_facility_button(
 	var title := _harbor_label(title_text, title_font_size, title_color, true, 2 if primary else 1, Palette.HARBOR_FACILITY_PRIMARY_OUTLINE if primary else Palette.HARBOR_FACILITY_SECONDARY_OUTLINE)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title.clip_text = true
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(button, title, 0.205, 0.120, 0.560 if locked else 0.900, 0.880)
+	_place_control(button, title, TITLE_LEFT, TITLE_TOP, TITLE_RIGHT_WITH_LOCK_ICON if locked else TITLE_RIGHT_UNLOCKED, TITLE_BOTTOM)
 
 	if locked:
-		var lock := _harbor_label(body_text, 8, Palette.HARBOR_DETAIL_BODY_SECONDARY, true, 1, Palette.HARBOR_LABEL_OUTLINE)
-		lock.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		lock.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		lock.clip_text = true
-		lock.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_place_control(button, lock, 0.545, 0.160, 0.930, 0.840)
+		var lock_icon := _icon_rect(ICON_LOCK_PATH)
+		lock_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_place_control(button, lock_icon, LOCK_ICON_LEFT, LOCK_ICON_TOP, LOCK_ICON_RIGHT, LOCK_ICON_BOTTOM)
+
+	if badge:
+		# ボタンではなくメニュー（parent）の子にして clip_contents の影響を避ける。
+		# アンカーをボタン右上角の1点（BUTTON_H_MARGIN_RIGHT, top）に固定し、
+		# offsetで直径11pxの丸をボタン内側へ収める（px指定なのでボタン高さに依存しない）。
+		var badge_dot := Panel.new()
+		# add_child() は同名衝突時に既定で読みにくい内部名（@Panel@id等）へ差し替えるため、
+		# 行ごとに一意な名前を明示して衝突を避ける（複数バッジ同時表示時の取得・カウント対策）。
+		badge_dot.name = "FacilityMenuBadge_%s" % title_text
+		badge_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		badge_dot.anchor_left = BUTTON_H_MARGIN_RIGHT
+		badge_dot.anchor_right = BUTTON_H_MARGIN_RIGHT
+		badge_dot.anchor_top = top
+		badge_dot.anchor_bottom = top
+		badge_dot.offset_left = -(BADGE_INSET_RIGHT + BADGE_DIAMETER)
+		badge_dot.offset_right = -BADGE_INSET_RIGHT
+		badge_dot.offset_top = BADGE_INSET_TOP
+		badge_dot.offset_bottom = BADGE_INSET_TOP + BADGE_DIAMETER
+		badge_dot.add_theme_stylebox_override(
+			"panel",
+			_make_flat_panel_style(Palette.HARBOR_MENU_BADGE_FILL, Palette.HARBOR_MENU_BADGE_BORDER, 6, 2)
+		)
+		parent.add_child(badge_dot)
 
 
 func _set_facility_detail(title_text: String, body_text: String, primary := false) -> void:
@@ -876,9 +1224,7 @@ func _refresh_labels() -> void:
 	PlayerProgress.selected_time_slot_id = normalized_time_slot_id
 	_refresh_time_slot_buttons()
 	_refresh_time_slot_grade_overlay()
-	var fish_total := 0
-	for count in PlayerProgress.inventory.values():
-		fish_total += int(count)
+	var fish_total := _cooler_fish_total()
 	var next_text := (
 		"MAX"
 		if PlayerProgress.level >= GameData.MAX_LEVEL

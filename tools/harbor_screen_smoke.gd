@@ -16,6 +16,7 @@ func _ready() -> void:
 	await _verify_info_board_v3()
 	await _verify_shark_pen_navigation()
 	await _verify_megalodon_omen()
+	await _verify_menu_badges_and_hint()
 
 	if _failed:
 		return
@@ -209,6 +210,88 @@ func _verify_megalodon_omen() -> void:
 	_expect(screen._preparation_body_label.text.contains("深海の何か"), "harbor should show megalodon omen when unlocked and uncaught")
 	screen.queue_free()
 	await get_tree().process_frame
+
+
+func _verify_menu_badges_and_hint() -> void:
+	# ケースA: 納品できる依頼 + クーラーボックスに魚あり → 両バッジ表示・優先度1のヒント。
+	PlayerProgress.level = 15
+	PlayerProgress.owned_boats = ["bluewater_boat"]
+	PlayerProgress.sea_chart_fragments = 3
+	PlayerProgress.caught_counts = {}
+	PlayerProgress.pending_buff = {}
+	PlayerProgress.inventory = {"kihada": 1, "aji": 2}
+	PlayerProgress.quest_board = [
+		{"kind": "delivery", "fish_id": "kihada", "count": 1, "reward_money": 50, "text": "テスト依頼"}
+	]
+	var screen := _make_screen()
+	await get_tree().process_frame
+	_expect(screen._has_deliverable_quest(), "quest with satisfied count should be deliverable")
+	_expect(screen._cooler_fish_total() == 3, "cooler total should sum inventory counts")
+	var items_a: Array[Dictionary] = screen._facility_menu_items()
+	_expect(bool(_menu_item_badge(items_a, "quest_board")), "quest_board should carry badge=true when deliverable")
+	_expect(bool(_menu_item_badge(items_a, "market")), "market should carry badge=true when cooler has fish")
+	_expect(_count_named_nodes(screen, "FacilityMenuBadge") == 2, "menu tree should render 2 badge dots")
+	_expect(
+		screen._facility_detail_title_label.text == "つぎのおすすめ",
+		"default detail title should switch to hint title when a quest is deliverable"
+	)
+	_expect(
+		screen._facility_detail_body_label.text.contains("納品できる依頼がある"),
+		"deliverable quest should take priority over cooler hint"
+	)
+	screen.queue_free()
+	await get_tree().process_frame
+
+	# ケースB: 依頼なし・クーラーボックスも空 → バッジなし・フォールバックヒント。
+	PlayerProgress.quest_board = []
+	PlayerProgress.inventory = {}
+	screen = _make_screen()
+	await get_tree().process_frame
+	_expect(not screen._has_deliverable_quest(), "empty quest board should not be deliverable")
+	_expect(screen._cooler_fish_total() == 0, "empty inventory should sum to zero")
+	var items_b: Array[Dictionary] = screen._facility_menu_items()
+	_expect(not bool(_menu_item_badge(items_b, "quest_board")), "quest_board badge should be false without a deliverable quest")
+	_expect(not bool(_menu_item_badge(items_b, "market")), "market badge should be false with an empty cooler")
+	_expect(_count_named_nodes(screen, "FacilityMenuBadge") == 0, "menu tree should render no badge dots")
+	_expect(
+		screen._facility_detail_title_label.text == "釣り場へ向かう",
+		"fallback detail should keep the original guidance when no hint applies"
+	)
+	screen.queue_free()
+	await get_tree().process_frame
+
+	# ケースC: クーラーボックスのみ魚あり → 魚市場バッジのみ・優先度2のヒント。
+	PlayerProgress.quest_board = []
+	PlayerProgress.inventory = {"aji": 2}
+	screen = _make_screen()
+	await get_tree().process_frame
+	var items_c: Array[Dictionary] = screen._facility_menu_items()
+	_expect(not bool(_menu_item_badge(items_c, "quest_board")), "quest_board badge should stay false without a deliverable quest")
+	_expect(bool(_menu_item_badge(items_c, "market")), "market badge should be true with fish in the cooler")
+	_expect(_count_named_nodes(screen, "FacilityMenuBadge") == 1, "menu tree should render exactly 1 badge dot")
+	_expect(
+		screen._facility_detail_body_label.text.contains("クーラーボックスに2匹"),
+		"cooler-only state should show the priority-2 hint with the fish count"
+	)
+	screen.queue_free()
+	await get_tree().process_frame
+
+
+func _menu_item_badge(items: Array[Dictionary], id: String) -> bool:
+	for item in items:
+		if String(item.get("id", "")) == id:
+			return bool(item.get("badge", false))
+	return false
+
+
+func _count_named_nodes(node: Node, target_name: String) -> int:
+	# Godot は同名兄弟ノードへ自動で連番を振る（"FacilityMenuBadge2" 等）ため前方一致で数える。
+	var count := 0
+	if String(node.name).begins_with(target_name):
+		count += 1
+	for child in node.get_children():
+		count += _count_named_nodes(child, target_name)
+	return count
 
 
 func _make_screen(payload: Dictionary = {}) -> Control:

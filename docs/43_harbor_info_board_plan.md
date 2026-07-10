@@ -75,6 +75,66 @@
 2. UI実装 — 情報板レイアウト・ポートレート表示・理由ラベル（`skills/ui-screen-uplift/` の距離ゲート併用、`docs/qa/harbor_qa.md` freeze改訂込み）
 3. QA証拠 — 実スクショ・`harbor_screen_smoke` 回帰・`docs/qa/evidence/harbor/` への証拠保存
 
+## 1.5 Phase B: 一点物化の生成指示
+
+`docs/qa/harbor_qa.md` §5 既知ギャップ「情報板カード／枠素材の質感は完成イメージより簡素（PIL幾何）。Phase B でAI一点物へ。」に対応する準備。対象は `tools/generate_harbor_info_board_assets.py` が出力する下記2素材のみ（この2点はPhase A同様、AIソース画像から加工する運用へ切り替える）。
+
+| 素材 | 現行の役割・寸法 | 参照箇所 |
+|---|---|---|
+| `harbor_info_board_frame.png` | 情報板全体の外枠背景。**1280x320px**（4:1）。`TextureRect.STRETCH_SCALE` でフルレクト伸縮（アスペクト非保持）。タイトル「本日の狙い目」は runtime Label が上に重なるだけで素材側に焼き込まない | `src/ui/harbor_screen.gd:117-119` |
+| `harbor_info_fish_card.png` | 情報板内の魚カード背景。**240x280px**（6:7）。同じく `STRETCH_SCALE` で3枚並べて使う。ポートレート・魚名・理由バッジはすべて runtime 要素が上に重なる | `src/ui/harbor_screen.gd:135-137`（1スロット分。3スロットで使い回し） |
+
+いずれも中央領域を透過でくり抜く必要はない（現行PIL版も不透明な板のまま。portrait/label は単に前面に重ねて表示される）。**アスペクト比を変えると港画面の縦横比が崩れるため、生成・加工の両方で上記比率を厳守する。**
+
+### 生成指示（Cursor GenerateImage / OpenAI で人手生成）
+
+トーンは既存港画面素材（金縁×濃紺×羊皮紙の和洋折衷・海洋RPG調。`harbor_plan_panel.png` や `harbor_main_frame.png` と揃える）。**日本語・英語問わず文字/ロゴ/紋章の描き込みは禁止**（実行時にrun-time描画と二重になる／将来のローカライズに耐えない）。背景はクロマキー用にマゼンタ `#FF00FF` 単色で塗りつぶす。
+
+**1. `harbor_info_board_frame_source.png` 用プロンプト（英語）**
+
+```
+A wide wooden bulletin-board frame for a seafaring fantasy RPG UI, ornate gold-leaf trim
+around a dark navy-blue felt/parchment center panel, warm brown weathered wood grain
+border with subtle carved corner plates, nautical fishing-village aesthetic (Japanese-
+European hybrid maritime style), rich but not gaudy, painterly texture with soft ambient
+occlusion. Wide banner aspect ratio 4:1 (approximately 1600x400px or larger, same aspect,
+generate bigger and it will be downscaled). Absolutely no text, no letters, no numbers,
+no logos, no emblems, no watermarks — decorative border and panel only. Flat solid
+magenta background color #FF00FF everywhere outside the board (for chroma-key removal).
+Soft directional lighting from upper-left, no harsh reflections, no glass glare.
+```
+
+**2. `harbor_info_fish_card_source.png` 用プロンプト（英語）**
+
+```
+A small ornate parchment card background for a seafaring fantasy RPG UI, aged cream
+parchment paper texture with a warm brown-gold carved wooden frame border, subtle
+corner plate ornaments matching a nautical fishing-village aesthetic (Japanese-European
+hybrid maritime style), soft vignette shadow at the edges, gentle paper grain and faint
+stains, no glossy highlights. Portrait aspect ratio 6:7, roughly square-ish and taller
+than wide (approximately 480x560px or larger, same aspect, generate bigger and it will
+be downscaled). Absolutely no text, no letters, no numbers, no logos, no icons, no
+illustrations of fish or animals — decorative frame and paper texture only, the center
+must stay a plain lightly-textured parchment fill so a portrait image and labels can be
+overlaid on top of it later. Flat solid magenta background color #FF00FF everywhere
+outside the card (for chroma-key removal).
+```
+
+### ソース画像の置き場所
+
+生成した画像はリサイズせずそのまま以下へ保存する（加工スクリプトが目標ピクセル寸法へ cover-fit する）:
+
+- `tools/source_assets/harbor/harbor_info_board_frame_source.png`
+- `tools/source_assets/harbor/harbor_info_fish_card_source.png`
+
+### 生成後の手順
+
+1. 加工スクリプト実行: `python3 tools/process_harbor_info_board_assets.py`（マゼンタ透過 → トリム → 現行と同一ピクセル寸法へ cover-fit リサイズ → `assets/showcase/harbor/harbor_info_board_frame.png` / `harbor_info_fish_card.png` を上書き出力）
+2. Visual QA: 港画面を実機/smoke でスクリーンショットし、Phase A前（PIL版）・完成イメージ（`harbor_info_board_vision_v4.png`）と横並び比較する（AGENTS.md不変ルール「見た目の完了判断は実スクショ+参照画像との横並び比較」）
+3. 採用基準（`docs/19_ui_production_playbook.md` の基準どおり）: **現行PIL版に全画面比較で明確に勝つ場合のみ採用**。僅差・部分的な質感向上だけでは不採用とし、理由を `docs/qa/harbor_qa.md`（不採用リスト／freeze更新）に記録し、比較画像を `docs/qa/evidence/harbor/` へコピーする
+4. 採用した場合は同じコミットで `docs/31_asset_ledger.md`（77行目の「港出港プラン紙面＋行アイコン（Phase A）」行と同じ書式）に「港情報板の枠＋魚カード（Phase B）」行を追記し、生成サービス・日付・商用利用条件を記入する
+5. `./tools/validate_project.sh` を通す（`tools/audit_showcase_asset_refs.py` の素材参照監査を含む）
+
 ## 2. 天気の気配（出港前の天候先読み）
 
 ### 現状（コード事実）
