@@ -7,6 +7,7 @@ extends Node
 const MainScript = preload("res://src/main.gd")
 const ThemeFactory = preload("res://src/ui/ui_theme.gd")
 const TitleScreen = preload("res://src/ui/title_screen.gd")
+const PlayerProgressScript = preload("res://src/autoload/player_progress.gd")
 
 var _failed := false
 
@@ -109,14 +110,65 @@ func _ready() -> void:
 	PlayerProgress.load_game()
 	_expect_eq(PlayerProgress.money, 777, "both corrupt should keep in-memory values")
 
-	# 未知の将来バージョンも読み込みは試みる（前方互換）
-	_write_text(
-		PlayerProgress.current_save_path(),
-		JSON.stringify({"version": 99, "money": 4242, "level": 3})
+	# version欠損の疎な旧saveは従来どおり読み込める。
+	_verify_versionless_sparse_save_is_allowed()
+	_verify_unknown_version_type_guards()
+	await _verify_title_future_slot_guard_ui()
+
+	# 将来版を含むslotは、main / backup / tmpを一切変えずに利用を止める。
+	_remove_all_save_files()
+	var future_main := {
+		"version": PlayerProgress.SAVE_VERSION + 0.5,
+		"level": {},
+		"money": [],
+		"play_seconds": null,
+		"future_main_payload": {"preserve": "main"},
+	}
+	var future_backup := {
+		"version": PlayerProgress.SAVE_VERSION + 2,
+		"level": 4,
+		"money": 4343,
+		"future_backup_payload": ["preserve", "backup"],
+	}
+	var future_tmp := {
+		"version": PlayerProgress.SAVE_VERSION + 3,
+		"future_tmp_payload": "preserve tmp",
+	}
+	_write_text(_slot_save_path(1), JSON.stringify(future_main, "\t"))
+	_write_text(_slot_backup_path(1), JSON.stringify(future_backup, "\t"))
+	_write_text(_slot_tmp_path(1), JSON.stringify(future_tmp, "\t"))
+	var future_hashes := {
+		"main": _file_hash(_slot_save_path(1)),
+		"backup": _file_hash(_slot_backup_path(1)),
+		"tmp": _file_hash(_slot_tmp_path(1)),
+	}
+	_expect(PlayerProgress.is_future_save_version_guarded(1), "future slot should be guarded")
+	_expect_eq(
+		float(PlayerProgress.future_save_guard_status(1).get("version", 0.0)),
+		float(PlayerProgress.SAVE_VERSION) + 0.5,
+		"future guard should report the main version"
 	)
-	PlayerProgress.load_game()
-	_expect_eq(PlayerProgress.money, 4242, "future version should still load")
-	_expect_eq(PlayerProgress.level, 3, "future version should still load level")
+	_expect(not PlayerProgress.set_active_save_slot(1), "future slot should refuse activation")
+	_expect_eq(PlayerProgress.money, 500, "future slot should not load its money")
+	PlayerProgress.save_game()
+	PlayerProgress.reset_game()
+	_expect_future_slot_hashes(future_hashes, "guarded save/reset should preserve every source file")
+
+	# 他slotは通常利用でき、対象slotへ戻るとguardを再評価する。
+	_expect(not PlayerProgress.is_future_save_version_guarded(2), "other slot should not inherit guard")
+	_expect(PlayerProgress.set_active_save_slot(2, false), "other slot should activate normally")
+	PlayerProgress.reset_game()
+	PlayerProgress.money = 2468
+	PlayerProgress.save_game()
+	_expect_eq(PlayerProgress.money, 2468, "other slot should remain saveable")
+	_expect_future_slot_hashes(future_hashes, "other slot saves must not change guarded slot files")
+	await _verify_title_future_slot_guard_ui()
+	_expect(not PlayerProgress.set_active_save_slot(1), "switching back should re-evaluate the future guard")
+	_expect_future_slot_hashes(future_hashes, "re-evaluating the guard must not change guarded slot files")
+	_remove_all_save_files()
+	_verify_future_guard_blocks_legacy_migration_on_startup()
+	_remove_all_save_files()
+	_expect(PlayerProgress.set_active_save_slot(1, false), "cleanup should restore slot 1 for later tests")
 
 	# E10: shark_bonds は欠損時に補完され、JSON由来のfloat値はintへ正規化される
 	_write_text(
@@ -239,6 +291,176 @@ func _verify_title_empty_slot_selection_is_non_committal() -> void:
 	viewport.queue_free()
 	await get_tree().process_frame
 	await get_tree().process_frame
+
+
+func _verify_title_future_slot_guard_ui() -> void:
+	var guarded_hashes := {
+		"main": _file_hash(_slot_save_path(1)),
+		"backup": _file_hash(_slot_backup_path(1)),
+		"tmp": _file_hash(_slot_tmp_path(1)),
+	}
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(1280, 720)
+	viewport.disable_3d = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(viewport)
+	var title: TitleScreen = TitleScreen.new()
+	title.theme = ThemeFactory.build_theme()
+	viewport.add_child(title)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_expect_eq(title._slot_buttons.size(), PlayerProgress.SAVE_SLOT_COUNT, "title should update all save slots")
+	_expect(title._slot_buttons[1].text.contains("Lv."), "title should render the safe occupied slot")
+	_expect(title._slot_buttons[2].text.contains("空き"), "title should render the empty slot")
+	title._select_slot(1)
+	_expect(title._continue_button.disabled, "future slot should disable continue in title UI")
+	_expect(title._new_button.disabled, "future slot should disable new game in title UI")
+	_expect(title._slot_buttons[0].text.contains("対応版"), "future slot should render a guarded slot label")
+	_expect(
+		title._slot_status_label.text.contains("新しい版")
+		and title._slot_status_label.text.contains("対応版"),
+		"future slot should show a compatible-version notice"
+	)
+	title._select_slot(2)
+	_expect(not title._continue_button.disabled, "safe slot should enable continue in title UI")
+	_expect(not title._new_button.disabled, "safe slot should re-enable new game in title UI")
+	title._continue_selected_slot()
+	_expect_eq(PlayerProgress.active_save_slot, 2, "safe slot should remain usable from title UI")
+	_expect_future_slot_hashes(guarded_hashes, "title refresh should preserve guarded files")
+	viewport.queue_free()
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+
+func _verify_versionless_sparse_save_is_allowed() -> void:
+	_remove_all_save_files()
+	_write_text(
+		_slot_save_path(1),
+		JSON.stringify({"level": 7, "money": 321, "sparse_payload": "keep compatible"})
+	)
+	_expect(
+		not PlayerProgress.is_future_save_version_guarded(1),
+		"versionless sparse save should remain compatible"
+	)
+	_expect(PlayerProgress.set_active_save_slot(1), "versionless sparse save should load")
+	_expect_eq(PlayerProgress.level, 7, "versionless sparse save should preserve level")
+	_expect_eq(PlayerProgress.money, 321, "versionless sparse save should preserve money")
+	_remove_all_save_files()
+
+
+func _verify_unknown_version_type_guards() -> void:
+	var invalid_cases: Array[Dictionary] = [
+		{"label": "String", "version": "future-v2"},
+		{"label": "null", "version": null},
+		{"label": "Array", "version": [PlayerProgress.SAVE_VERSION + 1]},
+		{"label": "Dictionary", "version": {"major": PlayerProgress.SAVE_VERSION + 1}},
+		{"label": "bool", "version": true},
+	]
+	for invalid_case in invalid_cases:
+		var label := String(invalid_case["label"])
+		var invalid_version = invalid_case["version"]
+		_remove_all_save_files()
+		_write_text(
+			_slot_save_path(1),
+			JSON.stringify(
+				{
+					"version": invalid_version,
+					"level": {},
+					"money": [],
+					"play_seconds": null,
+					"unknown_version_payload": label,
+				}
+			)
+		)
+		# 不正mainに加えて数値future backupを置いても、slot全体を安全側で停止する。
+		_write_text(
+			_slot_backup_path(1),
+			JSON.stringify({"version": PlayerProgress.SAVE_VERSION + 2, "future_backup_payload": label})
+		)
+		_write_text(
+			_slot_tmp_path(1),
+			JSON.stringify({"version": PlayerProgress.SAVE_VERSION + 3, "future_tmp_payload": label})
+		)
+		var guarded_hashes := {
+			"main": _file_hash(_slot_save_path(1)),
+			"backup": _file_hash(_slot_backup_path(1)),
+			"tmp": _file_hash(_slot_tmp_path(1)),
+		}
+		var guard_status := PlayerProgress.future_save_guard_status(1)
+		_expect(bool(guard_status.get("guarded", false)), "%s version should guard the slot" % label)
+		_expect_eq(
+			String(guard_status.get("reason", "")),
+			"unknown_version_type",
+			"%s version should report unknown type" % label
+		)
+		_expect_eq(
+			int(guard_status.get("version_type", -1)),
+			typeof(invalid_version),
+			"%s version should preserve its type in guard status" % label
+		)
+		var summary := PlayerProgress.save_slot_summary(1)
+		_expect(bool(summary.get("future_guarded", false)), "%s version should not break slot summary" % label)
+		_expect_eq(int(summary.get("level", -1)), 1, "%s summary should use safe level" % label)
+		_expect_eq(int(summary.get("money", -1)), 0, "%s summary should use safe money" % label)
+		_expect_eq(float(summary.get("play_seconds", -1.0)), 0.0, "%s summary should use safe play time" % label)
+		_expect_eq(
+			typeof(summary.get("future_version", null)),
+			typeof(invalid_version),
+			"%s version should not be coerced in slot summary" % label
+		)
+		_expect(not PlayerProgress.set_active_save_slot(1), "%s version should refuse activation" % label)
+		PlayerProgress.save_game()
+		PlayerProgress.reset_game()
+		_expect_future_slot_hashes(guarded_hashes, "%s version should preserve guarded files" % label)
+		_expect(not PlayerProgress.is_future_save_version_guarded(2), "%s guard should not affect slot 2" % label)
+		_expect(PlayerProgress.set_active_save_slot(2, false), "%s case should activate slot 2" % label)
+		PlayerProgress.reset_game()
+		PlayerProgress.money = 2000 + invalid_cases.find(invalid_case)
+		PlayerProgress.save_game()
+		_expect_future_slot_hashes(guarded_hashes, "%s case should keep slot 1 unchanged after slot 2 save" % label)
+		_expect(not PlayerProgress.set_active_save_slot(1), "%s guard should re-evaluate on slot switch" % label)
+		_expect_future_slot_hashes(guarded_hashes, "%s case should keep slot 1 unchanged after re-evaluation" % label)
+
+
+func _verify_future_guard_blocks_legacy_migration_on_startup() -> void:
+	# 起動時にbackup / tmpだけで将来版を検出しても、legacyをslotへ移動させない。
+	_write_text(
+		PlayerProgress.LEGACY_SAVE_PATH,
+		JSON.stringify({"version": PlayerProgress.SAVE_VERSION, "money": 999, "legacy_payload": "keep"})
+	)
+	_write_text(
+		_slot_backup_path(1),
+		JSON.stringify({"version": PlayerProgress.SAVE_VERSION + 1, "future_backup_payload": "keep"})
+	)
+	_write_text(
+		_slot_tmp_path(1),
+		JSON.stringify({"version": PlayerProgress.SAVE_VERSION + 2, "future_tmp_payload": "keep"})
+	)
+	var legacy_hash := _file_hash(PlayerProgress.LEGACY_SAVE_PATH)
+	var backup_hash := _file_hash(_slot_backup_path(1))
+	var tmp_hash := _file_hash(_slot_tmp_path(1))
+	var startup_progress := PlayerProgressScript.new()
+	startup_progress._sandbox_mode = false
+	startup_progress._initialize_save_storage()
+	_expect(
+		startup_progress.is_future_save_version_guarded(1),
+		"startup should guard a slot when only backup/tmp is future version"
+	)
+	_expect(not FileAccess.file_exists(_slot_save_path(1)), "startup guard should not create a main save")
+	_expect_eq(_file_hash(PlayerProgress.LEGACY_SAVE_PATH), legacy_hash, "startup guard should preserve legacy main")
+	_expect_eq(_file_hash(_slot_backup_path(1)), backup_hash, "startup guard should preserve future backup")
+	_expect_eq(_file_hash(_slot_tmp_path(1)), tmp_hash, "startup guard should preserve future tmp")
+	startup_progress.free()
+
+
+func _expect_future_slot_hashes(expected_hashes: Dictionary, message: String) -> void:
+	_expect_eq(_file_hash(_slot_save_path(1)), String(expected_hashes.get("main", "")), "%s (main)" % message)
+	_expect_eq(_file_hash(_slot_backup_path(1)), String(expected_hashes.get("backup", "")), "%s (backup)" % message)
+	_expect_eq(_file_hash(_slot_tmp_path(1)), String(expected_hashes.get("tmp", "")), "%s (tmp)" % message)
+
+
+func _file_hash(path: String) -> String:
+	return FileAccess.get_sha256(path)
 
 
 func _remove_if_exists(path: String) -> void:
