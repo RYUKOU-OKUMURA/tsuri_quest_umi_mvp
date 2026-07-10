@@ -998,7 +998,8 @@ func _close() -> void:
 
 
 func _apply_flow_button_style(button: Button) -> void:
-	CookingAssets.apply_flow_button_style(button, 76.0, 7.0)
+	# 左端の完了グリフを本文から離し、40px高でも潰れない導線幅を確保する。
+	CookingAssets.apply_flow_button_style(button, 92.0, 7.0)
 
 
 func _set_label_min_height(label: Label, font_size: int, lines := 1) -> void:
@@ -1010,55 +1011,26 @@ func _set_label_min_height(label: Label, font_size: int, lines := 1) -> void:
 
 
 func _draw_confirm_button_cue(button: Button) -> void:
-	var h := maxf(button.size.y, 1.0)
-	var center_y := h * 0.5
+	var center := Vector2(30.0, maxf(button.size.y, 1.0) * 0.5)
 	var gold := Palette.GOLD_BRIGHT
 	var ink := Palette.COOKING_LEVEL_DARK_INK
 	var glow := Palette.COOKING_LEVEL_IVORY
-	glow.a = 0.24
-
-	var crown_center := Vector2(24.0, center_y)
-	var crown := PackedVector2Array(
-		[
-			crown_center + Vector2(-11.0, 4.0),
-			crown_center + Vector2(-7.0, -6.0),
-			crown_center + Vector2(-2.0, 1.0),
-			crown_center + Vector2(0.0, -8.0),
-			crown_center + Vector2(2.0, 1.0),
-			crown_center + Vector2(7.0, -6.0),
-			crown_center + Vector2(11.0, 4.0),
-		]
-	)
-	button.draw_polyline(crown, ink, 4.0)
-	button.draw_polyline(crown, gold, 2.0)
-	button.draw_rect(Rect2(crown_center.x - 10.0, crown_center.y + 4.0, 20.0, 5.0), ink)
-	button.draw_rect(Rect2(crown_center.x - 8.0, crown_center.y + 5.0, 16.0, 2.0), glow)
-
-	var arrow_from := Vector2(42.0, center_y)
-	var arrow_to := Vector2(64.0, center_y)
-	button.draw_line(arrow_from, arrow_to, glow, 6.0)
-	button.draw_line(arrow_from, arrow_to, gold, 2.0)
+	glow.a = 0.28
+	button.draw_circle(center, 16.0, ink)
+	button.draw_circle(center, 13.0, glow)
+	var arrow_from := center + Vector2(-7.0, 0.0)
+	var arrow_to := center + Vector2(7.0, 0.0)
+	button.draw_line(arrow_from, arrow_to, gold, 3.0)
 	button.draw_polygon(
 		PackedVector2Array(
 			[
-				arrow_to + Vector2(7.0, 0.0),
-				arrow_to + Vector2(-3.0, -5.0),
-				arrow_to + Vector2(-3.0, 5.0),
+				arrow_to + Vector2(6.0, 0.0),
+				arrow_to + Vector2(-3.0, -6.0),
+				arrow_to + Vector2(-3.0, 6.0),
 			]
 		),
 		PackedColorArray([gold, gold, gold])
 	)
-
-	var card := Rect2(82.0, center_y - 8.0, 12.0, 16.0)
-	button.draw_rect(card.grow(1.5), ink)
-	button.draw_rect(card, Palette.COOKING_LEVEL_SUMMARY_CARD_FILL)
-	button.draw_line(
-		card.position + Vector2(1.0, 3.0),
-		card.position + Vector2(card.size.x - 1.0, 3.0),
-		Palette.COOKING_LEVEL_SUMMARY_CARD_HEAD,
-		2.0
-	)
-	button.draw_circle(card.position + Vector2(6.0, 10.0), 3.5, gold)
 
 
 func _clear_container(container: Container) -> void:

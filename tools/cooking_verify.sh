@@ -28,4 +28,7 @@ run_scene "res://tools/cooking_layout_audit.tscn"
 run_scene "res://tools/cooking_input_audit.tscn"
 run_scene "res://tools/cooking_flow_smoke.tscn"
 
+echo "==> C0表示契約（5状態キャプチャ）"
+"$ROOT/tools/cooking_visual_qa.sh"
+
 echo "Cooking showcase verification passed."

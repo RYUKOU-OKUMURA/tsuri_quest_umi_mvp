@@ -1,6 +1,6 @@
 # 調理場 QA判断ログ
 
-最終更新: 2026-07-05 / 状態: 調理場cooking_screen R1完了 / P1修正完了 / EXP_GAIN P2構成改善完了 / STATUS_SUMMARY P2構成改善完了 / COOK_SELECT P2構成改善完了 / LEVEL_UP P2構成改善完了 / 残: P3素材密度
+最終更新: 2026-07-10 / 状態: 調理場cooking_screen R1完了 / C0 runtime P1修正完了 / EXP_GAIN P2構成改善完了 / STATUS_SUMMARY P2構成改善完了 / COOK_SELECT P2構成改善完了 / LEVEL_UP P2構成改善完了 / 残: P3素材密度
 参照画像: reference/cooking_flow/01_cook_select_concept.png, reference/cooking_flow/02_meal_result_concept.png, reference/cooking_flow/03_exp_gain_concept.png, reference/cooking_flow/04_level_up_overlay_concept.png, reference/cooking_flow/05_status_summary_concept.png
 QA更新コマンド: ./tools/cooking_visual_qa.sh
 
@@ -19,6 +19,10 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 | STATUS_SUMMARY プレイヤーhero | `StatusPlayerHero min-height 154px` / `StatusNextExpText` は `次Lv\n%d EXP` / ステータス5行は `StatusStatRow*` 小カード | `src/ui/components/cooking_status_panel.gd` | P2 Top2構成改善。人物・Lv・次EXP・ステータス名/数値を、参照のプレイヤーカードのように同じ視線で読ませるため |
 | COOK_SELECT 右詳細タイトル帯 | `SelectedDishTitlePlate min-height 68px` / `SelectedDishTitle font 31 extra_bold` / `OVERRUN_NO_TRIMMING` / 料理画像 `SelectedDishFeatureImage min-height 140px` | `src/ui/cooking_screen.gd` | P2 Top3構成改善。右詳細を「料理名 -> 大皿 -> 材料/EXP/効果 -> 調理する」の順に読ませるため |
 | MEAL_RESULT モードタブ位置 | `MealResultModeTabVisual` plate `x=18 y=6` | `src/ui/components/cooking_reward_visuals.gd` | 「食べる」タブが結果バナー本文に重なるP1寄り表示を避けるため |
+| MEAL_RESULT 不透明ステージ下地 | `RewardStageBase` はMEAL_RESULT時のみ画面全体 `1280x720`・alpha `1.0` | `src/ui/components/cooking_reward_panel.gd` | alpha付き `meal_scene_bg.png` の下から前状態が透けるP1を防ぎ、EXP_GAIN / LEVEL_UPでは背面の調理画面を維持する |
+| STATUS_SUMMARY カード見出し帯 | `StatusSummaryTitleBand*` は `PanelBox`（文字を横断するボタン枠PNGを使わない） | `src/ui/components/cooking_status_panel.gd` | 5カードのタイトルを原寸で常に読めるようにする。カード矩形・見出し文字サイズは不変 |
+| EXP_GAIN / LEVEL_UP 下部導線 | 本文左content margin `Reward=88px` / `LevelUp=92px`、単一矢印グリフ | `cooking_reward_panel.gd` / `level_up_panel.gd` | 40px高の導線で複数小グリフが本文と潰れるP1を防ぐ |
+| STATUS_SUMMARY 所持金 | 整数部は3桁カンマ区切り（例: `10,170 G`） | `src/ui/components/cooking_status_panel.gd` | docs/19 §4.3の金額表記規格 |
 
 ## 2. 不採用・再試行禁止リスト
 
@@ -38,6 +42,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 | COOK_SELECT 料理カードタイトル帯 | 1 | 最新比較で枠ノッチとタイトル文字の干渉を確認し、runtimeタイトルをアウトラインなし太字・帯内下寄せへ調整 | 完了 |
 | COOK_SELECT 料理カード星ランク表示 | 1 | Label幅中央寄せを試したが実スクショで星文字が弱く、runtimeポリゴン描画 `RecipeStarRank` へ切替 | 完了 |
 | COOK_SELECT 右詳細料理名/大皿階層 | 1 | 右詳細上部を `SelectedDishTitlePlate` に組み替え、料理名を太字・省略禁止・監査対象にした | 構成改善完了 |
+| C0 runtime表示破綻 | 1 | 不透明ステージ下地、静かなカード見出し帯、単一導線グリフ、金額formatへ置換 | 完了 |
 
 ## 4. 暫定判定・再検証TODO
 
@@ -45,7 +50,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 
 ## 5. 現在の残ギャップ
 
-- P1: なし。`EXP_GAIN` の省略表示、`LEVEL_UP_OVERLAY` の解放説明省略、`STATUS_SUMMARY` のヘッダーEXP可読性、`MEAL_RESULT` の「食べる」タブ重なりは2026-07-05 P1修正で解消済み。
+- P1: なし。2026-07-10 C0でMEAL_RESULTの背面残像、STATUS_SUMMARYのタイトル帯衝突、EXP_GAIN / LEVEL_UP_OVERLAYの下部導線グリフ潰れ、STATUS_SUMMARY所持金の桁区切り違反を解消済み。既存の省略表示・ヘッダーEXP・モードタブのP1修正も維持。
 - P2 Top1完了: `EXP_GAIN` はステップ行を退け、中央の大見出し・巨大 `+EXP`・EXPゲージを先に読める構成へ改善済み。参照の一点物祝祭密度、巨大タイトルの余白、背景/光の素材差は残るが、次に触るなら数px調整ではなくAI生成一点物素材または祝祭設計フェーズとして扱う。
 - P2 Top2完了: `STATUS_SUMMARY` はヘッダーsubtitle、プレイヤーhero、ステータス5行、各カードのアート高さを見直し、人物・Lv/次EXP・ステータス名/数値が読める独立ステータス画面へ改善済み。参照ほどの人物一点物アート密度やカード装飾密度は残るが、次に触るなら素材フェーズとして扱う。
 - P2 Top3完了: `COOK_SELECT` は右詳細上部を料理タイトル帯に組み替え、料理名・説明・大皿・材料/EXP/効果・調理ボタンの順に読める構成へ改善済み。参照ほど行ラベルと効果行の一体感は残っていないが、残差はカード素材/行フレームの一点物素材フェーズとして扱う。
@@ -54,9 +59,24 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-なし。
+2026-07-10: `C0 runtime表示破綻` を、docs/33 C0 / docs/45 UI-C0-01 に基づく **P1再発** として局所再オープンし、同日完了。
+
+- 対象状態・差分: MEAL_RESULT（前状態の残像wash）、STATUS_SUMMARY（カードタイトル帯と文字の衝突）、EXP_GAIN / LEVEL_UP_OVERLAY（下部導線グリフ潰れ）、STATUS_SUMMARY所持金（3桁区切りなし）。
+- 動かすもの: 報酬画面の不透明ステージ下地、STATUS_SUMMARYカードタイトル帯の表示方式、上記2導線のランタイムグリフ、所持金表示format、決定的プレビューの表示契約。
+- 不動値: §1の全freeze値、調理/EXP/レベルアップの進行ロジック、料理・魚データ、既存素材、COOK_SELECT構成、C1〜C5の素材課題。
+- 比較条件: `tools/cooking_preview.gd` の固定Lv/所持金/料理状態で、5状態の1280x720 before / afterを保存し、参照02〜05との横並びでP1消失を確認する。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-10: `C0 runtime表示破綻` 完了。docs/45 UI-C0-01の4件を、素材や既存freezeを動かさずに解消した。
+
+- 再オープン理由: `2026-07-07_uplift_plan_gap_sheet.png` の実スクショで、MEAL_RESULTに前状態残像、STATUS_SUMMARYにタイトル帯衝突、EXP_GAIN / LEVEL_UP_OVERLAYに下部導線グリフ潰れを再確認。所持金の `%d G` もdocs/19 §4.3違反だったため、P1再発としてC0だけを開いた。
+- 変えたもの: MEAL_RESULT時だけ表示する`RewardStageBase` の不透明下地、MEAL_RESULT scene artのalpha `1.0`、5カードの静かなruntime見出し帯、EXP_GAIN / LEVEL_UPの単一矢印グリフと本文余白、STATUS_SUMMARY金額format、決定的プレビューのC0表示契約、旧金額表記を持つcontent audit契約。
+- 変えていないもの: §1の既存freeze値、調理/EXP/レベルアップの進行ロジック、カード矩形・見出し文字サイズ、料理/魚データ、既存素材、COOK_SELECT、C1〜C5。
+- 証拠画像: `docs/qa/evidence/cooking/2026-07-10_c0_before_{select,result,exp,levelup,status}.png` と `docs/qa/evidence/cooking/2026-07-10_c0_after_{select,result,exp,levelup,status}.png`。同一の決定的状態で比較し、MEAL_RESULTは下地が一貫して不透明、STATUS_SUMMARYは5見出しが文字横断なし、EXP_GAIN / LEVEL_UPは導線グリフと本文が分離、所持金は `10,170 G` を確認した。
+- 判定: beforeにあった4件のP1がafterで再現せず、参照02〜05の「独立した食事シーン・静かな見出し帯・単一で読める下部導線・金額の階層」へ局所的に近づいた。素材密度などC1〜C5のP2課題は再オープンしていない。
+- 検証: `./tools/cooking_visual_qa.sh` green、`./tools/cooking_verify.sh` green（content / layout / input / flow / C0 5状態表示契約）、`./tools/validate_project.sh` green。ObjectDB / resource終了ログは既知ベースライン警告。
+- 固定条件: 今後この4状態を触るときは、MEAL_RESULT限定の`RewardStageBase`不透明性、EXP_GAIN / LEVEL_UPでの下地非表示、カード見出しの文字非横断、導線本文の左余白、金額カンマ区切りを表示契約として維持する。素材密度の改善はC1〜C5で扱う。
 
 2026-07-05: `LEVEL_UP reward hierarchy pass` 完了。残P2として、レベルアップ報酬の主導線を通常パネルより強い構成へ上げた。
 

@@ -35,6 +35,7 @@ const EXP_BURST_FRAME := "res://assets/showcase/cooking/exp_burst_frame.png"
 
 
 var _dialog: PanelContainer
+var _stage_base: ColorRect
 var _stage_background: TextureRect
 var _result_banner: PanelContainer
 var _meal_banner_spark: MealResultBannerSparkVisual
@@ -430,6 +431,7 @@ func show_meal_result(result: Dictionary) -> void:
 	_status_strip.set_secondary(true)
 	_result_banner.name = "MealResultBanner"
 	_header_title.name = "MealResultTitle"
+	_set_stage_base_visible(true)
 	_set_stage_background(MEAL_SCENE_BG)
 	_apply_meal_result_composition()
 	var dish_name := String(result.get("dish_name", "料理"))
@@ -459,7 +461,7 @@ func show_meal_result(result: Dictionary) -> void:
 	_scene_dish_image.set_dish_texture(dish_texture)
 	_scene_dish_image.set_recipe_id(result_recipe_id)
 	_scene_dish_image.set_mode("meal")
-	_set_scene_backdrop(MEAL_RESULT_SCENE_ART, 0.98, true)
+	_set_scene_backdrop(MEAL_RESULT_SCENE_ART, 1.0, true)
 	_scene_caption.text = "湯気の立つ%sを味わった。" % dish_name
 	_scene_caption.visible = false
 	_scene_bonus_label.text = _meal_bonus_badge_text(result)
@@ -503,6 +505,7 @@ func show_reward(
 	_result_banner.name = "ExpGainBanner"
 	_header_title.name = "ExpGainTitle"
 	_header_title.modulate = Color.WHITE
+	_set_stage_base_visible(false)
 	_set_stage_background(EXP_STAGE_BG)
 	_apply_exp_gain_composition()
 	if _meal_banner_spark != null:
@@ -660,7 +663,8 @@ func _draw_confirm_button_cue(button: Button) -> void:
 
 
 func _apply_flow_button_style(button: Button) -> void:
-	CookingAssets.apply_flow_button_style(button, 78.0, 6.0)
+	# 左端の導線グリフと本文の描画領域を明確に分離する。
+	CookingAssets.apply_flow_button_style(button, 88.0, 6.0)
 
 
 func _set_confirm_button_emphasis(is_meal_result: bool) -> void:
@@ -803,56 +807,41 @@ func _draw_button_meal_to_exp(
 func _draw_button_exp_to_level(
 	button: Button, center: Vector2, ink: Color, gold: Color, red: Color
 ) -> void:
-	button.draw_circle(center + Vector2(-7.0, 0.0), 13.0, Palette.COOKING_REWARD_EXP_ORB_FILL)
-	button.draw_circle(center + Vector2(-7.0, 0.0), 7.0, Palette.GAUGE_CYAN_HI)
-	button.draw_line(center + Vector2(9.0, 0.0), center + Vector2(34.0, 0.0), gold, 3.0)
+	# 40px高の導線に複数の小グリフを詰めず、成長先を示す単一の上向き矢印にする。
+	var glyph_center := center + Vector2(2.0, 0.0)
+	button.draw_circle(glyph_center, 15.0, ink)
+	button.draw_circle(glyph_center, 12.0, Color(red, 0.82))
+	button.draw_line(glyph_center + Vector2(0.0, 8.0), glyph_center + Vector2(0.0, -7.0), gold, 3.0)
 	button.draw_colored_polygon(
 		PackedVector2Array(
 			[
-				center + Vector2(40.0, 0.0),
-				center + Vector2(28.0, -7.0),
-				center + Vector2(28.0, 7.0),
+				glyph_center + Vector2(0.0, -13.0),
+				glyph_center + Vector2(-7.0, -4.0),
+				glyph_center + Vector2(7.0, -4.0),
 			]
 		),
 		gold
 	)
-	var star_center := center + Vector2(58.0, 0.0)
-	var points := PackedVector2Array()
-	for i in range(10):
-		var radius := 13.0 if i % 2 == 0 else 6.0
-		var angle := -PI * 0.5 + TAU * float(i) / 10.0
-		points.append(star_center + Vector2(cos(angle), sin(angle)) * radius)
-	button.draw_colored_polygon(points, red)
-	button.draw_line(star_center + Vector2(-9.0, 12.0), star_center + Vector2(9.0, 12.0), ink, 2.0)
-	button.draw_line(star_center + Vector2(-6.0, -14.0), star_center + Vector2(0.0, -23.0), gold, 2.0)
-	button.draw_line(star_center + Vector2(6.0, -14.0), star_center + Vector2(0.0, -23.0), gold, 2.0)
 
 
 func _draw_button_exp_to_summary(
 	button: Button, center: Vector2, ink: Color, gold: Color, cyan: Color
 ) -> void:
-	button.draw_circle(center + Vector2(-9.0, 0.0), 12.0, Palette.COOKING_REWARD_EXP_ORB_FILL)
-	button.draw_circle(center + Vector2(-9.0, 0.0), 7.0, cyan)
-	button.draw_line(center + Vector2(8.0, 0.0), center + Vector2(30.0, 0.0), gold, 3.0)
+	# 準備画面へ戻る導線も、本文と競合しない単一の右向き矢印へ簡略化する。
+	var glyph_center := center + Vector2(2.0, 0.0)
+	button.draw_circle(glyph_center, 15.0, ink)
+	button.draw_circle(glyph_center, 12.0, Color(cyan, 0.76))
+	button.draw_line(glyph_center + Vector2(-7.0, 0.0), glyph_center + Vector2(7.0, 0.0), gold, 3.0)
 	button.draw_colored_polygon(
 		PackedVector2Array(
 			[
-				center + Vector2(36.0, 0.0),
-				center + Vector2(24.0, -7.0),
-				center + Vector2(24.0, 7.0),
+				glyph_center + Vector2(13.0, 0.0),
+				glyph_center + Vector2(4.0, -7.0),
+				glyph_center + Vector2(4.0, 7.0),
 			]
 		),
 		gold
 	)
-	for i in range(3):
-		var x := center.x + 48.0 + float(i) * 11.0
-		var rect := Rect2(x, center.y - 10.0 + float(i % 2) * 3.0, 9.0, 18.0)
-		button.draw_rect(rect, Palette.COOKING_REWARD_IVORY_FILL)
-		button.draw_rect(Rect2(rect.position, Vector2(rect.size.x, 3.0)), gold)
-		button.draw_line(rect.position, rect.position + Vector2(rect.size.x, 0.0), ink, 1.0)
-		button.draw_line(rect.position, rect.position + Vector2(0.0, rect.size.y), ink, 1.0)
-		button.draw_line(rect.position + Vector2(rect.size.x, 0.0), rect.position + rect.size, ink, 1.0)
-		button.draw_line(rect.position + Vector2(0.0, rect.size.y), rect.position + rect.size, ink, 1.0)
 
 
 func _draw_exp_focus_burst() -> void:
@@ -900,6 +889,14 @@ func _build_status_strip(parent: VBoxContainer) -> void:
 
 
 func _add_meal_scene_background() -> void:
+	_stage_base = ColorRect.new()
+	_stage_base.name = "RewardStageBase"
+	_stage_base.color = Palette.COOKING_REWARD_DIALOG_FILL
+	_stage_base.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_stage_base.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stage_base.visible = false
+	add_child(_stage_base)
+
 	_stage_background = TextureRect.new()
 	_stage_background.name = "RewardStageBackground"
 	_stage_background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -916,6 +913,11 @@ func _set_stage_background(path: String) -> void:
 	var bg_tex := load(path) as Texture2D
 	if bg_tex != null:
 		_stage_background.texture = bg_tex
+
+
+func _set_stage_base_visible(visible: bool) -> void:
+	if _stage_base != null:
+		_stage_base.visible = visible
 
 
 func _add_reward_ambient_layer() -> void:

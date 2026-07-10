@@ -744,7 +744,7 @@ func show_summary() -> void:
 		_meal_hint_label.text = "次回の釣行で\n%s" % _effect_sentence(String(PlayerProgress.pending_buff.get("text", "")))
 
 	_cooler_count_label.text = "%d / 20" % _total_fish_count()
-	_money_label.text = "%d G" % PlayerProgress.money
+	_money_label.text = "%s G" % _format_money(PlayerProgress.money)
 	_play_label.text = format_play_time(PlayerProgress.play_seconds)
 	if PlayerProgress.level >= GameData.BOSS_UNLOCK_LEVEL:
 		_footer_message_label.text = (
@@ -777,24 +777,38 @@ func _status_card(parent: HBoxContainer, title: String) -> VBoxContainer:
 	box.add_theme_constant_override("separation", 6)
 	panel.add_child(box)
 
-	var title_band := _texture_panel_box(
-		CookingAssets.FLOW_ACTION_BUTTON_FRAME,
-		24,
-		_style_box(Palette.COOKING_STATUS_TITLE_BAND_FILL, Palette.GOLD_DEEP, Palette.GOLD_BRIGHT, 4, 4),
-		20.0,
-		5.0
+	# FLOW_ACTION_BUTTON_FRAMEの中央装飾はカード見出しの文字を横断するため、
+	# 同じ配色の静かなruntime帯へ置換する。
+	var title_band := _panel_box(
+		Palette.COOKING_STATUS_TITLE_BAND_FILL,
+		Palette.GOLD_DEEP,
+		Palette.GOLD_BRIGHT,
+		3
 	)
+	var title_suffix := _status_card_node_name(title).trim_prefix("StatusCard")
+	title_band.name = "StatusSummaryTitleBand%s" % title_suffix
 	title_band.custom_minimum_size = Vector2(0.0, 36.0)
 	title_band.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(title_band)
 
 	var title_label := make_shadow_label(title, 21, Palette.TEXT_BONE, 3)
+	title_label.name = "StatusSummaryTitle%s" % title_suffix
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title_label.custom_minimum_size = Vector2(0.0, 38.0)
 	title_label.add_theme_color_override("font_shadow_color", Palette.COOKING_STATUS_TITLE_SHADOW)
 	title_band.add_child(title_label)
 	return box
+
+
+func _format_money(value: int) -> String:
+	var digits := str(maxi(0, value))
+	var grouped := ""
+	for index in range(digits.length()):
+		if index > 0 and (digits.length() - index) % 3 == 0:
+			grouped += ","
+		grouped += digits[index]
+	return grouped
 
 
 func _build_player_hero(parent: VBoxContainer) -> void:
