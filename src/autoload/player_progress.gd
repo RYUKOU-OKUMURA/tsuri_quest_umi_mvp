@@ -5,6 +5,7 @@ signal level_up(new_level: int)
 signal fish_caught(fish_id: String, size_cm: float)
 signal dish_eaten(recipe_id: String, gained_exp: int)
 signal titles_earned(title_ids: Array[String])
+signal save_failed(message: String)
 
 const SAVE_SLOT_COUNT := 3
 const DEFAULT_SAVE_SLOT := 1
@@ -102,6 +103,8 @@ var selected_time_slot_id: String = GameData.DEFAULT_TIME_SLOT_ID
 # true の間はディスクへの読み書きを一切行わない。
 var _sandbox_mode := false
 var _known_title_ids: Array[String] = []
+# save_system_smoke 専用。通常実行では空文字のままにする。
+var _save_failure_injection_stage := ""
 
 
 func _ready() -> void:
@@ -251,14 +254,15 @@ func save_slot_summary(slot_id: int) -> Dictionary:
 	}
 
 
-func reset_game() -> void:
+func reset_game() -> bool:
 	if is_future_save_version_guarded():
-		push_warning(FUTURE_SAVE_GUARD_MESSAGE)
-		return
+		_report_save_failure(FUTURE_SAVE_GUARD_MESSAGE)
+		return false
 	_reset_runtime_state()
 	_remember_current_titles()
-	save_game()
+	var saved := save_game()
 	progress_changed.emit()
+	return saved
 
 
 func _reset_runtime_state() -> void:
@@ -865,12 +869,12 @@ func _award_quest_reward_rig() -> bool:
 	return true
 
 
-func save_game() -> void:
+func save_game() -> bool:
 	if _sandbox_mode:
-		return
+		return true
 	if is_future_save_version_guarded():
-		push_warning(FUTURE_SAVE_GUARD_MESSAGE)
-		return
+		_report_save_failure(FUTURE_SAVE_GUARD_MESSAGE)
+		return false
 	_ensure_slot_dir(active_save_slot)
 	var data := {
 		"version": SAVE_VERSION,
@@ -899,21 +903,53 @@ func save_game() -> void:
 	var backup_path := current_backup_path()
 	var tmp_path := current_tmp_path()
 	# 一時ファイルへ書き切ってから差し替える（書き込み途中のクラッシュで本体を壊さない）
-	var tmp_file := FileAccess.open(tmp_path, FileAccess.WRITE)
+	var tmp_file: FileAccess = null
+	if _save_failure_injection_stage != "tmp_open":
+		tmp_file = FileAccess.open(tmp_path, FileAccess.WRITE)
 	if tmp_file == null:
-		push_warning("セーブファイルを開けませんでした: %s" % tmp_path)
-		return
+		return _fail_save("セーブ用の一時ファイルを開けませんでした。")
+	if _save_failure_injection_stage == "write_unavailable":
+		tmp_file.close()
+		_remove_save_tmp(tmp_path)
+		return _fail_save("セーブデータを書き込めませんでした。")
 	tmp_file.store_string(JSON.stringify(data, "\t"))
+	var write_error := tmp_file.get_error()
 	tmp_file.close()
+	if write_error != OK:
+		_remove_save_tmp(tmp_path)
+		return _fail_save("セーブデータを書き込めませんでした（コード: %d）。" % write_error)
 
 	# 直前の正常な本体を1世代バックアップとして残す
 	if FileAccess.file_exists(save_path):
-		var backup_err := DirAccess.rename_absolute(save_path, backup_path)
+		var backup_err := ERR_CANT_CREATE if _save_failure_injection_stage == "backup_rename" else DirAccess.rename_absolute(save_path, backup_path)
 		if backup_err != OK:
-			push_warning("セーブのバックアップ作成に失敗しました（コード: %d）" % backup_err)
-	var rename_err := DirAccess.rename_absolute(tmp_path, save_path)
+			_remove_save_tmp(tmp_path)
+			return _fail_save("セーブのバックアップ作成に失敗しました（コード: %d）。" % backup_err)
+	var rename_err := ERR_CANT_CREATE if _save_failure_injection_stage == "final_rename" else DirAccess.rename_absolute(tmp_path, save_path)
 	if rename_err != OK:
-		push_warning("セーブファイルの差し替えに失敗しました（コード: %d）" % rename_err)
+		_remove_save_tmp(tmp_path)
+		if FileAccess.file_exists(backup_path) and not FileAccess.file_exists(save_path):
+			# backup世代を残したままmainを復元し、再試行可能な状態を維持する。
+			var restore_err := DirAccess.copy_absolute(backup_path, save_path)
+			if restore_err != OK:
+				return _fail_save("セーブファイルの差し替えと復元に失敗しました（コード: %d / %d）。" % [rename_err, restore_err])
+		return _fail_save("セーブファイルの差し替えに失敗しました（コード: %d）。" % rename_err)
+	return true
+
+
+func _fail_save(message: String) -> bool:
+	_report_save_failure(message)
+	return false
+
+
+func _report_save_failure(message: String) -> void:
+	push_warning(message)
+	save_failed.emit(message)
+
+
+func _remove_save_tmp(tmp_path: String) -> void:
+	if FileAccess.file_exists(tmp_path):
+		DirAccess.remove_absolute(tmp_path)
 
 
 func load_game() -> void:
