@@ -585,7 +585,8 @@ func _refresh_detail() -> void:
 	]
 	_detail_price_label.text = "単価 %s G" % ScreenBase.format_money(price)
 	_detail_count_label.text = "所持 %d匹" % count
-	_detail_subtotal_label.text = "選択 %s G" % ScreenBase.format_money(price * quantity)
+	var item_quote := PlayerProgress.quote_fish_sale({_selected_fish_id: quantity})
+	_detail_subtotal_label.text = "選択 %s G" % ScreenBase.format_money(int(item_quote.get("income", 0)))
 
 func _refresh_cart() -> void:
 	var summary := _cart_summary()
@@ -693,7 +694,7 @@ func _hide_confirm_overlay() -> void:
 	_confirm_overlay.visible = false
 
 
-func _confirm_sell() -> void:
+func _confirm_sell() -> Dictionary:
 	var result := PlayerProgress.sell_fish_batch(_sell_quantities)
 	_confirm_overlay.visible = false
 	if bool(result.get("ok", false)):
@@ -705,28 +706,11 @@ func _confirm_sell() -> void:
 	else:
 		_last_message = String(result.get("message", "売却できませんでした。"))
 	_refresh()
+	return result
 
 
 func _cart_summary() -> Dictionary:
-	var income := 0
-	var amount := 0
-	var types := 0
-	for key in _sell_quantities.keys():
-		var fish_id := String(key)
-		var quantity := int(_sell_quantities[fish_id])
-		if quantity <= 0:
-			continue
-		var fish := GameData.get_fish(fish_id)
-		if fish.is_empty():
-			continue
-		types += 1
-		amount += quantity
-		income += int(fish.get("sell_price", 0)) * quantity
-	return {
-		"income": income,
-		"amount": amount,
-		"types": types,
-	}
+	return PlayerProgress.quote_fish_sale(_sell_quantities)
 
 
 func _selected_order_ids() -> Array[String]:

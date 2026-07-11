@@ -377,13 +377,48 @@ func add_sea_chart_fragments(amount: int = 1) -> int:
 	return sea_chart_fragments - before
 
 
+func _saturating_add_nonnegative(current: int, amount: int) -> int:
+	var bounded_current := clampi(current, 0, MAX_SAFE_JSON_INTEGER)
+	if amount <= 0:
+		return bounded_current
+	if bounded_current >= MAX_SAFE_JSON_INTEGER or amount >= MAX_SAFE_JSON_INTEGER - bounded_current:
+		return MAX_SAFE_JSON_INTEGER
+	return bounded_current + amount
+
+
+func _saturating_multiply_nonnegative(left: int, right: int) -> int:
+	if left <= 0 or right <= 0:
+		return 0
+	if left >= MAX_SAFE_JSON_INTEGER or right >= MAX_SAFE_JSON_INTEGER:
+		return MAX_SAFE_JSON_INTEGER
+	@warning_ignore("integer_division")
+	var largest_safe_left := MAX_SAFE_JSON_INTEGER / right
+	if left > largest_safe_left:
+		return MAX_SAFE_JSON_INTEGER
+	return left * right
+
+
+func _safe_count_dictionary_total(values: Dictionary) -> int:
+	var total := 0
+	for value in values.values():
+		if not _is_integer_at_least(value, 0):
+			return MAX_SAFE_JSON_INTEGER
+		total = _saturating_add_nonnegative(total, int(value))
+	return total
+
+
+func _increment_count_with_global_cap(values: Dictionary, key: String) -> bool:
+	var current := int(values.get(key, 0))
+	if current >= MAX_SAFE_JSON_INTEGER or _safe_count_dictionary_total(values) >= MAX_SAFE_JSON_INTEGER:
+		return false
+	values[key] = current + 1
+	return true
+
+
 func gain_trip_event_money(amount: int) -> void:
 	if amount <= 0:
 		return
-	if money >= MAX_SAFE_JSON_INTEGER or amount >= MAX_SAFE_JSON_INTEGER - money:
-		money = MAX_SAFE_JSON_INTEGER
-	else:
-		money += amount
+	money = _saturating_add_nonnegative(money, amount)
 	save_game()
 	progress_changed.emit()
 
@@ -407,7 +442,7 @@ func add_exp(amount: int) -> Array[int]:
 	if amount <= 0 or level >= GameData.MAX_LEVEL:
 		return leveled_to
 
-	exp += amount
+	exp = _saturating_add_nonnegative(exp, amount)
 	while level < GameData.MAX_LEVEL:
 		var required := exp_to_next_level()
 		if required <= 0 or exp < required:
@@ -428,7 +463,7 @@ func record_catch(fish_id: String, size_cm: float, spot_id: String = "") -> Dict
 	var previous_best := float(best_sizes.get(fish_id, 0.0))
 	var catch_result := {
 		"fish_id": fish_id,
-		"first_catch": previous_count <= 0,
+		"first_catch": false,
 		"boss_first_clear_reward": {},
 		"record_broken": previous_count > 0 and size_cm > previous_best,
 		"previous_best_cm": previous_best,
@@ -441,21 +476,24 @@ func record_catch(fish_id: String, size_cm: float, spot_id: String = "") -> Dict
 		if GameData.is_raiseable_shark_id(fish_id) and not shark_bonds.has(fish_id):
 			shark_bonds[fish_id] = 0
 	else:
-		inventory[fish_id] = int(inventory.get(fish_id, 0)) + 1
-	caught_counts[fish_id] = previous_count + 1
+		_increment_count_with_global_cap(inventory, fish_id)
+	var caught_incremented := _increment_count_with_global_cap(caught_counts, fish_id)
+	catch_result["first_catch"] = previous_count <= 0 and caught_incremented
 	if not spot_id.is_empty():
 		var spot_counts: Dictionary = {}
 		var loaded_spot_counts = spot_caught_counts.get(spot_id, {})
 		if typeof(loaded_spot_counts) == TYPE_DICTIONARY:
 			spot_counts = loaded_spot_counts.duplicate(true)
-		spot_counts[fish_id] = int(spot_counts.get(fish_id, 0)) + 1
+		spot_counts[fish_id] = _saturating_add_nonnegative(
+			int(spot_counts.get(fish_id, 0)), 1
+		)
 		spot_caught_counts[spot_id] = spot_counts
 	best_sizes[fish_id] = maxf(float(best_sizes.get(fish_id, 0.0)), size_cm)
-	if previous_count <= 0 and bool(fish.get("boss", false)):
+	if bool(catch_result["first_catch"]) and bool(fish.get("boss", false)):
 		var reward := GameData.get_boss_first_clear_reward(fish_id)
 		var reward_money := int(reward.get("money", 0))
 		if reward_money > 0:
-			money += reward_money
+			money = _saturating_add_nonnegative(money, reward_money)
 		catch_result["boss_first_clear_reward"] = reward
 	catch_result["new_titles"] = _award_new_titles()
 	fish_caught.emit(fish_id, size_cm)
@@ -474,15 +512,16 @@ func sell_fish(fish_id: String, amount: int) -> Dictionary:
 	if fish.is_empty() or bool(fish.get("shark", false)) or amount <= 0 or current < amount:
 		return {"ok": false, "message": "売却できる魚が足りません。"}
 
-	var income := int(fish["sell_price"]) * amount
+	var income := _saturating_multiply_nonnegative(int(fish["sell_price"]), amount)
 	inventory[fish_id] = current - amount
-	money += income
+	money = _saturating_add_nonnegative(money, income)
 	save_game()
 	progress_changed.emit()
 	return {"ok": true, "income": income, "amount": amount}
 
 
-func sell_fish_batch(orders: Dictionary) -> Dictionary:
+## inventoryを参照しないpure見積。市場表示と実売却で同じ安全な積算結果を共有する。
+func quote_fish_sale(orders: Dictionary) -> Dictionary:
 	var normalized: Dictionary = {}
 	var sold: Dictionary = {}
 	var income := 0
@@ -494,8 +533,62 @@ func sell_fish_batch(orders: Dictionary) -> Dictionary:
 		if amount <= 0:
 			continue
 		var fish := GameData.get_fish(fish_id)
-		var current := fish_count(fish_id)
-		if fish.is_empty() or bool(fish.get("shark", false)) or current < amount:
+		if fish.is_empty() or bool(fish.get("shark", false)):
+			return {
+				"ok": false,
+				"reason": "invalid_fish",
+				"income": 0,
+				"amount": 0,
+				"total_amount": 0,
+				"types": 0,
+				"orders": {},
+				"sold": {},
+			}
+		normalized[fish_id] = amount
+
+	for fish_id in normalized.keys():
+		var amount := int(normalized[fish_id])
+		var fish := GameData.get_fish(fish_id)
+		var item_income := _saturating_multiply_nonnegative(int(fish["sell_price"]), amount)
+		income = _saturating_add_nonnegative(income, item_income)
+		total_amount = _saturating_add_nonnegative(total_amount, amount)
+		sold[fish_id] = {
+			"amount": amount,
+			"income": item_income,
+		}
+
+	return {
+		"ok": not normalized.is_empty(),
+		"reason": "" if not normalized.is_empty() else "empty",
+		"income": income,
+		"amount": total_amount,
+		"total_amount": total_amount,
+		"types": normalized.size(),
+		"orders": normalized,
+		"sold": sold,
+	}
+
+
+func sell_fish_batch(orders: Dictionary) -> Dictionary:
+	var quote := quote_fish_sale(orders)
+	if not bool(quote.get("ok", false)):
+		var invalid_fish := String(quote.get("reason", "")) == "invalid_fish"
+		return {
+			"ok": false,
+			"income": 0,
+			"total_amount": 0,
+			"sold": {},
+			"message": (
+				"売却できる魚が足りません。"
+				if invalid_fish
+				else "売る魚を選んでください。"
+			),
+		}
+
+	var normalized: Dictionary = quote.get("orders", {})
+	for fish_id in normalized.keys():
+		var amount := int(normalized[fish_id])
+		if fish_count(fish_id) < amount:
 			return {
 				"ok": false,
 				"income": 0,
@@ -503,30 +596,14 @@ func sell_fish_batch(orders: Dictionary) -> Dictionary:
 				"sold": {},
 				"message": "売却できる魚が足りません。",
 			}
-		normalized[fish_id] = amount
-		income += int(fish["sell_price"]) * amount
-		total_amount += amount
-
-	if normalized.is_empty():
-		return {
-			"ok": false,
-			"income": 0,
-			"total_amount": 0,
-			"sold": {},
-			"message": "売る魚を選んでください。",
-		}
 
 	for fish_id in normalized.keys():
-		var amount := int(normalized[fish_id])
-		var fish := GameData.get_fish(fish_id)
-		var item_income := int(fish["sell_price"]) * amount
-		inventory[fish_id] = fish_count(fish_id) - amount
-		sold[fish_id] = {
-			"amount": amount,
-			"income": item_income,
-		}
+		inventory[fish_id] = fish_count(fish_id) - int(normalized[fish_id])
 
-	money += income
+	var income := int(quote.get("income", 0))
+	var total_amount := int(quote.get("total_amount", 0))
+	var sold: Dictionary = Dictionary(quote.get("sold", {})).duplicate(true)
+	money = _saturating_add_nonnegative(money, income)
 	save_game()
 	progress_changed.emit()
 	return {
@@ -648,8 +725,8 @@ func deliver_quest(index: int) -> Dictionary:
 		inventory[fish_id] = current_count - required_count
 
 	var reward := int(quest.get("reward_money", 0))
-	money += reward
-	quest_completed_count += 1
+	money = _saturating_add_nonnegative(money, reward)
+	quest_completed_count = _saturating_add_nonnegative(quest_completed_count, 1)
 	var rig_awarded := _award_quest_reward_rig()
 	var new_titles := _award_new_titles()
 	var replacement := GameData.generate_quest(_quest_generation_context([quest]))
@@ -690,7 +767,11 @@ func cook_and_eat(fish_id: String, recipe_id: String) -> Dictionary:
 	var first_time := not eaten_recipes.has(dish_key)
 	var first_bonus := base_exp if first_time else 0
 	var total_exp := base_exp + first_bonus
-	eaten_recipes[dish_key] = int(eaten_recipes.get(dish_key, 0)) + 1
+	var eaten_count_incremented := _increment_count_with_global_cap(eaten_recipes, dish_key)
+	if first_time and not eaten_count_incremented:
+		first_time = false
+		first_bonus = 0
+		total_exp = base_exp
 	pending_buff = {
 		"recipe_id": recipe_id,
 		"name": "%sの%s" % [String(fish["name"]), String(recipe["name"])],
@@ -1143,16 +1224,15 @@ func _is_valid_save_candidate(data: Dictionary) -> bool:
 		return false
 	if data.has("sea_chart_fragments") and not _is_integer_in_range(data["sea_chart_fragments"], 0, SEA_CHART_FRAGMENT_MAX):
 		return false
-	for key in ["inventory", "caught_counts"]:
-		if data.has(key) and not _is_nonnegative_number_dictionary(data[key]):
+	for key in ["inventory", "caught_counts", "eaten_recipes"]:
+		if data.has(key) and not _is_safe_count_dictionary(data[key]):
 			return false
 	if data.has("best_sizes") and not _is_nonnegative_float_dictionary(data["best_sizes"]):
 		return false
 	if data.has("spot_caught_counts") and not _is_valid_spot_caught_counts(data["spot_caught_counts"]):
 		return false
-	for key in ["eaten_recipes", "pending_buff"]:
-		if data.has(key) and typeof(data[key]) != TYPE_DICTIONARY:
-			return false
+	if data.has("pending_buff") and typeof(data["pending_buff"]) != TYPE_DICTIONARY:
+		return false
 	for key in ["owned_rods", "owned_rigs", "owned_boats"]:
 		if data.has(key) and not _is_string_array(data[key]):
 			return false
@@ -1198,12 +1278,17 @@ func _is_integer_in_range(value: Variant, minimum: int, maximum: int) -> bool:
 	return _is_json_integer(value) and float(value) >= minimum and float(value) <= maximum
 
 
-func _is_nonnegative_number_dictionary(value: Variant) -> bool:
+func _is_safe_count_dictionary(value: Variant) -> bool:
 	if typeof(value) != TYPE_DICTIONARY:
 		return false
+	var total := 0
 	for item in Dictionary(value).values():
 		if not _is_integer_at_least(item, 0):
 			return false
+		var count := int(item)
+		if count > MAX_SAFE_JSON_INTEGER - total:
+			return false
+		total += count
 	return true
 
 
@@ -1326,27 +1411,13 @@ func _apply_save_data(data: Dictionary) -> void:
 	var loaded_eaten_recipes = data.get("eaten_recipes", {})
 	var loaded_quest_board = data.get("quest_board", [])
 	var loaded_shark_bonds = data.get("shark_bonds", {})
-	inventory = (
-		loaded_inventory.duplicate(true) if typeof(loaded_inventory) == TYPE_DICTIONARY else {}
-	)
-	caught_counts = (
-		loaded_caught_counts.duplicate(true)
-		if typeof(loaded_caught_counts) == TYPE_DICTIONARY
-		else {}
-	)
-	spot_caught_counts = (
-		loaded_spot_caught_counts.duplicate(true)
-		if typeof(loaded_spot_caught_counts) == TYPE_DICTIONARY
-		else {}
-	)
+	inventory = _normalized_count_dictionary(loaded_inventory)
+	caught_counts = _normalized_count_dictionary(loaded_caught_counts)
+	spot_caught_counts = _normalized_spot_caught_counts(loaded_spot_caught_counts)
 	best_sizes = (
 		loaded_best_sizes.duplicate(true) if typeof(loaded_best_sizes) == TYPE_DICTIONARY else {}
 	)
-	eaten_recipes = (
-		loaded_eaten_recipes.duplicate(true)
-		if typeof(loaded_eaten_recipes) == TYPE_DICTIONARY
-		else {}
-	)
+	eaten_recipes = _normalized_count_dictionary(loaded_eaten_recipes)
 	quest_board = _normalized_quest_board(loaded_quest_board)
 	quest_completed_count = maxi(0, int(data.get("quest_completed_count", 0)))
 	sea_chart_fragments = clampi(int(data.get("sea_chart_fragments", 0)), 0, SEA_CHART_FRAGMENT_MAX)
@@ -1410,6 +1481,24 @@ func _normalized_quest_board(value: Variant) -> Array[Dictionary]:
 		normalized.append(quest)
 		if normalized.size() >= 3:
 			break
+	return normalized
+
+
+func _normalized_count_dictionary(value: Variant) -> Dictionary:
+	var normalized: Dictionary = {}
+	if typeof(value) != TYPE_DICTIONARY:
+		return normalized
+	for key in Dictionary(value).keys():
+		normalized[key] = int(Dictionary(value)[key])
+	return normalized
+
+
+func _normalized_spot_caught_counts(value: Variant) -> Dictionary:
+	var normalized: Dictionary = {}
+	if typeof(value) != TYPE_DICTIONARY:
+		return normalized
+	for spot_id in Dictionary(value).keys():
+		normalized[spot_id] = _normalized_count_dictionary(Dictionary(value)[spot_id])
 	return normalized
 
 
