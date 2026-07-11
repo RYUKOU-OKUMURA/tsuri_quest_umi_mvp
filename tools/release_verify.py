@@ -94,9 +94,9 @@ def default_runner(test: str) -> str:
     return "direct_scene" if test.endswith(".tscn") else "direct_script"
 
 
-def load_manifest(path: Path) -> dict[str, str]:
+def parse_manifest(text: str) -> dict[str, str]:
     entries: dict[str, str] = {}
-    for number, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+    for number, raw in enumerate(text.splitlines(), 1):
         line = raw.strip()
         if not line or line.startswith("#"):
             continue
@@ -110,6 +110,17 @@ def load_manifest(path: Path) -> dict[str, str]:
             raise ValueError(f"manifest {number}: testまたはrunnerが不正: {line}")
         entries[test] = runner
     return entries
+
+
+def read_manifest_snapshot(path: Path) -> tuple[dict[str, str], dict[str, str]]:
+    if path.is_symlink() or not path.is_file():
+        raise ValueError(f"manifestはsymlinkでないregular file必須です: {path}")
+    data = path.read_bytes()
+    return parse_manifest(data.decode("utf-8")), {"path": str(path.resolve(strict=True)), "sha256": hashlib.sha256(data).hexdigest()}
+
+
+def load_manifest(path: Path) -> dict[str, str]:
+    return read_manifest_snapshot(path)[0]
 
 
 def classify(tests: list[str], overrides: dict[str, str]) -> list[tuple[str, str]]:
@@ -142,6 +153,10 @@ def warning_summary(output: str, context: str = "all") -> dict[str, object]:
     rules = EXPLAINED_WARNING_RULES["all"] + EXPLAINED_WARNING_RULES.get(context, [])
     unknown = [line for line in found if not any(pattern.fullmatch(line) for pattern, _ in rules)]
     return {"count": len(found), "distinct_samples": sorted(set(found))[:20], "unexplained": unknown}
+
+
+def timeout_budget(test: str, env: dict[str, str]) -> float:
+    return float(env["TSURI_RELEASE_TEST_TIMEOUT_SECONDS"]) if "TSURI_RELEASE_TEST_TIMEOUT_SECONDS" in env else TEST_TIMEOUT_OVERRIDES.get(test, 900.0)
 
 
 def run(command: list[str], cwd: Path, env: dict[str, str], log: Path, context: str = "all") -> dict[str, object]:
@@ -224,6 +239,12 @@ def prepare_output_root(raw: Path) -> Path:
     if not absolute.is_dir():
         raise ValueError(f"outputは実ディレクトリ必須です: {absolute}")
     return absolute.resolve(strict=True)
+
+
+def reject_source_output(raw: Path, root: Path) -> None:
+    lexical = raw.expanduser().absolute()
+    if lexical == root or root in lexical.parents or lexical.resolve(strict=False).is_relative_to(root):
+        raise ValueError(f"outputはsource root外必須です: {lexical}")
 
 
 def prepare_run_logs(output: Path) -> Path:
@@ -309,7 +330,9 @@ def main(argv: Iterable[str] | None = None) -> int:
     args = parser.parse_args(argv)
     root = args.root.resolve()
     manifest = args.manifest or root / "tools/release_test_manifest.txt"
-    output = prepare_output_root(args.output_dir or Path(os.environ.get("TSURI_RELEASE_VERIFY_OUTPUT", "/tmp/tsuri_release_verify")))
+    output_input = args.output_dir or Path(os.environ.get("TSURI_RELEASE_VERIFY_OUTPUT", "/tmp/tsuri_release_verify"))
+    reject_source_output(output_input, root)
+    output = prepare_output_root(output_input)
     report_path = output / "release_verify_report.json"
     report: dict[str, object] = {"schema_version": 2, "status": "running", "mode": "rc" if args.rc else "skeleton", "started_at_unix": time.time(), "run_logs": None}
     atomic_json(report_path, report)  # 旧PASSを最初に無効化する
@@ -318,7 +341,8 @@ def main(argv: Iterable[str] | None = None) -> int:
         logs = prepare_run_logs(output)
         report["run_logs"] = str(logs)
         atomic_json(report_path, report)
-        classified = classify(discover(root), load_manifest(manifest))
+        manifest_entries, manifest_start = read_manifest_snapshot(manifest)
+        classified = classify(discover(root), manifest_entries)
         source_start = git_snapshot(root)
         source_commit = source_start["commit"]
         source_tree = source_start["tree"]
@@ -363,16 +387,16 @@ def main(argv: Iterable[str] | None = None) -> int:
         failed = validation["status"] == "failed"
         save_done = False
         for index, (test, runner) in enumerate(classified, 1):
-            timeout_budget = float(env["TSURI_RELEASE_TEST_TIMEOUT_SECONDS"]) if "TSURI_RELEASE_TEST_TIMEOUT_SECONDS" in env else TEST_TIMEOUT_OVERRIDES.get(test, 900.0)
-            record: dict[str, object] = {"test": test, "runner": runner, "timeout_seconds": timeout_budget}
+            budget = timeout_budget(test, env)
+            record: dict[str, object] = {"test": test, "runner": runner, "timeout_seconds": budget}
             if runner == "export_evidence":
-                record.update(status="delegated_evidence", warnings={"count": 0, "distinct_samples": []})
+                record.update(status="delegated_evidence" if args.rc else "pending_rc_evidence", warnings={"count": 0, "distinct_samples": []})
             elif runner == "save_system" and save_done:
                 record.update(status="covered_by_save_system_verify", warnings={"count": 0, "distinct_samples": []})
             else:
                 test_home = home_root / f"test_{index:03d}"
                 test_home.mkdir()
-                test_env = env | {"HOME": str(test_home), "TSURI_GODOT_HOME": str(test_home), "TSURI_RELEASE_TEST_TIMEOUT_SECONDS": str(timeout_budget)}
+                test_env = env | {"HOME": str(test_home), "TSURI_GODOT_HOME": str(test_home), "TSURI_RELEASE_TEST_TIMEOUT_SECONDS": str(budget)}
                 if runner == "save_system":
                     command = [str(root / "tools/save_system_verify.sh")]
                 elif runner == "direct_script":
@@ -392,6 +416,9 @@ def main(argv: Iterable[str] | None = None) -> int:
             rc_evidence_end = {"artifacts": parse_export_evidence(artifact_log), "run_log": validate_export_run_log(run_log_path, artifact_log, version, template_version, template), "template_sha256": sha256(template)}
             if rc_evidence_end != rc_evidence_start:
                 failed = True
+        manifest_end = read_manifest_snapshot(manifest)[1] if manifest.is_file() and not manifest.is_symlink() else {"path": None, "sha256": None}
+        if manifest_end != manifest_start:
+            failed = True
         shutil.rmtree(home_root)
         home_root = None
         source_end = git_snapshot(root)
@@ -403,7 +430,7 @@ def main(argv: Iterable[str] | None = None) -> int:
             godot={"version": version, "binary": godot},
             setup=setup,
             export_template={"version": template_version, "path": str(template), "present": template.is_file(), "sha256": sha256(template) if template.is_file() else None},
-            discovery={"patterns": ["tools/**/*_{smoke,audit}.tscn", "non-scene tools/**/*_{smoke,audit}.gd"], "count": len(classified), "manifest": str(manifest), "manifest_sha256": sha256(manifest)},
+            discovery={"patterns": ["tools/**/*_{smoke,audit}.tscn", "non-scene tools/**/*_{smoke,audit}.gd"], "count": len(classified), "manifest": {"start": manifest_start, "end": manifest_end, "stable": manifest_start == manifest_end}},
             validation=validation,
             export_evidence=export_evidence,
             export_verify_run_log=export_run_log,

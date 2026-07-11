@@ -3,13 +3,14 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import shutil
 import sys
 import tempfile
 import time
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from release_verify import REQUIRED_SPECIAL, atomic_json, classify, create_run_home, discover, load_manifest, main, normalize_output, prepare_output_root, prepare_run_logs, run, sha256, unexplained_errors, validate_export_run_log, warning_summary
+from release_verify import REQUIRED_SPECIAL, TEST_TIMEOUT_OVERRIDES, atomic_json, classify, create_run_home, discover, load_manifest, main, normalize_output, prepare_output_root, prepare_run_logs, run, sha256, timeout_budget, unexplained_errors, validate_export_run_log, warning_summary
 
 
 def must_fail(label, callback):
@@ -44,17 +45,32 @@ with tempfile.TemporaryDirectory() as temporary:
     must_fail("重複", lambda: load_manifest(manifest))
     manifest.write_text("tools/a_smoke.gd|direct_scene\n", encoding="utf-8")
     must_fail("runner不一致", lambda: classify(["tools/a_smoke.gd"], load_manifest(manifest)))
+    manifest_link = root / "manifest_link.txt"
+    manifest_link.symlink_to(manifest)
+    must_fail("manifest symlink", lambda: load_manifest(manifest_link))
+    assert TEST_TIMEOUT_OVERRIDES["tools/nushi_encounter_audit.tscn"] == 1800.0
+    assert timeout_budget("tools/nushi_encounter_audit.tscn", {}) == 1800.0
+    assert timeout_budget("tools/nushi_encounter_audit.tscn", {"TSURI_RELEASE_TEST_TIMEOUT_SECONDS": "12"}) == 12.0
 
     assert normalize_output(b"partial\xff") == "partial�"
     assert unexplained_errors("ERROR: forced\n") == ["ERROR: forced"]
     assert unexplained_errors("ERROR: Parse JSON failed. Error at line 0: Expected key\n", "save_system") == []
     assert unexplained_errors("ERROR: Parse JSON failed. Error at line 0: Expected key\n", "direct_script") != []
+    vector_warning = "WARNING: Vector2 cannot be normalized, the elements must be finite. Making (0, 0) as a fallback.\n"
+    assert warning_summary(vector_warning, "save_system")["unexplained"]
+    for context in ("validation", "save_system", "export"):
+        assert not warning_summary("WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details).\n", context)["unexplained"]
+    for count in (2, 3):
+        assert not warning_summary(f"WARNING: {count} ObjectDB instances were leaked at exit (run with `--verbose` for details).\n", "direct_scene")["unexplained"]
+    for count in (4, 999):
+        assert warning_summary(f"WARNING: {count} ObjectDB instances were leaked at exit (run with `--verbose` for details).\n", "direct_scene")["unexplained"]
 
     marker = root / "orphan_marker"
     timeout_log = root / "timeout.log"
     command = ["sh", "-c", f"(sleep 1; touch '{marker}') & printf '\\377'; wait"]
     result = run(command, root, {**os.environ, "TSURI_RELEASE_TEST_TIMEOUT_SECONDS": "0.1", "TSURI_RELEASE_TERM_GRACE_SECONDS": "0.1"}, timeout_log)
     assert result["exit_code"] == 124 and result["timed_out"] and timeout_log.is_file()
+    assert result["duration_seconds"] >= 0.1
     assert timeout_log.read_text(encoding="utf-8").count("�") == 1
     time.sleep(1.2)
     assert not marker.exists(), "timeout後にorphan子processがmarkerを書きました"
@@ -100,8 +116,7 @@ with tempfile.TemporaryDirectory() as temporary:
     assert first_logs != second_logs and not (second_logs / "old.log").exists()
 
     # 旧PASSがあってもlogs symlink拒否は今回failedへ原子的に更新し、外部を触らない。
-    old_pass_output = root / "old_pass_output"
-    old_pass_output.mkdir()
+    old_pass_output = Path(tempfile.mkdtemp(prefix="release_old_pass_"))
     atomic_json(old_pass_output / "release_verify_report.json", {"status": "skeleton_passed"})
     old_logs_target = root / "old_logs_target"
     old_logs_target.mkdir()
@@ -111,6 +126,10 @@ with tempfile.TemporaryDirectory() as temporary:
     assert main(["--root", str(root), "--manifest", str(root / "manifest.txt"), "--output-dir", str(old_pass_output)]) == 1
     assert json.loads((old_pass_output / "release_verify_report.json").read_text())["status"] == "failed"
     assert old_logs_marker.read_text() == "keep"
+    shutil.rmtree(old_pass_output)
+    ignored_output = root / "ignored_output"
+    must_fail("repo内output", lambda: main(["--root", str(root), "--output-dir", str(ignored_output)]))
+    assert not ignored_output.exists()
     ancestor_target = root / "ancestor_target"
     ancestor_target.mkdir()
     ancestor_marker = ancestor_target / "marker"
@@ -138,11 +157,13 @@ with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() a
     tools = fixture / "tools"
     tools.mkdir()
     (tools / "only_audit.gd").write_text("extends SceneTree\n")
+    (tools / "nushi_encounter_audit.tscn").touch()
     (tools / "save_namespace_migration_smoke.tscn").touch()
     (tools / "save_system_smoke.tscn").touch()
     (tools / "export_launch_smoke.tscn").touch()
     (tools / "release_test_manifest.txt").write_text(
         "tools/only_audit.gd|direct_script\n"
+        "tools/nushi_encounter_audit.tscn|direct_scene\n"
         "tools/save_namespace_migration_smoke.tscn|save_system\n"
         "tools/save_system_smoke.tscn|save_system\n"
         "tools/export_launch_smoke.tscn|export_evidence\n"
@@ -181,11 +202,15 @@ with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() a
     report = json.loads((output / "release_verify_report.json").read_text())
     direct = next(item for item in report["tests"] if item["runner"] == "direct_script")
     save_execution = next(item for item in report["tests"] if item["runner"] == "save_system" and "exit_code" in item)
+    export_pending = next(item for item in report["tests"] if item["runner"] == "export_evidence")
+    nushi_budget_record = next(item for item in report["tests"] if item["test"] == "tools/nushi_encounter_audit.tscn")
     assert rc == 1 and report["status"] == "failed" and direct["timed_out"] and not report["source"]["stable"], repr(report)
     assert report["source"]["start"]["porcelain_sha256"] == report["source"]["end"]["porcelain_sha256"]
     assert report["source"]["start"]["worktree_content_sha256"] != report["source"]["end"]["worktree_content_sha256"]
     assert report["godot"] == {"version": "4.7.test.official.fixture", "binary": str(fake_godot.resolve())}
     assert report["validation"]["status"] == "passed" and save_execution["status"] == "passed", repr(report)
+    assert direct["timeout_seconds"] == 0.5 and direct["duration_seconds"] >= 0 and export_pending["status"] == "pending_rc_evidence"
+    assert nushi_budget_record["timeout_seconds"] == 0.5  # 明示global overrideはnushi個別defaultより優先
     engine_count = engine_marker.read_text().count("fake-engine")
     assert engine_count >= 3, f"同一engine呼び出し数が不正: {engine_count}"
     assert outside_marker.read_text() == "keep"
@@ -242,6 +267,37 @@ with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() a
         os.environ.clear(); os.environ.update(old_env)
     hung_report = json.loads((Path(output_temporary) / "out/release_verify_report.json").read_text())
     assert rc == 1 and hung_report["status"] == "failed" and hung_report["setup"]["timed_out"]
+
+# source外manifestをrun中に変更しても開始hashで分類し、終了不一致でfailする。
+with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() as external_temporary:
+    fixture = Path(temporary)
+    external = Path(external_temporary)
+    tools = fixture / "tools"
+    tools.mkdir()
+    (tools / "mutator_audit.gd").touch()
+    for special in REQUIRED_SPECIAL:
+        (fixture / special).touch()
+    external_manifest = external / "manifest.txt"
+    manifest_lines = "tools/mutator_audit.gd|direct_script\n" + "".join(f"{test}|{runner}\n" for test, runner in REQUIRED_SPECIAL.items())
+    external_manifest.write_text(manifest_lines)
+    fake = fixture / "godot"
+    fake.write_text(f"#!/bin/sh\nif [ \"${{1:-}}\" = --version ]; then echo 4.7.test.official.fixture; exit 0; fi\ncase \" $* \" in *' --script '*) printf '%s' '# changed\n{manifest_lines}' > '{external_manifest}' ;; esac\n")
+    fake.chmod(0o755)
+    (tools / "validate_project.sh").write_text("#!/bin/sh\nexit 0\n")
+    (tools / "validate_project.sh").chmod(0o755)
+    (tools / "save_system_verify.sh").write_text("#!/bin/sh\nexit 0\n")
+    (tools / "save_system_verify.sh").chmod(0o755)
+    subprocess.run(["git", "init", "-q"], cwd=fixture, check=True)
+    subprocess.run(["git", "add", "."], cwd=fixture, check=True)
+    subprocess.run(["git", "-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "fixture"], cwd=fixture, check=True)
+    old_env = os.environ.copy(); os.environ["GODOT_BIN"] = str(fake)
+    try:
+        rc = main(["--root", str(fixture), "--manifest", str(external_manifest), "--output-dir", str(external / "out")])
+    finally:
+        os.environ.clear(); os.environ.update(old_env)
+    changed_manifest_report = json.loads((external / "out/release_verify_report.json").read_text())
+    assert rc == 1 and changed_manifest_report["status"] == "failed"
+    assert changed_manifest_report["source"]["stable"] and not changed_manifest_report["discovery"]["manifest"]["stable"]
 
 # RC成果物をrun中に差し替えると終了時再hashでfailedになる。
 with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() as evidence_temporary:
