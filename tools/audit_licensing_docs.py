@@ -27,7 +27,9 @@ ATTESTATION_FIELDS = {
 }
 TYPE_SPECIFIC_FIELDS = {
     "suno-track-provenance": {"Asset-Count", "One-to-One-Mapping-Verified"},
-    "suno-paid-period": {"Plan", "Period-Start", "Period-End", "Covers-U-01"},
+    "suno-paid-period": {
+        "Plan", "Period-Start", "Period-End", "Evidence-As-Of", "Covers-U-01",
+    },
     "ai-image-provenance": {
         "Inventory-Contract", "Population-Count", "Population-SHA256",
         "Provenance-Count", "Unresolved-Items", "Provenance-Complete",
@@ -59,6 +61,16 @@ EVIDENCE_ID_TYPES = {
     "U-05": {"license-holder"},
     "U-06": {"trademark-clearance"},
     "U-08": {"ai-input-rights"},
+}
+FINDING_CODES = {
+    "suno-track-provenance": "track-provenance-verified",
+    "suno-paid-period": "paid-period-verified",
+    "ai-image-provenance": "image-provenance-verified",
+    "icon-rights": "icon-rights-verified",
+    "icon-replacement-rights": "replacement-rights-verified",
+    "license-holder": "license-holder-verified",
+    "trademark-clearance": "trademark-clearance-reviewed",
+    "ai-input-rights": "ai-input-rights-cleared",
 }
 MANAGEMENT_FILES = {"README.md", "OWNER_EVIDENCE_REQUEST.md"}
 OFFICIAL_PUBLIC_URLS = {
@@ -121,7 +133,8 @@ def normalize_public_text(text: str) -> str:
     """Decode nested entities/percent escapes and compatibility characters."""
     decoded = text
     for _ in range(32):
-        unescaped = unquote(html.unescape(unicodedata.normalize("NFKC", decoded)))
+        compatibility_text = unicodedata.normalize("NFKC", decoded)
+        unescaped = unquote(html.unescape(compatibility_text))
         if unescaped == decoded:
             break
         decoded = unescaped
@@ -130,8 +143,19 @@ def normalize_public_text(text: str) -> str:
     return decoded
 
 
-def scan_public_text(text: str, path: Path, allow_official_urls: bool) -> None:
+def scan_public_text(
+    text: str, path: Path, allow_official_urls: bool,
+    allowed_repo_tokens: set[str] | None = None,
+) -> None:
     normalized_text = normalize_public_text(text)
+    for character in normalized_text:
+        category = unicodedata.category(character)
+        assert category != "Cf" and not (category == "Cc" and character not in "\n\r\t"), (
+            f"Unicode format/control character forbidden in public licensing text: {path}"
+        )
+    assert not re.search(r"<!--|-->|</?[A-Za-z][^>]*>", normalized_text), (
+        f"HTML tags/comments forbidden in public licensing text: {path}"
+    )
     assert not re.search(r"(?<![A-Za-z0-9])(?:data|blob)\s*:", normalized_text, flags=re.IGNORECASE), (
         f"embedded data/blob URI forbidden in public licensing text: {path}"
     )
@@ -169,11 +193,25 @@ def scan_public_text(text: str, path: Path, allow_official_urls: bool) -> None:
         except ValueError:
             continue
         raise AssertionError(f"bare IPv6 destination in public licensing text: {path}")
+    for ipv6_path_match in re.finditer(
+        r"(?<![0-9A-Fa-f:])([0-9A-Fa-f:]{2,})(?=/)", text_without_urls,
+    ):
+        try:
+            ipaddress.ip_address(ipv6_path_match.group(1))
+        except ValueError:
+            continue
+        raise AssertionError(f"bare IPv6 path destination in public licensing text: {path}")
     assert not re.search(
         r"(?<![A-Za-z0-9._-])localhost(?::\d{1,5})?(?:/[^\s|<>()\[\]`\"'、。]*)?",
         text_without_urls,
         flags=re.IGNORECASE,
     ), f"bare localhost destination in public licensing text: {path}"
+    assert not re.search(r"(?<![A-Za-z0-9+.-])(?:file|ftp|s3):[\\/]+", text_without_urls, flags=re.IGNORECASE), (
+        f"non-public URI scheme/path in public licensing text: {path}"
+    )
+    assert not re.search(
+        r"(?:^|[\s(\[{'\"`])/(?!/)[^\s|<>()\[\]`\"'、。]+", text_without_urls,
+    ), f"absolute POSIX path in public licensing text: {path}"
     domain_scan_text = text_without_urls
     allowed_dotted_tokens = ALLOWED_PUBLIC_BARE_DOMAINS | ALLOWED_PUBLIC_DOTTED_NON_URLS
     for allowed_token in sorted(allowed_dotted_tokens, key=len, reverse=True):
@@ -183,6 +221,28 @@ def scan_public_text(text: str, path: Path, allow_official_urls: bool) -> None:
             domain_scan_text,
             flags=re.IGNORECASE,
         )
+    for repo_token in sorted(allowed_repo_tokens or set(), key=len, reverse=True):
+        domain_scan_text = re.sub(
+            rf"(?<![\w./-]){re.escape(repo_token)}(?![\w./-])",
+            lambda match: " " * len(match.group(0)),
+            domain_scan_text,
+        )
+    assert not re.search(
+        r"(?:^|[\s(\[{'\"`:=|])"
+        r"(?:(?:[^\W_]|-)+。)+(?:[^\W\d_]){2,63}(?=/)",
+        domain_scan_text,
+        flags=re.IGNORECASE | re.MULTILINE,
+    ), f"bare Unicode-dot path destination in public licensing text: {path}"
+    # ASCII hosts are handled above.  For an IDN host, require a URI/field-like
+    # left boundary instead of treating Japanese sentence punctuation as a host
+    # boundary; otherwise ordinary prose such as ``...。全source/reference`` is
+    # indistinguishable from a Unicode hostname after compatibility folding.
+    assert not re.search(
+        r"(?:^|[\s(\[{'\"`:=|])"
+        r"(?:(?:[^\W_]|-)+\.)+(?:[^\W_]|-){2,63}(?=/)",
+        domain_scan_text,
+        flags=re.IGNORECASE | re.MULTILINE,
+    ), f"bare IDN path destination in public licensing text: {path}"
     bare_domain_matches = list(re.finditer(
         r"(?<![@\w.-])(?:(?:[^\W_]|-)+\.)+"
         r"[A-Za-z](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.?(?![\w.-])",
@@ -240,13 +300,15 @@ def scan_public_text(text: str, path: Path, allow_official_urls: bool) -> None:
         r"API[-_ ]?キー|秘密[-_ ]?URL)"
     )
     sensitive_label = re.compile(
-        rf"(?<![A-Za-z0-9_])(?P<label>{sensitive_label_core})\s*(?P<separator>[:=/])\s*"
+        rf"(?<![A-Za-z0-9_])(?P<label>\[?{sensitive_label_core}\]?)\s*"
+        rf"(?P<separator>[:=/])\s*"
         rf"(?P<value>[^\s|<{{\[、。,.，;；:/]+)",
         flags=re.IGNORECASE,
     )
     sensitive_table_label = re.compile(rf"^{sensitive_label_core}$", flags=re.IGNORECASE)
     def normalize_table_label(value: str) -> str:
         value = value.strip().strip(":=")
+        value = value.strip("[]")
         value = re.sub(r"\s*(?:\([^)]*\)|\[[^]]*\])\s*$", "", value)
         value = re.sub(r"(?:欄|フィールド)$", "", value)
         return value.strip()
@@ -309,8 +371,7 @@ def scan_public_text(text: str, path: Path, allow_official_urls: bool) -> None:
             break
     prohibited = (
         (r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", "email"),
-        (r"(?<![A-Za-z0-9])(?:\d[ \t\-\u2010-\u2015\u2212]*?){11,18}\d(?![A-Za-z0-9])", "separated 12-19 digit card-like number"),
-        (r"(?<![A-Za-z0-9])0\d{1,4}[ \t\-\u2010-\u2015\u2212\u30fc]+\d{1,4}[ \t\-\u2010-\u2015\u2212\u30fc]+\d{3,4}(?![A-Za-z0-9])", "Japanese phone-like number"),
+        (r"(?<![A-Za-z0-9])0\d{1,4}[ \t.\-\u2010-\u2015\u2212\u30fc]+\d{1,4}[ \t.\-\u2010-\u2015\u2212\u30fc]+\d{3,4}(?![A-Za-z0-9])", "Japanese phone-like number"),
         (r"(?<![A-Za-z0-9])0\d{1,4}[ \t\-]*\(\d{1,4}\)[ \t\-]*\d{3,4}(?![A-Za-z0-9])", "parenthesized Japanese phone-like number"),
         (r"(?<![A-Za-z0-9])0(?:[5789]0\d{8}|\d{9})(?![A-Za-z0-9])", "contiguous Japanese phone-like number"),
         (r"(?<![A-Za-z0-9])\+81[ \-]?(?:\(0\)[ \-]?)?\d{1,4}[ \-]\d{1,4}[ \-]\d{3,4}(?![A-Za-z0-9])", "international Japanese phone-like number"),
@@ -325,6 +386,18 @@ def scan_public_text(text: str, path: Path, allow_official_urls: bool) -> None:
         assert not re.search(pattern, normalized_text, flags=re.IGNORECASE), (
             f"public licensing text contains prohibited {label}: {path}"
         )
+    assert not re.search(r"(?<![A-Za-z0-9])\d{12,19}(?![A-Za-z0-9])", normalized_text), (
+        f"public licensing text contains contiguous 12-19 digit card-like number: {path}"
+    )
+    grouped_card_pattern = re.compile(
+        r"(?<![A-Za-z0-9])\d{2,6}(?P<sep>[ \t./\-\u2010-\u2015\u2212\u30fc]+)\d{2,6}"
+        r"(?:(?P=sep)\d{2,6}){1,4}(?![A-Za-z0-9])"
+    )
+    for card_match in grouped_card_pattern.finditer(normalized_text):
+        digit_count = sum(character.isdigit() for character in card_match.group(0))
+        assert not 12 <= digit_count <= 19, (
+            f"public licensing text contains separated 12-19 digit card-like number: {path}"
+        )
     wrapped_base64_size = 0
     for line in normalized_text.splitlines():
         candidate = re.sub(r"^[\s>|`*~-]+", "", line)
@@ -335,8 +408,10 @@ def scan_public_text(text: str, path: Path, allow_official_urls: bool) -> None:
             r"[A-Za-z0-9+/_-]+={0,2}", compact_candidate,
         ):
             raise AssertionError(f"public licensing text contains spaced raw base64 payload: {path}")
+        if compact_candidate.startswith("iVBORw0KGgo") and len(compact_candidate) >= 16:
+            raise AssertionError(f"public licensing text contains raw PNG base64 payload: {path}")
         is_wrapped_chunk = (
-            len(compact_candidate.rstrip("=")) >= 60
+            len(compact_candidate.rstrip("=")) >= 50
             and re.fullmatch(r"[A-Za-z0-9+/_-]+={0,2}", compact_candidate)
             and not re.fullmatch(r"[0-9a-fA-F]{64}", compact_candidate)
         )
@@ -386,11 +461,64 @@ def validate_u04_decision_schema(
         assert fields["Replacement-Integrated"] == "true", f"U-04 replacement is not integrated: {label}"
 
 
-def parse_attestation(path: Path) -> dict[str, str]:
+def attestation_repo_tokens(fields: dict[str, str], asset_root: Path) -> set[str]:
+    evidence_type = fields.get("Evidence-Type", "")
+    tokens: set[str] = set()
+    candidates: list[tuple[str, tuple[str, ...], set[str]]] = []
+    if evidence_type == "suno-track-provenance":
+        for key, value in fields.items():
+            if re.fullmatch(r"Track-\d{2,4}", key):
+                candidates.append((value.split(";", 1)[0].strip(), ("assets/audio/",), {".mp3"}))
+    elif evidence_type == "ai-image-provenance":
+        for key, value in fields.items():
+            if re.fullmatch(r"Item-\d{4,6}", key):
+                candidates.append((value.split(";", 1)[0].strip(), (
+                    "assets/showcase/", "tools/source_assets/", "reference/",
+                ), {".png"}))
+    elif evidence_type == "ai-input-rights":
+        for key, value in fields.items():
+            if re.fullmatch(r"Item-\d{4,6}", key):
+                candidates.append((value.split(";", 1)[0].strip(), (
+                    "assets/audio/", "assets/showcase/", "tools/source_assets/", "reference/",
+                ), {".mp3", ".png"}))
+    elif evidence_type == "icon-rights":
+        candidate = fields.get("Replacement-Product-Path", "")
+        if candidate:
+            candidates.append((candidate, ("assets/",), {".svg", ".png", ".webp"}))
+    elif evidence_type == "icon-replacement-rights":
+        candidate = fields.get("Replacement-Asset-Path", "")
+        if candidate:
+            candidates.append((candidate, ("assets/",), {".svg", ".png", ".webp"}))
+    for candidate, prefixes, suffixes in candidates:
+        if evidence_type == "suno-track-provenance":
+            relative = f"assets/audio/{candidate}"
+            canonical = PurePosixPath(candidate).name == candidate
+        else:
+            relative = candidate
+            canonical_path = PurePosixPath(candidate)
+            canonical = (
+                candidate
+                and "\\" not in candidate
+                and not canonical_path.is_absolute()
+                and all(part not in {"", ".", ".."} for part in canonical_path.parts)
+                and canonical_path.as_posix() == candidate
+            )
+        if (
+            canonical
+            and relative.startswith(prefixes)
+            and Path(relative).suffix.lower() in suffixes
+            and (asset_root / relative).is_file()
+        ):
+            tokens.add(candidate)
+            tokens.add(relative)
+            tokens.add(Path(relative).name)
+    return tokens
+
+
+def parse_attestation(path: Path, asset_root: Path = ROOT) -> dict[str, str]:
     assert path.is_file(), f"attestation is not a regular file: {path}"
     text = path.read_text(encoding="utf-8")
     assert text.strip(), f"attestation is empty: {path}"
-    scan_public_text(text, path, allow_official_urls=False)
     fields: dict[str, str] = {}
     duplicate_fields: set[str] = set()
     for line in text.splitlines():
@@ -413,6 +541,10 @@ def parse_attestation(path: Path) -> dict[str, str]:
     assert evidence_type in TYPE_SPECIFIC_FIELDS, f"unknown Evidence-Type: {evidence_type} in {path}"
     assert evidence_type in EVIDENCE_ID_TYPES[fields["Evidence-ID"]], (
         f"Evidence-ID/Type mismatch: {fields['Evidence-ID']} / {evidence_type} in {path}"
+    )
+    scan_public_text(
+        text, path, allow_official_urls=False,
+        allowed_repo_tokens=attestation_repo_tokens(fields, asset_root),
     )
     allowed_fields = ATTESTATION_FIELDS | TYPE_SPECIFIC_FIELDS[evidence_type]
     dynamic_patterns = {
@@ -465,10 +597,10 @@ def parse_attestation(path: Path) -> dict[str, str]:
     assert len(set(fields["Original-SHA256"])) >= 5, f"placeholder original SHA-256: {path}"
     reviewed_at = require_calendar_date(fields["Reviewed-At"], f"Reviewed-At in {path}")
     assert reviewed_at <= release_today(), f"future Reviewed-At in {path}: {reviewed_at}"
-    assert re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{1,63}", fields["Reviewer"]), (
+    assert re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{1,63}", fields["Reviewer"]), (
         f"Reviewer must be a non-secret role/ID: {path}"
     )
-    assert re.fullmatch(r"[A-Z0-9][A-Z0-9._-]{2,63}", fields["Private-Storage-Reference"]), (
+    assert re.fullmatch(r"[A-Z0-9][A-Z0-9_-]{2,63}", fields["Private-Storage-Reference"]), (
         f"Private-Storage-Reference must be a non-secret management ID: {path}"
     )
     assert not re.search(
@@ -476,11 +608,15 @@ def parse_attestation(path: Path) -> dict[str, str]:
         fields["Private-Storage-Reference"],
     ), f"Private-Storage-Reference contains a prohibited billing/account identifier: {path}"
     assert fields["Redaction-Checked"] == "true", f"redaction must be confirmed: {path}"
-    assert len(fields["Finding"]) >= 10, f"finding too short: {path}"
+    assert fields["Finding"] == FINDING_CODES[evidence_type], (
+        f"Finding must use the closed safe code for {evidence_type}: {path}"
+    )
     return fields
 
 
-def audit_evidence_tree(evidence_root: Path) -> dict[Path, dict[str, str]]:
+def audit_evidence_tree(
+    evidence_root: Path, asset_root: Path = ROOT,
+) -> dict[Path, dict[str, str]]:
     """Reject raw/private evidence anywhere under the public licensing tree."""
     assert evidence_root.is_dir() and not evidence_root.is_symlink(), f"invalid evidence root: {evidence_root}"
     attestation_root = evidence_root / "attestations"
@@ -503,7 +639,7 @@ def audit_evidence_tree(evidence_root: Path) -> dict[Path, dict[str, str]]:
         assert re.fullmatch(r"U-(?:0[1-6]|08)_[A-Za-z0-9._-]+\.md", relative.name), (
             f"attestation filename must be U-XX_*.md: {relative}"
         )
-        fields = parse_attestation(path)
+        fields = parse_attestation(path, asset_root)
         assert relative.name.startswith(f"{fields['Evidence-ID']}_"), f"filename/ID mismatch: {relative}"
         parsed[path.resolve()] = fields
     return parsed
@@ -697,7 +833,7 @@ def validate_u01_tracks(
             f"U-01 stale content digest for {filename}"
         )
         generated_at = parse_generated_at(generated_at_raw, f"U-01 generated-at for {filename}")
-        assert re.fullmatch(r"[A-Z0-9][A-Z0-9._-]{2,63}", mapping_id), (
+        assert re.fullmatch(r"[A-Z0-9][A-Z0-9_-]{2,63}", mapping_id), (
             f"U-01 mapping ID must be a non-secret management ID: {filename}"
         )
         assert mapping_id not in mapping_ids, f"U-01 duplicate mapping ID: {mapping_id}"
@@ -709,17 +845,24 @@ def validate_u01_tracks(
 
 
 def validate_u02_period(
-    fields: dict[str, str], label: str, as_of: date | None = None,
-) -> tuple[date, date]:
+    fields: dict[str, str], label: str, audit_date: date | None = None,
+) -> tuple[date, date, date]:
     assert fields.get("Plan") in {"Pro", "Premier"}, f"invalid Suno plan: {label}"
     period_start = require_calendar_date(fields.get("Period-Start", ""), f"Period-Start in {label}")
     period_end = require_calendar_date(fields.get("Period-End", ""), f"Period-End in {label}")
+    evidence_as_of = require_calendar_date(
+        fields.get("Evidence-As-Of", ""), f"Evidence-As-Of in {label}"
+    )
+    reviewed_at = require_calendar_date(fields.get("Reviewed-At", ""), f"Reviewed-At in {label}")
     assert period_start <= period_end, f"invalid Suno paid period order: {label}"
-    assert period_end <= (as_of if as_of is not None else release_today()), (
-        f"Suno paid period cannot extend beyond the Asia/Tokyo audit date: {label}"
+    assert period_start <= evidence_as_of <= period_end and evidence_as_of <= reviewed_at, (
+        f"Suno evidence-as-of must be within the period and no later than Reviewed-At: {label}"
+    )
+    assert evidence_as_of <= (audit_date if audit_date is not None else release_today()), (
+        f"Suno Evidence-As-Of cannot be in the future: {label}"
     )
     assert fields.get("Covers-U-01") == "true", f"U-02 does not declare U-01 coverage: {label}"
-    return period_start, period_end
+    return period_start, period_end, evidence_as_of
 
 
 def cross_check_u02_covers_u01(
@@ -727,12 +870,14 @@ def cross_check_u02_covers_u01(
     audio_names: list[str], root: Path = ROOT,
 ) -> None:
     generated = validate_u01_tracks(u01_fields, label, audio_names, root)
-    period_start, period_end = validate_u02_period(u02_fields, label)
+    period_start, period_end, evidence_as_of = validate_u02_period(u02_fields, label)
     # Subscription evidence uses calendar dates. Compare each generation's calendar date in its recorded offset.
     generated_dates = [value.date() for value in generated]
-    assert period_start <= min(generated_dates) and max(generated_dates) <= period_end, (
+    confirmed_period_end = min(period_end, evidence_as_of)
+    assert period_start <= min(generated_dates) and max(generated_dates) <= confirmed_period_end, (
         f"U-02 paid period does not contain U-01 local generated dates: "
-        f"{period_start}..{period_end} vs {min(generated_dates)}..{max(generated_dates)}"
+        f"confirmed={period_start}..{confirmed_period_end}, contractual-end={period_end}, "
+        f"generated={min(generated_dates)}..{max(generated_dates)}"
     )
 
 
@@ -814,7 +959,7 @@ def validate_u03_manifest(fields: dict[str, str], population: list[str], label: 
         assert disposition in {"procedural", "ai-generated", "source-derived", "reference-only", "rejected"}, (
             f"U-03 invalid disposition for {path}: {disposition}"
         )
-        assert re.fullmatch(r"[A-Z0-9][A-Z0-9._-]{2,63}", provenance_id), (
+        assert re.fullmatch(r"[A-Z0-9][A-Z0-9_-]{2,63}", provenance_id), (
             f"U-03 invalid provenance ID for {path}"
         )
         covered.add(path)
@@ -834,13 +979,13 @@ def validate_u03_manifest(fields: dict[str, str], population: list[str], label: 
         assert provenance_id in referenced_provenance_ids and provenance_id not in provenance_records, (
             f"U-03 invalid/duplicate provenance record ID: {provenance_id}"
         )
-        assert re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{2,63}", service), (
+        assert re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{2,63}", service), (
             f"U-03 invalid generation service: {service}"
         )
         generated_start = parse_generated_at(generated_start_raw, f"U-03 generated-start for {provenance_id}")
         generated_end = parse_generated_at(generated_end_raw, f"U-03 generated-end for {provenance_id}")
         assert generated_start <= generated_end, f"U-03 generation range reversed: {provenance_id}"
-        assert re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{2,63}", creator_id), (
+        assert re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{2,63}", creator_id), (
             f"U-03 creator must be a non-secret role/ID: {provenance_id}"
         )
         provenance_records.add(provenance_id)
@@ -871,7 +1016,7 @@ def validate_u08_manifest(
         assert asset in combined and asset not in covered, f"U-08 invalid/duplicate asset: {asset}"
         assert content_sha256 == file_sha256(root / asset), f"U-08 stale content digest for {asset}"
         assert status in {"none", "cleared"}, f"U-08 invalid input-rights status for {asset}: {status}"
-        assert re.fullmatch(r"[A-Z0-9][A-Z0-9._-]{2,63}", rights_id), f"U-08 invalid rights ID: {asset}"
+        assert re.fullmatch(r"[A-Z0-9][A-Z0-9_-]{2,63}", rights_id), f"U-08 invalid rights ID: {asset}"
         covered.add(asset)
     assert covered == set(combined), f"U-08 manifest does not cover U-01/U-03 populations: {label}"
     assert fields.get("Clearance-Complete") == "true", f"U-08 clearance incomplete: {label}"
@@ -960,6 +1105,96 @@ def validate_u04_rejected(
     )
 
 
+def validate_completed_attestation_payload(
+    evidence_id: str, fields: dict[str, str], relative: str,
+    saved_paths: list[str], parsed_attestations: dict[Path, dict[str, str]],
+    ledger: str, project_config: str, root: Path, index_paths: set[str],
+    saved_path: Path, audio_population: list[str], u03_population: list[str],
+) -> None:
+    """Apply the same per-evidence close gate used by main and positive fixtures."""
+    if evidence_id == "U-01":
+        for audio_name in audio_population:
+            audio_relative = f"assets/audio/{audio_name}"
+            require_worktree_matches_index(root, audio_relative, index_paths, "U-01 audio")
+        validate_u01_tracks(fields, relative, audio_population, root)
+    elif evidence_id == "U-02":
+        validate_u02_period(fields, relative)
+    elif evidence_id == "U-03":
+        for asset_relative in u03_population:
+            require_worktree_matches_index(root, asset_relative, index_paths, "U-03 asset")
+        validate_u03_manifest(fields, u03_population, relative, root)
+    elif evidence_id == "U-04":
+        if fields["Evidence-Type"] == "icon-replacement-rights":
+            replacement_asset_path = fields.get("Replacement-Asset-Path", "")
+            assert replacement_asset_path and replacement_asset_path in index_paths, (
+                f"U-04 replacement rights record references unindexed asset: {relative}"
+            )
+            assert fields.get("Replacement-Content-SHA256") == file_sha256(root / replacement_asset_path), (
+                f"U-04 replacement rights record has stale digest: {relative}"
+            )
+            require_worktree_matches_index(
+                root, replacement_asset_path, index_paths, "U-04 replacement asset"
+            )
+            assert fields.get("Replacement-Asset-Rights-Verified") == "true", (
+                f"U-04 replacement rights are not verified: {relative}"
+            )
+        else:
+            assert fields.get("Product-Decision") in {"adopted", "rejected"}, (
+                f"U-04 product decision missing: {relative}"
+            )
+        if fields.get("Product-Decision") == "adopted":
+            require_worktree_matches_index(root, "assets/icon.svg", index_paths, "U-04 adopted icon")
+            require_worktree_matches_index(root, "project.godot", index_paths, "U-04 project config")
+            assert re.search(
+                r'^config/icon\s*=\s*"res://assets/icon\.svg"\s*$',
+                project_config,
+                flags=re.MULTILINE,
+            ), "U-04 adopted decision requires assets/icon.svg as project config/icon"
+            assert fields.get("Product-Content-SHA256") == file_sha256(root / "assets/icon.svg"), (
+                "U-04 adopted icon content digest is stale"
+            )
+            assert fields.get("Author-Verified") == "true" and fields.get("Rights-Holder-Verified") == "true", (
+                f"U-04 adopted icon author/rights holder is not verified: {relative}"
+            )
+        elif fields.get("Product-Decision") == "rejected":
+            require_worktree_matches_index(root, "project.godot", index_paths, "U-04 project config")
+            validate_u04_rejected(
+                fields, relative, saved_paths, parsed_attestations,
+                ledger, project_config, root, index_paths, saved_path,
+            )
+    elif evidence_id == "U-05":
+        require_worktree_matches_index(root, "LICENSE.md", index_paths, "U-05 license")
+        assert fields.get("License-Holder-Matches-LICENSE") == "true", (
+            f"U-05 does not match LICENSE: {relative}"
+        )
+    elif evidence_id == "U-06":
+        assert fields.get("Territories") and fields.get("Trademark-Classes"), (
+            f"U-06 territory/classes missing: {relative}"
+        )
+        assert fields.get("Official-DB") and "://" not in fields["Official-DB"], (
+            f"U-06 official DB must be named without secret URL: {relative}"
+        )
+        try:
+            search_date = require_calendar_date(fields.get("Search-Date", ""), f"Search-Date in {relative}")
+            result_count = int(fields.get("Result-Count", ""))
+        except ValueError as exc:
+            raise AssertionError(f"invalid U-06 search payload: {relative}") from exc
+        assert search_date <= release_today() and result_count >= 0, f"invalid U-06 results: {relative}"
+        assert fields.get("Expert-Review") in {"completed", "not-required"}, (
+            f"U-06 expert review decision missing: {relative}"
+        )
+    elif evidence_id == "U-08":
+        for audio_name in audio_population:
+            require_worktree_matches_index(
+                root, f"assets/audio/{audio_name}", index_paths, "U-08 audio"
+            )
+        for asset_relative in u03_population:
+            require_worktree_matches_index(root, asset_relative, index_paths, "U-08 asset")
+        validate_u08_manifest(fields, u03_population, relative, audio_population, root)
+    else:
+        raise AssertionError(f"unsupported completed evidence ID: {evidence_id}")
+
+
 def run_negative_self_tests() -> None:
     def must_fail(label: str, operation) -> None:
         try:
@@ -970,6 +1205,10 @@ def run_negative_self_tests() -> None:
 
     privacy_fixture = Path("privacy-fixture.md")
     privacy_negatives = {
+        "ASCII HTML tag": "Finding: <span>private evidence</span>",
+        "ASCII HTML comment": "Finding: <!-- private evidence -->",
+        "Unicode format character": "Finding: safe\u200bhidden",
+        "Markdown bracketed Japanese label": "[氏名]: 山田太郎",
         "Japanese fullwidth label separator": "Finding: 氏名：山田太郎",
         "Japanese fullwidth equals": "電話番号＝09012345678",
         "Japanese inline slash with Markdown": "**氏名** / `山田太郎`",
@@ -1011,9 +1250,12 @@ def run_negative_self_tests() -> None:
         "bare IPv4 path": "Finding: 192.168.1.10/private",
         "bare IPv4 root": "Finding: 10.0.0.1",
         "bare IPv6 path": "Finding: [fd00::1]/private",
+        "bare unbracketed IPv6 path": "Finding: fd00::1/private",
         "bare localhost path": "Finding: localhost:8080/private",
         "punycode bare domain": "Finding: xn--eckwd4c7c.xn--zckzah/private",
         "IDN bare domain": "Finding: 秘密.example/private",
+        "Unicode-TLD IDN path": "Finding: 秘密.テスト/private",
+        "Unicode-dot bare domain": "Finding: private。example/path",
         "twice-encoded protocol-relative URL": "Finding: &amp;#x2f;&amp;#x2f;private.example/evidence",
         "fullwidth amp nested URL": "Finding: ＆amp;#x2f;＆amp;#x2f;private.example/evidence",
         "fullwidth hash nested URL": "Finding: &amp;＃x2f;&amp;＃x2f;private.example/evidence",
@@ -1024,6 +1266,8 @@ def run_negative_self_tests() -> None:
         "mounted macOS home path": "Finding: /Volumes/Disk/Users/alice/private/evidence.pdf",
         "root absolute user path": "Finding: /root/private/evidence.pdf",
         "nested root home path": "Finding: /var/root/private/evidence.pdf",
+        "general absolute POSIX path": "Finding: /private/var/evidence.pdf",
+        "single-slash file URI": "Finding: file:/private/var/evidence.pdf",
         "Windows absolute user path": r"Finding: C:\Users\Alice\private\evidence.pdf",
         "Windows forward-slash user path": "Finding: C:/Users/Alice/private/evidence.pdf",
         "Windows profile path": r"Finding: D:\Profiles\Alice\private\evidence.pdf",
@@ -1037,6 +1281,8 @@ def run_negative_self_tests() -> None:
         "long raw base64": f"Finding: {'A' * 160}",
         "long raw base64url": f"Finding: {'A_' * 80}",
         "wrapped raw base64": f"{'A' * 76}\n{'B' * 76}",
+        "three short wrapped base64 chunks": f"Finding: {'A' * 50}\n{'B' * 50}\n{'C' * 50}",
+        "short PNG base64": "Finding: iVBORw0KGgoAAAANSUhEUg",
         "space-wrapped field base64": f"Finding: {'A' * 76} {'B' * 76}",
         "field-prefixed wrapped base64": f"Finding: {'A' * 76}\nNote: {'B' * 76}",
         "spaced card number": "Finding: 4111 1111 1111 1111",
@@ -1044,7 +1290,9 @@ def run_negative_self_tests() -> None:
         "tab-spaced card number": "Finding: 4111\t1111\t1111\t1111",
         "hyphenated card number": "Finding: 4111-1111-1111-1111",
         "twelve-digit card-like number": "Finding: 4111-1111-1111",
+        "slash-separated card number": "Finding: 4111/1111/1111/1111",
         "Japanese mobile phone": "Finding: 090-1234-5678",
+        "Japanese dotted phone": "Finding: 090.1234.5678",
         "Japanese landline phone": "Finding: 03-1234-5678",
         "Japanese long-dash phone": "Finding: 090ー1234ー5678",
         "Japanese parenthesized phone": "Finding: 03(1234)5678",
@@ -1074,6 +1322,12 @@ def run_negative_self_tests() -> None:
         privacy_fixture,
         allow_official_urls=True,
     )
+    scan_public_text(
+        f"benign numeric text: v1.0.0 / 3.14159 / 2026-07-11; repo: docs/plan.md; "
+        f"sha256: {'0123456789abcdef' * 4}",
+        privacy_fixture,
+        allow_official_urls=True,
+    )
     boundary_instant = datetime(2026, 7, 10, 15, 30, tzinfo=timezone.utc)
     previous_tz = os.environ.get("TZ")
     try:
@@ -1091,15 +1345,25 @@ def run_negative_self_tests() -> None:
             os.environ["TZ"] = previous_tz
         if hasattr(time, "tzset"):
             time.tzset()
+    validate_u02_period(
+        {
+            "Plan": "Pro", "Period-Start": "2026-07-01", "Period-End": "2026-08-01",
+            "Evidence-As-Of": "2026-07-11", "Reviewed-At": "2026-07-11",
+            "Covers-U-01": "true",
+        },
+        "active renewal fixture",
+        audit_date=release_today(boundary_instant),
+    )
     must_fail(
-        "U-02 paid period extends into a future Asia/Tokyo date",
+        "U-02 Evidence-As-Of extends into a future Asia/Tokyo date",
         lambda: validate_u02_period(
             {
-                "Plan": "Pro", "Period-Start": "2026-07-01", "Period-End": "2026-07-12",
+                "Plan": "Pro", "Period-Start": "2026-07-01", "Period-End": "2026-08-01",
+                "Evidence-As-Of": "2026-07-12", "Reviewed-At": "2026-07-12",
                 "Covers-U-01": "true",
             },
             "JST boundary fixture",
-            as_of=release_today(boundary_instant),
+            audit_date=release_today(boundary_instant),
         ),
     )
 
@@ -1154,9 +1418,32 @@ def run_negative_self_tests() -> None:
         "Evidence-ID: U-01", "Evidence-Type: suno-track-provenance",
         f"Original-SHA256: {'1234567890abcdef' * 4}", "Reviewed-At: 2026-07-11",
         "Reviewer: reviewer-1", "Private-Storage-Reference: EVIDENCE-12345",
-        "Redaction-Checked: true", "Finding: sanitized finding only",
+        "Redaction-Checked: true", "Finding: track-provenance-verified",
         "Asset-Count: 0", "One-to-One-Mapping-Verified: true",
     )
+    for label, old_line, new_line in (
+        (
+            "arbitrary Finding summary",
+            "Finding: track-provenance-verified",
+            "Finding: arbitrary sanitized summary",
+        ),
+        ("dotted Reviewer ID", "Reviewer: reviewer-1", "Reviewer: reviewer.team"),
+        (
+            "dotted private storage ID",
+            "Private-Storage-Reference: EVIDENCE-12345",
+            "Private-Storage-Reference: EVIDENCE.TEAM",
+        ),
+    ):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            attestations = root / "attestations"
+            attestations.mkdir()
+            fixture = attestations / "U-01_schema_negative.md"
+            fixture.write_text(
+                "\n".join(new_line if line == old_line else line for line in common_attestation_lines),
+                encoding="utf-8",
+            )
+            must_fail(label, lambda root=root: audit_evidence_tree(root))
     with tempfile.TemporaryDirectory() as temp_dir:
         root = Path(temp_dir)
         attestations = root / "attestations"
@@ -1196,7 +1483,7 @@ def run_negative_self_tests() -> None:
                 "Evidence-ID: U-01", "Evidence-Type: trademark-clearance",
                 f"Original-SHA256: {'1234567890abcdef' * 4}", "Reviewed-At: 2026-07-11",
                 "Reviewer: reviewer-1", "Private-Storage-Reference: EVIDENCE-12345",
-                "Redaction-Checked: true", "Finding: sanitized finding only",
+                "Redaction-Checked: true", "Finding: trademark-clearance-reviewed",
                 "Territories: JP", "Trademark-Classes: 9", "Official-DB: J-PlatPat",
                 "Search-Date: 2026-07-11", "Result-Count: 0", "Expert-Review: not-required",
             )), encoding="utf-8",
@@ -1213,7 +1500,7 @@ def run_negative_self_tests() -> None:
                 "Evidence-ID: U-03", "Evidence-Type: ai-image-provenance",
                 f"Original-SHA256: {'1234567890abcdef' * 4}", "Reviewed-At: 2026-07-11",
                 "Reviewer: reviewer-1", "Private-Storage-Reference: EVIDENCE-12345",
-                "Redaction-Checked: true", "Finding: sanitized finding only",
+                "Redaction-Checked: true", "Finding: image-provenance-verified",
                 "Inventory-Contract: docs/31 sections 2.2 and 4", "Population-Count: 0",
                 f"Population-SHA256: {'abcdef0123456789' * 4}", "Provenance-Count: 0",
                 "Unresolved-Items: 0", "Provenance-Complete: true",
@@ -1231,7 +1518,7 @@ def run_negative_self_tests() -> None:
             "Evidence-ID: U-04", "Evidence-Type: icon-replacement-rights",
             f"Original-SHA256: {'1234567890abcdef' * 4}", "Reviewed-At: 2026-07-11",
             "Reviewer: reviewer-1", "Private-Storage-Reference: EVIDENCE-12345",
-            "Redaction-Checked: true", "Finding: replacement rights independently verified",
+            "Redaction-Checked: true", "Finding: replacement-rights-verified",
             "Replacement-Asset-Path: assets/product_icon.svg",
             f"Replacement-Content-SHA256: {'abcdef0123456789' * 4}",
             "Replacement-Asset-Rights-Verified: true",
@@ -1285,7 +1572,7 @@ def run_negative_self_tests() -> None:
                 "Evidence-ID: U-01", "Evidence-Type: suno-track-provenance",
                 f"Original-SHA256: {'1234567890abcdef' * 4}", "Reviewed-At: 2026-07-11",
                 "Reviewer: reviewer-1", "Private-Storage-Reference: ../private/path",
-                "Redaction-Checked: true", "Finding: sanitized finding only",
+                "Redaction-Checked: true", "Finding: track-provenance-verified",
             )), encoding="utf-8",
         )
         must_fail("private storage path", lambda: audit_evidence_tree(root))
@@ -1301,7 +1588,7 @@ def run_negative_self_tests() -> None:
                     "Evidence-ID: U-01", "Evidence-Type: suno-track-provenance",
                     f"Original-SHA256: {'1234567890abcdef' * 4}", "Reviewed-At: 2026-07-11",
                     "Reviewer: reviewer-1", f"Private-Storage-Reference: {private_reference}",
-                    "Redaction-Checked: true", "Finding: sanitized finding only",
+                    "Redaction-Checked: true", "Finding: track-provenance-verified",
                 )), encoding="utf-8",
             )
             must_fail(f"billing identifier {private_reference}", lambda root=root: audit_evidence_tree(root))
@@ -1496,6 +1783,48 @@ def run_negative_self_tests() -> None:
             "Unresolved-Items": "0", "Provenance-Complete": "true",
         }
         validate_u03_manifest(valid_u03, one_item_population, "fixture", fixture_root)
+        for label, replacement in (
+            (
+                "U-03 dotted provenance ID",
+                {"Item-0001": f"assets/showcase/example.png;{one_item_digest};ai-generated;PROV.001"},
+            ),
+            (
+                "U-03 dotted service ID",
+                {"Provenance-0001": "PROV-001;Open.AI;2026-07-10T10:00:00+09:00;2026-07-10T10:01:00+09:00;creator-1"},
+            ),
+            (
+                "U-03 dotted creator ID",
+                {"Provenance-0001": "PROV-001;OpenAI;2026-07-10T10:00:00+09:00;2026-07-10T10:01:00+09:00;creator.1"},
+            ),
+        ):
+            dotted_u03 = dict(valid_u03)
+            dotted_u03.update(replacement)
+            must_fail(
+                label,
+                lambda dotted_u03=dotted_u03: validate_u03_manifest(
+                    dotted_u03, one_item_population, "fixture", fixture_root,
+                ),
+            )
+        valid_u08 = {
+            "Covered-Media": "suno-and-ai-images",
+            "Population-Count": "1",
+            "Population-SHA256": manifest_sha256(
+                [f"assets/showcase/example.png;{one_item_digest}"]
+            ),
+            "Item-0001": f"assets/showcase/example.png;{one_item_digest};none;RIGHTS_001",
+            "Clearance-Complete": "true",
+        }
+        validate_u08_manifest(valid_u08, one_item_population, "fixture", [], fixture_root)
+        dotted_u08 = dict(valid_u08)
+        dotted_u08["Item-0001"] = (
+            f"assets/showcase/example.png;{one_item_digest};none;RIGHTS.001"
+        )
+        must_fail(
+            "U-08 dotted rights ID",
+            lambda: validate_u08_manifest(
+                dotted_u08, one_item_population, "fixture", [], fixture_root,
+            ),
+        )
         fixture_asset.write_bytes(b"png-fixture-changed")
         must_fail(
             "U-03 content replaced after evidence",
@@ -1747,11 +2076,21 @@ def run_negative_self_tests() -> None:
             f"{filename};{file_sha256(ROOT / 'assets/audio' / filename)};"
             f"2026-07-10T12:00:00+09:00;MAP-{number:02d}"
         )
+    dotted_mapping_u01 = dict(valid_u01)
+    dotted_mapping_u01["Track-01"] = dotted_mapping_u01["Track-01"].rsplit(";", 1)[0] + ";MAP.01"
+    must_fail(
+        "U-01 dotted mapping ID",
+        lambda: validate_u01_tracks(dotted_mapping_u01, "fixture", sorted(EXPECTED_AUDIO)),
+    )
     must_fail(
         "U-02 period does not contain U-01",
         lambda: cross_check_u02_covers_u01(
             valid_u01,
-            {"Plan": "Pro", "Period-Start": "2026-07-01", "Period-End": "2026-07-09", "Covers-U-01": "true"},
+            {
+                "Plan": "Pro", "Period-Start": "2026-07-01", "Period-End": "2026-08-01",
+                "Evidence-As-Of": "2026-07-09", "Reviewed-At": "2026-07-11",
+                "Covers-U-01": "true",
+            },
             "fixture", sorted(EXPECTED_AUDIO),
         ),
     )
@@ -1785,6 +2124,228 @@ def run_negative_self_tests() -> None:
             lambda: validate_u01_tracks(valid_eleven, "fixture", eleven_audio, fixture_root),
         )
     print("licensing audit negative fixtures: ok (privacy tree/IDs, U-01 mapping, U-02 dependency/period, U-03/U-08 manifests, U-04, ledger/docs30 transitions)")
+
+
+def write_attestation_fixture(path: Path, fields: dict[str, str]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "\n".join(f"{key}: {value}" for key, value in fields.items()) + "\n",
+        encoding="utf-8",
+    )
+
+
+def fixture_common_fields(evidence_id: str, evidence_type: str) -> dict[str, str]:
+    return {
+        "Evidence-ID": evidence_id,
+        "Evidence-Type": evidence_type,
+        "Original-SHA256": hashlib.sha256(b"private-source-evidence").hexdigest(),
+        "Reviewed-At": "2026-07-11",
+        "Reviewer": "reviewer_1",
+        "Private-Storage-Reference": "EVIDENCE_12345",
+        "Redaction-Checked": "true",
+        "Finding": FINDING_CODES[evidence_type],
+    }
+
+
+def run_positive_attestation_self_tests() -> None:
+    """Exercise real attestation files through parsing and the main close gate."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        fixture_root = Path(temp_dir).resolve()
+        audio_dir = fixture_root / "assets/audio"
+        audio_dir.mkdir(parents=True)
+        for filename in EXPECTED_AUDIO:
+            (audio_dir / filename).write_bytes(f"audio:{filename}".encode("utf-8"))
+        image_relative = "assets/showcase/example.png"
+        image_path = fixture_root / image_relative
+        image_path.parent.mkdir(parents=True)
+        image_path.write_bytes(b"fixture-png-bytes")
+        icon_path = fixture_root / "assets/icon.svg"
+        icon_path.write_bytes((ROOT / "assets/icon.svg").read_bytes())
+        (fixture_root / "project.godot").write_text(
+            '[application]\nconfig/icon="res://assets/icon.svg"\n', encoding="utf-8",
+        )
+        (fixture_root / "LICENSE.md").write_text(
+            "Copyright (c) 2026 Fixture Rights Holder\n", encoding="utf-8",
+        )
+        subprocess.run(["git", "init", "-q"], cwd=fixture_root, check=True)
+        subprocess.run(
+            ["git", "add", "assets", "project.godot", "LICENSE.md"],
+            cwd=fixture_root, check=True,
+        )
+        audio_population = build_audio_population(fixture_root)
+        u03_population = build_u03_population(fixture_root)
+        assert set(audio_population) == EXPECTED_AUDIO and u03_population == [image_relative]
+
+        u01 = fixture_common_fields("U-01", "suno-track-provenance") | {
+            "Asset-Count": str(len(audio_population)),
+            "One-to-One-Mapping-Verified": "true",
+        }
+        for number, filename in enumerate(audio_population, start=1):
+            u01[f"Track-{number:02d}"] = (
+                f"{filename};{file_sha256(audio_dir / filename)};"
+                f"2026-07-10T12:00:00+09:00;MAP_{number:02d}"
+            )
+        u02 = fixture_common_fields("U-02", "suno-paid-period") | {
+            "Plan": "Pro",
+            "Period-Start": "2026-07-01",
+            "Period-End": "2026-08-01",
+            "Evidence-As-Of": "2026-07-11",
+            "Covers-U-01": "true",
+        }
+        image_digest = file_sha256(image_path)
+        u03 = fixture_common_fields("U-03", "ai-image-provenance") | {
+            "Inventory-Contract": "docs/31 sections 2.2 and 4",
+            "Population-Count": "1",
+            "Population-SHA256": manifest_sha256([f"{image_relative};{image_digest}"]),
+            "Item-0001": f"{image_relative};{image_digest};ai-generated;PROV_001",
+            "Provenance-Count": "1",
+            "Provenance-0001": (
+                "PROV_001;OpenAI;2026-07-10T10:00:00+09:00;"
+                "2026-07-10T10:01:00+09:00;creator_1"
+            ),
+            "Unresolved-Items": "0",
+            "Provenance-Complete": "true",
+        }
+        u04 = fixture_common_fields("U-04", "icon-rights") | {
+            "Product-Decision": "adopted",
+            "Baseline-Original-Content-SHA256": KNOWN_ORIGINAL_ICON_SHA256,
+            "Product-Content-SHA256": KNOWN_ORIGINAL_ICON_SHA256,
+            "Author-Verified": "true",
+            "Rights-Holder-Verified": "true",
+        }
+        u05 = fixture_common_fields("U-05", "license-holder") | {
+            "License-Holder-Matches-LICENSE": "true",
+        }
+        u06 = fixture_common_fields("U-06", "trademark-clearance") | {
+            "Territories": "JP",
+            "Trademark-Classes": "9, 41",
+            "Official-DB": "J_PlatPat",
+            "Search-Date": "2026-07-11",
+            "Result-Count": "0",
+            "Expert-Review": "not-required",
+        }
+        combined = sorted({f"assets/audio/{name}" for name in audio_population} | set(u03_population))
+        u08 = fixture_common_fields("U-08", "ai-input-rights") | {
+            "Covered-Media": "suno-and-ai-images",
+            "Population-Count": str(len(combined)),
+            "Population-SHA256": manifest_sha256(
+                [f"{relative};{file_sha256(fixture_root / relative)}" for relative in combined]
+            ),
+            "Clearance-Complete": "true",
+        }
+        for number, relative in enumerate(combined, start=1):
+            u08[f"Item-{number:04d}"] = (
+                f"{relative};{file_sha256(fixture_root / relative)};none;RIGHTS_{number:02d}"
+            )
+
+        evidence_root = fixture_root / "docs/qa/evidence/licensing"
+        canonical_fields = {
+            "U-01": u01, "U-02": u02, "U-03": u03, "U-04": u04,
+            "U-05": u05, "U-06": u06, "U-08": u08,
+        }
+        for evidence_id, fields in canonical_fields.items():
+            write_attestation_fixture(
+                evidence_root / "attestations" / f"{evidence_id}_positive.md", fields,
+            )
+        subprocess.run(["git", "add", "docs"], cwd=fixture_root, check=True)
+
+        historical_u02_path = fixture_root / "U-02_historical_positive.md"
+        write_attestation_fixture(
+            historical_u02_path,
+            fixture_common_fields("U-02", "suno-paid-period") | {
+                "Plan": "Premier",
+                "Period-Start": "2026-06-01",
+                "Period-End": "2026-07-11",
+                "Evidence-As-Of": "2026-07-11",
+                "Covers-U-01": "true",
+            },
+        )
+        validate_u02_period(
+            parse_attestation(historical_u02_path, fixture_root), "historical U-02 positive"
+        )
+
+        parsed = audit_evidence_tree(evidence_root, fixture_root)
+        completed_ids = set(canonical_fields)
+        grouped: dict[str, list[dict[str, str]]] = {}
+        for fields in parsed.values():
+            grouped.setdefault(fields["Evidence-ID"], []).append(fields)
+        audit_completion_dependencies(completed_ids)
+        audit_canonical_attestation_counts(grouped, completed_ids)
+        index_paths = indexed_paths(fixture_root)
+        project_config = (fixture_root / "project.godot").read_text(encoding="utf-8")
+        for evidence_id in sorted(completed_ids):
+            saved_paths = sorted(
+                path.relative_to(fixture_root).as_posix()
+                for path, fields in parsed.items()
+                if fields["Evidence-ID"] == evidence_id
+            )
+            audit_completed_attestation_references(
+                evidence_id, saved_paths, parsed, fixture_root,
+            )
+            for relative in saved_paths:
+                saved_path = (fixture_root / relative).resolve()
+                require_worktree_matches_index(
+                    fixture_root, relative, index_paths, f"positive {evidence_id} attestation",
+                )
+                validate_completed_attestation_payload(
+                    evidence_id, parsed[saved_path], relative, saved_paths, parsed,
+                    "", project_config, fixture_root, index_paths, saved_path,
+                    audio_population, u03_population,
+                )
+        cross_check_u02_covers_u01(
+            grouped["U-01"][0], grouped["U-02"][0],
+            "positive completed U-01/U-02", audio_population, fixture_root,
+        )
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        fixture_root = Path(temp_dir).resolve()
+        original_icon = fixture_root / "assets/icon.svg"
+        original_icon.parent.mkdir(parents=True)
+        original_icon.write_bytes((ROOT / "assets/icon.svg").read_bytes())
+        replacement_relative = "assets/product_icon.svg"
+        replacement = fixture_root / replacement_relative
+        replacement.write_text("<svg>replacement icon</svg>", encoding="utf-8")
+        replacement_digest = file_sha256(replacement)
+        project_config = f'config/icon="res://{replacement_relative}"\n'
+        (fixture_root / "project.godot").write_text(project_config, encoding="utf-8")
+        decision_relative = "docs/qa/evidence/licensing/attestations/U-04_rejected.md"
+        rights_relative = "docs/qa/evidence/licensing/attestations/U-04_replacement_rights.md"
+        decision = fixture_common_fields("U-04", "icon-rights") | {
+            "Product-Decision": "rejected",
+            "Baseline-Original-Content-SHA256": KNOWN_ORIGINAL_ICON_SHA256,
+            "Replacement-Integrated": "true",
+            "Replacement-Product-Path": replacement_relative,
+            "Replacement-Content-SHA256": replacement_digest,
+            "Replacement-Rights-Attestation": rights_relative,
+        }
+        rights = fixture_common_fields("U-04", "icon-replacement-rights") | {
+            "Replacement-Asset-Path": replacement_relative,
+            "Replacement-Content-SHA256": replacement_digest,
+            "Replacement-Asset-Rights-Verified": "true",
+        }
+        write_attestation_fixture(fixture_root / decision_relative, decision)
+        write_attestation_fixture(fixture_root / rights_relative, rights)
+        subprocess.run(["git", "init", "-q"], cwd=fixture_root, check=True)
+        subprocess.run(["git", "add", "."], cwd=fixture_root, check=True)
+        evidence_root = fixture_root / "docs/qa/evidence/licensing"
+        parsed = audit_evidence_tree(evidence_root, fixture_root)
+        saved_paths = [decision_relative, rights_relative]
+        audit_completed_attestation_references("U-04", saved_paths, parsed, fixture_root)
+        audit_canonical_attestation_counts(
+            {"U-04": list(parsed.values())}, {"U-04"},
+        )
+        index_paths = indexed_paths(fixture_root)
+        ledger = f"{replacement_relative}\n[RIGHTS-01A:U-04-REPLACEMENT]=integrated"
+        for relative in saved_paths:
+            saved_path = (fixture_root / relative).resolve()
+            require_worktree_matches_index(
+                fixture_root, relative, index_paths, "positive U-04 rejected attestation",
+            )
+            validate_completed_attestation_payload(
+                "U-04", parsed[saved_path], relative, saved_paths, parsed,
+                ledger, project_config, fixture_root, index_paths, saved_path, [], [],
+            )
+    print("licensing audit positive fixtures: ok (U-01/U-02/U-03/U-04 adopted+rejected/U-05/U-06/U-08)")
 
 
 def main() -> int:
@@ -1891,85 +2452,11 @@ def main() -> int:
                 assert reviewed_at <= parsed_close_date, (
                     f"review date after close date for {evidence_id}: {reviewed_at} > {parsed_close_date}"
                 )
-                if evidence_id == "U-01":
-                    for audio_name in audio_population:
-                        audio_relative = f"assets/audio/{audio_name}"
-                        require_worktree_matches_index(ROOT, audio_relative, git_index_paths, "U-01 audio")
-                    validate_u01_tracks(fields, relative, audio_population)
-                elif evidence_id == "U-02":
-                    validate_u02_period(fields, relative)
-                elif evidence_id == "U-03":
-                    for asset_relative in u03_population:
-                        require_worktree_matches_index(ROOT, asset_relative, git_index_paths, "U-03 asset")
-                    validate_u03_manifest(fields, u03_population, relative)
-                elif evidence_id == "U-04":
-                    if fields["Evidence-Type"] == "icon-replacement-rights":
-                        replacement_asset_path = fields.get("Replacement-Asset-Path", "")
-                        assert replacement_asset_path and replacement_asset_path in git_index_paths, (
-                            f"U-04 replacement rights record references unindexed asset: {relative}"
-                        )
-                        assert fields.get("Replacement-Content-SHA256") == file_sha256(ROOT / replacement_asset_path), (
-                            f"U-04 replacement rights record has stale digest: {relative}"
-                        )
-                        require_worktree_matches_index(
-                            ROOT, replacement_asset_path, git_index_paths, "U-04 replacement asset"
-                        )
-                        assert fields.get("Replacement-Asset-Rights-Verified") == "true", (
-                            f"U-04 replacement rights are not verified: {relative}"
-                        )
-                    else:
-                        assert fields.get("Product-Decision") in {"adopted", "rejected"}, (
-                            f"U-04 product decision missing: {relative}"
-                        )
-                    if fields.get("Product-Decision") == "adopted":
-                        require_worktree_matches_index(ROOT, "assets/icon.svg", git_index_paths, "U-04 adopted icon")
-                        require_worktree_matches_index(ROOT, "project.godot", git_index_paths, "U-04 project config")
-                        assert re.search(
-                            r'^config/icon\s*=\s*"res://assets/icon\.svg"\s*$',
-                            project_config,
-                            flags=re.MULTILINE,
-                        ), "U-04 adopted decision requires assets/icon.svg as project config/icon"
-                        assert fields.get("Product-Content-SHA256") == file_sha256(ROOT / "assets/icon.svg"), (
-                            "U-04 adopted icon content digest is stale"
-                        )
-                        assert fields.get("Author-Verified") == "true" and fields.get("Rights-Holder-Verified") == "true", (
-                            f"U-04 adopted icon author/rights holder is not verified: {relative}"
-                        )
-                    elif fields.get("Product-Decision") == "rejected":
-                        require_worktree_matches_index(ROOT, "project.godot", git_index_paths, "U-04 project config")
-                        validate_u04_rejected(
-                            fields, relative, saved_paths, parsed_attestations,
-                            ledger, project_config, ROOT, git_index_paths, saved_path,
-                        )
-                elif evidence_id == "U-05":
-                    require_worktree_matches_index(ROOT, "LICENSE.md", git_index_paths, "U-05 license")
-                    assert fields.get("License-Holder-Matches-LICENSE") == "true", (
-                        f"U-05 does not match LICENSE: {relative}"
-                    )
-                elif evidence_id == "U-06":
-                    assert fields.get("Territories") and fields.get("Trademark-Classes"), (
-                        f"U-06 territory/classes missing: {relative}"
-                    )
-                    assert fields.get("Official-DB") and "://" not in fields["Official-DB"], (
-                        f"U-06 official DB must be named without secret URL: {relative}"
-                    )
-                    try:
-                        search_date = require_calendar_date(fields.get("Search-Date", ""), f"Search-Date in {relative}")
-                        result_count = int(fields.get("Result-Count", ""))
-                    except ValueError as exc:
-                        raise AssertionError(f"invalid U-06 search payload: {relative}") from exc
-                    assert search_date <= release_today() and result_count >= 0, f"invalid U-06 results: {relative}"
-                    assert fields.get("Expert-Review") in {"completed", "not-required"}, (
-                        f"U-06 expert review decision missing: {relative}"
-                    )
-                elif evidence_id == "U-08":
-                    for audio_name in audio_population:
-                        require_worktree_matches_index(
-                            ROOT, f"assets/audio/{audio_name}", git_index_paths, "U-08 audio"
-                        )
-                    for asset_relative in u03_population:
-                        require_worktree_matches_index(ROOT, asset_relative, git_index_paths, "U-08 asset")
-                    validate_u08_manifest(fields, u03_population, relative, audio_population)
+                validate_completed_attestation_payload(
+                    evidence_id, fields, relative, saved_paths, parsed_attestations,
+                    ledger, project_config, ROOT, git_index_paths, saved_path,
+                    audio_population, u03_population,
+                )
                 completed_fields.setdefault(evidence_id, []).append(fields)
                 matching_attestations += 1
             assert matching_attestations > 0, f"completed {evidence_id} requires a valid attestation"
@@ -2241,6 +2728,7 @@ def main() -> int:
 if __name__ == "__main__":
     if sys.argv[1:] == ["--self-test"]:
         run_negative_self_tests()
+        run_positive_attestation_self_tests()
         raise SystemExit(0)
     assert not sys.argv[1:], f"unknown arguments: {sys.argv[1:]}"
     raise SystemExit(main())
