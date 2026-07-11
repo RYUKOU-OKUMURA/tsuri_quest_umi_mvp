@@ -56,7 +56,7 @@ CLAUDE.md
 - E7/E11統合後の実ファイル構成
 - RIGHTS-01A確定後のライセンス・notice入力
 - 製品アイコン、ブートスプラッシュ、設定画面素材
-- 実装済みrelease verifier骨格を固定RC strict modeで実行し、検査する配布物内ファイル一覧を確定
+- 29対象・manifest完全一致へfreeze済みのrelease verifier骨格を固定RC modeで実行し、検査する配布物内ファイル一覧を確定
 - 最低macOS、対象Mac、Intel、署名・公証方針
 
 [RC固定時に記録する項目]
