@@ -1,39 +1,71 @@
-.gitignore
-CHANGELOG.md
-LICENSE.md
+釣りクエスト ～海釣り編～ manifest（Pre-RC草案）
+
+このファイルはsource treeと製品配布物の境界を示す。最終RCのファイル単位manifestやhash記録ではない。
+
+[SOURCE TREE主要構成: 完全なファイル一覧ではない]
 README.md
 VALIDATION.md
-assets/icon.svg
-docs/00_プロジェクト概要.md
-docs/01_要件定義書.md
-docs/02_ゲームデザイン仕様.md
-docs/03_画面遷移とUI.md
-docs/04_技術設計.md
-docs/05_データ仕様.md
-docs/archive/06_実装ロードマップ.md
-docs/07_テスト計画.md
-docs/08_独自性と権利メモ.md
-docs/09_パラメータ調整表.md
+CHANGELOG.md
+MANIFEST.txt
+LICENSE.md
+THIRD_PARTY_NOTICES.md
 project.godot
-reference/.gdignore
-reference/01_surface_fishing_mockup.png
-reference/02_underwater_fight_mockup.png
-reference/03_cooking_levelup_mockup.png
-reference/README.md
-scenes/main.tscn
-src/autoload/game_data.gd
-src/autoload/player_progress.gd
-src/core/fishing_simulator.gd
-src/main.gd
-src/ui/components/underwater_view.gd
-src/ui/cooking_screen.gd
-src/ui/fishing_screen.gd
-src/ui/harbor_screen.gd
-src/ui/market_screen.gd
-src/ui/screen_base.gd
-src/ui/shop_screen.gd
-src/ui/status_screen.gd
-src/ui/title_screen.gd
-src/ui/ui_theme.gd
-tools/open_on_mac.command
-tools/validate_project.sh
+export_presets.cfg
+scenes/
+src/
+assets/
+tools/
+docs/
+reference/
+skills/
+AGENTS.md
+CLAUDE.md
+.codex/
+.cursor/
+.claude/
+.gitignore
+
+完全な追跡対象一覧は対象source commitに対する `git ls-tree -r --name-only <commit>` で生成する。
+
+[PACKAGE INPUT CANDIDATES: Pre-RCで配布物への包含を確定]
+project.godot
+export_presets.cfg
+scenes/
+src/
+assets/
+LICENSE.md
+THIRD_PARTY_NOTICES.md
+
+現行の最小export設定は `reference/` と `tools/` を明示除外する。Godotが取り込むゲームresourceと、最終ZIPへ別途同梱するlicense / noticeは性質が異なるため、上記を現時点の配布済みファイル一覧とはみなさない。RIGHTS-01Bとrelease verifierで最終成果物の実内容を検査する。
+
+[DEVELOPMENT-ONLY: 製品payloadへ含めない]
+docs/
+reference/
+tools/
+skills/
+AGENTS.md
+CLAUDE.md
+.codex/
+.cursor/
+.claude/
+.git/
+.gitignore
+.godot/（Godotが生成するimport/cache。source管理・製品payloadの対象外）
+
+[PRE-RCで確定する項目]
+- E7/E11統合後の実ファイル構成
+- RIGHTS-01A確定後のライセンス・notice入力
+- 製品アイコン、ブートスプラッシュ、設定画面素材
+- 29対象・manifest完全一致へfreeze済みのrelease verifier骨格を固定RC modeで実行し、検査する配布物内ファイル一覧を確定
+- 最低macOS、対象Mac、Intel、署名・公証方針
+
+[RC固定時に記録する項目]
+- source commit
+- Godot 4.7 stable / export templateの正確な版
+- unsigned export hash
+- 署名・公証の状態
+- final .app hash
+- final ZIP hash
+- final ZIP内のファイル単位一覧と必要なlicense / notice / OFL
+
+RC固定後に本ファイルを含むパッケージ入力は変更しない。内容変更、再export、再署名でfinal hashが変わる場合はRC番号を上げて再検証する。
