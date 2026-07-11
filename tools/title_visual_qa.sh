@@ -75,6 +75,7 @@ python3 "$ROOT/tools/build_screen_visual_comparison.py" title_storage_block
 
 echo "==> 不正artifact状態をキャプチャ"
 TSURI_QA_SANDBOX=1 TSURI_QA_DETERMINISTIC=1 TSURI_TITLE_PREVIEW_MODE=invalid_artifact \
+  TSURI_TITLE_PREVIEW_ALLOW_MUTATION=1 \
   HOME="$INVALID_GODOT_HOME" \
   "$GODOT" --path "$ROOT" "res://tools/title_preview.tscn"
 

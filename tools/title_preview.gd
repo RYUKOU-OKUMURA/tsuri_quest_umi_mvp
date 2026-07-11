@@ -22,6 +22,12 @@ func _ready() -> void:
 		PlayerProgress._save_storage_ready = true
 		PlayerProgress._save_storage_block_message = ""
 		PlayerProgress.active_save_slot = PlayerProgress.DEFAULT_SAVE_SLOT
+		var user_data_path := ProjectSettings.globalize_path("user://").simplify_path()
+		if not is_mutation_root_allowed(
+			user_data_path, OS.get_environment("TSURI_TITLE_PREVIEW_ALLOW_MUTATION")
+		) or _mutation_root_is_symlink(user_data_path):
+			_fail_preview("不正artifact previewのmutation guardを通過できませんでした。")
+			return
 		var mkdir_error := DirAccess.make_dir_recursive_absolute(PlayerProgress.SAVE_SLOT_ROOT + "/1")
 		if mkdir_error != OK and mkdir_error != ERR_ALREADY_EXISTS:
 			_fail_preview("不正artifact fixture用directoryを作成できませんでした（code %d）。" % mkdir_error)
@@ -45,8 +51,6 @@ func _ready() -> void:
 		PlayerProgress._save_storage_ready = true
 		PlayerProgress._save_storage_block_message = ""
 		PlayerProgress.active_save_slot = PlayerProgress.DEFAULT_SAVE_SLOT
-		_remove_preview_save(PlayerProgress.current_save_path())
-		_remove_preview_save(PlayerProgress.current_backup_path())
 
 	var screen := TitleScreen.new()
 	screen.configure({})
@@ -109,6 +113,51 @@ func _remove_all_slot_artifacts() -> void:
 	for slot_id in range(1, PlayerProgress.SAVE_SLOT_COUNT + 1):
 		for path in PlayerProgress._slot_save_paths(slot_id):
 			_remove_preview_save(path)
+
+
+static func is_mutation_root_allowed(user_data_path: String, allow_value: String) -> bool:
+	if allow_value != "1":
+		return false
+	var normalized := user_data_path.simplify_path()
+	var relative := ""
+	if normalized.begins_with("/private/tmp/"):
+		relative = normalized.trim_prefix("/private/tmp/")
+	elif normalized.begins_with("/tmp/"):
+		relative = normalized.trim_prefix("/tmp/")
+	else:
+		return false
+	var root_component := relative.get_slice("/", 0)
+	if (
+		not root_component.begins_with("tsuri_title_")
+		or root_component.length() <= 12
+		or root_component.contains("..")
+	):
+		return false
+	for character in root_component:
+		var code := String(character).unicode_at(0)
+		var allowed := (
+			(code >= 48 and code <= 57)
+			or (code >= 65 and code <= 90)
+			or (code >= 97 and code <= 122)
+			or character == "_"
+			or character == "-"
+		)
+		if not allowed:
+			return false
+	return true
+
+
+func _mutation_root_is_symlink(user_data_path: String) -> bool:
+	var normalized := user_data_path.simplify_path()
+	var parent := "/private/tmp" if normalized.begins_with("/private/tmp/") else "/tmp"
+	var relative := normalized.trim_prefix(parent + "/")
+	var current := parent
+	for component in relative.split("/", false):
+		var parent_dir := DirAccess.open(current)
+		if parent_dir == null or parent_dir.is_link(component):
+			return true
+		current = current.path_join(component)
+	return false
 
 
 func _is_rendered_image_valid(image: Image) -> bool:
