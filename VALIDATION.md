@@ -40,7 +40,7 @@ TSURI_GODOT_HOME=/tmp/tsuri-docs-release ./tools/validate_project.sh
 ./tools/save_system_verify.sh
 ```
 
-原子的書き込み、バックアップ復元、未知save versionの非破壊guard、失敗通知、ユーザーデータ領域移行などの回帰を扱います。発売前にはSAVE-04統合後の最新版で再実行します。
+原子的書き込み、バックアップ復元、未知save versionの非破壊guard、失敗通知、ユーザーデータ領域移行、旧saveの達成不能依頼repairなどの回帰を扱います。SAVE-04統合後の検証は完了しており、今後もセーブ契約へ影響する変更時と固定RCで再実行します。
 
 ### export起動
 
@@ -53,6 +53,37 @@ GODOT_BIN=/Applications/Godot.app/Contents/MacOS/Godot \
 REL-01の最小macOS Universal exportに対する起動確認用です。指定したGodotと同じ版のmacOS export templateが `~/Library/Application Support/Godot/export_templates/` 以下に必要です。`GODOT_BIN` の既定値は上記のアプリ内実行ファイルで、`godot` / `godot4` のPATH探索は行いません。
 
 入力はdirty worktreeではなく、`TSURI_EXPORT_SOURCE_REF`（既定 `HEAD`）が解決するcommit treeです。未コミットの文書・実装を検証したい場合は先にcommitする必要があります。このコマンドは最終RCの署名・公証済み成果物を検証するrelease verifierではありません。
+
+### release verifier
+
+まず、検出・manifest分類・失敗・未説明ERROR・export証跡契約の負ケースを含むself-testを実行します。
+
+```zsh
+python3 tools/release_verify_self_test.py
+```
+
+次にskeleton modeで、`tools/*_{smoke,audit}.tscn` の自動列挙、`tools/release_test_manifest.txt` による特殊runner分類、全体validate、全smoke / audit、セーブ検証委譲を実行し、機械可読レポートを生成します。
+
+```zsh
+./tools/release_verify.sh
+```
+
+既定の出力先は `/tmp/tsuri_release_verify/release_verify_report.json` です。必要に応じて `GODOT_BIN`、`TSURI_GODOT_HOME`、`TSURI_RELEASE_VERIFY_OUTPUT`、`TSURI_RELEASE_TEST_TIMEOUT_SECONDS` を指定できます。skeleton modeの `skeleton_passed` は検証ランナー骨格と現在のsource検証が成功したことを示しますが、固定RC検証や最終配布証跡の完了を意味しません。
+
+固定RCではclean worktreeと、同じsource commit/treeから `tools/export_launch_verify.sh` が生成したexport証跡・全stdoutログを指定してstrict modeを実行します。
+
+```zsh
+mkdir -p /tmp/tsuri_release_evidence
+set -o pipefail
+./tools/export_launch_verify.sh \
+  | tee /tmp/tsuri_release_evidence/export_launch_verify.log
+
+TSURI_EXPORT_ARTIFACT_LOG=/tmp/tsuri_quest_umi_export_spike/logs/artifacts.sha256 \
+  TSURI_EXPORT_VERIFY_LOG=/tmp/tsuri_release_evidence/export_launch_verify.log \
+  ./tools/release_verify.sh --rc
+```
+
+上記パスは例です。`TSURI_EXPORT_VERIFY_LOG` には `export_launch_verify.sh` の全stdoutを事前に保存し、証跡のsource commit/treeを検証対象HEADと一致させます。strict modeの `rc_passed` も、署名・公証判断、final `.app` / ZIP hash、RIGHTS-01B、性能・soak、3難易度9セル受入を代替しません。これらの最終証跡は固定RCで別途完了させます。
 
 ### 画面別visual QA
 
@@ -90,11 +121,11 @@ find tools -maxdepth 1 \
 
 ## Pre-RC / RCで追加する検証
 
-- E7: 3難易度の保存・倍率・ファイト・タイトル/ステータス表示
+- E7: 3難易度の保存・倍率・ファイト・タイトル/ステータス表示（SAVE Gate完了後の次工程）
 - E11: 音量、slot削除、表示、全画面入力、製品アイコン・スプラッシュ
 - 対象Mac: 最低macOS、最低対象Mac、Intel確認
 - 権利: RIGHTS-01Aの確定と、最終成果物内のnotice・Godot license・OFL同梱（RIGHTS-01B）
-- RC: source commit、Godot/export template版、unsigned hash、署名・公証後のfinal artifact/ZIP hashの固定
+- RC: release verifier strict mode、source commit、Godot/export template版、unsigned hash、署名・公証後のfinal artifact/ZIP hashの固定
 - 最終配布物: clean起動、save移行・再読込、性能・30分soak、easy/normal/hard × 序盤/中盤/終盤の9セル受入
 
 RC固定後は検証対象のパッケージ入力を変更しません。修正・再export・再署名でfinal hashが変わった場合はRC番号を上げ、必要な検証を再実行します。

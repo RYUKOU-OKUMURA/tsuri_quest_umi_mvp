@@ -4,7 +4,7 @@
 
 ## [1.0.0] - 未リリース
 
-Pre-RC開発中。E7、E11、権利・対象Mac・署名/公証判断、release verifier、最終RC検証が完了するまでリリース日と成果物hashは確定しません。
+Pre-RC開発中。SAVE-04とrelease verifier骨格は完了しています。E7、E11、権利・対象Mac・署名/公証判断、固定RCでのstrict実行と最終RC検証が完了するまでリリース日と成果物hashは確定しません。
 
 ### 追加
 
@@ -14,7 +14,9 @@ Pre-RC開発中。E7、E11、権利・対象Mac・署名/公証判断、release 
 - 魚図鑑、称号31件、記録更新、依頼ボード、釣行イベント、海図断片
 - 危険海域のサメ9種、横取り・餌魚選択、生簀でのサメ10種育成、メガロドン
 - 3スロットセーブ、原子的書き込み、バックアップ復元、未知version guard、旧ユーザーデータ領域からの非破壊移行
+- 旧saveの未知魚・サメ・ヌシ依頼を除去し、正常依頼を維持して3件へ補充するSAVE-04 repair
 - macOS Universal向け最小export設定とexport起動smoke
+- smoke / auditを自動列挙し、特殊runner分類、未説明ERROR検査、機械可読レポート生成を行うrelease verifier骨格
 
 ### 改善
 
@@ -25,9 +27,9 @@ Pre-RC開発中。E7、E11、権利・対象Mac・署名/公証判断、release 
 
 ### リリース前の残作業
 
-- SAVE-04、E7難易度、E11設定・入力・製品外装
+- E7難易度、E11設定・入力・製品外装
 - RIGHTS-01A/01B、対象Mac、Intel確認、Developer ID署名・公証方針
-- release verifier、最終配布物manifest、固定RCでの機械検証・性能・9セル受入
+- 固定RCでのrelease verifier strict実行・最終証跡、最終配布物manifest、性能・9セル受入
 
 ## [0.1.0] - 2026-06-23
 
