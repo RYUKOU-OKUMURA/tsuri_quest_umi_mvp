@@ -9,6 +9,16 @@
 - 「入手元」は再取得できる具体性で書く（URL、生成スクリプト名、生成サービス名＋日付）
 - AI生成サービスを使った場合は、サービス名・生成日・当時の商用利用規約の要点を書く
 
+RIGHTS-01A状態marker（`docs/qa/evidence/licensing/README.md` の未完/完了表と同時更新）:
+
+- `[RIGHTS-01A:U-01]=pending`
+- `[RIGHTS-01A:U-02]=pending`
+- `[RIGHTS-01A:U-03]=pending`
+- `[RIGHTS-01A:U-04]=pending`
+- `[RIGHTS-01A:U-05]=pending`
+- `[RIGHTS-01A:U-06]=pending`
+- `[RIGHTS-01A:U-08]=pending`
+
 ## 1. フォント — 記入済み・問題なし
 
 | 素材 | パス | 作者/出所 | ライセンス | 同梱ライセンス文書 |

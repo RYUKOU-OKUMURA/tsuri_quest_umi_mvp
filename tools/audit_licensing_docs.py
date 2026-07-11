@@ -2,6 +2,7 @@
 """Read-only consistency checks for the repository's licensing documents."""
 
 from pathlib import Path
+from datetime import date
 import re
 import subprocess
 import sys
@@ -15,6 +16,16 @@ def require_file(relative: str) -> str:
     if not path.is_file():
         raise AssertionError(f"missing required file: {relative}")
     return path.read_text(encoding="utf-8")
+
+
+def require_calendar_date(value: str, label: str) -> date:
+    value = value.strip()
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+        raise AssertionError(f"invalid {label} format (expected YYYY-MM-DD): {value}")
+    try:
+        return date.fromisoformat(value)
+    except ValueError as exc:
+        raise AssertionError(f"invalid {label}: {value}") from exc
 
 
 def main() -> int:
@@ -56,25 +67,151 @@ def main() -> int:
             "completed evidence rows require non-empty close date and saved-evidence judgment"
         )
         evidence_root = (ROOT / "docs/qa/evidence/licensing").resolve()
+        attestation_root = (evidence_root / "attestations").resolve()
         non_evidence_management_files = {
             (evidence_root / "README.md").resolve(),
             (evidence_root / "OWNER_EVIDENCE_REQUEST.md").resolve(),
         }
         for evidence_id, close_date, saved_evidence in completed_rows:
-            assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", close_date.strip()), (
-                f"invalid close date for {evidence_id}: {close_date.strip()}"
-            )
+            parsed_close_date = require_calendar_date(close_date, f"close date for {evidence_id}")
+            assert parsed_close_date <= date.today(), f"future close date for {evidence_id}: {parsed_close_date}"
             saved_paths = re.findall(r"`([^`]+)`", saved_evidence)
             assert saved_paths, f"completed {evidence_id} requires a backticked saved evidence path"
+            matching_attestations = 0
             for relative in saved_paths:
                 saved_path = (ROOT / relative).resolve()
-                assert saved_path == evidence_root or evidence_root in saved_path.parents, (
-                    f"completed {evidence_id} evidence must be under licensing evidence root: {relative}"
+                assert attestation_root in saved_path.parents, (
+                    f"completed {evidence_id} evidence must be under attestations/: {relative}"
                 )
                 assert saved_path not in non_evidence_management_files, (
                     f"completed {evidence_id} cannot cite a management file as evidence: {relative}"
                 )
                 assert saved_path.is_file(), f"completed {evidence_id} evidence file missing: {relative}"
+                assert saved_path.suffix == ".md" and saved_path.name.startswith(f"{evidence_id}_"), (
+                    f"completed {evidence_id} attestation must be U-XX_*.md: {relative}"
+                )
+                attestation = saved_path.read_text(encoding="utf-8")
+                assert attestation.strip(), f"completed {evidence_id} attestation is empty: {relative}"
+                fields = {}
+                for line in attestation.splitlines():
+                    match = re.fullmatch(r"([A-Za-z0-9-]+):\s*(.+)", line)
+                    if match:
+                        fields[match.group(1)] = match.group(2).strip()
+                required_fields = {
+                    "Evidence-ID",
+                    "Evidence-Type",
+                    "Original-SHA256",
+                    "Reviewed-At",
+                    "Reviewer",
+                    "Private-Storage-Reference",
+                    "Redaction-Checked",
+                    "Finding",
+                }
+                assert required_fields <= fields.keys(), (
+                    f"attestation fields missing for {evidence_id}: "
+                    f"{sorted(required_fields - fields.keys())} in {relative}"
+                )
+                assert fields["Evidence-ID"] == evidence_id, (
+                    f"attestation ID mismatch for {evidence_id}: {relative}"
+                )
+                allowed_types = {
+                    "U-01": {"suno-track-provenance"},
+                    "U-02": {"suno-paid-period"},
+                    "U-03": {"ai-image-provenance"},
+                    "U-04": {"icon-rights"},
+                    "U-05": {"license-holder"},
+                    "U-06": {"trademark-clearance"},
+                    "U-08": {"ai-input-rights"},
+                }
+                assert fields["Evidence-Type"] in allowed_types[evidence_id], (
+                    f"invalid evidence type for {evidence_id}: {fields['Evidence-Type']}"
+                )
+                assert re.fullmatch(r"[0-9a-f]{64}", fields["Original-SHA256"]), (
+                    f"invalid original SHA-256 for {evidence_id}: {relative}"
+                )
+                assert len(set(fields["Original-SHA256"])) >= 5, (
+                    f"placeholder original SHA-256 for {evidence_id}: {relative}"
+                )
+                reviewed_at = require_calendar_date(fields["Reviewed-At"], f"Reviewed-At for {evidence_id}")
+                assert reviewed_at <= date.today(), f"future Reviewed-At for {evidence_id}: {reviewed_at}"
+                assert reviewed_at <= parsed_close_date, (
+                    f"review date after close date for {evidence_id}: {reviewed_at} > {parsed_close_date}"
+                )
+                assert len(fields["Reviewer"]) >= 2, f"missing reviewer for {evidence_id}: {relative}"
+                private_reference = fields["Private-Storage-Reference"]
+                assert len(private_reference) >= 3 and "://" not in private_reference, (
+                    f"private storage reference must be a non-secret ID, not URL: {relative}"
+                )
+                assert fields["Redaction-Checked"] == "true", (
+                    f"redaction must be confirmed for {evidence_id}: {relative}"
+                )
+                assert len(fields["Finding"]) >= 10, f"finding too short for {evidence_id}: {relative}"
+                if evidence_id == "U-01":
+                    expected_audio = {
+                        "opening_bgm.mp3", "アタリ_ヒット音.mp3", "外海・回遊ルート.mp3",
+                        "岩礁・消波ブロック.mp3", "水中ファイト通常.mp3", "海辺（さざなみ）.mp3",
+                        "海辺（少し風が強い）.mp3", "港外・潮目.mp3", "砂浜・かけあがり.mp3",
+                        "逃げられた.mp3",
+                    }
+                    covered_assets = {item.strip() for item in fields.get("Covered-Assets", "").split(",") if item.strip()}
+                    assert fields.get("Asset-Count") == "10" and covered_assets == expected_audio, (
+                        f"U-01 must cover exactly all 10 audio files: {relative}"
+                    )
+                    assert fields.get("One-to-One-Mapping-Verified") == "true", (
+                        f"U-01 one-to-one mapping is not verified: {relative}"
+                    )
+                elif evidence_id == "U-02":
+                    assert fields.get("Plan") in {"Pro", "Premier"}, f"invalid Suno plan: {relative}"
+                    period_start = require_calendar_date(fields.get("Period-Start", ""), f"Period-Start in {relative}")
+                    period_end = require_calendar_date(fields.get("Period-End", ""), f"Period-End in {relative}")
+                    assert period_start <= period_end, (
+                        f"invalid Suno paid period order: {relative}"
+                    )
+                    assert fields.get("Covers-U-01") == "true", f"U-02 does not cover U-01: {relative}"
+                elif evidence_id == "U-03":
+                    assert fields.get("Inventory-Contract") == "docs/31 sections 2.2 and 4", (
+                        f"U-03 inventory contract mismatch: {relative}"
+                    )
+                    assert fields.get("Unresolved-Items") == "0" and fields.get("Provenance-Complete") == "true", (
+                        f"U-03 provenance is incomplete: {relative}"
+                    )
+                elif evidence_id == "U-04":
+                    assert fields.get("Product-Decision") in {"adopted", "rejected"}, (
+                        f"U-04 product decision missing: {relative}"
+                    )
+                    assert fields.get("Author-Verified") == "true" and fields.get("Rights-Holder-Verified") == "true", (
+                        f"U-04 author/rights holder is not verified: {relative}"
+                    )
+                elif evidence_id == "U-05":
+                    assert fields.get("License-Holder-Matches-LICENSE") == "true", (
+                        f"U-05 does not match LICENSE: {relative}"
+                    )
+                elif evidence_id == "U-06":
+                    assert fields.get("Territories") and fields.get("Trademark-Classes"), (
+                        f"U-06 territory/classes missing: {relative}"
+                    )
+                    assert fields.get("Official-DB") and "://" not in fields["Official-DB"], (
+                        f"U-06 official DB must be named without secret URL: {relative}"
+                    )
+                    try:
+                        search_date = require_calendar_date(fields.get("Search-Date", ""), f"Search-Date in {relative}")
+                        result_count = int(fields.get("Result-Count", ""))
+                    except ValueError as exc:
+                        raise AssertionError(f"invalid U-06 search payload: {relative}") from exc
+                    assert search_date <= date.today() and result_count >= 0, f"invalid U-06 results: {relative}"
+                    assert fields.get("Expert-Review") in {"completed", "not-required"}, (
+                        f"U-06 expert review decision missing: {relative}"
+                    )
+                elif evidence_id == "U-08":
+                    assert fields.get("Covered-Media") == "suno-and-ai-images", (
+                        f"U-08 media coverage incomplete: {relative}"
+                    )
+                    assert fields.get("Third-Party-Inputs") in {"none", "cleared"}, (
+                        f"U-08 third-party input status invalid: {relative}"
+                    )
+                    assert fields.get("Clearance-Complete") == "true", f"U-08 clearance incomplete: {relative}"
+                matching_attestations += 1
+            assert matching_attestations > 0, f"completed {evidence_id} requires a valid attestation"
         unresolved_holder = "RIGHTS HOLDER NAME" in license_text
         rights_01a_ids = {"U-01", "U-02", "U-03", "U-04", "U-05", "U-06", "U-08"}
         classified_ids = set(evidence_ids) | set(completed_evidence_ids)
@@ -83,6 +220,14 @@ def main() -> int:
             f"missing={sorted(rights_01a_ids - classified_ids)}, "
             f"unexpected={sorted(classified_ids - rights_01a_ids)}"
         )
+
+        for evidence_id in sorted(rights_01a_ids):
+            expected_state = "pending" if evidence_id in evidence_ids else "complete"
+            expected_marker = f"[RIGHTS-01A:{evidence_id}]={expected_state}"
+            opposite_state = "complete" if expected_state == "pending" else "pending"
+            opposite_marker = f"[RIGHTS-01A:{evidence_id}]={opposite_state}"
+            assert expected_marker in ledger, f"asset ledger missing state marker: {expected_marker}"
+            assert opposite_marker not in ledger, f"asset ledger has stale state marker: {opposite_marker}"
 
         if unresolved_holder:
             assert "U-05" in evidence_ids, "unresolved LICENSE holder requires open U-05"

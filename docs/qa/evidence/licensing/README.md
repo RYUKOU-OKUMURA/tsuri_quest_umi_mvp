@@ -2,7 +2,7 @@
 
 確認日: 2026-07-11
 
-このフォルダには、公開一次情報へのリンクと、アカウント所有者だけが取得できる非公開証拠の保存状況を記録する。リンク先の規約は将来変更され得るため、発売候補確定時に再確認し、アカウント画面の証拠は個人情報・決済情報をマスクして保存する。
+このフォルダには、公開一次情報へのリンクと、非公開原本を確認したsanitized attestationだけを記録する。このrepositoryはpublicのため、raw screenshot/PDF/email/invoice、アカウント・決済ID、カード下4桁、住所、秘密URL等は保存しない。原本はアクセス制御された非公開保管先に置き、ここには原本SHA-256、確認日、確認者、証拠種別、redaction確認、非秘密の保管参照ID、個人情報を含まない判定だけを残す。詳細契約は `OWNER_EVIDENCE_REQUEST.md`。
 
 ## 保存済み・repoで再確認可能
 
@@ -26,11 +26,11 @@
 
 ## 2026-07-11 U-01〜U-08再監査結果
 
-リポジトリ内の保存証拠をファイル単位・証拠単位で再確認した。現時点でこのディレクトリに保存されている証拠ファイルは本READMEだけであり、アカウント所有者の画面、曲URL、作成者申告、商標検索結果は未保存である。一般規約の確認は個別素材のclearanceを意味しない。
+リポジトリ内の保存証拠をファイル単位・証拠単位で再確認した。現時点では管理文書だけで、closeに使えるsanitized attestationは0件。アカウント所有者の画面等の原本は非公開保管も未確認である。一般規約の確認は個別素材のclearanceを意味しない。
 
 | ID | 状態 | 再監査結果 / 次の証拠 |
 |---|---|---|
-| U-01 | 所有者証拠待ち | `assets/audio/*.mp3` 10件は列挙済みだが、各ファイルに対応するSuno曲URLまたは生成日時画面が0件。提出形式は `OWNER_EVIDENCE_REQUEST.md` §1 |
+| U-01 | 所有者証拠待ち | `assets/audio/*.mp3` 10件は列挙済みだが、各ファイルに対応するSuno曲と生成日時を確認したattestationが0件。確認形式は `OWNER_EVIDENCE_REQUEST.md` §1 |
 | U-02 | 所有者証拠待ち | Billing History / Pro・Premier加入期間画面が0件。U-01の最古〜最新生成日時を連続して覆う証拠が必要 |
 | U-03 | 所有者申告・証拠待ち | `docs/31` §2.2のsource/reference-consuming全行と§4のgenerate外画像について、既存作業記録がある一部を除き、ファイル単位のサービス・生成日・作成者・製品採否が未確定。453 PNGという母集団件数は追跡補助値であり、純粋生成・中間物・製品出力を含むため、それ自体を未clear件数とは扱わない |
 | U-04 | 所有者申告待ち | `assets/icon.svg` はcommit `9a9974a`（2026-06-24）で追加。SVG本文とコミット著者は確認済みだが、作者・作成手段・権利者・製品採否の申告がない |
@@ -39,14 +39,14 @@
 | U-07 | **RIGHTS-01Bへ分離** | bundle ID等の決定値は保存済み。正確なexport template、clean export notice、itch.io実公開質問票はRC/公開フローでしか確定できないためRIGHTS-01Aのclose条件に含めない |
 | U-08 | 作成者申告待ち | Suno 10曲とAI画像/source/referenceについて、第三者著作物・音源・画像・商標・人物素材を入力したかの作成者申告が0件。サービス一般規約だけではcloseしない |
 
-所有者へ依頼する具体的なファイル名・回答欄は [`OWNER_EVIDENCE_REQUEST.md`](OWNER_EVIDENCE_REQUEST.md) に固定した。個人情報・決済情報はマスクしてよいが、アカウント名、プラン名、対象期間、曲URL/生成日時の対応を確認できる範囲は残す。
+所有者へ依頼する確認項目と公開禁止事項は [`OWNER_EVIDENCE_REQUEST.md`](OWNER_EVIDENCE_REQUEST.md) に固定した。アカウント画面等の原本は非公開保管し、公開repositoryには所定のsanitized attestationだけを置く。
 
 ## ユーザー入力・保存待ち（未完了）
 
 | ID | 必要な証拠または決定 | close条件 |
 |---|---|---|
-| U-01 | Suno 10音源それぞれの生成日時または曲詳細URL/画面 | 全ファイルとSuno生成物を一対一対応できる |
-| U-02 | 生成期間を覆うSuno Billing HistoryとPro/Premier加入画面 | U-01の全生成日時が有料加入期間内に含まれる。決済番号・住所等はマスク可 |
+| U-01 | Suno 10音源それぞれの生成日時・曲詳細を非公開原本で確認したattestation | 全ファイルとSuno生成物を一対一対応できる |
+| U-02 | 生成期間を覆うSuno Billing HistoryとPro/Premier加入画面の非公開原本確認 | U-01の全生成日時が有料加入期間内に含まれ、公開repoにはsanitized attestationだけがある |
 | U-03 | 各 `assets/showcase/` generate外PNG、および `tools/source_assets/**` / `reference/**` を画素入力として読むsource/reference-consuming pipeline全件の採否・生成サービス・生成日・作成者申告・製品出力先 | 全source/referenceと製品出力が一対一または派生関係で追跡でき、原本非同梱を理由に派生製品を除外せず、推定が残らない。OpenAI以外のサービス利用も記録される |
 | U-04 | `assets/icon.svg` の作者・作成手段・権利者、および製品採否 | 採用なら権利者申告、非採用なら差し替え側の証拠を台帳化 |
 | U-05 | MITでライセンスするコードの法的権利者名 | `LICENSE.md` のplaceholderを実名または法人名へ置換 |
@@ -55,7 +55,7 @@
 
 ## RIGHTS-01A完了済み
 
-現時点では該当なし。証拠をcloseしたIDは、上の未完表から削除して次の表へ移し、保存証拠への相対パスと確認日を記録する。
+現時点では該当なし。証拠をcloseしたIDは、上の未完表から削除して次の表へ移し、sanitized attestationへの相対パスと確認日を記録する。raw private evidenceを記載・commitしない。
 
 | ID | close日 | 保存証拠 / 判定 |
 |---|---|---|
