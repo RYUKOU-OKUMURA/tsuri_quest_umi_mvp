@@ -1,0 +1,26 @@
+# E11 入力フォーカス／解像度 QA ハーネス
+
+## 目的
+
+E11-INPUT-COMMON と E11-DISPLAY の実装前後を同じ契約で計測する中立な probe。現行画面や `project.godot` は変更せず、製品側の不足を機械可読 `findings` として記録する。probe 自身のロード・生成・出力失敗は `harness_error` または終了コード 2 とし、製品 findings と区別する。
+
+## 実行
+
+```bash
+./tools/e11_qa_harness_verify.sh
+```
+
+個別 probe は既定で `/tmp/e11_input_focus_probe.json` と `/tmp/e11_resolution_probe.json` に JSON を出力する。`--output <path>` で変更できる。通常モードは findings があっても終了コード 0、後続タスクで使う `--strict` は findings が1件以上なら終了コード 1となる。`--self-test` は正常・異常fixtureと幾何計算を検証する。
+
+JSON 共通項目は `schema_version`、`probe`、`mode`、`harness_status`、`product_status`、`findings`。各 finding は `code`、`severity`、`target`、`message`、`evidence` を持つ。
+
+## Baseline（2026-07-12、基点 `faf465331c2f9938edca3270a95edfd5487cab1b`）
+
+非strictで現行12対象（title、harbor、釣り場選択、釣行READY、調理、市場、釣具店、造船所、ステータス、魚図鑑、依頼、生簀）を走査した。これは合格記録ではない。
+
+- 入力: 44 findings。初期focus未観測 11、戻る入力によるnavigation未観測 11、決定入力によるpressed/navigation未観測 11、可視focus style不足 8、focus可能要素なし 2、方向操作でdisabledへ到達 1。
+- 表示: 4 findings。設計viewportは1280x720、stretch modeは`canvas_items`だが、aspectは要求の`keep`ではなく現行`expand`。加えて3解像度すべてでruntime観測値と想定`keep`契約の不一致を報告する。
+- 解像度計測: 各条件へruntime windowを実際に変更し、window size、viewport visible rect、content scale size/aspect/modeを記録する。1280x720は想定content 1280x720・黒帯なし。1280x800（16:10）は想定content 1280x720・上下40px。1024x768（4:3）は想定content 1024x576・上下96px。現行`expand`では実viewport visible rectが順に1280x720、1280x800、1280x960となり、想定`keep`と一致しない。
+- release discovery / manifest: 従来どおり30件。`e11_*_probe.tscn` は smoke/audit 命名を避けており release gate へ自動混入しない。
+
+入力の「戻る／決定／方向」は `InputEventAction` をruntime viewportへ送り、navigation signal、button pressed、focus遷移先、disabled非到達を観測する。registryは画面IDと状態IDを分離しており、後続の画面別修正でモーダル等の状態fixtureを追加してstrict gateへ昇格できる。
