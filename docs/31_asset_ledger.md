@@ -9,6 +9,18 @@
 - 「入手元」は再取得できる具体性で書く（URL、生成スクリプト名、生成サービス名＋日付）
 - AI生成サービスを使った場合は、サービス名・生成日・当時の商用利用規約の要点を書く
 
+RIGHTS-01A状態marker（`docs/qa/evidence/licensing/README.md` の未完/完了表と同時更新）:
+
+`pending`から`complete`へ移す時はmarkerだけを書き換えず、対象実体行の`U-XX待ち`等を除去して`U-XX解決済み`へ更新する。監査はmarkerと実体proseの両方を照合する。
+
+- `[RIGHTS-01A:U-01]=pending`
+- `[RIGHTS-01A:U-02]=pending`
+- `[RIGHTS-01A:U-03]=pending`
+- `[RIGHTS-01A:U-04]=pending`
+- `[RIGHTS-01A:U-05]=pending`
+- `[RIGHTS-01A:U-06]=pending`
+- `[RIGHTS-01A:U-08]=pending`
+
 ## 1. フォント — 記入済み・問題なし
 
 | 素材 | パス | 作者/出所 | ライセンス | 同梱ライセンス文書 |
@@ -38,26 +50,26 @@
 
 ### 2.2 `tools/source_assets/**` / `reference/**` を消費するパイプライン（全件追跡対象）
 
-下表のsource/reference-consuming pipelineについて、「生成元・日付・入力権利」は、個別記録がある行でもサービス規約の一般条件と第三者権利clearanceを分離する。`reference/` 自体が製品非同梱でも、その画素をcrop/blendして製品PNGへ書き出す経路は派生製品として追跡する。全source/referenceについて採否、生成元、日付、入力権利、製品出力先が揃うまで U-03/U-08 は未完了。
+下表のsource/reference-consuming pipelineについて、「生成元・日付・入力権利」は、個別記録がある行でもサービス規約の一般条件と第三者権利clearanceを分離する。`reference/` 自体が製品非同梱でも、その画素をcrop/blendして製品PNGへ書き出す経路は派生製品として追跡し、全source/referenceについて採否、生成元、日付、入力権利、製品出力先が揃うまで U-03・U-08 は未完了。
 
 | source群 | 消費スクリプト | 製品出力先 / 採否 | 権利証拠状態 |
 |---|---|---|---|
 | `fish/*.png`, `fish/shark_e4_realistic_sources/*.png`, `kurodai_final_art_source.png` | `process_underwater_fish_assets.py`, `generate_shark_fish_assets.py`, `generate_megalodon_fish_assets.py`（`generate_nushi_fish_assets.py` のcontact sheetは入力ではなくQA出力） | `assets/showcase/fish/` | 一部にOpenAI・日付記録あり。全sourceの入力権利はU-08待ち |
-| `fishing_spot_map_source.png`, `fishing_spot_thumbs/*.png` | `generate_fishing_spot_map_assets.py` | `map_bg.png`, `map_color_grade.png`, `thumbs/<id>.png`（採用済み） | 生成元・日付・入力権利はU-03/U-08待ち |
+| `fishing_spot_map_source.png`, `fishing_spot_thumbs/*.png` | `generate_fishing_spot_map_assets.py` | `map_bg.png`, `map_color_grade.png`, `thumbs/{id}.png`（採用済み） | 生成元・日付・入力権利はU-03待ち・U-08待ち |
 | `fishing_time_slots/*.png` | `process_fishing_time_slot_assets.py` | `assets/showcase/surface/`, `assets/showcase/underwater/`（一部採用済み、contact sheetは製品非同梱） | 一部にOpenAI・日付記録あり。入力権利はU-08待ち |
 | `harbor_hub_bg_source.png`, `harbor/harbor_plan_panel_source.png`, `harbor/harbor_plan_icons_contact_source.png` | `generate_harbor_showcase_assets.py`, `generate_harbor_info_board_assets.py`（plan processorを間接実行）, `process_harbor_plan_assets.py` | `harbor_hub_bg.png`, `harbor_color_grade.png`, `harbor_scene_window.png`, plan panel / icon 5点（採用済み） | plan以外を含む生成元・日付はU-03待ち、入力権利はU-08待ち |
 | `harbor/harbor_info_board_frame_source.png`, `harbor/harbor_info_fish_card_source.png` | `process_harbor_info_board_assets.py` | Phase B AI一点物候補はQAで**不採用・製品未使用**。現行製品はPIL版を維持 | 不採用証拠: `docs/qa/harbor_qa.md` §2。再採用しない限り製品出力なし |
-| `tackle_shop_*_backplate_source.png` | `generate_tackle_shop_assets.py` | `shop_rod_backplate.png`, `shop_rig_backplate.png`, `shop_item_icon_sheet.png`, `shop_detail_item_sheet.png`（採用済み） | 生成元・日付・入力権利はU-03/U-08待ち |
-| `title_opening_bg_source.png` | `generate_title_showcase_assets.py` | `title_ocean_bg.png`, `title_color_grade.png`（採用済み） | 生成元・日付・入力権利はU-03/U-08待ち |
-| `underwater_battle_bg_source.png` | `enhance_underwater_battle_bg.py` | 履歴上の旧採用経路（`bba599ee` 以前）。現行 `underwater_battle_bg.png` には未使用 | sourceがrepoに残るため、再採用時は生成元・日付・入力権利をU-03/U-08で確認 |
-| `sidebar_frame_material_source.png`, `fight_hud_material_source.png`, `top_status_material_source.png` | `generate_underwater_ui_frame_assets.py` | `assets/showcase/underwater/sidebar_frame.png`, `fight_hud_frame.png`, `top_status_frame.png`（採用済み） | 生成元・日付・入力権利はU-03/U-08待ち |
-| `reference/02_underwater_fight_mockup.png` + `tools/source_assets/underwater_center_paintover_candidate.png` | `build_reference_underwater_background.py` | `72038061`以降referenceから再構築し、`b6cb03ec`以降はrepoに存在するcenter paintoverも合成。最新更新`463edcbb`までこの経路の `underwater_battle_bg.png` が**現行採用済み** | 両入力の生成元・日付・入力権利と派生利用権はU-03/U-08待ち |
-| `reference/02_underwater_fight_mockup.png` | `process_underwater_fish_assets.py` | `hit_badge_full.png`, `fight_lure.png`, `hud_bait_icon.png`, `hud_tension_icon.png`, `hud_stamina_icon.png`, `hud_key_a.png`, `hud_key_b.png`, `hud_key_lr.png`, `hud_key_plus.png`, `hud_key_minus.png`（crop/合成して採用済み） | referenceの生成元・日付・入力権利と派生利用権はU-03/U-08待ち |
-| `reference/02_underwater_fight_mockup.png` | `generate_underwater_ui_frame_assets.py` | 紙質crop/blend由来の `top_status_frame.png`, `sidebar_frame.png`, `fight_hud_frame.png`、直接cropの `fight_action_card_icon.png`, `fight_tackle_card_icon.png`（採用済み） | referenceの生成元・日付・入力権利と派生利用権はU-03/U-08待ち |
-| `reference/02_underwater_fight_mockup.png` | `extract_top_status_icons.py` | `top_status_icon_sheet.png`（時計・太陽・風・コインをcrop、採用済み） | referenceの生成元・日付・入力権利と派生利用権はU-03/U-08待ち |
-| `reference/cooking_flow/01_cook_select_concept.png` | `generate_cooking_showcase_assets.py` | `cooking_room_bg.png`, `fish_icon_sheet.png`, `dish_feature_aji_shioyaki.png`、紙質blendを使う各frame、二次派生 `meal_table_spread.png`（採用済み） | referenceの生成元・日付・入力権利と派生利用権はU-03/U-08待ち |
+| `tackle_shop_*_backplate_source.png` | `generate_tackle_shop_assets.py` | `shop_rod_backplate.png`, `shop_rig_backplate.png`, `shop_item_icon_sheet.png`, `shop_detail_item_sheet.png`（採用済み） | 生成元・日付・入力権利はU-03待ち・U-08待ち |
+| `title_opening_bg_source.png` | `generate_title_showcase_assets.py` | `title_ocean_bg.png`, `title_color_grade.png`（採用済み） | 生成元・日付・入力権利はU-03待ち・U-08待ち |
+| `underwater_battle_bg_source.png` | `enhance_underwater_battle_bg.py` | 履歴上の旧採用経路（`bba599ee` 以前）。現行 `underwater_battle_bg.png` には未使用 | sourceがrepoに残るため、再採用時は生成元・日付・入力権利をU-03・U-08で確認 |
+| `sidebar_frame_material_source.png`, `fight_hud_material_source.png`, `top_status_material_source.png` | `generate_underwater_ui_frame_assets.py` | `assets/showcase/underwater/sidebar_frame.png`, `fight_hud_frame.png`, `top_status_frame.png`（採用済み） | 生成元・日付・入力権利はU-03待ち・U-08待ち |
+| `reference/02_underwater_fight_mockup.png` + `tools/source_assets/underwater_center_paintover_candidate.png` | `build_reference_underwater_background.py` | `72038061`以降referenceから再構築し、`b6cb03ec`以降はrepoに存在するcenter paintoverも合成。最新更新`463edcbb`までこの経路の `underwater_battle_bg.png` が**現行採用済み** | 両入力の生成元・日付・入力権利と派生利用権はU-03待ち・U-08待ち |
+| `reference/02_underwater_fight_mockup.png` | `process_underwater_fish_assets.py` | `hit_badge_full.png`, `fight_lure.png`, `hud_bait_icon.png`, `hud_tension_icon.png`, `hud_stamina_icon.png`, `hud_key_a.png`, `hud_key_b.png`, `hud_key_lr.png`, `hud_key_plus.png`, `hud_key_minus.png`（crop/合成して採用済み） | referenceの生成元・日付・入力権利と派生利用権はU-03待ち・U-08待ち |
+| `reference/02_underwater_fight_mockup.png` | `generate_underwater_ui_frame_assets.py` | 紙質crop/blend由来の `top_status_frame.png`, `sidebar_frame.png`, `fight_hud_frame.png`、直接cropの `fight_action_card_icon.png`, `fight_tackle_card_icon.png`（採用済み） | referenceの生成元・日付・入力権利と派生利用権はU-03待ち・U-08待ち |
+| `reference/02_underwater_fight_mockup.png` | `extract_top_status_icons.py` | `top_status_icon_sheet.png`（時計・太陽・風・コインをcrop、採用済み） | referenceの生成元・日付・入力権利と派生利用権はU-03待ち・U-08待ち |
+| `reference/cooking_flow/01_cook_select_concept.png` | `generate_cooking_showcase_assets.py` | `cooking_room_bg.png`, `fish_icon_sheet.png`, `dish_feature_aji_shioyaki.png`、紙質blendを使う各frame、二次派生 `meal_table_spread.png`（採用済み） | referenceの生成元・日付・入力権利と派生利用権はU-03待ち・U-08待ち |
 
-## 3. 音源（BGM / SE） — 条件確認済み・加入期間証拠待ち
+## 3. 音源（BGM / SE） — 条件確認済み・証拠待ち
 
 `assets/audio/` の全10ファイル（`opening_bgm` / `アタリ_ヒット音` / `外海・回遊ルート` / `岩礁・消波ブロック` / `水中ファイト通常` / `海辺（さざなみ）` / `海辺（少し風が強い）` / `港外・潮目` / `砂浜・かけあがり` / `逃げられた`）は同一条件のため一括記載:
 
@@ -77,16 +89,16 @@ generate外画像に加え、§2.2のsource-consuming出力も対象。OpenAI Te
 
 | 対象 | パス | 生成サービス / 日付の記録 | サービス規約条件と個別証拠 | 記入状態 |
 |---|---|---|---|---|
-| 魚ポートレート・泳ぎシート（70種×2点 + E2ヌシ7体×2点 + E4サメ9種 + `nushi_danger_reef` + E10メガロドン） | `assets/showcase/fish/` | OpenAI（Codex App / ChatGPT）とのユーザー申告記録（2026-07-06）。E2ヌシ7体は既存魚素材の派生、E4サメ・E10はsource-consuming | OpenAI Terms上のOutput帰属という一般条件のみ確認。個別sourceとの対応・入力権利・第三者権利clearanceはU-03/U-08待ち | 未完 |
-| docs/35 P1バッチ1 魚素材8種（`houbou`, `kanagashira`, `kyusen`, `kobudai`, `ojisan`, `sayori`, `binnaga`, `konoshiro`） | `tools/source_assets/fish/fish_dedup_2026-07-08_contact_sheet_1.png` → `assets/showcase/fish/<id>_card_portrait.png` / `<id>_showcase_sheet.png` | OpenAI built-in image generationとの作業記録（2026-07-08） | Output帰属の一般条件のみ確認。入力権利・第三者権利clearanceはU-08待ち | 未完 |
-| docs/35 P1バッチ2 魚素材7種（`ira`, `kinmedai`, `akamutsu`, `medai`, `sawara`, `mahaze`, `nenbutsudai`） | `tools/source_assets/fish/fish_dedup_2026-07-08_contact_sheet_2.png` → `assets/showcase/fish/<id>_card_portrait.png` / `<id>_showcase_sheet.png` | OpenAI built-in image generationとの作業記録（2026-07-08） | Output帰属の一般条件のみ確認。入力権利・第三者権利clearanceはU-08待ち | 未完 |
-| docs/35 P2バッチ1 魚素材9種（`meichidai`, `murasoi`, `onikasago`, `kihada`, `mebachi`, `hirasouda`, `suma`, `takabe`, `makogarei`） | `tools/source_assets/fish/fish_dedup_2026-07-08_contact_sheet_3.png` → `assets/showcase/fish/<id>_card_portrait.png` / `<id>_showcase_sheet.png` | OpenAI built-in image generationとの作業記録（2026-07-08） | Output帰属の一般条件のみ確認。入力権利・第三者権利clearanceはU-08待ち | 未完 |
-| docs/35 P2バッチ2 魚素材8種（`shimaaji`, `gingameaji`, `kaiwari`, `ishigarei`, `umitanago`, `ishigakidai`, `oomonhata`, `ara`） | `tools/source_assets/fish/fish_dedup_2026-07-08_contact_sheet_4.png` → `assets/showcase/fish/<id>_card_portrait.png` / `<id>_showcase_sheet.png` | OpenAI built-in image generationとの作業記録（2026-07-08） | Output帰属の一般条件のみ確認。入力権利・第三者権利clearanceはU-08待ち | 未完 |
-| docs/35 P3 魚素材4種（`megochi`, `kurosoi`, `takenokomebaru`, `mejina`） | `tools/source_assets/fish/fish_dedup_2026-07-08_contact_sheet_5.png` → `assets/showcase/fish/<id>_card_portrait.png` / `<id>_showcase_sheet.png` | OpenAI built-in image generationとの作業記録（2026-07-08） | Output帰属の一般条件のみ確認。入力権利・第三者権利clearanceはU-08待ち | 未完 |
+| 魚ポートレート・泳ぎシート（70種×2点 + E2ヌシ7体×2点 + E4サメ9種 + `nushi_danger_reef` + E10メガロドン） | `assets/showcase/fish/` | OpenAI（Codex App / ChatGPT）とのユーザー申告記録（2026-07-06）。E2ヌシ7体は既存魚素材の派生、E4サメ・E10はsource-consuming | OpenAI Terms上のOutput帰属という一般条件のみ確認。個別sourceとの対応・入力権利・第三者権利clearanceはU-03待ち・U-08待ち | 未完 |
+| docs/35 P1バッチ1 魚素材8種（`houbou`, `kanagashira`, `kyusen`, `kobudai`, `ojisan`, `sayori`, `binnaga`, `konoshiro`） | `tools/source_assets/fish/fish_dedup_2026-07-08_contact_sheet_1.png` → `assets/showcase/fish/{id}_card_portrait.png` / `{id}_showcase_sheet.png` | OpenAI built-in image generationとの作業記録（2026-07-08） | Output帰属の一般条件のみ確認。入力権利・第三者権利clearanceはU-08待ち | 未完 |
+| docs/35 P1バッチ2 魚素材7種（`ira`, `kinmedai`, `akamutsu`, `medai`, `sawara`, `mahaze`, `nenbutsudai`） | `tools/source_assets/fish/fish_dedup_2026-07-08_contact_sheet_2.png` → `assets/showcase/fish/{id}_card_portrait.png` / `{id}_showcase_sheet.png` | OpenAI built-in image generationとの作業記録（2026-07-08） | Output帰属の一般条件のみ確認。入力権利・第三者権利clearanceはU-08待ち | 未完 |
+| docs/35 P2バッチ1 魚素材9種（`meichidai`, `murasoi`, `onikasago`, `kihada`, `mebachi`, `hirasouda`, `suma`, `takabe`, `makogarei`） | `tools/source_assets/fish/fish_dedup_2026-07-08_contact_sheet_3.png` → `assets/showcase/fish/{id}_card_portrait.png` / `{id}_showcase_sheet.png` | OpenAI built-in image generationとの作業記録（2026-07-08） | Output帰属の一般条件のみ確認。入力権利・第三者権利clearanceはU-08待ち | 未完 |
+| docs/35 P2バッチ2 魚素材8種（`shimaaji`, `gingameaji`, `kaiwari`, `ishigarei`, `umitanago`, `ishigakidai`, `oomonhata`, `ara`） | `tools/source_assets/fish/fish_dedup_2026-07-08_contact_sheet_4.png` → `assets/showcase/fish/{id}_card_portrait.png` / `{id}_showcase_sheet.png` | OpenAI built-in image generationとの作業記録（2026-07-08） | Output帰属の一般条件のみ確認。入力権利・第三者権利clearanceはU-08待ち | 未完 |
+| docs/35 P3 魚素材4種（`megochi`, `kurosoi`, `takenokomebaru`, `mejina`） | `tools/source_assets/fish/fish_dedup_2026-07-08_contact_sheet_5.png` → `assets/showcase/fish/{id}_card_portrait.png` / `{id}_showcase_sheet.png` | OpenAI built-in image generationとの作業記録（2026-07-08） | Output帰属の一般条件のみ確認。入力権利・第三者権利clearanceはU-08待ち | 未完 |
 | E5 Stage 2 時間帯READY/釣果ベース4枚（朝まずめ/夜釣り） | `tools/source_assets/fishing_time_slots/*_source.png` → `assets/showcase/surface/surface_scene_ready_asa_mazume.png` / `surface_scene_ready_night.png` / `assets/showcase/underwater/catch_photo_base_asa.png` / `catch_photo_base_night.png` | OpenAI built-in image generationとの作業記録（2026-07-08） | Output帰属の一般条件のみ確認。入力権利・第三者権利clearanceはU-08待ち | 未完 |
 | 港出港プラン紙面＋行アイコン（Phase A） | `tools/source_assets/harbor/harbor_plan_panel_source.png` / `harbor_plan_icons_contact_source.png` → `assets/showcase/harbor/harbor_plan_panel.png` / `harbor_plan_icon_*.png` / `harbor_weather_stub_icon.png` | OpenAI Cursor GenerateImageとの作業記録（2026-07-09） | Output帰属の一般条件のみ確認。入力権利・第三者権利clearanceはU-08待ち | 未完 |
 | reference 完成イメージ一式 | `reference/`（`.gdignore` 済で原本は製品非同梱） | OpenAI生成画像、またはPIL生成との従前記録 | `reference/02` と `reference/cooking_flow/01` は§2.2のとおり製品PNGへcrop/blendされているため、原本非同梱だけではclearできない。その他referenceも派生利用有無をU-03で監査 | 未完 |
-| 各画面の背景など generate スクリプト外のPNG | 各 `assets/showcase/<screen>/` | **未確定**。OpenAI利用との従前メモはあるが、ファイル単位の生成サービス・日付・作成者申告がなく推定を確定へ昇格できない | サービス確定後、その生成時点の規約と入力権利を確認 | ユーザー入力待ち（証拠index U-03/U-08） |
+| 各画面の背景など generate スクリプト外のPNG | 各 `assets/showcase/{screen}/` | **未確定**。OpenAI利用との従前メモはあるが、ファイル単位の生成サービス・日付・作成者申告がなく推定を確定へ昇格できない | サービス確定後、その生成時点の規約と入力権利を確認 | ユーザー入力待ち（証拠index U-03・U-08） |
 
 **AI生成画像の横断注意（販売時）**:
 
@@ -99,7 +111,7 @@ generate外画像に加え、§2.2のsource-consuming出力も対象。OpenAI Te
 | 項目 | 状態 |
 |---|---|
 | 正式製品名「釣りクエスト ～海釣り編～」の商標調査 | 正式名称 / v1.0.0は決定#20で確定済み。販売地域・商標対象区分の確定と、その範囲での公式DB検索・必要な専門家確認の証跡は未完（証拠index U-06）。類似検索だけで法的clearance完了とは扱わない |
-| `assets/icon.svg`（魚と釣り針のcustom SVG。Godotデフォルトではない） | commit `9a9974a`（2026-06-24）で新規追加された履歴は確認済み。ただしコミット著者だけでは作者・作成手段・権利者を確定できない。製品採否と権利者申告待ち（証拠index U-04） |
+| `assets/icon.svg`（魚と釣り針のcustom SVG。Godotデフォルトではない） | commit `9a9974a`（2026-06-24）で新規追加された履歴は確認済み。U-04 decisionの現行原本bytesはSHA-256 `493a29b86943751f2441343ebc347a9fa42b046032dedd7d1fcb86fd51567595`へ固定し、非採用後に原本を削除しても同一bytesの再利用を差し替えと認めない。ただしコミット著者だけでは作者・作成手段・権利者を確定できない。製品採否と権利者申告待ち（証拠index U-04） |
 | 製品コードのMIT権利者・適用範囲 | `LICENSE.md` に適用範囲を追記。法的権利者名はユーザー入力待ち（証拠index U-05）のためplaceholderを残し、発売不可条件として明示 |
 | Godot / font / 同梱依存notice | `THIRD_PARTY_NOTICES.md` を新設し、repoで確認できるGodot・LINE Seed JP・M PLUS 1pを列挙。初回販売=itch.io、対象OS=macOS Universal、bundle ID=`net.physical-balance-lab.tsuri-quest-umi`、予定slug=`tsuri-quest-umi`、store App ID=`未発行`は確定済み。正確なGodot export preset/templateへの配線と、clean exportへの必要notice・OFL全文の同梱確認は未完（証拠index U-07） |
 | Steam AI開示 | 初回itch.io版v1.0.0の発売ゲート対象外。将来Steamを採用する場合はOpenAI画像・Suno音源をPre-Generated AIとしてContent Surveyへ申告し、提出控えを保存する（公式: https://partner.steamgames.com/doc/gettingstarted/contentsurvey） |
@@ -113,7 +125,7 @@ generate外画像に加え、§2.2のsource-consuming出力も対象。OpenAI Te
 
 - 2026-07-06: 初版。フォント・プロシージャル素材を記入済み化、音源・AI生成画像を要記入として棚卸し
 - 2026-07-06: 音源10件についてSuno AI有料プランとのユーザー申告を記録。当時は記入済みとしたが、2026-07-11の再監査で個別生成日時・加入期間・入力権利が未証明と判明し、U-01/U-02/U-08完了まで未完へ訂正
-- 2026-07-06: 魚画像についてOpenAI利用とのユーザー確認を記録。当時「商用利用可」と整理したが、2026-07-11の再監査でOutput帰属の一般条件と個別素材の入力権利・第三者権利clearanceを分離し、U-03/U-08完了まで未完へ訂正
+- 2026-07-06: 魚画像についてOpenAI利用とのユーザー確認を記録。当時「商用利用可」と整理したが、2026-07-11の再監査でOutput帰属の一般条件と個別素材の入力権利・第三者権利clearanceを分離し、U-03・U-08完了まで未完へ訂正
 - 2026-07-06: E2ヌシ7体の魚素材を既存魚素材のプロシージャル派生として追加し、生成スクリプトを台帳へ追記
 - 2026-07-06: E3依頼ボードのv1参照画像をPIL生成物として追加
 - 2026-07-06: E6鳥山演出 `surface_bird_swarm.png` を `tools/generate_surface_showcase_assets.py` に追加
