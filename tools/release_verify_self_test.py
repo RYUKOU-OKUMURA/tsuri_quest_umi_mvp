@@ -9,7 +9,7 @@ import time
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from release_verify import atomic_json, classify, create_run_home, discover, load_manifest, main, normalize_output, run, unexplained_errors, validate_export_run_log, warning_summary
+from release_verify import REQUIRED_SPECIAL, atomic_json, classify, create_run_home, discover, load_manifest, main, normalize_output, prepare_output_root, prepare_run_logs, run, sha256, unexplained_errors, validate_export_run_log, warning_summary
 
 
 def must_fail(label, callback):
@@ -32,9 +32,13 @@ with tempfile.TemporaryDirectory() as temporary:
     assert discover(root) == ["tools/sub/a_audit.gd", "tools/sub/b_audit.tscn", "tools/z_smoke.tscn"]
     manifest = root / "manifest.txt"
     manifest.write_text("tools/a_smoke.gd|direct_script\n", encoding="utf-8")
-    assert classify(["tools/a_smoke.gd"], load_manifest(manifest)) == [("tools/a_smoke.gd", "direct_script")]
-    assert classify(["tools/a_smoke.tscn"], {"tools/a_smoke.tscn": "direct_scene"}) == [("tools/a_smoke.tscn", "direct_scene")]
-    must_fail("未登録target", lambda: classify(["tools/a_smoke.tscn", "tools/new_audit.gd"], {"tools/a_smoke.tscn": "direct_scene"}))
+    special_tests = sorted(REQUIRED_SPECIAL)
+    special_manifest = dict(REQUIRED_SPECIAL)
+    tests = sorted(special_tests + ["tools/a_smoke.gd"])
+    manifest.write_text("\n".join(f"{test}|{runner}" for test, runner in (special_manifest | {"tools/a_smoke.gd": "direct_script"}).items()) + "\n")
+    assert dict(classify(tests, load_manifest(manifest)))["tools/a_smoke.gd"] == "direct_script"
+    must_fail("特殊同時削除", lambda: classify(["tools/a_smoke.gd"], {"tools/a_smoke.gd": "direct_script"}))
+    must_fail("未登録target", lambda: classify(sorted(tests + ["tools/new_audit.gd"]), special_manifest | {"tools/a_smoke.gd": "direct_script"}))
     must_fail("0件", lambda: classify([], {}))
     manifest.write_text("tools/a_smoke.gd|direct_script\ntools/a_smoke.gd|direct_script\n", encoding="utf-8")
     must_fail("重複", lambda: load_manifest(manifest))
@@ -57,6 +61,7 @@ with tempfile.TemporaryDirectory() as temporary:
     warning_result = run(["sh", "-c", "echo 'WARNING: sample'; echo 'WARNING: sample'"], root, os.environ.copy(), root / "warning.log")
     assert warning_result["warnings"] == {"count": 2, "distinct_samples": ["WARNING: sample"], "unexplained": ["WARNING: sample", "WARNING: sample"]}
     assert warning_summary("WARNING: unknown\n", "direct_scene")["unexplained"] == ["WARNING: unknown"]
+    assert warning_summary("WARNING: 999 ObjectDB instances were leaked at exit (run with `--verbose` for details).\n", "direct_scene")["unexplained"]
     with mock.patch("release_verify.os.killpg", side_effect=ProcessLookupError):
         raced = run(["sh", "-c", "sleep 0.05"], root, {**os.environ, "TSURI_RELEASE_TEST_TIMEOUT_SECONDS": "0.01", "TSURI_RELEASE_TERM_GRACE_SECONDS": "0.2"}, root / "race.log")
     assert raced["exit_code"] == 124 and raced["timed_out"]
@@ -77,6 +82,43 @@ with tempfile.TemporaryDirectory() as temporary:
     assert fresh.parent == external.resolve() and not fresh.is_symlink()
     fresh.rmdir()
     assert outside_marker.read_text() == "keep"
+    logs_target = root / "outside_logs"
+    logs_target.mkdir()
+    logs_marker = logs_target / "marker"
+    logs_marker.write_text("keep")
+    unsafe_output = root / "unsafe_output"
+    unsafe_output.mkdir()
+    (unsafe_output / "logs").symlink_to(logs_target, target_is_directory=True)
+    safe_unsafe_output = prepare_output_root(unsafe_output)
+    must_fail("logs symlink", lambda: prepare_run_logs(safe_unsafe_output))
+    assert logs_marker.read_text() == "keep"
+    safe_output = root / "safe_output"
+    safe_output = prepare_output_root(safe_output)
+    first_logs = prepare_run_logs(safe_output)
+    (first_logs / "old.log").write_text("old")
+    second_logs = prepare_run_logs(safe_output)
+    assert first_logs != second_logs and not (second_logs / "old.log").exists()
+
+    # 旧PASSがあってもlogs symlink拒否は今回failedへ原子的に更新し、外部を触らない。
+    old_pass_output = root / "old_pass_output"
+    old_pass_output.mkdir()
+    atomic_json(old_pass_output / "release_verify_report.json", {"status": "skeleton_passed"})
+    old_logs_target = root / "old_logs_target"
+    old_logs_target.mkdir()
+    old_logs_marker = old_logs_target / "marker"
+    old_logs_marker.write_text("keep")
+    (old_pass_output / "logs").symlink_to(old_logs_target, target_is_directory=True)
+    assert main(["--root", str(root), "--manifest", str(root / "manifest.txt"), "--output-dir", str(old_pass_output)]) == 1
+    assert json.loads((old_pass_output / "release_verify_report.json").read_text())["status"] == "failed"
+    assert old_logs_marker.read_text() == "keep"
+    ancestor_target = root / "ancestor_target"
+    ancestor_target.mkdir()
+    ancestor_marker = ancestor_target / "marker"
+    ancestor_marker.write_text("keep")
+    ancestor_link = root / "ancestor_link"
+    ancestor_link.symlink_to(ancestor_target, target_is_directory=True)
+    must_fail("output祖先symlink", lambda: prepare_output_root(ancestor_link / "release"))
+    assert ancestor_marker.read_text() == "keep" and not (ancestor_target / "release").exists()
 
     artifact_log = root / "artifacts.sha256"
     artifact_log.write_text("fixture\n")
@@ -98,10 +140,12 @@ with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() a
     (tools / "only_audit.gd").write_text("extends SceneTree\n")
     (tools / "save_namespace_migration_smoke.tscn").touch()
     (tools / "save_system_smoke.tscn").touch()
+    (tools / "export_launch_smoke.tscn").touch()
     (tools / "release_test_manifest.txt").write_text(
         "tools/only_audit.gd|direct_script\n"
         "tools/save_namespace_migration_smoke.tscn|save_system\n"
         "tools/save_system_smoke.tscn|save_system\n"
+        "tools/export_launch_smoke.tscn|export_evidence\n"
     )
     outside = Path(output_temporary)
     engine_marker = outside / "engine_marker"
@@ -140,7 +184,7 @@ with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() a
     assert rc == 1 and report["status"] == "failed" and direct["timed_out"] and not report["source"]["stable"], repr(report)
     assert report["source"]["start"]["porcelain_sha256"] == report["source"]["end"]["porcelain_sha256"]
     assert report["source"]["start"]["worktree_content_sha256"] != report["source"]["end"]["worktree_content_sha256"]
-    assert report["godot"] == {"version": "4.7.test.official.fixture", "binary": str(fake_godot)}
+    assert report["godot"] == {"version": "4.7.test.official.fixture", "binary": str(fake_godot.resolve())}
     assert report["validation"]["status"] == "passed" and save_execution["status"] == "passed", repr(report)
     engine_count = engine_marker.read_text().count("fake-engine")
     assert engine_count >= 3, f"同一engine呼び出し数が不正: {engine_count}"
@@ -154,7 +198,9 @@ with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() a
     tools = fixture / "tools"
     tools.mkdir()
     (tools / "cleanup_audit.gd").touch()
-    (tools / "release_test_manifest.txt").write_text("tools/cleanup_audit.gd|direct_script\n")
+    for special in REQUIRED_SPECIAL:
+        (fixture / special).touch()
+    (tools / "release_test_manifest.txt").write_text("tools/cleanup_audit.gd|direct_script\n" + "".join(f"{test}|{runner}\n" for test, runner in REQUIRED_SPECIAL.items()))
     fake = fixture / "fake"
     fake.write_text("#!/bin/sh\nif [ \"${1:-}\" = --version ]; then echo 4.7.test.official.fixture; exit 0; fi\nparent=$(dirname \"$HOME\")\nmv \"$parent\" \"${parent}.moved\"\n")
     fake.chmod(0o755)
@@ -171,5 +217,76 @@ with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() a
         os.environ.clear(); os.environ.update(old_env)
     cleanup_report = json.loads((Path(output_temporary) / "out/release_verify_report.json").read_text())
     assert rc == 1 and cleanup_report["status"] == "failed" and "cleanup_error" in cleanup_report
+
+# setupのhung engineもprocess-group timeoutとatomic failed reportへ載せる。
+with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() as output_temporary:
+    fixture = Path(temporary)
+    tools = fixture / "tools"
+    tools.mkdir()
+    for special in REQUIRED_SPECIAL:
+        (fixture / special).touch()
+    (tools / "release_test_manifest.txt").write_text("".join(f"{test}|{runner}\n" for test, runner in REQUIRED_SPECIAL.items()))
+    hung = fixture / "hung_godot"
+    hung.write_text("#!/bin/sh\n(sleep 1) & wait\n")
+    hung.chmod(0o755)
+    (tools / "validate_project.sh").write_text("#!/bin/sh\nexit 0\n")
+    (tools / "validate_project.sh").chmod(0o755)
+    subprocess.run(["git", "init", "-q"], cwd=fixture, check=True)
+    subprocess.run(["git", "add", "."], cwd=fixture, check=True)
+    subprocess.run(["git", "-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "fixture"], cwd=fixture, check=True)
+    old_env = os.environ.copy()
+    os.environ.update(GODOT_BIN=str(hung), TSURI_RELEASE_SETUP_TIMEOUT_SECONDS="0.1", TSURI_RELEASE_TERM_GRACE_SECONDS="0.1")
+    try:
+        rc = main(["--root", str(fixture), "--output-dir", str(Path(output_temporary) / "out")])
+    finally:
+        os.environ.clear(); os.environ.update(old_env)
+    hung_report = json.loads((Path(output_temporary) / "out/release_verify_report.json").read_text())
+    assert rc == 1 and hung_report["status"] == "failed" and hung_report["setup"]["timed_out"]
+
+# RC成果物をrun中に差し替えると終了時再hashでfailedになる。
+with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() as evidence_temporary:
+    fixture = Path(temporary)
+    evidence = Path(evidence_temporary)
+    tools = fixture / "tools"
+    tools.mkdir()
+    for special in REQUIRED_SPECIAL:
+        (fixture / special).touch()
+    (tools / "release_test_manifest.txt").write_text("".join(f"{test}|{runner}\n" for test, runner in REQUIRED_SPECIAL.items()))
+    fake = fixture / "godot"
+    fake.write_text("#!/bin/sh\nif [ \"${1:-}\" = --version ]; then echo 4.7.rc.official.fixture; fi\n")
+    fake.chmod(0o755)
+    (tools / "validate_project.sh").write_text("#!/bin/sh\nexit 0\n")
+    (tools / "validate_project.sh").chmod(0o755)
+    debug_pck, release_pck, pack_manifest = evidence / "debug.pck", evidence / "release.pck", evidence / "pack.txt"
+    for path, value in ((debug_pck, b"debug"), (release_pck, b"release"), (pack_manifest, b"manifest")):
+        path.write_bytes(value)
+    (tools / "save_system_verify.sh").write_text(f"#!/bin/sh\nprintf changed >> '{release_pck}'\n")
+    (tools / "save_system_verify.sh").chmod(0o755)
+    subprocess.run(["git", "init", "-q"], cwd=fixture, check=True)
+    subprocess.run(["git", "add", "."], cwd=fixture, check=True)
+    subprocess.run(["git", "-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "fixture"], cwd=fixture, check=True)
+    commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=fixture, text=True).strip()
+    tree = subprocess.check_output(["git", "rev-parse", "HEAD^{tree}"], cwd=fixture, text=True).strip()
+    artifact_log = evidence / "artifacts.sha256"
+    artifact_log.write_text(
+        f"source_commit={commit}\nsource_tree={tree}\ndebug_pck={debug_pck}\ndebug_pck_sha256={sha256(debug_pck)}\n"
+        f"release_pck={release_pck}\nrelease_pck_sha256={sha256(release_pck)}\nrelease_pack_manifest={pack_manifest}\n"
+        f"release_pack_manifest_sha256={sha256(pack_manifest)}\n"
+    )
+    template_home = evidence / "home"
+    template = template_home / "Library/Application Support/Godot/export_templates/4.7.rc/macos.zip"
+    template.parent.mkdir(parents=True)
+    template.write_bytes(b"template")
+    run_log = evidence / "export.log"
+    run_log.write_text(f"Godot: 4.7.rc.official.fixture\nTemplate: 4.7.rc ({template})\nArtifact hashes: {artifact_log.resolve()}\nexport_launch_verify: PASS\n")
+    old_env = os.environ.copy()
+    os.environ.update(GODOT_BIN=str(fake), TSURI_EXPORT_ARTIFACT_LOG=str(artifact_log), TSURI_EXPORT_VERIFY_LOG=str(run_log))
+    try:
+        with mock.patch("release_verify.Path.home", return_value=template_home):
+            rc = main(["--root", str(fixture), "--output-dir", str(evidence / "out"), "--rc"])
+    finally:
+        os.environ.clear(); os.environ.update(old_env)
+    swapped_report = json.loads((evidence / "out/release_verify_report.json").read_text())
+    assert rc == 1 and swapped_report["status"] == "failed" and "export成果物hash不一致" in swapped_report["error"]
 
 print("release_verify self-test: ok (列挙/process-group/atomic report/HOME/engine/warning)")

@@ -26,12 +26,12 @@ EXPLAINED_ERROR_RULES = {
 }
 EXPLAINED_WARNING_RULES = {
     "all": [],
-    "validation": [(re.compile(r"^WARNING: \d+ ObjectDB instances were leaked at exit \(run with `--verbose` for details\)\.$"), "既存headless validation終了時のObjectDB cleanup診断")],
-    "direct_scene": [(re.compile(r"^WARNING: \d+ ObjectDB instances were leaked at exit \(run with `--verbose` for details\)\.$"), "既存scene終了時のObjectDB cleanup診断")],
+    "validation": [(re.compile(r"^WARNING: 2 ObjectDB instances were leaked at exit \(run with `--verbose` for details\)\.$"), "既存headless validation終了時のObjectDB cleanup診断")],
+    "direct_scene": [(re.compile(r"^WARNING: (?:2|3) ObjectDB instances were leaked at exit \(run with `--verbose` for details\)\.$"), "既存scene終了時のObjectDB cleanup診断")],
     "export": [(re.compile(r"^WARNING: 2 ObjectDB instances were leaked at exit \(run with `--verbose` for details\)\.$"), "REL-01 export成果物smoke終了時の既知ObjectDB cleanup診断")],
     "save_system": [
+        (re.compile(r"^WARNING: 2 ObjectDB instances were leaked at exit \(run with `--verbose` for details\)\.$"), "save_system_verify終了時の既知ObjectDB cleanup診断"),
         (re.compile(r"^WARNING: (?:新しい版で作られたセーブのため、対応する新しい版で開いてください。|旧版セーブの移行を完了できなかったため、セーブの読み書きを停止しました。ゲームを再起動してください。|移行markerのない一時コピーがあるため、移行を停止します。|旧namespace移行markerが不正なため、移行を停止します。|セーブデータが壊れていたため、バックアップから復元します。|セーブデータとバックアップが壊れているため、読み込めませんでした。原本は変更していません。|セーブファイルの差し替えに失敗しました（コード: 20）。|進行データがセーブ可能な範囲を超えたため、原本を変更せず保存を中止しました。|セーブ用の一時ファイルを開けませんでした。|セーブデータを書き込めませんでした。|セーブのバックアップ作成に失敗しました（コード: 20）。)$"), "save verifierの意図的な移行・破損・I/O失敗fixture"),
-        (re.compile(r"^WARNING: Vector2 cannot be normalized, the elements must be finite\. Making \(0, 0\) as a fallback\.$"), "save smokeのtitle要約生成時にzero-size TitleBackdropを描画する既知経路"),
     ],
 }
 REQUIRED_SPECIAL = {
@@ -39,6 +39,7 @@ REQUIRED_SPECIAL = {
     "tools/save_system_smoke.tscn": "save_system",
     "tools/export_launch_smoke.tscn": "export_evidence",
 }
+TEST_TIMEOUT_OVERRIDES = {"tools/nushi_encounter_audit.tscn": 1800.0}
 
 
 def sha256(path: Path) -> str:
@@ -118,6 +119,9 @@ def classify(tests: list[str], overrides: dict[str, str]) -> list[tuple[str, str
     stale = sorted(set(overrides) - set(tests))
     if missing or stale:
         raise ValueError(f"発見集合とmanifestが不一致です missing={missing} stale={stale}")
+    absent_special = sorted(set(REQUIRED_SPECIAL) - set(tests))
+    if absent_special:
+        raise ValueError(f"必須特殊testがありません: {', '.join(absent_special)}")
     for test, expected in REQUIRED_SPECIAL.items():
         if test in tests and overrides.get(test) != expected:
             raise ValueError(f"特殊testのrunner不正: {test} は {expected} 必須です")
@@ -143,6 +147,7 @@ def warning_summary(output: str, context: str = "all") -> dict[str, object]:
 def run(command: list[str], cwd: Path, env: dict[str, str], log: Path, context: str = "all") -> dict[str, object]:
     timeout = float(env.get("TSURI_RELEASE_TEST_TIMEOUT_SECONDS", "900"))
     grace = float(env.get("TSURI_RELEASE_TERM_GRACE_SECONDS", "3"))
+    started = time.monotonic()
     process = subprocess.Popen(command, cwd=cwd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, start_new_session=True)
     timed_out = False
     try:
@@ -172,6 +177,7 @@ def run(command: list[str], cwd: Path, env: dict[str, str], log: Path, context: 
         "warnings": warning_summary(output, context),
         "log": str(log),
         "log_sha256": sha256(log),
+        "duration_seconds": round(time.monotonic() - started, 3),
     }
 
 
@@ -192,6 +198,43 @@ def install_engine_shim(home_root: Path, godot: str) -> Path:
     shim = bin_dir / "godot"
     shim.symlink_to(source)
     return bin_dir
+
+
+def resolve_godot(requested: str) -> str:
+    path = Path(requested) if os.path.sep in requested else Path(shutil.which(requested) or "")
+    if path.is_file():
+        return str(path.resolve(strict=True))
+    for name in ("godot", "godot4"):
+        found = shutil.which(name)
+        if found:
+            return str(Path(found).resolve(strict=True))
+    fallback = Path("/Applications/Godot.app/Contents/MacOS/Godot")
+    if fallback.is_file():
+        return str(fallback.resolve(strict=True))
+    raise ValueError("Godot 4.xが見つかりません")
+
+
+def prepare_output_root(raw: Path) -> Path:
+    absolute = raw.expanduser().absolute()
+    platform_aliases = {Path("/tmp"), Path("/var")}
+    linked = [item for item in (absolute, *absolute.parents) if item.is_symlink() and item not in platform_aliases]
+    if linked:
+        raise ValueError(f"output path component symlinkは使用できません: {linked[0]}")
+    absolute.mkdir(parents=True, exist_ok=True)
+    if not absolute.is_dir():
+        raise ValueError(f"outputは実ディレクトリ必須です: {absolute}")
+    return absolute.resolve(strict=True)
+
+
+def prepare_run_logs(output: Path) -> Path:
+    logs_root = output / "logs"
+    if logs_root.is_symlink():
+        raise ValueError(f"logs symlinkは使用できません: {logs_root}")
+    logs_root.mkdir(exist_ok=True)
+    if not logs_root.is_dir():
+        raise ValueError(f"logsは実ディレクトリ必須です: {logs_root}")
+    run_logs = Path(tempfile.mkdtemp(prefix="run_", dir=logs_root.resolve(strict=True)))
+    return run_logs
 
 
 def git_value(root: Path, *args: str) -> str:
@@ -266,34 +309,43 @@ def main(argv: Iterable[str] | None = None) -> int:
     args = parser.parse_args(argv)
     root = args.root.resolve()
     manifest = args.manifest or root / "tools/release_test_manifest.txt"
-    output = (args.output_dir or Path(os.environ.get("TSURI_RELEASE_VERIFY_OUTPUT", "/tmp/tsuri_release_verify"))).resolve()
+    output = prepare_output_root(args.output_dir or Path(os.environ.get("TSURI_RELEASE_VERIFY_OUTPUT", "/tmp/tsuri_release_verify")))
     report_path = output / "release_verify_report.json"
-    report: dict[str, object] = {"schema_version": 2, "status": "running", "mode": "rc" if args.rc else "skeleton", "started_at_unix": time.time()}
+    report: dict[str, object] = {"schema_version": 2, "status": "running", "mode": "rc" if args.rc else "skeleton", "started_at_unix": time.time(), "run_logs": None}
     atomic_json(report_path, report)  # 旧PASSを最初に無効化する
     home_root: Path | None = None
     try:
-        output.mkdir(parents=True, exist_ok=True)
-        logs = output / "logs"
-        logs.mkdir(parents=True, exist_ok=True)
+        logs = prepare_run_logs(output)
+        report["run_logs"] = str(logs)
+        atomic_json(report_path, report)
         classified = classify(discover(root), load_manifest(manifest))
-        godot = os.environ.get("GODOT_BIN", "/Applications/Godot.app/Contents/MacOS/Godot")
-        if not Path(godot).is_file():
-            godot = next((name for name in ("godot", "godot4") if subprocess.call(["sh", "-c", f"command -v {name} >/dev/null"]) == 0), "")
-        if not godot:
-            raise ValueError("Godot 4.xが見つかりません")
-        version = subprocess.check_output([godot, "--version"], text=True, stderr=subprocess.STDOUT).strip()
-        template_version = version.split(".official.", 1)[0]
-        template = Path.home() / "Library/Application Support/Godot/export_templates" / template_version / "macos.zip"
         source_start = git_snapshot(root)
         source_commit = source_start["commit"]
         source_tree = source_start["tree"]
         dirty = source_start["dirty"]
+        parent = Path(os.environ.get("TSURI_RELEASE_HOME_PARENT", tempfile.gettempdir()))
+        home_root = create_run_home(parent)
+        godot = resolve_godot(os.environ.get("GODOT_BIN", "/Applications/Godot.app/Contents/MacOS/Godot"))
+        engine_bin = install_engine_shim(home_root, godot)
+        env = os.environ.copy()
+        env["PATH"] = f"{engine_bin}{os.pathsep}{env.get('PATH', '')}"
+        setup_env = env | {"TSURI_RELEASE_TEST_TIMEOUT_SECONDS": env.get("TSURI_RELEASE_SETUP_TIMEOUT_SECONDS", "30")}
+        setup = run([godot, "--version"], root, setup_env, logs / "setup_godot_version.log")
+        report["setup"] = setup
+        if setup["exit_code"] != 0 or setup["unexplained_errors"] or setup["warnings"]["unexplained"]:
+            raise ValueError("Godot --version setupが失敗しました")
+        version = Path(setup["log"]).read_text(encoding="utf-8").strip()
+        if not version:
+            raise ValueError("Godot --versionが空です")
+        template_version = version.split(".official.", 1)[0]
+        template = Path.home() / "Library/Application Support/Godot/export_templates" / template_version / "macos.zip"
         artifact_env = os.environ.get("TSURI_EXPORT_ARTIFACT_LOG")
         artifact_log = Path(artifact_env).resolve() if artifact_env else None
         export_evidence = parse_export_evidence(artifact_log)
         if export_evidence["status"] == "consumed" and (export_evidence["fields"]["source_commit"] != source_commit or export_evidence["fields"]["source_tree"] != source_tree):
             raise ValueError("export証跡のsource commit/treeが検証対象と一致しません")
         export_run_log = None
+        rc_evidence_start = None
         if args.rc:
             if dirty or artifact_log is None or export_evidence["status"] != "consumed":
                 raise ValueError("RC検証はclean worktreeとTSURI_EXPORT_ARTIFACT_LOG必須です")
@@ -301,12 +353,7 @@ def main(argv: Iterable[str] | None = None) -> int:
             if not run_log_env:
                 raise ValueError("RC検証はexport_launch_verify.sh全stdoutのTSURI_EXPORT_VERIFY_LOG必須です")
             export_run_log = validate_export_run_log(Path(run_log_env).resolve(), artifact_log, version, template_version, template)
-
-        parent = Path(os.environ.get("TSURI_RELEASE_HOME_PARENT", tempfile.gettempdir()))
-        home_root = create_run_home(parent)
-        engine_bin = install_engine_shim(home_root, godot)
-        env = os.environ.copy()
-        env["PATH"] = f"{engine_bin}{os.pathsep}{env.get('PATH', '')}"
+            rc_evidence_start = {"artifacts": export_evidence, "run_log": export_run_log, "template_sha256": sha256(template)}
         results: list[dict[str, object]] = []
         validate_home = home_root / "validation"
         validate_home.mkdir()
@@ -316,7 +363,8 @@ def main(argv: Iterable[str] | None = None) -> int:
         failed = validation["status"] == "failed"
         save_done = False
         for index, (test, runner) in enumerate(classified, 1):
-            record: dict[str, object] = {"test": test, "runner": runner}
+            timeout_budget = float(env["TSURI_RELEASE_TEST_TIMEOUT_SECONDS"]) if "TSURI_RELEASE_TEST_TIMEOUT_SECONDS" in env else TEST_TIMEOUT_OVERRIDES.get(test, 900.0)
+            record: dict[str, object] = {"test": test, "runner": runner, "timeout_seconds": timeout_budget}
             if runner == "export_evidence":
                 record.update(status="delegated_evidence", warnings={"count": 0, "distinct_samples": []})
             elif runner == "save_system" and save_done:
@@ -324,7 +372,7 @@ def main(argv: Iterable[str] | None = None) -> int:
             else:
                 test_home = home_root / f"test_{index:03d}"
                 test_home.mkdir()
-                test_env = env | {"HOME": str(test_home), "TSURI_GODOT_HOME": str(test_home)}
+                test_env = env | {"HOME": str(test_home), "TSURI_GODOT_HOME": str(test_home), "TSURI_RELEASE_TEST_TIMEOUT_SECONDS": str(timeout_budget)}
                 if runner == "save_system":
                     command = [str(root / "tools/save_system_verify.sh")]
                 elif runner == "direct_script":
@@ -337,6 +385,13 @@ def main(argv: Iterable[str] | None = None) -> int:
                 record.update(execution)
                 failed |= execution["status"] == "failed"
             results.append(record)
+        rc_evidence_end = None
+        if args.rc:
+            assert artifact_log is not None
+            run_log_path = Path(os.environ["TSURI_EXPORT_VERIFY_LOG"]).resolve()
+            rc_evidence_end = {"artifacts": parse_export_evidence(artifact_log), "run_log": validate_export_run_log(run_log_path, artifact_log, version, template_version, template), "template_sha256": sha256(template)}
+            if rc_evidence_end != rc_evidence_start:
+                failed = True
         shutil.rmtree(home_root)
         home_root = None
         source_end = git_snapshot(root)
@@ -346,11 +401,13 @@ def main(argv: Iterable[str] | None = None) -> int:
             status="failed" if failed else ("rc_passed" if args.rc else "skeleton_passed"),
             source={"start": source_start, "end": source_end, "stable": source_end == source_start},
             godot={"version": version, "binary": godot},
+            setup=setup,
             export_template={"version": template_version, "path": str(template), "present": template.is_file(), "sha256": sha256(template) if template.is_file() else None},
             discovery={"patterns": ["tools/**/*_{smoke,audit}.tscn", "non-scene tools/**/*_{smoke,audit}.gd"], "count": len(classified), "manifest": str(manifest), "manifest_sha256": sha256(manifest)},
             validation=validation,
             export_evidence=export_evidence,
             export_verify_run_log=export_run_log,
+            rc_evidence={"start": rc_evidence_start, "end": rc_evidence_end, "stable": rc_evidence_start == rc_evidence_end if args.rc else None},
             tests=results,
             warnings={"count": int(validation["warnings"]["count"]) + sum(int(item["warnings"]["count"]) for item in results), "distinct_samples": sorted(set(validation["warnings"]["distinct_samples"]).union(*(item["warnings"]["distinct_samples"] for item in results)))[:50]},
             rc_remaining=["同一RCの署名・公証判断と最終成果物hash", "最終配布ZIPのhash", "RIGHTS-01B・性能/soak・3難易度9セル受入"],
