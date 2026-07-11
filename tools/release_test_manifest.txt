@@ -1,0 +1,5 @@
+# scene|runner
+# runner: direct=Godotで直接実行 / save_system=既存save verifierへ委譲 / export_evidence=既存export証跡を消費
+tools/save_namespace_migration_smoke.tscn|save_system
+tools/save_system_smoke.tscn|save_system
+tools/export_launch_smoke.tscn|export_evidence
