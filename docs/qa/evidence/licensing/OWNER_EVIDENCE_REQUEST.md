@@ -25,19 +25,19 @@ Redaction-Checked: true
 Finding: <個人情報を含まない判定要約>
 ```
 
-IDごとに1つ以上のattestationを作り、`docs/qa/evidence/licensing/attestations/U-XX_*.md` として保存する。原本hashは照合用であり、原本そのものや秘密URLの代替ではない。公開前に、禁止項目が含まれないことを別の確認者が再確認する。
+IDごとに1つ以上のattestationを作り、`docs/qa/evidence/licensing/attestations/U-XX_*.md` として保存する。原本hashは照合用であり、原本そのものや秘密URLの代替ではない。公開前に、禁止項目が含まれないことを別の確認者が再確認する。通常validateはこのディレクトリをtracked/untrackedにかかわらず再帰走査し、管理文書2件、任意の`attestations/.gitkeep`、契約準拠attestation以外を拒否する。未参照attestationもprivacy検査対象である。
 
 共通項目に加え、ID別に次のpayloadを必須とする。値を確認できない場合はcloseしない。
 
 | ID | 必須payload |
 |---|---|
-| U-01 | `Asset-Count: 10`、`Covered-Assets:` に下記10ファイルを漏れなく列挙、`One-to-One-Mapping-Verified: true` |
-| U-02 | `Plan: Pro` または `Premier`、`Period-Start/Period-End: YYYY-MM-DD`、`Covers-U-01: true` |
-| U-03 | `Inventory-Contract: docs/31 sections 2.2 and 4`、`Unresolved-Items: 0`、`Provenance-Complete: true` |
-| U-04 | `Product-Decision: adopted` または `rejected`、`Author-Verified: true`、`Rights-Holder-Verified: true` |
+| U-01 | `Asset-Count: 10`、`Track-01:`〜`Track-10:`を`filename;generated-at;mapping-id`形式で記載、`One-to-One-Mapping-Verified: true`。generated-atはtimezone付き`YYYY-MM-DDTHH:MM:SSZ`または`±HH:MM`、mapping-idは曲URLやaccount IDではない一意の非秘密管理ID |
+| U-02 | `Plan: Pro` または `Premier`、`Period-Start/Period-End: YYYY-MM-DD`、`Covers-U-01: true`。U-01完了が前提で、各generated-atに記録されたoffset上の暦日min/maxを加入期間が包含すること |
+| U-03 | `Inventory-Contract: docs/31 sections 2.2 and 4`、`Population-Count:`、`Population-SHA256:`、`Item-0001:`以降を`path;disposition;provenance-id`形式で現在の`assets/showcase/**/*.png`・`tools/source_assets/**/*.png`・`reference/**/*.png`全件分。さらに`Provenance-Count:`と`Provenance-0001:`以降を`id;service;generated-start;generated-end;creator-id`形式で記録する。生成日時はtimezone付き、creatorは非秘密role/ID。バッチでprovenance ID共有可だが、全item IDが一意なrecordへ解決し、未参照recordを残さない。`Unresolved-Items: 0`、`Provenance-Complete: true`。count/hash/item集合をGit追跡中の現在母集団と監査照合する |
+| U-04 | adopted: `Product-Decision: adopted`、`Author-Verified: true`、`Rights-Holder-Verified: true`。rejected: `Product-Decision: rejected`、`Replacement-Integrated: true`、`Replacement-Product-Path:`、`Replacement-Rights-Attestation:`。差し替え権利attestationには`Replacement-Asset-Rights-Verified: true`が必要。差し替え本体の存在、`project.godot`配線、docs/31記載とintegration markerも監査する |
 | U-05 | `License-Holder-Matches-LICENSE: true` |
 | U-06 | `Territories:`、`Trademark-Classes:`、`Official-DB:`、`Search-Date: YYYY-MM-DD`、`Result-Count:` 非負整数、`Expert-Review: completed` または `not-required` |
-| U-08 | `Covered-Media: suno-and-ai-images`、`Third-Party-Inputs: none` または `cleared`、`Clearance-Complete: true` |
+| U-08 | U-01/U-03完了が前提。`Covered-Media: suno-and-ai-images`、`Population-Count:`、`Population-SHA256:`、`Item-0001:`以降を`asset;none|cleared;rights-id`形式で音源10件＋U-03確定母集団全件分、`Clearance-Complete: true`。count/hash/item集合を監査照合する |
 
 ## 1. Suno 10曲（U-01 / U-02 / U-08）
 
@@ -56,7 +56,7 @@ IDごとに1つ以上のattestationを作り、`docs/qa/evidence/licensing/attes
 
 併せて、非公開のBilling HistoryとPro/Premier加入画面で、上記10件の最古生成日時から最新生成日時まで加入期間が連続して覆うことを確認してください。10曲すべてについて、入力に第三者の楽曲、録音、歌詞、声、MIDI、stem、reference audio等を使ったかを確認します。使った場合は、対象曲・入力物・権利者・利用許諾の原本も非公開保管し、公開attestationには権利clearanceの判定だけを記録します。
 
-Evidence-Type: U-01=`suno-track-provenance`、U-02=`suno-paid-period`、U-08=`ai-input-rights`
+Evidence-Type: U-01=`suno-track-provenance`、U-02=`suno-paid-period`、U-08=`ai-input-rights`。U-02はU-01完了後でなければcloseできない。
 
 ## 2. AI画像・source・reference（U-03 / U-08）
 
