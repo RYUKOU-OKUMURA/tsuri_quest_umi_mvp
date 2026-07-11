@@ -2,8 +2,40 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-GODOT_HOME="${TSURI_GODOT_HOME:-/tmp/tsuri_title_visual_qa_home}"
-INVALID_GODOT_HOME="${GODOT_HOME}_invalid_artifact"
+GODOT_HOME="${TSURI_GODOT_HOME-/tmp/tsuri_title_visual_qa_home}"
+
+safe_title_qa_home() {
+  local target="$1"
+  if [[ -z "$target" || "$target" == "/" || "$target" == "$HOME" || -L "$target" ]]; then
+    echo "危険なtitle visual QA HOMEを拒否しました: ${target:-<empty>}" >&2
+    return 1
+  fi
+  local parent base canonical_parent
+  parent="$(dirname "$target")"
+  base="$(basename "$target")"
+  if [[ "$parent" != "/tmp" && "$parent" != "/private/tmp" ]]; then
+    echo "title visual QA HOMEは/private/tmp直下だけ許可します: $target" >&2
+    return 1
+  fi
+  if [[ "$base" != tsuri_title_* ]]; then
+    echo "title visual QA HOMEのbasenameが専用prefix外です: $base" >&2
+    return 1
+  fi
+  canonical_parent="$(cd "$parent" && pwd -P)"
+  if [[ "$canonical_parent" != "/private/tmp" ]]; then
+    echo "title visual QA HOMEの実parentが/private/tmpではありません: $canonical_parent" >&2
+    return 1
+  fi
+  printf '%s/%s\n' "$canonical_parent" "$base"
+}
+
+GODOT_HOME="$(safe_title_qa_home "$GODOT_HOME")"
+INVALID_GODOT_HOME="$(safe_title_qa_home "${GODOT_HOME}_invalid_artifact")"
+
+if [[ "${TSURI_TITLE_VISUAL_QA_GUARD_ONLY:-0}" == "1" ]]; then
+  echo "title visual QA HOME guard passed."
+  exit 0
+fi
 
 if [[ -n "${GODOT_BIN:-}" ]]; then
   GODOT="$GODOT_BIN"
@@ -18,6 +50,7 @@ else
   exit 1
 fi
 
+rm -rf "$GODOT_HOME" "$INVALID_GODOT_HOME"
 mkdir -p "$GODOT_HOME"
 # macOS対象のcustom user data dirとshader cacheを先に作り、初回描画のERRORを避ける。
 mkdir -p "$GODOT_HOME/Library/Application Support/tsuri_quest_umi/shader_cache"

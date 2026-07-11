@@ -92,6 +92,8 @@ func _ready() -> void:
 
 	# SAVE-03: 構文正常でも意味破損したmainは、同じ検証を通ったbackupへfallbackする。
 	await _verify_semantic_save_candidate_selection()
+	_verify_safe_integer_and_outbound_contract()
+	_verify_fallback_lifecycle()
 
 	# version欠損の疎な旧saveは従来どおり読み込める。
 	_verify_versionless_sparse_save_is_allowed()
@@ -613,6 +615,101 @@ func _verify_title_invalid_slot_is_blocked(expected_hashes: Dictionary) -> void:
 	_expect_eq(_file_hash(_slot_backup_path(1)), expected_hashes["backup"], "blocked title start preserves invalid backup")
 	viewport.queue_free()
 	await get_tree().process_frame
+
+
+func _verify_safe_integer_and_outbound_contract() -> void:
+	var max_safe := PlayerProgress.MAX_SAFE_JSON_INTEGER
+	var accepted_boundaries: Array[Dictionary] = [
+		{"version": 1, "money": max_safe},
+		{"version": 1, "inventory": {"aji": max_safe}},
+		{"version": 1, "spot_caught_counts": {"harbor_pier": {"aji": max_safe}}},
+		{"version": 1, "quest_board": [{"count": max_safe, "reward_money": max_safe}]},
+		{"version": 1, "shark_bonds": {"nekozame": max_safe}},
+	]
+	var rejected_boundaries: Array[Dictionary] = [
+		{"version": 1, "money": max_safe + 1},
+		{"version": 1, "inventory": {"aji": max_safe + 1}},
+		{"version": 1, "spot_caught_counts": {"harbor_pier": {"aji": max_safe + 1}}},
+		{"version": 1, "quest_board": [{"count": max_safe + 1}]},
+		{"version": 1, "shark_bonds": {"nekozame": max_safe + 1}},
+	]
+	for candidate in accepted_boundaries:
+		_expect(PlayerProgress._is_valid_save_candidate(candidate), "2^53-1 should be accepted on every integer path")
+	for candidate in rejected_boundaries:
+		_expect(not PlayerProgress._is_valid_save_candidate(candidate), "2^53 should be rejected on every integer path")
+
+	_remove_all_save_files()
+	PlayerProgress.set_active_save_slot(1, false)
+	PlayerProgress.money = max_safe
+	_expect(PlayerProgress.save_game(), "MAX_SAFE_JSON_INTEGER outbound save should succeed")
+	PlayerProgress.load_game()
+	_expect_eq(PlayerProgress.money, max_safe, "MAX_SAFE_JSON_INTEGER should round-trip")
+	PlayerProgress.gain_trip_event_money(1)
+	_expect_eq(PlayerProgress.money, max_safe, "normal money gain should saturate at JSON safe integer max")
+	_expect_eq(int(_read_json(_slot_save_path(1)).get("money", -1)), max_safe, "saturated money save should remain valid")
+	PlayerProgress.load_game()
+	_expect_eq(PlayerProgress.money, max_safe, "saturated money should reload without backup rollback")
+	PlayerProgress.money = 500
+	PlayerProgress.gain_trip_event_money(9223372036854775807)
+	_expect_eq(PlayerProgress.money, max_safe, "extreme money gain should saturate before int64 addition overflow")
+
+	var hashes_before_invalid_outbound := {
+		"main": _file_hash(_slot_save_path(1)),
+		"backup": _file_hash(_slot_backup_path(1)),
+		"tmp": _file_hash(_slot_tmp_path(1)),
+	}
+	var outbound_failures: Array[String] = []
+	var collect_failure := func(message: String) -> void: outbound_failures.append(message)
+	PlayerProgress.save_failed.connect(collect_failure)
+	PlayerProgress.money = max_safe + 1
+	_expect(not PlayerProgress.save_game(), "2^53 outbound data should be refused before tmp write")
+	PlayerProgress.save_failed.disconnect(collect_failure)
+	_expect_eq(outbound_failures.size(), 1, "invalid outbound save should notify once")
+	_expect_eq(_file_hash(_slot_save_path(1)), hashes_before_invalid_outbound["main"], "invalid outbound preserves main")
+	_expect_eq(_file_hash(_slot_backup_path(1)), hashes_before_invalid_outbound["backup"], "invalid outbound preserves backup")
+	_expect_eq(_file_hash(_slot_tmp_path(1)), hashes_before_invalid_outbound["tmp"], "invalid outbound preserves tmp")
+	_remove_all_save_files()
+
+
+func _verify_fallback_lifecycle() -> void:
+	_remove_all_save_files()
+	PlayerProgress.set_active_save_slot(1, false)
+	var invalid_main := {"version": 1, "money": -1}
+	var valid_backup := {"version": 1, "level": 12, "money": 2468}
+	_write_text(_slot_save_path(1), JSON.stringify(invalid_main, "\t"))
+	_write_text(_slot_backup_path(1), JSON.stringify(valid_backup, "\t"))
+	PlayerProgress.load_game()
+	_expect_eq(PlayerProgress.money, 2468, "fallback lifecycle should load backup")
+	var valid_backup_hash := _file_hash(_slot_backup_path(1))
+
+	# 不正main削除後のrename失敗実経路では、backupをmainへcopy復元する。
+	PlayerProgress._save_failure_injection_stage = "fallback_final_rename_after_remove"
+	_expect(not PlayerProgress.save_game(), "post-remove fallback final rename failure should return false")
+	PlayerProgress._save_failure_injection_stage = ""
+	_expect_eq(_file_hash(_slot_backup_path(1)), valid_backup_hash, "post-remove failure preserves valid backup")
+	_expect_eq(_file_hash(_slot_save_path(1)), valid_backup_hash, "post-remove failure restores valid backup to main")
+	_expect(not FileAccess.file_exists(_slot_tmp_path(1)), "post-remove failure cleans tmp")
+
+	# fallbackからの通常save成功は新mainと旧正常backupの2世代を残す。
+	_write_text(_slot_save_path(1), JSON.stringify(invalid_main, "\t"))
+	PlayerProgress.load_game()
+	PlayerProgress.money = 3579
+	_expect(PlayerProgress.save_game(), "fallback normal save should succeed")
+	_expect_eq(int(_read_json(_slot_save_path(1)).get("money", -1)), 3579, "fallback save writes new valid main")
+	_expect_eq(_file_hash(_slot_backup_path(1)), valid_backup_hash, "fallback save keeps old valid backup")
+
+	# main消失＋valid backup＋tmp残置のクラッシュ相当から再ロード・次回saveで復旧する。
+	_remove_if_exists(_slot_save_path(1))
+	_write_text(_slot_tmp_path(1), JSON.stringify({"version": 1, "money": 9999}, "\t"))
+	PlayerProgress.money = 0
+	PlayerProgress.load_game()
+	_expect_eq(PlayerProgress.money, 2468, "missing main crash state should reload valid backup")
+	PlayerProgress.money = 4680
+	_expect(PlayerProgress.save_game(), "save after missing-main crash state should recover")
+	_expect_eq(int(_read_json(_slot_save_path(1)).get("money", -1)), 4680, "crash recovery should create valid main")
+	_expect_eq(_file_hash(_slot_backup_path(1)), valid_backup_hash, "crash recovery should retain valid backup")
+	_expect(not FileAccess.file_exists(_slot_tmp_path(1)), "crash recovery should replace stale tmp")
+	_remove_all_save_files()
 
 
 func _verify_unknown_version_type_guards() -> void:

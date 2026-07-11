@@ -22,9 +22,25 @@ func _ready() -> void:
 		PlayerProgress._save_storage_ready = true
 		PlayerProgress._save_storage_block_message = ""
 		PlayerProgress.active_save_slot = PlayerProgress.DEFAULT_SAVE_SLOT
-		DirAccess.make_dir_recursive_absolute(PlayerProgress.SAVE_SLOT_ROOT + "/1")
-		_write_preview_save(PlayerProgress.current_save_path(), {"version": 1, "level": {}})
-		_write_preview_save(PlayerProgress.current_backup_path(), {"version": 1, "inventory": []})
+		var mkdir_error := DirAccess.make_dir_recursive_absolute(PlayerProgress.SAVE_SLOT_ROOT + "/1")
+		if mkdir_error != OK and mkdir_error != ERR_ALREADY_EXISTS:
+			_fail_preview("不正artifact fixture用directoryを作成できませんでした（code %d）。" % mkdir_error)
+			return
+		_remove_all_slot_artifacts()
+		if not _write_preview_save(PlayerProgress.current_save_path(), {"version": 1, "level": {}}):
+			_fail_preview("不正artifact main fixtureを書き込めませんでした。")
+			return
+		if not _write_preview_save(PlayerProgress.current_backup_path(), {"version": 1, "inventory": []}):
+			_fail_preview("不正artifact backup fixtureを書き込めませんでした。")
+			return
+		var invalid_summary := PlayerProgress.save_slot_summary(1)
+		if (
+			not bool(invalid_summary.get("invalid_artifact", false))
+			or bool(invalid_summary.get("candidate_valid", true))
+			or bool(invalid_summary.get("future_guarded", true))
+		):
+			_fail_preview("不正artifact preview fixtureが期待したsummaryになりませんでした。")
+			return
 	else:
 		PlayerProgress._save_storage_ready = true
 		PlayerProgress._save_storage_block_message = ""
@@ -35,14 +51,26 @@ func _ready() -> void:
 	var screen := TitleScreen.new()
 	screen.configure({})
 	add_child(screen)
-	await get_tree().process_frame
-	await get_tree().process_frame
+	for _frame in range(4):
+		await get_tree().process_frame
+	if mode == "invalid_artifact":
+		if (
+			not screen._slot_buttons[0].text.contains("破損")
+			or not screen._continue_button.disabled
+			or not screen._new_button.disabled
+		):
+			_fail_preview("不正artifactのslot文言またはdisabled導線が成立していません。")
+			return
+	await RenderingServer.frame_post_draw
 	await RenderingServer.frame_post_draw
 
 	var image := get_viewport().get_texture().get_image()
 	if image == null or image.is_empty():
 		push_error("タイトル画面の実スクショを取得できませんでした。")
 		get_tree().quit(1)
+		return
+	if not _is_rendered_image_valid(image):
+		_fail_preview("タイトル画面が空描画または黒矩形を含む不正captureになりました。")
 		return
 	var out := OS.get_environment("TSURI_TITLE_PREVIEW_OUT").strip_edges()
 	if out.is_empty():
@@ -62,15 +90,44 @@ func _ready() -> void:
 	get_tree().quit(0)
 
 
-func _write_preview_save(path: String, data: Dictionary) -> void:
+func _write_preview_save(path: String, data: Dictionary) -> bool:
 	var file := FileAccess.open(path, FileAccess.WRITE)
 	if file == null:
-		push_error("不正artifact preview fixtureを書き込めませんでした: %s" % path)
-		return
+		return false
 	file.store_string(JSON.stringify(data, "\t"))
+	var write_error := file.get_error()
 	file.close()
+	return write_error == OK
 
 
 func _remove_preview_save(path: String) -> void:
 	if FileAccess.file_exists(path):
 		DirAccess.remove_absolute(path)
+
+
+func _remove_all_slot_artifacts() -> void:
+	for slot_id in range(1, PlayerProgress.SAVE_SLOT_COUNT + 1):
+		for path in PlayerProgress._slot_save_paths(slot_id):
+			_remove_preview_save(path)
+
+
+func _is_rendered_image_valid(image: Image) -> bool:
+	if image.get_width() != 1280 or image.get_height() != 720:
+		return false
+	var sampled := 0
+	var near_black := 0
+	var transparent := 0
+	for y in range(0, image.get_height(), 4):
+		for x in range(0, image.get_width(), 4):
+			var pixel := image.get_pixel(x, y)
+			sampled += 1
+			if pixel.a < 0.9:
+				transparent += 1
+			if maxf(pixel.r, maxf(pixel.g, pixel.b)) <= 0.03:
+				near_black += 1
+	return transparent == 0 and near_black <= int(sampled * 0.01)
+
+
+func _fail_preview(message: String) -> void:
+	push_error(message)
+	get_tree().quit(1)

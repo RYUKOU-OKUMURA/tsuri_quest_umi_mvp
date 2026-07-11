@@ -19,6 +19,7 @@ const SAVE_VERSION := 1
 const FUTURE_SAVE_GUARD_MESSAGE := "新しい版で作られたセーブのため、対応する新しい版で開いてください。"
 const INVALID_SAVE_MESSAGE := "セーブデータとバックアップが壊れているため、読み込めませんでした。原本は変更していません。"
 const INVALID_SAVE_TITLE_MESSAGE := "セーブ破損。原本は変更していません"
+const INVALID_OUTBOUND_SAVE_MESSAGE := "進行データがセーブ可能な範囲を超えたため、原本を変更せず保存を中止しました。"
 const SAVE_STORAGE_MIGRATION_BLOCK_MESSAGE := SaveNamespaceMigrator.DEFAULT_FAILURE_MESSAGE
 const SEA_CHART_FRAGMENT_MAX := 3
 const MAX_SAFE_JSON_INTEGER := 9007199254740991
@@ -379,7 +380,10 @@ func add_sea_chart_fragments(amount: int = 1) -> int:
 func gain_trip_event_money(amount: int) -> void:
 	if amount <= 0:
 		return
-	money += amount
+	if money >= MAX_SAFE_JSON_INTEGER or amount >= MAX_SAFE_JSON_INTEGER - money:
+		money = MAX_SAFE_JSON_INTEGER
+	else:
+		money += amount
 	save_game()
 	progress_changed.emit()
 
@@ -988,6 +992,9 @@ func save_game() -> bool:
 		"shark_bonds": shark_bonds,
 		"selected_time_slot_id": selected_time_slot_id,
 	}
+	if not _is_valid_save_candidate(data):
+		_report_save_failure(INVALID_OUTBOUND_SAVE_MESSAGE)
+		return false
 	var save_path := current_save_path()
 	var backup_path := current_backup_path()
 	var tmp_path := current_tmp_path()
@@ -1024,7 +1031,10 @@ func save_game() -> bool:
 		if remove_err != OK:
 			_remove_save_tmp(tmp_path)
 			return _fail_save("不正なセーブ本体を安全に差し替えられませんでした（コード: %d）。" % remove_err)
-	var rename_err := ERR_CANT_CREATE if _save_failure_injection_stage == "final_rename" else DirAccess.rename_absolute(tmp_path, save_path)
+	var fail_final_rename := _save_failure_injection_stage in [
+		"final_rename", "fallback_final_rename_after_remove"
+	]
+	var rename_err := ERR_CANT_CREATE if fail_final_rename else DirAccess.rename_absolute(tmp_path, save_path)
 	if rename_err != OK:
 		_remove_save_tmp(tmp_path)
 		if FileAccess.file_exists(backup_path) and not FileAccess.file_exists(save_path):
