@@ -21,6 +21,7 @@ func _ready() -> void:
 	_verify_insufficient_delivery()
 	_verify_shokunin_reward()
 	_verify_save_type_normalization()
+	_verify_legacy_quest_repair()
 	await _verify_screen_build()
 	await _verify_full_condition_text_layout()
 
@@ -158,6 +159,54 @@ func _verify_save_type_normalization() -> void:
 		TYPE_INT,
 		"quest reward field should normalize to int"
 	)
+
+
+func _verify_legacy_quest_repair() -> void:
+	var valid_quest := {
+		"template_id": "bulk_common",
+		"kind": "delivery",
+		"fish_id": "aji",
+		"count": 5.0,
+		"reward_money": 960.0,
+		"text": "アジを5匹届けてほしい",
+		"legacy_progress": 2,
+	}
+	var second_valid_quest := {
+		"template_id": "size_record",
+		"kind": "record",
+		"fish_id": "mejina",
+		"target_size_cm": 45.5,
+		"posted_best_cm": 40.25,
+		"reward_money": 1200.0,
+		"text": "45.5cm以上のメジナを見せてほしい",
+	}
+	PlayerProgress._apply_save_data(
+		{
+			"level": 30,
+			"owned_boats": ["skiff", "offshore_boat", "bluewater_boat"],
+			"quest_board": [
+				valid_quest,
+				{"kind": "delivery", "fish_id": "unknown_fish", "text": "unknown"},
+				second_valid_quest,
+				{"kind": "delivery", "fish_id": "nekozame", "text": "shark"},
+				{"kind": "record", "fish_id": "nushi_deep_ocean", "text": "boss"},
+			],
+		}
+	)
+	_expect_eq(PlayerProgress.quest_board.size(), 3, "legacy quest repair should refill three slots")
+	var preserved := PlayerProgress.quest_board[0]
+	_expect_eq(String(preserved.get("template_id", "")), "bulk_common", "valid quest id should stay")
+	_expect_eq(int(preserved.get("count", 0)), 5, "valid quest progress requirement should stay")
+	_expect_eq(int(preserved.get("reward_money", 0)), 960, "valid quest reward should stay")
+	_expect_eq(int(preserved.get("legacy_progress", 0)), 2, "unknown valid quest fields should stay")
+	var second_preserved := PlayerProgress.quest_board[1]
+	_expect_eq(String(second_preserved.get("template_id", "")), "size_record", "second valid quest id")
+	_expect_eq(String(second_preserved.get("fish_id", "")), "mejina", "valid quest order should stay")
+	_expect_eq(float(second_preserved.get("target_size_cm", 0.0)), 45.5, "record target should stay")
+	_expect_eq(float(second_preserved.get("posted_best_cm", 0.0)), 40.25, "posted progress should stay")
+	_expect_eq(int(second_preserved.get("reward_money", 0)), 1200, "second reward should stay")
+	for quest in PlayerProgress.quest_board:
+		_expect_valid_quest(quest)
 
 
 func _verify_screen_build() -> void:
