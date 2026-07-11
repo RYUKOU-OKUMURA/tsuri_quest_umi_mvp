@@ -23,6 +23,7 @@ def main() -> int:
         notices = require_file("THIRD_PARTY_NOTICES.md")
         ledger = require_file("docs/31_asset_ledger.md")
         evidence = require_file("docs/qa/evidence/licensing/README.md")
+        owner_request = require_file("docs/qa/evidence/licensing/OWNER_EVIDENCE_REQUEST.md")
         project_overview = require_file("docs/00_プロジェクト概要.md")
         v2_overview = require_file("docs/30_v2_expansion_overview.md")
         line_seed_ofl = require_file("assets/fonts/line_seed/OFL.txt")
@@ -30,12 +31,59 @@ def main() -> int:
 
         for marker in ("## Scope", "Original project-owned visual and audio assets"):
             assert marker in license_text, f"LICENSE.md missing marker: {marker}"
-        evidence_ids = re.findall(r"^\| (U-\d{2}) \|", evidence, flags=re.MULTILINE)
+        open_evidence_section = evidence.split("## ユーザー入力・保存待ち（未完了）", 1)[1]
+        open_evidence_section = open_evidence_section.split("\n## ", 1)[0]
+        evidence_ids = re.findall(r"^\| (U-\d{2}) \|", open_evidence_section, flags=re.MULTILINE)
         assert len(evidence_ids) == len(set(evidence_ids)), f"duplicate evidence IDs: {evidence_ids}"
-        known_evidence_ids = {f"U-{number:02d}" for number in range(1, 9)}
-        assert set(evidence_ids) <= known_evidence_ids, f"unknown licensing evidence IDs: {evidence_ids}"
-
+        completed_evidence_section = evidence.split("## RIGHTS-01A完了済み", 1)[1]
+        completed_evidence_section = completed_evidence_section.split("\n## ", 1)[0]
+        completed_evidence_ids = re.findall(
+            r"^\| (U-\d{2}) \|", completed_evidence_section, flags=re.MULTILINE
+        )
+        assert len(completed_evidence_ids) == len(set(completed_evidence_ids)), (
+            f"duplicate completed evidence IDs: {completed_evidence_ids}"
+        )
+        assert not (set(evidence_ids) & set(completed_evidence_ids)), (
+            f"evidence IDs cannot be both open and complete: "
+            f"{sorted(set(evidence_ids) & set(completed_evidence_ids))}"
+        )
+        completed_rows = re.findall(
+            r"^\| (U-\d{2}) \| ([^|]+) \| ([^|]+) \|$",
+            completed_evidence_section,
+            flags=re.MULTILINE,
+        )
+        assert len(completed_rows) == len(completed_evidence_ids), (
+            "completed evidence rows require non-empty close date and saved-evidence judgment"
+        )
+        evidence_root = (ROOT / "docs/qa/evidence/licensing").resolve()
+        non_evidence_management_files = {
+            (evidence_root / "README.md").resolve(),
+            (evidence_root / "OWNER_EVIDENCE_REQUEST.md").resolve(),
+        }
+        for evidence_id, close_date, saved_evidence in completed_rows:
+            assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", close_date.strip()), (
+                f"invalid close date for {evidence_id}: {close_date.strip()}"
+            )
+            saved_paths = re.findall(r"`([^`]+)`", saved_evidence)
+            assert saved_paths, f"completed {evidence_id} requires a backticked saved evidence path"
+            for relative in saved_paths:
+                saved_path = (ROOT / relative).resolve()
+                assert saved_path == evidence_root or evidence_root in saved_path.parents, (
+                    f"completed {evidence_id} evidence must be under licensing evidence root: {relative}"
+                )
+                assert saved_path not in non_evidence_management_files, (
+                    f"completed {evidence_id} cannot cite a management file as evidence: {relative}"
+                )
+                assert saved_path.is_file(), f"completed {evidence_id} evidence file missing: {relative}"
         unresolved_holder = "RIGHTS HOLDER NAME" in license_text
+        rights_01a_ids = {"U-01", "U-02", "U-03", "U-04", "U-05", "U-06", "U-08"}
+        classified_ids = set(evidence_ids) | set(completed_evidence_ids)
+        assert classified_ids == rights_01a_ids, (
+            f"RIGHTS-01A evidence classification mismatch: "
+            f"missing={sorted(rights_01a_ids - classified_ids)}, "
+            f"unexpected={sorted(classified_ids - rights_01a_ids)}"
+        )
+
         if unresolved_holder:
             assert "U-05" in evidence_ids, "unresolved LICENSE holder requires open U-05"
             assert "legal rights holder remains a\nrelease blocker" in license_text, (
@@ -62,6 +110,29 @@ def main() -> int:
             assert marker in mplus_ofl, f"M PLUS OFL missing: {marker}"
         for marker in ("ユーザー入力・保存待ち",):
             assert marker in evidence, f"licensing evidence index missing: {marker}"
+        for evidence_id in sorted(evidence_ids):
+            assert evidence_id in owner_request, (
+                f"owner evidence request missing unresolved item: {evidence_id}"
+            )
+        rights_01b_section = evidence.split("## RIGHTS-01B:", 1)[1]
+        assert re.search(r"^\| U-07 \|", rights_01b_section, flags=re.MULTILINE), (
+            "RIGHTS-01B evidence table missing U-07"
+        )
+        for audio_name in (
+            "opening_bgm.mp3",
+            "アタリ_ヒット音.mp3",
+            "外海・回遊ルート.mp3",
+            "岩礁・消波ブロック.mp3",
+            "水中ファイト通常.mp3",
+            "海辺（さざなみ）.mp3",
+            "海辺（少し風が強い）.mp3",
+            "港外・潮目.mp3",
+            "砂浜・かけあがり.mp3",
+            "逃げられた.mp3",
+        ):
+            assert audio_name in owner_request, f"Suno evidence request missing track: {audio_name}"
+        for marker in ("RIGHTS-01Bへ分離", "RIGHTS-01Bへ送る項目"):
+            assert marker in evidence or marker in owner_request, f"RIGHTS-01B boundary missing: {marker}"
 
         release_markers = ("釣りクエスト ～海釣り編～", "itch.io", "macOS Universal")
         for marker in release_markers:
