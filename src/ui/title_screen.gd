@@ -25,6 +25,7 @@ var _slot_buttons: Array[Button] = []
 var _slot_status_label: Label
 var _continue_button: Button
 var _new_button: Button
+var _settings_button: Button
 var _selected_slot_id := PlayerProgress.DEFAULT_SAVE_SLOT
 var _selected_difficulty_id := GameData.DEFAULT_DIFFICULTY_ID
 
@@ -43,8 +44,17 @@ func _build_screen() -> void:
 	_build_logo(root)
 	_build_fish_feature(root)
 	_build_menu(root)
+	_build_settings_button(root)
 	_build_version(root)
 	_build_new_game_modals(root)
+
+
+func _build_settings_button(root: Control) -> void:
+	_settings_button = make_button("せってい", func() -> void: navigate("settings", {"return_screen_id": "title"}), 220)
+	_settings_button.name = "TitleSettingsButton"
+	_settings_button.custom_minimum_size = Vector2.ZERO
+	_apply_title_button_skin(_settings_button, false)
+	_place_control(root, _settings_button, 0.790, 0.300, 0.960, 0.370)
 
 
 func _build_logo(root: Control) -> void:
@@ -505,6 +515,7 @@ func _set_background_focus_enabled(enabled: bool) -> void:
 		button.focus_mode = mode
 	_continue_button.focus_mode = mode
 	_new_button.focus_mode = mode
+	_settings_button.focus_mode = mode
 
 
 func _new_game_action_is_safe() -> bool:

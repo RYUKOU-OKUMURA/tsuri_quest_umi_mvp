@@ -13,10 +13,11 @@ const StatusScreen = preload("res://src/ui/status_screen.gd")
 const FishBookScreen = preload("res://src/ui/fish_book_screen.gd")
 const QuestBoardScreen = preload("res://src/ui/quest_board_screen.gd")
 const SharkPenScreen = preload("res://src/ui/shark_pen_screen.gd")
+const SettingsScreen = preload("res://src/ui/settings_screen.gd")
 
 const OPENING_BGM_PATH := "res://assets/audio/opening_bgm.mp3"
 const OPENING_BGM_VOLUME_DB := -10.0
-const OPENING_BGM_SCREEN_IDS := ["title", "harbor"]
+const OPENING_BGM_SCREEN_IDS := ["title", "harbor", "settings"]
 
 var _current_screen
 var _fade: ColorRect
@@ -27,6 +28,7 @@ var _save_exit_dialog: ConfirmationDialog
 
 func _ready() -> void:
 	theme = ThemeFactory.build_theme()
+	SettingsScreen.apply_to_audio_buses(SettingsScreen.load_settings())
 	# close requestを保存結果に応じて制御するため、SceneTreeの自動終了を無効化する。
 	get_tree().auto_accept_quit = false
 	PlayerProgress.save_failed.connect(_on_save_failed)
@@ -115,6 +117,8 @@ func _swap(screen_id: String, payload: Dictionary) -> void:
 			screen_script = QuestBoardScreen
 		"shark_pen":
 			screen_script = SharkPenScreen
+		"settings":
+			screen_script = SettingsScreen
 		_:
 			push_warning("未知の画面IDです: %s" % screen_id)
 			screen_script = HarborScreen
@@ -168,6 +172,7 @@ func play_app_bgm(path: String, volume_db: float = -10.0) -> void:
 	_app_bgm_player = AudioStreamPlayer.new()
 	_app_bgm_player.name = "AppBGMPlayer"
 	_app_bgm_player.stream = stream
+	_app_bgm_player.bus = &"BGM"
 	_app_bgm_player.volume_db = volume_db
 	_app_bgm_player.finished.connect(_on_app_bgm_finished)
 	add_child(_app_bgm_player)
