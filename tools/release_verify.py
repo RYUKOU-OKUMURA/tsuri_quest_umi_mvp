@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import re
 import signal
+import site
 import subprocess
 import sys
 import tempfile
@@ -157,6 +158,16 @@ def warning_summary(output: str, context: str = "all") -> dict[str, object]:
 
 def timeout_budget(test: str, env: dict[str, str]) -> float:
     return float(env["TSURI_RELEASE_TEST_TIMEOUT_SECONDS"]) if "TSURI_RELEASE_TEST_TIMEOUT_SECONDS" in env else TEST_TIMEOUT_OVERRIDES.get(test, 900.0)
+
+
+def preserve_python_user_base(env: dict[str, str], user_base: str | None = None) -> dict[str, str]:
+    """Godot用HOMEを隔離しても、起動元Pythonのユーザー依存を子監査へ引き継ぐ。"""
+    updated = env.copy()
+    if "PYTHONUSERBASE" not in updated:
+        resolved = user_base or site.getuserbase()
+        if resolved:
+            updated["PYTHONUSERBASE"] = str(Path(resolved).resolve())
+    return updated
 
 
 def run(command: list[str], cwd: Path, env: dict[str, str], log: Path, context: str = "all") -> dict[str, object]:
@@ -351,7 +362,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         home_root = create_run_home(parent)
         godot = resolve_godot(os.environ.get("GODOT_BIN", "/Applications/Godot.app/Contents/MacOS/Godot"))
         engine_bin = install_engine_shim(home_root, godot)
-        env = os.environ.copy()
+        env = preserve_python_user_base(os.environ.copy())
         env["PATH"] = f"{engine_bin}{os.pathsep}{env.get('PATH', '')}"
         setup_env = env | {"TSURI_RELEASE_TEST_TIMEOUT_SECONDS": env.get("TSURI_RELEASE_SETUP_TIMEOUT_SECONDS", "30")}
         setup = run([godot, "--version"], root, setup_env, logs / "setup_godot_version.log")

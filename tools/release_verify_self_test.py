@@ -10,7 +10,7 @@ import time
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from release_verify import REQUIRED_SPECIAL, TEST_TIMEOUT_OVERRIDES, atomic_json, classify, create_run_home, discover, load_manifest, main, normalize_output, prepare_output_root, prepare_run_logs, run, sha256, timeout_budget, unexplained_errors, validate_export_run_log, warning_summary
+from release_verify import REQUIRED_SPECIAL, TEST_TIMEOUT_OVERRIDES, atomic_json, classify, create_run_home, discover, load_manifest, main, normalize_output, prepare_output_root, prepare_run_logs, preserve_python_user_base, run, sha256, timeout_budget, unexplained_errors, validate_export_run_log, warning_summary
 
 
 def must_fail(label, callback):
@@ -98,6 +98,25 @@ with tempfile.TemporaryDirectory() as temporary:
     assert fresh.parent == external.resolve() and not fresh.is_symlink()
     fresh.rmdir()
     assert outside_marker.read_text() == "keep"
+
+    # Godot用HOMEを差し替えても、起動元Pythonのユーザー依存はPYTHONUSERBASEで維持する。
+    python_user_base = root / "python_user_base"
+    python_user_site = python_user_base / "lib" / "python" / "site-packages"
+    python_user_site.mkdir(parents=True)
+    (python_user_site / "release_fixture_dependency.py").write_text("VALUE = 7\n")
+    isolated_python_home = root / "isolated_python_home"
+    isolated_python_home.mkdir()
+    python_env = preserve_python_user_base(os.environ.copy(), str(python_user_base))
+    assert python_env["PYTHONUSERBASE"] == str(python_user_base.resolve())
+    explicit_user_base = root / "explicit_user_base"
+    assert preserve_python_user_base({"PYTHONUSERBASE": str(explicit_user_base)}, str(python_user_base))["PYTHONUSERBASE"] == str(explicit_user_base)
+    python_probe = run(
+        [sys.executable, "-c", "import os, release_fixture_dependency; assert release_fixture_dependency.VALUE == 7 and os.environ['HOME'].endswith('isolated_python_home')"],
+        root,
+        python_env | {"HOME": str(isolated_python_home)},
+        root / "python_user_site.log",
+    )
+    assert python_probe["exit_code"] == 0, python_probe
     logs_target = root / "outside_logs"
     logs_target.mkdir()
     logs_marker = logs_target / "marker"

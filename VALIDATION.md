@@ -68,7 +68,7 @@ python3 tools/release_verify_self_test.py
 ./tools/release_verify.sh
 ```
 
-既定の出力先は `/tmp/tsuri_release_verify/release_verify_report.json` です。`--output-dir` または `TSURI_RELEASE_VERIFY_OUTPUT` で変更できますが、出力先はsource root外必須です。gitignore対象であってもリポジトリ内は指定できません。使用するGodotは `GODOT_BIN` で指定でき、runnerは解決した同一engineをPATH shim経由でvalidate / saveにも強制します。隔離HOMEの親は既存の実ディレクトリを `TSURI_RELEASE_HOME_PARENT` で指定し、runnerがrun固有HOMEを作成して各testへさらに分離します。`TSURI_GODOT_HOME` はrunner内部で設定されるため、利用者がrelease verifier用に指定する変数ではありません。
+既定の出力先は `/tmp/tsuri_release_verify/release_verify_report.json` です。`--output-dir` または `TSURI_RELEASE_VERIFY_OUTPUT` で変更できますが、出力先はsource root外必須です。gitignore対象であってもリポジトリ内は指定できません。使用するGodotは `GODOT_BIN` で指定でき、runnerは解決した同一engineをPATH shim経由でvalidate / saveにも強制します。隔離HOMEの親は既存の実ディレクトリを `TSURI_RELEASE_HOME_PARENT` で指定し、runnerがrun固有HOMEを作成して各testへさらに分離します。GodotのHOMEを分離してもPython監査の依存を失わないよう、起動元Pythonのユーザーベースは子processの`PYTHONUSERBASE`へ引き継ぎます。`TSURI_GODOT_HOME` はrunner内部で設定されるため、利用者がrelease verifier用に指定する変数ではありません。
 
 Godot解決などsetupのtimeoutは `TSURI_RELEASE_SETUP_TIMEOUT_SECONDS`（既定30秒）です。全testを同じ値へ明示上書きする場合だけ `TSURI_RELEASE_TEST_TIMEOUT_SECONDS` を使います。未指定時の個別budgetは通常900秒、`tools/nushi_encounter_audit.tscn` のみ1800秒です。
 
