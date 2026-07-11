@@ -80,8 +80,8 @@ E0〜E6・E10 は実装・検証・台帳更新まで完了済み。以後の作
 | 6 | E4 | サメ危険海域 | E0・E2・E6 | 中 | 要（サメ素材。§13） |
 | 7 | E10 | サメ飼育・生簀 | E4 | 大 | 要（生簀画面一式） |
 | 8 | E5 | 時間帯 | E0（夜=Lv15） | 中 | 中 |
-| 9 | E7 | 難易度選択 | E1〜E4 | 小 | 小 |
-| 10 | E11 | ローンチ準備（実装部。台帳運用とRelease Gate 0は前倒し完了→E11 doc §E11-0） | E10 | 中 | 小 |
+| 9 | E7 | 難易度選択 | E0〜E6・E10・Release Gate 1（SAVE-01〜04） | 小 | 小 |
+| 10 | E11 | ローンチ準備（実装部。台帳運用とRelease Gate 0は前倒し完了→E11 doc §E11-0） | E7（ID-01・最小export・権利証跡は先行可） | 中 | 小 |
 | 11 | E8 | ザリガニ釣り | E3 | 中 | 要 |
 | 12 | E9 | 川エリア | E1〜E8 | 特大 | 特大 |
 
@@ -242,6 +242,107 @@ namespace間移行は次を不変契約とする。
 
 ## 6. 進行状況
 
+**本節を発売前作業の状態・開始可否・統合順の正本とする。** `docs/45_release_readiness_code_review.md` は監査時点の発見事項・brief・Launch Gateを保存するスナップショットであり、完了状態や次の着手対象は本節を優先する。状態を変えたスライスは、実装・検証・本節更新を同じコミットへ含める。
+
+### 6-1. 発売クリティカルパスと合流条件
+
+クリティカルパスは次で固定する。
+
+`SAVE-03 → SAVE-04 → E7 → E11 → RC固定 → RC検証 → itch.io配布`
+
+~~~mermaid
+flowchart LR
+  S3["SAVE-03 意味検証"] --> S4["SAVE-04 旧依頼repair"]
+  S4 --> E7["E7 難易度"]
+  E7 --> E11A["E11 設定・削除・表示・入力"]
+  E11A --> E11B["E11 製品外装"]
+  E11B --> PRE["Pre-RC close"]
+  PRE --> RCF["RC固定"]
+  RCF --> RCV["RC検証"]
+  RCV --> DIST["itch.io配布"]
+
+  ID["ID-01 完了"] --> EX["最小export spike"]
+  EX --> E11B
+  ICON["RIGHTS-01A U-04 icon採否"] --> E11B
+  RIGHTSA["RIGHTS-01A 出所・入力権利"] --> PRE
+  RCF --> RIGHTSB["RIGHTS-01B 配布物同梱"]
+  RIGHTSB --> RCV
+  TARGET["対象Mac・署名方針"] --> PRE
+  DOCS["製品文書"] --> PRE
+  VERIFY["release verifier骨格"] --> PRE
+~~~
+
+`RC固定` は検証対象のsource commit・Godot / export template版・成果物hashを不変にする境界とする。素材差し替えへ発展し得るRIGHTS-01A、対象Mac・署名/公証方針、README等のsource-controlled製品文書、release verifier骨格はPre-RCで閉じる。RC生成時にunsigned export hashを記録し、方針上必要なら同じsourceから署名・公証済み配布物を作ってfinal artifact / ZIP hashを別々に記録する。以後のclean起動・性能・9セル受入は**最終配布物そのもの**を対象にする。修正・再export・再署名でfinal hashが変わった場合はRC番号を上げ、影響検証に加えてrelease verifier全体を再実行する。検証ログは固定したsource commit / final artifact hashを参照する証拠として後続commitへ保存できるが、パッケージ入力を変えない。
+
+### 6-2. 並列レーンと単一owner
+
+初動は3実装レーン＋外部判断レーンで進める。開始順と統合順は別であり、同じ集約ファイルを複数レーンが同時に編集しない。
+
+| レーン | 直列の本線 | 主な単一owner範囲 | 合流先 |
+|---|---|---|---|
+| A: state / gameplay | `SAVE-03 → SAVE-04 → E7-core → E11 slot削除backend` | `player_progress.gd`、save fixture / smoke | E7 Gate、E11 Gate |
+| B: release engineering | `最小export → verifier骨格 → 最終export / hash` | `export_presets.cfg`、export smoke、release manifest / runner | E11外装、RC検証 |
+| C: rights / packaging | `RIGHTS-01A: U-01〜U-08の出所・入力権利・icon・商標・権利者判断 → RIGHTS-01B: notice/OFL同梱確認` | `docs/31`、`LICENSE.md`、`THIRD_PARTY_NOTICES.md`、licensing evidence | RC固定、RC検証 |
+| D: external decision / acceptance | 最低macOS・最低対象Mac・Intel確認・署名/公証・itch.io設定 | ユーザー/外部サービスでしか確定できない証拠と判断 | PERF、最終配布 |
+| E: E11 settings spine | `SETTINGS-AUDIO → SLOT-DELETE UI → DISPLAY → INPUT-COMMON → EXTERIOR` | `settings_screen.gd`、`settings_smoke.gd`、共有設定の統合 | E11 Gate |
+
+レーンBの最小export完了後、`project.godot` のownerをレーンEへ一時移譲する。E11外装まで統合後にレーンBへ戻し、最終exportを作る。レーンCは `export_presets.cfg` を直接編集せず、同梱要件をレーンBへ引き渡す。EXTERIORでicon / splashを追加・差し替えるcommitだけはレーンCを止め、`docs/31`のownerもレーンEへ一時移譲して素材と台帳を同じcommitへ入れる。
+
+### 6-3. wave実行順
+
+| Wave / Gate | 同時に進める作業 | 統合条件 |
+|---|---|---|
+| Wave 0: baseline | 親がclean worktree、全体validate、save smoke、各レーンのbranch/worktreeと担当ファイルを固定 | baseline greenと差分0を記録 |
+| Wave 1: 即時3並列 | A=`SAVE-03`、B=`最小export spike`、C=`RIGHTS-01A`の既存台帳とU-01〜U-08対応表。Dは最低対象Mac・Intel確認・署名/公証方針を決定 | 各レーンを独立commit。共有ファイル競合0 |
+| Wave 2: save完了待ち | A=`SAVE-04`、B=release manifest / runner骨格、C=証拠回収継続 | **SAVE Gate**: `save_system_verify.sh`、quest / shark回帰、validate green |
+| Wave 3: E7 | 先にE7-coreのAPIを統合。そのcommitを基点にE7-fightとE7-UIを並列化し、core→fight→UIの順でrebase / 統合。B/C/Dは継続 | **E7 Gate**: difficulty audit、save回帰、title/status runtime visual QA、validate green |
+| Wave 4A: E11 spine | Eは `SETTINGS-AUDIO → SLOT-DELETE UI → DISPLAY → INPUT-COMMON → EXTERIOR` を小刻みに直列統合。EXTERIORはU-04のicon採否確定後。並行してB=verifier、C=権利、入力監査harness、表示QA matrix、製品文書草案を進める | spine各sliceでsettings smoke、関連smoke / visual QA、validate green |
+| Wave 4B: 画面別入力 | INPUT-COMMON後、監査で失敗した画面を1画面1briefで並列修正。`title` / `settings` はspine ownerが保持 | **E11 Gate**: 設定・削除・表示・全画面入力・外装・最小export回帰がgreen |
+| Wave 4C: Pre-RC close | E11、REL-01、RIGHTS-01A、TARGET-01 / SIGN-01、release verifier骨格、README等4文書をclose | 全パッケージ入力がcommit済み。RCを作り直す未確定値0 |
+| Wave 5A: RC固定・機械Gate | Pre-RC commitからdebug/release成果物を作り、必要な署名・公証を実施。source commit / template / unsigned hash / final artifact・ZIP hashを固定し、最終配布物でrelease verifierとclean起動を実行 | 未説明ERROR 0、全smoke / audit green、save移行・export再読込green |
+| Wave 5B: 同一RCの並列受入 | 性能/30分soak、RIGHTS-01Bのnotice/OFL同梱、3難易度9セル受入を同じRCで並列実施 | Launch Gate全項目close。修正時はRCを再固定 |
+| Wave 6: 最終配布 | 固定済みの最終ZIPを変更せずitch.ioへuploadし、実download、hash照合、clean環境起動 | 公開判定と配布証拠を保存 |
+
+E7の並列境界は次のとおり。E7-coreだけが `player_progress.gd` を所有し、売却・料理・サメ餌やりを含むEXP/販売倍率と `difficulty_id` 保存を実装する。E7-fightは `fishing_screen.gd`、E7-UIは `title_screen.gd` / `status_screen.gd` / title QAを所有する。使用済みslotの上書き確認は**1回**とし、slot番号・Lv・プレイ時間・選択難易度・不可逆警告・安全なcancel focusを同じ最終確認へ表示する。二段階確認は採用しない。
+
+E11は共有ハブを持つため、全体を複数workerへ同時に渡さない。spineの横で先行できるのは、共有ハブを編集しない入力監査harness、visual QA script、release verifier、権利証跡、製品文書草案とする。画面別入力修正はINPUT-COMMON後だけfan-outする。
+
+### 6-4. 並列実行の衝突防止
+
+- 各実装レーンは別branchだけでなく別worktreeを使う。1 slice = 1 concern = 1以上の小さな日本語commitとする
+- GodotのHOMEはレーンごとに `TSURI_GODOT_HOME=/tmp/tsuri-<lane>` へ分離する。特にsave smokeを既定の同一HOMEで同時実行しない
+- visual QAの多くは固定 `/tmp/tsuri_*.png` を使う。同じvisual QA scriptは同時実行せず、親が統合後に正規証拠を再生成する
+- `player_progress.gd` は `SAVE-03 → SAVE-04 → E7-core → E11 slot削除backend` の単一writer直列とする
+- `project.godot`だけをレーンB→E→Bの順でowner移譲する。`export_presets.cfg`は全waveを通してレーンBが継続所有し、他レーンは編集しない
+- `project.godot`のID-01値 `config/use_custom_user_dir=true` / `config/custom_user_dir_name="tsuri_quest_umi"` は全レーンでfreezeする。最小exportとE11は回帰確認だけ行う
+- `title_screen.gd` は `E7-UI → settings導線 / slot削除 → EXTERIOR` の統合順を守る
+- `settings_screen.gd` / `settings_smoke.gd` はE11 settings spineの単一ownerとする。slot削除backendだけはレーンAで先行実装できる
+- `export_launch_smoke.*` はレーンB、`release_verify.sh` / manifest / CIはrelease verifier担当が所有し、二重所有しない
+- `docs/30`の進捗欄は親が所有する。SAVE-03の§4-1契約をworkerへ渡す間だけ明示的にownerを移し、他レーンから同時更新しない
+- `docs/31`は通常レーンCが所有する。EXTERIORの新素材commitだけはレーンEへownerを移し、素材追加と台帳更新を分離しない
+- worker報告だけで完了扱いにしない。親がdiff・実スクショ・該当smokeを確認し、サブエージェントレビュー後に統合する
+
+### 6-5. 発売前作業台帳
+
+| ID | 状態 | 前提 / 現在の次アクション |
+|---|---|---|
+| SAVE-03 | **着手可** | version 1の必須/任意・型/範囲・正常な疎save/破損fixtureを先に本doc §4-1へ契約化。loadとtitleのslot summaryが同じ候補選択結果を使うこと |
+| SAVE-04 | SAVE-03待ち | 未知魚・サメ・ヌシ依頼の除去、正常依頼維持、3件補充 |
+| E7 | SAVE-04待ち | Wave 3のcore / fight / UI境界で実装 |
+| ID-01 | **完了** | namespace、bundle ID、itch.io slug、store App ID、旧名称save移行境界を固定済み |
+| REL-01 最小export | **着手可** | ID-01のnamespaceは変更せず、bundle IDをpresetへ配線し、debug/release・clean起動・save再読込・移行・不要物混入を確認 |
+| RIGHTS-01A | **基盤完了・外部証拠待ち** | `docs/31`、`LICENSE.md`、`THIRD_PARTY_NOTICES.md`、権利監査scriptは存在。U-01〜U-08のうち出所・入力権利・icon・商標・権利者名をRC固定前にcloseする |
+| RIGHTS-01B | RC待ち | 最終成果物でnotice・Godot由来license・OFL 2件の同梱と質問票回答控えを確認する |
+| TARGET-01 / SIGN-01 | ユーザー判断待ち | 最低macOS、最低対象Mac、Intel確認方法、Developer ID署名・公証を発売条件にするかを確定 |
+| E11実装 | E7待ち | settings spineを単一ownerで開始し、画面別入力だけをfan-out |
+| QA-RELEASE | 未着手 | REL-01と所有分割後、固定25本ではなくmanifest / 自動列挙で骨格を先行実装 |
+| PERF-RELEASE | TARGET-01とRC待ち | 基準機・計測法の固定後、重い代表状態と30分soak |
+| DOCS-RELEASE | E7 / E11確定待ち | 草案は先行可。README / VALIDATION / CHANGELOG / MANIFESTをPre-RCでcloseし、RC固定後は内容を変えない |
+| ACCEPT-9CELL | RC機械Gate待ち | easy / normal / hard × 序盤 / 中盤 / 終盤を同一RCで受入 |
+| DIST-ITCH | 全Launch Gate待ち | RCで固定済みの最終ZIPをupload/downloadし、hash一致、clean起動、公開判定 |
+
+### 6-6. フェーズ進捗
+
 | フェーズ | 状態 | 完了日 | 備考 |
 |---|---|---|---|
 | E1 | 完了 | 2026-07-06 | 記録更新演出、称号31件、Status称号表示、E1 smoke/証拠画像を追加 |
@@ -255,12 +356,14 @@ namespace間移行は次を不変契約とする。
 | SAVE-01（Release Gate 1） | 完了 | 2026-07-11 | 将来版を含むslotをmain / backup / tmp単位で非破壊guardし、タイトルで対応版を案内。`version`欠損の旧疎saveは互換維持、数値以外の`version`は未知形式としてguardする。guard中のタイトル要約は本文値を変換せず安全値を表示し、他slotの継続利用・slot切替再評価をsave smokeで確認。Release Gate 1全体はSAVE-02〜04を継続 |
 | SAVE-02（Release Gate 1） | 完了 | 2026-07-11 | `save_game()` / `reset_game()`を成否契約化し、tmp open・書込・backup rename・final rename失敗を`save_failed(message)`と共通通知へ伝播。終了時は即quitせず再試行 / 保存せず終了を選択可能にし、失敗注入とSAVE-01原本保護をsave smokeで確認。Release Gate 1全体はSAVE-03〜04を継続 |
 | ID-01（製品識別子） | 完了 | 2026-07-11 | user data namespace=`tsuri_quest_umi`、macOS bundle ID、itch.io slug / store App IDを分離。旧MVP namespaceは新側saveが空の初回だけ非破壊コピーし、marker・tmp・hashで再開 / no-overwriteを保証。最小export spikeは継続 |
-| E7 | 未着手 | — | ローンチ前。E5 の後 |
-| E11 | 一部着手 | — | docs/31 素材台帳、Release Gate 0、ID-01は完了。最小export spikeとE11実装部を継続し、画面実装はE7後 |
+| E7 | 未着手 | — | ローンチ前。Release Gate 1（SAVE-03〜04残）完了後、Wave 3で実装 |
+| E11 | 一部着手 | — | docs/31 素材台帳、Release Gate 0、ID-01は完了。最小export spikeはWave 1、設定等の画面実装はE7後 |
 | E8 | 未着手 | — | **ローンチ後**（決定#18）。docs/35 完了済み |
 | E9 | 未着手 | — | **ローンチ後**（決定#18）。反応を見てから着手判断。docs/35 完了が前提 |
 
-品質トラック（V2フェーズ外。ローンチ品質のための欠陥修正・素材工事。進行状況は本docで一元管理）:
+### 6-7. 品質トラック
+
+V2フェーズ外。ローンチ品質のための欠陥修正・素材工事。進行状況は本docで一元管理する。
 
 | トラック | 状態 | 位置づけ | 備考 |
 |---|---|---|---|
@@ -310,3 +413,4 @@ namespace間移行は次を不変契約とする。
 - 2026-07-11: Release Gate 0（決定#20）を確定。初回販売=itch.io、macOS Universal、マウス＋キーボード専用、非16:9=`keep`＋黒帯、正式名「釣りクエスト ～海釣り編～」/ v1.0.0。3種類の製品識別子と最低対象ハードウェアは後続技術判断へ分離
 - 2026-07-11: SAVE-02を完了。`save_game()` / `reset_game()`の成否契約、4段階の保存失敗通知、終了時の再試行 / 保存せず終了、SAVE-01原本保護の回帰確認を追加。Release Gate 0・SAVE-01〜02は完了し、SAVE-03〜04、E7、E11、release_verifyは継続
 - 2026-07-11: ID-01を完了。user data namespace=`tsuri_quest_umi`、macOS bundle ID=`net.physical-balance-lab.tsuri-quest-umi`、itch.io予定slug=`tsuri-quest-umi`、store App ID=`未発行`を分離記録し、旧MVP namespaceからの非破壊・再開可能なコピー移行を追加。bundle IDのpreset配線と最小export spikeは後続
+- 2026-07-11: 発売前作業を3実装レーン＋外部判断レーンのwave方式へ再編。クリティカルパス、共有ファイルの単一owner、E7分割、E11 settings spine、RC固定/検証、並列worktreeのHOME/visual QA隔離を§6へ追加

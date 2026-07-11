@@ -21,7 +21,7 @@
 
 - 新画面 `src/ui/settings_screen.gd`「せってい」。導線はタイトル画面＋港画面メニュー
 - 項目（最小構成）:
-  1. **BGM音量 / SE音量**（スライダー。`AudioServer` のバス操作。現状バス未分離のため `Master` 直下に `BGM` / `SE` バスを新設し、既存の再生箇所をバス指定へ寄せる）
+  1. **BGM音量 / SE音量**（スライダー。`AudioServer` のバス操作。現状バス未分離のため `default_bus_layout.tres` に `Master` 直下の `BGM` / `SE` バスを新設し、既存の再生箇所をバス指定へ寄せる）
   2. **フルスクリーン切替**（`DisplayServer.window_set_mode`）
   3. **現在対象の1スロットを削除**（二重確認ダイアログ必須。タイトルからは選択slot、港からはactive slot。slot番号・Lv・プレイ時間を表示）
 - 削除対象は当該slotのmain / backup / tmpだけ。削除後は当該runtime stateを初期化してタイトルへ戻し、他2slotと `settings.json` は変更しない。終了時auto-saveで削除slotを再生成しないこと
@@ -34,7 +34,7 @@
 1. **将来版guard**: `version > SAVE_VERSION` の対象slotだけ通常ロード・保存を許可せず、そのmain / backup / tmpを変更しない。他2slotは利用可能で、slot切替時にguardを再評価する。対応版が必要なことをUI通知する
 2. **セーブ失敗の伝播**: `save_game()` が成功 / 失敗を返し、tmp open・backup rename・final rename失敗を `save_failed(message)` と共通トーストへ伝える
 3. **終了時失敗**: 保存失敗でも即quitせず、「再試行 / 保存せず終了」を選べる
-4. **意味検証付き候補選択**: 先にdocs/30へversion 1の必須 / 任意key・型・意味範囲・正常な疎save fixtureを定義し、その契約でmain / backupを採用する。疎な旧saveを破損扱いしない
+4. **意味検証付き候補選択**: 先にdocs/30へversion 1の必須 / 任意key・型・意味範囲・正常な疎save fixtureを定義し、その契約でmain / backupを採用する。疎な旧saveを破損扱いしない。`load_game()`とtitleの`save_slot_summary()`は同じ候補選択結果を使い、表示要約と実ロードを一致させる
 5. **旧依頼repair**: load時に未知魚・サメ・ヌシなど達成不能な旧依頼を除去し、正常依頼を維持したまま3件へ補充する
 6. **3スロット（決定#17）**: E3で実装済み。`user://slots/<n>/`、旧save→slot 1、backup/tmp分離を回帰対象として維持する
 7. チート対策は**しない**（シングルプレイヤー・子供向け。JSON平文を許容する方針を明記）
@@ -56,6 +56,7 @@
 
 ## E11-5. 権利・台帳（docs/31）
 
+- RIGHTS-01A（出所・入力権利・icon・商標・権利者名）は素材差し替えへ発展し得るためRC固定前に完了する。RIGHTS-01B（notice / Godot由来license / OFL / 質問票の最終成果物確認）は固定したRC exportに対して行う
 - `docs/31_asset_ledger.md` の「要記入」をゼロにする（音源10件・AI生成画像の生成手段と商用条件）
 - タイトル「釣りクエスト」の商標調査
 - `LICENSE.md` の権利者名と適用範囲を確定し、Godot・font・その他同梱依存を `THIRD_PARTY_NOTICES.md` 相当へ列挙。必要なlicense本文が最終配布物に含まれることを確認
@@ -66,7 +67,7 @@
 - 対象OSごとの `export_presets.cfg` を追加し、debug / release exportを再現可能にする
 - ID-01の確定値を使って最小export spikeを行い、bundle IDの実配線、clean user dataでの起動・新規save・再起動読込、旧MVP namespaceコピーを確認する
 - launch candidateでは成果物hash、Godot版、対象OS、対象OS / チャネルで必要な署名 / 公証状態を記録する
-- tools/release_verify.sh相当で全smoke / audit、未説明ERROR、save移行、export起動を1コマンド化する
+- `tools/release_verify.sh`相当で全smoke / audit、未説明ERROR、save移行、export起動を1コマンド化する。対象は固定本数を埋め込まず、manifest / 自動列挙で追加sceneを取りこぼさない
 
 | チャネル | 追加要件の例 |
 |---|---|
@@ -86,19 +87,48 @@
 
 セーブスロット数は決定#17の3スロットで解消済み。上表はdocs/30決定#20と同期する。ID-01ではuser data namespace=`tsuri_quest_umi`、macOS bundle ID=`net.physical-balance-lab.tsuri-quest-umi`、itch.io予定slug=`tsuri-quest-umi`、store App ID=`未発行`を正式名称とは別に固定し、旧MVP namespaceの非破壊コピー移行を実装した。`config/name`の正式名称反映は最小export spike後のE11-EXTERIORで行う。macOSの最低対象ハードウェア / 性能計測の基準機も、PERF-RELEASE着手前の別技術判断として記録する。
 
-## E11-8. 触ってよいファイル / DoD
+## E11-8. 並列実装構成
 
-- 触る: `settings_screen.gd`（新設）, `title_screen.gd`・`harbor_screen.gd`（導線）, `player_progress.gd`（save hardening）, `screen_base.gd`（トースト）, `project.godot`（バス・input map・user data namespace・name・icon）, `export_presets.cfg`（OS application ID・新設）, `tools/settings_smoke.tscn`（新設）, release検証tool（新設）
-- DoD:
-  1. `settings_smoke`: 音量変更→保存→再起動相当→復元の一巡、対象1slotの削除二重確認、main / backup / tmp削除、他slot / settings不変、削除slot非再生成
-  2. `save_system_verify.sh`: 3slot、旧save→slot 1、future版対象slotだけ非破壊 / 他slot利用可 / guard再評価、意味破損main→backup、書込失敗、旧依頼repair
-  3. セーブ失敗トーストと終了時「再試行 / 保存せず終了」
-  4. 表示方針に応じた全画面の解像度別runtime visual QA
-  5. 対応入力の初期focus・隣接遷移・決定・戻る・disabledを実操作
-  6. 対象OSのdebug / release export、clean環境起動、新規save / 再読込
-  7. tools/release_verify.sh相当で全25 smoke / auditと未説明ERRORを一括判定
-  8. docs/31の要記入 / 推定 / 保存待ち0、商標・AI開示・icon、LICENSE / THIRD_PARTY_NOTICESをclose
-  9. 3難易度の序盤・中盤・終盤を人手受入
-  10. README / VALIDATION / CHANGELOG / MANIFESTを最終成果物へ同期
-  11. 対象ハードウェアで1280x720・60fps目標を計測し、30分soakでcrash・進行不能・無制限なresource増加がない
-  12. validate green、対象OS / チャネルで必要な署名 / 公証を施した最終成果物を確認
+共有ハブを持つ実装は、次のsettings spineとして単一ownerが直列統合する。
+
+`E11-SETTINGS-AUDIO → E11-SLOT-DELETE UI → E11-DISPLAY → E11-INPUT-COMMON → E11-EXTERIOR`
+
+- `E11-SLOT-DELETE`のbackend（`player_progress.gd`とsave smoke）だけはstateレーンが先行できる。settings側は公開APIを消費し、同じファイルを触らない
+- `E11-INPUT-COMMON`はゲームパッド採用時だけの任意briefではない。確定済みの**マウス＋キーボード**範囲に対し、全画面のinitial focus、隣接遷移、決定、戻る、disabled skip、可視focusを監査する必須sliceとする
+- INPUT-COMMON後、失敗画面を1画面1briefへ分けて並列修正する。`title_screen.gd`と`settings_screen.gd`はsettings spineが保持する
+- 最小export担当は `export_presets.cfg` / `export_launch_smoke.*`、release verifier担当はmanifest / runner / CIを所有する。`release_verify.sh`やexport smokeを二重所有しない
+- 権利担当は配布要件を最小export担当へ渡し、`export_presets.cfg`を直接編集しない
+- `project.godot`は最小export完了後にsettings spineへownerを渡し、EXTERIOR後に最終export担当へ戻す
+- EXTERIORでicon / splashを追加・差し替えるcommitは、権利担当を止めて`docs/31`もsettings spineへownerを移し、素材と台帳を同じcommitへ入れる
+- 共有ハブを編集しないinput audit harness、visual QA matrix、権利証跡、release verifier、製品文書草案はspineと並列化できる
+
+詳細なwave、owner移譲、RC Gateはdocs/30 §6を正とする。
+
+## E11-9. slice別touch / E11実装DoD
+
+ID-01で固定した `project.godot` の `config/use_custom_user_dir=true` と `config/custom_user_dir_name="tsuri_quest_umi"` は**freeze**とし、E11では編集しない。旧namespace移行は回帰確認だけを行う。
+
+| slice | 触ってよいファイル |
+|---|---|
+| E11-SETTINGS-AUDIO | `src/ui/settings_screen.gd`（新設）、`src/ui/title_screen.gd`、`src/ui/harbor_screen.gd`、`src/main.gd`、`src/ui/screen_base.gd`、`src/ui/components/catch_fanfare.gd`、`default_bus_layout.tres`（新設）、`tools/settings_smoke.gd` / `.tscn`（新設） |
+| E11-SLOT-DELETE backend（state owner） | `src/autoload/player_progress.gd`、`tools/save_system_smoke.gd`、`tools/save_system_verify.sh` |
+| E11-SLOT-DELETE UI（settings spine） | `src/ui/settings_screen.gd`、`src/ui/title_screen.gd`、`src/main.gd`、`tools/settings_smoke.gd` / `.tscn` |
+| E11-DISPLAY | `src/ui/settings_screen.gd`、`project.godot`（表示設定だけ）、`tools/settings_smoke.gd` / `.tscn`、解像度別preview / visual QA script |
+| E11-INPUT-COMMON | `project.godot`（input mapだけ）、`src/ui/screen_base.gd`、`tools/input_focus_audit.gd` / `.tscn`（新設） |
+| INPUT-<SCREEN> | 監査で失敗した1画面のscreen / smoke / QA / evidenceだけ。1画面1brief |
+| E11-EXTERIOR | `project.godot`（name / version / icon / splashだけ）、`src/ui/title_screen.gd`、製品icon / splash、title preview / visual QA / QA、owner移譲中の`docs/31_asset_ledger.md` |
+
+REL-01の `export_presets.cfg` / export smokeと、QA-RELEASEのmanifest / runner / CIはE11実装sliceのtouch範囲に含めない。docs/30 §6の別レーンで実装し、E11 Gateでは回帰結果だけを受け取る。
+
+E11実装DoD:
+
+1. `settings_smoke`: BGM / SE音量とfullscreenの変更→保存→再起動相当→復元、破損`settings.json`の初期値復帰
+2. 対象1slotの二重確認削除、main / backup / tmp削除、他slot / settings不変、削除slot非再生成
+3. `save_system_verify.sh`: 3slot、旧save→slot 1、ID-01 namespace移行、future版guard、意味破損main→backup、書込失敗、旧依頼repair
+4. 1280×720 / 16:10 / 4:3の全画面runtime visual QAで`keep`＋黒帯を確認
+5. マウス＋キーボードのinitial focus・隣接遷移・決定・戻る・disabled skip・可視focusを全画面で確認
+6. 正式名 / v1.0.0 / icon / splashをruntime titleと最小export回帰で確認。U-04のicon採否をEXTERIOR前にcloseし、新素材は台帳と同じcommit
+7. SAVE-02のセーブ失敗トーストと終了時「再試行 / 保存せず終了」を回帰確認
+8. settings smoke、save回帰、対象visual QA、`./tools/validate_project.sh`がgreen
+
+release verifier最終実行、RIGHTS-01A/B全体、製品文書、性能/soak、9セル受入、署名/公証、配布はE11実装DoDへ含めない。docs/30 §6のPre-RC / RC / Launch Gateで管理する。

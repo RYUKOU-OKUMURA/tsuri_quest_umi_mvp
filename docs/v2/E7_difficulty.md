@@ -1,7 +1,7 @@
 # V2 / E7. 難易度選択
 
 正本: `docs/30_v2_expansion_overview.md`（読む順: docs/30 §4 共通仕様 → 本doc）
-前提フェーズ: E1〜E4（環の完成後のポリッシュ枠）
+前提フェーズ: E0〜E6・E10・Release Gate 1（SAVE-01〜04）。環と発売対象機能の完成後のポリッシュ枠
 状態: 未着手。進行状況はdocs/30 §6、発売前の追加監査事項はdocs/45を参照
 
 決定#3: **新しいセーブデータの開始時のみ選択・変更不可**。既存セーブはロード補完で「ふつう」。
@@ -28,19 +28,29 @@
 
 - 前提: docs/30 Release Gate 1（docs/45 SAVE-01〜04）が完了していること。係数を含めE7をGate 1と並列化しない。タイトル開始導線はSAVE-02の保存結果契約へ接続する
 - `title_screen.gd`: 現在選択中のセーブスロットに対し、「はじめから」押下時に3択パネルを重ねる（既存タイトルレイアウトの上のモーダル。タイトル自体の配置は動かさない）。選択→確認→`reset_game(difficulty_id)` へ引数追加
-- 空スロットは難易度選択後に開始。使用済みスロットは、選択難易度と上書き対象slotを示す最終確認を1回以上行い、docs/01 FR-001「確認後に初期化」を維持する。他スロットは変更しない
-- slot番号・Lv・プレイ時間・不可逆警告・安全なcancel focusまで表示する強化案と、確認を二段階にする案はP2提案。採用する場合はモックをユーザー確認し、docs/45 TITLE-03とtitle QAへ決定を記録する
-- resetと初回saveが成功してから港へ遷移する。保存失敗時はslotを開始済み扱いにせず、E11の共通通知契約へ接続する
+- 空スロットは難易度選択後に開始。使用済みスロットは、難易度選択後に**最終確認を1回だけ**行い、docs/01 FR-001「確認後に初期化」を維持する。確認にはslot番号・Lv・プレイ時間・選択難易度・取り消せない旨を表示し、初期focusはcancelへ置く。他スロットは変更しない
+- 二段階確認は採用しない。確認段数と表示項目をtitle QAへ確定値として記録する
+- resetと初回saveが成功してから港へ遷移する。保存失敗時はslotを開始済み扱いにせず、SAVE-02で実装済みの共通通知契約へ接続する
 - 既存セーブはロード補完で `"normal"`（docs/30 §4-1）
-- `docs/qa/title_qa.md` とruntime title visual QAを新設する。旧 `tools/build_title_static_preview.py` だけを合否根拠にしない
+- ID-01で新設済みの `docs/qa/title_qa.md` とruntime title visual QAへ、empty / occupied / 3slot / difficulty / overwrite確認状態を追加する。旧 `tools/build_title_static_preview.py` だけを合否根拠にしない
 - ステータス画面のヘッダー付近に現在難易度を小さく表示
 
-## E7-4. 触ってよいファイル / DoD
+## E7-4. 並列スライス
 
-- 触る: `game_catalog_data.gd`, `player_progress.gd`, `title_screen.gd`, `fishing_screen.gd`, `status_screen.gd`, `tools/difficulty_fight_audit.tscn`（新設）, runtime title visual QA（新設）, `docs/qa/title_qa.md`（新設）
+| スライス | 単一owner | 内容 |
+|---|---|---|
+| E7-core | `game_catalog_data.gd`、`player_progress.gd`、`difficulty_fight_audit.*` | `difficulty_id`、倍率表、safe帯・line break、売却・料理・サメ餌やりEXP、save契約と監査。`player_progress.gd`を触る唯一のスライス |
+| E7-fight | `fishing_screen.gd` | 魚スタミナ倍率をsimulatorへ渡す実ファイト経路へ接続 |
+| E7-UI | `title_screen.gd`、`status_screen.gd`、title preview / visual QA / QA文書 | 新規ゲーム導線、1回の上書き確認、難易度表示 |
+
+E7-coreのAPIを先に統合し、そのcommitを基点にE7-fightとE7-UIを並列化する。統合順はcore→fight→UIとし、最終的に全DoDを同じcommit系列で再検証する。
+
+## E7-5. 触ってよいファイル / DoD
+
+- 触る: `game_catalog_data.gd`, `player_progress.gd`, `title_screen.gd`, `fishing_screen.gd`, `status_screen.gd`, `tools/difficulty_fight_audit.gd` / `.tscn`（新設）, `tools/title_preview.gd` / `.tscn`, `tools/title_visual_qa.sh`, `docs/qa/title_qa.md`
 - DoD:
-  1. `difficulty_fight_audit`: 3難易度で safe帯幅・スタミナ・売値・経験値の実効値を表出力
+  1. `difficulty_fight_audit`: 3難易度で safe帯幅・スタミナ・売値・料理EXP・E10サメ餌やりEXPの実効値を表出力
   2. `save_system_verify.sh`: 旧セーブ→normal補完、選択slotだけ変更、他2slot不変
-  3. 空slot開始、使用済みslotでcancel、使用済みslotの確認後開始、保存失敗時非遷移。他slot不変
+  3. 空slot開始、使用済みslotの1回確認でslot番号・Lv・プレイ時間・難易度・不可逆警告を表示、cancel初期focus、確認後開始、保存失敗時非遷移。他slot不変
   4. タイトルruntime visual QA: empty / occupied / 3slot / difficulty / overwrite確認
   5. validate green
