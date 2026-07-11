@@ -520,7 +520,8 @@ func sell_fish(fish_id: String, amount: int) -> Dictionary:
 	return {"ok": true, "income": income, "amount": amount}
 
 
-func sell_fish_batch(orders: Dictionary) -> Dictionary:
+## inventoryを参照しないpure見積。市場表示と実売却で同じ安全な積算結果を共有する。
+func quote_fish_sale(orders: Dictionary) -> Dictionary:
 	var normalized: Dictionary = {}
 	var sold: Dictionary = {}
 	var income := 0
@@ -532,8 +533,62 @@ func sell_fish_batch(orders: Dictionary) -> Dictionary:
 		if amount <= 0:
 			continue
 		var fish := GameData.get_fish(fish_id)
-		var current := fish_count(fish_id)
-		if fish.is_empty() or bool(fish.get("shark", false)) or current < amount:
+		if fish.is_empty() or bool(fish.get("shark", false)):
+			return {
+				"ok": false,
+				"reason": "invalid_fish",
+				"income": 0,
+				"amount": 0,
+				"total_amount": 0,
+				"types": 0,
+				"orders": {},
+				"sold": {},
+			}
+		normalized[fish_id] = amount
+
+	for fish_id in normalized.keys():
+		var amount := int(normalized[fish_id])
+		var fish := GameData.get_fish(fish_id)
+		var item_income := _saturating_multiply_nonnegative(int(fish["sell_price"]), amount)
+		income = _saturating_add_nonnegative(income, item_income)
+		total_amount = _saturating_add_nonnegative(total_amount, amount)
+		sold[fish_id] = {
+			"amount": amount,
+			"income": item_income,
+		}
+
+	return {
+		"ok": not normalized.is_empty(),
+		"reason": "" if not normalized.is_empty() else "empty",
+		"income": income,
+		"amount": total_amount,
+		"total_amount": total_amount,
+		"types": normalized.size(),
+		"orders": normalized,
+		"sold": sold,
+	}
+
+
+func sell_fish_batch(orders: Dictionary) -> Dictionary:
+	var quote := quote_fish_sale(orders)
+	if not bool(quote.get("ok", false)):
+		var invalid_fish := String(quote.get("reason", "")) == "invalid_fish"
+		return {
+			"ok": false,
+			"income": 0,
+			"total_amount": 0,
+			"sold": {},
+			"message": (
+				"売却できる魚が足りません。"
+				if invalid_fish
+				else "売る魚を選んでください。"
+			),
+		}
+
+	var normalized: Dictionary = quote.get("orders", {})
+	for fish_id in normalized.keys():
+		var amount := int(normalized[fish_id])
+		if fish_count(fish_id) < amount:
 			return {
 				"ok": false,
 				"income": 0,
@@ -541,30 +596,13 @@ func sell_fish_batch(orders: Dictionary) -> Dictionary:
 				"sold": {},
 				"message": "売却できる魚が足りません。",
 			}
-		normalized[fish_id] = amount
-		var item_income := _saturating_multiply_nonnegative(int(fish["sell_price"]), amount)
-		income = _saturating_add_nonnegative(income, item_income)
-		total_amount = _saturating_add_nonnegative(total_amount, amount)
-
-	if normalized.is_empty():
-		return {
-			"ok": false,
-			"income": 0,
-			"total_amount": 0,
-			"sold": {},
-			"message": "売る魚を選んでください。",
-		}
 
 	for fish_id in normalized.keys():
-		var amount := int(normalized[fish_id])
-		var fish := GameData.get_fish(fish_id)
-		var item_income := _saturating_multiply_nonnegative(int(fish["sell_price"]), amount)
-		inventory[fish_id] = fish_count(fish_id) - amount
-		sold[fish_id] = {
-			"amount": amount,
-			"income": item_income,
-		}
+		inventory[fish_id] = fish_count(fish_id) - int(normalized[fish_id])
 
+	var income := int(quote.get("income", 0))
+	var total_amount := int(quote.get("total_amount", 0))
+	var sold: Dictionary = Dictionary(quote.get("sold", {})).duplicate(true)
 	money = _saturating_add_nonnegative(money, income)
 	save_game()
 	progress_changed.emit()

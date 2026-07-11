@@ -17,6 +17,7 @@ var _failed := false
 
 func _ready() -> void:
 	_test_batch_api()
+	await _test_saturating_cart_flow()
 	_seed_progress()
 	_screen = await _make_screen(EXPANDED_VIEWPORT)
 
@@ -112,14 +113,62 @@ func _test_batch_api() -> void:
 	PlayerProgress.money = 500
 	PlayerProgress.inventory = {"aji": 3, "saba": 2}
 	var expected_income := int(GameData.get_fish("aji").get("sell_price", 0)) * 2 + int(GameData.get_fish("saba").get("sell_price", 0))
+	var quote := PlayerProgress.quote_fish_sale({"aji": 2, "saba": 1, "madai": 0})
+	_expect(bool(quote.get("ok", false)), "quote_fish_sale should accept positive orders")
+	_expect_eq(int(quote.get("income", 0)), expected_income, "quote_fish_sale should report normal income")
+	_expect_eq(int(quote.get("amount", 0)), 3, "quote_fish_sale should report normal amount")
+	_expect_eq(int(quote.get("types", 0)), 2, "quote_fish_sale should report normal fish types")
+	_expect_eq(PlayerProgress.money, 500, "quote_fish_sale should not mutate money")
+	_expect_eq(PlayerProgress.fish_count("aji"), 3, "quote_fish_sale should not mutate inventory")
 	var result := PlayerProgress.sell_fish_batch({"aji": 2, "saba": 1, "madai": 0})
 	_expect(bool(result.get("ok", false)), "sell_fish_batch should accept positive orders")
-	_expect_eq(int(result.get("income", 0)), expected_income, "sell_fish_batch should report total income")
-	_expect_eq(int(result.get("total_amount", 0)), 3, "sell_fish_batch should report total amount")
+	_expect_eq(int(result.get("income", 0)), int(quote.get("income", 0)), "sell_fish_batch should match quoted income")
+	_expect_eq(int(result.get("total_amount", 0)), int(quote.get("amount", 0)), "sell_fish_batch should match quoted amount")
 	_expect_eq(PlayerProgress.money, 500 + expected_income, "sell_fish_batch should add money")
 	_expect_eq(PlayerProgress.fish_count("aji"), 1, "sell_fish_batch should subtract aji")
 	var failed := PlayerProgress.sell_fish_batch({"saba": 99})
 	_expect(not bool(failed.get("ok", false)), "sell_fish_batch should reject unavailable orders")
+
+
+func _test_saturating_cart_flow() -> void:
+	var max_safe := PlayerProgress.MAX_SAFE_JSON_INTEGER
+	var overflow_sell_amount := 1281023894007608
+	var remaining_amount := max_safe - overflow_sell_amount
+	PlayerProgress.money = 500
+	PlayerProgress.inventory = {
+		"nushi_deep_ocean": overflow_sell_amount,
+		"aji": remaining_amount,
+	}
+
+	var boundary_screen := await _make_screen(Vector2i(DESIGN_SIZE))
+	boundary_screen._select_all_fish()
+	var summary: Dictionary = boundary_screen._cart_summary()
+	_expect(bool(summary.get("ok", false)), "MAX_SAFE cart quote should be valid")
+	_expect_eq(int(summary.get("income", 0)), max_safe, "MAX_SAFE cart income should saturate")
+	_expect_eq(int(summary.get("amount", 0)), max_safe, "MAX_SAFE cart amount should remain safe")
+	_expect_eq(int(summary.get("types", 0)), 2, "MAX_SAFE cart should count selected fish types")
+	_expect_eq(PlayerProgress.money, 500, "MAX_SAFE cart quote should not mutate money")
+	_expect_eq(PlayerProgress.fish_count("nushi_deep_ocean"), overflow_sell_amount, "MAX_SAFE cart quote should not mutate inventory")
+	_expect_eq(String(boundary_screen._detail_subtotal_label.text), "選択 %s G" % ScreenBase.format_money(max_safe), "detail subtotal should render the safe quote")
+	_expect_eq(String(boundary_screen._cart_total_label.text), "%s G" % ScreenBase.format_money(max_safe), "cart total should render the safe quote")
+	_expect_eq(String(boundary_screen._cart_action_button.text), "売却 %d匹" % max_safe, "cart action should render the safe amount")
+
+	boundary_screen._show_confirm_overlay()
+	_expect(boundary_screen._confirm_overlay.visible, "MAX_SAFE cart confirm overlay should open")
+	var confirm_body := String(boundary_screen._confirm_body_label.text)
+	_expect(confirm_body.contains("%d匹" % max_safe), "confirm overlay should render the safe amount")
+	_expect(confirm_body.contains("%s G" % ScreenBase.format_money(max_safe)), "confirm overlay should render the safe income")
+
+	var result: Dictionary = boundary_screen._confirm_sell()
+	_expect(bool(result.get("ok", false)), "MAX_SAFE cart should sell successfully")
+	_expect_eq(int(result.get("income", 0)), int(summary.get("income", 0)), "confirmed income should match the displayed quote")
+	_expect_eq(int(result.get("total_amount", 0)), int(summary.get("amount", 0)), "confirmed amount should match the displayed quote")
+	_expect_eq(PlayerProgress.money, max_safe, "confirmed sale should saturate money")
+	_expect_eq(PlayerProgress.fish_count("nushi_deep_ocean"), 0, "confirmed sale should subtract the high-price fish")
+	_expect_eq(PlayerProgress.fish_count("aji"), 0, "confirmed sale should subtract the remaining fish")
+
+	boundary_screen.get_parent().queue_free()
+	await _tick()
 
 
 func _seed_progress() -> void:
