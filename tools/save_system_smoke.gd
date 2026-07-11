@@ -58,6 +58,11 @@ func _ready() -> void:
 		GameData.DEFAULT_TIME_SLOT_ID,
 		"saved data should include default selected_time_slot_id"
 	)
+	_expect_eq(
+		String(saved.get("difficulty_id", "")),
+		GameData.DEFAULT_DIFFICULTY_ID,
+		"saved data should include default difficulty_id"
+	)
 
 	# 2回目の保存でバックアップ世代が残る
 	PlayerProgress.money = 1234
@@ -95,6 +100,7 @@ func _ready() -> void:
 	_verify_safe_integer_and_outbound_contract()
 	_verify_saturating_progress_mutations()
 	_verify_fallback_lifecycle()
+	_verify_difficulty_save_contract()
 
 	# version欠損の疎な旧saveは従来どおり読み込める。
 	_verify_versionless_sparse_save_is_allowed()
@@ -443,6 +449,95 @@ func _verify_versionless_sparse_save_is_allowed() -> void:
 	_expect_eq(PlayerProgress.level, 7, "versionless sparse save should preserve level")
 	_expect_eq(PlayerProgress.money, 321, "versionless sparse save should preserve money")
 	_remove_all_save_files()
+
+
+func _verify_difficulty_save_contract() -> void:
+	_remove_all_save_files()
+	_expect(
+		PlayerProgress._is_valid_save_candidate(
+			{"version": PlayerProgress.SAVE_VERSION, "difficulty_id": "hard"}
+		),
+		"difficulty-only sparse save should remain valid"
+	)
+	_expect(
+		not PlayerProgress._is_valid_save_candidate(
+			{"version": PlayerProgress.SAVE_VERSION, "difficulty_id": ["hard"]}
+		),
+		"non-String difficulty_id should be rejected"
+	)
+
+	# E7以前のsaveはnormalへ補完し、次回saveで明示的に永続化する。
+	_write_text(
+		_slot_save_path(1),
+		JSON.stringify({"version": PlayerProgress.SAVE_VERSION, "level": 7, "money": 321})
+	)
+	_expect(PlayerProgress.set_active_save_slot(1), "legacy difficulty save should load")
+	_expect_eq(
+		PlayerProgress.difficulty_id,
+		GameData.DEFAULT_DIFFICULTY_ID,
+		"legacy save should default to normal"
+	)
+	_expect_eq(
+		String(PlayerProgress.save_slot_summary(1).get("difficulty_id", "")),
+		GameData.DEFAULT_DIFFICULTY_ID,
+		"legacy slot summary should default to normal"
+	)
+	_expect(PlayerProgress.save_game(), "legacy difficulty default should save")
+	_expect_eq(
+		String(_read_json(_slot_save_path(1)).get("difficulty_id", "")),
+		GameData.DEFAULT_DIFFICULTY_ID,
+		"normal default should persist on next save"
+	)
+
+	# 未知のString IDはsave候補として保ち、ロード正規化だけでnormalへ戻す。
+	_remove_all_save_files()
+	_write_text(
+		_slot_save_path(1),
+		JSON.stringify({"version": PlayerProgress.SAVE_VERSION, "difficulty_id": "future-mode"})
+	)
+	_expect(PlayerProgress.set_active_save_slot(1), "unknown difficulty String should stay loadable")
+	_expect_eq(
+		PlayerProgress.difficulty_id,
+		GameData.DEFAULT_DIFFICULTY_ID,
+		"unknown difficulty String should normalize to normal"
+	)
+
+	# 選択slotだけをhardで初期化し、他2slotの全artifactを変更しない。
+	_remove_all_save_files()
+	var initial_difficulties := {1: "easy", 2: "normal", 3: "easy"}
+	for slot_id in range(1, PlayerProgress.SAVE_SLOT_COUNT + 1):
+		_expect(PlayerProgress.set_active_save_slot(slot_id, false), "slot %d should activate" % slot_id)
+		_expect(
+			PlayerProgress.reset_game(String(initial_difficulties[slot_id])),
+			"slot %d difficulty reset should save" % slot_id
+		)
+		PlayerProgress.money = 1000 + slot_id
+		_expect(PlayerProgress.save_game(), "slot %d second generation should save" % slot_id)
+	var slot_1_hashes := _slot_artifact_hashes(1)
+	var slot_3_hashes := _slot_artifact_hashes(3)
+	_expect(PlayerProgress.set_active_save_slot(2), "slot 2 should activate for reset validation")
+	var slot_2_hashes := _slot_artifact_hashes(2)
+	var slot_2_money_before := PlayerProgress.money
+	_expect(not PlayerProgress.reset_game("typo"), "unknown difficulty should refuse reset")
+	_expect_slot_artifact_hashes(2, slot_2_hashes, "unknown difficulty should preserve slot 2")
+	_expect_eq(PlayerProgress.money, slot_2_money_before, "unknown difficulty should preserve runtime")
+	_expect_eq(PlayerProgress.difficulty_id, "normal", "unknown reset should preserve difficulty")
+	_expect(PlayerProgress.reset_game("hard"), "slot 2 hard reset should save")
+	_expect_slot_artifact_hashes(1, slot_1_hashes, "slot 2 reset should preserve slot 1")
+	_expect_slot_artifact_hashes(3, slot_3_hashes, "slot 2 reset should preserve slot 3")
+	_expect_eq(
+		String(_read_json(_slot_save_path(2)).get("difficulty_id", "")),
+		"hard",
+		"selected slot should persist hard"
+	)
+	_expect(PlayerProgress.set_active_save_slot(2), "hard slot should reload")
+	_expect_eq(PlayerProgress.difficulty_id, "hard", "hard difficulty should round-trip")
+	_expect(PlayerProgress.set_active_save_slot(1), "easy slot should reload")
+	_expect_eq(PlayerProgress.difficulty_id, "easy", "other slot difficulty should remain unchanged")
+
+	_remove_all_save_files()
+	PlayerProgress._reset_runtime_state()
+	_expect(PlayerProgress.set_active_save_slot(1, false), "difficulty cleanup should restore slot 1")
 
 
 func _verify_semantic_save_candidate_selection() -> void:
@@ -877,6 +972,16 @@ func _verify_saturating_progress_mutations() -> void:
 		},
 		"cooking count and exp saturation"
 	)
+	var capped_cooking_preview := PlayerProgress.cooking_exp_preview("aji", "salt_grill")
+	_expect(
+		not bool(capped_cooking_preview.get("first_time", true)),
+		"cooking preview should drop first bonus when the recipe counter cannot grow"
+	)
+	_expect_eq(
+		int(capped_cooking_preview.get("total_exp", -1)),
+		int(capped_cooking_preview.get("base_exp", -2)),
+		"capped cooking preview total should match the actual base-only award"
+	)
 	var cooking_result := PlayerProgress.cook_and_eat("aji", "salt_grill")
 	_expect(bool(cooking_result.get("ok", false)), "MAX_SAFE cooking fixture should succeed")
 	_expect_eq(
@@ -1029,9 +1134,35 @@ func _verify_unknown_version_type_guards() -> void:
 
 
 func _expect_future_slot_hashes(expected_hashes: Dictionary, message: String) -> void:
-	_expect_eq(_file_hash(_slot_save_path(1)), String(expected_hashes.get("main", "")), "%s (main)" % message)
-	_expect_eq(_file_hash(_slot_backup_path(1)), String(expected_hashes.get("backup", "")), "%s (backup)" % message)
-	_expect_eq(_file_hash(_slot_tmp_path(1)), String(expected_hashes.get("tmp", "")), "%s (tmp)" % message)
+	_expect_slot_artifact_hashes(1, expected_hashes, message)
+
+
+func _slot_artifact_hashes(slot_id: int) -> Dictionary:
+	return {
+		"main": _file_hash(_slot_save_path(slot_id)),
+		"backup": _file_hash(_slot_backup_path(slot_id)),
+		"tmp": _file_hash(_slot_tmp_path(slot_id)),
+	}
+
+
+func _expect_slot_artifact_hashes(
+	slot_id: int, expected_hashes: Dictionary, message: String
+) -> void:
+	_expect_eq(
+		_file_hash(_slot_save_path(slot_id)),
+		String(expected_hashes.get("main", "")),
+		"%s (main)" % message
+	)
+	_expect_eq(
+		_file_hash(_slot_backup_path(slot_id)),
+		String(expected_hashes.get("backup", "")),
+		"%s (backup)" % message
+	)
+	_expect_eq(
+		_file_hash(_slot_tmp_path(slot_id)),
+		String(expected_hashes.get("tmp", "")),
+		"%s (tmp)" % message
+	)
 
 
 func _file_hash(path: String) -> String:

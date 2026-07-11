@@ -11,9 +11,9 @@ config_version=5
 [application]
 
 config/name="釣りクエスト ～海釣り編～ MVP"
+run/main_scene="res://scenes/main.tscn"
 config/use_custom_user_dir=true
 config/custom_user_dir_name="tsuri_quest_umi"
-run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://assets/icon.svg"
 

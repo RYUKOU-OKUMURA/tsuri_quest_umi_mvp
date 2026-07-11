@@ -25,6 +25,16 @@ func _ready() -> void:
 	_screen._select_shark("nekozame")
 	_screen._select_food("mahaze")
 	await get_tree().process_frame
+	_expect(
+		String(_screen._feed_preview_label.text).contains("EXP +36"),
+		"normal favorite preview should show 36 EXP"
+	)
+	PlayerProgress.difficulty_id = "hard"
+	_screen._refresh_feed_state()
+	_expect(
+		String(_screen._feed_preview_label.text).contains("EXP +45"),
+		"hard favorite preview should show 45 EXP"
+	)
 	_expect_selected_hover_matches_normal(_screen._shark_rows["nekozame"]["button"] as Button, "selected shark row")
 	_expect_selected_hover_matches_normal(_screen._food_rows["mahaze"]["button"] as Button, "selected food row")
 	var before_stock := PlayerProgress.fish_count("mahaze")
@@ -34,8 +44,10 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_expect(PlayerProgress.fish_count("mahaze") == before_stock - 1, "feeding should consume one fish")
 	_expect(int(PlayerProgress.shark_bonds.get("nekozame", 0)) == before_bond + GameData.SHARK_FAVORITE_BOND_GAIN, "favorite feeding should add favorite bond")
-	_expect(PlayerProgress.exp > before_exp, "feeding should grant exp")
+	_expect(PlayerProgress.exp == before_exp + 45, "hard feeding should grant the previewed 45 EXP")
 	_expect(String(_screen._message_label.text).contains("好物"), "favorite feeding message should mention favorite")
+	_expect(String(_screen._message_label.text).contains("EXP +45"), "hard feed result should match preview")
+	PlayerProgress.difficulty_id = GameData.DEFAULT_DIFFICULTY_ID
 
 	_screen._select_food("buri")
 	await get_tree().process_frame

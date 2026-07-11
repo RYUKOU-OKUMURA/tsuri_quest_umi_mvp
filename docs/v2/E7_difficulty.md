@@ -2,7 +2,7 @@
 
 正本: `docs/30_v2_expansion_overview.md`（読む順: docs/30 §4 共通仕様 → 本doc）
 前提フェーズ: E0〜E6・E10・Release Gate 1（SAVE-01〜04）。環と発売対象機能の完成後のポリッシュ枠
-状態: 未着手。進行状況はdocs/30 §6、発売前の追加監査事項はdocs/45を参照
+状態: 実装中（2026-07-11 E7-core完了。E7-fight / E7-UI着手可）。進行状況はdocs/30 §6、発売前の追加監査事項はdocs/45を参照
 
 決定#3: **新しいセーブデータの開始時のみ選択・変更不可**。既存セーブはロード補完で「ふつう」。
 
@@ -39,15 +39,15 @@
 
 | スライス | 単一owner | 内容 |
 |---|---|---|
-| E7-core | `game_catalog_data.gd`、`player_progress.gd`、`difficulty_fight_audit.*` | `difficulty_id`、倍率表、safe帯・line break、売却・料理・サメ餌やりEXP、save契約と監査。`player_progress.gd`を触る唯一のスライス |
-| E7-fight | `fishing_screen.gd` | 魚スタミナ倍率をsimulatorへ渡す実ファイト経路へ接続 |
-| E7-UI | `title_screen.gd`、`status_screen.gd`、title preview / visual QA / QA文書 | 新規ゲーム導線、1回の上書き確認、難易度表示 |
+| E7-core | `game_catalog_data.gd`、`game_data.gd`、`player_progress.gd`、`cooking_screen.gd` / `shark_pen_screen.gd`のEXPプレビュー、`difficulty_fight_audit.*`の基礎 | `difficulty_id`、倍率表と公開alias、safe帯・line break、売却・料理・サメ餌やりEXP、プレビューと実値の一致、save契約と監査。`player_progress.gd`を触る唯一のスライス |
+| E7-fight | `fishing_screen.gd`、`difficulty_fight_audit.*`の実経路assertion | 魚スタミナ倍率をsimulatorへ渡す実ファイト経路へ接続し、coreが作った理論値監査を実経路まで延長 |
+| E7-UI | `title_screen.gd`、`status_screen.gd`、`save_system_smoke.gd`のタイトル導線回帰、title preview / visual QA / QA文書 | 新規ゲーム導線、1回の上書き確認、難易度表示 |
 
 E7-coreのAPIを先に統合し、そのcommitを基点にE7-fightとE7-UIを並列化する。統合順はcore→fight→UIとし、最終的に全DoDを同じcommit系列で再検証する。
 
 ## E7-5. 触ってよいファイル / DoD
 
-- 触る: `game_catalog_data.gd`, `player_progress.gd`, `title_screen.gd`, `fishing_screen.gd`, `status_screen.gd`, `tools/difficulty_fight_audit.gd` / `.tscn`（新設）, `tools/title_preview.gd` / `.tscn`, `tools/title_visual_qa.sh`, `docs/qa/title_qa.md`
+- 触る: `game_catalog_data.gd`, `game_data.gd`, `player_progress.gd`, `cooking_screen.gd`, `shark_pen_screen.gd`, `title_screen.gd`, `fishing_screen.gd`, `status_screen.gd`, `tools/difficulty_fight_audit.gd` / `.tscn`（新設）, `tools/title_preview.gd` / `.tscn`, `tools/title_visual_qa.sh`, `docs/qa/title_qa.md`
 - DoD:
   1. `difficulty_fight_audit`: 3難易度で safe帯幅・スタミナ・売値・料理EXP・E10サメ餌やりEXPの実効値を表出力
   2. `save_system_verify.sh`: 旧セーブ→normal補完、選択slotだけ変更、他2slot不変
