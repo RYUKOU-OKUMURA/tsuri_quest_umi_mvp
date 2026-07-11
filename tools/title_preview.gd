@@ -1,11 +1,12 @@
 extends Control
-## タイトル画面の通常状態 / セーブ領域利用不可状態を1280x720で実描画する。
+## タイトル画面の通常 / セーブ領域利用不可 / 不正artifact状態を1280x720で実描画する。
 
 const TitleScreen = preload("res://src/ui/title_screen.gd")
 const ThemeFactory = preload("res://src/ui/ui_theme.gd")
 
 const NORMAL_OUT := "/tmp/tsuri_title_normal.png"
 const STORAGE_BLOCKED_OUT := "/tmp/tsuri_title_storage_blocked.png"
+const INVALID_ARTIFACT_OUT := "/tmp/tsuri_title_invalid_artifact.png"
 
 
 func _ready() -> void:
@@ -17,10 +18,19 @@ func _ready() -> void:
 			"旧版セーブの移行を完了できなかったため、セーブの読み書きを停止しました。"
 			+ "ゲームを再起動してください。"
 		)
+	elif mode == "invalid_artifact":
+		PlayerProgress._save_storage_ready = true
+		PlayerProgress._save_storage_block_message = ""
+		PlayerProgress.active_save_slot = PlayerProgress.DEFAULT_SAVE_SLOT
+		DirAccess.make_dir_recursive_absolute(PlayerProgress.SAVE_SLOT_ROOT + "/1")
+		_write_preview_save(PlayerProgress.current_save_path(), {"version": 1, "level": {}})
+		_write_preview_save(PlayerProgress.current_backup_path(), {"version": 1, "inventory": []})
 	else:
 		PlayerProgress._save_storage_ready = true
 		PlayerProgress._save_storage_block_message = ""
 		PlayerProgress.active_save_slot = PlayerProgress.DEFAULT_SAVE_SLOT
+		_remove_preview_save(PlayerProgress.current_save_path())
+		_remove_preview_save(PlayerProgress.current_backup_path())
 
 	var screen := TitleScreen.new()
 	screen.configure({})
@@ -36,7 +46,13 @@ func _ready() -> void:
 		return
 	var out := OS.get_environment("TSURI_TITLE_PREVIEW_OUT").strip_edges()
 	if out.is_empty():
-		out = STORAGE_BLOCKED_OUT if mode == "storage_blocked" else NORMAL_OUT
+		out = (
+			STORAGE_BLOCKED_OUT
+			if mode == "storage_blocked"
+			else INVALID_ARTIFACT_OUT
+			if mode == "invalid_artifact"
+			else NORMAL_OUT
+		)
 	var save_error := image.save_png(out)
 	if save_error != OK:
 		push_error("タイトル画面の実スクショを保存できませんでした（code %d）。" % save_error)
@@ -44,3 +60,17 @@ func _ready() -> void:
 		return
 	print("title_preview: wrote %s" % out)
 	get_tree().quit(0)
+
+
+func _write_preview_save(path: String, data: Dictionary) -> void:
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		push_error("不正artifact preview fixtureを書き込めませんでした: %s" % path)
+		return
+	file.store_string(JSON.stringify(data, "\t"))
+	file.close()
+
+
+func _remove_preview_save(path: String) -> void:
+	if FileAccess.file_exists(path):
+		DirAccess.remove_absolute(path)

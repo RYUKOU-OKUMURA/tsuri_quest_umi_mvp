@@ -90,6 +90,9 @@ func _ready() -> void:
 	PlayerProgress.load_game()
 	_expect_eq(PlayerProgress.money, 777, "both corrupt should keep in-memory values")
 
+	# SAVE-03: 構文正常でも意味破損したmainは、同じ検証を通ったbackupへfallbackする。
+	await _verify_semantic_save_candidate_selection()
+
 	# version欠損の疎な旧saveは従来どおり読み込める。
 	_verify_versionless_sparse_save_is_allowed()
 	_verify_unknown_version_type_guards()
@@ -438,6 +441,180 @@ func _verify_versionless_sparse_save_is_allowed() -> void:
 	_remove_all_save_files()
 
 
+func _verify_semantic_save_candidate_selection() -> void:
+	_remove_all_save_files()
+	var invalid_main := {"version": PlayerProgress.SAVE_VERSION, "level": {}, "money": 9999}
+	var valid_backup := {
+		"version": PlayerProgress.SAVE_VERSION,
+		"level": 8,
+		"money": 4321,
+		"play_seconds": 98.5,
+		"spot_caught_counts": {"harbor_pier": {"aji": 2, "iwashi": 1}},
+	}
+	_write_text(_slot_save_path(1), JSON.stringify(invalid_main, "\t"))
+	_write_text(_slot_backup_path(1), JSON.stringify(valid_backup, "\t"))
+	var summary := PlayerProgress.save_slot_summary(1)
+	_expect(bool(summary.get("has_save", false)), "valid backup should make the slot available")
+	_expect_eq(int(summary.get("level", -1)), 8, "summary should select semantically valid backup")
+	_expect_eq(int(summary.get("money", -1)), 4321, "summary money should come from selected backup")
+	_expect_eq(float(summary.get("play_seconds", -1.0)), 98.5, "summary time should come from selected backup")
+	PlayerProgress.money = 0
+	PlayerProgress.load_game()
+	_expect_eq(PlayerProgress.level, 8, "load should select the same valid backup as summary")
+	_expect_eq(PlayerProgress.money, 4321, "load money should match backup summary")
+	_expect_eq(
+		int(PlayerProgress.spot_caught_counts.get("harbor_pier", {}).get("aji", 0)),
+		2,
+		"nested spot catch counts should load from the selected backup"
+	)
+	# fallback直後のfinal rename失敗でも、不正mainと唯一の正常backupを両方維持する。
+	var fallback_hashes := {
+		"main": _file_hash(_slot_save_path(1)),
+		"backup": _file_hash(_slot_backup_path(1)),
+	}
+	PlayerProgress._save_failure_injection_stage = "final_rename"
+	_expect(not PlayerProgress.save_game(), "fallback save final rename failure should be reported")
+	PlayerProgress._save_failure_injection_stage = ""
+	_expect_eq(_file_hash(_slot_save_path(1)), fallback_hashes["main"], "fallback failure preserves invalid main original")
+	_expect_eq(_file_hash(_slot_backup_path(1)), fallback_hashes["backup"], "fallback failure preserves valid backup")
+	_expect_eq(int(PlayerProgress.save_slot_summary(1).get("level", -1)), 8, "valid backup remains selectable after failed save")
+
+	# nested釣果を持つ正常mainもbackupへ巻き戻さず、そのまま選択する。
+	var valid_main := {
+		"version": PlayerProgress.SAVE_VERSION,
+		"level": 9,
+		"money": 5432,
+		"spot_caught_counts": {"rocky_shore": {"kasago": 3}},
+	}
+	_write_text(_slot_save_path(1), JSON.stringify(valid_main, "\t"))
+	var main_summary := PlayerProgress.save_slot_summary(1)
+	_expect_eq(int(main_summary.get("level", -1)), 9, "nested spot counts should keep valid main selected")
+	PlayerProgress.load_game()
+	_expect_eq(PlayerProgress.money, 5432, "valid nested main should load instead of backup")
+	_expect_eq(
+		int(PlayerProgress.spot_caught_counts.get("rocky_shore", {}).get("kasago", 0)),
+		3,
+		"valid nested main spot count should load"
+	)
+
+	# 内側Dictionary、fish ID、countの型・範囲破損は候補から除外する。
+	var invalid_spot_count_cases: Array[Dictionary] = [
+		{"spot_caught_counts": {"harbor_pier": []}},
+		{"spot_caught_counts": {"harbor_pier": {"": 1}}},
+		{"spot_caught_counts": {"harbor_pier": {"aji": []}}},
+		{"spot_caught_counts": {"harbor_pier": {"aji": -1}}},
+	]
+	for invalid_spot_counts in invalid_spot_count_cases:
+		var invalid_nested_main := {"version": PlayerProgress.SAVE_VERSION, "level": 40}
+		invalid_nested_main.merge(invalid_spot_counts)
+		_write_text(_slot_save_path(1), JSON.stringify(invalid_nested_main, "\t"))
+		var nested_summary := PlayerProgress.save_slot_summary(1)
+		_expect_eq(
+			int(nested_summary.get("level", -1)),
+			8,
+			"invalid nested spot count should fall back to valid backup"
+		)
+		PlayerProgress.load_game()
+		_expect_eq(PlayerProgress.level, 8, "invalid nested spot count should not load")
+
+	# 整数fieldのfraction、空root、未知keyだけのrootは正常backupより先に採用しない。
+	var invalid_root_cases: Array[Dictionary] = [
+		{},
+		{"unknown_only": true},
+		{"version": PlayerProgress.SAVE_VERSION, "level": 8.5},
+		{"version": PlayerProgress.SAVE_VERSION, "money": 0.5},
+		{"version": PlayerProgress.SAVE_VERSION, "inventory": {"aji": 1.5}},
+		{"version": PlayerProgress.SAVE_VERSION, "sea_chart_fragments": 1.5},
+		{"version": PlayerProgress.SAVE_VERSION, "shark_bonds": {"nekozame": 1.5}},
+		{"version": PlayerProgress.SAVE_VERSION, "money": 1e100},
+		{"version": PlayerProgress.SAVE_VERSION, "caught_counts": {"aji": 1e100}},
+	]
+	for invalid_root in invalid_root_cases:
+		_write_text(_slot_save_path(1), JSON.stringify(invalid_root, "\t"))
+		_expect_eq(
+			int(PlayerProgress.save_slot_summary(1).get("level", -1)),
+			8,
+			"empty, unknown-only, or fractional main should fall back to backup"
+		)
+
+	# 両候補が意味不正なら通知し、main / backup原本とruntime値を維持する。
+	_write_text(_slot_save_path(1), JSON.stringify(invalid_main, "\t"))
+	var invalid_backup := {"version": PlayerProgress.SAVE_VERSION, "inventory": []}
+	_write_text(_slot_backup_path(1), JSON.stringify(invalid_backup, "\t"))
+	var original_hashes := {
+		"main": _file_hash(_slot_save_path(1)),
+		"backup": _file_hash(_slot_backup_path(1)),
+	}
+	var failure_messages: Array[String] = []
+	var collect_failure := func(message: String) -> void: failure_messages.append(message)
+	PlayerProgress.save_failed.connect(collect_failure)
+	PlayerProgress.money = 7654
+	PlayerProgress.load_game()
+	PlayerProgress.save_failed.disconnect(collect_failure)
+	_expect_eq(PlayerProgress.money, 7654, "invalid candidates should preserve runtime state")
+	_expect_eq(failure_messages.size(), 1, "invalid candidates should notify the user once")
+	_expect(not failure_messages[0].is_empty(), "invalid candidate notification should explain the failure")
+	_expect_eq(_file_hash(_slot_save_path(1)), original_hashes["main"], "invalid main original hash")
+	_expect_eq(_file_hash(_slot_backup_path(1)), original_hashes["backup"], "invalid backup original hash")
+	PlayerProgress.money = 8765
+	_expect(not PlayerProgress.save_game(), "direct save should refuse two invalid artifacts")
+	_expect_eq(PlayerProgress.money, 8765, "refused direct save should preserve runtime state")
+	_expect_eq(_file_hash(_slot_save_path(1)), original_hashes["main"], "refused direct save preserves invalid main")
+	_expect_eq(_file_hash(_slot_backup_path(1)), original_hashes["backup"], "refused direct save preserves invalid backup")
+	_expect(not PlayerProgress.reset_game(), "direct reset should refuse two invalid artifacts")
+	_expect_eq(PlayerProgress.money, 8765, "refused direct reset should preserve runtime state")
+	_expect_eq(_file_hash(_slot_save_path(1)), original_hashes["main"], "refused direct reset preserves invalid main")
+	_expect_eq(_file_hash(_slot_backup_path(1)), original_hashes["backup"], "refused direct reset preserves invalid backup")
+	_write_text(_slot_save_path(2), JSON.stringify(invalid_main, "\t"))
+	_write_text(_slot_backup_path(2), JSON.stringify(invalid_backup, "\t"))
+	var invalid_slot_2_hashes := {
+		"main": _file_hash(_slot_save_path(2)),
+		"backup": _file_hash(_slot_backup_path(2)),
+	}
+	_expect(not PlayerProgress.set_active_save_slot(2), "direct slot switch should refuse invalid artifacts")
+	_expect_eq(PlayerProgress.active_save_slot, 1, "refused slot switch should preserve active slot")
+	_expect_eq(PlayerProgress.money, 8765, "refused slot switch should preserve runtime state")
+	_expect_eq(_file_hash(_slot_save_path(2)), invalid_slot_2_hashes["main"], "refused slot switch preserves invalid main")
+	_expect_eq(_file_hash(_slot_backup_path(2)), invalid_slot_2_hashes["backup"], "refused slot switch preserves invalid backup")
+	var invalid_summary := PlayerProgress.save_slot_summary(1)
+	_expect(bool(invalid_summary.get("has_save", false)), "invalid artifacts should not look like an empty slot")
+	_expect(bool(invalid_summary.get("invalid_artifact", false)), "summary should persist invalid artifact state")
+	_expect(not bool(invalid_summary.get("candidate_valid", true)), "invalid summary should expose no valid candidate")
+	await _verify_title_invalid_slot_is_blocked(original_hashes)
+
+	# version 1だけの疎saveも正常候補で、欠損値はデフォルト補完する。
+	_remove_all_save_files()
+	_write_text(_slot_save_path(1), JSON.stringify({"version": PlayerProgress.SAVE_VERSION}))
+	_expect(bool(PlayerProgress.save_slot_summary(1).get("has_save", false)), "version-only sparse save should be valid")
+	_expect_eq(int(PlayerProgress.save_slot_summary(1).get("money", -1)), 500, "version-only summary should match load default money")
+	PlayerProgress.load_game()
+	_expect_eq(PlayerProgress.level, 1, "version-only sparse save should default level")
+	_expect_eq(PlayerProgress.money, 500, "version-only sparse save should default money")
+	_remove_all_save_files()
+
+
+func _verify_title_invalid_slot_is_blocked(expected_hashes: Dictionary) -> void:
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(1280, 720)
+	viewport.disable_3d = true
+	add_child(viewport)
+	var title: TitleScreen = TitleScreen.new()
+	title.theme = ThemeFactory.build_theme()
+	viewport.add_child(title)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	title._select_slot(1)
+	_expect(title._continue_button.disabled, "invalid slot should disable continue")
+	_expect(title._new_button.disabled, "invalid slot should disable new game overwrite")
+	_expect(title._slot_buttons[0].text.contains("破損"), "invalid slot should persist a damaged label")
+	_expect(title._slot_status_label.text.contains("原本は変更していません"), "title should explain invalid artifact preservation")
+	title._start_new_game()
+	_expect_eq(_file_hash(_slot_save_path(1)), expected_hashes["main"], "blocked title start preserves invalid main")
+	_expect_eq(_file_hash(_slot_backup_path(1)), expected_hashes["backup"], "blocked title start preserves invalid backup")
+	viewport.queue_free()
+	await get_tree().process_frame
+
+
 func _verify_unknown_version_type_guards() -> void:
 	var invalid_cases: Array[Dictionary] = [
 		{"label": "String", "version": "future-v2"},
@@ -491,7 +668,7 @@ func _verify_unknown_version_type_guards() -> void:
 		var summary := PlayerProgress.save_slot_summary(1)
 		_expect(bool(summary.get("future_guarded", false)), "%s version should not break slot summary" % label)
 		_expect_eq(int(summary.get("level", -1)), 1, "%s summary should use safe level" % label)
-		_expect_eq(int(summary.get("money", -1)), 0, "%s summary should use safe money" % label)
+		_expect_eq(int(summary.get("money", -1)), 500, "%s summary should use default money" % label)
 		_expect_eq(float(summary.get("play_seconds", -1.0)), 0.0, "%s summary should use safe play time" % label)
 		_expect_eq(
 			typeof(summary.get("future_version", null)),

@@ -28,6 +28,14 @@ PRESETS = {
             "out": Path("/tmp/tsuri_title_storage_blocked_compare.png"),
         }
     ],
+    "title_invalid_artifact": [
+        {
+            "id": "TITLE_INVALID_ARTIFACT",
+            "reference": Path("/tmp/tsuri_title_normal.png"),
+            "capture": Path("/tmp/tsuri_title_invalid_artifact.png"),
+            "out": Path("/tmp/tsuri_title_invalid_artifact_compare.png"),
+        }
+    ],
     "status": [
         {
             "id": "STATUS",

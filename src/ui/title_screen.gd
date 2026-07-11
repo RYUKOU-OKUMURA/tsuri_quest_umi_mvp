@@ -276,14 +276,15 @@ func _refresh_slot_ui() -> void:
 	var active_summary := PlayerProgress.save_slot_summary(_selected_slot_id)
 	var has_save := bool(active_summary.get("has_save", false))
 	var future_guarded := bool(active_summary.get("future_guarded", false))
+	var invalid_artifact := bool(active_summary.get("invalid_artifact", false))
 	_slot_status_label.text = _slot_status_text(active_summary)
-	_continue_button.disabled = storage_blocked or not has_save or future_guarded
-	_new_button.disabled = storage_blocked or future_guarded
+	_continue_button.disabled = storage_blocked or not has_save or future_guarded or invalid_artifact
+	_new_button.disabled = storage_blocked or future_guarded or invalid_artifact
 	_new_button.text = (
 		"セーブを確認できません（再起動）"
 		if storage_blocked
 		else "このスロットは利用できません"
-		if future_guarded
+		if future_guarded or invalid_artifact
 		else ("最初から" if has_save else "ゲームを始める")
 	)
 
@@ -294,6 +295,8 @@ func _slot_button_text(summary: Dictionary) -> String:
 		return "スロット%d　利用不可（再起動）" % slot_id
 	if bool(summary.get("future_guarded", false)):
 		return "スロット%d　新しい版（対応版が必要）" % slot_id
+	if bool(summary.get("invalid_artifact", false)):
+		return "スロット%d　セーブ破損（利用不可）" % slot_id
 	if not bool(summary.get("has_save", false)):
 		return "スロット%d　空き" % slot_id
 	return "スロット%d　Lv.%d　%s" % [
@@ -309,6 +312,8 @@ func _slot_status_text(summary: Dictionary) -> String:
 		return "セーブデータを確認できません。ゲームを再起動してください"
 	if bool(summary.get("future_guarded", false)):
 		return "スロット%d　%s" % [slot_id, future_save_guard_message()]
+	if bool(summary.get("invalid_artifact", false)):
+		return "スロット%d　%s" % [slot_id, String(summary.get("invalid_message", "セーブを読み込めません"))]
 	if not bool(summary.get("has_save", false)):
 		return "スロット%dを選択中　新しく始められます" % slot_id
 	return "スロット%dを選択中　最終保存 %s　%s" % [
@@ -347,6 +352,11 @@ func _on_new_game_pressed() -> void:
 	if PlayerProgress.is_future_save_version_guarded(_selected_slot_id):
 		_refresh_slot_ui()
 		return
+	var summary := PlayerProgress.save_slot_summary(_selected_slot_id)
+	if bool(summary.get("invalid_artifact", false)):
+		show_common_notification(String(summary.get("invalid_message", "セーブを読み込めません")))
+		_refresh_slot_ui()
+		return
 	if PlayerProgress.has_save_file(_selected_slot_id):
 		_confirm_reset.dialog_text = "スロット%dの進行を消して、最初から始めます。よろしいですか？" % _selected_slot_id
 		_confirm_reset.popup_centered(Vector2i(620, 220))
@@ -359,6 +369,11 @@ func _continue_selected_slot() -> void:
 		show_common_notification(PlayerProgress.save_storage_block_message())
 		_refresh_slot_ui()
 		return
+	var summary := PlayerProgress.save_slot_summary(_selected_slot_id)
+	if bool(summary.get("invalid_artifact", false)):
+		show_common_notification(String(summary.get("invalid_message", "セーブを読み込めません")))
+		_refresh_slot_ui()
+		return
 	if not PlayerProgress.set_active_save_slot(_selected_slot_id):
 		_refresh_slot_ui()
 		return
@@ -368,6 +383,11 @@ func _continue_selected_slot() -> void:
 func _start_new_game() -> void:
 	if PlayerProgress.is_save_storage_blocked():
 		show_common_notification(PlayerProgress.save_storage_block_message())
+		_refresh_slot_ui()
+		return
+	var summary := PlayerProgress.save_slot_summary(_selected_slot_id)
+	if bool(summary.get("invalid_artifact", false)):
+		show_common_notification(String(summary.get("invalid_message", "セーブを読み込めません")))
 		_refresh_slot_ui()
 		return
 	if not PlayerProgress.set_active_save_slot(_selected_slot_id, false):

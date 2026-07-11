@@ -17,8 +17,11 @@ const SAVE_BACKUP_FILE_NAME := "tsuri_quest_save.json.bak"
 const SAVE_TMP_FILE_NAME := "tsuri_quest_save.json.tmp"
 const SAVE_VERSION := 1
 const FUTURE_SAVE_GUARD_MESSAGE := "新しい版で作られたセーブのため、対応する新しい版で開いてください。"
+const INVALID_SAVE_MESSAGE := "セーブデータとバックアップが壊れているため、読み込めませんでした。原本は変更していません。"
+const INVALID_SAVE_TITLE_MESSAGE := "セーブ破損。原本は変更していません"
 const SAVE_STORAGE_MIGRATION_BLOCK_MESSAGE := SaveNamespaceMigrator.DEFAULT_FAILURE_MESSAGE
 const SEA_CHART_FRAGMENT_MAX := 3
+const MAX_SAFE_JSON_INTEGER := 9007199254740991
 const EXP_REQUIREMENTS: Array[int] = [
 	0,
 	60,
@@ -250,12 +253,18 @@ func set_active_save_slot(slot_id: int, load_slot := true) -> bool:
 	if not _save_storage_ready:
 		_report_save_failure(save_storage_block_message())
 		return false
-	active_save_slot = _normalized_slot(slot_id)
-	if is_future_save_version_guarded(active_save_slot):
+	var resolved_slot := _normalized_slot(slot_id)
+	if is_future_save_version_guarded(resolved_slot):
+		active_save_slot = resolved_slot
 		_reset_runtime_state()
 		_remember_current_titles()
 		progress_changed.emit()
 		return false
+	var selection := _select_save_candidate(resolved_slot)
+	if bool(selection.get("has_artifact", false)) and not bool(selection.get("found", false)):
+		_report_save_failure(INVALID_SAVE_MESSAGE)
+		return false
+	active_save_slot = resolved_slot
 	_ensure_slot_dir(active_save_slot)
 	if not load_slot:
 		return true
@@ -286,18 +295,17 @@ func save_slot_summary(slot_id: int) -> Dictionary:
 		}
 	var future_guard := future_save_guard_status(resolved_slot)
 	var future_guarded := bool(future_guard.get("guarded", false))
-	var data := _read_save_dictionary(_slot_save_path(resolved_slot))
-	if data.is_empty():
-		data = _read_save_dictionary(_slot_backup_path(resolved_slot))
-	var save_path := _slot_save_path(resolved_slot)
-	var backup_path := _slot_backup_path(resolved_slot)
+	var selection := _select_save_candidate(resolved_slot)
+	var data: Dictionary = selection.get("data", {})
+	var invalid_artifact := (
+		bool(selection.get("has_artifact", false)) and not bool(selection.get("found", false))
+	)
 	var updated_unix := 0
-	if FileAccess.file_exists(save_path):
-		updated_unix = int(FileAccess.get_modified_time(save_path))
-	elif FileAccess.file_exists(backup_path):
-		updated_unix = int(FileAccess.get_modified_time(backup_path))
+	var selected_path := String(selection.get("path", ""))
+	if not selected_path.is_empty():
+		updated_unix = int(FileAccess.get_modified_time(selected_path))
 	var summary_level := 1
-	var summary_money := 0
+	var summary_money := 500
 	var summary_play_seconds := 0.0
 	if not future_guarded:
 		summary_level = int(data.get("level", summary_level))
@@ -306,7 +314,10 @@ func save_slot_summary(slot_id: int) -> Dictionary:
 	return {
 		"slot_id": resolved_slot,
 		"active": resolved_slot == active_save_slot,
-		"has_save": not data.is_empty(),
+		"has_save": bool(selection.get("found", false)) or invalid_artifact,
+		"candidate_valid": bool(selection.get("found", false)),
+		"invalid_artifact": invalid_artifact,
+		"invalid_message": INVALID_SAVE_TITLE_MESSAGE if invalid_artifact else "",
 		"level": summary_level,
 		"money": summary_money,
 		"play_seconds": summary_play_seconds,
@@ -324,6 +335,10 @@ func reset_game() -> bool:
 		return false
 	if is_future_save_version_guarded():
 		_report_save_failure(FUTURE_SAVE_GUARD_MESSAGE)
+		return false
+	var selection := _select_save_candidate(active_save_slot)
+	if bool(selection.get("has_artifact", false)) and not bool(selection.get("found", false)):
+		_report_save_failure(INVALID_SAVE_MESSAGE)
 		return false
 	_reset_runtime_state()
 	_remember_current_titles()
@@ -945,6 +960,10 @@ func save_game() -> bool:
 	if is_future_save_version_guarded():
 		_report_save_failure(FUTURE_SAVE_GUARD_MESSAGE)
 		return false
+	var current_selection := _select_save_candidate(active_save_slot)
+	if bool(current_selection.get("has_artifact", false)) and not bool(current_selection.get("found", false)):
+		_report_save_failure(INVALID_SAVE_MESSAGE)
+		return false
 	_ensure_slot_dir(active_save_slot)
 	var data := {
 		"version": SAVE_VERSION,
@@ -972,6 +991,7 @@ func save_game() -> bool:
 	var save_path := current_save_path()
 	var backup_path := current_backup_path()
 	var tmp_path := current_tmp_path()
+	var preserve_valid_backup := String(current_selection.get("source", "")) == "backup"
 	# 一時ファイルへ書き切ってから差し替える（書き込み途中のクラッシュで本体を壊さない）
 	var tmp_file: FileAccess = null
 	if _save_failure_injection_stage != "tmp_open":
@@ -989,12 +1009,21 @@ func save_game() -> bool:
 		_remove_save_tmp(tmp_path)
 		return _fail_save("セーブデータを書き込めませんでした（コード: %d）。" % write_error)
 
-	# 直前の正常な本体を1世代バックアップとして残す
-	if FileAccess.file_exists(save_path):
+	# fallback中は不正mainで唯一の正常backupを上書きしない。final失敗注入は原本へ触る前に返す。
+	if preserve_valid_backup and _save_failure_injection_stage == "final_rename":
+		_remove_save_tmp(tmp_path)
+		return _fail_save("セーブファイルの差し替えに失敗しました（コード: %d）。" % ERR_CANT_CREATE)
+	# 直前の正常な本体を1世代バックアップとして残す。
+	if FileAccess.file_exists(save_path) and not preserve_valid_backup:
 		var backup_err := ERR_CANT_CREATE if _save_failure_injection_stage == "backup_rename" else DirAccess.rename_absolute(save_path, backup_path)
 		if backup_err != OK:
 			_remove_save_tmp(tmp_path)
 			return _fail_save("セーブのバックアップ作成に失敗しました（コード: %d）。" % backup_err)
+	if preserve_valid_backup and FileAccess.file_exists(save_path):
+		var remove_err := DirAccess.remove_absolute(save_path)
+		if remove_err != OK:
+			_remove_save_tmp(tmp_path)
+			return _fail_save("不正なセーブ本体を安全に差し替えられませんでした（コード: %d）。" % remove_err)
 	var rename_err := ERR_CANT_CREATE if _save_failure_injection_stage == "final_rename" else DirAccess.rename_absolute(tmp_path, save_path)
 	if rename_err != OK:
 		_remove_save_tmp(tmp_path)
@@ -1034,20 +1063,192 @@ func load_game() -> void:
 		push_warning(FUTURE_SAVE_GUARD_MESSAGE)
 		_remember_current_titles()
 		return
-	var save_path := current_save_path()
-	var backup_path := current_backup_path()
-	var data := _read_save_dictionary(save_path)
-	if data.is_empty():
-		var backup := _read_save_dictionary(backup_path)
-		if backup.is_empty():
-			if FileAccess.file_exists(save_path):
-				push_warning("セーブデータが壊れているため初期値を使用します。")
-			_remember_current_titles()
-			return
+	var selection := _select_save_candidate(active_save_slot)
+	if not bool(selection.get("found", false)):
+		if bool(selection.get("has_artifact", false)):
+			_report_save_failure(INVALID_SAVE_MESSAGE)
+		_remember_current_titles()
+		return
+	if String(selection.get("source", "")) == "backup":
 		push_warning("セーブデータが壊れていたため、バックアップから復元します。")
-		data = backup
+	var data: Dictionary = selection.get("data", {})
 	_apply_save_data(_migrate_save_data(data))
 	_remember_current_titles()
+
+
+func _select_save_candidate(slot_id: int) -> Dictionary:
+	var has_artifact := false
+	var candidates := [
+		{"source": "main", "path": _slot_save_path(slot_id)},
+		{"source": "backup", "path": _slot_backup_path(slot_id)},
+	]
+	for candidate in candidates:
+		var path := String(candidate["path"])
+		if not FileAccess.file_exists(path):
+			continue
+		has_artifact = true
+		var file := FileAccess.open(path, FileAccess.READ)
+		if file == null:
+			continue
+		var parsed = JSON.parse_string(file.get_as_text())
+		if typeof(parsed) != TYPE_DICTIONARY:
+			continue
+		var data := Dictionary(parsed)
+		if not _is_valid_save_candidate(data):
+			continue
+		return {
+			"found": true,
+			"has_artifact": true,
+			"source": String(candidate["source"]),
+			"path": path,
+			"data": data,
+		}
+	return {"found": false, "has_artifact": has_artifact, "source": "", "path": "", "data": {}}
+
+
+func _is_valid_save_candidate(data: Dictionary) -> bool:
+	var known_keys := [
+		"version", "level", "exp", "money", "inventory", "caught_counts",
+		"spot_caught_counts", "best_sizes", "eaten_recipes", "owned_rods",
+		"equipped_rod_id", "owned_rigs", "equipped_rig_id", "owned_boats",
+		"pending_buff", "play_seconds", "quest_board", "quest_completed_count",
+		"sea_chart_fragments", "shark_bonds", "selected_time_slot_id",
+	]
+	var has_known_key := false
+	for key in known_keys:
+		if data.has(key):
+			has_known_key = true
+			break
+	if not has_known_key:
+		return false
+	if data.has("version") and not _is_integer_in_range(data["version"], SAVE_VERSION, SAVE_VERSION):
+		return false
+	for key in ["level"]:
+		if data.has(key) and not _is_integer_in_range(data[key], 1, GameData.MAX_LEVEL):
+			return false
+	for key in ["exp", "money", "quest_completed_count"]:
+		if data.has(key) and not _is_integer_at_least(data[key], 0):
+			return false
+	if data.has("play_seconds") and not _is_number_at_least(data["play_seconds"], 0.0):
+		return false
+	if data.has("sea_chart_fragments") and not _is_integer_in_range(data["sea_chart_fragments"], 0, SEA_CHART_FRAGMENT_MAX):
+		return false
+	for key in ["inventory", "caught_counts"]:
+		if data.has(key) and not _is_nonnegative_number_dictionary(data[key]):
+			return false
+	if data.has("best_sizes") and not _is_nonnegative_float_dictionary(data["best_sizes"]):
+		return false
+	if data.has("spot_caught_counts") and not _is_valid_spot_caught_counts(data["spot_caught_counts"]):
+		return false
+	for key in ["eaten_recipes", "pending_buff"]:
+		if data.has(key) and typeof(data[key]) != TYPE_DICTIONARY:
+			return false
+	for key in ["owned_rods", "owned_rigs", "owned_boats"]:
+		if data.has(key) and not _is_string_array(data[key]):
+			return false
+	for key in ["equipped_rod_id", "equipped_rig_id", "selected_time_slot_id"]:
+		if data.has(key) and typeof(data[key]) != TYPE_STRING:
+			return false
+	if data.has("quest_board") and not _is_structurally_valid_quest_board(data["quest_board"]):
+		return false
+	if data.has("shark_bonds"):
+		if typeof(data["shark_bonds"]) != TYPE_DICTIONARY:
+			return false
+		for value in Dictionary(data["shark_bonds"]).values():
+			if not _is_integer_at_least(value, 0):
+				return false
+	return true
+
+
+func _is_json_number(value: Variant) -> bool:
+	return (typeof(value) == TYPE_INT or typeof(value) == TYPE_FLOAT) and is_finite(float(value))
+
+
+func _is_number_at_least(value: Variant, minimum: float) -> bool:
+	return _is_json_number(value) and float(value) >= minimum
+
+
+func _is_number_in_range(value: Variant, minimum: float, maximum: float) -> bool:
+	return _is_json_number(value) and float(value) >= minimum and float(value) <= maximum
+
+
+func _is_json_integer(value: Variant) -> bool:
+	return _is_json_number(value) and float(value) == floorf(float(value))
+
+
+func _is_integer_at_least(value: Variant, minimum: int) -> bool:
+	return (
+		_is_json_integer(value)
+		and float(value) >= minimum
+		and float(value) <= MAX_SAFE_JSON_INTEGER
+	)
+
+
+func _is_integer_in_range(value: Variant, minimum: int, maximum: int) -> bool:
+	return _is_json_integer(value) and float(value) >= minimum and float(value) <= maximum
+
+
+func _is_nonnegative_number_dictionary(value: Variant) -> bool:
+	if typeof(value) != TYPE_DICTIONARY:
+		return false
+	for item in Dictionary(value).values():
+		if not _is_integer_at_least(item, 0):
+			return false
+	return true
+
+
+func _is_nonnegative_float_dictionary(value: Variant) -> bool:
+	if typeof(value) != TYPE_DICTIONARY:
+		return false
+	for item in Dictionary(value).values():
+		if not _is_number_at_least(item, 0.0):
+			return false
+	return true
+
+
+func _is_valid_spot_caught_counts(value: Variant) -> bool:
+	if typeof(value) != TYPE_DICTIONARY:
+		return false
+	for spot_id in Dictionary(value):
+		if typeof(spot_id) != TYPE_STRING or String(spot_id).is_empty():
+			return false
+		var fish_counts = Dictionary(value)[spot_id]
+		if typeof(fish_counts) != TYPE_DICTIONARY:
+			return false
+		for fish_id in Dictionary(fish_counts):
+			if typeof(fish_id) != TYPE_STRING or String(fish_id).is_empty():
+				return false
+			if not _is_integer_at_least(Dictionary(fish_counts)[fish_id], 0):
+				return false
+	return true
+
+
+func _is_string_array(value: Variant) -> bool:
+	if typeof(value) != TYPE_ARRAY:
+		return false
+	for item in Array(value):
+		if typeof(item) != TYPE_STRING:
+			return false
+	return true
+
+
+func _is_structurally_valid_quest_board(value: Variant) -> bool:
+	if typeof(value) != TYPE_ARRAY:
+		return false
+	for item in Array(value):
+		if typeof(item) != TYPE_DICTIONARY:
+			return false
+		var quest := Dictionary(item)
+		for key in ["template_id", "kind", "fish_id"]:
+			if quest.has(key) and typeof(quest[key]) != TYPE_STRING:
+				return false
+		for key in ["count", "reward_money"]:
+			if quest.has(key) and not _is_integer_at_least(quest[key], 0):
+				return false
+		for key in ["target_size_cm", "posted_best_cm"]:
+			if quest.has(key) and not _is_number_at_least(quest[key], 0.0):
+				return false
+	return true
 
 
 func _read_save_dictionary(path: String) -> Dictionary:
