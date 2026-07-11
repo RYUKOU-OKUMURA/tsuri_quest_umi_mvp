@@ -23,6 +23,8 @@ def main() -> int:
         notices = require_file("THIRD_PARTY_NOTICES.md")
         ledger = require_file("docs/31_asset_ledger.md")
         evidence = require_file("docs/qa/evidence/licensing/README.md")
+        project_overview = require_file("docs/00_プロジェクト概要.md")
+        v2_overview = require_file("docs/30_v2_expansion_overview.md")
         line_seed_ofl = require_file("assets/fonts/line_seed/OFL.txt")
         mplus_ofl = require_file("assets/fonts/OFL-MPLUS1p.txt")
 
@@ -60,6 +62,24 @@ def main() -> int:
             assert marker in mplus_ofl, f"M PLUS OFL missing: {marker}"
         for marker in ("ユーザー入力・保存待ち",):
             assert marker in evidence, f"licensing evidence index missing: {marker}"
+
+        release_markers = ("釣りクエスト ～海釣り編～", "itch.io", "macOS Universal")
+        for marker in release_markers:
+            assert marker in project_overview, f"project overview missing Gate 0 value: {marker}"
+            assert marker in v2_overview, f"V2 overview missing Gate 0 value: {marker}"
+            assert marker in ledger, f"asset ledger not synchronized with Gate 0: {marker}"
+            assert marker in evidence, f"licensing evidence not synchronized with Gate 0: {marker}"
+        for marker in ("itch.io", "macOS Universal"):
+            assert marker in notices, f"third-party notices not synchronized with Gate 0: {marker}"
+        stale_gate_zero_markers = (
+            "正式名称・販売地域・対象区分が未決",
+            "チャネル/OS決定待ち",
+            "販売チャネル未決",
+            "チャネル決定後の提出・保存待ち",
+        )
+        licensing_docs = "\n".join((ledger, evidence, notices))
+        for marker in stale_gate_zero_markers:
+            assert marker not in licensing_docs, f"stale pre-Gate-0 licensing text remains: {marker}"
         for marker in (
             "THIRD_PARTY_NOTICES.md",
             "加入期間証拠待ち",

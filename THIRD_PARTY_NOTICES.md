@@ -19,8 +19,10 @@ https://docs.godotengine.org/en/stable/about/complying_with_licenses.html
 
 Godot's own copyright and license text, plus attribution required by libraries
 compiled into the selected official export template, must accompany the final
-desktop distribution. This repository cannot freeze that complete set until
-the target OS, export format, and exact export template are selected.
+desktop distribution. The target is fixed to a macOS Universal build for
+itch.io, but this repository cannot freeze that complete set until the exact
+export format, preset, and template are selected and the packaged build is
+inspected.
 
 ## LINE Seed JP
 
@@ -54,7 +56,9 @@ non-infringement conditions. Suno asset/date/subscription evidence remains open
 under U-01/U-02, and input-rights clearance for Suno and OpenAI material remains
 open under U-08 in `docs/qa/evidence/licensing/README.md`. OpenAI's contractual
 assignment of its rights in Output is separate from third-party rights
-clearance. Required store disclosure is also channel-dependent.
+clearance. The initial release channel is itch.io; any AI, age, or content
+disclosure required by its actual publishing flow must be checked and preserved
+under U-07. A future Steam release has a separate disclosure requirement.
 
 ## Repository dependency boundary
 

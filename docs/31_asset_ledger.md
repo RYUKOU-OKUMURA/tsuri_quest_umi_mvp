@@ -98,12 +98,12 @@ generate外画像に加え、§2.2のsource-consuming出力も対象。OpenAI Te
 
 | 項目 | 状態 |
 |---|---|
-| ゲームタイトル「釣りクエスト」の商標調査 | 未実施。正式名称・販売地域・対象区分が未決のため調査範囲を確定できない（証拠index U-06）。類似検索だけで法的clearance完了とは扱わない |
+| 正式製品名「釣りクエスト ～海釣り編～」の商標調査 | 正式名称 / v1.0.0は決定#20で確定済み。販売地域・商標対象区分の確定と、その範囲での公式DB検索・必要な専門家確認の証跡は未完（証拠index U-06）。類似検索だけで法的clearance完了とは扱わない |
 | `assets/icon.svg`（魚と釣り針のcustom SVG。Godotデフォルトではない） | commit `9a9974a`（2026-06-24）で新規追加された履歴は確認済み。ただしコミット著者だけでは作者・作成手段・権利者を確定できない。製品採否と権利者申告待ち（証拠index U-04） |
 | 製品コードのMIT権利者・適用範囲 | `LICENSE.md` に適用範囲を追記。法的権利者名はユーザー入力待ち（証拠index U-05）のためplaceholderを残し、発売不可条件として明示 |
-| Godot / font / 同梱依存notice | `THIRD_PARTY_NOTICES.md` を新設し、repoで確認できるGodot・LINE Seed JP・M PLUS 1pを列挙。最終export template固有noticeと配布物同梱確認はチャネル/OS決定待ち（証拠index U-07） |
-| Steam AI開示 | Steam採用時はOpenAI画像・Suno音源をPre-Generated AIとしてContent Survey申告が必要。提出控えはチャネル決定後に保存（公式: https://partner.steamgames.com/doc/gettingstarted/contentsurvey） |
-| 年齢質問票 / IARC | 販売チャネル未決のため未着手。対象ストア決定後、公式質問票への回答控えと発行ratingを保存 |
+| Godot / font / 同梱依存notice | `THIRD_PARTY_NOTICES.md` を新設し、repoで確認できるGodot・LINE Seed JP・M PLUS 1pを列挙。初回販売=itch.io、対象OS=macOS Universalは確定済み。正確なGodot export preset/templateの固定と、clean exportへの必要notice・OFL全文の同梱確認は未完（証拠index U-07） |
+| Steam AI開示 | 初回itch.io版v1.0.0の発売ゲート対象外。将来Steamを採用する場合はOpenAI画像・Suno音源をPre-Generated AIとしてContent Surveyへ申告し、提出控えを保存する（公式: https://partner.steamgames.com/doc/gettingstarted/contentsurvey） |
+| itch.io公開時の質問項目 | itch.ioの実公開フローで、AI生成コンテンツ開示、年齢・コンテンツ区分、その他質問票の入力要否を公式手順により確認し、必要な場合は回答控えを保存する（証拠index U-07） |
 
 ## 補足: 本台帳の目的（誤解防止）
 
@@ -130,3 +130,4 @@ generate外画像に加え、§2.2のsource-consuming出力も対象。OpenAI Te
 - 2026-07-08: docs/35 P3として4種（`megochi`, `kurosoi`, `takenokomebaru`, `mejina`）のOpenAI生成コンタクトシートを追加し、P3境界ケースの新規ソースアート差し替えを完了
 - 2026-07-08: E5 Stage 2として時間帯READY2枚（朝まずめ/夜釣り）と釣果写真ベース2枚（朝まずめ/夜釣り）をOpenAI生成し、`tools/process_fishing_time_slot_assets.py` で既存解像度へ整形
 - 2026-07-09: E5 Stage 2釣果写真ベースの下段ボタンクロームを日中版基準へ正規化し、朝まずめ/夜釣りの runtime ボタンラベル位置を揃えた
+- 2026-07-11: Release Gate 0の確定値（正式名、itch.io、macOS Universal）を権利台帳へ同期。U-06/U-07の未完理由を、決定待ちから商標調査証跡・export包装検証待ちへ更新
