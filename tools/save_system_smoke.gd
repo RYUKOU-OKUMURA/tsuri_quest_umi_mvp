@@ -93,6 +93,7 @@ func _ready() -> void:
 	# SAVE-03: 構文正常でも意味破損したmainは、同じ検証を通ったbackupへfallbackする。
 	await _verify_semantic_save_candidate_selection()
 	_verify_safe_integer_and_outbound_contract()
+	_verify_saturating_progress_mutations()
 	_verify_fallback_lifecycle()
 
 	# version欠損の疎な旧saveは従来どおり読み込める。
@@ -445,6 +446,7 @@ func _verify_versionless_sparse_save_is_allowed() -> void:
 
 func _verify_semantic_save_candidate_selection() -> void:
 	_remove_all_save_files()
+	var max_safe := PlayerProgress.MAX_SAFE_JSON_INTEGER
 	var invalid_main := {"version": PlayerProgress.SAVE_VERSION, "level": {}, "money": 9999}
 	var valid_backup := {
 		"version": PlayerProgress.SAVE_VERSION,
@@ -530,6 +532,13 @@ func _verify_semantic_save_candidate_selection() -> void:
 		{"version": PlayerProgress.SAVE_VERSION, "shark_bonds": {"nekozame": 1.5}},
 		{"version": PlayerProgress.SAVE_VERSION, "money": 1e100},
 		{"version": PlayerProgress.SAVE_VERSION, "caught_counts": {"aji": 1e100}},
+		{"version": PlayerProgress.SAVE_VERSION, "inventory": {"aji": max_safe, "mejina": 1}},
+		{"version": PlayerProgress.SAVE_VERSION, "caught_counts": {"aji": max_safe, "mejina": 1}},
+		{"version": PlayerProgress.SAVE_VERSION, "eaten_recipes": {"aji:salt_grill": 0.5}},
+		{
+			"version": PlayerProgress.SAVE_VERSION,
+			"eaten_recipes": {"aji:salt_grill": max_safe, "mejina:salt_grill": 1},
+		},
 	]
 	for invalid_root in invalid_root_cases:
 		_write_text(_slot_save_path(1), JSON.stringify(invalid_root, "\t"))
@@ -622,6 +631,8 @@ func _verify_safe_integer_and_outbound_contract() -> void:
 	var accepted_boundaries: Array[Dictionary] = [
 		{"version": 1, "money": max_safe},
 		{"version": 1, "inventory": {"aji": max_safe}},
+		{"version": 1, "caught_counts": {"aji": max_safe}},
+		{"version": 1, "eaten_recipes": {"aji:salt_grill": max_safe}},
 		{"version": 1, "spot_caught_counts": {"harbor_pier": {"aji": max_safe}}},
 		{"version": 1, "quest_board": [{"count": max_safe, "reward_money": max_safe}]},
 		{"version": 1, "shark_bonds": {"nekozame": max_safe}},
@@ -629,6 +640,12 @@ func _verify_safe_integer_and_outbound_contract() -> void:
 	var rejected_boundaries: Array[Dictionary] = [
 		{"version": 1, "money": max_safe + 1},
 		{"version": 1, "inventory": {"aji": max_safe + 1}},
+		{"version": 1, "inventory": {"aji": max_safe, "mejina": 1}},
+		{"version": 1, "caught_counts": {"aji": max_safe + 1}},
+		{"version": 1, "caught_counts": {"aji": max_safe, "mejina": 1}},
+		{"version": 1, "eaten_recipes": {"aji:salt_grill": max_safe + 1}},
+		{"version": 1, "eaten_recipes": {"aji:salt_grill": max_safe, "mejina:salt_grill": 1}},
+		{"version": 1, "eaten_recipes": {"aji:salt_grill": 0.5}},
 		{"version": 1, "spot_caught_counts": {"harbor_pier": {"aji": max_safe + 1}}},
 		{"version": 1, "quest_board": [{"count": max_safe + 1}]},
 		{"version": 1, "shark_bonds": {"nekozame": max_safe + 1}},
@@ -669,6 +686,206 @@ func _verify_safe_integer_and_outbound_contract() -> void:
 	_expect_eq(_file_hash(_slot_backup_path(1)), hashes_before_invalid_outbound["backup"], "invalid outbound preserves backup")
 	_expect_eq(_file_hash(_slot_tmp_path(1)), hashes_before_invalid_outbound["tmp"], "invalid outbound preserves tmp")
 	_remove_all_save_files()
+
+
+func _verify_saturating_progress_mutations() -> void:
+	var max_safe := PlayerProgress.MAX_SAFE_JSON_INTEGER
+	var overflow_sell_amount := 1281023894007608
+	_expect_eq(PlayerProgress._saturating_add_nonnegative(500, 250), 750, "normal addition should remain exact")
+	_expect_eq(PlayerProgress._saturating_multiply_nonnegative(120, 3), 360, "normal multiplication should remain exact")
+	_expect_eq(
+		PlayerProgress._saturating_multiply_nonnegative(50000, max_safe),
+		max_safe,
+		"MAX sell price times MAX_SAFE must saturate before int64 multiplication"
+	)
+
+	# Dictionary総和が上限のsaveから新魚を釣っても、所持・捕獲・spot値を範囲外へ出さない。
+	var initial_hash := _prepare_saturation_fixture(
+		{
+			"inventory": {"aji": max_safe},
+			"caught_counts": {"aji": max_safe},
+			"spot_caught_counts": {"harbor_pier": {"mejina": max_safe}},
+		},
+		"record_catch saturation"
+	)
+	var catch_result := PlayerProgress.record_catch("mejina", 42.0, "harbor_pier")
+	_expect(not bool(catch_result.get("first_catch", true)), "global caught cap must not claim an unrecorded first catch")
+	_expect(not PlayerProgress.inventory.has("mejina"), "global inventory cap must not add a new counter")
+	_expect(not PlayerProgress.caught_counts.has("mejina"), "global caught cap must not add a new counter")
+	_expect_eq(
+		int(PlayerProgress.spot_caught_counts.get("harbor_pier", {}).get("mejina", -1)),
+		max_safe,
+		"spot catch counter should saturate"
+	)
+	_expect_saturation_generation(initial_hash, "record_catch saturation")
+	PlayerProgress.load_game()
+	_expect_eq(int(PlayerProgress.inventory.get("aji", -1)), max_safe, "record_catch saturated inventory reload")
+
+	# 初捕獲ヌシの報酬は所持金上限で止まり、inventory総和上限も維持する。
+	initial_hash = _prepare_saturation_fixture(
+		{
+			"money": max_safe,
+			"inventory": {"aji": max_safe},
+			"caught_counts": {},
+		},
+		"boss reward saturation"
+	)
+	var boss_result := PlayerProgress.record_catch("nushi_deep_ocean", 300.0, "deep_ocean")
+	_expect(bool(boss_result.get("first_catch", false)), "recordable boss should remain a first catch")
+	_expect(not Dictionary(boss_result.get("boss_first_clear_reward", {})).is_empty(), "boss reward should still be awarded")
+	_expect_eq(PlayerProgress.money, max_safe, "boss reward money should saturate")
+	_expect(not PlayerProgress.inventory.has("nushi_deep_ocean"), "boss catch must respect global inventory cap")
+	_expect_saturation_generation(initial_hash, "boss reward saturation")
+	PlayerProgress.load_game()
+	_expect_eq(PlayerProgress.money, max_safe, "boss reward saturated money should reload")
+	_expect_eq(int(PlayerProgress.caught_counts.get("nushi_deep_ocean", 0)), 1, "boss catch count should reload")
+	_expect(not PlayerProgress.inventory.has("nushi_deep_ocean"), "boss inventory cap should persist after reload")
+
+	# 14,400 × 1,281,023,894,007,608 はint64積を作らず、income/moneyをsafe上限へ送る。
+	initial_hash = _prepare_saturation_fixture(
+		{
+			"money": 500,
+			"inventory": {"nushi_deep_ocean": overflow_sell_amount},
+		},
+		"single sell overflow saturation"
+	)
+	var sell_result := PlayerProgress.sell_fish("nushi_deep_ocean", overflow_sell_amount)
+	_expect(bool(sell_result.get("ok", false)), "safe-count single sell should succeed")
+	_expect_eq(int(sell_result.get("income", -1)), max_safe, "single sell income should saturate")
+	_expect_eq(PlayerProgress.money, max_safe, "single sell money should saturate")
+	_expect_eq(PlayerProgress.fish_count("nushi_deep_ocean"), 0, "single sell should consume inventory")
+	_expect_saturation_generation(initial_hash, "single sell overflow saturation")
+	PlayerProgress.load_game()
+	_expect_eq(PlayerProgress.money, max_safe, "single sell saturated money should reload")
+
+	# batchは各item積、income、total_amount、moneyをすべてsafe範囲へ保つ。
+	var remaining_batch_amount := max_safe - overflow_sell_amount
+	initial_hash = _prepare_saturation_fixture(
+		{
+			"money": 500,
+			"inventory": {
+				"nushi_deep_ocean": overflow_sell_amount,
+				"aji": remaining_batch_amount,
+			},
+		},
+		"batch sell overflow saturation"
+	)
+	var batch_result := PlayerProgress.sell_fish_batch(
+		{
+			"nushi_deep_ocean": overflow_sell_amount,
+			"aji": remaining_batch_amount,
+		}
+	)
+	_expect(bool(batch_result.get("ok", false)), "safe-count batch sell should succeed")
+	_expect_eq(int(batch_result.get("income", -1)), max_safe, "batch income should saturate")
+	_expect_eq(int(batch_result.get("total_amount", -1)), max_safe, "batch total amount should stay safe")
+	_expect_eq(PlayerProgress.money, max_safe, "batch money should saturate")
+	var sold: Dictionary = batch_result.get("sold", {})
+	_expect_eq(
+		int(Dictionary(sold.get("nushi_deep_ocean", {})).get("income", -1)),
+		max_safe,
+		"batch item income should saturate before multiplication"
+	)
+	_expect_saturation_generation(initial_hash, "batch sell overflow saturation")
+	PlayerProgress.load_game()
+	_expect_eq(PlayerProgress.money, max_safe, "batch saturated money should reload")
+	_expect_eq(PlayerProgress.fish_count("nushi_deep_ocean"), 0, "batch sold boss inventory should reload")
+	_expect_eq(PlayerProgress.fish_count("aji"), 0, "batch sold regular inventory should reload")
+
+	# 依頼報酬と達成累計は上限で止まり、納品後saveも正常候補のままにする。
+	initial_hash = _prepare_saturation_fixture(
+		{
+			"money": 500,
+			"inventory": {"aji": max_safe},
+			"quest_completed_count": max_safe,
+			"quest_board": [
+				{
+					"template_id": "saturation_delivery",
+					"kind": "delivery",
+					"fish_id": "aji",
+					"count": 1,
+					"reward_money": max_safe,
+					"text": "アジを1匹届けてほしい",
+				},
+				{
+					"template_id": "saturation_record_a",
+					"kind": "record",
+					"fish_id": "mejina",
+					"target_size_cm": 9999.0,
+					"reward_money": 0,
+					"text": "fixture a",
+				},
+				{
+					"template_id": "saturation_record_b",
+					"kind": "record",
+					"fish_id": "kasago",
+					"target_size_cm": 9999.0,
+					"reward_money": 0,
+					"text": "fixture b",
+				},
+			],
+		},
+		"quest reward saturation"
+	)
+	var quest_result := PlayerProgress.deliver_quest(0)
+	_expect(bool(quest_result.get("ok", false)), "MAX_SAFE quest should deliver")
+	_expect_eq(PlayerProgress.money, max_safe, "quest reward money should saturate")
+	_expect_eq(PlayerProgress.quest_completed_count, max_safe, "quest completed count should saturate")
+	_expect_eq(PlayerProgress.fish_count("aji"), max_safe - 1, "quest should consume one fish safely")
+	_expect_saturation_generation(initial_hash, "quest reward saturation")
+	PlayerProgress.load_game()
+	_expect_eq(PlayerProgress.money, max_safe, "quest saturated money should reload")
+	_expect_eq(PlayerProgress.quest_completed_count, max_safe, "quest saturated count should reload")
+	_expect_eq(PlayerProgress.fish_count("aji"), max_safe - 1, "quest inventory should reload")
+	_expect_eq(PlayerProgress.quest_board.size(), 3, "quest replacement board should reload")
+
+	# 料理回数の総和が上限なら増分だけを止め、EXP加算もint64 overflow前にsaturateする。
+	initial_hash = _prepare_saturation_fixture(
+		{
+			"level": 1,
+			"exp": max_safe,
+			"inventory": {"aji": 1},
+			"eaten_recipes": {
+				"aji:salt_grill": max_safe - 1,
+				"mejina:salt_grill": 1,
+			},
+		},
+		"cooking count and exp saturation"
+	)
+	var cooking_result := PlayerProgress.cook_and_eat("aji", "salt_grill")
+	_expect(bool(cooking_result.get("ok", false)), "MAX_SAFE cooking fixture should succeed")
+	_expect_eq(
+		int(PlayerProgress.eaten_recipes.get("aji:salt_grill", -1)),
+		max_safe - 1,
+		"cooking count should stop when dictionary total reaches MAX_SAFE"
+	)
+	_expect_eq(PlayerProgress.level, GameData.MAX_LEVEL, "saturated EXP should resolve levels without overflow")
+	_expect_eq(PlayerProgress.exp, 0, "max-level EXP should normalize to zero")
+	_expect_saturation_generation(initial_hash, "cooking count and exp saturation")
+	PlayerProgress.load_game()
+	_expect_eq(PlayerProgress.level, GameData.MAX_LEVEL, "saturated cooking save should reload")
+	_remove_all_save_files()
+
+
+func _prepare_saturation_fixture(data: Dictionary, label: String) -> String:
+	_remove_all_save_files()
+	_expect(PlayerProgress.set_active_save_slot(1, false), "%s should activate slot 1" % label)
+	var fixture := data.duplicate(true)
+	fixture["version"] = PlayerProgress.SAVE_VERSION
+	_expect(PlayerProgress._is_valid_save_candidate(fixture), "%s fixture should satisfy SAVE-03" % label)
+	_write_text(_slot_save_path(1), JSON.stringify(fixture, "\t"))
+	var initial_hash := _file_hash(_slot_save_path(1))
+	PlayerProgress.load_game()
+	return initial_hash
+
+
+func _expect_saturation_generation(initial_hash: String, label: String) -> void:
+	_expect(FileAccess.file_exists(_slot_save_path(1)), "%s should write a main save" % label)
+	_expect(FileAccess.file_exists(_slot_backup_path(1)), "%s should preserve a backup generation" % label)
+	_expect_eq(_file_hash(_slot_backup_path(1)), initial_hash, "%s backup should retain pre-operation bytes" % label)
+	var saved := _read_json(_slot_save_path(1))
+	_expect(PlayerProgress._is_valid_save_candidate(saved), "%s main should remain a valid SAVE-03 candidate" % label)
+	_expect(not FileAccess.file_exists(_slot_tmp_path(1)), "%s should not leave a tmp file" % label)
 
 
 func _verify_fallback_lifecycle() -> void:
