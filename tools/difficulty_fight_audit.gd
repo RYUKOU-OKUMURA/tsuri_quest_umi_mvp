@@ -1,6 +1,8 @@
 extends Node
 
 const AuditTablePrinter = preload("res://tools/audit_table_printer.gd")
+const FishingScreenScript = preload("res://src/ui/fishing_screen.gd")
+const FishingSimulatorScript = preload("res://src/core/fishing_simulator.gd")
 
 const EXPECTED_VALUES: Dictionary = {
 	"easy": {
@@ -140,12 +142,27 @@ func _effective_values(selected_difficulty_id: String) -> Dictionary:
 	PlayerProgress.level = 1
 	PlayerProgress.equipped_rod_id = "starter"
 	var stats := PlayerProgress.get_base_stats()
-	var difficulty_data := PlayerProgress.difficulty()
 	var aji := GameData.get_fish("aji")
-	var fish_stamina := (
-		float(aji.get("stamina", 0.0))
-		* float(difficulty_data.get("fish_stamina_multiplier", 1.0))
+	var original_aji := aji.duplicate(true)
+	var fishing_screen = FishingScreenScript.new()
+	fishing_screen._simulator = FishingSimulatorScript.new()
+	fishing_screen._current_fish = aji
+	fishing_screen._trip_stats = stats
+	fishing_screen._prepare_current_fish_in_simulator()
+	var fish_stamina: float = fishing_screen._simulator.fish_stamina_max
+	_expect_eq(aji, original_aji, "%s source fish after prepare" % selected_difficulty_id)
+	_expect_eq(
+		fishing_screen._current_fish,
+		original_aji,
+		"%s current fish after prepare" % selected_difficulty_id
 	)
+	fishing_screen._prepare_current_fish_in_simulator()
+	_expect_approx(
+		fishing_screen._simulator.fish_stamina_max,
+		fish_stamina,
+		"%s repeated prepare should not compound stamina" % selected_difficulty_id
+	)
+	fishing_screen.free()
 	var single_quote := PlayerProgress.quote_fish_sale({"iwashi": 1})
 	var batch_quote := PlayerProgress.quote_fish_sale({"iwashi": 2})
 	PlayerProgress.inventory = {"iwashi": 3}

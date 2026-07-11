@@ -680,7 +680,7 @@ func _prepare_new_attempt() -> void:
 
 
 func _prepare_simulator_with_current_fish() -> void:
-	_simulator.prepare(_current_fish, _trip_stats)
+	_prepare_current_fish_in_simulator()
 	_view.bind_simulator(_simulator)
 	_surface_view.bind_simulator(_simulator)
 	_fight_sidebar.bind(_simulator, _current_fish, _trip_stats)
@@ -688,6 +688,16 @@ func _prepare_simulator_with_current_fish() -> void:
 		_fight_floating_card.bind(_simulator, _current_fish, _trip_stats)
 	_fight_hud.bind(_simulator, _current_fish, _trip_stats)
 	_sync_ready_shark_lure_selector()
+
+
+func _prepare_current_fish_in_simulator() -> void:
+	var simulator_fish := _current_fish.duplicate(true)
+	if simulator_fish.has("stamina"):
+		var stamina_multiplier := float(
+			PlayerProgress.difficulty().get("fish_stamina_multiplier", 1.0)
+		)
+		simulator_fish["stamina"] = float(simulator_fish["stamina"]) * stamina_multiplier
+	_simulator.prepare(simulator_fish, _trip_stats)
 
 
 func _delays_hook_roll_until_cast() -> bool:
