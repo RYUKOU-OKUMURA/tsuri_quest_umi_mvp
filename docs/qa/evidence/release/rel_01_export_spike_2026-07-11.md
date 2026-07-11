@@ -2,7 +2,8 @@
 
 ## 実行環境
 
-- source baseline: `143e3d97`
+- source commit: `0d78f2a4c104f411ff8a9a79c1df96f1396eb2ac`
+- source tree: `b30d1fc722dd9860b9bb26e59cb3acf639d01577`
 - Godot: `4.7.stable.official.5b4e0cb0f`
 - export template: 公式 `Godot_v4.7-stable_export_templates.tpz` 内 `templates/macos.zip`
 - preset: `macOS Universal`
@@ -33,8 +34,15 @@ tracked treeを`git archive`から展開するため、worktreeのdirty / untrac
 - 同じ成果物を終了・再起動 → title ready到達・`money=4242`読込: PASS
 - 旧MVP namespaceのroot save → 新namespace slot 1コピー・読込: PASS
 - 旧原本SHA-256不変: PASS
-- debug / release PCK SHA-256: `$TSURI_EXPORT_BUILD_ROOT/logs/artifacts.sha256`（既定では`/private/tmp/tsuri_quest_umi_export_spike/logs/artifacts.sha256`）へsource commit / treeと同時に機械保存し、stdoutにも出力する。PCKが各appにちょうど1件でなければ検証失敗とする
-- 成果物サイズ: debug 318MB / release 287MB
+- debug PCK SHA-256: `228af6e30eb10a7a3ce4bcf5dba97e2b9b4402cdc871fe15926dbd45c516c542`
+- release PCK SHA-256: `228af6e30eb10a7a3ce4bcf5dba97e2b9b4402cdc871fe15926dbd45c516c542`
+- release pack manifest: 956件 / SHA-256 `65cd758324ef106eedb5a434ecf9c105c74acce6e52311ea008c0c1ff3056ab6`
+- 成果物サイズ: debug 303MiB / release 287MiB（`du -sh`）
+
+source commit / tree、PCK hash、manifest件数 / hashは実行時に
+`$TSURI_EXPORT_BUILD_ROOT/logs/artifacts.sha256`（既定では
+`/private/tmp/tsuri_quest_umi_export_spike/logs/artifacts.sha256`）へ機械保存し、stdoutにも出力する。
+PCKが各appにちょうど1件でなければ検証失敗とする。
 
 このSHA-256は最小spike成果物の追跡用であり、署名・公証・最終packageを固定するRC hashではない。
 spike harnessまたはsource commitが変わるたび再生成する。
@@ -43,7 +51,10 @@ spike harnessまたはsource commitが変わるたび再生成する。
 
 canonical preset自体が`reference/**`と`tools/**`を除外する。spike専用smokeは
 Git固定treeからstage-onlyの`src/__export_spike/`へコピーし、release exportが出力する
-全pack entry manifestでもdeny prefixを検査して混入がないことを確認した。
+全pack entry manifestでもdeny prefixを検査して混入がないことを確認した。検証時の
+canonical manifest全件は
+[`rel_01_release_pack_manifest_2026-07-11.txt`](rel_01_release_pack_manifest_2026-07-11.txt)
+へ固定した。件数956、重複0、不正形式0、禁止prefix 0で、上記SHA-256と一致する。
 
 - `reference/`
 - `tools/`全体
@@ -77,3 +88,11 @@ logに未説明`ERROR:`がある場合はPASSにしない。終了時のGodot既
 
 これはRIGHTS-01B / RC Gateの未完事項であり、REL-01のexport可能性・save回帰結果を
 偽装してcloseするものではない。
+
+## 証跡commit境界
+
+上記成果物は統合後のclean source commit `0d78f2a4c104f411ff8a9a79c1df96f1396eb2ac`
+から生成した。本書とmanifestを追加する後続commitは`docs/**`だけを変更し、canonical presetが
+`docs/**`をpack対象に含めないため、検証済みPCKの入力は変わらない。E11外装、署名・公証、
+notice同梱、またはゲーム入力が変わった時点で本spikeのhashを最終RC証跡として流用せず、
+release verifierで再生成する。
