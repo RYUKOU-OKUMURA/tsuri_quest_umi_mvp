@@ -331,6 +331,7 @@ func _verify_save_failure_propagation() -> void:
 
 func _verify_common_save_failure_ui() -> void:
 	var main := MainScript.new()
+	main.size = Vector2(1280.0, 720.0)
 	add_child(main)
 	await get_tree().create_timer(0.4).timeout
 	_expect(not get_tree().auto_accept_quit, "main should disable automatic close request acceptance")
