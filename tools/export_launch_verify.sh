@@ -12,6 +12,7 @@ NEGATIVE_HOME="$BUILD_ROOT/negative_home"
 LOG_DIR="$BUILD_ROOT/logs"
 STAGE_ROOT="$BUILD_ROOT/stage"
 ARTIFACT_LOG="$LOG_DIR/artifacts.sha256"
+RELEASE_PACK_MANIFEST="$LOG_DIR/release_pack_manifest.txt"
 BUNDLE_ID="net.physical-balance-lab.tsuri-quest-umi"
 SOURCE_REF="${TSURI_EXPORT_SOURCE_REF:-HEAD}"
 
@@ -32,6 +33,7 @@ NEGATIVE_HOME="$BUILD_ROOT/negative_home"
 LOG_DIR="$BUILD_ROOT/logs"
 STAGE_ROOT="$BUILD_ROOT/stage"
 ARTIFACT_LOG="$LOG_DIR/artifacts.sha256"
+RELEASE_PACK_MANIFEST="$LOG_DIR/release_pack_manifest.txt"
 
 [[ -x "$GODOT_BIN" ]] || fail "Godot not found: $GODOT_BIN"
 GODOT_VERSION="$($GODOT_BIN --version | tr -d '\r')"
@@ -56,6 +58,19 @@ perl -0pi -e 's/(Juicer=.*\n)/$1ExportLaunchSmoke="*res:\/\/src\/__export_spike\
 
 "$GODOT_BIN" --headless --path "$STAGE_ROOT" --export-debug "$PRESET" "$DEBUG_APP" 2>&1 | tee "$LOG_DIR/export_debug.log"
 "$GODOT_BIN" --headless --path "$STAGE_ROOT" --export-release "$PRESET" "$RELEASE_APP" 2>&1 | tee "$LOG_DIR/export_release.log"
+
+# Godotのlocalized progress logからsavepack対象だけを抽出し、順序とANSI表示に
+# 依存しないcanonical manifestを残す。不要素材検査も同じmanifestを正とする。
+perl -pe 's/\e\[[0-9;]*[A-Za-z]//g; s/\r//g' "$LOG_DIR/export_release.log" \
+	| perl -ne 'print "$1\n" if /savepack.*?(res:\/\/.*)$/' \
+	| LC_ALL=C sort -u > "$RELEASE_PACK_MANIFEST"
+[[ -s "$RELEASE_PACK_MANIFEST" ]] || fail "release pack manifest is empty"
+RELEASE_PACK_MANIFEST_COUNT="$(wc -l < "$RELEASE_PACK_MANIFEST" | tr -d '[:space:]')"
+[[ "$RELEASE_PACK_MANIFEST_COUNT" =~ ^[1-9][0-9]*$ ]] || fail "invalid release pack manifest count"
+RELEASE_PACK_MANIFEST_SHA256="$(shasum -a 256 "$RELEASE_PACK_MANIFEST" | awk '{print $1}')"
+if grep -a -E '^res://(reference|tools|\.git|build)(/|$)' "$RELEASE_PACK_MANIFEST" >/dev/null; then
+	fail "forbidden development resources found in release pack manifest"
+fi
 
 for app in "$DEBUG_APP" "$RELEASE_APP"; do
 	[[ -d "$app" ]] || fail "export was not created: $app"
@@ -86,6 +101,9 @@ RELEASE_PCK_SHA256="$(shasum -a 256 "$RELEASE_PCK" | awk '{print $1}')"
 	printf 'debug_pck_sha256=%s\n' "$DEBUG_PCK_SHA256"
 	printf 'release_pck=%s\n' "$RELEASE_PCK"
 	printf 'release_pck_sha256=%s\n' "$RELEASE_PCK_SHA256"
+	printf 'release_pack_manifest=%s\n' "$RELEASE_PACK_MANIFEST"
+	printf 'release_pack_manifest_count=%s\n' "$RELEASE_PACK_MANIFEST_COUNT"
+	printf 'release_pack_manifest_sha256=%s\n' "$RELEASE_PACK_MANIFEST_SHA256"
 } > "$ARTIFACT_LOG"
 
 RELEASE_EXECUTABLE_NAME="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$RELEASE_APP/Contents/Info.plist")"
@@ -161,16 +179,13 @@ run_smoke migration "$LOG_DIR/migration.log"
 LEGACY_HASH_AFTER="$(shasum -a 256 "$LEGACY_SAVE" | awk '{print $1}')"
 [[ "$LEGACY_HASH_BEFORE" == "$LEGACY_HASH_AFTER" ]] || fail "legacy save was modified"
 
-if grep -a -E 'res://reference/|res://tools/' "$LOG_DIR/export_release.log" >/dev/null; then
-	fail "forbidden development resources found in release export manifest"
-fi
-
 echo "Godot: $GODOT_VERSION"
 echo "Template: $TEMPLATE_VERSION ($TEMPLATE_ROOT/macos.zip)"
 echo "Source object: $SOURCE_OBJECT"
 echo "Source commit: $SOURCE_COMMIT"
 echo "Artifact hashes: $ARTIFACT_LOG"
 cat "$ARTIFACT_LOG"
+echo "Release pack manifest: $RELEASE_PACK_MANIFEST ($RELEASE_PACK_MANIFEST_COUNT entries)"
 echo "Debug app: $DEBUG_APP"
 echo "Release app: $RELEASE_APP"
 echo "export_launch_verify: PASS"
