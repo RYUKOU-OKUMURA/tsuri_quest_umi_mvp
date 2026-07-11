@@ -76,7 +76,14 @@ func _build_header(root: Control) -> void:
 	subtitle.name = "StatusSubtitle"
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	subtitle.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(header, subtitle, 0.088, 0.565, 0.450, 0.880)
+	_place_control(header, subtitle, 0.088, 0.500, 0.450, 0.715)
+
+	var difficulty_name := String(PlayerProgress.difficulty().get("name", "ふつう"))
+	var difficulty_label := _status_label("難易度: %s" % difficulty_name, 13, Palette.GOLD_BRIGHT, true, 1)
+	difficulty_label.name = "StatusDifficulty"
+	difficulty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	difficulty_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control(header, difficulty_label, 0.088, 0.715, 0.450, 0.930)
 
 	_player_status_bar = PlayerStatusBarScript.new()
 	_player_status_bar.name = "StatusPlayerStatusBar"

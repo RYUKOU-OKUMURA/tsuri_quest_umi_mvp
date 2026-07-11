@@ -13,12 +13,20 @@ const TITLE_BUTTON_SECONDARY_HOVER_PATH := "res://assets/showcase/title/title_bu
 const TITLE_BUTTON_DISABLED_PATH := "res://assets/showcase/title/title_button_disabled.png"
 const TITLE_BAIT_PATH := "res://assets/showcase/common/nav_fishing_icon.png"
 
-var _confirm_reset: ConfirmationDialog
+var _modal_layer: Control
+var _difficulty_panel: Control
+var _overwrite_panel: Control
+var _difficulty_buttons: Dictionary = {}
+var _difficulty_cancel_button: Button
+var _overwrite_detail_label: Label
+var _overwrite_confirm_button: Button
+var _overwrite_cancel_button: Button
 var _slot_buttons: Array[Button] = []
 var _slot_status_label: Label
 var _continue_button: Button
 var _new_button: Button
 var _selected_slot_id := PlayerProgress.DEFAULT_SAVE_SLOT
+var _selected_difficulty_id := GameData.DEFAULT_DIFFICULTY_ID
 
 
 func _build_screen() -> void:
@@ -36,7 +44,7 @@ func _build_screen() -> void:
 	_build_fish_feature(root)
 	_build_menu(root)
 	_build_version(root)
-	_build_reset_dialog()
+	_build_new_game_modals(root)
 
 
 func _build_logo(root: Control) -> void:
@@ -178,14 +186,90 @@ func _build_version(root: Control) -> void:
 	root.add_child(version_label)
 
 
-func _build_reset_dialog() -> void:
-	_confirm_reset = ConfirmationDialog.new()
-	_confirm_reset.title = "セーブデータの初期化"
-	_confirm_reset.dialog_text = "現在の進行を消して、最初から始めます。よろしいですか？"
-	_confirm_reset.ok_button_text = "最初から始める"
-	_confirm_reset.cancel_button_text = "キャンセル"
-	_confirm_reset.confirmed.connect(_start_new_game)
-	add_child(_confirm_reset)
+func _build_new_game_modals(root: Control) -> void:
+	_modal_layer = Control.new()
+	_modal_layer.name = "TitleNewGameModalLayer"
+	_modal_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_modal_layer.mouse_filter = Control.MOUSE_FILTER_STOP
+	_modal_layer.visible = false
+	root.add_child(_modal_layer)
+
+	var scrim := ColorRect.new()
+	scrim.color = Palette.DARK_PANEL_DEEP
+	scrim.color.a = 0.78
+	scrim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	scrim.mouse_filter = Control.MOUSE_FILTER_STOP
+	_modal_layer.add_child(scrim)
+
+	_difficulty_panel = _make_modal_panel("TitleDifficultyPanel")
+	var difficulty_title := _modal_label("難易度を選んでください", 28, true)
+	_place_control(_difficulty_panel, difficulty_title, 0.10, 0.105, 0.90, 0.205)
+	var difficulty_note := _modal_label("新しい冒険の間は変更できません", 15, false)
+	_place_control(_difficulty_panel, difficulty_note, 0.10, 0.205, 0.90, 0.275)
+
+	_difficulty_buttons.clear()
+	var choices := [
+		{"id": "easy", "label": "やさしい", "note": "安全域が広く、魚の体力は少なめ"},
+		{"id": "normal", "label": "ふつう", "note": "標準の遊びごたえ"},
+		{"id": "hard", "label": "むずかしい", "note": "強い魚と戦い、売値・経験値が25%UP"},
+	]
+	for index in range(choices.size()):
+		var choice: Dictionary = choices[index]
+		var top := 0.300 + float(index) * 0.145
+		var button := make_button(String(choice["label"]), Callable(self, "_on_difficulty_selected").bind(String(choice["id"])), 380, index == 1)
+		button.name = "TitleDifficulty_%s" % String(choice["id"])
+		button.custom_minimum_size = Vector2.ZERO
+		_apply_title_button_skin(button, index == 1)
+		_place_control(_difficulty_panel, button, 0.10, top, 0.43, top + 0.105)
+		_difficulty_buttons[String(choice["id"])] = button
+		var note := _modal_label(String(choice["note"]), 14, false)
+		note.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		_place_control(_difficulty_panel, note, 0.47, top, 0.91, top + 0.105)
+	_difficulty_cancel_button = make_button("キャンセル", _close_new_game_modals, 250)
+	_difficulty_cancel_button.name = "TitleDifficultyCancel"
+	_difficulty_cancel_button.custom_minimum_size = Vector2.ZERO
+	_apply_title_button_skin(_difficulty_cancel_button, false)
+	_place_control(_difficulty_panel, _difficulty_cancel_button, 0.31, 0.785, 0.69, 0.895)
+
+	_overwrite_panel = _make_modal_panel("TitleOverwritePanel")
+	_overwrite_panel.visible = false
+	var overwrite_title := _modal_label("本当に最初から始めますか？", 27, true)
+	_place_control(_overwrite_panel, overwrite_title, 0.08, 0.095, 0.92, 0.205)
+	_overwrite_detail_label = _modal_label("", 18, false)
+	_overwrite_detail_label.name = "TitleOverwriteDetails"
+	_overwrite_detail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_overwrite_detail_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	_overwrite_detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_place_control(_overwrite_panel, _overwrite_detail_label, 0.13, 0.245, 0.87, 0.665)
+	_overwrite_confirm_button = make_button("削除して最初から始める", _confirm_overwrite, 320, true)
+	_overwrite_confirm_button.name = "TitleOverwriteConfirm"
+	_overwrite_confirm_button.custom_minimum_size = Vector2.ZERO
+	_apply_title_button_skin(_overwrite_confirm_button, true)
+	_place_control(_overwrite_panel, _overwrite_confirm_button, 0.08, 0.750, 0.54, 0.875)
+	_overwrite_cancel_button = make_button("キャンセル", _close_new_game_modals, 250)
+	_overwrite_cancel_button.name = "TitleOverwriteCancel"
+	_overwrite_cancel_button.custom_minimum_size = Vector2.ZERO
+	_apply_title_button_skin(_overwrite_cancel_button, false)
+	_place_control(_overwrite_panel, _overwrite_cancel_button, 0.58, 0.750, 0.92, 0.875)
+
+
+func _make_modal_panel(node_name: String) -> Control:
+	var panel := _anchored_control(_modal_layer, 0.240, 0.110, 0.760, 0.890)
+	panel.name = node_name
+	var frame := _texture_rect(TITLE_MENU_FRAME_PATH)
+	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	panel.add_child(frame)
+	return panel
+
+
+func _modal_label(text: String, font_size: int, bold: bool) -> Label:
+	var label := make_shadow_label(text, font_size, Palette.TEXT_BONE, 2, Palette.TITLE_MENU_OUTLINE, Palette.TITLE_MENU_SHADOW)
+	_apply_title_font(label, bold)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.clip_text = true
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	return label
 
 func _texture_rect(path: String) -> TextureRect:
 	var rect := TextureRect.new()
@@ -357,11 +441,86 @@ func _on_new_game_pressed() -> void:
 		show_common_notification(String(summary.get("invalid_message", "セーブを読み込めません")))
 		_refresh_slot_ui()
 		return
-	if PlayerProgress.has_save_file(_selected_slot_id):
-		_confirm_reset.dialog_text = "スロット%dの進行を消して、最初から始めます。よろしいですか？" % _selected_slot_id
-		_confirm_reset.popup_centered(Vector2i(620, 220))
+	_show_difficulty_modal()
+
+
+func _show_difficulty_modal() -> void:
+	_selected_difficulty_id = GameData.DEFAULT_DIFFICULTY_ID
+	_set_background_focus_enabled(false)
+	_modal_layer.visible = true
+	_difficulty_panel.visible = true
+	_overwrite_panel.visible = false
+	var default_button: Button = _difficulty_buttons.get(GameData.DEFAULT_DIFFICULTY_ID)
+	if default_button != null:
+		default_button.grab_focus()
+
+
+func _on_difficulty_selected(difficulty_id: String) -> void:
+	if not GameData.DIFFICULTIES.has(difficulty_id):
+		return
+	if not _new_game_action_is_safe():
+		_close_new_game_modals()
+		return
+	_selected_difficulty_id = difficulty_id
+	var summary := PlayerProgress.save_slot_summary(_selected_slot_id)
+	if bool(summary.get("has_save", false)):
+		_show_overwrite_confirmation(summary)
 	else:
-		_start_new_game()
+		_start_new_game(_selected_difficulty_id)
+
+
+func _show_overwrite_confirmation(summary: Dictionary) -> void:
+	var difficulty_name := String(PlayerProgress.difficulty().get("name", "ふつう"))
+	if GameData.DIFFICULTIES.has(_selected_difficulty_id):
+		difficulty_name = String(GameData.DIFFICULTIES[_selected_difficulty_id].get("name", difficulty_name))
+	_overwrite_detail_label.text = (
+		"スロット: %d\n現在のレベル: Lv.%d\nプレイ時間: %s\n選択難易度: %s\n\nこの進行は削除され、元には戻せません。"
+		% [
+			_selected_slot_id,
+			int(summary.get("level", 1)),
+			_format_play_time(float(summary.get("play_seconds", 0.0))),
+			difficulty_name,
+		]
+	)
+	_difficulty_panel.visible = false
+	_overwrite_panel.visible = true
+	_overwrite_cancel_button.grab_focus()
+
+
+func _confirm_overwrite() -> void:
+	_start_new_game(_selected_difficulty_id)
+
+
+func _close_new_game_modals() -> void:
+	_modal_layer.visible = false
+	_difficulty_panel.visible = true
+	_overwrite_panel.visible = false
+	_set_background_focus_enabled(true)
+	_new_button.grab_focus()
+
+
+func _set_background_focus_enabled(enabled: bool) -> void:
+	var mode := Control.FOCUS_ALL if enabled else Control.FOCUS_NONE
+	for button in _slot_buttons:
+		button.focus_mode = mode
+	_continue_button.focus_mode = mode
+	_new_button.focus_mode = mode
+
+
+func _new_game_action_is_safe() -> bool:
+	if PlayerProgress.is_save_storage_blocked():
+		show_common_notification(PlayerProgress.save_storage_block_message())
+		_refresh_slot_ui()
+		return false
+	if PlayerProgress.is_future_save_version_guarded(_selected_slot_id):
+		_refresh_slot_ui()
+		return false
+	var summary := PlayerProgress.save_slot_summary(_selected_slot_id)
+	if bool(summary.get("invalid_artifact", false)):
+		show_common_notification(String(summary.get("invalid_message", "セーブを読み込めません")))
+		_refresh_slot_ui()
+		return false
+	return true
 
 
 func _continue_selected_slot() -> void:
@@ -380,20 +539,17 @@ func _continue_selected_slot() -> void:
 	navigate("harbor")
 
 
-func _start_new_game() -> void:
-	if PlayerProgress.is_save_storage_blocked():
-		show_common_notification(PlayerProgress.save_storage_block_message())
-		_refresh_slot_ui()
-		return
-	var summary := PlayerProgress.save_slot_summary(_selected_slot_id)
-	if bool(summary.get("invalid_artifact", false)):
-		show_common_notification(String(summary.get("invalid_message", "セーブを読み込めません")))
-		_refresh_slot_ui()
+func _start_new_game(difficulty_id: String = GameData.DEFAULT_DIFFICULTY_ID) -> void:
+	if not _new_game_action_is_safe():
+		_close_new_game_modals()
 		return
 	if not PlayerProgress.set_active_save_slot(_selected_slot_id, false):
+		_close_new_game_modals()
 		_refresh_slot_ui()
 		return
-	if not PlayerProgress.reset_game():
+	if not PlayerProgress.reset_game(difficulty_id):
+		_close_new_game_modals()
 		_refresh_slot_ui()
 		return
+	_close_new_game_modals()
 	navigate("harbor")

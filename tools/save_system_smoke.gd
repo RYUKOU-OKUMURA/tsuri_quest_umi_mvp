@@ -29,6 +29,7 @@ func _ready() -> void:
 	PlayerProgress.set_active_save_slot(1, false)
 	_expect(not PlayerProgress.has_save_file(), "clean slate should report no save file")
 	await _verify_title_empty_slot_selection_is_non_committal()
+	await _verify_e7_title_new_game_flow()
 
 	# slot 2はslot 1と独立して保存される
 	_remove_all_save_files()
@@ -286,6 +287,93 @@ func _verify_title_empty_slot_selection_is_non_committal() -> void:
 	main.free()
 	viewport.queue_free()
 	await get_tree().process_frame
+	await get_tree().process_frame
+
+
+func _verify_e7_title_new_game_flow() -> void:
+	# empty: 難易度選択後の初回save成功後にだけ遷移する。
+	_remove_all_save_files()
+	PlayerProgress.set_active_save_slot(1, false)
+	var empty_viewport := SubViewport.new()
+	empty_viewport.size = Vector2i(1280, 720)
+	empty_viewport.disable_3d = true
+	add_child(empty_viewport)
+	var empty_title: TitleScreen = TitleScreen.new()
+	empty_title.theme = ThemeFactory.build_theme()
+	empty_viewport.add_child(empty_title)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var empty_navigations: Array[String] = []
+	empty_title.navigate_requested.connect(
+		func(screen_id: String, _payload: Dictionary) -> void: empty_navigations.append(screen_id)
+	)
+	empty_title._on_new_game_pressed()
+	_expect(empty_title._modal_layer.visible, "empty new game should open difficulty modal")
+	_expect(empty_title._difficulty_buttons.size() == 3, "difficulty modal should expose exactly three choices")
+	for button in empty_title._slot_buttons:
+		_expect(button.focus_mode == Control.FOCUS_NONE, "difficulty modal should contain focus away from slot buttons")
+	_expect(empty_title._continue_button.focus_mode == Control.FOCUS_NONE, "modal should block continue focus")
+	_expect(empty_title._new_button.focus_mode == Control.FOCUS_NONE, "modal should block new-game focus")
+	PlayerProgress._save_failure_injection_stage = "tmp_open"
+	empty_title._on_difficulty_selected("hard")
+	PlayerProgress._save_failure_injection_stage = ""
+	_expect(empty_navigations.is_empty(), "SAVE-02 initial save failure should keep the player on title")
+	_expect(not FileAccess.file_exists(_slot_save_path(1)), "SAVE-02 initial save failure should not create a slot")
+	empty_title._on_new_game_pressed()
+	empty_title._on_difficulty_selected("easy")
+	_expect_eq(empty_navigations, ["harbor"], "empty difficulty selection should navigate after save")
+	_expect(FileAccess.file_exists(_slot_save_path(1)), "empty difficulty selection should create selected slot")
+	_expect_eq(String(_read_json(_slot_save_path(1)).get("difficulty_id", "")), "easy", "empty start should persist selected difficulty")
+	empty_viewport.queue_free()
+	await get_tree().process_frame
+
+	# occupied: 難易度選択の後にだけ1回の最終確認を出し、他slotを変更しない。
+	_remove_all_save_files()
+	PlayerProgress.set_active_save_slot(1, false)
+	_expect(PlayerProgress.reset_game("normal"), "occupied fixture slot 1 should save")
+	PlayerProgress.level = 12
+	PlayerProgress.play_seconds = 45240.0
+	_expect(PlayerProgress.save_game(), "occupied fixture slot 1 values should save")
+	PlayerProgress.set_active_save_slot(2, false)
+	_expect(PlayerProgress.reset_game("easy"), "other slot fixture should save")
+	PlayerProgress.money = 2222
+	_expect(PlayerProgress.save_game(), "slot 2 backup generation should save")
+	PlayerProgress.set_active_save_slot(3, false)
+	_expect(PlayerProgress.reset_game("hard"), "third slot fixture should save")
+	PlayerProgress.money = 3333
+	_expect(PlayerProgress.save_game(), "slot 3 backup generation should save")
+	var slot_2_hashes := _slot_artifact_hashes(2)
+	var slot_3_hashes := _slot_artifact_hashes(3)
+	PlayerProgress.set_active_save_slot(1)
+	var occupied_viewport := SubViewport.new()
+	occupied_viewport.size = Vector2i(1280, 720)
+	occupied_viewport.disable_3d = true
+	add_child(occupied_viewport)
+	var occupied_title: TitleScreen = TitleScreen.new()
+	occupied_title.theme = ThemeFactory.build_theme()
+	occupied_viewport.add_child(occupied_title)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var occupied_navigations: Array[String] = []
+	occupied_title.navigate_requested.connect(
+		func(screen_id: String, _payload: Dictionary) -> void: occupied_navigations.append(screen_id)
+	)
+	occupied_title._on_new_game_pressed()
+	_expect(occupied_title._difficulty_panel.visible, "occupied flow must select difficulty before confirmation")
+	_expect(not occupied_title._overwrite_panel.visible, "old pre-difficulty confirmation must not appear")
+	occupied_title._on_difficulty_selected("hard")
+	_expect(occupied_title._overwrite_panel.visible, "occupied difficulty selection should show one final confirmation")
+	var details := occupied_title._overwrite_detail_label.text
+	for required in ["スロット: 1", "Lv.12", "12時間34分", "むずかしい", "元には戻せません"]:
+		_expect(details.contains(required), "overwrite confirmation should include %s" % required)
+	_expect(occupied_title.get_viewport().gui_get_focus_owner() == occupied_title._overwrite_cancel_button, "overwrite confirmation should focus cancel first")
+	_expect(occupied_navigations.is_empty(), "occupied flow should not navigate before final confirmation")
+	occupied_title._confirm_overwrite()
+	_expect_eq(occupied_navigations, ["harbor"], "occupied final confirmation should navigate once")
+	_expect_eq(String(_read_json(_slot_save_path(1)).get("difficulty_id", "")), "hard", "confirmed overwrite should persist hard")
+	_expect_slot_artifact_hashes(2, slot_2_hashes, "occupied overwrite must preserve slot 2 artifacts")
+	_expect_slot_artifact_hashes(3, slot_3_hashes, "occupied overwrite must preserve slot 3 artifacts")
+	occupied_viewport.queue_free()
 	await get_tree().process_frame
 
 

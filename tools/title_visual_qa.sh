@@ -55,11 +55,20 @@ mkdir -p "$GODOT_HOME"
 # macOS対象のcustom user data dirとshader cacheを先に作り、初回描画のERRORを避ける。
 mkdir -p "$GODOT_HOME/Library/Application Support/tsuri_quest_umi/shader_cache"
 mkdir -p "$INVALID_GODOT_HOME/Library/Application Support/tsuri_quest_umi/shader_cache"
-rm -f /tmp/tsuri_title_normal.png
-rm -f /tmp/tsuri_title_storage_blocked.png
-rm -f /tmp/tsuri_title_storage_blocked_compare.png
-rm -f /tmp/tsuri_title_invalid_artifact.png
-rm -f /tmp/tsuri_title_invalid_artifact_compare.png
+rm -f /tmp/tsuri_title_*.png
+
+for mode in empty occupied 3slot difficulty overwrite; do
+  mode_home="$(safe_title_qa_home "${GODOT_HOME}_${mode}")"
+  rm -rf "$mode_home"
+  mkdir -p "$mode_home/Library/Application Support/tsuri_quest_umi/shader_cache"
+  echo "==> E7 title ${mode}状態をキャプチャ"
+  TSURI_QA_SANDBOX=1 TSURI_QA_DETERMINISTIC=1 TSURI_TITLE_PREVIEW_MODE="$mode" \
+    TSURI_TITLE_PREVIEW_ALLOW_MUTATION=1 HOME="$mode_home" \
+    "$GODOT" --path "$ROOT" "res://tools/title_preview.tscn"
+done
+
+echo "==> E7 title 5状態の比較画像を作成"
+python3 "$ROOT/tools/build_screen_visual_comparison.py" title_e7
 
 echo "==> タイトル通常状態をキャプチャ"
 TSURI_QA_SANDBOX=1 TSURI_QA_DETERMINISTIC=1 HOME="$GODOT_HOME" \
@@ -88,3 +97,8 @@ echo "/tmp/tsuri_title_storage_blocked.png"
 echo "/tmp/tsuri_title_storage_blocked_compare.png"
 echo "/tmp/tsuri_title_invalid_artifact.png"
 echo "/tmp/tsuri_title_invalid_artifact_compare.png"
+echo "/tmp/tsuri_title_empty.png"
+echo "/tmp/tsuri_title_occupied.png"
+echo "/tmp/tsuri_title_3slot.png"
+echo "/tmp/tsuri_title_difficulty.png"
+echo "/tmp/tsuri_title_overwrite.png"

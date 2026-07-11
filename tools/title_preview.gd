@@ -1,5 +1,5 @@
 extends Control
-## タイトル画面の通常 / セーブ領域利用不可 / 不正artifact状態を1280x720で実描画する。
+## タイトル画面の代表/高リスク状態を1280x720で実描画する。
 
 const TitleScreen = preload("res://src/ui/title_screen.gd")
 const ThemeFactory = preload("res://src/ui/ui_theme.gd")
@@ -7,11 +7,19 @@ const ThemeFactory = preload("res://src/ui/ui_theme.gd")
 const NORMAL_OUT := "/tmp/tsuri_title_normal.png"
 const STORAGE_BLOCKED_OUT := "/tmp/tsuri_title_storage_blocked.png"
 const INVALID_ARTIFACT_OUT := "/tmp/tsuri_title_invalid_artifact.png"
+const EMPTY_OUT := "/tmp/tsuri_title_empty.png"
+const OCCUPIED_OUT := "/tmp/tsuri_title_occupied.png"
+const THREE_SLOT_OUT := "/tmp/tsuri_title_3slot.png"
+const DIFFICULTY_OUT := "/tmp/tsuri_title_difficulty.png"
+const OVERWRITE_OUT := "/tmp/tsuri_title_overwrite.png"
 
 
 func _ready() -> void:
 	theme = ThemeFactory.build_theme()
 	var mode := OS.get_environment("TSURI_TITLE_PREVIEW_MODE")
+	if mode in ["empty", "occupied", "3slot", "difficulty", "overwrite"]:
+		if not _prepare_e7_fixture(mode):
+			return
 	if mode == "storage_blocked":
 		PlayerProgress._save_storage_ready = false
 		PlayerProgress._save_storage_block_message = (
@@ -57,6 +65,13 @@ func _ready() -> void:
 	add_child(screen)
 	for _frame in range(4):
 		await get_tree().process_frame
+	if mode == "difficulty":
+		screen._show_difficulty_modal()
+	elif mode == "overwrite":
+		screen._show_difficulty_modal()
+		screen._on_difficulty_selected("hard")
+	for _frame in range(2):
+		await get_tree().process_frame
 	if mode == "invalid_artifact":
 		if (
 			not screen._slot_buttons[0].text.contains("破損")
@@ -78,13 +93,20 @@ func _ready() -> void:
 		return
 	var out := OS.get_environment("TSURI_TITLE_PREVIEW_OUT").strip_edges()
 	if out.is_empty():
-		out = (
+		var e7_outputs := {
+			"empty": EMPTY_OUT,
+			"occupied": OCCUPIED_OUT,
+			"3slot": THREE_SLOT_OUT,
+			"difficulty": DIFFICULTY_OUT,
+			"overwrite": OVERWRITE_OUT,
+		}
+		out = String(e7_outputs.get(mode, (
 			STORAGE_BLOCKED_OUT
 			if mode == "storage_blocked"
 			else INVALID_ARTIFACT_OUT
 			if mode == "invalid_artifact"
 			else NORMAL_OUT
-		)
+		)))
 	var save_error := image.save_png(out)
 	if save_error != OK:
 		push_error("タイトル画面の実スクショを保存できませんでした（code %d）。" % save_error)
@@ -92,6 +114,43 @@ func _ready() -> void:
 		return
 	print("title_preview: wrote %s" % out)
 	get_tree().quit(0)
+
+
+func _prepare_e7_fixture(mode: String) -> bool:
+	PlayerProgress._save_storage_ready = true
+	PlayerProgress._save_storage_block_message = ""
+	PlayerProgress.active_save_slot = PlayerProgress.DEFAULT_SAVE_SLOT
+	var user_data_path := ProjectSettings.globalize_path("user://").simplify_path()
+	if not is_mutation_root_allowed(
+		user_data_path, OS.get_environment("TSURI_TITLE_PREVIEW_ALLOW_MUTATION")
+	) or _mutation_root_is_symlink(user_data_path):
+		_fail_preview("E7 title previewのmutation guardを通過できませんでした。")
+		return false
+	for slot_id in range(1, PlayerProgress.SAVE_SLOT_COUNT + 1):
+		var mkdir_error := DirAccess.make_dir_recursive_absolute(PlayerProgress.SAVE_SLOT_ROOT + "/%d" % slot_id)
+		if mkdir_error != OK and mkdir_error != ERR_ALREADY_EXISTS:
+			_fail_preview("E7 fixture用directoryを作成できませんでした。")
+			return false
+	_remove_all_slot_artifacts()
+	if mode in ["occupied", "overwrite"]:
+		return _write_preview_save(PlayerProgress.current_save_path(), _occupied_save(12, 45240.0, "normal"))
+	if mode == "3slot":
+		return (
+			_write_preview_save(PlayerProgress.current_save_path(), _occupied_save(12, 45240.0, "normal"))
+			and _write_preview_save(PlayerProgress.SAVE_SLOT_ROOT + "/2/" + PlayerProgress.SAVE_FILE_NAME, _occupied_save(5, 7380.0, "easy"))
+			and _write_preview_save(PlayerProgress.SAVE_SLOT_ROOT + "/3/" + PlayerProgress.SAVE_FILE_NAME, _occupied_save(28, 359940.0, "hard"))
+		)
+	return true
+
+
+func _occupied_save(level: int, play_seconds: float, difficulty_id: String) -> Dictionary:
+	return {
+		"version": PlayerProgress.SAVE_VERSION,
+		"level": level,
+		"money": 12450,
+		"play_seconds": play_seconds,
+		"difficulty_id": difficulty_id,
+	}
 
 
 func _write_preview_save(path: String, data: Dictionary) -> bool:

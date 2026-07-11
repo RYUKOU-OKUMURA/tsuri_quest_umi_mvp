@@ -1,6 +1,6 @@
 # タイトル画面 QA判断ログ
 
-最終更新: 2026-07-11 / 状態: 既存レイアウトfreeze維持・ID-01利用不可／SAVE-03不正artifact状態freeze
+最終更新: 2026-07-12 / 状態: E7難易度選択／上書き確認freeze、既存安全契約維持
 参照: `docs/14_opening_title_showcase.md` の採用構成、および通常状態の現行runtime
 QA更新コマンド: `./tools/title_visual_qa.sh`
 
@@ -14,6 +14,9 @@ QA更新コマンド: `./tools/title_visual_qa.sh`
 | 不正artifact状態 | 対象slotを「セーブ破損（利用不可）」、状態欄を「セーブ破損。原本は変更していません」と表示 | `src/ui/title_screen.gd` | 一過性signalに依存せず、破損原本を空slotと誤認させない |
 | 不正artifact時の操作 | 対象slotの続き・新規開始をdisabled。他の正常slotは利用可能 | `src/ui/title_screen.gd` | 明示的な安全操作なしの原本上書きを防ぐ |
 | 固定アンカー | ロゴ、魚、menu枠、3slot、下段2ボタンの既存矩形 | `src/ui/title_screen.gd` | ID-01ではfreeze値を再オープンしない |
+| 難易度選択 | やさしい／ふつう／むずかしいの3択＋キャンセル | `src/ui/title_screen.gd` | 新規開始時のみ。既存title画像スキンを再利用 |
+| 上書き最終確認 | 難易度選択後に1回。slot番号／Lv／プレイ時間／選択難易度／不可逆警告を表示 | `src/ui/title_screen.gd` | 初期focusはキャンセル。二段階確認禁止 |
+| モーダルfocus | 表示中は背面slot／下段ボタンを`FOCUS_NONE` | `src/ui/title_screen.gd` | Tab／方向キーの背面漏れを防止 |
 
 ## 2. 不採用・再試行禁止リスト
 
@@ -30,6 +33,7 @@ QA更新コマンド: `./tools/title_visual_qa.sh`
 | 装飾パス累計 | 0 | 素材・配色・座標は変更なし | freeze |
 | 利用不可文言 | 1 | 既存slot / 状態欄 / 主ボタン内へ収めた | freeze |
 | 不正artifact文言 | 1 | 既存矩形を動かさず、状態欄のellipsisを解消する短文へ収束 | freeze |
+| E7モーダル説明幅 | 1 | hard説明が1行に収まるよう新規モーダルのみ拡幅 | freeze |
 
 ## 4. 暫定判定・再検証TODO
 
@@ -37,9 +41,30 @@ QA更新コマンド: `./tools/title_visual_qa.sh`
 
 ## 5. 現在の残ギャップ
 
-- 正式製品名・v1.0.0外装とE7難易度モーダルは後続。追加時も本利用不可状態を優先し、既存矩形を不用意に動かさない。
+- 正式製品名・v1.0.0外装は後続。
+
+## 6. E7状態契約（freeze）
+
+- 局所uplift: E7仕様で確定済みの難易度選択／上書き最終確認ブロックだけを新設する。
+- 存在する領域: 背景スクリム、共通画像スキンのモーダル、3難易度ボタン、キャンセル、使用済みslotのみ最終確認。
+- 存在しない領域: 旧上書き確認→難易度→再確認の二段階、難易度の後日変更、倍率の重複詳細表示、新規PNG。
+- 主操作: 選択slotの新規開始難易度を1つ選ぶ。補助操作はキャンセル。上書き最終確認の初期focusはキャンセル。
+- 状態対応: emptyは選択後すぐreset、occupiedは選択後にslot番号／Lv／プレイ時間／難易度／不可逆警告の5項目を含む1回の最終確認。storage blocked / future guarded / invalid artifactはモーダル非表示でreset不可。
+- 固定アンカー: ロゴ、魚、menu枠、3slot、状態欄、下段2ボタンの現行矩形。可変領域は画面中央のオーバーレイのみ。
+- 素材/runtime分担: title/commonの既存画像スキンが枠・ボタン質感、Palette/GameFontsとGodot runtimeが文言・選択状態・フォーカス・スクリムを担う。
+- 動かす値: 新規モーダル内の矩形と内部余白のみ。不動freeze: 既存画面の全矩形、素材、配色、フォント、安全遮断契約。
+
+| 状態 | 固定seed/データ | 表示/非表示 | 固定アンカー | 可変領域 | evidence出力 | smoke契約 |
+|---|---|---|---|---|---|---|
+| empty | 3slot空 | 通常UI | 既存全矩形 | slot文言のみ | `title/2026-07-12_e7_empty.png` | 選択のみで保存しない |
+| occupied | slot1=Lv12/12時間34分 | 通常UI | 同上 | slot文言のみ | `title/2026-07-12_e7_occupied.png` | 旧確認は先に出ない |
+| 3slot | 3slotすべて使用済み（Lv/時間/難易度差） | 通常UI | 同上 | slot文言のみ | `title/2026-07-12_e7_3slot.png` | 選択slot以外のartifact不変 |
+| difficulty | slot1選択 | 3択モーダル | 背面の既存全矩形 | モーダル | `title/2026-07-12_e7_difficulty.png` | 3IDとcancel、安全状態での非表示 |
+| overwrite | slot1=Lv12/12時間34分、hard | 5項目最終確認 | 背面の既存全矩形 | モーダル | `title/2026-07-12_e7_overwrite.png` | 確認1回、cancel初期focus、確認後開始 |
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-12 E7局所upliftを採用。empty / occupied / 3slot / difficulty / overwriteの5状態をGodot 4.7・1280x720で実撮影し、hard説明と5項目最終確認に見切れ・省略・重なりなし。既存title矩形、素材、storage blocked / future guarded / invalid artifact契約は不動。smokeで空slotの保存成功後遷移、SAVE-02失敗時の非遷移、確認1回／5項目／cancel初期focus、背面focus遮断、他2slotのmain/backup/tmp不変を固定。証拠は`docs/qa/evidence/title/2026-07-12_e7_*.png`、主比較は`2026-07-12_e7_difficulty_compare.png`と`2026-07-12_e7_overwrite_compare.png`。
 
 2026-07-11 ID-01の高リスク状態としてセーブ領域利用不可を追加。「移行失敗を空slotに見せない」だけを変更し、既存レイアウト、素材、配色、フォント、通常状態の導線は不動とした。通常状態と同じ1280x720・同じ矩形で比較し、3slot、状態欄、主ボタンの文言に見切れ・重なりがなく、全操作がdisabledになることを実スクショとsmokeで確認した。採用証拠は`docs/qa/evidence/title/2026-07-11_id01_storage_blocked.png`、比較は`docs/qa/evidence/title/2026-07-11_id01_storage_block_compare.png`。通常状態へ戻すとslotと主ボタンが再度有効になる契約もsmokeで固定した。
 
