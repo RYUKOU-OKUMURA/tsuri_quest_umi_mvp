@@ -74,7 +74,9 @@ FINDING_CODES = {
     "trademark-clearance": "trademark-clearance-reviewed",
     "ai-input-rights": "ai-input-rights-cleared",
 }
-MANAGEMENT_FILES = {"README.md", "OWNER_EVIDENCE_REQUEST.md"}
+MANAGEMENT_FILES = {
+    "README.md", "OWNER_EVIDENCE_REQUEST.md", "2026-07-12_RIGHTS-01A_AUDIT.md",
+}
 OFFICIAL_PUBLIC_URLS = {
     "https://suno.com/terms/",
     "https://help.suno.com/en/articles/9601665",
@@ -2513,6 +2515,9 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
         ledger = require_file("docs/31_asset_ledger.md")
         evidence = require_file("docs/qa/evidence/licensing/README.md")
         owner_request = require_file("docs/qa/evidence/licensing/OWNER_EVIDENCE_REQUEST.md")
+        dated_audit = require_file(
+            "docs/qa/evidence/licensing/2026-07-12_RIGHTS-01A_AUDIT.md"
+        )
         evidence = normalized_overrides.get(
             (ROOT / "docs/qa/evidence/licensing/README.md").resolve(), evidence,
         )
@@ -2581,6 +2586,7 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
         non_evidence_management_files = {
             (evidence_root / "README.md").resolve(),
             (evidence_root / "OWNER_EVIDENCE_REQUEST.md").resolve(),
+            (evidence_root / "2026-07-12_RIGHTS-01A_AUDIT.md").resolve(),
         }
         completed_fields: dict[str, list[dict[str, str]]] = {}
         for evidence_id, close_date, saved_evidence in completed_rows:
@@ -2691,6 +2697,22 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
             assert marker in mplus_ofl, f"M PLUS OFL missing: {marker}"
         for marker in ("ユーザー入力・保存待ち",):
             assert marker in evidence, f"licensing evidence index missing: {marker}"
+        assert "2026-07-12_RIGHTS-01A_AUDIT.md" in evidence, (
+            "licensing evidence index missing dated RIGHTS-01A audit link"
+        )
+        for marker in (
+            "| ID | 現在の主張 | 必要証拠 | 現存証拠 | 判定 | 残作業 |",
+            "## 外部入力の最短チェックリスト",
+            "リポジトリ側で可能な棚卸し、証拠受入形式、機密情報境界、状態判定は準備完了",
+        ):
+            assert marker in dated_audit, f"dated RIGHTS-01A audit missing marker: {marker}"
+        dated_audit_ids = re.findall(
+            r"^\| (U-\d{2}) \|", dated_audit, flags=re.MULTILINE
+        )
+        assert dated_audit_ids == [f"U-{number:02d}" for number in range(1, 9)], (
+            f"dated RIGHTS-01A audit must cover U-01 through U-08 once and in order: "
+            f"{dated_audit_ids}"
+        )
         for evidence_id in sorted(evidence_ids):
             assert evidence_id in owner_request, (
                 f"owner evidence request missing unresolved item: {evidence_id}"
