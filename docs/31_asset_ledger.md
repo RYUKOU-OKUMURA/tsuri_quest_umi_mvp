@@ -69,7 +69,7 @@ RIGHTS-01A状態marker（`docs/qa/evidence/licensing/README.md` の未完/完了
 | `reference/02_underwater_fight_mockup.png` | `extract_top_status_icons.py` | `top_status_icon_sheet.png`（時計・太陽・風・コインをcrop、採用済み） | referenceの生成元・日付・入力権利と派生利用権はU-03待ち・U-08待ち |
 | `reference/cooking_flow/01_cook_select_concept.png` | `generate_cooking_showcase_assets.py` | `cooking_room_bg.png`, `fish_icon_sheet.png`, `dish_feature_aji_shioyaki.png`、紙質blendを使う各frame、二次派生 `meal_table_spread.png`（採用済み） | referenceの生成元・日付・入力権利と派生利用権はU-03待ち・U-08待ち |
 
-## 3. 音源（BGM / SE） — 条件確認済み・加入期間証拠待ち
+## 3. 音源（BGM / SE） — 条件確認済み・証拠待ち
 
 `assets/audio/` の全10ファイル（`opening_bgm` / `アタリ_ヒット音` / `外海・回遊ルート` / `岩礁・消波ブロック` / `水中ファイト通常` / `海辺（さざなみ）` / `海辺（少し風が強い）` / `港外・潮目` / `砂浜・かけあがり` / `逃げられた`）は同一条件のため一括記載:
 
