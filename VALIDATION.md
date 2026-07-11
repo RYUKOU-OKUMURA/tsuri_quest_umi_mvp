@@ -129,7 +129,7 @@ find tools -maxdepth 1 \
 
 ## Pre-RC / RCで追加する検証
 
-- E7: 3難易度の保存・倍率・ファイト・タイトル/ステータス表示（SAVE Gate完了後の次工程）
+- E7（完了済み・固定RCでも再実行）: 3難易度の保存・倍率・ファイト・タイトル/ステータス表示
 - E11: 音量、slot削除、表示、全画面入力、製品アイコン・スプラッシュ
 - 対象Mac: 最低macOS、最低対象Mac、Intel確認
 - 権利: RIGHTS-01Aの確定と、最終成果物内のnotice・Godot license・OFL同梱（RIGHTS-01B）

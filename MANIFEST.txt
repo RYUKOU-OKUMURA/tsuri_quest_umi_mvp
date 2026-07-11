@@ -53,7 +53,7 @@ CLAUDE.md
 .godot/（Godotが生成するimport/cache。source管理・製品payloadの対象外）
 
 [PRE-RCで確定する項目]
-- E7/E11統合後の実ファイル構成
+- E11統合後の実ファイル構成
 - RIGHTS-01A確定後のライセンス・notice入力
 - 製品アイコン、ブートスプラッシュ、設定画面素材
 - 30対象・manifest完全一致へfreeze済みのrelease verifier骨格を固定RC modeで実行し、検査する配布物内ファイル一覧を確定

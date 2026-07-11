@@ -2,7 +2,7 @@
 
 正本: `docs/30_v2_expansion_overview.md`（読む順: docs/30 §4 共通仕様 → 本doc）
 前提フェーズ: E0〜E6・E10・Release Gate 1（SAVE-01〜04）。環と発売対象機能の完成後のポリッシュ枠
-状態: 実装中（2026-07-11 E7-core完了。E7-fight / E7-UI着手可）。進行状況はdocs/30 §6、発売前の追加監査事項はdocs/45を参照
+状態: 完了（2026-07-12。E7-core → E7-fight → E7-UIの順でmainへ統合し、全DoDを同一commit系列で再検証）。進行状況はdocs/30 §6、発売前の追加監査事項はdocs/45を参照
 
 決定#3: **新しいセーブデータの開始時のみ選択・変更不可**。既存セーブはロード補完で「ふつう」。
 
@@ -44,6 +44,8 @@
 | E7-UI | `title_screen.gd`、`status_screen.gd`、`save_system_smoke.gd`のタイトル導線回帰、title preview / visual QA / QA文書 | 新規ゲーム導線、1回の上書き確認、難易度表示 |
 
 E7-coreのAPIを先に統合し、そのcommitを基点にE7-fightとE7-UIを並列化する。統合順はcore→fight→UIとし、最終的に全DoDを同じcommit系列で再検証する。
+
+完了記録（2026-07-12）: 上記順でmainへ統合。`difficulty_fight_audit`、`save_system_verify.sh`、title/status runtime visual QA、`status_smoke`、`validate_project.sh`、release verifyを通過し、各スライスと統合差分の独立レビューでP0/P1/P2なし。
 
 ## E7-5. 触ってよいファイル / DoD
 
