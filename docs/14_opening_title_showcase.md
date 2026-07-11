@@ -31,15 +31,26 @@
 
 ## QA
 
-- 静的タイトルプレビュー: `python3 tools/build_title_static_preview.py`
-- 出力: `/tmp/tsuri_title_static_preview.png`
+- 静的タイトル素材プレビュー（旧構成の素材目視用。現行UXの合否には使わない）: `python3 tools/build_title_static_preview.py`
+- 静的出力: `/tmp/tsuri_title_static_preview.png`
+- 実画面・状態比較: `./tools/title_visual_qa.sh`
+- 出力: `/tmp/tsuri_title_normal.png`、`/tmp/tsuri_title_storage_blocked.png`、`/tmp/tsuri_title_storage_blocked_compare.png`
 - プロジェクト検証: `./tools/validate_project.sh`
 - 水中ファイト回帰確認: `./tools/fight_visual_qa.sh`
 - 音声確認: 通常起動でタイトル表示中にBGMが流れ、開始/続きからで港へ遷移しても継続し、釣り場選択などへ移ると停止することを確認する。
 
+### ID-01 セーブ領域利用不可状態
+
+| 状態 | 表示 | 操作 | 固定するもの |
+|---|---|---|---|
+| 通常・空スロット | 各slotを「空き」、状態欄を「新しく始められます」と表示 | slot選択と「ゲームを始める」を有効化 | ロゴ、魚、menu枠、3slot、下段2ボタンの矩形 |
+| namespace移行未完了 | 3slotを「利用不可（再起動）」、状態欄と主ボタンを再起動案内へ変更 | slot選択・続き・新規開始をすべて無効化 | 通常状態と同じ矩形・素材・配色。部分コピーを空slotとして見せない |
+
+状態A→B→Aで既存矩形を動かさず、文言とdisabled状態だけを切り替える。契約は`tools/save_namespace_migration_smoke.gd`、原寸比較は`tools/title_visual_qa.sh`で固定する。
+
 ## 現在の合格ライン
 
 - 背景が第一印象になり、ロゴ/メニューが背景を過剰に覆わない。
-- タイトル文字、サブタイトル、コンセプト、3つのボタンが 1280x720 で枠内に収まる。
+- タイトル文字、サブタイトル、コンセプト、3slot、状態欄、下段2ボタンが 1280x720 で枠内に収まる。
 - 画像素材は Godot import 済みで、`.import` と `title_backdrop.gd.uid` を含めて管理する。
 - `ui_theme.gd` や水中ファイト UI は変更せず、既存のファイトQAが通る。

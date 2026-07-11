@@ -2,7 +2,7 @@
 
 正本: `docs/30_v2_expansion_overview.md`（読む順: docs/30 §4 共通仕様 → 本doc）
 前提フェーズ: 実施時期は分割型（下記 §E11-0）。画面実装はE7完了後
-状態: 一部完了（3スロット、素材台帳基盤）。実装部はE7後。進行状況はdocs/30 §6、監査追加事項はdocs/45参照
+状態: 一部完了（3スロット、素材台帳基盤、Release Gate 0、ID-01）。最小export spikeと実装部は未完、画面実装はE7後。進行状況はdocs/30 §6、監査追加事項はdocs/45参照
 
 目的: ローンチ対象（E0〜E7＋E10）の外周——設定・セーブ保護・表示・入力・権利・export・製品外装——を販売品質にする。2026-07-10の横断監査結果はdocs/45を正とする。
 
@@ -13,7 +13,8 @@
 | E11-5 素材台帳の運用開始 | **即時**（docs/31 作成済み。以後は新素材と同コミットで追記） | 時間が経つほど出所を思い出せなくなる |
 | 3スロット | **E3で完了済み** | 旧単一save→slot 1を含め実装済み。E11では回帰対象 |
 | E11-7 Release Gate 0の5件 | **2026-07-11確定済み** | 決定値をexport、設定、入力、表示、製品外装へ引き渡す |
-| user data namespace / OS application ID / 最小export spike / 権利証跡 | **E7と並走または先行** | 正式名称変更と最終パッケージの手戻りを防ぐ |
+| ID-01: user data namespace / OS application ID / store識別子 / 旧save移行 | **2026-07-11完了** | 正式名称変更前に固定し、旧MVP saveを非破壊コピー |
+| 最小export spike / 権利証跡 | **E7と並走または先行** | 正式名称変更と最終パッケージの手戻りを防ぐ |
 | E11-1〜4・6 の実装 | **E7完了後・ローンチ前** | ゲーム内容確定後に外周を締める |
 
 ## E11-1. 設定画面（新画面）
@@ -42,8 +43,9 @@
 
 - §E11-7 の確定方針に従い、`stretch/aspect="keep"`＋黒帯へ変更する
 - 1280x720に加え、16:10 / 4:3でゲーム領域が16:9のまま維持され、余剰領域が黒帯となることを実スクショで確認する。全画面スクショ比較は既存 visual QA スクリプトに解像度パラメータを足して流用する
-- `config/name` から「MVP」を外す前に、Godotのuser data namespace（custom user directory name相当）を固定し、旧名称配下saveの移行要否を検証する
-- user data namespace、対象OSのapplication / bundle ID、チャネル発行のstore App IDを別々に記録する。store App ID未発行時は空欄ではなく「未発行」
+- ID-01でGodot user data namespaceを`tsuri_quest_umi`へ固定し、旧`Godot/app_userdata/釣りクエスト ～海釣り編～ MVP`配下のsave artifactを、新側saveが空の初回だけ旧原本保持でコピーする。移行marker・tmp・hash照合により再コピーと上書きを防ぐ
+- macOS bundle ID=`net.physical-balance-lab.tsuri-quest-umi`、itch.io予定slug=`tsuri-quest-umi`、store App ID=`未発行`として分離記録済み。bundle IDのpreset配線は最小export spikeで行う
+- `config/name`からのMVP除去とruntime version表記は、ID-01回帰と最小export spikeを通過後、E11-EXTERIORで行う
 - 正式名、runtime version表記、専用icon、ブートスプラッシュを設定（差し替え素材はdocs/31台帳へ記入）
 
 ## E11-4. 入力
@@ -62,7 +64,7 @@
 ## E11-6. チャネル固有要件（§E11-7 の決定後に確定）
 
 - 対象OSごとの `export_presets.cfg` を追加し、debug / release exportを再現可能にする
-- user data namespaceとOS application / bundle ID確定直後に最小export spikeを行い、clean user dataで起動・新規save・再起動読込を確認する
+- ID-01の確定値を使って最小export spikeを行い、bundle IDの実配線、clean user dataでの起動・新規save・再起動読込、旧MVP namespaceコピーを確認する
 - launch candidateでは成果物hash、Godot版、対象OS、対象OS / チャネルで必要な署名 / 公証状態を記録する
 - tools/release_verify.sh相当で全smoke / audit、未説明ERROR、save移行、export起動を1コマンド化する
 
@@ -82,7 +84,7 @@
 | 4 | 非16:9の表示方針 | `keep`＋黒帯 | 2026-07-11 |
 | 5 | 正式名称 / version表記 | 「釣りクエスト ～海釣り編～」/ v1.0.0 | 2026-07-11 |
 
-セーブスロット数は決定#17の3スロットで解消済み。上表はdocs/30決定#20と同期する。後続ID-01では、Godotのuser data namespace、macOSのOS application / bundle ID、itch.ioのstore App IDを正式名称とは別の値として記録する。store App IDが未発行なら「未発行」と記録し、user data namespaceと旧save移行方針を固定してから`config/name`へ正式名称を反映する。macOSの最低対象ハードウェア / 性能計測の基準機も、PERF-RELEASE着手前の別技術判断として記録する。
+セーブスロット数は決定#17の3スロットで解消済み。上表はdocs/30決定#20と同期する。ID-01ではuser data namespace=`tsuri_quest_umi`、macOS bundle ID=`net.physical-balance-lab.tsuri-quest-umi`、itch.io予定slug=`tsuri-quest-umi`、store App ID=`未発行`を正式名称とは別に固定し、旧MVP namespaceの非破壊コピー移行を実装した。`config/name`の正式名称反映は最小export spike後のE11-EXTERIORで行う。macOSの最低対象ハードウェア / 性能計測の基準機も、PERF-RELEASE着手前の別技術判断として記録する。
 
 ## E11-8. 触ってよいファイル / DoD
 

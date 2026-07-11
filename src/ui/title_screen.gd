@@ -255,26 +255,34 @@ func _make_button_style(path: String) -> StyleBoxTexture:
 
 
 func _select_slot(slot_id: int) -> void:
+	if PlayerProgress.is_save_storage_blocked():
+		show_common_notification(PlayerProgress.save_storage_block_message())
+		_refresh_slot_ui()
+		return
 	_selected_slot_id = clampi(slot_id, 1, PlayerProgress.SAVE_SLOT_COUNT)
 	_refresh_slot_ui()
 
 
 func _refresh_slot_ui() -> void:
+	var storage_blocked := PlayerProgress.is_save_storage_blocked()
 	for index in range(_slot_buttons.size()):
 		var slot_id := index + 1
 		var summary := PlayerProgress.save_slot_summary(slot_id)
 		var selected := slot_id == _selected_slot_id
 		var button := _slot_buttons[index]
 		button.text = _slot_button_text(summary)
+		button.disabled = storage_blocked
 		_apply_title_button_skin(button, selected)
 	var active_summary := PlayerProgress.save_slot_summary(_selected_slot_id)
 	var has_save := bool(active_summary.get("has_save", false))
 	var future_guarded := bool(active_summary.get("future_guarded", false))
 	_slot_status_label.text = _slot_status_text(active_summary)
-	_continue_button.disabled = not has_save or future_guarded
-	_new_button.disabled = future_guarded
+	_continue_button.disabled = storage_blocked or not has_save or future_guarded
+	_new_button.disabled = storage_blocked or future_guarded
 	_new_button.text = (
-		"このスロットは利用できません"
+		"セーブを確認できません（再起動）"
+		if storage_blocked
+		else "このスロットは利用できません"
 		if future_guarded
 		else ("最初から" if has_save else "ゲームを始める")
 	)
@@ -282,6 +290,8 @@ func _refresh_slot_ui() -> void:
 
 func _slot_button_text(summary: Dictionary) -> String:
 	var slot_id := int(summary.get("slot_id", 1))
+	if bool(summary.get("storage_blocked", false)):
+		return "スロット%d　利用不可（再起動）" % slot_id
 	if bool(summary.get("future_guarded", false)):
 		return "スロット%d　新しい版（対応版が必要）" % slot_id
 	if not bool(summary.get("has_save", false)):
@@ -295,6 +305,8 @@ func _slot_button_text(summary: Dictionary) -> String:
 
 func _slot_status_text(summary: Dictionary) -> String:
 	var slot_id := int(summary.get("slot_id", 1))
+	if bool(summary.get("storage_blocked", false)):
+		return "セーブデータを確認できません。ゲームを再起動してください"
 	if bool(summary.get("future_guarded", false)):
 		return "スロット%d　%s" % [slot_id, future_save_guard_message()]
 	if not bool(summary.get("has_save", false)):
@@ -328,6 +340,10 @@ func _format_updated_time(unix_time: int) -> String:
 
 
 func _on_new_game_pressed() -> void:
+	if PlayerProgress.is_save_storage_blocked():
+		show_common_notification(PlayerProgress.save_storage_block_message())
+		_refresh_slot_ui()
+		return
 	if PlayerProgress.is_future_save_version_guarded(_selected_slot_id):
 		_refresh_slot_ui()
 		return
@@ -339,6 +355,10 @@ func _on_new_game_pressed() -> void:
 
 
 func _continue_selected_slot() -> void:
+	if PlayerProgress.is_save_storage_blocked():
+		show_common_notification(PlayerProgress.save_storage_block_message())
+		_refresh_slot_ui()
+		return
 	if not PlayerProgress.set_active_save_slot(_selected_slot_id):
 		_refresh_slot_ui()
 		return
@@ -346,6 +366,10 @@ func _continue_selected_slot() -> void:
 
 
 func _start_new_game() -> void:
+	if PlayerProgress.is_save_storage_blocked():
+		show_common_notification(PlayerProgress.save_storage_block_message())
+		_refresh_slot_ui()
+		return
 	if not PlayerProgress.set_active_save_slot(_selected_slot_id, false):
 		_refresh_slot_ui()
 		return

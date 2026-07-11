@@ -33,7 +33,7 @@
 | U-04 | `assets/icon.svg` の作者・作成手段・権利者、および製品採否 | 採用なら権利者申告、非採用なら差し替え側の証拠を台帳化 |
 | U-05 | MITでライセンスするコードの法的権利者名 | `LICENSE.md` のplaceholderを実名または法人名へ置換 |
 | U-06 | 正式製品名「釣りクエスト ～海釣り編～」/ v1.0.0は確定済み。販売地域・商標対象区分と、公式DB検索・必要な専門家確認の証跡 | 対象範囲を確定し、J-PlatPat等の公式DBと必要地域での調査結果を保存する |
-| U-07 | 初回販売=itch.io、対象OS=macOS Universalは確定済み。正確なGodot export preset/template、itch.io公開時のAI・年齢/コンテンツ関連入力の要否、最終配布物 | 実公開フローで必要項目を確認して回答控えを保存し、clean exportにGodot由来notice・`THIRD_PARTY_NOTICES.md`・2件のOFL全文が揃うことを検証する |
+| U-07 | 初回販売=itch.io、対象OS=macOS Universal、bundle ID=`net.physical-balance-lab.tsuri-quest-umi`、予定slug=`tsuri-quest-umi`、store App ID=`未発行`は確定済み。正確なGodot export preset/template、itch.io公開時のAI・年齢/コンテンツ関連入力の要否、最終配布物 | bundle IDをpresetへ配線し、実公開フローで必要項目を確認して回答控えを保存する。clean exportにGodot由来notice・`THIRD_PARTY_NOTICES.md`・2件のOFL全文が揃うことを検証する |
 | U-08 | AI入力に第三者著作物・音源を用いたかの作成者申告 | サービス規約上必要な入力権利の確認を完了 |
 
 ## itch.io / macOS向けの提出・保存待ち

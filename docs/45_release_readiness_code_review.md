@@ -15,7 +15,7 @@ Godot: 4.7.stable.official.5b4e0cb0f
 
 ### 0.1 2026-07-11追補
 
-本書の発見事項本文・open表記・Launch Gateチェックボックスは基準コミット時点の監査スナップショットとして維持する。監査後にSAVE-01、UI-QUEST-01、UI-READY-01、UI-M0-01、UI-C0-01を完了した。Release Gate 0、SAVE-02〜04、E7、E11、release_verifyは未完。現行進捗はdocs/30 §6と対象QAを参照する。
+本書の発見事項本文・open表記・Launch Gateチェックボックスは基準コミット時点の監査スナップショットとして維持する。監査後にRelease Gate 0、ID-01、SAVE-01〜02、UI-QUEST-01、UI-READY-01、UI-M0-01、UI-C0-01を完了した。最小export spike、SAVE-03〜04、E7、E11、release_verifyは未完。現行進捗はdocs/30 §6と対象QAを参照する。
 
 本書が扱うもの:
 

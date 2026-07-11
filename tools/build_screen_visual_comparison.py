@@ -20,6 +20,14 @@ TEXT = "#f4ead1"
 MUTED = "#9fe8ff"
 
 PRESETS = {
+    "title_storage_block": [
+        {
+            "id": "TITLE_STORAGE_BLOCK",
+            "reference": Path("/tmp/tsuri_title_normal.png"),
+            "capture": Path("/tmp/tsuri_title_storage_blocked.png"),
+            "out": Path("/tmp/tsuri_title_storage_blocked_compare.png"),
+        }
+    ],
     "status": [
         {
             "id": "STATUS",

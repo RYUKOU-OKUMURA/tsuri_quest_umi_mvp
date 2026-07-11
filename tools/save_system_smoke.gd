@@ -30,26 +30,6 @@ func _ready() -> void:
 	_expect(not PlayerProgress.has_save_file(), "clean slate should report no save file")
 	await _verify_title_empty_slot_selection_is_non_committal()
 
-	# 旧単一セーブはslot 1へ自動移行される
-	_write_text(
-		PlayerProgress.LEGACY_SAVE_PATH,
-		JSON.stringify({"version": PlayerProgress.SAVE_VERSION, "level": 4, "money": 888})
-	)
-	_write_text(
-		PlayerProgress.LEGACY_SAVE_BACKUP_PATH,
-		JSON.stringify({"version": PlayerProgress.SAVE_VERSION, "level": 3, "money": 777})
-	)
-	PlayerProgress._migrate_legacy_save_files()
-	_expect(FileAccess.file_exists(_slot_save_path(1)), "legacy main save should migrate to slot 1")
-	_expect(
-		FileAccess.file_exists(_slot_backup_path(1)),
-		"legacy backup save should migrate to slot 1"
-	)
-	_expect(not FileAccess.file_exists(PlayerProgress.LEGACY_SAVE_PATH), "legacy main should move away")
-	PlayerProgress.set_active_save_slot(1)
-	_expect_eq(PlayerProgress.level, 4, "migrated slot should load level")
-	_expect_eq(PlayerProgress.money, 888, "migrated slot should load money")
-
 	# slot 2はslot 1と独立して保存される
 	_remove_all_save_files()
 	PlayerProgress.set_active_save_slot(2, false)
@@ -165,8 +145,6 @@ func _ready() -> void:
 	await _verify_title_future_slot_guard_ui()
 	_expect(not PlayerProgress.set_active_save_slot(1), "switching back should re-evaluate the future guard")
 	_expect_future_slot_hashes(future_hashes, "re-evaluating the guard must not change guarded slot files")
-	_remove_all_save_files()
-	_verify_future_guard_blocks_legacy_migration_on_startup()
 	_remove_all_save_files()
 	_expect(PlayerProgress.set_active_save_slot(1, false), "cleanup should restore slot 1 for later tests")
 
@@ -534,37 +512,6 @@ func _verify_unknown_version_type_guards() -> void:
 		_expect_future_slot_hashes(guarded_hashes, "%s case should keep slot 1 unchanged after re-evaluation" % label)
 
 
-func _verify_future_guard_blocks_legacy_migration_on_startup() -> void:
-	# 起動時にbackup / tmpだけで将来版を検出しても、legacyをslotへ移動させない。
-	_write_text(
-		PlayerProgress.LEGACY_SAVE_PATH,
-		JSON.stringify({"version": PlayerProgress.SAVE_VERSION, "money": 999, "legacy_payload": "keep"})
-	)
-	_write_text(
-		_slot_backup_path(1),
-		JSON.stringify({"version": PlayerProgress.SAVE_VERSION + 1, "future_backup_payload": "keep"})
-	)
-	_write_text(
-		_slot_tmp_path(1),
-		JSON.stringify({"version": PlayerProgress.SAVE_VERSION + 2, "future_tmp_payload": "keep"})
-	)
-	var legacy_hash := _file_hash(PlayerProgress.LEGACY_SAVE_PATH)
-	var backup_hash := _file_hash(_slot_backup_path(1))
-	var tmp_hash := _file_hash(_slot_tmp_path(1))
-	var startup_progress := PlayerProgressScript.new()
-	startup_progress._sandbox_mode = false
-	startup_progress._initialize_save_storage()
-	_expect(
-		startup_progress.is_future_save_version_guarded(1),
-		"startup should guard a slot when only backup/tmp is future version"
-	)
-	_expect(not FileAccess.file_exists(_slot_save_path(1)), "startup guard should not create a main save")
-	_expect_eq(_file_hash(PlayerProgress.LEGACY_SAVE_PATH), legacy_hash, "startup guard should preserve legacy main")
-	_expect_eq(_file_hash(_slot_backup_path(1)), backup_hash, "startup guard should preserve future backup")
-	_expect_eq(_file_hash(_slot_tmp_path(1)), tmp_hash, "startup guard should preserve future tmp")
-	startup_progress.free()
-
-
 func _expect_future_slot_hashes(expected_hashes: Dictionary, message: String) -> void:
 	_expect_eq(_file_hash(_slot_save_path(1)), String(expected_hashes.get("main", "")), "%s (main)" % message)
 	_expect_eq(_file_hash(_slot_backup_path(1)), String(expected_hashes.get("backup", "")), "%s (backup)" % message)
@@ -585,9 +532,6 @@ func _remove_all_save_files() -> void:
 		_remove_if_exists(_slot_save_path(slot_id))
 		_remove_if_exists(_slot_backup_path(slot_id))
 		_remove_if_exists(_slot_tmp_path(slot_id))
-	_remove_if_exists(PlayerProgress.LEGACY_SAVE_PATH)
-	_remove_if_exists(PlayerProgress.LEGACY_SAVE_BACKUP_PATH)
-	_remove_if_exists(PlayerProgress.LEGACY_SAVE_TMP_PATH)
 
 
 func _slot_save_path(slot_id: int) -> String:

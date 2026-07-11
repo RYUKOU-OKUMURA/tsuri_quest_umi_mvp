@@ -18,6 +18,7 @@ fi
 mkdir -p "$GODOT_HOME"
 
 # HOME 隔離しているため user:// への書き込みは本番セーブに届かない
+TSURI_SAVE_MIGRATION_SMOKE_ALLOW=1 HOME="$GODOT_HOME" "$GODOT" --headless --path "$ROOT" "res://tools/save_namespace_migration_smoke.tscn"
 TSURI_SAVE_SMOKE_ALLOW=1 HOME="$GODOT_HOME" "$GODOT" --headless --path "$ROOT" "res://tools/save_system_smoke.tscn"
 
 echo "Save system verification passed."

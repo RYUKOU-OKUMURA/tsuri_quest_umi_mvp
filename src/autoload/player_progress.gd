@@ -1,5 +1,7 @@
 extends Node
 
+const SaveNamespaceMigrator = preload("res://src/autoload/save_namespace_migrator.gd")
+
 signal progress_changed
 signal level_up(new_level: int)
 signal fish_caught(fish_id: String, size_cm: float)
@@ -13,11 +15,9 @@ const SAVE_SLOT_ROOT := "user://slots"
 const SAVE_FILE_NAME := "tsuri_quest_save.json"
 const SAVE_BACKUP_FILE_NAME := "tsuri_quest_save.json.bak"
 const SAVE_TMP_FILE_NAME := "tsuri_quest_save.json.tmp"
-const LEGACY_SAVE_PATH := "user://tsuri_quest_save.json"
-const LEGACY_SAVE_BACKUP_PATH := "user://tsuri_quest_save.json.bak"
-const LEGACY_SAVE_TMP_PATH := "user://tsuri_quest_save.json.tmp"
 const SAVE_VERSION := 1
 const FUTURE_SAVE_GUARD_MESSAGE := "新しい版で作られたセーブのため、対応する新しい版で開いてください。"
+const SAVE_STORAGE_MIGRATION_BLOCK_MESSAGE := SaveNamespaceMigrator.DEFAULT_FAILURE_MESSAGE
 const SEA_CHART_FRAGMENT_MAX := 3
 const EXP_REQUIREMENTS: Array[int] = [
 	0,
@@ -105,6 +105,8 @@ var _sandbox_mode := false
 var _known_title_ids: Array[String] = []
 # save_system_smoke 専用。通常実行では空文字のままにする。
 var _save_failure_injection_stage := ""
+var _save_storage_ready := true
+var _save_storage_block_message := ""
 
 
 func _ready() -> void:
@@ -117,8 +119,28 @@ func _ready() -> void:
 
 
 func _initialize_save_storage() -> void:
-	if not is_future_save_version_guarded(DEFAULT_SAVE_SLOT):
-		_migrate_legacy_save_files()
+	_save_storage_ready = false
+	_save_storage_block_message = ""
+	var migrator := SaveNamespaceMigrator.new(
+		{
+			"slot_count": SAVE_SLOT_COUNT,
+			"default_slot": DEFAULT_SAVE_SLOT,
+			"save_version": SAVE_VERSION,
+			"save_file_name": SAVE_FILE_NAME,
+			"backup_file_name": SAVE_BACKUP_FILE_NAME,
+			"tmp_file_name": SAVE_TMP_FILE_NAME,
+		}
+	)
+	var migration_result := migrator.run()
+	if not bool(migration_result.get("ok", false)):
+		_save_storage_block_message = String(
+			migration_result.get("message", SAVE_STORAGE_MIGRATION_BLOCK_MESSAGE)
+		)
+		_reset_runtime_state()
+		_remember_current_titles()
+		_report_save_failure(_save_storage_block_message)
+		return
+	_save_storage_ready = true
 	load_game()
 
 
@@ -135,6 +157,18 @@ func _detect_sandbox_mode() -> bool:
 
 func is_sandbox_mode() -> bool:
 	return _sandbox_mode
+
+
+func is_save_storage_blocked() -> bool:
+	return not _save_storage_ready
+
+
+func save_storage_block_message() -> String:
+	return (
+		_save_storage_block_message
+		if not _save_storage_block_message.is_empty()
+		else SAVE_STORAGE_MIGRATION_BLOCK_MESSAGE
+	)
 
 
 func _process(delta: float) -> void:
@@ -154,6 +188,8 @@ func current_tmp_path() -> String:
 
 
 func has_save_file(slot_id: int = -1) -> bool:
+	if not _save_storage_ready:
+		return false
 	var resolved_slot := active_save_slot if slot_id < 1 else _normalized_slot(slot_id)
 	return FileAccess.file_exists(_slot_save_path(resolved_slot)) or FileAccess.file_exists(
 		_slot_backup_path(resolved_slot)
@@ -162,6 +198,15 @@ func has_save_file(slot_id: int = -1) -> bool:
 
 func future_save_guard_status(slot_id: int = -1) -> Dictionary:
 	var resolved_slot := active_save_slot if slot_id < 1 else _normalized_slot(slot_id)
+	if not _save_storage_ready:
+		return {
+			"guarded": false,
+			"slot_id": resolved_slot,
+			"version": 0,
+			"version_type": TYPE_NIL,
+			"reason": "storage_blocked",
+			"path": "",
+		}
 	for path in _slot_save_paths(resolved_slot):
 		var data := _read_save_dictionary(path)
 		if not data.has("version"):
@@ -202,6 +247,9 @@ func is_future_save_version_guarded(slot_id: int = -1) -> bool:
 
 
 func set_active_save_slot(slot_id: int, load_slot := true) -> bool:
+	if not _save_storage_ready:
+		_report_save_failure(save_storage_block_message())
+		return false
 	active_save_slot = _normalized_slot(slot_id)
 	if is_future_save_version_guarded(active_save_slot):
 		_reset_runtime_state()
@@ -222,6 +270,20 @@ func set_active_save_slot(slot_id: int, load_slot := true) -> bool:
 
 func save_slot_summary(slot_id: int) -> Dictionary:
 	var resolved_slot := _normalized_slot(slot_id)
+	if not _save_storage_ready:
+		return {
+			"slot_id": resolved_slot,
+			"active": resolved_slot == active_save_slot,
+			"has_save": false,
+			"level": 1,
+			"money": 500,
+			"play_seconds": 0.0,
+			"updated_unix": 0,
+			"future_guarded": false,
+			"future_version": null,
+			"storage_blocked": true,
+			"storage_block_message": save_storage_block_message(),
+		}
 	var future_guard := future_save_guard_status(resolved_slot)
 	var future_guarded := bool(future_guard.get("guarded", false))
 	var data := _read_save_dictionary(_slot_save_path(resolved_slot))
@@ -251,10 +313,15 @@ func save_slot_summary(slot_id: int) -> Dictionary:
 		"updated_unix": updated_unix,
 		"future_guarded": future_guarded,
 		"future_version": future_guard.get("version", null),
+		"storage_blocked": false,
+		"storage_block_message": "",
 	}
 
 
 func reset_game() -> bool:
+	if not _save_storage_ready:
+		_report_save_failure(save_storage_block_message())
+		return false
 	if is_future_save_version_guarded():
 		_report_save_failure(FUTURE_SAVE_GUARD_MESSAGE)
 		return false
@@ -872,6 +939,9 @@ func _award_quest_reward_rig() -> bool:
 func save_game() -> bool:
 	if _sandbox_mode:
 		return true
+	if not _save_storage_ready:
+		_report_save_failure(save_storage_block_message())
+		return false
 	if is_future_save_version_guarded():
 		_report_save_failure(FUTURE_SAVE_GUARD_MESSAGE)
 		return false
@@ -956,6 +1026,10 @@ func load_game() -> void:
 	if _sandbox_mode:
 		_remember_current_titles()
 		return
+	if not _save_storage_ready:
+		push_warning(save_storage_block_message())
+		_remember_current_titles()
+		return
 	if is_future_save_version_guarded():
 		push_warning(FUTURE_SAVE_GUARD_MESSAGE)
 		_remember_current_titles()
@@ -986,21 +1060,6 @@ func _read_save_dictionary(path: String) -> Dictionary:
 	if typeof(parsed) != TYPE_DICTIONARY:
 		return {}
 	return parsed
-
-
-func _migrate_legacy_save_files() -> void:
-	_ensure_slot_dir(DEFAULT_SAVE_SLOT)
-	_move_legacy_save_file(LEGACY_SAVE_PATH, _slot_save_path(DEFAULT_SAVE_SLOT))
-	_move_legacy_save_file(LEGACY_SAVE_BACKUP_PATH, _slot_backup_path(DEFAULT_SAVE_SLOT))
-	_move_legacy_save_file(LEGACY_SAVE_TMP_PATH, _slot_tmp_path(DEFAULT_SAVE_SLOT))
-
-
-func _move_legacy_save_file(from_path: String, to_path: String) -> void:
-	if not FileAccess.file_exists(from_path) or FileAccess.file_exists(to_path):
-		return
-	var err := DirAccess.rename_absolute(from_path, to_path)
-	if err != OK:
-		push_warning("旧セーブの移行に失敗しました（%s → %s / code %d）" % [from_path, to_path, err])
 
 
 func _normalized_slot(slot_id: int) -> int:
