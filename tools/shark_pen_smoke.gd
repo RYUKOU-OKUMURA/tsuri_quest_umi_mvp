@@ -126,19 +126,30 @@ func _verify_shark_exclusion_from_market_and_cooking() -> void:
 func _verify_legacy_shark_quest_rejected() -> void:
 	_seed_clean_progress()
 	PlayerProgress.inventory["nekozame"] = 1
-	PlayerProgress.quest_board = [
+	PlayerProgress._apply_save_data(
 		{
-			"template_id": "bulk_common",
-			"kind": "delivery",
-			"fish_id": "nekozame",
-			"count": 1,
-			"reward_money": 1000,
-			"text": "ネコザメを1匹届けてほしい",
-		},
-	]
-	var result := PlayerProgress.deliver_quest(0)
-	_expect(not bool(result.get("ok", false)), "legacy shark quest should be rejected")
-	_expect_eq(PlayerProgress.fish_count("nekozame"), 1, "rejected shark quest should not consume stock")
+			"level": 30,
+			"inventory": {"nekozame": 1},
+			"owned_boats": ["skiff", "offshore_boat", "bluewater_boat"],
+			"quest_board": [
+				{
+					"template_id": "bulk_common",
+					"kind": "delivery",
+					"fish_id": "nekozame",
+					"count": 1,
+					"reward_money": 1000,
+					"text": "ネコザメを1匹届けてほしい",
+				},
+			],
+		}
+	)
+	_expect_eq(PlayerProgress.quest_board.size(), 3, "legacy shark quest should be removed and refilled")
+	for quest in PlayerProgress.quest_board:
+		_expect(
+			String(quest.get("fish_id", "")) != "nekozame",
+			"repaired quest board should not retain a shark target"
+		)
+	_expect_eq(PlayerProgress.fish_count("nekozame"), 1, "quest repair should not consume old shark stock")
 
 
 func _seed_clean_progress() -> void:

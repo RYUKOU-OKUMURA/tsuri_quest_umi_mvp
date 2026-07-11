@@ -454,6 +454,19 @@ func _verify_semantic_save_candidate_selection() -> void:
 		"money": 4321,
 		"play_seconds": 98.5,
 		"spot_caught_counts": {"harbor_pier": {"aji": 2, "iwashi": 1}},
+		"quest_board": [
+			{
+				"template_id": "bulk_common",
+				"kind": "delivery",
+				"fish_id": "aji",
+				"count": 5,
+				"reward_money": 960,
+				"text": "アジを5匹届けてほしい",
+			},
+			{"kind": "delivery", "fish_id": "legacy_unknown", "text": "unknown"},
+			{"kind": "delivery", "fish_id": "nekozame", "text": "shark"},
+			{"kind": "record", "fish_id": "nushi_deep_ocean", "text": "boss"},
+		],
 	}
 	_write_text(_slot_save_path(1), JSON.stringify(invalid_main, "\t"))
 	_write_text(_slot_backup_path(1), JSON.stringify(valid_backup, "\t"))
@@ -466,6 +479,17 @@ func _verify_semantic_save_candidate_selection() -> void:
 	PlayerProgress.load_game()
 	_expect_eq(PlayerProgress.level, 8, "load should select the same valid backup as summary")
 	_expect_eq(PlayerProgress.money, 4321, "load money should match backup summary")
+	_expect_eq(PlayerProgress.quest_board.size(), 3, "fallback load should repair board to three quests")
+	_expect_eq(
+		String(PlayerProgress.quest_board[0].get("template_id", "")),
+		"bulk_common",
+		"fallback repair should preserve the valid quest in place"
+	)
+	for quest in PlayerProgress.quest_board:
+		_expect(
+			not GameData.is_quest_excluded_fish_id(String(quest.get("fish_id", ""))),
+			"fallback repair should remove unknown, shark, and boss quests"
+		)
 	_expect_eq(
 		int(PlayerProgress.spot_caught_counts.get("harbor_pier", {}).get("aji", 0)),
 		2,

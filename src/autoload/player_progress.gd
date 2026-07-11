@@ -1457,6 +1457,7 @@ func _apply_save_data(data: Dictionary) -> void:
 	var loaded_buff = data.get("pending_buff", {})
 	pending_buff = loaded_buff.duplicate(true) if typeof(loaded_buff) == TYPE_DICTIONARY else {}
 	play_seconds = maxf(0.0, float(data.get("play_seconds", 0.0)))
+	_repair_loaded_quest_board()
 	progress_changed.emit()
 
 
@@ -1478,10 +1479,20 @@ func _normalized_quest_board(value: Variant) -> Array[Dictionary]:
 		quest["text"] = String(quest.get("text", ""))
 		if String(quest.get("fish_id", "")).is_empty() or String(quest.get("text", "")).is_empty():
 			continue
+		if GameData.is_quest_excluded_fish_id(String(quest.get("fish_id", ""))):
+			continue
 		normalized.append(quest)
 		if normalized.size() >= 3:
 			break
 	return normalized
+
+
+func _repair_loaded_quest_board() -> void:
+	while quest_board.size() < 3:
+		var quest := GameData.generate_quest(_quest_generation_context())
+		if quest.is_empty():
+			break
+		quest_board.append(quest)
 
 
 func _normalized_count_dictionary(value: Variant) -> Dictionary:
