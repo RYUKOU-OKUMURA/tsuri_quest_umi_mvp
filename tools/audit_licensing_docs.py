@@ -7,6 +7,7 @@ from datetime import date, datetime, timezone
 import hashlib
 import html
 import ipaddress
+import io
 import os
 import re
 import subprocess
@@ -14,6 +15,7 @@ import sys
 import tempfile
 import time
 import unicodedata
+from contextlib import redirect_stderr, redirect_stdout
 from urllib.parse import unquote
 from zoneinfo import ZoneInfo
 
@@ -194,13 +196,16 @@ def scan_public_text(
             continue
         raise AssertionError(f"bare IPv6 destination in public licensing text: {path}")
     for ipv6_path_match in re.finditer(
-        r"(?<![0-9A-Fa-f:])([0-9A-Fa-f:]{2,})(?=/)", text_without_urls,
+        r"(?<![A-Za-z0-9_.%:-])"
+        r"((?=[A-Fa-f0-9:]*:)[A-Fa-f0-9:]{2,}(?:%[A-Za-z0-9_.-]+)?)"
+        r"(?![A-Za-z0-9_%:-])",
+        text_without_urls,
     ):
         try:
-            ipaddress.ip_address(ipv6_path_match.group(1))
+            ipaddress.ip_address(ipv6_path_match.group(1).split("%", 1)[0])
         except ValueError:
             continue
-        raise AssertionError(f"bare IPv6 path destination in public licensing text: {path}")
+        raise AssertionError(f"bare IPv6 destination in public licensing text: {path}")
     assert not re.search(
         r"(?<![A-Za-z0-9._-])localhost(?::\d{1,5})?(?:/[^\s|<>()\[\]`\"'、。]*)?",
         text_without_urls,
@@ -227,22 +232,73 @@ def scan_public_text(
             lambda match: " " * len(match.group(0)),
             domain_scan_text,
         )
-    assert not re.search(
-        r"(?:^|[\s(\[{'\"`:=|])"
-        r"(?:(?:[^\W_]|-)+。)+(?:[^\W\d_]){2,63}(?=/)",
-        domain_scan_text,
+    # ASCII-dot IDNs are domain-shaped.  Ideographic-dot text is ambiguous with
+    # Japanese sentences, so pure-Unicode labels need a path or explicit context.
+    idn_candidate = re.compile(
+        r"(?<![@\w.-])"
+        r"(?P<host>(?:[^\W_]|-)+(?:\.(?:[^\W_]|-)+)+)\.?(?![\w.-])",
         flags=re.IGNORECASE | re.MULTILINE,
-    ), f"bare Unicode-dot path destination in public licensing text: {path}"
-    # ASCII hosts are handled above.  For an IDN host, require a URI/field-like
-    # left boundary instead of treating Japanese sentence punctuation as a host
-    # boundary; otherwise ordinary prose such as ``...。全source/reference`` is
-    # indistinguishable from a Unicode hostname after compatibility folding.
-    assert not re.search(
-        r"(?:^|[\s(\[{'\"`:=|])"
-        r"(?:(?:[^\W_]|-)+\.)+(?:[^\W_]|-){2,63}(?=/)",
-        domain_scan_text,
+    )
+    unicode_dot_candidate = re.compile(
+        r"(?<![A-Za-z0-9@_.-])"
+        r"(?P<host>(?:[^\W_]|-)+(?:。(?:[^\W_]|-)+)+)[.。]?(?![\w.-])",
         flags=re.IGNORECASE | re.MULTILINE,
-    ), f"bare IDN path destination in public licensing text: {path}"
+    )
+    destination_context_core = r"(?:接続先|リンク先|URL|URI|host|domain|宛先|リンク)"
+    contextual_idn_candidate = re.compile(
+        rf"(?<!\w){destination_context_core}"
+        r"(?P<bridge>(?:(?:として|して|は|を|が|の|へ|と)|"
+        r"[ \t:：=＝→⇒\-–—>›»・、，,;；（(\[「『【'\"）)\]」』】]){1,24})"
+        r"(?P<host>(?:[^\W_]|-)+(?:[.。](?:[^\W_]|-)+)+)[.。]?(?![\w.-])",
+        flags=re.IGNORECASE | re.MULTILINE,
+    )
+    idn_matches = list(idn_candidate.finditer(domain_scan_text))
+    unicode_dot_matches = list(unicode_dot_candidate.finditer(domain_scan_text))
+    contextual_idn_matches = list(contextual_idn_candidate.finditer(domain_scan_text))
+    domain_matches = (
+        [(match, "general") for match in idn_matches]
+        + [(match, "unicode-dot") for match in unicode_dot_matches]
+        + [(match, "explicit-context") for match in contextual_idn_matches]
+    )
+    for match, match_mode in domain_matches:
+        host = match.group("host")
+        unicode_labels = any(ord(character) > 127 for character in host if character != "。")
+        if not unicode_labels and "。" not in host:
+            continue
+        ascii_dots = host.replace("。", ".")
+        labels = ascii_dots.split(".")
+        if not (
+            2 <= len(labels)
+            and all(
+                label
+                and len(label) <= 63
+                and not label.startswith("-")
+                and not label.endswith("-")
+                and all(character.isalnum() or character == "-" for character in label)
+                for label in labels
+            )
+            and len(labels[-1]) >= 2
+            and (labels[-1].isalpha() or labels[-1].lower().startswith("xn--"))
+        ):
+            continue
+        host_start = match.start("host")
+        destination_end = match.end()
+        if match_mode == "unicode-dot":
+            followed_by_path = (
+                destination_end < len(domain_scan_text)
+                and domain_scan_text[destination_end] == "/"
+            )
+            consumed_trailing_dot = destination_end > match.end("host")
+            explicit_ascii_trailing_dot = (
+                consumed_trailing_dot and domain_scan_text[destination_end - 1] == "."
+            )
+            if not followed_by_path and not explicit_ascii_trailing_dot:
+                continue
+        line_start = domain_scan_text.rfind("\n", 0, host_start) + 1
+        inside_markdown_code = domain_scan_text[line_start:host_start].count("`") % 2 == 1
+        if inside_markdown_code and Path(ascii_dots).suffix.lower() in PUBLIC_REPO_FILE_SUFFIXES:
+            continue
+        raise AssertionError(f"bare IDN destination in public licensing text: {path}")
     bare_domain_matches = list(re.finditer(
         r"(?<![@\w.-])(?:(?:[^\W_]|-)+\.)+"
         r"[A-Za-z](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.?(?![\w.-])",
@@ -306,6 +362,11 @@ def scan_public_text(
         flags=re.IGNORECASE,
     )
     sensitive_table_label = re.compile(rf"^{sensitive_label_core}$", flags=re.IGNORECASE)
+    sensitive_markdown_value = re.compile(
+        rf"\[\s*(?P<label>{sensitive_label_core})\s*\]\s*"
+        rf"(?:\((?P<inline>[^)]+)\)|\[(?P<reference>[^]]+)\])",
+        flags=re.IGNORECASE,
+    )
     def normalize_table_label(value: str) -> str:
         value = value.strip().strip(":=")
         value = value.strip("[]")
@@ -315,6 +376,9 @@ def scan_public_text(
 
     for line in normalized_text.splitlines():
         plain = re.sub(r"[*_`~]", "", line)
+        for match in sensitive_markdown_value.finditer(plain):
+            value = (match.group("inline") or match.group("reference") or "").strip()
+            assert not value, f"public licensing Markdown link/reference contains sensitive value: {path}"
         for match in sensitive_label.finditer(plain):
             value = match.group("value").rstrip("、。,.，;；")
             lower_plain = plain.lower()
@@ -390,12 +454,19 @@ def scan_public_text(
         f"public licensing text contains contiguous 12-19 digit card-like number: {path}"
     )
     grouped_card_pattern = re.compile(
-        r"(?<![A-Za-z0-9])\d{2,6}(?P<sep>[ \t./\-\u2010-\u2015\u2212\u30fc]+)\d{2,6}"
-        r"(?:(?P=sep)\d{2,6}){1,4}(?![A-Za-z0-9])"
+        r"(?<![A-Za-z0-9])\d{2,6}"
+        r"(?:(?:[ \t]*[./\-\u2010-\u2015\u2212\u30fc][ \t]*|[ \t]+)\d{2,6}){2,5}"
+        r"(?![A-Za-z0-9])"
     )
     for card_match in grouped_card_pattern.finditer(normalized_text):
-        digit_count = sum(character.isdigit() for character in card_match.group(0))
-        assert not 12 <= digit_count <= 19, (
+        candidate = card_match.group(0)
+        digit_groups = re.split(
+            r"[ \t]*[./\-\u2010-\u2015\u2212\u30fc][ \t]*|[ \t]+",
+            candidate,
+        )
+        digit_count = sum(len(group) for group in digit_groups)
+        card_like = 12 <= digit_count <= 19 and 2 <= len(digit_groups[0]) <= 4
+        assert not card_like, (
             f"public licensing text contains separated 12-19 digit card-like number: {path}"
         )
     wrapped_base64_size = 0
@@ -616,6 +687,7 @@ def parse_attestation(path: Path, asset_root: Path = ROOT) -> dict[str, str]:
 
 def audit_evidence_tree(
     evidence_root: Path, asset_root: Path = ROOT,
+    management_text_overrides: dict[Path, str] | None = None,
 ) -> dict[Path, dict[str, str]]:
     """Reject raw/private evidence anywhere under the public licensing tree."""
     assert evidence_root.is_dir() and not evidence_root.is_symlink(), f"invalid evidence root: {evidence_root}"
@@ -630,7 +702,10 @@ def audit_evidence_tree(
         assert path.is_file(), f"non-regular entry in licensing evidence tree: {relative}"
         if relative.parent == Path("."):
             assert relative.name in MANAGEMENT_FILES, f"raw/unknown evidence file forbidden: {relative}"
-            scan_public_text(path.read_text(encoding="utf-8"), path, allow_official_urls=True)
+            management_text = (management_text_overrides or {}).get(
+                path.resolve(), path.read_text(encoding="utf-8"),
+            )
+            scan_public_text(management_text, path, allow_official_urls=True)
             continue
         assert relative.parent == Path("attestations"), f"nested evidence path forbidden: {relative}"
         if relative.name == ".gitkeep":
@@ -1209,6 +1284,8 @@ def run_negative_self_tests() -> None:
         "ASCII HTML comment": "Finding: <!-- private evidence -->",
         "Unicode format character": "Finding: safe\u200bhidden",
         "Markdown bracketed Japanese label": "[氏名]: 山田太郎",
+        "Markdown inline-link Japanese label": "[氏名](山田太郎)",
+        "Markdown reference-link Japanese label": "[氏名][山田太郎]",
         "Japanese fullwidth label separator": "Finding: 氏名：山田太郎",
         "Japanese fullwidth equals": "電話番号＝09012345678",
         "Japanese inline slash with Markdown": "**氏名** / `山田太郎`",
@@ -1251,11 +1328,36 @@ def run_negative_self_tests() -> None:
         "bare IPv4 root": "Finding: 10.0.0.1",
         "bare IPv6 path": "Finding: [fd00::1]/private",
         "bare unbracketed IPv6 path": "Finding: fd00::1/private",
+        "bare unbracketed IPv6 root": "Finding: fd00::1",
+        "bare unbracketed IPv6 before period": "Finding: fd00::1.",
+        "bare loopback IPv6 root": "Finding: ::1",
+        "bare trailing-compression IPv6 root": "Finding: 2001:db8::",
         "bare localhost path": "Finding: localhost:8080/private",
         "punycode bare domain": "Finding: xn--eckwd4c7c.xn--zckzah/private",
         "IDN bare domain": "Finding: 秘密.example/private",
         "Unicode-TLD IDN path": "Finding: 秘密.テスト/private",
+        "Unicode-TLD IDN root": "Finding: 秘密.テスト",
+        "Unicode-TLD IDN trailing dot": "Finding: 秘密.テスト.",
+        "quoted Unicode-TLD IDN": "Finding: 「秘密.テスト」",
+        "Japanese-comma bounded Unicode-TLD IDN": "確認、秘密.テスト、",
+        "Japanese-period bounded Unicode-TLD IDN": "確認。秘密.テスト。",
+        "Japanese-semicolon bounded Unicode-TLD IDN": "確認；秘密.テスト；",
+        "ideographic-dot Unicode IDN path": "Finding: 秘密。テスト/private",
+        "long-label ideographic-dot Unicode IDN path": "Finding: 内部秘密。テスト/private",
+        "whitespace-bounded ideographic-dot IDN": "接続先は 秘密。テスト",
+        "adjacent contextual ideographic-dot IDN": "接続先は秘密。テスト",
+        "URL-context ideographic-dot IDN": "URLは秘密。テスト",
+        "arrow-context ideographic-dot IDN": "接続先→秘。テスト",
+        "link-destination contextual IDN": "リンク先は秘。テスト",
+        "link-destination colon IDN": "リンク先: private。example",
+        "link-destination quoted IDN": "リンク先「秘。テスト」",
+        "trailing-dot ideographic IDN path": "内部秘密。テスト./private",
+        "ideographic-trailing-dot IDN path": "秘。テスト。/p",
+        "contextual ASCII-label Unicode-dot path": "接続先はprivate。example/path",
+        "ASCII-label Unicode-dot trailing dot": "private。example.",
         "Unicode-dot bare domain": "Finding: private。example/path",
+        "mixed Unicode-dot path": "Finding: 内部秘密。example/path",
+        "intra-label mixed Unicode-dot path": "Finding: a秘。example/path",
         "twice-encoded protocol-relative URL": "Finding: &amp;#x2f;&amp;#x2f;private.example/evidence",
         "fullwidth amp nested URL": "Finding: ＆amp;#x2f;＆amp;#x2f;private.example/evidence",
         "fullwidth hash nested URL": "Finding: &amp;＃x2f;&amp;＃x2f;private.example/evidence",
@@ -1291,6 +1393,9 @@ def run_negative_self_tests() -> None:
         "hyphenated card number": "Finding: 4111-1111-1111-1111",
         "twelve-digit card-like number": "Finding: 4111-1111-1111",
         "slash-separated card number": "Finding: 4111/1111/1111/1111",
+        "mixed-separator card number": "Finding: 4111-1111 1111-1111",
+        "spaced-hyphen card number": "Finding: 4111 - 1111 - 1111 - 1111",
+        "spaced-slash card number": "Finding: 4111 / 1111 / 1111 / 1111",
         "Japanese mobile phone": "Finding: 090-1234-5678",
         "Japanese dotted phone": "Finding: 090.1234.5678",
         "Japanese landline phone": "Finding: 03-1234-5678",
@@ -1328,6 +1433,49 @@ def run_negative_self_tests() -> None:
         privacy_fixture,
         allow_official_urls=True,
     )
+    scan_public_text(
+        "benign boundaries: 12:34:56 2026-07-11T12:34:56+09:00 ratio 1:2:3 "
+        "versions v2.3.4 decimal 12345.6789 ratio 1920/1080 "
+        "repo `assets/showcase/example.v1.png` `docs/qa/evidence/2026-07-11/build_1234.md`",
+        privacy_fixture,
+        allow_official_urls=True,
+    )
+    scan_public_text(
+        "確認済み。問題なし\nこれは説明。続きです\n成功。完了\n正常。完了\n"
+        "曖昧rootは許可: 秘密。example private。テスト 完了。next SVG。Godot",
+        privacy_fixture,
+        allow_official_urls=True,
+    )
+    management_readme_path = (ROOT / "docs/qa/evidence/licensing/README.md").resolve()
+    management_readme = management_readme_path.read_text(encoding="utf-8")
+    main_injection_payloads = (
+        "確認: 秘密.テスト fd00::1 [氏名](山田太郎) 4111-1111 1111-1111",
+        "秘密.テスト",
+        "fd00::1",
+        "[氏名](山田太郎)",
+        "4111-1111 1111-1111",
+        "接続先は秘密。テスト",
+        "URLは秘密。テスト",
+        "接続先はprivate。example/path",
+        "private。example.",
+        "内部秘密。テスト./private",
+        "内部秘密。example/path",
+        "a秘。example/path",
+        "秘。テスト。/p",
+        "接続先→秘。テスト",
+        "リンク先は秘。テスト",
+        "リンク先: private。example",
+        "リンク先「秘。テスト」",
+    )
+    for injected_payload in main_injection_payloads:
+        injected_management_readme = f"{management_readme}\n{injected_payload}\n"
+        captured_stdout = io.StringIO()
+        captured_stderr = io.StringIO()
+        with redirect_stdout(captured_stdout), redirect_stderr(captured_stderr):
+            injected_main_result = main({management_readme_path: injected_management_readme})
+        assert injected_main_result == 1 and "licensing audit: FAIL:" in captured_stderr.getvalue(), (
+            f"main accepted private management README payload: {injected_payload}"
+        )
     boundary_instant = datetime(2026, 7, 10, 15, 30, tzinfo=timezone.utc)
     previous_tz = os.environ.get("TZ")
     try:
@@ -2348,13 +2496,30 @@ def run_positive_attestation_self_tests() -> None:
     print("licensing audit positive fixtures: ok (U-01/U-02/U-03/U-04 adopted+rejected/U-05/U-06/U-08)")
 
 
-def main() -> int:
+def main(management_text_overrides: dict[Path, str] | None = None) -> int:
     try:
+        normalized_overrides = {
+            path.resolve(): text for path, text in (management_text_overrides or {}).items()
+        }
+        allowed_override_paths = {
+            (ROOT / "docs/qa/evidence/licensing/README.md").resolve(),
+            (ROOT / "docs/qa/evidence/licensing/OWNER_EVIDENCE_REQUEST.md").resolve(),
+        }
+        assert normalized_overrides.keys() <= allowed_override_paths, (
+            "main fixture overrides are limited to licensing management Markdown"
+        )
         license_text = require_file("LICENSE.md")
         notices = require_file("THIRD_PARTY_NOTICES.md")
         ledger = require_file("docs/31_asset_ledger.md")
         evidence = require_file("docs/qa/evidence/licensing/README.md")
         owner_request = require_file("docs/qa/evidence/licensing/OWNER_EVIDENCE_REQUEST.md")
+        evidence = normalized_overrides.get(
+            (ROOT / "docs/qa/evidence/licensing/README.md").resolve(), evidence,
+        )
+        owner_request = normalized_overrides.get(
+            (ROOT / "docs/qa/evidence/licensing/OWNER_EVIDENCE_REQUEST.md").resolve(),
+            owner_request,
+        )
         project_config = require_file("project.godot")
         project_overview = require_file("docs/00_プロジェクト概要.md")
         v2_overview = require_file("docs/30_v2_expansion_overview.md")
@@ -2405,7 +2570,9 @@ def main() -> int:
         )
         evidence_root = (ROOT / "docs/qa/evidence/licensing").resolve()
         attestation_root = (evidence_root / "attestations").resolve()
-        parsed_attestations = audit_evidence_tree(evidence_root)
+        parsed_attestations = audit_evidence_tree(
+            evidence_root, management_text_overrides=normalized_overrides,
+        )
         all_attestation_fields: dict[str, list[dict[str, str]]] = {}
         for parsed_fields in parsed_attestations.values():
             all_attestation_fields.setdefault(parsed_fields["Evidence-ID"], []).append(parsed_fields)

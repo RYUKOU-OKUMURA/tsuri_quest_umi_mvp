@@ -50,7 +50,7 @@ RIGHTS-01A状態marker（`docs/qa/evidence/licensing/README.md` の未完/完了
 
 ### 2.2 `tools/source_assets/**` / `reference/**` を消費するパイプライン（全件追跡対象）
 
-下表のsource/reference-consuming pipelineについて、「生成元・日付・入力権利」は、個別記録がある行でもサービス規約の一般条件と第三者権利clearanceを分離する。`reference/` 自体が製品非同梱でも、その画素をcrop/blendして製品PNGへ書き出す経路は派生製品として追跡する。全source/referenceについて採否、生成元、日付、入力権利、製品出力先が揃うまで U-03・U-08 は未完了。
+下表のsource/reference-consuming pipelineについて、「生成元・日付・入力権利」は、個別記録がある行でもサービス規約の一般条件と第三者権利clearanceを分離する。`reference/` 自体が製品非同梱でも、その画素をcrop/blendして製品PNGへ書き出す経路は派生製品として追跡し、全source/referenceについて採否、生成元、日付、入力権利、製品出力先が揃うまで U-03・U-08 は未完了。
 
 | source群 | 消費スクリプト | 製品出力先 / 採否 | 権利証拠状態 |
 |---|---|---|---|

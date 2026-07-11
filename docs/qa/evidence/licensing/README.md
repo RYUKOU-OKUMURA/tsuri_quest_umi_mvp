@@ -2,7 +2,7 @@
 
 確認日: 2026-07-11
 
-このフォルダには、公開一次情報へのリンクと、非公開原本を確認したsanitized attestationだけを記録する。このrepositoryはpublicのため、raw screenshot/PDF/email/invoice、アカウント・決済ID、カード下4桁、住所、秘密URL等は保存しない。原本はアクセス制御された非公開保管先に置き、ここには原本SHA-256、確認日、確認者、証拠種別、redaction確認、非秘密の保管参照ID、個人情報を含まない判定だけを残す。通常validateはtracked/untrackedを問わず管理文書を含む本ディレクトリ全体を走査し、公式allowlist外URLと明白なPII/決済labelを拒否する。詳細契約は `OWNER_EVIDENCE_REQUEST.md`。
+このフォルダには、公開一次情報へのリンクと、非公開原本を確認したsanitized attestationだけを記録する。このrepositoryはpublicのため、raw screenshot/PDF/email/invoice、アカウント・決済ID、カード下4桁、住所、秘密URL等は保存しない。原本はアクセス制御された非公開保管先に置き、ここには原本SHA-256、確認日、確認者、証拠種別、redaction確認、非秘密の保管参照ID、個人情報を含まない判定だけを残し、通常validateはtracked/untrackedを問わず管理文書を含む本ディレクトリ全体を走査し、公式allowlist外URLと明白なPII/決済labelを拒否する。詳細契約は `OWNER_EVIDENCE_REQUEST.md`。
 
 ## 保存済み・repoで再確認可能
 
