@@ -18,14 +18,19 @@ else
 fi
 
 mkdir -p "$GODOT_HOME"
-rm -f /tmp/tsuri_status.png /tmp/tsuri_status_compare.png
+rm -f /tmp/tsuri_status_normal.png /tmp/tsuri_status_hard.png /tmp/tsuri_status_normal_compare.png /tmp/tsuri_status_hard_compare.png
 
-echo "==> Capture status preview"
-HOME="$GODOT_HOME" "$GODOT" --path "$ROOT" "res://tools/status_preview.tscn"
+echo "==> Capture status normal preview"
+TSURI_STATUS_DIFFICULTY=normal HOME="$GODOT_HOME" "$GODOT" --path "$ROOT" "res://tools/status_preview.tscn"
+
+echo "==> Capture status hard preview"
+TSURI_STATUS_DIFFICULTY=hard HOME="$GODOT_HOME" "$GODOT" --path "$ROOT" "res://tools/status_preview.tscn"
 
 echo "==> Build status side-by-side QA output"
 python3 "$ROOT/tools/build_screen_visual_comparison.py" status
 
 echo "Status visual QA output:"
-echo "/tmp/tsuri_status.png"
-echo "/tmp/tsuri_status_compare.png"
+echo "/tmp/tsuri_status_normal.png"
+echo "/tmp/tsuri_status_hard.png"
+echo "/tmp/tsuri_status_normal_compare.png"
+echo "/tmp/tsuri_status_hard_compare.png"

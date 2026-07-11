@@ -20,6 +20,15 @@ TEXT = "#f4ead1"
 MUTED = "#9fe8ff"
 
 PRESETS = {
+    "title_e7": [
+        {
+            "id": f"TITLE_E7_{state.upper()}",
+            "reference": Path("/tmp/tsuri_title_empty.png"),
+            "capture": Path(f"/tmp/tsuri_title_{state}.png"),
+            "out": Path(f"/tmp/tsuri_title_{state}_compare.png"),
+        }
+        for state in ["occupied", "3slot", "difficulty", "overwrite"]
+    ],
     "title_storage_block": [
         {
             "id": "TITLE_STORAGE_BLOCK",
@@ -38,11 +47,17 @@ PRESETS = {
     ],
     "status": [
         {
-            "id": "STATUS",
+            "id": "STATUS_NORMAL",
             "reference": ROOT / "reference" / "08_status_screen_mockup.png",
-            "capture": Path("/tmp/tsuri_status.png"),
-            "out": Path("/tmp/tsuri_status_compare.png"),
-        }
+            "capture": Path("/tmp/tsuri_status_normal.png"),
+            "out": Path("/tmp/tsuri_status_normal_compare.png"),
+        },
+        {
+            "id": "STATUS_HARD",
+            "reference": ROOT / "reference" / "08_status_screen_mockup.png",
+            "capture": Path("/tmp/tsuri_status_hard.png"),
+            "out": Path("/tmp/tsuri_status_hard_compare.png"),
+        },
     ],
     "fish_book": [
         {

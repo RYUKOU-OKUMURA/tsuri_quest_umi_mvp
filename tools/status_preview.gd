@@ -3,7 +3,8 @@ extends Control
 # 一部の魚を発見済みに捏造してカードが埋まるようにする（保存しないのでディスク不変）。
 const ThemeFactory = preload("res://src/ui/ui_theme.gd")
 const StatusScreen = preload("res://src/ui/status_screen.gd")
-const OUT := "/tmp/tsuri_status.png"
+const NORMAL_OUT := "/tmp/tsuri_status_normal.png"
+const HARD_OUT := "/tmp/tsuri_status_hard.png"
 const VW := Vector2i(1280, 720)
 
 
@@ -16,6 +17,8 @@ func _ready() -> void:
 
 	# 捏造：参照に近い状態へ（add_child 前＝_build_screen 実行前に行う）
 	PlayerProgress.level = 12
+	var difficulty_id := OS.get_environment("TSURI_STATUS_DIFFICULTY")
+	PlayerProgress.difficulty_id = difficulty_id if difficulty_id in ["normal", "hard"] else "normal"
 	PlayerProgress.exp = 1450
 	PlayerProgress.money = 12450
 	PlayerProgress.equipped_rod_id = "iso"
@@ -76,5 +79,27 @@ func _ready() -> void:
 	await get_tree().create_timer(0.4).timeout
 
 	var img := vp.get_texture().get_image()
-	img.save_png(OUT)
+	if not _is_rendered_image_valid(img):
+		push_error("ステータス画面が空描画または黒矩形を含む不正captureになりました。")
+		get_tree().quit(1)
+		return
+	var out := HARD_OUT if PlayerProgress.difficulty_id == "hard" else NORMAL_OUT
+	img.save_png(out)
 	get_tree().quit()
+
+
+func _is_rendered_image_valid(image: Image) -> bool:
+	if image == null or image.is_empty() or image.get_size() != VW:
+		return false
+	var sampled := 0
+	var near_black := 0
+	var transparent := 0
+	for y in range(0, image.get_height(), 4):
+		for x in range(0, image.get_width(), 4):
+			var pixel := image.get_pixel(x, y)
+			sampled += 1
+			if pixel.a < 0.9:
+				transparent += 1
+			if maxf(pixel.r, maxf(pixel.g, pixel.b)) <= 0.03:
+				near_black += 1
+	return transparent == 0 and near_black <= int(sampled * 0.01)

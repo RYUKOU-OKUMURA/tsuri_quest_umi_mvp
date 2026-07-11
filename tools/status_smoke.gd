@@ -11,11 +11,14 @@ var _failed := false
 
 func _ready() -> void:
 	_seed_progress()
+	PlayerProgress.difficulty_id = "normal"
 	_screen = _make_screen()
 	await get_tree().process_frame
 	await get_tree().process_frame
 
 	_expect(_screen._player_status_bar != null, "player status bar should be present")
+	_expect(_find_label_containing(_screen, "難易度: ふつう") != null, "status should show the normal difficulty name once")
+	_expect(_count_labels_containing(_screen, "難易度:") == 1, "status should not duplicate difficulty information")
 	_expect(_screen._player_panel != null, "player panel should be present")
 	_expect(_screen._summary_panel != null, "catch summary panel should be present")
 	_expect(_screen._inventory_panel != null, "inventory panel should be present")
@@ -62,6 +65,13 @@ func _ready() -> void:
 
 	_screen._return_button.pressed.emit()
 	_expect(_navigated_to == "harbor", "return button should navigate to harbor")
+
+	PlayerProgress.difficulty_id = "hard"
+	var hard_screen := _make_screen()
+	await get_tree().process_frame
+	_expect(_find_label_containing(hard_screen, "難易度: むずかしい") != null, "status should show the hard difficulty name")
+	_expect(_count_labels_containing(hard_screen, "難易度:") == 1, "hard status should show difficulty exactly once")
+	hard_screen.queue_free()
 
 	if _failed:
 		return
@@ -143,6 +153,13 @@ func _find_label_containing(root: Node, text: String) -> Label:
 		if found != null:
 			return found
 	return null
+
+
+func _count_labels_containing(root: Node, text: String) -> int:
+	var count := 1 if root is Label and String((root as Label).text).contains(text) else 0
+	for child in root.get_children():
+		count += _count_labels_containing(child, text)
+	return count
 
 
 func _buttons_with_meta(root: Node, meta_name: String) -> Array[Button]:

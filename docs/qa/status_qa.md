@@ -1,6 +1,6 @@
 # ステータス画面 QA判断ログ
 
-最終更新: 2026-07-05 / 状態: 共有GaugeBar/Theme R1確認済み
+最終更新: 2026-07-12 / 状態: E7難易度表示freeze
 参照画像: reference/08_status_screen_mockup.png
 QA更新コマンド: ./tools/status_visual_qa.sh
 
@@ -10,6 +10,8 @@ QA更新コマンド: ./tools/status_visual_qa.sh
 
 | 項目 | 値 | 場所 | 理由・備考 |
 |---|---|---|---|
+| 現在難易度 | ヘッダー左クラスタに「難易度: <name>」を1回 | `src/ui/status_screen.gd` | `PlayerProgress.difficulty()["name"]`の実値。重複情報なし |
+| ヘッダー外形 | 現行矩形を維持 | `src/ui/status_screen.gd` | `PlayerStatusBar`・3ペイン・フッターを不動 |
 
 ## 2. 不採用・再試行禁止リスト
 
@@ -20,6 +22,7 @@ QA更新コマンド: ./tools/status_visual_qa.sh
 
 | パラメータ | 回数 | 直近の変更内容 | 状態 |
 |---|---|---|---|
+| 難易度表示余白 | 0 | 初回採用値でnormal/hardとも収まり | freeze |
 
 ## 4. 暫定判定・再検証TODO
 
@@ -29,11 +32,16 @@ QA更新コマンド: ./tools/status_visual_qa.sh
 
 - R5: ステータス画面全体の参照upliftは未着手。本パスは共有 `GaugeBar` のR1表示同値移行のみ。
 
-## 6. フェーズスコープ宣言（作業中のみ）
+## 6. E7状態契約（freeze）
 
-なし。
+- 局所uplift: E7の現在難易度名をヘッダー左クラスタ内に小さく1回だけ表示する。
+- 存在する領域: `PlayerProgress.difficulty()["name"]` を使う「難易度: <名>」。存在しない領域: 倍率詳細、ID、変更操作、他ペインへの重複表示。
+- 動かす値: 左ヘッダー内の副文言領域の分割のみ。不動freeze: ヘッダー外形、`PlayerStatusBar`、3ペイン、フッター、素材、配色、フォント。
+- 状態契約: normal / hardの実値が同一アンカーに表示され、見切れ・省略・重なりがないこと。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-12 E7局所upliftを採用。normal / hardの実値をGodot 4.7・1280x720で撮影し、ヘッダー内に難易度名が1回だけ表示され、見切れ・省略・重なりなし。ヘッダー外形、`PlayerStatusBar`、3ペイン、フッターは不動。証拠は`docs/qa/evidence/status/2026-07-12_e7_normal.png`、`2026-07-12_e7_hard.png`および各compare。
 
 2026-07-05: `shared UI theme palette R1 pass` 完了。ステータス画面にも適用される共通テーマ色をPalette用途名へ移行した。
 
