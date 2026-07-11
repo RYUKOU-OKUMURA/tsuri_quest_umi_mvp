@@ -114,6 +114,7 @@ var _known_title_ids: Array[String] = []
 var _save_failure_injection_stage := ""
 var _save_storage_ready := true
 var _save_storage_block_message := ""
+var _active_slot_save_suppressed := false
 
 
 func _ready() -> void:
@@ -168,6 +169,10 @@ func is_sandbox_mode() -> bool:
 
 func is_save_storage_blocked() -> bool:
 	return not _save_storage_ready
+
+
+func is_active_slot_save_suppressed() -> bool:
+	return _active_slot_save_suppressed
 
 
 func save_storage_block_message() -> String:
@@ -269,6 +274,7 @@ func set_active_save_slot(slot_id: int, load_slot := true) -> bool:
 		_report_save_failure(INVALID_SAVE_MESSAGE)
 		return false
 	active_save_slot = resolved_slot
+	_active_slot_save_suppressed = false
 	_ensure_slot_dir(active_save_slot)
 	if not load_slot:
 		return true
@@ -279,6 +285,41 @@ func set_active_save_slot(slot_id: int, load_slot := true) -> bool:
 		_remember_current_titles()
 		progress_changed.emit()
 	return true
+
+
+## 指定slotのmain / backup / tmpだけを削除する。
+## active slot削除後は、明示的なslot再選択またはreset_gameまで保存を抑止する。
+func delete_save_slot(slot_id: int) -> Dictionary:
+	if slot_id < 1 or slot_id > SAVE_SLOT_COUNT:
+		return {"ok": false, "reason": "invalid_slot", "slot_id": slot_id, "active_deleted": false}
+	if _sandbox_mode:
+		return {"ok": false, "reason": "sandbox_mode", "slot_id": slot_id, "active_deleted": false}
+	if not _save_storage_ready:
+		_report_save_failure(save_storage_block_message())
+		return {"ok": false, "reason": "storage_blocked", "slot_id": slot_id, "active_deleted": false}
+
+	for path in _slot_save_paths(slot_id):
+		if not FileAccess.file_exists(path):
+			continue
+		var remove_error := DirAccess.remove_absolute(path)
+		if remove_error != OK:
+			var message := "セーブデータを削除できませんでした（コード: %d）。" % remove_error
+			_report_save_failure(message)
+			return {
+				"ok": false,
+				"reason": "remove_failed",
+				"slot_id": slot_id,
+				"active_deleted": false,
+				"message": message,
+			}
+
+	var active_deleted := slot_id == active_save_slot
+	if active_deleted:
+		_active_slot_save_suppressed = true
+		_reset_runtime_state()
+		_remember_current_titles()
+		progress_changed.emit()
+	return {"ok": true, "reason": "", "slot_id": slot_id, "active_deleted": active_deleted}
 
 
 func save_slot_summary(slot_id: int) -> Dictionary:
@@ -382,6 +423,7 @@ func reset_game(selected_difficulty_id: String = GameData.DEFAULT_DIFFICULTY_ID)
 		_report_save_failure(INVALID_SAVE_MESSAGE)
 		return false
 	_reset_runtime_state()
+	_active_slot_save_suppressed = false
 	difficulty_id = _normalized_difficulty_id(selected_difficulty_id)
 	_remember_current_titles()
 	var saved := save_game()
@@ -1128,6 +1170,8 @@ func _award_quest_reward_rig() -> bool:
 func save_game() -> bool:
 	if _sandbox_mode:
 		return true
+	if _active_slot_save_suppressed:
+		return false
 	if not _save_storage_ready:
 		_report_save_failure(save_storage_block_message())
 		return false
