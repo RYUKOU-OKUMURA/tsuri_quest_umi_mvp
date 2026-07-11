@@ -15,27 +15,32 @@ fi
 
 RUN_DIR="$(mktemp -d "${TMPDIR:-/tmp}/e11-qa-harness.XXXXXX")"
 trap 'rm -rf "$RUN_DIR"' EXIT
-mkdir -p "$RUN_DIR/home"
-
 run_probe() {
   local scene="$1"
   local output="$2"
   shift 2
-  HOME="$RUN_DIR/home" "$GODOT" --headless --path "$ROOT" "res://tools/$scene" -- "$@" --output "$output"
+  local home="$RUN_DIR/home-$(basename "$output" .json)"
+  mkdir -p "$home"
+  HOME="$home" "$GODOT" --headless --path "$ROOT" "res://tools/$scene" -- "$@" --output "$output"
 }
 
 run_probe e11_input_focus_probe.tscn "$RUN_DIR/input-self.json" --self-test
 run_probe e11_resolution_probe.tscn "$RUN_DIR/resolution-self.json" --self-test
 run_probe e11_input_focus_probe.tscn "$RUN_DIR/input-baseline.json"
+run_probe e11_input_focus_probe.tscn "$RUN_DIR/input-baseline-2.json"
+run_probe e11_input_focus_probe.tscn "$RUN_DIR/input-baseline-3.json"
 run_probe e11_resolution_probe.tscn "$RUN_DIR/resolution-baseline.json"
 
 set +e
-run_probe e11_resolution_probe.tscn "$RUN_DIR/resolution-strict.json" --strict
-strict_rc=$?
+run_probe e11_input_focus_probe.tscn "$RUN_DIR/strict-pass.json" --self-test --strict
+pass_rc=$?
+run_probe e11_input_focus_probe.tscn "$RUN_DIR/strict-finding.json" --self-test --self-test-finding --strict
+finding_rc=$?
 run_probe e11_input_focus_probe.tscn "$RUN_DIR/harness-error.json" --self-test --self-test-harness-error
 harness_rc=$?
 set -e
-[[ "$strict_rc" -eq 1 ]] || { echo "strict findingの終了コードが1ではありません: $strict_rc" >&2; exit 1; }
+[[ "$pass_rc" -eq 0 ]] || { echo "strict pass fixtureの終了コードが0ではありません: $pass_rc" >&2; exit 1; }
+[[ "$finding_rc" -eq 1 ]] || { echo "strict finding fixtureの終了コードが1ではありません: $finding_rc" >&2; exit 1; }
 [[ "$harness_rc" -eq 2 ]] || { echo "harness errorの終了コードが2ではありません: $harness_rc" >&2; exit 1; }
 
 python3 - "$RUN_DIR" "$ROOT" <<'PY'
@@ -72,19 +77,30 @@ def load(name):
 input_self = load("input-self.json")
 resolution_self = load("resolution-self.json")
 input_baseline = load("input-baseline.json")
+input_baseline_2 = load("input-baseline-2.json")
+input_baseline_3 = load("input-baseline-3.json")
 resolution_baseline = load("resolution-baseline.json")
-resolution_strict = load("resolution-strict.json")
+strict_pass = load("strict-pass.json")
+strict_finding = load("strict-finding.json")
 harness_error = load("harness-error.json")
 fixtures = {item["id"]: item["classification"] for item in input_self["screens"]}
 assert fixtures == {"fixture_good": "pass", "fixture_bad": "finding"}
 assert not input_self["findings"]
 assert not resolution_self["findings"]
-assert len(input_baseline["screens"]) == input_baseline["registry_count"] == 12
+assert len(input_baseline["screens"]) == input_baseline["registry_count"]
+assert input_baseline["registry_count"] in {12, 13}
+assert any(item["id"] == "settings" for item in input_baseline["screens"]) == (input_baseline["registry_count"] == 13)
+def summary(data):
+    return json.dumps({"findings": data["findings"], "screens": data["screens"]}, ensure_ascii=False, sort_keys=True)
+assert summary(input_baseline) == summary(input_baseline_2) == summary(input_baseline_3)
+shipyard = next(item for item in input_baseline["screens"] if item["id"] == "shipyard")
+assert shipyard["cancel_contract"] == "navigation" and shipyard["cancel_observed"] is True
 assert input_baseline["product_status"] in {"pass", "findings"}
 assert resolution_baseline["product_status"] in {"pass", "findings"}
 assert len(resolution_baseline["measurements"]) == 3
 assert all("observed" in item and "matches_expected_keep" in item for item in resolution_baseline["measurements"])
-assert resolution_strict["findings"] and resolution_strict["mode"] == "strict"
+assert strict_pass["mode"] == "strict" and not strict_pass["findings"]
+assert strict_finding["mode"] == "strict" and strict_finding["findings"]
 assert harness_error["harness_status"] == "error" and harness_error["harness_errors"]
 
 spec = importlib.util.spec_from_file_location("release_verify", root / "tools/release_verify.py")
@@ -93,7 +109,7 @@ spec.loader.exec_module(module)
 tests = module.discover(root)
 manifest = module.load_manifest(root / "tools/release_test_manifest.txt")
 module.classify(tests, manifest)
-assert len(tests) == len(manifest) == 30
+assert set(tests) == set(manifest)
 assert not any("e11_" in item for item in tests)
 print(f"e11_qa_harness: schema/fixtures/baseline ok; release tests={len(tests)}")
 PY

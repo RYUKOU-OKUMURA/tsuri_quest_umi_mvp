@@ -29,6 +29,7 @@ func _ready() -> void:
 			"window_size": _vec_json(get_window().size),
 		},
 		"measurements": _measurements,
+		"pixel_visual_qa": {"status": "required", "reason": "headless事前probeは実画面ピクセルと黒帯色を証明しない", "handoff": "non-headless resolution visual QA"},
 		"findings": _findings,
 		"harness_errors": _harness_errors,
 	}
@@ -100,7 +101,7 @@ func _measurement(window_size: Vector2i) -> Dictionary:
 		"expected_content_rect": _rect_json(Rect2(offset, content_size)),
 		"content_aspect": content_size.x / content_size.y,
 		"scale": scale,
-		"black_bars": bars_json,
+		"expected_black_bars": bars_json,
 	}
 
 
