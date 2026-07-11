@@ -390,7 +390,10 @@ def main(argv: Iterable[str] | None = None) -> int:
             budget = timeout_budget(test, env)
             record: dict[str, object] = {"test": test, "runner": runner, "timeout_seconds": budget}
             if runner == "export_evidence":
-                record.update(status="delegated_evidence" if args.rc else "pending_rc_evidence", warnings={"count": 0, "distinct_samples": []})
+                record.update(
+                    status="delegated_evidence" if args.rc else "pending_rc_evidence",
+                    warnings=export_run_log["warnings"] if args.rc and export_run_log is not None else {"count": 0, "distinct_samples": [], "unexplained": []},
+                )
             elif runner == "save_system" and save_done:
                 record.update(status="covered_by_save_system_verify", warnings={"count": 0, "distinct_samples": []})
             else:

@@ -316,7 +316,7 @@ with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() a
     debug_pck, release_pck, pack_manifest = evidence / "debug.pck", evidence / "release.pck", evidence / "pack.txt"
     for path, value in ((debug_pck, b"debug"), (release_pck, b"release"), (pack_manifest, b"manifest")):
         path.write_bytes(value)
-    (tools / "save_system_verify.sh").write_text(f"#!/bin/sh\nprintf changed >> '{release_pck}'\n")
+    (tools / "save_system_verify.sh").write_text(f"#!/bin/sh\nif [ \"${{MUTATE_RC_ARTIFACT:-0}}\" = 1 ]; then printf changed >> '{release_pck}'; fi\n")
     (tools / "save_system_verify.sh").chmod(0o755)
     subprocess.run(["git", "init", "-q"], cwd=fixture, check=True)
     subprocess.run(["git", "add", "."], cwd=fixture, check=True)
@@ -334,10 +334,19 @@ with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() a
     template.parent.mkdir(parents=True)
     template.write_bytes(b"template")
     run_log = evidence / "export.log"
-    run_log.write_text(f"Godot: 4.7.rc.official.fixture\nTemplate: 4.7.rc ({template})\nArtifact hashes: {artifact_log.resolve()}\nexport_launch_verify: PASS\n")
+    export_warning = "WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details)."
+    run_log.write_text(f"{export_warning}\nGodot: 4.7.rc.official.fixture\nTemplate: 4.7.rc ({template})\nArtifact hashes: {artifact_log.resolve()}\nexport_launch_verify: PASS\n")
     old_env = os.environ.copy()
     os.environ.update(GODOT_BIN=str(fake), TSURI_EXPORT_ARTIFACT_LOG=str(artifact_log), TSURI_EXPORT_VERIFY_LOG=str(run_log))
     try:
+        with mock.patch("release_verify.Path.home", return_value=template_home):
+            positive_rc = main(["--root", str(fixture), "--output-dir", str(evidence / "positive_out"), "--rc"])
+        positive_report = json.loads((evidence / "positive_out/release_verify_report.json").read_text())
+        export_record = next(item for item in positive_report["tests"] if item["runner"] == "export_evidence")
+        assert positive_rc == 0 and positive_report["status"] == "rc_passed"
+        assert export_record["warnings"]["count"] == 1 and export_warning in export_record["warnings"]["distinct_samples"]
+        assert positive_report["warnings"]["count"] == 1 and export_warning in positive_report["warnings"]["distinct_samples"]
+        os.environ["MUTATE_RC_ARTIFACT"] = "1"
         with mock.patch("release_verify.Path.home", return_value=template_home):
             rc = main(["--root", str(fixture), "--output-dir", str(evidence / "out"), "--rc"])
     finally:
