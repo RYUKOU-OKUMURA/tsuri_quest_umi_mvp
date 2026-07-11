@@ -10,6 +10,7 @@
 - 氏名、メールアドレス、住所、電話番号、アカウントID、請求・決済・注文・取引ID
 - カード番号、下4桁、銀行・決済サービス情報、税務情報
 - session token、秘密URL、共有リンク、private storageのパスワードや資格情報
+- macOS / Linux / Windowsのユーザーhome絶対path、parent traversal、protocol-relative URL、raw base64 payload
 - 上記を含むファイルの一部マスク版（復元・取り残しリスクがあるためraw由来画像/PDF自体をcommitしない）
 
 原本は必ず非公開保管し、公開repositoryには次の全項目を持つUTF-8 Markdown attestationのみを置く。`Private-Storage-Reference` は組織内の非秘密な管理番号・保管棚ID等とし、URLや認証情報を書かない。
@@ -25,19 +26,19 @@ Redaction-Checked: true
 Finding: <個人情報を含まない判定要約>
 ```
 
-IDごとに1つ以上のattestationを作り、`docs/qa/evidence/licensing/attestations/U-XX_*.md` として保存する。原本hashは照合用であり、原本そのものや秘密URLの代替ではない。公開前に、禁止項目が含まれないことを別の確認者が再確認する。通常validateはこのディレクトリをtracked/untrackedにかかわらず再帰走査し、privacy scan済み管理文書2件、任意の**0 byteのみ**の`attestations/.gitkeep`、契約準拠attestation以外を拒否する。管理文書のURLは監査内の公式一次情報allowlistだけを許可する。未参照attestationもprivacy検査対象である。完了表から参照するattestationとU-04 replacementはGit indexへ追加済みでなければならない。complete対象のattestation・素材・音源・icon・LICENSE・状態文書はworking bytesとGit index blobのSHA-256一致も必須とし、staged後のunstaged変更を許可しない。
+U-01/U-02/U-03/U-05/U-06/U-08はIDごとにexactly one canonical attestationを作り、`docs/qa/evidence/licensing/attestations/U-XX_*.md` として保存する。U-04だけはdecision recordがexactly oneで、rejected時に限りdistinctなreplacement-rights recordをexactly one追加する。原本hashは照合用であり、原本そのものや秘密URLの代替ではない。公開前に、禁止項目が含まれないことを別の確認者が再確認する。通常validateはこのディレクトリをtracked/untrackedにかかわらず再帰走査し、privacy scan済み管理文書2件、任意の**0 byteのみ**の`attestations/.gitkeep`、契約準拠attestation以外を拒否する。日本語・英語のlabel/value、Markdown装飾と表、nested HTML entity、絶対path・traversal、URL、raw base64、カード・電話らしい数列をFindingを含む公開文書全体で検査する。管理文書のURLは監査内の公式一次情報allowlistだけを許可する。repo-relative pathは許可する。未参照attestationもprivacy検査対象である。完了表から参照するattestationとU-04 replacementはGit indexへ追加済みでなければならない。complete対象のattestation・素材・音源・icon・LICENSE・状態文書はworking bytesとGit index blobのSHA-256一致も必須とし、staged後のunstaged変更を許可しない。close日・`Reviewed-At`・`Search-Date`の未来判定は実行環境のTZに依存させずAsia/Tokyoの暦日で行う。
 
 共通項目に加え、ID別に次のpayloadを必須とする。値を確認できない場合はcloseしない。
 
 | ID | 必須payload |
 |---|---|
 | U-01 | exactly one canonical attestation。`Asset-Count: 10`、`Track-01:`〜`Track-10:`を`filename;content-sha256;generated-at;mapping-id`形式で記載、`One-to-One-Mapping-Verified: true`。generated-atはtimezone付き`YYYY-MM-DDTHH:MM:SSZ`または`±HH:MM`、mapping-idは曲URLやaccount IDではない一意の非秘密管理ID。content hashを現在のmp3 bytesと照合 |
-| U-02 | exactly one canonical attestation。`Plan: Pro` または `Premier`、`Period-Start/Period-End: YYYY-MM-DD`、`Covers-U-01: true`。U-01完了が前提で、各generated-atに記録されたoffset上の暦日min/maxを加入期間が包含すること |
-| U-03 | `Inventory-Contract: docs/31 sections 2.2 and 4`、`Population-Count:`、path+current content digestで算出する`Population-SHA256:`、`Item-0001:`以降を`path;content-sha256;disposition;provenance-id`形式で現在の`assets/showcase/**/*.png`・`tools/source_assets/**/*.png`・`reference/**/*.png`全件分。さらに`Provenance-Count:`と`Provenance-0001:`以降を`id;service;generated-start;generated-end;creator-id`形式で記録する。生成日時はtimezone付き、creatorは非秘密role/ID。バッチでprovenance ID共有可だが、全item IDが一意なrecordへ解決し、未参照recordを残さない。`Unresolved-Items: 0`、`Provenance-Complete: true` |
-| U-04 | exactly one `Evidence-Type: icon-rights` decision record。adopted: `Product-Decision: adopted`、`Product-Content-SHA256:`、`Author-Verified: true`、`Rights-Holder-Verified: true`。rejected: `Product-Decision: rejected`、`Replacement-Integrated: true`、`Replacement-Product-Path:`、`Replacement-Content-SHA256:`、distinctな`Replacement-Rights-Attestation:`。rights recordは別pathの`Evidence-Type: icon-replacement-rights`で`Replacement-Asset-Path:`、`Replacement-Content-SHA256:`、`Replacement-Asset-Rights-Verified: true`を持つ。self-reference禁止。replacementはcanonical repo-relative path、許可画像拡張子、元`assets/icon.svg`とはpath・inode・bytesすべてが異なること。差し替え本体・両attestationはGit index登録済み、`config/icon`配線、docs/31記載とintegration markerも監査する |
-| U-05 | `License-Holder-Matches-LICENSE: true` |
-| U-06 | `Territories:`、`Trademark-Classes:`、`Official-DB:`、`Search-Date: YYYY-MM-DD`、`Result-Count:` 非負整数、`Expert-Review: completed` または `not-required` |
-| U-08 | U-01/U-03完了が前提。`Covered-Media: suno-and-ai-images`、`Population-Count:`、path+current content digestの`Population-SHA256:`、`Item-0001:`以降を`asset;content-sha256;none|cleared;rights-id`形式で音源10件＋U-03確定母集団全件分、`Clearance-Complete: true` |
+| U-02 | exactly one canonical attestation。`Plan: Pro` または `Premier`、`Period-Start/Period-End: YYYY-MM-DD`、`Covers-U-01: true`。U-01完了が前提で、各generated-atに記録されたoffset上の暦日min/maxを加入期間が包含し、`Period-End`がAsia/Tokyoの監査日を越えないこと |
+| U-03 | exactly one canonical attestation。`Inventory-Contract: docs/31 sections 2.2 and 4`、`Population-Count:`、path+current content digestで算出する`Population-SHA256:`、`Item-0001:`以降を`path;content-sha256;disposition;provenance-id`形式で現在の`assets/showcase/**/*.png`・`tools/source_assets/**/*.png`・`reference/**/*.png`全件分。さらに`Provenance-Count:`と`Provenance-0001:`以降を`id;service;generated-start;generated-end;creator-id`形式で記録する。生成日時はtimezone付き、creatorは非秘密role/ID。バッチでprovenance ID共有可だが、全item IDが一意なrecordへ解決し、未参照recordを残さない。`Unresolved-Items: 0`、`Provenance-Complete: true` |
+| U-04 | exactly one `Evidence-Type: icon-rights` decision record。どちらも`Baseline-Original-Content-SHA256: 493a29b86943751f2441343ebc347a9fa42b046032dedd7d1fcb86fd51567595`を必須とし、元icon削除後もこの既知bytesを差し替えに再利用できない。adopted: `Product-Decision: adopted`、同じdigestの`Product-Content-SHA256:`、`Author-Verified: true`、`Rights-Holder-Verified: true`だけを持ち、replacement payloadは禁止。rejected: `Product-Decision: rejected`、`Replacement-Integrated: true`、`Replacement-Product-Path:`、`Replacement-Content-SHA256:`、distinctな`Replacement-Rights-Attestation:`だけを持ち、adopted-only payloadは禁止。rights recordは別pathの`Evidence-Type: icon-replacement-rights`で`Replacement-Asset-Path:`、`Replacement-Content-SHA256:`、`Replacement-Asset-Rights-Verified: true`だけを持つ。self-reference禁止。replacementはcanonical repo-relative path、許可画像拡張子、元`assets/icon.svg`とはpath・inode・既知bytesすべてが異なること。差し替え本体・両attestationはGit index登録済み、`config/icon`配線、docs/31記載とintegration markerも監査する |
+| U-05 | exactly one canonical attestation。`License-Holder-Matches-LICENSE: true` |
+| U-06 | exactly one canonical attestation。`Territories:`、`Trademark-Classes:`、`Official-DB:`、`Search-Date: YYYY-MM-DD`、`Result-Count:` 非負整数、`Expert-Review: completed` または `not-required` |
+| U-08 | exactly one canonical attestation。U-01/U-03完了が前提。`Covered-Media: suno-and-ai-images`、`Population-Count:`、path+current content digestの`Population-SHA256:`、`Item-0001:`以降を`asset;content-sha256;none|cleared;rights-id`形式で音源10件＋U-03確定母集団全件分、`Clearance-Complete: true` |
 
 ## 1. Suno 10曲（U-01 / U-02 / U-08）
 
@@ -86,6 +87,8 @@ Evidence-Type: U-03=`ai-image-provenance`、U-08=`ai-input-rights`
 - 第三者素材を使った場合の出所・ライセンス・改変可否
 
 Evidence-Type: `icon-rights`
+
+現行原本`assets/icon.svg`のdecision baselineはSHA-256 `493a29b86943751f2441343ebc347a9fa42b046032dedd7d1fcb86fd51567595`に固定する。非採用後に原本を削除しても、このdigestと同じbytesを別pathへ置いたものは差し替えとして認めない。
 
 ## 4. LICENSE権利者（U-05）
 

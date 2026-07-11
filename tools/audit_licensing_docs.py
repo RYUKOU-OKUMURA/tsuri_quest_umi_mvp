@@ -5,14 +5,22 @@ from pathlib import Path
 from pathlib import PurePosixPath
 from datetime import date, datetime, timezone
 import hashlib
+import html
+import ipaddress
 import os
 import re
 import subprocess
 import sys
 import tempfile
+import time
+import unicodedata
+from urllib.parse import unquote
+from zoneinfo import ZoneInfo
 
 
 ROOT = Path(__file__).resolve().parents[1]
+RELEASE_TIME_ZONE = ZoneInfo("Asia/Tokyo")
+KNOWN_ORIGINAL_ICON_SHA256 = "493a29b86943751f2441343ebc347a9fa42b046032dedd7d1fcb86fd51567595"
 ATTESTATION_FIELDS = {
     "Evidence-ID", "Evidence-Type", "Original-SHA256", "Reviewed-At", "Reviewer",
     "Private-Storage-Reference", "Redaction-Checked", "Finding",
@@ -25,7 +33,8 @@ TYPE_SPECIFIC_FIELDS = {
         "Provenance-Count", "Unresolved-Items", "Provenance-Complete",
     },
     "icon-rights": {
-        "Product-Decision", "Product-Content-SHA256", "Author-Verified",
+        "Product-Decision", "Baseline-Original-Content-SHA256",
+        "Product-Content-SHA256", "Author-Verified",
         "Rights-Holder-Verified", "Replacement-Integrated", "Replacement-Product-Path",
         "Replacement-Content-SHA256", "Replacement-Rights-Attestation",
     },
@@ -56,11 +65,25 @@ OFFICIAL_PUBLIC_URLS = {
     "https://suno.com/terms/",
     "https://help.suno.com/en/articles/9601665",
     "https://help.suno.com/en/articles/2425729",
+    "https://help.suno.com/en/articles/2410177",
     "https://openai.com/policies/terms-of-use/",
     "https://docs.godotengine.org/en/stable/about/complying_with_licenses.html",
     "https://partner.steamgames.com/doc/gettingstarted/contentsurvey",
     "https://www.j-platpat.inpit.go.jp/t0100",
     "https://www.j-platpat.inpit.go.jp/t1201",
+}
+SAFE_PUBLIC_SLASH_ENUMERATIONS = (
+    "raw screenshot / screen recording / PDF / email / invoice / receipt",
+    "raw screenshot/PDF/email/invoice",
+)
+ALLOWED_PUBLIC_BARE_DOMAINS = {"itch.io"}
+ALLOWED_PUBLIC_DOTTED_NON_URLS = {
+    "image.open", "license.md", "readme.md", "ofl.txt", "ofl-mplus1p.txt", "icon.svg",
+    "net.physical-balance-lab.tsuri-quest-umi",
+}
+PUBLIC_REPO_FILE_SUFFIXES = {
+    ".cfg", ".gd", ".godot", ".json", ".md", ".mp3", ".png", ".py", ".svg",
+    ".tscn", ".ttf", ".txt", ".webp",
 }
 EXPECTED_AUDIO = {
     "opening_bgm.mp3", "アタリ_ヒット音.mp3", "外海・回遊ルート.mp3",
@@ -87,38 +110,280 @@ def require_calendar_date(value: str, label: str) -> date:
         raise AssertionError(f"invalid {label}: {value}") from exc
 
 
+def release_today(now: datetime | None = None) -> date:
+    """Return the release-audit date in the project's fixed Asia/Tokyo timezone."""
+    instant = now if now is not None else datetime.now(timezone.utc)
+    assert instant.tzinfo is not None, "release audit clock must be timezone-aware"
+    return instant.astimezone(RELEASE_TIME_ZONE).date()
+
+
+def normalize_public_text(text: str) -> str:
+    """Decode nested entities/percent escapes and compatibility characters."""
+    decoded = text
+    for _ in range(32):
+        unescaped = unquote(html.unescape(unicodedata.normalize("NFKC", decoded)))
+        if unescaped == decoded:
+            break
+        decoded = unescaped
+    else:
+        raise AssertionError("public licensing text contains excessive nested encoding")
+    return decoded
+
+
 def scan_public_text(text: str, path: Path, allow_official_urls: bool) -> None:
-    assert not re.search(r"(?:data|blob):", text, flags=re.IGNORECASE), (
+    normalized_text = normalize_public_text(text)
+    assert not re.search(r"(?<![A-Za-z0-9])(?:data|blob)\s*:", normalized_text, flags=re.IGNORECASE), (
         f"embedded data/blob URI forbidden in public licensing text: {path}"
     )
-    urls = re.findall(r"(?:https?|ftp|file|s3)://[^\s|)>]+", text, flags=re.IGNORECASE)
+    urls = re.findall(
+        r"(?<![A-Za-z0-9])(?:[a-z][a-z0-9+.-]{1,20}:)?//[^\s|<>()\[\]`\"'、。]+",
+        normalized_text,
+        flags=re.IGNORECASE,
+    )
     if allow_official_urls:
         assert all(url in OFFICIAL_PUBLIC_URLS for url in urls), f"non-allowlisted URL in public licensing text: {path}"
     else:
         assert not urls, f"URL forbidden in attestation: {path}"
+    text_without_urls = normalized_text
+    for url in urls:
+        text_without_urls = text_without_urls.replace(url, " " * len(url))
+    bare_urls_with_paths = re.findall(
+        r"(?<![A-Za-z0-9._-])(?:www\.)?(?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,}"
+        r"(?:/[^\s|<>()\[\]`\"'、。]+)+",
+        text_without_urls,
+        flags=re.IGNORECASE,
+    )
+    assert not bare_urls_with_paths, f"bare/non-allowlisted URL in public licensing text: {path}"
+    for ipv4_match in re.finditer(
+        r"(?<![A-Za-z0-9.])(?:\d{1,3}\.){3}\d{1,3}(?![A-Za-z0-9.])",
+        text_without_urls,
+    ):
+        try:
+            ipaddress.ip_address(ipv4_match.group(0))
+        except ValueError:
+            continue
+        raise AssertionError(f"bare IP destination in public licensing text: {path}")
+    for ipv6_match in re.finditer(r"\[([0-9A-Fa-f:.%]+)\]", text_without_urls):
+        try:
+            ipaddress.ip_address(ipv6_match.group(1).split("%", 1)[0])
+        except ValueError:
+            continue
+        raise AssertionError(f"bare IPv6 destination in public licensing text: {path}")
+    assert not re.search(
+        r"(?<![A-Za-z0-9._-])localhost(?::\d{1,5})?(?:/[^\s|<>()\[\]`\"'、。]*)?",
+        text_without_urls,
+        flags=re.IGNORECASE,
+    ), f"bare localhost destination in public licensing text: {path}"
+    domain_scan_text = text_without_urls
+    allowed_dotted_tokens = ALLOWED_PUBLIC_BARE_DOMAINS | ALLOWED_PUBLIC_DOTTED_NON_URLS
+    for allowed_token in sorted(allowed_dotted_tokens, key=len, reverse=True):
+        domain_scan_text = re.sub(
+            rf"(?<![A-Za-z0-9.-]){re.escape(allowed_token)}(?![A-Za-z0-9.-])",
+            lambda match: " " * len(match.group(0)),
+            domain_scan_text,
+            flags=re.IGNORECASE,
+        )
+    bare_domain_matches = list(re.finditer(
+        r"(?<![@\w.-])(?:(?:[^\W_]|-)+\.)+"
+        r"[A-Za-z](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.?(?![\w.-])",
+        domain_scan_text,
+        flags=re.IGNORECASE,
+    ))
+    for match in bare_domain_matches:
+        dotted_token = match.group(0).lower().rstrip(".")
+        line_start = domain_scan_text.rfind("\n", 0, match.start()) + 1
+        inside_markdown_code = domain_scan_text[line_start:match.start()].count("`") % 2 == 1
+        if inside_markdown_code and Path(dotted_token).suffix.lower() in PUBLIC_REPO_FILE_SUFFIXES:
+            continue
+        if match.end() < len(domain_scan_text) and domain_scan_text[match.end()] in "/:":
+            raise AssertionError(f"bare/non-allowlisted domain in public licensing text: {path}")
+        start, end = match.span()
+        while start > 0 and (
+            domain_scan_text[start - 1].isalnum() or domain_scan_text[start - 1] in "._-/"
+        ):
+            start -= 1
+        while end < len(domain_scan_text) and (
+            domain_scan_text[end].isalnum() or domain_scan_text[end] in "._-/"
+        ):
+            end += 1
+        candidate = domain_scan_text[start:end]
+        candidate_path = PurePosixPath(candidate)
+        is_repo_relative = (
+            candidate
+            and not candidate_path.is_absolute()
+            and all(part not in {"", ".", ".."} for part in candidate_path.parts)
+            and ("/" in candidate or (ROOT / candidate).exists())
+        )
+        assert is_repo_relative, f"bare/non-allowlisted domain in public licensing text: {path}"
     sensitive_label_core = (
-        r"(?:customer[-_ ]*name|phone|address|account(?:[-_ ]*(?:id|number))?|"
+        r"(?:name|first[-_ ]*name|last[-_ ]*name|customer[-_ ]*name|full[-_ ]*name|"
+        r"subscriber[-_ ]*name|account[-_ ]*holder|cardholder[-_ ]*name|"
+        r"contact[-_ ]*(?:name|person)|billing[-_ ]*address|postal[-_ ]*code|zip[-_ ]*code|"
+        r"e[-_ ]?mail(?:[-_ ]*address)?|"
+        r"phone(?:[-_ ]*number)?|telephone|mobile(?:[-_ ]*number)?|address|"
+        r"account(?:[-_ ]*(?:id|number))?|"
         r"billing|invoice|receipt|payment|order|transaction|session|token|"
         r"password|passphrase|credential|api[-_ ]*key|access[-_ ]*key|secret[-_ ]*key|"
         r"auth[-_ ]*token|access[-_ ]*token|private[-_ ]*storage[-_ ]*password|"
-        r"card(?:[-_ ]*(?:id|number|last[-_ ]*4|last4))?|last[-_ ]*4|"
+        r"card[-_ ]*(?:id|number|last[-_ ]*4|last4)|last[-_ ]*4|"
         r"ssn|social[-_ ]*security[-_ ]*(?:id|number)|tax[-_ ]*(?:id|number)|"
         r"dob|date[-_ ]*of[-_ ]*birth|bank[-_ ]*(?:id|account|number)|"
-        r"routing(?:[-_ ]*(?:id|number))?|private[-_ ]*url|secret[-_ ]*url)"
+        r"routing(?:[-_ ]*(?:id|number))?|private[-_ ]*url|secret[-_ ]*url|"
+        r"顧客名|契約者名|名義(?:人)?|担当者|氏名|名前|メール(?:アドレス)?|電子メール|"
+        r"住所|請求先|郵便番号|"
+        r"電話(?:番号)?|携帯(?:電話)?(?:番号)?|アカウント(?:ID|番号)?|連絡先|"
+        r"請求(?:書|情報|ID|番号)?|決済(?:サービス)?(?:情報|ID|番号)?|"
+        r"注文(?:ID|番号)?|取引(?:ID|番号)?|領収書(?:ID|番号)?|"
+        r"カード(?:番号|下[-_ ]?4桁)|下[-_ ]?4桁|"
+        r"銀行(?:名|情報|口座|番号)?|口座(?:番号)?|税務(?:ID|番号|情報)?|"
+        r"生年月日|パスワード|認証情報|認証トークン|アクセストークン|トークン|"
+        r"API[-_ ]?キー|秘密[-_ ]?URL)"
     )
-    sensitive_label = re.compile(sensitive_label_core + r"\s*[:=]\s*[^\s|]+", flags=re.IGNORECASE)
-    sensitive_slash_label = re.compile(r"^" + sensitive_label_core + r"\s*/\s*[^\s|]+", flags=re.IGNORECASE)
-    for line in text.splitlines():
-        normalized = re.sub(r"^[\s>|*`_~#-]+", "", line)
-        normalized = re.sub(r"[*_`~]", "", normalized)
-        assert not sensitive_label.search(normalized), f"public licensing text contains sensitive labeled value: {path}"
-        assert not sensitive_slash_label.search(normalized), f"public licensing text contains sensitive slash-labeled value: {path}"
+    sensitive_label = re.compile(
+        rf"(?<![A-Za-z0-9_])(?P<label>{sensitive_label_core})\s*(?P<separator>[:=/])\s*"
+        rf"(?P<value>[^\s|<{{\[、。,.，;；:/]+)",
+        flags=re.IGNORECASE,
+    )
+    sensitive_table_label = re.compile(rf"^{sensitive_label_core}$", flags=re.IGNORECASE)
+    def normalize_table_label(value: str) -> str:
+        value = value.strip().strip(":=")
+        value = re.sub(r"\s*(?:\([^)]*\)|\[[^]]*\])\s*$", "", value)
+        value = re.sub(r"(?:欄|フィールド)$", "", value)
+        return value.strip()
+
+    for line in normalized_text.splitlines():
+        plain = re.sub(r"[*_`~]", "", line)
+        for match in sensitive_label.finditer(plain):
+            value = match.group("value").rstrip("、。,.，;；")
+            lower_plain = plain.lower()
+            safe_ranges = []
+            for safe_phrase in SAFE_PUBLIC_SLASH_ENUMERATIONS:
+                start = lower_plain.find(safe_phrase.lower())
+                if start >= 0:
+                    safe_ranges.append((start, start + len(safe_phrase)))
+            slash_enumeration = (
+                match.group("separator") == "/"
+                and sensitive_table_label.fullmatch(value)
+                and any(start <= match.start() and match.end() <= end for start, end in safe_ranges)
+            )
+            assert slash_enumeration, f"public licensing text contains sensitive labeled value: {path}"
+        if "|" in plain:
+            cells = [cell.strip().strip(":=") for cell in plain.strip().strip("|").split("|")]
+            for index, cell in enumerate(cells[:-1]):
+                value = cells[index + 1].strip()
+                if (
+                    sensitive_table_label.fullmatch(normalize_table_label(cell))
+                    and value
+                    and not re.fullmatch(r"[-:]+", value)
+                    and not re.fullmatch(r"<[^>]+>", value)
+                ):
+                    raise AssertionError(f"public licensing Markdown table contains sensitive value: {path}")
+    table_block: list[list[str]] = []
+    table_blocks: list[list[list[str]]] = []
+    for line in normalized_text.splitlines() + [""]:
+        if "|" in line:
+            plain = re.sub(r"[*_`~]", "", line)
+            table_block.append([cell.strip() for cell in plain.strip().strip("|").split("|")])
+        elif table_block:
+            table_blocks.append(table_block)
+            table_block = []
+    for block in table_blocks:
+        for separator_index in range(1, len(block)):
+            separator = block[separator_index]
+            if not separator or not all(re.fullmatch(r":?-{3,}:?", cell) for cell in separator):
+                continue
+            headers = block[separator_index - 1]
+            sensitive_columns = {
+                index for index, header in enumerate(headers)
+                if sensitive_table_label.fullmatch(normalize_table_label(header))
+            }
+            for row in block[separator_index + 1:]:
+                for index in sensitive_columns:
+                    if index >= len(row):
+                        continue
+                    value = row[index].strip()
+                    if value and not re.fullmatch(r"[-:]+|<[^>]+>", value):
+                        raise AssertionError(
+                            f"public licensing Markdown header column contains sensitive value: {path}"
+                        )
+            break
     prohibited = (
         (r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", "email"),
-        (r"\b\d{12,19}\b", "long payment-like number"),
+        (r"(?<![A-Za-z0-9])(?:\d[ \t\-\u2010-\u2015\u2212]*?){11,18}\d(?![A-Za-z0-9])", "separated 12-19 digit card-like number"),
+        (r"(?<![A-Za-z0-9])0\d{1,4}[ \t\-\u2010-\u2015\u2212\u30fc]+\d{1,4}[ \t\-\u2010-\u2015\u2212\u30fc]+\d{3,4}(?![A-Za-z0-9])", "Japanese phone-like number"),
+        (r"(?<![A-Za-z0-9])0\d{1,4}[ \t\-]*\(\d{1,4}\)[ \t\-]*\d{3,4}(?![A-Za-z0-9])", "parenthesized Japanese phone-like number"),
+        (r"(?<![A-Za-z0-9])0(?:[5789]0\d{8}|\d{9})(?![A-Za-z0-9])", "contiguous Japanese phone-like number"),
+        (r"(?<![A-Za-z0-9])\+81[ \-]?(?:\(0\)[ \-]?)?\d{1,4}[ \-]\d{1,4}[ \-]\d{3,4}(?![A-Za-z0-9])", "international Japanese phone-like number"),
+        (r"(?<![A-Za-z0-9+/=_-])[A-Za-z0-9+/_-]{120,}={0,2}(?![A-Za-z0-9+/=_-])", "long raw base64 payload"),
+        (r"(?<![A-Za-z0-9._-])/(?:[^/\s|`<>]+/)*(?:Users|home)/[^\s|`<>]+", "absolute macOS/Linux user path"),
+        (r"(?<![A-Za-z0-9._-])/(?:[^/\s|`<>]+/)*root(?:/[^\s|`<>]+)?", "absolute root user path"),
+        (r"(?<![A-Za-z0-9_])[A-Z]:[\\/][^\s|`<>]+", "absolute Windows user path"),
+        (r"(?<![A-Za-z0-9_])\\\\[^\\\s|`<>]+\\[^\s|`<>]+", "Windows UNC path"),
+        (r"(?:^|[\\/\s(\[{'\"`])(?:~[\\/]|\.\.[\\/])", "home/traversal path"),
     )
     for pattern, label in prohibited:
-        assert not re.search(pattern, text, flags=re.IGNORECASE), f"attestation contains prohibited {label}: {path}"
+        assert not re.search(pattern, normalized_text, flags=re.IGNORECASE), (
+            f"public licensing text contains prohibited {label}: {path}"
+        )
+    wrapped_base64_size = 0
+    for line in normalized_text.splitlines():
+        candidate = re.sub(r"^[\s>|`*~-]+", "", line)
+        candidate = re.sub(r"[`]+$", "", candidate).strip()
+        candidate = re.sub(r"^[A-Za-z0-9-]+:\s*", "", candidate)
+        compact_candidate = re.sub(r"[ \t]", "", candidate)
+        if len(compact_candidate.rstrip("=")) >= 120 and re.fullmatch(
+            r"[A-Za-z0-9+/_-]+={0,2}", compact_candidate,
+        ):
+            raise AssertionError(f"public licensing text contains spaced raw base64 payload: {path}")
+        is_wrapped_chunk = (
+            len(compact_candidate.rstrip("=")) >= 60
+            and re.fullmatch(r"[A-Za-z0-9+/_-]+={0,2}", compact_candidate)
+            and not re.fullmatch(r"[0-9a-fA-F]{64}", compact_candidate)
+        )
+        if is_wrapped_chunk:
+            wrapped_base64_size += len(compact_candidate.rstrip("="))
+            assert wrapped_base64_size < 120, (
+                f"public licensing text contains wrapped raw base64 payload: {path}"
+            )
+        elif compact_candidate:
+            wrapped_base64_size = 0
+
+
+def validate_u04_decision_schema(
+    fields: dict[str, str], label: str,
+    known_original_digest: str = KNOWN_ORIGINAL_ICON_SHA256,
+) -> None:
+    decision = fields.get("Product-Decision")
+    assert decision in {"adopted", "rejected"}, f"U-04 product decision missing: {label}"
+    assert re.fullmatch(r"[0-9a-f]{64}", known_original_digest), (
+        f"invalid U-04 known original icon digest contract: {known_original_digest}"
+    )
+    assert fields.get("Baseline-Original-Content-SHA256") == known_original_digest, (
+        f"U-04 decision does not preserve the known original icon digest: {label}"
+    )
+    if decision == "adopted":
+        required = {"Product-Content-SHA256", "Author-Verified", "Rights-Holder-Verified"}
+        forbidden = {
+            "Replacement-Integrated", "Replacement-Product-Path",
+            "Replacement-Content-SHA256", "Replacement-Rights-Attestation",
+        }
+        assert required <= fields.keys(), f"U-04 adopted decision fields missing: {label}"
+        assert not (forbidden & fields.keys()), f"U-04 adopted decision has replacement payload: {label}"
+        assert fields["Product-Content-SHA256"] == known_original_digest, (
+            f"U-04 adopted product digest differs from the known original icon: {label}"
+        )
+        assert fields["Author-Verified"] == "true" and fields["Rights-Holder-Verified"] == "true", (
+            f"U-04 adopted icon author/rights holder is not verified: {label}"
+        )
+    else:
+        required = {
+            "Replacement-Integrated", "Replacement-Product-Path",
+            "Replacement-Content-SHA256", "Replacement-Rights-Attestation",
+        }
+        forbidden = {"Product-Content-SHA256", "Author-Verified", "Rights-Holder-Verified"}
+        assert required <= fields.keys(), f"U-04 rejected decision fields missing: {label}"
+        assert not (forbidden & fields.keys()), f"U-04 rejected decision has adopted-only payload: {label}"
+        assert fields["Replacement-Integrated"] == "true", f"U-04 replacement is not integrated: {label}"
 
 
 def parse_attestation(path: Path) -> dict[str, str]:
@@ -160,6 +425,13 @@ def parse_attestation(path: Path) -> dict[str, str]:
         if key not in allowed_fields and not any(re.fullmatch(pattern, key) for pattern in dynamic_patterns)
     }
     assert not unknown_fields, f"unknown attestation fields forbidden: {sorted(unknown_fields)} in {path}"
+    if evidence_type == "icon-rights":
+        validate_u04_decision_schema(fields, str(path))
+    else:
+        missing_type_fields = TYPE_SPECIFIC_FIELDS[evidence_type] - fields.keys()
+        assert not missing_type_fields, (
+            f"attestation type-specific fields missing: {sorted(missing_type_fields)} in {path}"
+        )
     def bounded_count(field_name: str, maximum: int) -> int:
         raw = fields.get(field_name, "")
         assert re.fullmatch(r"0|[1-9]\d*", raw), f"invalid {field_name}: {raw} in {path}"
@@ -192,7 +464,7 @@ def parse_attestation(path: Path) -> dict[str, str]:
     assert re.fullmatch(r"[0-9a-f]{64}", fields["Original-SHA256"]), f"invalid original SHA-256: {path}"
     assert len(set(fields["Original-SHA256"])) >= 5, f"placeholder original SHA-256: {path}"
     reviewed_at = require_calendar_date(fields["Reviewed-At"], f"Reviewed-At in {path}")
-    assert reviewed_at <= date.today(), f"future Reviewed-At in {path}: {reviewed_at}"
+    assert reviewed_at <= release_today(), f"future Reviewed-At in {path}: {reviewed_at}"
     assert re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{1,63}", fields["Reviewer"]), (
         f"Reviewer must be a non-secret role/ID: {path}"
     )
@@ -294,7 +566,9 @@ def audit_ledger_evidence_state(evidence_id: str, is_open: bool, ledger: str) ->
         assert resolved_token in ledger, f"completed {evidence_id} lacks substantive resolved ledger prose"
 
 
-def audit_ledger_section_states(open_ids: set[str], ledger: str) -> None:
+def audit_ledger_section_states(
+    open_ids: set[str], ledger: str, require_source_scope: bool = False,
+) -> None:
     audio_pending_heading = "## 3. 音源（BGM / SE） — 条件確認済み・証拠待ち"
     if {"U-01", "U-02"} & open_ids:
         assert audio_pending_heading in ledger, "audio ledger heading must remain pending while U-01/U-02 is open"
@@ -314,21 +588,54 @@ def audit_ledger_section_states(open_ids: set[str], ledger: str) -> None:
         for stale in ("未完", "未完了"):
             assert stale not in audio_section, f"resolved audio ledger section retains stale state: {stale}"
     ai_pending_heading = "## 4. AI生成画像（外部サービス由来） — **要記入**"
+    ai_resolved_heading = "## 4. AI生成画像（外部サービス由来） — 解決済み"
+    assert not ("U-03" in open_ids and "U-08" not in open_ids), (
+        "AI ledger cannot report U-08 complete while prerequisite U-03 remains open"
+    )
     if {"U-03", "U-08"} & open_ids:
-        assert ai_pending_heading in ledger, "AI image ledger heading must remain pending while U-03/U-08 is open"
+        assert ledger.count(ai_pending_heading) == 1 and ledger.count(ai_resolved_heading) == 0, (
+            "AI image ledger must contain only the pending heading while U-03/U-08 is open"
+        )
+        ai_heading = ai_pending_heading
     else:
-        assert ai_pending_heading not in ledger and "## 4. AI生成画像（外部サービス由来） — 解決済み" in ledger, (
+        assert ledger.count(ai_pending_heading) == 0 and ledger.count(ai_resolved_heading) == 1, (
             "AI image ledger heading must be resolved after U-03/U-08 complete"
         )
-        ai_section = ledger.split("## 4. AI生成画像（外部サービス由来） — 解決済み", 1)[1].split("\n## ", 1)[0]
-        for stale in ("| 未完 |", "ユーザー入力待ち", "U-03待ち", "U-08待ち"):
-            assert stale not in ai_section, f"resolved AI ledger section retains stale state: {stale}"
+        ai_heading = ai_resolved_heading
+    ai_section = ledger.split(ai_heading, 1)[1].split("\n## ", 1)[0]
+    source_scope_heading = "### 2.2 `tools/source_assets/**` / `reference/**` を消費するパイプライン（全件追跡対象）"
+    source_scope = ""
+    if require_source_scope:
+        assert ledger.count(source_scope_heading) == 1, (
+            "docs/31 requires exactly one canonical AI source/reference scope heading"
+        )
+    if source_scope_heading in ledger:
+        assert ledger.count(source_scope_heading) == 1, "duplicate AI source/reference scope heading"
+        source_scope = ledger.split(source_scope_heading, 1)[1].split("\n## ", 1)[0]
+    ai_provenance_scope = source_scope + "\n" + ai_section
+    expected_ai_tokens = {
+        "U-03": "U-03待ち" if "U-03" in open_ids else "U-03解決済み",
+        "U-08": "U-08待ち" if "U-08" in open_ids else "U-08解決済み",
+    }
+    for evidence_id, token in expected_ai_tokens.items():
+        assert token in ai_section, f"AI ledger section lacks {evidence_id} state token: {token}"
+    if "U-03" not in open_ids:
+        for stale in ("U-03待ち", "未完", "未確定", "証拠待ち", "ユーザー入力待ち"):
+            assert stale not in ai_provenance_scope, (
+                f"U-03-resolved AI provenance scope retains stale state: {stale}"
+            )
+    if not ({"U-03", "U-08"} & open_ids):
+        for stale in (
+            "U-03待ち", "U-08待ち", "未完", "未確定", "証拠待ち", "ユーザー入力待ち",
+            "要記入", "確定しない", "申告がなく", "推定が残",
+        ):
+            assert stale not in ai_provenance_scope, f"resolved AI ledger scope retains stale state: {stale}"
 
 
 def audit_canonical_attestation_counts(
     completed_fields: dict[str, list[dict[str, str]]], completed_ids: set[str],
 ) -> None:
-    for evidence_id in ("U-01", "U-02"):
+    for evidence_id in ("U-01", "U-02", "U-03", "U-05", "U-06", "U-08"):
         if evidence_id in completed_ids:
             assert len(completed_fields.get(evidence_id, [])) == 1, (
                 f"{evidence_id} requires exactly one canonical full attestation"
@@ -342,6 +649,21 @@ def audit_canonical_attestation_counts(
             assert len(replacements) == 1, "U-04 rejected requires exactly one distinct replacement-rights attestation"
         else:
             assert not replacements, "U-04 adopted must not include replacement-rights attestations"
+
+
+def audit_completed_attestation_references(
+    evidence_id: str, saved_paths: list[str],
+    parsed_attestations: dict[Path, dict[str, str]], root: Path,
+) -> None:
+    expected_paths = {
+        path.relative_to(root.resolve()).as_posix()
+        for path, fields in parsed_attestations.items()
+        if fields.get("Evidence-ID") == evidence_id
+    }
+    assert set(saved_paths) == expected_paths, (
+        f"completed {evidence_id} row must reference every and only canonical attestation: "
+        f"expected={sorted(expected_paths)}, found={sorted(set(saved_paths))}"
+    )
 
 
 def parse_generated_at(value: str, label: str) -> datetime:
@@ -386,11 +708,16 @@ def validate_u01_tracks(
     return [tracks[name][0] for name in sorted(tracks)]
 
 
-def validate_u02_period(fields: dict[str, str], label: str) -> tuple[date, date]:
+def validate_u02_period(
+    fields: dict[str, str], label: str, as_of: date | None = None,
+) -> tuple[date, date]:
     assert fields.get("Plan") in {"Pro", "Premier"}, f"invalid Suno plan: {label}"
     period_start = require_calendar_date(fields.get("Period-Start", ""), f"Period-Start in {label}")
     period_end = require_calendar_date(fields.get("Period-End", ""), f"Period-End in {label}")
     assert period_start <= period_end, f"invalid Suno paid period order: {label}"
+    assert period_end <= (as_of if as_of is not None else release_today()), (
+        f"Suno paid period cannot extend beyond the Asia/Tokyo audit date: {label}"
+    )
     assert fields.get("Covers-U-01") == "true", f"U-02 does not declare U-01 coverage: {label}"
     return period_start, period_end
 
@@ -554,8 +881,9 @@ def validate_u04_rejected(
     fields: dict[str, str], relative: str, saved_paths: list[str],
     parsed_attestations: dict[Path, dict[str, str]], ledger: str,
     project_config: str, root: Path, index_paths: set[str], decision_attestation_path: Path,
+    known_original_digest: str = KNOWN_ORIGINAL_ICON_SHA256,
 ) -> None:
-    assert fields.get("Replacement-Integrated") == "true", f"U-04 replacement is not integrated: {relative}"
+    validate_u04_decision_schema(fields, relative, known_original_digest)
     replacement_product_path = fields.get("Replacement-Product-Path", "")
     posix_path = PurePosixPath(replacement_product_path)
     assert (
@@ -578,15 +906,19 @@ def validate_u04_rejected(
     assert replacement_path.is_file() and root.resolve() in replacement_path.parents, (
         f"U-04 replacement product file missing: {replacement_product_path}"
     )
+    replacement_digest = file_sha256(replacement_path)
+    assert replacement_digest != known_original_digest, (
+        "U-04 rejected replacement must differ from the persisted original icon bytes"
+    )
     if original_icon_path.exists():
+        assert file_sha256(original_icon_path) == known_original_digest, (
+            "U-04 original assets/icon.svg changed after its baseline digest was fixed"
+        )
         assert not replacement_path.samefile(original_icon_path), (
             "U-04 replacement must not be the same inode as original assets/icon.svg"
         )
-        assert file_sha256(replacement_path) != file_sha256(original_icon_path), (
-            "U-04 rejected replacement must differ in bytes from original assets/icon.svg"
-        )
     require_indexed(replacement_product_path, index_paths, "U-04 replacement product")
-    assert fields.get("Replacement-Content-SHA256") == file_sha256(replacement_path), (
+    assert fields.get("Replacement-Content-SHA256") == replacement_digest, (
         f"U-04 replacement content digest is stale: {replacement_product_path}"
     )
     assert re.search(
@@ -620,7 +952,7 @@ def validate_u04_rejected(
     assert replacement_fields.get("Replacement-Asset-Path") == replacement_product_path, (
         f"U-04 replacement rights path mismatch: {replacement_attestation_relative}"
     )
-    assert replacement_fields.get("Replacement-Content-SHA256") == file_sha256(replacement_path), (
+    assert replacement_fields.get("Replacement-Content-SHA256") == replacement_digest, (
         f"U-04 replacement rights digest mismatch: {replacement_attestation_relative}"
     )
     assert replacement_fields.get("Replacement-Asset-Rights-Verified") == "true", (
@@ -635,6 +967,141 @@ def run_negative_self_tests() -> None:
         except (AssertionError, UnicodeDecodeError):
             return
         raise AssertionError(f"negative fixture unexpectedly passed: {label}")
+
+    privacy_fixture = Path("privacy-fixture.md")
+    privacy_negatives = {
+        "Japanese fullwidth label separator": "Finding: 氏名：山田太郎",
+        "Japanese fullwidth equals": "電話番号＝09012345678",
+        "Japanese inline slash with Markdown": "**氏名** / `山田太郎`",
+        "Japanese chained slash/colon": "氏名/名前: 山田太郎",
+        "Japanese slash table label": "| 氏名 / 名前 | 山田太郎 |",
+        "safe enumeration prefix cannot mask PII": (
+            "Finding: raw screenshot / PDF / x / 氏名 / 名前: 山田太郎"
+        ),
+        "English sensitive-word slash value": "Password / token",
+        "English Markdown label/value table": "| **Phone** | `090-1234-5678` |",
+        "English code label/value table": "| `Account-ID` | **ACCOUNT-123** |",
+        "English Name label": "Name: Alice Example",
+        "English Name Markdown table": "| **Name** | `Alice Example` |",
+        "English First Name table": "| First Name | Alice |",
+        "English Last Name table": "| Last Name | Example |",
+        "English billing address table": "| Billing Address | Tokyo |",
+        "English postal code table": "| Postal Code | 100-0001 |",
+        "English vertical Name table": (
+            "| Role | **Name** |\n|---|---|\n| reviewer | `Alice Example` |"
+        ),
+        "English decorated Name table": "| Name (owner) | Alice |",
+        "Japanese Markdown label/value table": "| `メールアドレス` | **owner@example.com** |",
+        "Japanese bold table label": "| **カード番号** | `4111 1111 1111 1111` |",
+        "Japanese contract holder label": "契約者名: 山田太郎",
+        "Japanese billing destination label": "請求先: 東京都内",
+        "Japanese postal code table": "| 郵便番号 | 100-0001 |",
+        "Japanese contact person table": "| 担当者 | 山田 |",
+        "Japanese vertical name table": "| 種別 | 氏名 |\n|---|---|\n| 確認者 | 山田太郎 |",
+        "Japanese decorated name table": "| 氏名欄 | 山田 |",
+        "protocol-relative URL": "Finding: //private.example/evidence",
+        "bare URL": "Finding: www.private.example/evidence",
+        "Markdown bare URL": "Finding: [private](private.example/evidence)",
+        "bare root domain": "Finding: www.private.example",
+        "Markdown bare root domain": "Finding: [private](private.example)",
+        "multi-label bare domain": "Finding: private.co.uk",
+        "arbitrary-TLD bare domain": "Finding: private.tech",
+        "trailing-dot bare domain": "Finding: private.example.",
+        "local bare domain": "Finding: intranet.local",
+        "bare IPv4 path": "Finding: 192.168.1.10/private",
+        "bare IPv4 root": "Finding: 10.0.0.1",
+        "bare IPv6 path": "Finding: [fd00::1]/private",
+        "bare localhost path": "Finding: localhost:8080/private",
+        "punycode bare domain": "Finding: xn--eckwd4c7c.xn--zckzah/private",
+        "IDN bare domain": "Finding: 秘密.example/private",
+        "twice-encoded protocol-relative URL": "Finding: &amp;#x2f;&amp;#x2f;private.example/evidence",
+        "fullwidth amp nested URL": "Finding: ＆amp;#x2f;＆amp;#x2f;private.example/evidence",
+        "fullwidth hash nested URL": "Finding: &amp;＃x2f;&amp;＃x2f;private.example/evidence",
+        "nested encoded Japanese PII": "Finding: &#x6c0f;&#x540d;&amp;#x3a;山田太郎",
+        "macOS absolute user path": "Finding: /Users/alice/private/evidence.pdf",
+        "Linux absolute user path": "Finding: /home/alice/private/evidence.pdf",
+        "nested Linux home path": "Finding: /var/home/alice/private/evidence.pdf",
+        "mounted macOS home path": "Finding: /Volumes/Disk/Users/alice/private/evidence.pdf",
+        "root absolute user path": "Finding: /root/private/evidence.pdf",
+        "nested root home path": "Finding: /var/root/private/evidence.pdf",
+        "Windows absolute user path": r"Finding: C:\Users\Alice\private\evidence.pdf",
+        "Windows forward-slash user path": "Finding: C:/Users/Alice/private/evidence.pdf",
+        "Windows profile path": r"Finding: D:\Profiles\Alice\private\evidence.pdf",
+        "Windows UNC path": r"Finding: \\private-server\evidence\raw.pdf",
+        "home shorthand path": "Finding: ~/private/evidence.pdf",
+        "parent traversal path": "Finding: ../private/evidence.pdf",
+        "embedded parent traversal path": "Finding: assets/../private/evidence.pdf",
+        "Windows parent traversal path": r"Finding: assets\..\private\evidence.pdf",
+        "encoded traversal path": "Finding: &amp;#x2e;&amp;#x2e;&amp;#x2f;private/evidence.pdf",
+        "percent-encoded traversal path": "Finding: assets/%252e%252e%252fprivate/evidence.pdf",
+        "long raw base64": f"Finding: {'A' * 160}",
+        "long raw base64url": f"Finding: {'A_' * 80}",
+        "wrapped raw base64": f"{'A' * 76}\n{'B' * 76}",
+        "space-wrapped field base64": f"Finding: {'A' * 76} {'B' * 76}",
+        "field-prefixed wrapped base64": f"Finding: {'A' * 76}\nNote: {'B' * 76}",
+        "spaced card number": "Finding: 4111 1111 1111 1111",
+        "double-spaced card number": "Finding: 4111  1111  1111  1111",
+        "tab-spaced card number": "Finding: 4111\t1111\t1111\t1111",
+        "hyphenated card number": "Finding: 4111-1111-1111-1111",
+        "twelve-digit card-like number": "Finding: 4111-1111-1111",
+        "Japanese mobile phone": "Finding: 090-1234-5678",
+        "Japanese landline phone": "Finding: 03-1234-5678",
+        "Japanese long-dash phone": "Finding: 090ー1234ー5678",
+        "Japanese parenthesized phone": "Finding: 03(1234)5678",
+        "Japanese contiguous phone": "Finding: 09012345678",
+        "international Japanese phone": "Finding: +81-90-1234-5678",
+    }
+    for label, public_text in privacy_negatives.items():
+        must_fail(
+            label,
+            lambda public_text=public_text: scan_public_text(
+                public_text, privacy_fixture, allow_official_urls=True,
+            ),
+        )
+    for official_url in sorted(OFFICIAL_PUBLIC_URLS):
+        scan_public_text(
+            f"公式一次情報: {official_url}", privacy_fixture, allow_official_urls=True,
+        )
+    scan_public_text(
+        "repo-relative paths: project.godot docs/31_asset_ledger.md assets/icon.svg "
+        "tools/source_assets/**/*.png reference/02_underwater_fight_mockup.png "
+        "tools/audit.py reference/foo.png docs/plan.md",
+        privacy_fixture,
+        allow_official_urls=True,
+    )
+    scan_public_text(
+        "公開禁止ラベルの列挙: 氏名、メールアドレス、住所、電話番号。| 項目 | 内容 |",
+        privacy_fixture,
+        allow_official_urls=True,
+    )
+    boundary_instant = datetime(2026, 7, 10, 15, 30, tzinfo=timezone.utc)
+    previous_tz = os.environ.get("TZ")
+    try:
+        for process_tz in ("Asia/Tokyo", "UTC", "Pacific/Honolulu"):
+            os.environ["TZ"] = process_tz
+            if hasattr(time, "tzset"):
+                time.tzset()
+            assert release_today(boundary_instant) == date(2026, 7, 11), (
+                f"release evidence date changed with process TZ={process_tz}"
+            )
+    finally:
+        if previous_tz is None:
+            os.environ.pop("TZ", None)
+        else:
+            os.environ["TZ"] = previous_tz
+        if hasattr(time, "tzset"):
+            time.tzset()
+    must_fail(
+        "U-02 paid period extends into a future Asia/Tokyo date",
+        lambda: validate_u02_period(
+            {
+                "Plan": "Pro", "Period-Start": "2026-07-01", "Period-End": "2026-07-12",
+                "Covers-U-01": "true",
+            },
+            "JST boundary fixture",
+            as_of=release_today(boundary_instant),
+        ),
+    )
 
     for filename in (
         "billing.png", "invoice.pdf", "raw.txt", "mail.eml", "video.mp4",
@@ -755,6 +1222,30 @@ def run_negative_self_tests() -> None:
         )
         must_fail("extra Item-999999", lambda: audit_evidence_tree(root))
 
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        attestations = root / "attestations"
+        attestations.mkdir()
+        replacement_record = attestations / "U-04_replacement.md"
+        replacement_lines = (
+            "Evidence-ID: U-04", "Evidence-Type: icon-replacement-rights",
+            f"Original-SHA256: {'1234567890abcdef' * 4}", "Reviewed-At: 2026-07-11",
+            "Reviewer: reviewer-1", "Private-Storage-Reference: EVIDENCE-12345",
+            "Redaction-Checked: true", "Finding: replacement rights independently verified",
+            "Replacement-Asset-Path: assets/product_icon.svg",
+            f"Replacement-Content-SHA256: {'abcdef0123456789' * 4}",
+            "Replacement-Asset-Rights-Verified: true",
+        )
+        replacement_record.write_text("\n".join(replacement_lines), encoding="utf-8")
+        audit_evidence_tree(root)
+        replacement_record.write_text(
+            "\n".join((*replacement_lines, "Product-Decision: rejected")), encoding="utf-8",
+        )
+        must_fail(
+            "U-04 replacement-rights record contains decision payload",
+            lambda: audit_evidence_tree(root),
+        )
+
     for embedded in (
         "![billing](data:image/png;base64,AAAA)",
         '<embed src="data:application/pdf;base64,AAAA">',
@@ -844,6 +1335,7 @@ def run_negative_self_tests() -> None:
         replacement.write_text("<svg/>", encoding="utf-8")
         original_fixture_icon = fixture_root / "assets/icon.svg"
         original_fixture_icon.write_text("<svg>original</svg>", encoding="utf-8")
+        baseline_digest = file_sha256(original_fixture_icon)
         decision_path = (fixture_root / "docs/qa/evidence/licensing/attestations/U-04_decision.md").resolve()
         rights_relative = "docs/qa/evidence/licensing/attestations/U-04_replacement.md"
         rights_path = (fixture_root / rights_relative).resolve()
@@ -853,6 +1345,7 @@ def run_negative_self_tests() -> None:
         digest = file_sha256(replacement)
         decision_fields = {
             "Product-Decision": "rejected", "Replacement-Integrated": "true",
+            "Baseline-Original-Content-SHA256": baseline_digest,
             "Replacement-Product-Path": replacement_relative,
             "Replacement-Content-SHA256": digest,
             "Replacement-Rights-Attestation": rights_relative,
@@ -868,6 +1361,39 @@ def run_negative_self_tests() -> None:
         validate_u04_rejected(
             decision_fields, "fixture", [rights_relative], {rights_path: rights_fields},
             ledger_fixture, config_fixture, fixture_root, {replacement_relative}, decision_path,
+            baseline_digest,
+        )
+        adopted_fields = {
+            "Product-Decision": "adopted",
+            "Baseline-Original-Content-SHA256": baseline_digest,
+            "Product-Content-SHA256": baseline_digest,
+            "Author-Verified": "true",
+            "Rights-Holder-Verified": "true",
+        }
+        validate_u04_decision_schema(adopted_fields, "fixture adopted", baseline_digest)
+        adopted_with_replacement = dict(adopted_fields)
+        adopted_with_replacement["Replacement-Integrated"] = "true"
+        must_fail(
+            "U-04 adopted decision contains rejected payload",
+            lambda: validate_u04_decision_schema(
+                adopted_with_replacement, "fixture adopted conflict", baseline_digest,
+            ),
+        )
+        rejected_with_adopted = dict(decision_fields)
+        rejected_with_adopted["Author-Verified"] = "true"
+        must_fail(
+            "U-04 rejected decision contains adopted-only payload",
+            lambda: validate_u04_decision_schema(
+                rejected_with_adopted, "fixture rejected conflict", baseline_digest,
+            ),
+        )
+        stale_baseline = dict(decision_fields)
+        stale_baseline["Baseline-Original-Content-SHA256"] = "a" * 64
+        must_fail(
+            "U-04 decision changes persisted original digest",
+            lambda: validate_u04_decision_schema(
+                stale_baseline, "fixture stale baseline", baseline_digest,
+            ),
         )
         self_reference = dict(decision_fields)
         self_reference["Replacement-Rights-Attestation"] = decision_path.relative_to(fixture_root.resolve()).as_posix()
@@ -876,14 +1402,14 @@ def run_negative_self_tests() -> None:
             lambda: validate_u04_rejected(
                 self_reference, "fixture", [self_reference["Replacement-Rights-Attestation"]],
                 {decision_path: rights_fields}, ledger_fixture, config_fixture,
-                fixture_root, {replacement_relative}, decision_path,
+                fixture_root, {replacement_relative}, decision_path, baseline_digest,
             ),
         )
         must_fail(
             "U-04 untracked replacement",
             lambda: validate_u04_rejected(
                 decision_fields, "fixture", [rights_relative], {rights_path: rights_fields},
-                ledger_fixture, config_fixture, fixture_root, set(), decision_path,
+                ledger_fixture, config_fixture, fixture_root, set(), decision_path, baseline_digest,
             ),
         )
         traversal = dict(decision_fields)
@@ -893,7 +1419,7 @@ def run_negative_self_tests() -> None:
             lambda: validate_u04_rejected(
                 traversal, "fixture", [rights_relative], {rights_path: rights_fields},
                 ledger_fixture, config_fixture, fixture_root,
-                {"assets/../assets/icon.svg"}, decision_path,
+                {"assets/../assets/icon.svg"}, decision_path, baseline_digest,
             ),
         )
         same_bytes_relative = "assets/icon_copy.svg"
@@ -905,14 +1431,20 @@ def run_negative_self_tests() -> None:
         same_rights = dict(rights_fields)
         same_rights["Replacement-Asset-Path"] = same_bytes_relative
         same_rights["Replacement-Content-SHA256"] = file_sha256(same_bytes_path)
+        original_fixture_icon.unlink()
         must_fail(
-            "U-04 same bytes at different path",
+            "U-04 same original bytes after assets/icon.svg deletion",
             lambda: validate_u04_rejected(
                 same_bytes_fields, "fixture", [rights_relative], {rights_path: same_rights},
                 f"{same_bytes_relative}\n[RIGHTS-01A:U-04-REPLACEMENT]=integrated",
                 f'config/icon="res://{same_bytes_relative}"', fixture_root,
-                {same_bytes_relative}, decision_path,
+                {same_bytes_relative}, decision_path, baseline_digest,
             ),
+        )
+        validate_u04_rejected(
+            decision_fields, "fixture after original deletion", [rights_relative],
+            {rights_path: rights_fields}, ledger_fixture, config_fixture,
+            fixture_root, {replacement_relative}, decision_path, baseline_digest,
         )
         replacement.write_text("<svg>changed</svg>", encoding="utf-8")
         must_fail(
@@ -920,6 +1452,7 @@ def run_negative_self_tests() -> None:
             lambda: validate_u04_rejected(
                 decision_fields, "fixture", [rights_relative], {rights_path: rights_fields},
                 ledger_fixture, config_fixture, fixture_root, {replacement_relative}, decision_path,
+                baseline_digest,
             ),
         )
     must_fail(
@@ -981,22 +1514,74 @@ def run_negative_self_tests() -> None:
     audit_ledger_evidence_state("U-03", False, "[RIGHTS-01A:U-03]=complete\nU-03解決済み")
     audit_ledger_evidence_state("U-01", False, "U-01解決済み\nU-02待ち")
     audit_ledger_evidence_state("U-02", True, "U-01解決済み\nU-02待ち")
+    # docs/31 §4 must describe all three reachable U-03/U-08 transitions exactly.
+    audit_ledger_section_states(
+        {"U-03", "U-08"},
+        "## 3. 音源（BGM / SE） — 解決済み\n"
+        "## 4. AI生成画像（外部サービス由来） — **要記入**\n"
+        "U-03待ち / U-08待ち / | item | 未完 |",
+    )
     audit_ledger_section_states(
         {"U-08"},
         "## 3. 音源（BGM / SE） — 解決済み\n"
-        "## 4. AI生成画像（外部サービス由来） — **要記入**\nU-08待ち",
+        "## 4. AI生成画像（外部サービス由来） — **要記入**\n"
+        "U-03解決済み / U-08待ち",
+    )
+    audit_ledger_section_states(
+        set(),
+        "## 3. 音源（BGM / SE） — 解決済み\n"
+        "## 4. AI生成画像（外部サービス由来） — 解決済み\n"
+        "U-03解決済み / U-08解決済み / 全件確認済み",
+    )
+    must_fail(
+        "docs31 pending and resolved AI headings coexist",
+        lambda: audit_ledger_section_states(
+            {"U-03", "U-08"},
+            "## 3. 音源（BGM / SE） — 解決済み\n"
+            "## 4. AI生成画像（外部サービス由来） — **要記入**\nU-03待ち / U-08待ち\n"
+            "## 4. AI生成画像（外部サービス由来） — 解決済み\nU-03解決済み / U-08解決済み",
+        ),
+    )
+    must_fail(
+        "docs31 canonical AI source scope heading missing",
+        lambda: audit_ledger_section_states(
+            {"U-03", "U-08"},
+            "## 3. 音源（BGM / SE） — 解決済み\n"
+            "## 4. AI生成画像（外部サービス由来） — **要記入**\nU-03待ち / U-08待ち",
+            require_source_scope=True,
+        ),
+    )
+    must_fail(
+        "docs31 U-03-resolved source scope retains stale provenance prose",
+        lambda: audit_ledger_section_states(
+            {"U-08"},
+            "### 2.2 `tools/source_assets/**` / `reference/**` を消費するパイプライン（全件追跡対象）\n"
+            "生成サービス・生成日は未確定、所有者証拠待ち\n"
+            "## 3. 音源（BGM / SE） — 解決済み\n"
+            "## 4. AI生成画像（外部サービス由来） — **要記入**\nU-03解決済み / U-08待ち",
+            require_source_scope=True,
+        ),
+    )
+    must_fail(
+        "docs31 duplicate resolved AI heading",
+        lambda: audit_ledger_section_states(
+            set(),
+            "## 3. 音源（BGM / SE） — 解決済み\n"
+            "## 4. AI生成画像（外部サービス由来） — 解決済み\nU-03解決済み / U-08解決済み\n"
+            "## 4. AI生成画像（外部サービス由来） — 解決済み\nU-03解決済み / U-08解決済み",
+        ),
     )
     audit_ledger_section_states(
         {"U-02", "U-08"},
         "## 3. 音源（BGM / SE） — 条件確認済み・証拠待ち\nU-01解決済み\nU-02待ち\n"
-        "## 4. AI生成画像（外部サービス由来） — **要記入**\nU-08待ち",
+        "## 4. AI生成画像（外部サービス由来） — **要記入**\nU-03解決済み / U-08待ち",
     )
     must_fail(
         "partial audio transition retains U-01 pending prose",
         lambda: audit_ledger_section_states(
             {"U-02", "U-08"},
             "## 3. 音源（BGM / SE） — 条件確認済み・証拠待ち\nU-01待ち\nU-02待ち\n"
-            "## 4. AI生成画像（外部サービス由来） — **要記入**\nU-08待ち",
+            "## 4. AI生成画像（外部サービス由来） — **要記入**\nU-03解決済み / U-08待ち",
         ),
     )
     must_fail(
@@ -1004,23 +1589,102 @@ def run_negative_self_tests() -> None:
         lambda: audit_ledger_section_states(
             {"U-08"},
             "## 3. 音源（BGM / SE） — 解決済み\n| 証拠保全 | **未完了**。生成日時と加入期間証拠が必要 |\n"
-            "## 4. AI生成画像（外部サービス由来） — **要記入**\nU-08待ち",
+            "## 4. AI生成画像（外部サービス由来） — **要記入**\nU-03解決済み / U-08待ち",
         ),
     )
+    for stale in ("U-03待ち", "未完", "未確定", "証拠待ち", "ユーザー入力待ち"):
+        must_fail(
+            f"docs31 U-03-resolved section retains {stale}",
+            lambda stale=stale: audit_ledger_section_states(
+                {"U-08"},
+                "## 3. 音源（BGM / SE） — 解決済み\n"
+                "## 4. AI生成画像（外部サービス由来） — **要記入**\n"
+                f"U-03解決済み / U-08待ち / {stale}",
+            ),
+        )
+    for stale in ("U-03待ち", "U-08待ち", "未完", "未確定", "証拠待ち", "ユーザー入力待ち"):
+        must_fail(
+            f"docs31 fully resolved section retains {stale}",
+            lambda stale=stale: audit_ledger_section_states(
+                set(),
+                "## 3. 音源（BGM / SE） — 解決済み\n"
+                "## 4. AI生成画像（外部サービス由来） — 解決済み\n"
+                f"U-03解決済み / U-08解決済み / {stale}",
+            ),
+        )
+    for evidence_id in ("U-01", "U-02", "U-03", "U-05", "U-06", "U-08"):
+        audit_canonical_attestation_counts(
+            {evidence_id: [{"Evidence-ID": evidence_id, "Finding": "canonical"}]},
+            {evidence_id},
+        )
+        must_fail(
+            f"multiple contradictory {evidence_id} attestations",
+            lambda evidence_id=evidence_id: audit_canonical_attestation_counts(
+                {
+                    evidence_id: [
+                        {"Evidence-ID": evidence_id, "Finding": "decision-a"},
+                        {"Evidence-ID": evidence_id, "Finding": "decision-b"},
+                    ],
+                },
+                {evidence_id},
+            ),
+        )
     must_fail(
-        "docs31 resolved table retains stale unfinished row",
-        lambda: audit_ledger_section_states(
-            set(),
-            "## 3. 音源（BGM / SE） — 解決済み\n"
-            "## 4. AI生成画像（外部サービス由来） — 解決済み\n| item | 未完 |",
-        ),
-    )
-    must_fail(
-        "multiple contradictory U-01 attestations",
+        "contradictory U-03/U-08 canonical attestations",
         lambda: audit_canonical_attestation_counts(
-            {"U-01": [{"Finding": "a"}, {"Finding": "b"}]}, {"U-01"},
+            {
+                "U-03": [{"Finding": "provenance-a"}, {"Finding": "provenance-b"}],
+                "U-08": [{"Finding": "rights-a"}, {"Finding": "rights-b"}],
+            },
+            {"U-03", "U-08"},
         ),
     )
+    audit_canonical_attestation_counts(
+        {"U-04": [{"Evidence-Type": "icon-rights", "Product-Decision": "adopted"}]},
+        {"U-04"},
+    )
+    audit_canonical_attestation_counts(
+        {
+            "U-04": [
+                {"Evidence-Type": "icon-rights", "Product-Decision": "rejected"},
+                {"Evidence-Type": "icon-replacement-rights"},
+            ],
+        },
+        {"U-04"},
+    )
+    must_fail(
+        "U-04 adopted with replacement attestation",
+        lambda: audit_canonical_attestation_counts(
+            {
+                "U-04": [
+                    {"Evidence-Type": "icon-rights", "Product-Decision": "adopted"},
+                    {"Evidence-Type": "icon-replacement-rights"},
+                ],
+            },
+            {"U-04"},
+        ),
+    )
+    with tempfile.TemporaryDirectory() as temp_dir:
+        fixture_root = Path(temp_dir).resolve()
+        decision_relative = "docs/qa/evidence/licensing/attestations/U-04_decision.md"
+        replacement_relative = "docs/qa/evidence/licensing/attestations/U-04_replacement.md"
+        parsed_u04 = {
+            (fixture_root / decision_relative).resolve(): {
+                "Evidence-ID": "U-04", "Evidence-Type": "icon-rights",
+            },
+            (fixture_root / replacement_relative).resolve(): {
+                "Evidence-ID": "U-04", "Evidence-Type": "icon-replacement-rights",
+            },
+        }
+        audit_completed_attestation_references(
+            "U-04", [decision_relative, replacement_relative], parsed_u04, fixture_root,
+        )
+        must_fail(
+            "U-04 completed row omits canonical decision attestation",
+            lambda: audit_completed_attestation_references(
+                "U-04", [replacement_relative], parsed_u04, fixture_root,
+            ),
+        )
     must_fail(
         "untracked completed attestation",
         lambda: require_indexed(
@@ -1137,6 +1801,21 @@ def main() -> int:
         mplus_ofl = require_file("assets/fonts/OFL-MPLUS1p.txt")
         git_index_paths = indexed_paths(ROOT)
 
+        # The evidence tree scans README/OWNER plus every attestation; docs/31 is the
+        # remaining public RIGHTS-01A narrative and must pass the same privacy gate.
+        scan_public_text(ledger, ROOT / "docs/31_asset_ledger.md", allow_official_urls=True)
+        for contract_text, contract_label in (
+            (owner_request, "OWNER_EVIDENCE_REQUEST.md"),
+            (ledger, "docs/31_asset_ledger.md"),
+        ):
+            assert KNOWN_ORIGINAL_ICON_SHA256 in contract_text, (
+                f"U-04 known original icon digest missing from {contract_label}"
+            )
+        original_icon = ROOT / "assets/icon.svg"
+        if original_icon.exists():
+            assert file_sha256(original_icon) == KNOWN_ORIGINAL_ICON_SHA256, (
+                "assets/icon.svg no longer matches the persisted U-04 original digest"
+            )
         for marker in ("## Scope", "Original project-owned visual and audio assets"):
             assert marker in license_text, f"LICENSE.md missing marker: {marker}"
         open_evidence_section = evidence.split("## ユーザー入力・保存待ち（未完了）", 1)[1]
@@ -1166,6 +1845,9 @@ def main() -> int:
         evidence_root = (ROOT / "docs/qa/evidence/licensing").resolve()
         attestation_root = (evidence_root / "attestations").resolve()
         parsed_attestations = audit_evidence_tree(evidence_root)
+        all_attestation_fields: dict[str, list[dict[str, str]]] = {}
+        for parsed_fields in parsed_attestations.values():
+            all_attestation_fields.setdefault(parsed_fields["Evidence-ID"], []).append(parsed_fields)
         u03_population = build_u03_population(ROOT)
         audio_population = build_audio_population(ROOT)
         non_evidence_management_files = {
@@ -1175,9 +1857,15 @@ def main() -> int:
         completed_fields: dict[str, list[dict[str, str]]] = {}
         for evidence_id, close_date, saved_evidence in completed_rows:
             parsed_close_date = require_calendar_date(close_date, f"close date for {evidence_id}")
-            assert parsed_close_date <= date.today(), f"future close date for {evidence_id}: {parsed_close_date}"
+            assert parsed_close_date <= release_today(), f"future close date for {evidence_id}: {parsed_close_date}"
             saved_paths = re.findall(r"`([^`]+)`", saved_evidence)
             assert saved_paths, f"completed {evidence_id} requires a backticked saved evidence path"
+            assert len(saved_paths) == len(set(saved_paths)), (
+                f"completed {evidence_id} repeats the same attestation path"
+            )
+            audit_completed_attestation_references(
+                evidence_id, saved_paths, parsed_attestations, ROOT,
+            )
             matching_attestations = 0
             for relative in saved_paths:
                 saved_path = (ROOT / relative).resolve()
@@ -1195,62 +1883,14 @@ def main() -> int:
                     f"completed {evidence_id} attestation must be U-XX_*.md: {relative}"
                 )
                 assert saved_path in parsed_attestations, f"unvalidated attestation referenced: {relative}"
-                attestation = saved_path.read_text(encoding="utf-8")
-                assert attestation.strip(), f"completed {evidence_id} attestation is empty: {relative}"
-                fields = {}
-                for line in attestation.splitlines():
-                    match = re.fullmatch(r"([A-Za-z0-9-]+):\s*(.+)", line)
-                    if match:
-                        fields[match.group(1)] = match.group(2).strip()
-                required_fields = {
-                    "Evidence-ID",
-                    "Evidence-Type",
-                    "Original-SHA256",
-                    "Reviewed-At",
-                    "Reviewer",
-                    "Private-Storage-Reference",
-                    "Redaction-Checked",
-                    "Finding",
-                }
-                assert required_fields <= fields.keys(), (
-                    f"attestation fields missing for {evidence_id}: "
-                    f"{sorted(required_fields - fields.keys())} in {relative}"
-                )
+                fields = parsed_attestations[saved_path]
                 assert fields["Evidence-ID"] == evidence_id, (
                     f"attestation ID mismatch for {evidence_id}: {relative}"
                 )
-                allowed_types = {
-                    "U-01": {"suno-track-provenance"},
-                    "U-02": {"suno-paid-period"},
-                    "U-03": {"ai-image-provenance"},
-                    "U-04": {"icon-rights", "icon-replacement-rights"},
-                    "U-05": {"license-holder"},
-                    "U-06": {"trademark-clearance"},
-                    "U-08": {"ai-input-rights"},
-                }
-                assert fields["Evidence-Type"] in allowed_types[evidence_id], (
-                    f"invalid evidence type for {evidence_id}: {fields['Evidence-Type']}"
-                )
-                assert re.fullmatch(r"[0-9a-f]{64}", fields["Original-SHA256"]), (
-                    f"invalid original SHA-256 for {evidence_id}: {relative}"
-                )
-                assert len(set(fields["Original-SHA256"])) >= 5, (
-                    f"placeholder original SHA-256 for {evidence_id}: {relative}"
-                )
                 reviewed_at = require_calendar_date(fields["Reviewed-At"], f"Reviewed-At for {evidence_id}")
-                assert reviewed_at <= date.today(), f"future Reviewed-At for {evidence_id}: {reviewed_at}"
                 assert reviewed_at <= parsed_close_date, (
                     f"review date after close date for {evidence_id}: {reviewed_at} > {parsed_close_date}"
                 )
-                assert len(fields["Reviewer"]) >= 2, f"missing reviewer for {evidence_id}: {relative}"
-                private_reference = fields["Private-Storage-Reference"]
-                assert len(private_reference) >= 3 and "://" not in private_reference, (
-                    f"private storage reference must be a non-secret ID, not URL: {relative}"
-                )
-                assert fields["Redaction-Checked"] == "true", (
-                    f"redaction must be confirmed for {evidence_id}: {relative}"
-                )
-                assert len(fields["Finding"]) >= 10, f"finding too short for {evidence_id}: {relative}"
                 if evidence_id == "U-01":
                     for audio_name in audio_population:
                         audio_relative = f"assets/audio/{audio_name}"
@@ -1318,7 +1958,7 @@ def main() -> int:
                         result_count = int(fields.get("Result-Count", ""))
                     except ValueError as exc:
                         raise AssertionError(f"invalid U-06 search payload: {relative}") from exc
-                    assert search_date <= date.today() and result_count >= 0, f"invalid U-06 results: {relative}"
+                    assert search_date <= release_today() and result_count >= 0, f"invalid U-06 results: {relative}"
                     assert fields.get("Expert-Review") in {"completed", "not-required"}, (
                         f"U-06 expert review decision missing: {relative}"
                     )
@@ -1353,7 +1993,7 @@ def main() -> int:
                 )
         audit_rights_state(set(evidence_ids), set(completed_evidence_ids), v2_overview)
         audit_completion_dependencies(set(completed_evidence_ids))
-        audit_canonical_attestation_counts(completed_fields, set(completed_evidence_ids))
+        audit_canonical_attestation_counts(all_attestation_fields, set(completed_evidence_ids))
         if "U-02" in completed_evidence_ids:
             cross_check_u02_covers_u01(
                 completed_fields["U-01"][0], completed_fields["U-02"][0],
@@ -1369,7 +2009,7 @@ def main() -> int:
             assert opposite_marker not in ledger, f"asset ledger has stale state marker: {opposite_marker}"
             audit_ledger_evidence_state(evidence_id, evidence_id in evidence_ids, ledger)
 
-        audit_ledger_section_states(set(evidence_ids), ledger)
+        audit_ledger_section_states(set(evidence_ids), ledger, require_source_scope=True)
 
         if unresolved_holder:
             assert "U-05" in evidence_ids, "unresolved LICENSE holder requires open U-05"

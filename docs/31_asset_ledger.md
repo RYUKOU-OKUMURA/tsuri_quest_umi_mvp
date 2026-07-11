@@ -111,7 +111,7 @@ generate外画像に加え、§2.2のsource-consuming出力も対象。OpenAI Te
 | 項目 | 状態 |
 |---|---|
 | 正式製品名「釣りクエスト ～海釣り編～」の商標調査 | 正式名称 / v1.0.0は決定#20で確定済み。販売地域・商標対象区分の確定と、その範囲での公式DB検索・必要な専門家確認の証跡は未完（証拠index U-06）。類似検索だけで法的clearance完了とは扱わない |
-| `assets/icon.svg`（魚と釣り針のcustom SVG。Godotデフォルトではない） | commit `9a9974a`（2026-06-24）で新規追加された履歴は確認済み。ただしコミット著者だけでは作者・作成手段・権利者を確定できない。製品採否と権利者申告待ち（証拠index U-04） |
+| `assets/icon.svg`（魚と釣り針のcustom SVG。Godotデフォルトではない） | commit `9a9974a`（2026-06-24）で新規追加された履歴は確認済み。U-04 decisionの現行原本bytesはSHA-256 `493a29b86943751f2441343ebc347a9fa42b046032dedd7d1fcb86fd51567595`へ固定し、非採用後に原本を削除しても同一bytesの再利用を差し替えと認めない。ただしコミット著者だけでは作者・作成手段・権利者を確定できない。製品採否と権利者申告待ち（証拠index U-04） |
 | 製品コードのMIT権利者・適用範囲 | `LICENSE.md` に適用範囲を追記。法的権利者名はユーザー入力待ち（証拠index U-05）のためplaceholderを残し、発売不可条件として明示 |
 | Godot / font / 同梱依存notice | `THIRD_PARTY_NOTICES.md` を新設し、repoで確認できるGodot・LINE Seed JP・M PLUS 1pを列挙。初回販売=itch.io、対象OS=macOS Universal、bundle ID=`net.physical-balance-lab.tsuri-quest-umi`、予定slug=`tsuri-quest-umi`、store App ID=`未発行`は確定済み。正確なGodot export preset/templateへの配線と、clean exportへの必要notice・OFL全文の同梱確認は未完（証拠index U-07） |
 | Steam AI開示 | 初回itch.io版v1.0.0の発売ゲート対象外。将来Steamを採用する場合はOpenAI画像・Suno音源をPre-Generated AIとしてContent Surveyへ申告し、提出控えを保存する（公式: https://partner.steamgames.com/doc/gettingstarted/contentsurvey） |
