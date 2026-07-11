@@ -20,9 +20,11 @@ const FUTURE_SAVE_GUARD_MESSAGE := "新しい版で作られたセーブのた�
 const INVALID_SAVE_MESSAGE := "セーブデータとバックアップが壊れているため、読み込めませんでした。原本は変更していません。"
 const INVALID_SAVE_TITLE_MESSAGE := "セーブ破損。原本は変更していません"
 const INVALID_OUTBOUND_SAVE_MESSAGE := "進行データがセーブ可能な範囲を超えたため、原本を変更せず保存を中止しました。"
+const INVALID_DIFFICULTY_MESSAGE := "選択した難易度が見つからないため、セーブを初期化できませんでした。"
 const SAVE_STORAGE_MIGRATION_BLOCK_MESSAGE := SaveNamespaceMigrator.DEFAULT_FAILURE_MESSAGE
 const SEA_CHART_FRAGMENT_MAX := 3
 const MAX_SAFE_JSON_INTEGER := 9007199254740991
+const DIFFICULTY_MULTIPLIER_SCALE := 10000
 const EXP_REQUIREMENTS: Array[int] = [
 	0,
 	60,
@@ -102,6 +104,7 @@ var quest_completed_count: int = 0
 var sea_chart_fragments: int = 0
 var shark_bonds: Dictionary = {}
 var selected_time_slot_id: String = GameData.DEFAULT_TIME_SLOT_ID
+var difficulty_id: String = GameData.DEFAULT_DIFFICULTY_ID
 
 # smoke / preview / audit（res://tools/ 配下のシーン起動）から本番セーブを守るフラグ。
 # true の間はディスクへの読み書きを一切行わない。
@@ -288,6 +291,7 @@ func save_slot_summary(slot_id: int) -> Dictionary:
 			"level": 1,
 			"money": 500,
 			"play_seconds": 0.0,
+			"difficulty_id": GameData.DEFAULT_DIFFICULTY_ID,
 			"updated_unix": 0,
 			"future_guarded": false,
 			"future_version": null,
@@ -308,10 +312,14 @@ func save_slot_summary(slot_id: int) -> Dictionary:
 	var summary_level := 1
 	var summary_money := 500
 	var summary_play_seconds := 0.0
+	var summary_difficulty_id := GameData.DEFAULT_DIFFICULTY_ID
 	if not future_guarded:
 		summary_level = int(data.get("level", summary_level))
 		summary_money = int(data.get("money", summary_money))
 		summary_play_seconds = float(data.get("play_seconds", summary_play_seconds))
+		summary_difficulty_id = _normalized_difficulty_id(
+			data.get("difficulty_id", summary_difficulty_id)
+		)
 	return {
 		"slot_id": resolved_slot,
 		"active": resolved_slot == active_save_slot,
@@ -322,6 +330,7 @@ func save_slot_summary(slot_id: int) -> Dictionary:
 		"level": summary_level,
 		"money": summary_money,
 		"play_seconds": summary_play_seconds,
+		"difficulty_id": summary_difficulty_id,
 		"updated_unix": updated_unix,
 		"future_guarded": future_guarded,
 		"future_version": future_guard.get("version", null),
@@ -330,18 +339,50 @@ func save_slot_summary(slot_id: int) -> Dictionary:
 	}
 
 
-func reset_game() -> bool:
+func difficulty() -> Dictionary:
+	var resolved_id := _normalized_difficulty_id(difficulty_id)
+	return Dictionary(GameData.DIFFICULTIES[resolved_id]).duplicate(true)
+
+
+func difficulty_adjusted_exp(amount: int) -> int:
+	return _scaled_nonnegative_int(
+		amount, float(difficulty().get("exp_multiplier", 1.0))
+	)
+
+
+func cooking_exp_preview(fish_id: String, recipe_id: String) -> Dictionary:
+	var raw_base_exp := GameData.recipe_exp(fish_id, recipe_id)
+	var dish_key := "%s:%s" % [fish_id, recipe_id]
+	var first_time := (
+		not eaten_recipes.has(dish_key)
+		and _safe_count_dictionary_total(eaten_recipes) < MAX_SAFE_JSON_INTEGER
+	)
+	var base_exp := difficulty_adjusted_exp(raw_base_exp)
+	var total_exp := difficulty_adjusted_exp(raw_base_exp * 2 if first_time else raw_base_exp)
+	return {
+		"base_exp": base_exp,
+		"first_time": first_time,
+		"first_bonus": total_exp - base_exp if first_time else 0,
+		"total_exp": total_exp,
+	}
+
+
+func reset_game(selected_difficulty_id: String = GameData.DEFAULT_DIFFICULTY_ID) -> bool:
 	if not _save_storage_ready:
 		_report_save_failure(save_storage_block_message())
 		return false
 	if is_future_save_version_guarded():
 		_report_save_failure(FUTURE_SAVE_GUARD_MESSAGE)
 		return false
+	if not GameData.DIFFICULTIES.has(selected_difficulty_id):
+		_report_save_failure(INVALID_DIFFICULTY_MESSAGE)
+		return false
 	var selection := _select_save_candidate(active_save_slot)
 	if bool(selection.get("has_artifact", false)) and not bool(selection.get("found", false)):
 		_report_save_failure(INVALID_SAVE_MESSAGE)
 		return false
 	_reset_runtime_state()
+	difficulty_id = _normalized_difficulty_id(selected_difficulty_id)
 	_remember_current_titles()
 	var saved := save_game()
 	progress_changed.emit()
@@ -369,6 +410,7 @@ func _reset_runtime_state() -> void:
 	sea_chart_fragments = 0
 	shark_bonds = {}
 	selected_time_slot_id = GameData.DEFAULT_TIME_SLOT_ID
+	difficulty_id = GameData.DEFAULT_DIFFICULTY_ID
 
 
 func add_sea_chart_fragments(amount: int = 1) -> int:
@@ -396,6 +438,36 @@ func _saturating_multiply_nonnegative(left: int, right: int) -> int:
 	if left > largest_safe_left:
 		return MAX_SAFE_JSON_INTEGER
 	return left * right
+
+
+func _scaled_nonnegative_int(value: int, multiplier: float) -> int:
+	if value <= 0 or multiplier <= 0.0:
+		return 0
+	var bounded_value := mini(value, MAX_SAFE_JSON_INTEGER)
+	if not is_finite(multiplier):
+		return MAX_SAFE_JSON_INTEGER
+	var scaled_multiplier := multiplier * float(DIFFICULTY_MULTIPLIER_SCALE)
+	if scaled_multiplier >= float(MAX_SAFE_JSON_INTEGER):
+		return MAX_SAFE_JSON_INTEGER
+	var numerator := maxi(0, int(round(scaled_multiplier)))
+	return _saturating_multiply_divide_nonnegative(
+		bounded_value, numerator, DIFFICULTY_MULTIPLIER_SCALE
+	)
+
+
+func _saturating_multiply_divide_nonnegative(
+	value: int, numerator: int, denominator: int
+) -> int:
+	if value <= 0 or numerator <= 0 or denominator <= 0:
+		return 0
+	@warning_ignore("integer_division")
+	var quotient := value / denominator
+	var remainder := value % denominator
+	var whole := _saturating_multiply_nonnegative(quotient, numerator)
+	var fractional_product := remainder * numerator
+	@warning_ignore("integer_division")
+	var fractional := fractional_product / denominator
+	return _saturating_add_nonnegative(whole, fractional)
 
 
 func _safe_count_dictionary_total(values: Dictionary) -> int:
@@ -512,7 +584,10 @@ func sell_fish(fish_id: String, amount: int) -> Dictionary:
 	if fish.is_empty() or bool(fish.get("shark", false)) or amount <= 0 or current < amount:
 		return {"ok": false, "message": "売却できる魚が足りません。"}
 
-	var income := _saturating_multiply_nonnegative(int(fish["sell_price"]), amount)
+	var base_income := _saturating_multiply_nonnegative(int(fish["sell_price"]), amount)
+	var income := _scaled_nonnegative_int(
+		base_income, float(difficulty().get("sell_price_multiplier", 1.0))
+	)
 	inventory[fish_id] = current - amount
 	money = _saturating_add_nonnegative(money, income)
 	save_game()
@@ -526,6 +601,7 @@ func quote_fish_sale(orders: Dictionary) -> Dictionary:
 	var sold: Dictionary = {}
 	var income := 0
 	var total_amount := 0
+	var sell_price_multiplier := float(difficulty().get("sell_price_multiplier", 1.0))
 
 	for key in orders.keys():
 		var fish_id := String(key)
@@ -549,7 +625,8 @@ func quote_fish_sale(orders: Dictionary) -> Dictionary:
 	for fish_id in normalized.keys():
 		var amount := int(normalized[fish_id])
 		var fish := GameData.get_fish(fish_id)
-		var item_income := _saturating_multiply_nonnegative(int(fish["sell_price"]), amount)
+		var base_item_income := _saturating_multiply_nonnegative(int(fish["sell_price"]), amount)
+		var item_income := _scaled_nonnegative_int(base_item_income, sell_price_multiplier)
 		income = _saturating_add_nonnegative(income, item_income)
 		total_amount = _saturating_add_nonnegative(total_amount, amount)
 		sold[fish_id] = {
@@ -640,7 +717,8 @@ func feed_shark(shark_id: String, fish_id: String) -> Dictionary:
 		else GameData.SHARK_DEFAULT_EXP_MULTIPLIER
 	)
 	var after_bond := clampi(before_bond + bond_gain, 0, 100)
-	var exp_gain := int(round(float(food.get("food_exp", 0)) * exp_multiplier))
+	var base_exp_gain := int(round(float(food.get("food_exp", 0)) * exp_multiplier))
+	var exp_gain := difficulty_adjusted_exp(base_exp_gain)
 	inventory[fish_id] = current_count - 1
 	shark_bonds[shark_id] = after_bond
 	var leveled_to := add_exp(exp_gain)
@@ -762,11 +840,12 @@ func cook_and_eat(fish_id: String, recipe_id: String) -> Dictionary:
 		return {"ok": false, "message": "この魚には選んだ調理法を使えません。"}
 
 	inventory[fish_id] = fish_count(fish_id) - 1
-	var base_exp := GameData.recipe_exp(fish_id, recipe_id)
 	var dish_key := "%s:%s" % [fish_id, recipe_id]
-	var first_time := not eaten_recipes.has(dish_key)
-	var first_bonus := base_exp if first_time else 0
-	var total_exp := base_exp + first_bonus
+	var exp_preview := cooking_exp_preview(fish_id, recipe_id)
+	var base_exp := int(exp_preview.get("base_exp", 0))
+	var first_time := bool(exp_preview.get("first_time", false))
+	var first_bonus := int(exp_preview.get("first_bonus", 0))
+	var total_exp := int(exp_preview.get("total_exp", base_exp))
 	var eaten_count_incremented := _increment_count_with_global_cap(eaten_recipes, dish_key)
 	if first_time and not eaten_count_incremented:
 		first_time = false
@@ -912,6 +991,9 @@ func get_base_stats() -> Dictionary:
 	var growth := growth_points()
 	var growth_floor := int(floor(growth))
 	var technique_points := growth_floor + int(rod.get("technique_bonus", 0))
+	var difficulty_data := difficulty()
+	var base_safe_min := maxf(0.10, 0.22 - float(technique_points) * 0.007)
+	var base_safe_max := minf(0.88, 0.72 + float(technique_points) * 0.010)
 	return {
 		"level": level,
 		"max_energy": 100.0 + growth * 5.0,
@@ -920,9 +1002,16 @@ func get_base_stats() -> Dictionary:
 		"focus": growth_floor,
 		"energy_regen": 14.0 + growth * 0.45,
 		"bite_window_bonus": growth * 0.025,
-		"safe_min": maxf(0.10, 0.22 - float(technique_points) * 0.007),
-		"safe_max": minf(0.88, 0.72 + float(technique_points) * 0.010),
-		"line_break_limit": 1.0 + float(rod.get("line_limit_bonus", 0.0)),
+		"safe_min": clampf(
+			base_safe_min + float(difficulty_data.get("safe_min_shift", 0.0)), 0.06, 0.94
+		),
+		"safe_max": clampf(
+			base_safe_max + float(difficulty_data.get("safe_max_shift", 0.0)), 0.06, 0.94
+		),
+		"line_break_limit": (
+			(1.0 + float(rod.get("line_limit_bonus", 0.0)))
+			* float(difficulty_data.get("line_break_multiplier", 1.0))
+		),
 		"rod_name": String(rod.get("name", "港の入門竿")),
 	}
 
@@ -1072,6 +1161,7 @@ func save_game() -> bool:
 		"sea_chart_fragments": sea_chart_fragments,
 		"shark_bonds": shark_bonds,
 		"selected_time_slot_id": selected_time_slot_id,
+		"difficulty_id": difficulty_id,
 	}
 	if not _is_valid_save_candidate(data):
 		_report_save_failure(INVALID_OUTBOUND_SAVE_MESSAGE)
@@ -1203,7 +1293,7 @@ func _is_valid_save_candidate(data: Dictionary) -> bool:
 		"spot_caught_counts", "best_sizes", "eaten_recipes", "owned_rods",
 		"equipped_rod_id", "owned_rigs", "equipped_rig_id", "owned_boats",
 		"pending_buff", "play_seconds", "quest_board", "quest_completed_count",
-		"sea_chart_fragments", "shark_bonds", "selected_time_slot_id",
+		"sea_chart_fragments", "shark_bonds", "selected_time_slot_id", "difficulty_id",
 	]
 	var has_known_key := false
 	for key in known_keys:
@@ -1236,7 +1326,9 @@ func _is_valid_save_candidate(data: Dictionary) -> bool:
 	for key in ["owned_rods", "owned_rigs", "owned_boats"]:
 		if data.has(key) and not _is_string_array(data[key]):
 			return false
-	for key in ["equipped_rod_id", "equipped_rig_id", "selected_time_slot_id"]:
+	for key in [
+		"equipped_rod_id", "equipped_rig_id", "selected_time_slot_id", "difficulty_id"
+	]:
 		if data.has(key) and typeof(data[key]) != TYPE_STRING:
 			return false
 	if data.has("quest_board") and not _is_structurally_valid_quest_board(data["quest_board"]):
@@ -1423,6 +1515,9 @@ func _apply_save_data(data: Dictionary) -> void:
 	sea_chart_fragments = clampi(int(data.get("sea_chart_fragments", 0)), 0, SEA_CHART_FRAGMENT_MAX)
 	shark_bonds = _normalized_shark_bonds(loaded_shark_bonds)
 	selected_time_slot_id = _normalized_time_slot_id(data.get("selected_time_slot_id", GameData.DEFAULT_TIME_SLOT_ID))
+	difficulty_id = _normalized_difficulty_id(
+		data.get("difficulty_id", GameData.DEFAULT_DIFFICULTY_ID)
+	)
 	owned_rods = []
 	var loaded_rods = data.get("owned_rods", ["starter"])
 	if typeof(loaded_rods) == TYPE_ARRAY:
@@ -1532,6 +1627,15 @@ func _normalized_time_slot_id(value: Variant) -> String:
 	if not GameData.is_time_slot_unlocked(time_slot_id, level):
 		return GameData.DEFAULT_TIME_SLOT_ID
 	return time_slot_id
+
+
+func _normalized_difficulty_id(value: Variant) -> String:
+	if typeof(value) != TYPE_STRING:
+		return GameData.DEFAULT_DIFFICULTY_ID
+	var resolved_id := String(value)
+	if not GameData.DIFFICULTIES.has(resolved_id):
+		return GameData.DEFAULT_DIFFICULTY_ID
+	return resolved_id
 
 
 func _remember_current_titles() -> void:

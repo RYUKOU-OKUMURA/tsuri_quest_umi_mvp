@@ -8,6 +8,7 @@ const BOSS_UNLOCK_LEVEL: int = 5
 const DEFAULT_FISHING_SPOT_ID := "harbor_pier"
 const BOSS_FISHING_SPOT_ID := "harbor_boulder"
 const DEFAULT_TIME_SLOT_ID := "daytime"
+const DEFAULT_DIFFICULTY_ID := "normal"
 const NO_BOAT_RANK := 0
 const DEFAULT_RIG_ID := "sabiki"
 const RIG_MATCH_WEIGHT_MULTIPLIER := 2.5
@@ -20,6 +21,8 @@ const SHARK_AMBUSH_THRESHOLD_MIN := 0.25
 const SHARK_AMBUSH_THRESHOLD_MAX := 0.60
 
 const BOSS_FIRST_CLEAR_REWARDS: Dictionary = GameCatalogData.BOSS_FIRST_CLEAR_REWARDS
+const DIFFICULTY_ORDER: Array[String] = GameCatalogData.DIFFICULTY_ORDER
+const DIFFICULTIES: Dictionary = GameCatalogData.DIFFICULTIES
 const FISH: Dictionary = GameCatalogData.FISH
 const NUSHI_FISH: Dictionary = GameCatalogData.NUSHI_FISH
 const COMMON_LOW_LEVEL_FISH_IDS: Array[String] = GameCatalogData.COMMON_LOW_LEVEL_FISH_IDS

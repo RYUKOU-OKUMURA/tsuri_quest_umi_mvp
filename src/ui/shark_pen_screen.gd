@@ -353,7 +353,8 @@ func _refresh_feed_state() -> void:
 	var favorite := GameData.is_favorite_food(_selected_shark_id, food)
 	var bond_gain := GameData.SHARK_FAVORITE_BOND_GAIN if favorite else GameData.SHARK_DEFAULT_BOND_GAIN
 	var exp_multiplier := GameData.SHARK_FAVORITE_EXP_MULTIPLIER if favorite else GameData.SHARK_DEFAULT_EXP_MULTIPLIER
-	var exp_gain := int(round(float(food.get("food_exp", 0)) * exp_multiplier))
+	var base_exp_gain := int(round(float(food.get("food_exp", 0)) * exp_multiplier))
+	var exp_gain := PlayerProgress.difficulty_adjusted_exp(base_exp_gain)
 	var status := "好物" if favorite else "通常"
 	_feed_preview_label.text = "%s：なつき度 +%d / EXP +%d" % [status, bond_gain, exp_gain]
 	if _message_label.text.is_empty():

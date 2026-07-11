@@ -1553,10 +1553,13 @@ func _refresh_detail() -> void:
 		_cook_button.disabled = true
 		_cook_button.queue_redraw()
 		return
-	var base_exp := GameData.recipe_exp(_selected_fish_id, _selected_recipe_id)
-	var dish_key := "%s:%s" % [_selected_fish_id, _selected_recipe_id]
-	var first_time := not PlayerProgress.eaten_recipes.has(dish_key)
-	var total_exp := base_exp * 2 if first_time else base_exp
+	var exp_preview := PlayerProgress.cooking_exp_preview(
+		_selected_fish_id, _selected_recipe_id
+	)
+	var first_time := bool(exp_preview.get("first_time", false))
+	var base_exp := int(exp_preview.get("base_exp", 0))
+	var total_exp := int(exp_preview.get("total_exp", base_exp))
+	var first_bonus := int(exp_preview.get("first_bonus", 0))
 	var count := PlayerProgress.fish_count(_selected_fish_id)
 	_dish_title.text = _dish_display_name(
 		String(fish["name"]),
@@ -1568,7 +1571,7 @@ func _refresh_detail() -> void:
 	_material_value.text = "%s ×1" % String(fish["name"])
 	_stock_value.text = "%d / 1" % count
 	_exp_value.text = "+%d EXP" % total_exp
-	_bonus_value.text = "初回 +%d EXP" % base_exp if first_time else "初回済"
+	_bonus_value.text = "初回 +%d EXP" % first_bonus if first_time else "初回済"
 	_buff_value.text = _detail_buff_value_text(String(recipe.get("buff_text", "")))
 	_effect_count_value.text = "1回"
 	_overwrite_note.text = "調理後は食事結果へ"

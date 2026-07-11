@@ -24,6 +24,7 @@ func _ready() -> void:
 
 	_audit_required_assets()
 	await _audit_cook_select()
+	await _audit_hard_cook_select_exp()
 	await _audit_exp_gain()
 	await _audit_exp_gain_level_up()
 	await _audit_meal_result()
@@ -36,7 +37,7 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 
-	print("Cooking content audit passed for 5 states plus level-up EXP subcase.")
+	print("Cooking content audit passed for 5 states plus hard/capped EXP preview and level-up subcases.")
 	get_tree().quit(0)
 
 
@@ -309,6 +310,33 @@ func _audit_cook_select() -> void:
 	_expect_named_node("COOK_SELECT", screen, "FishRowKawahagi")
 	screen.queue_free()
 	await _tick()
+
+
+func _audit_hard_cook_select_exp() -> void:
+	_seed_select_state()
+	PlayerProgress.difficulty_id = "hard"
+	var screen := await _mount_cooking_screen()
+	await _expect_texts(
+		"COOK_SELECT_HARD",
+		screen,
+		["獲得EXP", "+50 EXP", "初回", "+25 EXP"]
+	)
+	screen.queue_free()
+	await _tick()
+
+	_seed_select_state()
+	PlayerProgress.difficulty_id = "hard"
+	PlayerProgress.eaten_recipes = {"legacy:recipe": PlayerProgress.MAX_SAFE_JSON_INTEGER}
+	screen = await _mount_cooking_screen()
+	await _expect_texts(
+		"COOK_SELECT_HARD_CAPPED",
+		screen,
+		["獲得EXP", "+25 EXP", "初回済"]
+	)
+	await _expect_absent_texts("COOK_SELECT_HARD_CAPPED", screen, ["+50 EXP"])
+	screen.queue_free()
+	await _tick()
+	PlayerProgress.difficulty_id = GameData.DEFAULT_DIFFICULTY_ID
 
 
 func _audit_exp_gain() -> void:
@@ -1165,6 +1193,7 @@ func _tick() -> void:
 
 
 func _seed_select_state() -> void:
+	PlayerProgress.difficulty_id = GameData.DEFAULT_DIFFICULTY_ID
 	PlayerProgress.level = 4
 	PlayerProgress.exp = 130
 	PlayerProgress.money = 1250
@@ -1187,6 +1216,7 @@ func _seed_select_state() -> void:
 
 
 func _seed_after_meal_state() -> void:
+	PlayerProgress.difficulty_id = GameData.DEFAULT_DIFFICULTY_ID
 	PlayerProgress.level = 5
 	PlayerProgress.exp = 20
 	PlayerProgress.money = 1250

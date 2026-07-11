@@ -5,6 +5,40 @@ extends RefCounted
 # harbor_boulder の "unlock_level": 5 は GameData.BOSS_UNLOCK_LEVEL と同値。
 # これらのルール定数を変える場合は本ファイルの該当値も揃えること。
 
+const DIFFICULTY_ORDER: Array[String] = ["easy", "normal", "hard"]
+const DIFFICULTIES: Dictionary = {
+	"easy": {
+		"id": "easy",
+		"name": "やさしい",
+		"safe_min_shift": -0.04,
+		"safe_max_shift": 0.05,
+		"line_break_multiplier": 1.15,
+		"fish_stamina_multiplier": 0.85,
+		"sell_price_multiplier": 1.0,
+		"exp_multiplier": 1.0,
+	},
+	"normal": {
+		"id": "normal",
+		"name": "ふつう",
+		"safe_min_shift": 0.0,
+		"safe_max_shift": 0.0,
+		"line_break_multiplier": 1.0,
+		"fish_stamina_multiplier": 1.0,
+		"sell_price_multiplier": 1.0,
+		"exp_multiplier": 1.0,
+	},
+	"hard": {
+		"id": "hard",
+		"name": "むずかしい",
+		"safe_min_shift": 0.02,
+		"safe_max_shift": -0.04,
+		"line_break_multiplier": 0.95,
+		"fish_stamina_multiplier": 1.25,
+		"sell_price_multiplier": 1.25,
+		"exp_multiplier": 1.25,
+	},
+}
+
 const BOSS_FIRST_CLEAR_REWARDS: Dictionary = {
 	"boss_kurodai":
 	{
