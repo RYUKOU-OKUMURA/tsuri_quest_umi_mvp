@@ -112,6 +112,8 @@ var _sandbox_mode := false
 var _known_title_ids: Array[String] = []
 # save_system_smoke 専用。通常実行では空文字のままにする。
 var _save_failure_injection_stage := ""
+# save_system_smoke専用。"main" / "backup" / "tmp" の削除直前で失敗させる。
+var _delete_failure_injection_stage := ""
 var _save_storage_ready := true
 var _save_storage_block_message := ""
 var _active_slot_save_suppressed := false
@@ -289,19 +291,36 @@ func set_active_save_slot(slot_id: int, load_slot := true) -> bool:
 
 ## 指定slotのmain / backup / tmpだけを削除する。
 ## active slot削除後は、明示的なslot再選択またはreset_gameまで保存を抑止する。
+## 複数artifactの削除は一括atomicではない。途中失敗はok=falseで返し、先に消えたartifactは
+## 復元しないが、残存artifactへ同じAPIを再実行すれば安全に削除を完了できる。
 func delete_save_slot(slot_id: int) -> Dictionary:
 	if slot_id < 1 or slot_id > SAVE_SLOT_COUNT:
 		return {"ok": false, "reason": "invalid_slot", "slot_id": slot_id, "active_deleted": false}
 	if _sandbox_mode:
 		return {"ok": false, "reason": "sandbox_mode", "slot_id": slot_id, "active_deleted": false}
 	if not _save_storage_ready:
-		_report_save_failure(save_storage_block_message())
-		return {"ok": false, "reason": "storage_blocked", "slot_id": slot_id, "active_deleted": false}
+		var message := save_storage_block_message()
+		_report_save_failure(message)
+		return {
+			"ok": false,
+			"reason": "storage_blocked",
+			"slot_id": slot_id,
+			"active_deleted": false,
+			"message": message,
+		}
 
-	for path in _slot_save_paths(slot_id):
+	var artifact_names := ["main", "backup", "tmp"]
+	var artifact_paths := _slot_save_paths(slot_id)
+	for artifact_index in artifact_paths.size():
+		var path := artifact_paths[artifact_index]
 		if not FileAccess.file_exists(path):
 			continue
-		var remove_error := DirAccess.remove_absolute(path)
+		var artifact_name: String = artifact_names[artifact_index]
+		var remove_error := (
+			ERR_CANT_CREATE
+			if _delete_failure_injection_stage == artifact_name
+			else DirAccess.remove_absolute(path)
+		)
 		if remove_error != OK:
 			var message := "セーブデータを削除できませんでした（コード: %d）。" % remove_error
 			_report_save_failure(message)
