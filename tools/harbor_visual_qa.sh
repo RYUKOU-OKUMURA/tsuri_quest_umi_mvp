@@ -40,7 +40,11 @@ rm -f /tmp/tsuri_harbor_asa_mazume.png \
   /tmp/tsuri_harbor_time_slot_compare.png \
   /tmp/tsuri_harbor_daytime_after_mock.png \
   /tmp/tsuri_harbor_daytime_after_mock_grayscale.png \
-  /tmp/tsuri_harbor_daytime_after_mock_thumbnail.png
+  /tmp/tsuri_harbor_daytime_after_mock_thumbnail.png \
+  /tmp/tsuri_harbor_header_normal.png \
+  /tmp/tsuri_harbor_header_hover.png \
+  /tmp/tsuri_harbor_header_pressed.png \
+  /tmp/tsuri_harbor_header_focus.png
 
 echo "==> Capture harbor time slot previews"
 for slot in asa_mazume daytime night; do
@@ -50,6 +54,28 @@ for slot in asa_mazume daytime night; do
     TSURI_HARBOR_TIME_SLOT_ID="$slot" \
     TSURI_HARBOR_OUT="/tmp/tsuri_harbor_${slot}.png" \
     "$GODOT" --path "$ROOT" "res://tools/harbor_preview.tscn"
+done
+
+echo "==> Capture settings/title header interaction states"
+for state in normal hover pressed focus; do
+  captured=0
+  for attempt in 1 2 3; do
+    if HOME="$GODOT_HOME" \
+      TSURI_HARBOR_SEED=standard \
+      TSURI_HARBOR_LEVEL=30 \
+      TSURI_HARBOR_TIME_SLOT_ID=daytime \
+      TSURI_HARBOR_HEADER_STATE="$state" \
+      TSURI_HARBOR_OUT="/tmp/tsuri_harbor_header_${state}.png" \
+      "$GODOT" --path "$ROOT" "res://tools/harbor_preview.tscn"; then
+      captured=1
+      break
+    fi
+    echo "Retry header state capture: ${state} (${attempt}/3)" >&2
+  done
+  if [[ "$captured" -ne 1 ]]; then
+    echo "Header state capture failed after retries: $state" >&2
+    exit 1
+  fi
 done
 
 echo "==> Capture daytime preview without a meal effect"
@@ -122,3 +148,7 @@ echo "/tmp/tsuri_harbor_time_slot_compare.png"
 echo "/tmp/tsuri_harbor_daytime_after_mock.png"
 echo "/tmp/tsuri_harbor_daytime_after_mock_grayscale.png"
 echo "/tmp/tsuri_harbor_daytime_after_mock_thumbnail.png"
+echo "/tmp/tsuri_harbor_header_normal.png"
+echo "/tmp/tsuri_harbor_header_hover.png"
+echo "/tmp/tsuri_harbor_header_pressed.png"
+echo "/tmp/tsuri_harbor_header_focus.png"
