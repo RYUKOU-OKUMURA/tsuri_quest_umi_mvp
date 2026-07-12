@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import re
+import secrets
 import signal
 import site
 import subprocess
@@ -19,7 +20,7 @@ import shutil
 from typing import Iterable
 
 TEST_RE = re.compile(r"^tools/.+_(?:smoke|audit)\.(?:tscn|gd)$")
-ALLOWED_RUNNERS = {"direct_scene", "direct_script", "save_system", "export_evidence"}
+ALLOWED_RUNNERS = {"direct_scene", "direct_script", "settings_smoke", "save_system", "export_evidence"}
 EXPLAINED_ERROR_RULES = {
     "all": [(re.compile(r"^ERROR: 1 resources still in use at exit(?: \(.*\))?\.$"), "Godot終了時の既知resource解放診断")],
     "save_system": [(re.compile(r"^ERROR: Parse JSON failed\. Error at line 0: Expected key$"), "破損JSONからbackup復元する既存負ケース")],
@@ -29,6 +30,10 @@ EXPLAINED_WARNING_RULES = {
     "all": [],
     "validation": [(re.compile(r"^WARNING: 2 ObjectDB instances were leaked at exit \(run with `--verbose` for details\)\.$"), "既存headless validation終了時のObjectDB cleanup診断")],
     "direct_scene": [(re.compile(r"^WARNING: (?:2|3) ObjectDB instances were leaked at exit \(run with `--verbose` for details\)\.$"), "既存scene終了時のObjectDB cleanup診断")],
+    "settings_smoke": [
+        (re.compile(r"^WARNING: (?:2|3) ObjectDB instances were leaked at exit \(run with `--verbose` for details\)\.$"), "settings smoke終了時の既知ObjectDB cleanup診断"),
+        (re.compile(r"^WARNING: セーブデータを削除できませんでした（コード: 20）。$"), "settings smokeの意図的なslot削除失敗fixture"),
+    ],
     "export": [(re.compile(r"^WARNING: 2 ObjectDB instances were leaked at exit \(run with `--verbose` for details\)\.$"), "REL-01 export成果物smoke終了時の既知ObjectDB cleanup診断")],
     "save_system": [
         (re.compile(r"^WARNING: 2 ObjectDB instances were leaked at exit \(run with `--verbose` for details\)\.$"), "save_system_verify終了時の既知ObjectDB cleanup診断"),
@@ -40,6 +45,7 @@ REQUIRED_SPECIAL = {
     "tools/save_namespace_migration_smoke.tscn": "save_system",
     "tools/save_system_smoke.tscn": "save_system",
     "tools/export_launch_smoke.tscn": "export_evidence",
+    "tools/settings_smoke.tscn": "settings_smoke",
 }
 TEST_TIMEOUT_OVERRIDES = {"tools/nushi_encounter_audit.tscn": 1800.0}
 
@@ -140,7 +146,9 @@ def classify(tests: list[str], overrides: dict[str, str]) -> list[tuple[str, str
             raise ValueError(f"特殊testのrunner不正: {test} は {expected} 必須です")
     classified = [(test, overrides[test]) for test in tests]
     for test, runner in classified:
-        if runner == "direct_scene" and not test.endswith(".tscn") or runner == "direct_script" and not test.endswith(".gd"):
+        if runner == "settings_smoke" and test != "tools/settings_smoke.tscn":
+            raise ValueError(f"settings_smoke runnerはtools/settings_smoke.tscn専用です: {test}")
+        if runner in {"direct_scene", "settings_smoke"} and not test.endswith(".tscn") or runner == "direct_script" and not test.endswith(".gd"):
             raise ValueError(f"拡張子とrunnerが不一致です: {test}|{runner}")
     return classified
 
@@ -364,6 +372,10 @@ def main(argv: Iterable[str] | None = None) -> int:
         godot = resolve_godot(os.environ.get("GODOT_BIN", "/Applications/Godot.app/Contents/MacOS/Godot"))
         engine_bin = install_engine_shim(home_root, godot)
         env = preserve_python_user_base(os.environ.copy())
+        env.pop("TSURI_SETTINGS_SMOKE_ALLOW", None)
+        env.pop("TSURI_QA_ISOLATED_HOME", None)
+        env.pop("TSURI_QA_RUN_TOKEN", None)
+        env.pop("TSURI_QA_REJECT_RAW_HOME_PROBE", None)
         env["PATH"] = f"{engine_bin}{os.pathsep}{env.get('PATH', '')}"
         setup_env = env | {"TSURI_RELEASE_TEST_TIMEOUT_SECONDS": env.get("TSURI_RELEASE_SETUP_TIMEOUT_SECONDS", "30")}
         setup = run([godot, "--version"], root, setup_env, logs / "setup_godot_version.log")
@@ -412,6 +424,11 @@ def main(argv: Iterable[str] | None = None) -> int:
                 test_home = home_root / f"test_{index:03d}"
                 test_home.mkdir()
                 test_env = env | {"HOME": str(test_home), "TSURI_GODOT_HOME": str(test_home), "TSURI_RELEASE_TEST_TIMEOUT_SECONDS": str(budget)}
+                if runner == "settings_smoke":
+                    isolated_home = str(test_home.resolve(strict=True))
+                    run_token = secrets.token_hex(24)
+                    (test_home / ".tsuri_settings_qa_guard").write_text(run_token, encoding="utf-8")
+                    test_env.update(HOME=isolated_home, TSURI_GODOT_HOME=isolated_home, TSURI_SETTINGS_SMOKE_ALLOW="1", TSURI_QA_ISOLATED_HOME=isolated_home, TSURI_QA_RUN_TOKEN=run_token)
                 if runner == "save_system":
                     command = [str(root / "tools/save_system_verify.sh")]
                 elif runner == "direct_script":
