@@ -30,6 +30,8 @@ func _ready() -> void:
 	_expect(not PlayerProgress.has_save_file(), "clean slate should report no save file")
 	await _verify_title_empty_slot_selection_is_non_committal()
 	await _verify_e7_title_new_game_flow()
+	_verify_save_slot_deletion_contract()
+	_verify_save_slot_deletion_failure_contracts()
 
 	# slot 2はslot 1と独立して保存される
 	_remove_all_save_files()
@@ -264,6 +266,224 @@ func _ready() -> void:
 		return
 	print("save_system_smoke: ok")
 	get_tree().quit(0)
+
+
+func _verify_save_slot_deletion_contract() -> void:
+	_remove_all_save_files()
+	var settings_path := "user://settings.json"
+	_write_text(settings_path, "settings-byte-sentinel\n")
+	var settings_hash := _file_hash(settings_path)
+
+	# 3slotすべてについて、対象のmain / backup / tmpだけが消えることを確認する。
+	for slot_id in range(1, PlayerProgress.SAVE_SLOT_COUNT + 1):
+		_remove_all_save_files()
+		var active_slot := 2 if slot_id == 1 else 1
+		_expect(PlayerProgress.set_active_save_slot(active_slot, false), "deletion fixture should select a non-target active slot")
+		for fixture_slot in range(1, PlayerProgress.SAVE_SLOT_COUNT + 1):
+			_write_text(_slot_save_path(fixture_slot), "main-%d-%d" % [slot_id, fixture_slot])
+			_write_text(_slot_backup_path(fixture_slot), "backup-%d-%d" % [slot_id, fixture_slot])
+			_write_text(_slot_tmp_path(fixture_slot), "tmp-%d-%d" % [slot_id, fixture_slot])
+		var untouched_hashes := {}
+		for other_slot in range(1, PlayerProgress.SAVE_SLOT_COUNT + 1):
+			if other_slot != slot_id:
+				untouched_hashes[other_slot] = _slot_artifact_hashes(other_slot)
+		var result := PlayerProgress.delete_save_slot(slot_id)
+		_expect(bool(result.get("ok", false)), "slot %d deletion should succeed" % slot_id)
+		_expect_eq(int(result.get("slot_id", -1)), slot_id, "deletion result should identify target slot")
+		_expect(not bool(result.get("active_deleted", true)), "non-active deletion should report non-active")
+		_expect(not FileAccess.file_exists(_slot_save_path(slot_id)), "target main should be deleted")
+		_expect(not FileAccess.file_exists(_slot_backup_path(slot_id)), "target backup should be deleted")
+		_expect(not FileAccess.file_exists(_slot_tmp_path(slot_id)), "target tmp should be deleted")
+		for other_slot in untouched_hashes:
+			_expect_slot_artifact_hashes(other_slot, untouched_hashes[other_slot], "non-target slot must remain byte-identical")
+		_expect_eq(_file_hash(settings_path), settings_hash, "settings must remain byte-identical")
+
+	var repeated := PlayerProgress.delete_save_slot(3)
+	_expect(bool(repeated.get("ok", false)), "deleting an empty slot should be idempotent")
+	# main / backup / tmpの一部だけが残る欠損状態でも、残存物だけを安全に削除する。
+	for artifact_kind in ["main", "backup", "tmp"]:
+		_remove_all_save_files()
+		var artifact_path := _slot_save_path(3)
+		if artifact_kind == "backup":
+			artifact_path = _slot_backup_path(3)
+		elif artifact_kind == "tmp":
+			artifact_path = _slot_tmp_path(3)
+		_write_text(artifact_path, "partial-%s" % artifact_kind)
+		var partial_result := PlayerProgress.delete_save_slot(3)
+		_expect(bool(partial_result.get("ok", false)), "partial %s deletion should succeed" % artifact_kind)
+		_expect(not FileAccess.file_exists(artifact_path), "partial %s artifact should be deleted" % artifact_kind)
+		_expect_eq(_file_hash(settings_path), settings_hash, "partial deletion must preserve settings")
+
+	# 無効ID用fixtureを全slotへ再配置する。
+	for fixture_slot in range(1, PlayerProgress.SAVE_SLOT_COUNT + 1):
+		_write_text(_slot_save_path(fixture_slot), "invalid-main-%d" % fixture_slot)
+		_write_text(_slot_backup_path(fixture_slot), "invalid-backup-%d" % fixture_slot)
+		_write_text(_slot_tmp_path(fixture_slot), "invalid-tmp-%d" % fixture_slot)
+	var all_hashes := {}
+	for slot_id in range(1, PlayerProgress.SAVE_SLOT_COUNT + 1):
+		all_hashes[slot_id] = _slot_artifact_hashes(slot_id)
+	for invalid_slot in [0, -1, PlayerProgress.SAVE_SLOT_COUNT + 1, 999]:
+		var invalid_result := PlayerProgress.delete_save_slot(invalid_slot)
+		_expect(not bool(invalid_result.get("ok", true)), "invalid slot must be rejected")
+		_expect_eq(String(invalid_result.get("reason", "")), "invalid_slot", "invalid slot reason")
+	for slot_id in all_hashes:
+		_expect_slot_artifact_hashes(slot_id, all_hashes[slot_id], "invalid IDs must preserve every slot")
+	_expect_eq(_file_hash(settings_path), settings_hash, "invalid and repeated deletion must preserve settings")
+
+	# 3slotそれぞれをactiveとして削除し、非対象2slotをbyte不変で保持する。
+	for target_slot in range(1, PlayerProgress.SAVE_SLOT_COUNT + 1):
+		_remove_all_save_files()
+		_expect(PlayerProgress.set_active_save_slot(target_slot, false), "active deletion fixture should select target")
+		PlayerProgress.reset_game()
+		PlayerProgress.money = 9876
+		PlayerProgress.save_game()
+		_write_text(_slot_tmp_path(target_slot), "active-delete-tmp-%d" % target_slot)
+		var other_hashes := {}
+		for other_slot in range(1, PlayerProgress.SAVE_SLOT_COUNT + 1):
+			if other_slot == target_slot:
+				continue
+			_write_text(_slot_save_path(other_slot), "active-other-main-%d" % other_slot)
+			_write_text(_slot_backup_path(other_slot), "active-other-backup-%d" % other_slot)
+			_write_text(_slot_tmp_path(other_slot), "active-other-tmp-%d" % other_slot)
+			other_hashes[other_slot] = _slot_artifact_hashes(other_slot)
+		var active_result := PlayerProgress.delete_save_slot(target_slot)
+		_expect(bool(active_result.get("ok", false)), "active slot deletion should succeed")
+		_expect(bool(active_result.get("active_deleted", false)), "active deletion should be reported")
+		_expect_eq(PlayerProgress.money, 500, "active deletion should reset runtime state")
+		_expect(PlayerProgress.is_active_slot_save_suppressed(), "active deletion should suppress automatic saves")
+		_expect(not PlayerProgress.save_game(), "suppressed save should report false")
+		_expect(not FileAccess.file_exists(_slot_save_path(target_slot)), "suppressed save must not recreate main")
+		_expect(not FileAccess.file_exists(_slot_backup_path(target_slot)), "suppressed save must not recreate backup")
+		_expect(not FileAccess.file_exists(_slot_tmp_path(target_slot)), "suppressed save must not recreate tmp")
+		for other_slot in other_hashes:
+			_expect_slot_artifact_hashes(other_slot, other_hashes[other_slot], "active deletion must preserve non-target slots")
+		_expect_eq(_file_hash(settings_path), settings_hash, "active deletion must preserve settings")
+
+		_expect(PlayerProgress.reset_game(), "explicit new game should recreate the active slot")
+		_expect(not PlayerProgress.is_active_slot_save_suppressed(), "new game should clear save suppression")
+		_expect(FileAccess.file_exists(_slot_save_path(target_slot)), "explicit new game should create main")
+	_remove_if_exists(settings_path)
+
+
+func _verify_save_slot_deletion_failure_contracts() -> void:
+	var settings_path := "user://settings.json"
+	var failure_messages: Array[String] = []
+	var collect_failure := func(message: String) -> void: failure_messages.append(message)
+	PlayerProgress.save_failed.connect(collect_failure)
+
+	# 各削除段階の失敗は成功と偽らず、runtime・抑止状態・非対象slot・settingsを変えない。
+	for failure_stage in ["main", "backup", "tmp"]:
+		_remove_all_save_files()
+		_expect(PlayerProgress.set_active_save_slot(1, false), "failure fixture should select active slot 1")
+		PlayerProgress.money = 4321
+		_write_text(settings_path, "failure-settings-%s\n" % failure_stage)
+		var settings_hash := _file_hash(settings_path)
+		for slot_id in range(1, PlayerProgress.SAVE_SLOT_COUNT + 1):
+			_write_text(_slot_save_path(slot_id), "failure-main-%s-%d" % [failure_stage, slot_id])
+			_write_text(_slot_backup_path(slot_id), "failure-backup-%s-%d" % [failure_stage, slot_id])
+			_write_text(_slot_tmp_path(slot_id), "failure-tmp-%s-%d" % [failure_stage, slot_id])
+		var other_hashes := {2: _slot_artifact_hashes(2), 3: _slot_artifact_hashes(3)}
+		var suppression_before := PlayerProgress.is_active_slot_save_suppressed()
+		var message_count_before := failure_messages.size()
+		PlayerProgress._delete_failure_injection_stage = failure_stage
+		var result := PlayerProgress.delete_save_slot(1)
+		PlayerProgress._delete_failure_injection_stage = ""
+		_expect(not bool(result.get("ok", true)), "%s removal failure should return false" % failure_stage)
+		_expect_eq(String(result.get("reason", "")), "remove_failed", "%s failure reason" % failure_stage)
+		_expect(not String(result.get("message", "")).is_empty(), "%s failure should include message" % failure_stage)
+		_expect(not bool(result.get("active_deleted", true)), "%s failure must not report active deletion" % failure_stage)
+		_expect_eq(failure_messages.size(), message_count_before + 1, "%s failure should notify once" % failure_stage)
+		_expect_eq(PlayerProgress.money, 4321, "%s failure must preserve runtime" % failure_stage)
+		_expect_eq(PlayerProgress.is_active_slot_save_suppressed(), suppression_before, "%s failure must preserve suppression" % failure_stage)
+		for other_slot in other_hashes:
+			_expect_slot_artifact_hashes(other_slot, other_hashes[other_slot], "%s failure must preserve other slots" % failure_stage)
+		_expect_eq(_file_hash(settings_path), settings_hash, "%s failure must preserve settings" % failure_stage)
+
+		# mainより後で失敗した場合、先行削除は戻さない。残存artifactへの再試行で完了する。
+		_expect_eq(FileAccess.file_exists(_slot_save_path(1)), failure_stage == "main", "%s partial main contract" % failure_stage)
+		_expect_eq(FileAccess.file_exists(_slot_backup_path(1)), failure_stage in ["main", "backup"], "%s partial backup contract" % failure_stage)
+		_expect(FileAccess.file_exists(_slot_tmp_path(1)), "%s failure should leave tmp for retry" % failure_stage)
+		var retry_result := PlayerProgress.delete_save_slot(1)
+		_expect(bool(retry_result.get("ok", false)), "%s retry should complete deletion" % failure_stage)
+		_expect(not FileAccess.file_exists(_slot_save_path(1)), "%s retry should remove main" % failure_stage)
+		_expect(not FileAccess.file_exists(_slot_backup_path(1)), "%s retry should remove backup" % failure_stage)
+		_expect(not FileAccess.file_exists(_slot_tmp_path(1)), "%s retry should remove tmp" % failure_stage)
+
+	# sandboxはartifact・runtime・settingsを一切変更しない。
+	_remove_all_save_files()
+	_expect(PlayerProgress.set_active_save_slot(1, false), "sandbox fixture should select slot 1")
+	PlayerProgress.money = 5432
+	_write_text(settings_path, "sandbox-settings\n")
+	for slot_id in range(1, PlayerProgress.SAVE_SLOT_COUNT + 1):
+		_write_text(_slot_save_path(slot_id), "sandbox-main-%d" % slot_id)
+		_write_text(_slot_backup_path(slot_id), "sandbox-backup-%d" % slot_id)
+		_write_text(_slot_tmp_path(slot_id), "sandbox-tmp-%d" % slot_id)
+	var sandbox_hashes := {1: _slot_artifact_hashes(1), 2: _slot_artifact_hashes(2), 3: _slot_artifact_hashes(3)}
+	var sandbox_settings_hash := _file_hash(settings_path)
+	var sandbox_active_slot := PlayerProgress.active_save_slot
+	var sandbox_suppression := PlayerProgress.is_active_slot_save_suppressed()
+	var sandbox_message_count := failure_messages.size()
+	PlayerProgress._sandbox_mode = true
+	var sandbox_result := PlayerProgress.delete_save_slot(1)
+	PlayerProgress._sandbox_mode = false
+	_expect(not bool(sandbox_result.get("ok", true)), "sandbox deletion should return false")
+	_expect_eq(String(sandbox_result.get("reason", "")), "sandbox_mode", "sandbox deletion reason")
+	_expect(not bool(sandbox_result.get("active_deleted", true)), "sandbox deletion must not report active deletion")
+	_expect_eq(failure_messages.size(), sandbox_message_count, "sandbox deletion must not notify save_failed")
+	_expect_eq(PlayerProgress.money, 5432, "sandbox deletion must preserve runtime")
+	_expect_eq(PlayerProgress.active_save_slot, sandbox_active_slot, "sandbox deletion must preserve active slot")
+	_expect_eq(PlayerProgress.is_active_slot_save_suppressed(), sandbox_suppression, "sandbox deletion must preserve suppression")
+	for slot_id in sandbox_hashes:
+		_expect_slot_artifact_hashes(slot_id, sandbox_hashes[slot_id], "sandbox deletion must preserve artifacts")
+	_expect_eq(_file_hash(settings_path), sandbox_settings_hash, "sandbox deletion must preserve settings")
+
+	# storage blockedも既存save_failed通知を行い、状態を一切変更しない。
+	var blocked_message_count := failure_messages.size()
+	var storage_ready_before := PlayerProgress._save_storage_ready
+	var blocked_active_slot := PlayerProgress.active_save_slot
+	var blocked_suppression := PlayerProgress.is_active_slot_save_suppressed()
+	PlayerProgress._save_storage_ready = false
+	var blocked_result := PlayerProgress.delete_save_slot(1)
+	PlayerProgress._save_storage_ready = storage_ready_before
+	_expect(not bool(blocked_result.get("ok", true)), "blocked deletion should return false")
+	_expect_eq(String(blocked_result.get("reason", "")), "storage_blocked", "blocked deletion reason")
+	_expect(not String(blocked_result.get("message", "")).is_empty(), "blocked deletion should include message")
+	_expect(not bool(blocked_result.get("active_deleted", true)), "blocked deletion must not report active deletion")
+	_expect_eq(failure_messages.size(), blocked_message_count + 1, "blocked deletion should notify once")
+	_expect_eq(String(failure_messages[-1]), String(blocked_result.get("message", "")), "blocked result and notification should share message")
+	_expect_eq(PlayerProgress.money, 5432, "blocked deletion must preserve runtime")
+	_expect_eq(PlayerProgress.active_save_slot, blocked_active_slot, "blocked deletion must preserve active slot")
+	_expect_eq(PlayerProgress.is_active_slot_save_suppressed(), blocked_suppression, "blocked deletion must preserve suppression")
+	for slot_id in sandbox_hashes:
+		_expect_slot_artifact_hashes(slot_id, sandbox_hashes[slot_id], "blocked deletion must preserve artifacts")
+	_expect_eq(_file_hash(settings_path), sandbox_settings_hash, "blocked deletion must preserve settings")
+
+	# future版も明示削除では内容を解釈・上書きせず、対象3artifactだけを削除する。
+	_remove_all_save_files()
+	_write_text(_slot_save_path(2), JSON.stringify({"version": PlayerProgress.SAVE_VERSION + 9, "future": "main"}))
+	_write_text(_slot_backup_path(2), JSON.stringify({"version": PlayerProgress.SAVE_VERSION + 10, "future": "backup"}))
+	_write_text(_slot_tmp_path(2), JSON.stringify({"version": PlayerProgress.SAVE_VERSION + 11, "future": "tmp"}))
+	_write_text(_slot_save_path(1), "future-other-main")
+	_write_text(_slot_backup_path(1), "future-other-backup")
+	_write_text(_slot_tmp_path(1), "future-other-tmp")
+	_write_text(_slot_save_path(3), "future-other-main-3")
+	_write_text(_slot_backup_path(3), "future-other-backup-3")
+	_write_text(_slot_tmp_path(3), "future-other-tmp-3")
+	var future_other_hashes := {1: _slot_artifact_hashes(1), 3: _slot_artifact_hashes(3)}
+	var future_settings_hash := _file_hash(settings_path)
+	var future_result := PlayerProgress.delete_save_slot(2)
+	_expect(bool(future_result.get("ok", false)), "explicit future slot deletion should succeed")
+	_expect(not FileAccess.file_exists(_slot_save_path(2)), "future main should be deleted")
+	_expect(not FileAccess.file_exists(_slot_backup_path(2)), "future backup should be deleted")
+	_expect(not FileAccess.file_exists(_slot_tmp_path(2)), "future tmp should be deleted")
+	for other_slot in future_other_hashes:
+		_expect_slot_artifact_hashes(other_slot, future_other_hashes[other_slot], "future deletion must preserve other slots")
+	_expect_eq(_file_hash(settings_path), future_settings_hash, "future deletion must preserve settings")
+
+	PlayerProgress.save_failed.disconnect(collect_failure)
+	_remove_if_exists(settings_path)
+	_remove_all_save_files()
+	_expect(PlayerProgress.set_active_save_slot(1, false), "deletion failure cleanup should restore slot 1")
 
 
 func _verify_title_empty_slot_selection_is_non_committal() -> void:
