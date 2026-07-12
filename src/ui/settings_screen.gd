@@ -14,6 +14,7 @@ var _bgm_slider: HSlider
 var _se_slider: HSlider
 var _bgm_value_label: Label
 var _se_value_label: Label
+var _fullscreen_button: Button
 var _return_button: Button
 var _delete_button: Button
 var _delete_summary_label: Label
@@ -33,6 +34,8 @@ var _target_slot_id := PlayerProgress.DEFAULT_SAVE_SLOT
 var _delete_stage := 0
 var _delete_api_call_count := 0
 var _loading := false
+var _fullscreen := false
+static var _last_display_fullscreen := false
 
 
 func _build_screen() -> void:
@@ -74,7 +77,8 @@ func _build_screen() -> void:
 	heading.name = "SettingsAudioHeading"
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	heading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_in(panel, heading, Rect2(70.0, 28.0, 780.0, 40.0))
+	_place_in(panel, heading, Rect2(70.0, 28.0, 420.0, 40.0))
+	_build_fullscreen_toggle(panel)
 	_bgm_slider = _build_volume_row(panel, "BGM音量", 72.0, BGM_BUS)
 	_bgm_value_label = panel.get_node("BGM_Value") as Label
 	_se_slider = _build_volume_row(panel, "SE音量", 142.0, SE_BUS)
@@ -134,11 +138,43 @@ func _build_volume_row(parent: Control, caption: String, y: float, bus_name: Str
 	return slider
 
 
+func _build_fullscreen_toggle(parent: Control) -> void:
+	_fullscreen_button = make_button("フルスクリーン: オフ", _toggle_fullscreen, 0.0, false)
+	_fullscreen_button.name = "SettingsFullscreenButton"
+	_fullscreen_button.custom_minimum_size = Vector2.ZERO
+	_fullscreen_button.focus_mode = Control.FOCUS_ALL
+	var button_style := ShowcaseAssetsScript.texture_style(
+		COMMON_BUTTON_PATH,
+		Vector4(46.0, 24.0, 46.0, 24.0),
+		Vector4(16.0, 8.0, 16.0, 8.0)
+	)
+	if button_style != null:
+		_fullscreen_button.add_theme_stylebox_override("normal", button_style)
+		_fullscreen_button.add_theme_stylebox_override("hover", button_style)
+		_fullscreen_button.add_theme_stylebox_override("pressed", button_style)
+		_fullscreen_button.add_theme_stylebox_override("focus", button_style)
+	_fullscreen_button.add_theme_color_override("font_color", Palette.TEXT_BONE)
+	_fullscreen_button.add_theme_color_override("font_hover_color", Palette.GOLD_BRIGHT)
+	_fullscreen_button.add_theme_color_override("font_pressed_color", Palette.GOLD_BRIGHT)
+	_fullscreen_button.add_theme_color_override("font_focus_color", Palette.GOLD_BRIGHT)
+	_fullscreen_button.add_theme_color_override("font_outline_color", Palette.TEXT_OUTLINE_DARK)
+	_fullscreen_button.add_theme_constant_override("outline_size", 2)
+	_fullscreen_button.mouse_entered.connect(_on_fullscreen_hover.bind(true))
+	_fullscreen_button.mouse_exited.connect(_on_fullscreen_hover.bind(false))
+	_fullscreen_button.button_down.connect(_on_fullscreen_pressed.bind(true))
+	_fullscreen_button.button_up.connect(_on_fullscreen_pressed.bind(false))
+	_fullscreen_button.focus_entered.connect(_on_fullscreen_focus.bind(true))
+	_fullscreen_button.focus_exited.connect(_on_fullscreen_focus.bind(false))
+	_place_in(parent, _fullscreen_button, Rect2(500.0, 10.0, 350.0, 58.0))
+
+
 func _wire_focus() -> void:
 	_bgm_slider.focus_neighbor_bottom = _bgm_slider.get_path_to(_se_slider)
 	_se_slider.focus_neighbor_top = _se_slider.get_path_to(_bgm_slider)
-	_se_slider.focus_neighbor_bottom = _se_slider.get_path_to(_delete_button)
-	_delete_button.focus_neighbor_top = _delete_button.get_path_to(_se_slider)
+	_se_slider.focus_neighbor_bottom = _se_slider.get_path_to(_fullscreen_button)
+	_fullscreen_button.focus_neighbor_top = _fullscreen_button.get_path_to(_se_slider)
+	_fullscreen_button.focus_neighbor_bottom = _fullscreen_button.get_path_to(_delete_button)
+	_delete_button.focus_neighbor_top = _delete_button.get_path_to(_fullscreen_button)
 	_delete_button.focus_neighbor_bottom = _delete_button.get_path_to(_return_button)
 	_return_button.focus_neighbor_top = _return_button.get_path_to(_delete_button)
 
@@ -254,11 +290,11 @@ func _refresh_delete_summary(message := "") -> void:
 	_delete_button.disabled = storage_blocked or not has_artifact
 	_delete_button.focus_mode = Control.FOCUS_NONE if _delete_button.disabled else Control.FOCUS_ALL
 	if not _delete_button.disabled:
-		_se_slider.focus_neighbor_bottom = _se_slider.get_path_to(_delete_button)
+		_fullscreen_button.focus_neighbor_bottom = _fullscreen_button.get_path_to(_delete_button)
 		_return_button.focus_neighbor_top = _return_button.get_path_to(_delete_button)
 	else:
-		_se_slider.focus_neighbor_bottom = _se_slider.get_path_to(_return_button)
-		_return_button.focus_neighbor_top = _return_button.get_path_to(_se_slider)
+		_fullscreen_button.focus_neighbor_bottom = _fullscreen_button.get_path_to(_return_button)
+		_return_button.focus_neighbor_top = _return_button.get_path_to(_fullscreen_button)
 	if not message.is_empty():
 		_delete_status_label.text = message
 	elif storage_blocked:
@@ -338,6 +374,7 @@ func _set_background_focus_enabled(enabled: bool) -> void:
 	var mode := Control.FOCUS_ALL if enabled else Control.FOCUS_NONE
 	_bgm_slider.focus_mode = mode
 	_se_slider.focus_mode = mode
+	_fullscreen_button.focus_mode = mode
 	_delete_button.focus_mode = mode if not _delete_button.disabled else Control.FOCUS_NONE
 	_return_button.focus_mode = mode
 
@@ -375,9 +412,12 @@ func _apply_loaded_settings() -> void:
 	var settings := load_settings()
 	_bgm_slider.value = int(settings["bgm_volume"])
 	_se_slider.value = int(settings["se_volume"])
+	_fullscreen = bool(settings["fullscreen"])
+	_refresh_fullscreen_button()
 	_update_value_label(BGM_BUS, _bgm_slider.value)
 	_update_value_label(SE_BUS, _se_slider.value)
 	apply_to_audio_buses(settings)
+	apply_display_settings(settings)
 	_loading = false
 
 
@@ -386,11 +426,51 @@ func _on_volume_changed(value: float, bus_name: StringName) -> void:
 	_set_bus_volume(bus_name, value)
 	if _loading:
 		return
-	save_settings({
+	_persist_current_settings()
+
+
+func _toggle_fullscreen() -> void:
+	var previous := _fullscreen
+	_fullscreen = not previous
+	if not _persist_current_settings():
+		_fullscreen = previous
+		_refresh_fullscreen_button()
+		return
+	apply_display_settings({"fullscreen": _fullscreen})
+	_refresh_fullscreen_button()
+
+
+func _persist_current_settings() -> bool:
+	return save_settings({
 		"version": SETTINGS_VERSION,
 		"bgm_volume": int(round(_bgm_slider.value)),
 		"se_volume": int(round(_se_slider.value)),
+		"fullscreen": _fullscreen,
 	})
+
+
+func _refresh_fullscreen_button() -> void:
+	if _fullscreen_button == null:
+		return
+	_fullscreen_button.text = "フルスクリーン: オン" if _fullscreen else "フルスクリーン: オフ"
+
+
+func _on_fullscreen_hover(active: bool) -> void:
+	if _fullscreen_button == null or _fullscreen_button.has_focus():
+		return
+	_fullscreen_button.self_modulate = Palette.GOLD_BRIGHT if active else Palette.TACKLE_TAB_ACTIVE_MODULATE
+
+
+func _on_fullscreen_pressed(active: bool) -> void:
+	if _fullscreen_button == null or _fullscreen_button.has_focus():
+		return
+	_fullscreen_button.self_modulate = Palette.GOLD if active else Palette.TACKLE_TAB_ACTIVE_MODULATE
+
+
+func _on_fullscreen_focus(active: bool) -> void:
+	if _fullscreen_button == null:
+		return
+	_fullscreen_button.self_modulate = Palette.TEXT_BONE if active else Palette.TACKLE_TAB_ACTIVE_MODULATE
 
 
 func _update_value_label(bus_name: StringName, value: float) -> void:
@@ -420,6 +500,7 @@ static func default_settings() -> Dictionary:
 		"version": SETTINGS_VERSION,
 		"bgm_volume": DEFAULT_BGM_VOLUME,
 		"se_volume": DEFAULT_SE_VOLUME,
+		"fullscreen": false,
 	}
 
 
@@ -452,6 +533,11 @@ static func load_settings() -> Dictionary:
 			valid = false
 			continue
 		normalized[key] = int(round(number))
+	var fullscreen_value: Variant = source.get("fullscreen", false)
+	if not fullscreen_value is bool:
+		valid = false
+	else:
+		normalized["fullscreen"] = fullscreen_value
 	var version_value: Variant = source.get("version", null)
 	if not (version_value is int or version_value is float):
 		valid = false
@@ -462,15 +548,35 @@ static func load_settings() -> Dictionary:
 	if not valid:
 		save_settings(defaults)
 		return defaults
-	if source.size() != normalized.size():
+	if not _settings_match_normalized(source, normalized):
 		save_settings(normalized)
 	return normalized
+
+
+static func _settings_match_normalized(source: Dictionary, normalized: Dictionary) -> bool:
+	if source.size() != normalized.size():
+		return false
+	for key in normalized.keys():
+		if not source.has(key):
+			return false
+		var source_value: Variant = source[key]
+		var normalized_value: Variant = normalized[key]
+		if normalized_value is bool:
+			if not source_value is bool or source_value != normalized_value:
+				return false
+		elif normalized_value is int or normalized_value is float:
+			if not (source_value is int or source_value is float) or not is_equal_approx(float(source_value), float(normalized_value)):
+				return false
+		elif source_value != normalized_value:
+			return false
+	return true
 
 
 static func save_settings(settings: Dictionary) -> bool:
 	var normalized := default_settings()
 	normalized["bgm_volume"] = clampi(int(settings.get("bgm_volume", DEFAULT_BGM_VOLUME)), 0, 100)
 	normalized["se_volume"] = clampi(int(settings.get("se_volume", DEFAULT_SE_VOLUME)), 0, 100)
+	normalized["fullscreen"] = bool(settings.get("fullscreen", false))
 	var file := FileAccess.open(SETTINGS_PATH, FileAccess.WRITE)
 	if file == null:
 		push_warning("設定を保存できません: %s" % error_string(FileAccess.get_open_error()))
@@ -482,6 +588,14 @@ static func save_settings(settings: Dictionary) -> bool:
 static func apply_to_audio_buses(settings: Dictionary) -> void:
 	_set_bus_volume(BGM_BUS, float(settings.get("bgm_volume", DEFAULT_BGM_VOLUME)))
 	_set_bus_volume(SE_BUS, float(settings.get("se_volume", DEFAULT_SE_VOLUME)))
+
+
+static func apply_display_settings(settings: Dictionary) -> void:
+	var fullscreen := bool(settings.get("fullscreen", false))
+	_last_display_fullscreen = fullscreen
+	DisplayServer.window_set_mode(
+		DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
+	)
 
 
 static func _set_bus_volume(bus_name: StringName, percent: float) -> void:

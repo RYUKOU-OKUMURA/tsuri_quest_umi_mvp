@@ -28,7 +28,9 @@ var _save_exit_dialog: ConfirmationDialog
 
 func _ready() -> void:
 	theme = ThemeFactory.build_theme()
-	SettingsScreen.apply_to_audio_buses(SettingsScreen.load_settings())
+	var settings := SettingsScreen.load_settings()
+	SettingsScreen.apply_to_audio_buses(settings)
+	SettingsScreen.apply_display_settings(settings)
 	# close requestを保存結果に応じて制御するため、SceneTreeの自動終了を無効化する。
 	get_tree().auto_accept_quit = false
 	PlayerProgress.save_failed.connect(_on_save_failed)

@@ -2,7 +2,7 @@
 
 正本: `docs/30_v2_expansion_overview.md`（読む順: docs/30 §4 共通仕様 → 本doc）
 前提フェーズ: 実施時期は分割型（下記 §E11-0）。画面実装はE7完了後
-状態: 一部完了（3スロット、素材台帳基盤、Release Gate 0、ID-01）。最小export spikeと実装部は未完、画面実装はE7後。進行状況はdocs/30 §6、監査追加事項はdocs/45参照
+状態: E11進行中（SETTINGS-AUDIO、SLOT-DELETE UI、DISPLAY、3スロット、素材台帳基盤、Release Gate 0、ID-01完了）。残りはINPUT-COMMON、EXTERIOR、最終受入。進行状況はdocs/30 §6、監査追加事項はdocs/45参照
 
 目的: ローンチ対象（E0〜E7＋E10）の外周——設定・セーブ保護・表示・入力・権利・export・製品外装——を販売品質にする。2026-07-10の横断監査結果はdocs/45を正とする。
 
@@ -15,7 +15,7 @@
 | E11-7 Release Gate 0の5件 | **2026-07-11確定済み** | 決定値をexport、設定、入力、表示、製品外装へ引き渡す |
 | ID-01: user data namespace / OS application ID / store識別子 / 旧save移行 | **2026-07-11完了** | 正式名称変更前に固定し、旧MVP saveを非破壊コピー |
 | 最小export spike / 権利証跡 | **E7と並走または先行** | 正式名称変更と最終パッケージの手戻りを防ぐ |
-| E11-1〜4・6 の実装 | **E7完了後・ローンチ前** | ゲーム内容確定後に外周を締める |
+| E11-4・6・EXTERIORの実装 | **E7完了後・ローンチ前** | SETTINGS-AUDIO / SLOT-DELETE UI / DISPLAYは完了済み。残りの外周を締める |
 
 ## E11-1. 設定画面（新画面）
 

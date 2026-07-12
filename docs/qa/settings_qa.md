@@ -1,6 +1,6 @@
 # 設定画面 QA判断ログ
 
-最終更新: 2026-07-12 / 状態: v1 freeze中
+最終更新: 2026-07-13 / 状態: E11-DISPLAY freeze
 参照画像: 専用参照なし。`docs/19_ui_production_playbook.md` のメニュー画面文法と共通キットを正とする
 QA更新コマンド: `./tools/settings_visual_qa.sh`
 
@@ -17,14 +17,18 @@ QA更新コマンド: `./tools/settings_visual_qa.sh`
 | 戻るボタン | `Rect2(920, 616, 276, 60)` | 右下 | 既存の右下戻る文法を維持 |
 | 既定音量 | BGM=`80` / SE=`80` | `settings.json` | 初回に十分聞こえ、最大音量を避ける |
 | 音量刻み | 5 | 両slider | キーボード / ゲームパッドで調整回数を抑える |
-| focus順 | BGM → SE → 削除 → 戻る | 画面内 | 空slotではdisabled削除を飛ばし、安全側操作を確認時の初期focusにする |
+| focus順 | BGM → SE → フルスクリーン → 削除 → 戻る | 画面内 | 空slotではdisabled削除を飛ばし、安全側操作を確認時の初期focusにする |
+| フルスクリーン切替 | panel内`Rect2(500, 10, 350, 58)` / global`Rect2(680, 154, 350, 58)`、文言 `フルスクリーン: オン / オフ` | 中央パネル上部右 | action_button_frame.pngのvertical patch margin 24+24を吸収し、heading/BGM行と分離。装飾線が文字へ干渉しない |
+| 表示設定 | `fullscreen` bool、既定`false`、`stretch/aspect=keep` | `settings_screen.gd` / `project.godot` | 起動時・再生成時に`DisplayServer.window_set_mode`へ適用。16:9領域を維持 |
+| 解像度matrix | 1280x720 / 1280x800 / 1024x768 | `settings_visual_qa.sh` | 実ウィンドウcaptureで16:9領域、上下黒帯なし / 各40px / 各96pxを確認 |
 
 ## 2. 不採用・再試行禁止リスト
 
 | 案 | 却下理由 | 判断日 |
 |---|---|---|
 | 設定画面専用PNG | E11-SETTINGS-AUDIOは共通キットでv1固定するスコープ | 2026-07-12 |
-| fullscreen / 解像度の先行表示 | 後続sliceの責務であり、未実装操作を見せない | 2026-07-12 |
+| fullscreen / 解像度の先行表示 | E11-DISPLAY着手前に未実装操作を見せる案。現在のfullscreen切替はE11-DISPLAYの採用仕様 | 2026-07-12 |
+| 解像度選択・ウィンドウサイズ選択 | E11-DISPLAYの責務はfullscreen切替と16:9 keep＋黒帯であり、選択UIは追加しない | 2026-07-13 |
 | 確認ごとに別フレームを重ねる | 同一位置のNinePatchを二重所有すると状態切替時の描画が不安定。1枚を再利用する | 2026-07-12 |
 | Lv / 所持金など上部ステータス | 設定操作と無関係で情報重複になる | 2026-07-12 |
 
@@ -46,8 +50,13 @@ QA更新コマンド: `./tools/settings_visual_qa.sh`
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-収束済みのため空欄。レビュー修正では削除状態文Yとartifact由来disabled/focusだけを再オープンし、タイトル、背景、中央パネル、音声行、右下戻る、音量契約、共通素材は維持した。
+| 状態 | 固定seed/データ | 表示/非表示 | 固定アンカー | 可変領域 | evidence出力 | smoke契約 |
+|---|---|---|---|---|---|---|
+| windowed / fullscreen | 既存settings・slot seed、BGM80/SE80 | fullscreen切替とオン/オフ文言を表示。解像度選択は非表示 | 既存タイトル、音声行、削除ブロック、確認モーダル、右下戻る | 追加切替ボタンの状態文言とwindow mode | `settings_fullscreen_{hover,pressed,focus,on}_1280x720.png`、解像度matrix画像 | settings保存、再読込、DisplayServer適用、既存全契約回帰 |
+| 16:10 / 4:3 | 1280x800 / 1024x768 | 16:9ゲーム領域＋黒帯 | ゲーム座標1280x720 | 余剰領域の黒帯だけ | `settings_resolution_{1280x800,1024x768}.png` | 黒帯寸法・色を画像検査 |
+
+再オープン理由と差分を明記する。beforeはfullscreen UIなし、`stretch/aspect=expand`、解像度matrix未実装。afterは中央パネル上部右の大きなruntime切替、`fullscreen`保存/復元、`stretch/aspect=keep`、16:10/4:3の実runtime黒帯証拠。既存音声行、削除ブロック、確認モーダル、右下戻る矩形、BGM/SE bus、フォントは不動値とする。
 
 ## 7. 判断ログ（直近パスのみ）
 
-`docs/qa/evidence/settings/2026-07-12_settings_{normal,confirm1,confirm2,failure,hover,pressed,focus}_1280x720.png` を原寸確認した。beforeはcommit `54b2b91` のnormal/failure（状態文y=298,h=42）で、金縁直上に寄りfooter wellが空いていた。afterは同名の現行evidence（y=350,h=48）で、通常/失敗文を暗色footer well中央へ移し、上下余白と読み順が明確に改善したため採用した。hoverは明るい橙、pressedは暗い茶、focusは金色のfocus枠でnormalから識別できる。screenのready/deferred初期focus完了後に状態を適用し、failure/focusはcapture直前のfocus ownerが削除ボタンであることをruntime assertした。7状態とも1280x720・全画素opaqueで、全画面黒欠損集計を通過し、slot/Lv/プレイ時間、不可逆警告、失敗理由、ボタンに見切れ・ellipsis・重なりが無い。専用PNG・表示設定・キー設定は追加していない。
+`docs/qa/evidence/settings/2026-07-12_settings_{normal,confirm1,confirm2,failure,hover,pressed,focus}_1280x720.png` をE11-DISPLAY前の既存evidenceとして原寸確認した。beforeはcommit `54b2b91` のnormal/failure（状態文y=298,h=42）で、金縁直上に寄りfooter wellが空いていた。E11-DISPLAYのafterは同じ7状態へ切替ボタンを追加し、`2026-07-13_settings_{normal,confirm1,confirm2,failure,hover,pressed,focus}_1280x720.png` と `2026-07-13_settings_{fullscreen_hover,fullscreen_pressed,fullscreen_focus,fullscreen_on}_1280x720.png` で設定画面と切替ボタンのnormal/hover/pressed/focus、および保存値fullscreen=trueから復元したオン文言を原寸確認した。fullscreen_onは実保存・実読込・表示モード適用後にpreview隔離内だけwindowedへ戻してcaptureした。追加P2対応では切替ボタンをbefore global`Rect2(740,164,290,46)`からafter global`Rect2(680,154,350,58)`へ再収束し、装飾線とオン/オフ文言の干渉がないことを原寸確認した。さらに`2026-07-13_settings_resolution_{1280x720,1280x800,1024x768}.png`を実ウィンドウcaptureし、黒帯全領域の黒画素率・連続境界・content内側境界を実画素検査した。slot/Lv/プレイ時間、不可逆警告、失敗理由、fullscreen文言、ボタンに見切れ・ellipsis・重なりは無い。専用PNG・fullscreen以外の表示設定・キー設定は追加していない。
