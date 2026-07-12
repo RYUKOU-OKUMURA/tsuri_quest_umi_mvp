@@ -58,6 +58,11 @@ with tempfile.TemporaryDirectory() as temporary:
     assert unexplained_errors("ERROR: Parse JSON failed. Error at line 0: Expected key\n", "direct_script") != []
     vector_warning = "WARNING: Vector2 cannot be normalized, the elements must be finite. Making (0, 0) as a fallback.\n"
     assert warning_summary(vector_warning, "save_system")["unexplained"]
+    delete_failure_warning = "WARNING: セーブデータを削除できませんでした（コード: 20）。"
+    assert not warning_summary(f"{delete_failure_warning}\n", "save_system")["unexplained"]
+    assert warning_summary(f"{delete_failure_warning}\n", "direct_scene")["unexplained"] == [delete_failure_warning]
+    similar_delete_warning = "WARNING: セーブデータを削除できませんでした（コード: 21）。"
+    assert warning_summary(f"{similar_delete_warning}\n", "save_system")["unexplained"] == [similar_delete_warning]
     for context in ("validation", "save_system", "export"):
         assert not warning_summary("WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details).\n", context)["unexplained"]
     for count in (2, 3):
