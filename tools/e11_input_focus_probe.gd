@@ -84,15 +84,49 @@ func _scan_project() -> void:
 
 func _audit_main_routes() -> void:
 	var source := FileAccess.get_file_as_string("res://src/main.gd")
-	var regex := RegEx.new()
-	regex.compile("res://src/ui/[a-z0-9_]+_screen\\.gd")
-	var registered := {}
-	for entry in _registry:
-		registered[String(entry["script"])] = true
-	for result in regex.search_all(source):
-		var path := result.get_string()
-		if not registered.has(path):
-			_harness_errors.append(Common.finding("HARNESS_MAIN_ROUTE_UNREGISTERED", "harness_error", path, "main画面routeがregistryにありません"))
+	_harness_errors.append_array(_main_route_findings(source, _registry))
+
+
+func _main_route_findings(source: String, registry: Array) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var preload_regex := RegEx.new()
+	preload_regex.compile("const\\s+([A-Za-z0-9_]+)\\s*=\\s*preload\\(\"(res://src/ui/[a-z0-9_]+_screen\\.gd)\"\\)")
+	var symbol_to_path := {}
+	var path_to_symbol := {}
+	for matched in preload_regex.search_all(source):
+		var symbol := matched.get_string(1)
+		var path := matched.get_string(2)
+		symbol_to_path[symbol] = path
+		path_to_symbol[path] = symbol
+	var branch_regex := RegEx.new()
+	branch_regex.compile("(?m)^\\s*\"([^\"]+)\":\\s*\\n\\s*screen_script\\s*=\\s*([A-Za-z0-9_]+)")
+	var id_to_symbol := {}
+	for matched in branch_regex.search_all(source):
+		id_to_symbol[matched.get_string(1)] = matched.get_string(2)
+	var registry_ids := {}
+	var registry_paths := {}
+	for entry_value in registry:
+		var entry := entry_value as Dictionary
+		var screen_id := String(entry["id"])
+		var script_path := String(entry["script"])
+		registry_ids[screen_id] = true
+		registry_paths[script_path] = true
+		if not path_to_symbol.has(script_path):
+			result.append(Common.finding("HARNESS_MAIN_PRELOAD_MISSING", "harness_error", screen_id, "registry画面のmain preloadがありません", {"script": script_path}))
+			continue
+		if not id_to_symbol.has(screen_id):
+			result.append(Common.finding("HARNESS_MAIN_MATCH_MISSING", "harness_error", screen_id, "registry画面のmain screen_id分岐がありません", {"script": script_path}))
+			continue
+		if id_to_symbol[screen_id] != path_to_symbol[script_path]:
+			result.append(Common.finding("HARNESS_MAIN_ROUTE_MISMATCH", "harness_error", screen_id, "main分岐がregistryと異なるscreen scriptを解決します", {"expected": path_to_symbol[script_path], "actual": id_to_symbol[screen_id]}))
+	for screen_id in id_to_symbol:
+		var symbol := String(id_to_symbol[screen_id])
+		if symbol_to_path.has(symbol) and not registry_ids.has(screen_id):
+			result.append(Common.finding("HARNESS_MAIN_ROUTE_UNREGISTERED", "harness_error", String(screen_id), "main screen_id分岐がregistryにありません", {"script": symbol_to_path[symbol]}))
+	for script_path in path_to_symbol:
+		if not registry_paths.has(script_path):
+			result.append(Common.finding("HARNESS_MAIN_PRELOAD_UNREGISTERED", "harness_error", String(script_path), "main screen preloadがregistryにありません"))
+	return result
 
 
 func _apply_setup(screen: Control, steps: Array) -> void:
@@ -323,12 +357,19 @@ func _run_self_test() -> void:
 	good.add_theme_stylebox_override("focus", StyleBoxLine.new())
 	var bad := Button.new()
 	var bad_normal := StyleBoxFlat.new()
+	bad_normal.bg_color = Color.BLACK
+	var bad_hover := StyleBoxFlat.new()
+	bad_hover.bg_color = Color.DIM_GRAY
 	var bad_focus := StyleBoxFlat.new()
+	bad_focus.bg_color = Color.DIM_GRAY
 	bad.add_theme_stylebox_override("normal", bad_normal)
+	bad.add_theme_stylebox_override("hover", bad_hover)
 	bad.add_theme_stylebox_override("focus", bad_focus)
-	bad.add_theme_color_override("font_color", Color.WHITE)
+	bad.add_theme_color_override("font_color", Color.GRAY)
+	bad.add_theme_color_override("font_hover_color", Color.WHITE)
 	bad.add_theme_color_override("font_focus_color", Color.WHITE)
-	bad.add_theme_color_override("icon_normal_color", Color.WHITE)
+	bad.add_theme_color_override("icon_normal_color", Color.GRAY)
+	bad.add_theme_color_override("icon_hover_color", Color.WHITE)
 	bad.add_theme_color_override("icon_focus_color", Color.WHITE)
 	if _fixture_is_abnormal(good):
 		_harness_errors.append(Common.finding("HARNESS_FIXTURE_GOOD", "harness_error", "fixture", "正常focus styleを異常分類しました"))
@@ -370,6 +411,18 @@ func _run_self_test() -> void:
 	for expected_code in ["INPUT_DISABLED_REACHED", "INPUT_FOCUS_ISOLATED", "INPUT_CANCEL_UNOBSERVED", "INPUT_ACCEPT_UNOBSERVED"]:
 		if not bad_codes.has(expected_code):
 			_harness_errors.append(Common.finding("HARNESS_CLASSIFY_BAD", "harness_error", "fixture", "異常入力観測のfindingが不足しています", {"missing": expected_code, "actual": bad_codes}))
+	var settings_registry := [{"id": "settings", "script": "res://src/ui/settings_screen.gd"}]
+	var valid_settings_source := "const SettingsScreen = preload(\"res://src/ui/settings_screen.gd\")\nfunc route(id):\n match id:\n  \"settings\":\n   screen_script = SettingsScreen\n"
+	if not _main_route_findings(valid_settings_source, settings_registry).is_empty():
+		_harness_errors.append(Common.finding("HARNESS_ROUTE_VALID", "harness_error", "fixture", "正常settings routeを異常分類しました"))
+	var missing_preload_source := "func route(id):\n match id:\n  \"settings\":\n   screen_script = SettingsScreen\n"
+	var missing_preload_codes := _main_route_findings(missing_preload_source, settings_registry).map(func(item: Dictionary) -> String: return String(item["code"]))
+	if not missing_preload_codes.has("HARNESS_MAIN_PRELOAD_MISSING"):
+		_harness_errors.append(Common.finding("HARNESS_ROUTE_PRELOAD", "harness_error", "fixture", "settings preload欠落を検出できません", {"actual": missing_preload_codes}))
+	var missing_match_source := "const SettingsScreen = preload(\"res://src/ui/settings_screen.gd\")\n"
+	var missing_match_codes := _main_route_findings(missing_match_source, settings_registry).map(func(item: Dictionary) -> String: return String(item["code"]))
+	if not missing_match_codes.has("HARNESS_MAIN_MATCH_MISSING"):
+		_harness_errors.append(Common.finding("HARNESS_ROUTE_MATCH", "harness_error", "fixture", "settings match欠落を検出できません", {"actual": missing_match_codes}))
 	_screens = [{"id": "fixture_good", "classification": "pass"}, {"id": "fixture_bad", "classification": "finding"}]
 	good.free()
 	bad.free()
