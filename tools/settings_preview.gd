@@ -3,8 +3,9 @@ extends Control
 const SettingsScreenScript = preload("res://src/ui/settings_screen.gd")
 const ThemeFactory = preload("res://src/ui/ui_theme.gd")
 const IsolationGuard = preload("res://tools/settings_isolation_guard.gd")
-const VW := Vector2i(1280, 720)
-const STATES := ["normal", "confirm1", "confirm2", "failure", "hover", "pressed", "focus"]
+const DESIGN_SIZE := Vector2i(1280, 720)
+const STATES := ["normal", "confirm1", "confirm2", "failure", "hover", "pressed", "focus", "fullscreen_hover", "fullscreen_pressed", "fullscreen_focus"]
+var _capture_size := DESIGN_SIZE
 
 
 func _ready() -> void:
@@ -26,16 +27,22 @@ func _ready() -> void:
 		get_tree().quit(2)
 		return
 	_cleanup_preview_artifacts()
-	SettingsScreenScript.save_settings({"bgm_volume": 80, "se_volume": 65})
+	SettingsScreenScript.save_settings({"bgm_volume": 80, "se_volume": 80})
 	PlayerProgress._sandbox_mode = false
 	PlayerProgress._save_storage_ready = true
 	_write_preview_save()
 
-	get_window().size = VW
+	_capture_size = _parse_capture_size(OS.get_environment("TSURI_SETTINGS_PREVIEW_WINDOW"))
+	if OS.get_environment("TSURI_SETTINGS_SCREEN_HOLD") == "1":
+		DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, true)
+	get_window().size = _capture_size
+	if OS.get_environment("TSURI_SETTINGS_SCREEN_HOLD") == "1":
+		get_window().position = Vector2i(0, 62)
+	get_window().grab_focus()
 	var screen := SettingsScreenScript.new()
 	screen.theme = ThemeFactory.build_theme()
 	screen.configure({"return_screen_id": "harbor"})
-	screen.size = Vector2(VW)
+	screen.size = Vector2(DESIGN_SIZE)
 	add_child(screen)
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -54,14 +61,32 @@ func _ready() -> void:
 			_apply_button_skin(screen._delete_button, "pressed")
 		"focus":
 			screen._delete_button.grab_focus()
-	if state == "failure" or state == "focus":
+		"fullscreen_hover":
+			screen._on_fullscreen_hover(true)
+		"fullscreen_pressed":
+			screen._on_fullscreen_pressed(true)
+		"fullscreen_focus":
+			screen._fullscreen_button.grab_focus()
+	var expected_focus: Control = screen._fullscreen_button if state == "fullscreen_focus" else (screen._delete_button if state == "failure" or state == "focus" else null)
+	if state == "failure" or state == "focus" or state == "fullscreen_focus":
 		await get_tree().process_frame
-		if get_viewport().gui_get_focus_owner() != screen._delete_button:
+		if get_viewport().gui_get_focus_owner() != expected_focus:
 			push_error("設定previewの削除ボタンfocusを確立できませんでした: %s" % state)
 			get_tree().quit(1)
 			return
-	var expected_focus: Control = screen._delete_button if state == "failure" or state == "focus" else null
-	await _save_capture(get_viewport(), "/tmp/tsuri_settings_%s.png" % state, state, expected_focus)
+	if _capture_size == DESIGN_SIZE:
+		var output_path := OS.get_environment("TSURI_SETTINGS_PREVIEW_OUTPUT")
+		if output_path.is_empty():
+			output_path = "/tmp/tsuri_settings_%s.png" % state
+		await _save_capture(get_viewport(), output_path, state, expected_focus)
+	else:
+		if OS.get_environment("TSURI_SETTINGS_SCREEN_HOLD") != "1":
+			push_error("解像度matrixは非headless実画面capture専用です")
+			get_tree().quit(2)
+			return
+	if OS.get_environment("TSURI_SETTINGS_SCREEN_HOLD") == "1":
+		print("settings_preview window position=%s size=%s" % [get_window().position, get_window().size])
+		await get_tree().create_timer(5.0).timeout
 
 	screen.queue_free()
 	await get_tree().process_frame
@@ -147,18 +172,19 @@ func _save_capture(viewport: Viewport, path: String, state: String, expected_foc
 			break
 		await get_tree().process_frame
 	if not _capture_looks_complete(image, state) or not _full_frame_is_complete(image):
-		push_error("設定画面の1280x720 captureに失敗しました: %s" % path)
+		push_error("設定画面の%s captureに失敗しました: %s" % [_capture_size, path])
 		get_tree().quit(1)
 		return
 	image.save_png(path)
 
 
 func _capture_looks_complete(image: Image, state: String) -> bool:
-	if image == null or image.is_empty() or image.get_size() != VW:
+	if image == null or image.is_empty() or image.get_size() != _capture_size:
 		return false
+	var content := _expected_content_rect()
 	var shell_complete := (
-		_pixel_is_opaque_and_bright(image.get_pixel(20, 20), 0.005)
-		and _pixel_is_opaque_and_bright(image.get_pixel(1260, 700), 0.005)
+		_pixel_is_opaque_and_bright(image.get_pixel(int(content.position.x + 20.0), int(content.position.y + 20.0)), 0.005)
+		and _pixel_is_opaque_and_bright(image.get_pixel(int(content.end.x - 20.0), int(content.end.y - 20.0)), 0.005)
 	)
 	if not shell_complete:
 		return false
@@ -166,13 +192,14 @@ func _capture_looks_complete(image: Image, state: String) -> bool:
 		return false
 	if state == "confirm1" or state == "confirm2":
 		return (
-			_region_has_bright_pixel(image, Rect2i(275, 135, 90, 55), 0.25)
-			and _region_has_bright_pixel(image, Rect2i(450, 275, 380, 120), 0.35)
+			_region_has_bright_pixel(image, _mapped_rect(Rect2(275.0, 135.0, 90.0, 55.0)), 0.25)
+			and _region_has_bright_pixel(image, _mapped_rect(Rect2(450.0, 275.0, 380.0, 120.0)), 0.35)
 		)
 	return (
-		_region_has_bright_pixel(image, Rect2i(560, 45, 160, 55), 0.30)
-		and _region_has_bright_pixel(image, Rect2i(185, 145, 80, 55), 0.25)
-		and _region_has_bright_pixel(image, Rect2i(245, 225, 720, 220), 0.35)
+		_region_has_bright_pixel(image, _mapped_rect(Rect2(560.0, 45.0, 160.0, 55.0)), 0.30)
+		and _region_has_bright_pixel(image, _mapped_rect(Rect2(185.0, 145.0, 80.0, 55.0)), 0.25)
+		and _region_has_bright_pixel(image, _mapped_rect(Rect2(735.0, 160.0, 300.0, 58.0)), 0.25)
+		and _region_has_bright_pixel(image, _mapped_rect(Rect2(245.0, 225.0, 720.0, 220.0)), 0.35)
 	)
 
 
@@ -186,8 +213,9 @@ func _region_has_bright_pixel(image: Image, rect: Rect2i, threshold: float) -> b
 
 func _non_black_sample_count(image: Image) -> int:
 	var count := 0
-	for y in range(0, VW.y, 8):
-		for x in range(0, VW.x, 8):
+	var content := _expected_content_rect()
+	for y in range(int(content.position.y), int(content.end.y), 8):
+		for x in range(int(content.position.x), int(content.end.x), 8):
 			if _pixel_is_opaque_and_bright(image.get_pixel(x, y), 0.008):
 				count += 1
 	return count
@@ -198,17 +226,56 @@ func _pixel_is_opaque_and_bright(pixel: Color, luminance: float) -> bool:
 
 
 func _full_frame_is_complete(image: Image) -> bool:
+	var content := _expected_content_rect()
 	var visible_pixels := 0
-	var near_black_pixels := 0
-	for y in range(VW.y):
-		for x in range(VW.x):
+	var content_visible_pixels := 0
+	var bar_pixels := 0
+	for y in range(_capture_size.y):
+		for x in range(_capture_size.x):
 			var pixel := image.get_pixel(x, y)
 			if pixel.a <= 0.99:
 				return false
 			var luminance := pixel.get_luminance()
+			var inside := content.has_point(Vector2(x, y))
 			visible_pixels += int(luminance > 0.008)
-			near_black_pixels += int(luminance <= 0.002)
-	return visible_pixels >= 575000 and near_black_pixels <= 92000
+			content_visible_pixels += int(inside and luminance > 0.008)
+			bar_pixels += int(not inside and luminance < 0.04)
+	var expected_content_area := int(content.size.x * content.size.y)
+	var expected_bar_area := _capture_size.x * _capture_size.y - expected_content_area
+	return (
+		visible_pixels >= int(expected_content_area * 0.70)
+		and content_visible_pixels >= int(expected_content_area * 0.70)
+		and bar_pixels >= int(expected_bar_area * 0.98)
+	)
+
+
+func _parse_capture_size(raw: String) -> Vector2i:
+	if raw.is_empty():
+		return DESIGN_SIZE
+	var parts := raw.to_lower().split("x", false)
+	if parts.size() != 2:
+		return DESIGN_SIZE
+	var width := int(parts[0])
+	var height := int(parts[1])
+	return Vector2i(width, height) if width >= DESIGN_SIZE.x / 2 and height >= DESIGN_SIZE.y / 2 else DESIGN_SIZE
+
+
+func _expected_content_rect() -> Rect2:
+	var scale := minf(float(_capture_size.x) / DESIGN_SIZE.x, float(_capture_size.y) / DESIGN_SIZE.y)
+	var content_size := Vector2(DESIGN_SIZE) * scale
+	return Rect2((Vector2(_capture_size) - content_size) * 0.5, content_size)
+
+
+func _mapped_rect(design_rect: Rect2) -> Rect2i:
+	var content := _expected_content_rect()
+	var scale := content.size.x / float(DESIGN_SIZE.x)
+	return Rect2i(
+		Vector2i(
+			floori(content.position.x + design_rect.position.x * scale),
+			floori(content.position.y + design_rect.position.y * scale)
+		),
+		Vector2i(ceili(design_rect.size.x * scale), ceili(design_rect.size.y * scale))
+	)
 
 
 func _settle_capture() -> void:

@@ -34,10 +34,12 @@ func _ready() -> void:
 		return
 	PlayerProgress._sandbox_mode = false
 	_cleanup_test_artifacts()
+	SettingsScreenScript.apply_display_settings(SettingsScreenScript.default_settings())
 	_verify_bus_layout()
 	await _verify_player_bus_connections()
 	await _verify_defaults_and_input_contract()
 	await _verify_slider_bus_save_reload_restore()
+	await _verify_startup_display_restore()
 	_verify_corruption_recovery()
 	await _verify_title_and_harbor_routes()
 	await _verify_slot_target_and_confirmation_flow()
@@ -153,20 +155,25 @@ func _verify_defaults_and_input_contract() -> void:
 	_expect(screen._se_value_label.text == "80%", "default SE percentage should be visible")
 	_expect(screen._return_button.text == "タイトルへ戻る", "title entry should restore title return label")
 	_expect(screen._bgm_slider.focus_neighbor_bottom == screen._bgm_slider.get_path_to(screen._se_slider), "BGM focus should lead to SE")
-	_expect(screen._se_slider.focus_neighbor_bottom == screen._se_slider.get_path_to(screen._return_button), "empty slot focus graph should skip slot delete")
+	_expect(screen._se_slider.focus_neighbor_bottom == screen._se_slider.get_path_to(screen._fullscreen_button), "SE focus should lead to fullscreen")
+	_expect(screen._fullscreen_button != null, "settings should expose fullscreen toggle")
+	_expect(screen._fullscreen_button.name == "SettingsFullscreenButton", "fullscreen toggle should have stable node name")
+	_expect(screen._fullscreen_button.text == "フルスクリーン: オフ", "default fullscreen label should be visible")
+	_expect(not bool(SettingsScreenScript.load_settings()["fullscreen"]), "missing fullscreen should use false default")
 	_expect(get_viewport().gui_get_focus_owner() == screen._bgm_slider, "BGM slider should own initial focus")
 	var initial_bgm: float = screen._bgm_slider.value
 	await _send_action("ui_right")
 	_expect(screen._bgm_slider.value > initial_bgm, "ui_right should change the focused BGM slider")
 	await _send_action("ui_down")
 	_expect(get_viewport().gui_get_focus_owner() == screen._se_slider, "ui_down should move focus from BGM to SE")
+	await _send_action("ui_down")
+	_expect(get_viewport().gui_get_focus_owner() == screen._fullscreen_button, "ui_down should move focus from SE to fullscreen")
 	_reset_route()
 	await _send_action("ui_cancel")
 	_expect(_route_id == "title", "ui_cancel should return to title entry")
-	_expect(screen.find_child("Fullscreen", true, false) == null, "fullscreen UI is outside this slice")
 	_expect(screen._target_slot_id == 1, "invalid or missing title target should use safe slot 1")
 	_expect(screen._delete_button.disabled, "empty slot delete should be disabled")
-	screen._se_slider.grab_focus()
+	screen._fullscreen_button.grab_focus()
 	await _send_action("ui_down")
 	_expect(get_viewport().gui_get_focus_owner() == screen._return_button, "empty slot focus should skip disabled delete")
 	await _free_node(screen)
@@ -184,10 +191,22 @@ func _verify_slider_bus_save_reload_restore() -> void:
 	_expect(AudioServer.is_bus_mute(se_index), "zero SE value should mute SE bus")
 	var saved := SettingsScreenScript.load_settings()
 	_expect(int(saved["bgm_volume"]) == 35 and int(saved["se_volume"]) == 0, "slider changes should persist")
+	screen._fullscreen_button.grab_focus()
+	await _press_button(screen._fullscreen_button)
+	await _settle()
+	var fullscreen_saved := SettingsScreenScript.load_settings()
+	_expect(bool(fullscreen_saved["fullscreen"]), "fullscreen toggle should persist true")
+	_expect(_display_mode_matches(true), "fullscreen toggle should apply fullscreen mode")
+	await _press_button(screen._fullscreen_button)
+	await _settle()
+	var windowed_saved := SettingsScreenScript.load_settings()
+	_expect(not bool(windowed_saved["fullscreen"]), "fullscreen toggle should persist false")
+	_expect(_display_mode_matches(false), "fullscreen toggle should restore windowed mode")
 	await _free_node(screen)
 	var restored: Variant = await _make_settings({"return_screen_id": "harbor"})
 	_expect(int(restored._bgm_slider.value) == 35, "recreated screen should restore BGM slider")
 	_expect(int(restored._se_slider.value) == 0, "recreated screen should restore SE slider")
+	_expect(not restored._fullscreen, "recreated screen should restore windowed setting")
 	_expect(restored._return_button.text == "港へ戻る", "harbor entry should restore harbor return label")
 	await _free_node(restored)
 
@@ -202,7 +221,25 @@ func _verify_corruption_recovery() -> void:
 	_write_raw(JSON.stringify({"version": {}, "bgm_volume": 40, "se_volume": 60}))
 	var invalid_version := SettingsScreenScript.load_settings()
 	_expect(invalid_version == SettingsScreenScript.default_settings(), "non-numeric version should recover defaults")
+	_write_raw(JSON.stringify({"version": 1, "bgm_volume": 40, "se_volume": 60}))
+	var migrated := SettingsScreenScript.load_settings()
+	_expect(int(migrated["bgm_volume"]) == 40 and int(migrated["se_volume"]) == 60, "legacy settings should preserve volume values")
+	_expect(not bool(migrated["fullscreen"]), "legacy settings should default fullscreen to false")
+	_write_raw(JSON.stringify({"version": 1, "bgm_volume": 40, "se_volume": 60, "fullscreen": "yes"}))
+	var invalid_fullscreen := SettingsScreenScript.load_settings()
+	_expect(invalid_fullscreen == SettingsScreenScript.default_settings(), "non-boolean fullscreen should recover defaults")
 	_expect(FileAccess.file_exists(SettingsScreenScript.SETTINGS_PATH), "recovery should leave a normalized settings file")
+
+
+func _verify_startup_display_restore() -> void:
+	SettingsScreenScript.save_settings({"bgm_volume": 23, "se_volume": 67, "fullscreen": true})
+	var main := MainScript.new()
+	add_child(main)
+	await _settle()
+	_expect(_display_mode_matches(true), "main startup should apply saved fullscreen setting")
+	await _free_node(main)
+	SettingsScreenScript.save_settings(SettingsScreenScript.default_settings())
+	SettingsScreenScript.apply_display_settings(SettingsScreenScript.default_settings())
 
 
 func _verify_title_and_harbor_routes() -> void:
@@ -238,17 +275,19 @@ func _verify_slot_target_and_confirmation_flow() -> void:
 	var screen: Variant = await _make_settings({"return_screen_id": "title", "target_slot_id": 2})
 	_expect(screen._target_slot_id == 2, "title payload should select slot 2")
 	_expect(not screen._delete_button.disabled, "occupied slot should allow delete")
-	_expect(screen._se_slider.focus_neighbor_bottom == screen._se_slider.get_path_to(screen._delete_button), "occupied slot focus should include delete")
+	_expect(screen._fullscreen_button.focus_neighbor_bottom == screen._fullscreen_button.get_path_to(screen._delete_button), "occupied slot focus should include delete")
 	_expect("スロット2" in screen._delete_summary_label.text, "normal summary should show slot number")
 	_expect("Lv.12" in screen._delete_summary_label.text, "normal summary should show level")
 	_expect("2時間33分" in screen._delete_summary_label.text, "normal summary should show play time")
 	await _press_button(screen._delete_button)
 	_expect(screen._delete_api_call_count == 0, "confirmation 1 must not call delete API")
 	_expect(screen._delete_stage == 1, "delete entry should open confirmation 1")
+	_expect(screen._fullscreen_button.focus_mode == Control.FOCUS_NONE, "confirmation 1 should disable fullscreen background focus")
 	_expect(get_viewport().gui_get_focus_owner() == screen._delete_confirm_cancel_button, "confirmation 1 should focus safe cancel")
 	_expect(FileAccess.file_exists(_slot_artifact_path(2, "main")), "confirmation 1 must not delete")
 	await _send_action("ui_cancel")
 	_expect(screen._delete_stage == 0, "ui_cancel should return confirmation 1 to normal")
+	_expect(screen._fullscreen_button.focus_mode == Control.FOCUS_ALL, "confirmation cancel should restore fullscreen focus")
 	_expect(get_viewport().gui_get_focus_owner() == screen._delete_button, "confirmation 1 cancel should restore delete focus")
 	await _press_button(screen._delete_button)
 	await _press_button(screen._delete_continue_button)
@@ -389,6 +428,13 @@ func _make_settings(payload: Dictionary) -> Variant:
 func _capture_route(screen_id: String, payload: Dictionary) -> void:
 	_route_id = screen_id
 	_route_payload = payload.duplicate(true)
+
+
+func _display_mode_matches(fullscreen: bool) -> bool:
+	var expected := DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
+	if DisplayServer.get_name() == "headless":
+		return SettingsScreenScript._last_display_fullscreen == fullscreen
+	return DisplayServer.window_get_mode() == expected
 
 
 func _reset_route() -> void:
