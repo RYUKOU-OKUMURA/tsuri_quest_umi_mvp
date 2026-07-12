@@ -25,6 +25,7 @@ tools/shark_lure_audit.tscn|direct_scene
 tools/shark_pen_screen_smoke.tscn|direct_scene
 tools/shark_pen_smoke.tscn|direct_scene
 tools/shipyard_smoke.tscn|direct_scene
+tools/settings_smoke.tscn|direct_scene
 tools/status_smoke.tscn|direct_scene
 tools/tackle_shop_smoke.tscn|direct_scene
 tools/time_slot_encounter_audit.tscn|direct_scene

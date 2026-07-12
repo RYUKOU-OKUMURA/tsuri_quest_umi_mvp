@@ -236,6 +236,7 @@ func _build_nodes() -> void:
 
 	_audio_player = AudioStreamPlayer.new()
 	_audio_player.name = "CatchFanfareAudio"
+	_audio_player.bus = &"SE"
 	_audio_player.volume_db = -10.0
 	add_child(_audio_player)
 

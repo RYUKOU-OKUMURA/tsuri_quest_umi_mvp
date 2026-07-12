@@ -16,14 +16,52 @@ func _ready() -> void:
 	add_child(screen)
 	await get_tree().process_frame
 	await get_tree().process_frame
-	await get_tree().create_timer(0.35).timeout
+	await _apply_header_interaction_state(screen)
+	await get_tree().create_timer(1.0).timeout
+	RenderingServer.force_draw(false, 0.0)
+	await get_tree().process_frame
 	var img := get_viewport().get_texture().get_image()
+	if not _is_rendered_image_valid(img):
+		push_error("港画面が空描画または黒矩形を含む不正captureになりました")
+		get_tree().quit(1)
+		return
 	var out := OS.get_environment("TSURI_HARBOR_OUT").strip_edges()
 	if out.is_empty():
 		out = DEFAULT_OUT
 	img.save_png(out)
 	print(out)
 	get_tree().quit()
+
+
+func _is_rendered_image_valid(image: Image) -> bool:
+	if image == null or image.is_empty() or image.get_size() != Vector2i(1280, 720):
+		return false
+	var sampled := 0
+	var near_black := 0
+	for y in range(0, image.get_height(), 8):
+		for x in range(0, image.get_width(), 8):
+			var pixel := image.get_pixel(x, y)
+			sampled += 1
+			if maxf(pixel.r, maxf(pixel.g, pixel.b)) <= 0.02:
+				near_black += 1
+	return near_black <= int(sampled * 0.55)
+
+
+func _apply_header_interaction_state(screen) -> void:
+	var state := OS.get_environment("TSURI_HARBOR_HEADER_STATE").strip_edges()
+	var button := screen._settings_button as Button
+	if button == null:
+		return
+	Input.warp_mouse(Vector2(20.0, 700.0))
+	await get_tree().process_frame
+	if state == "focus":
+		button.grab_focus()
+		await get_tree().process_frame
+		return
+	if state == "hover" or state == "pressed":
+		var style_name := "hover" if state == "hover" else "pressed"
+		button.add_theme_stylebox_override("normal", button.get_theme_stylebox(style_name))
+		await get_tree().process_frame
 
 
 func _setup_preview_progress() -> void:

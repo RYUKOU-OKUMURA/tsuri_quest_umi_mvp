@@ -103,6 +103,7 @@ func play_screen_bgm(path: String, volume_db: float = -10.0) -> void:
 	_screen_bgm_player = AudioStreamPlayer.new()
 	_screen_bgm_player.name = "ScreenBGMPlayer"
 	_screen_bgm_player.stream = stream
+	_screen_bgm_player.bus = &"BGM"
 	_screen_bgm_player.volume_db = volume_db
 	_screen_bgm_player.finished.connect(_on_screen_bgm_finished)
 	add_child(_screen_bgm_player)
@@ -157,6 +158,7 @@ func play_screen_sfx(path: String, volume_db: float = -3.0) -> void:
 	var player := AudioStreamPlayer.new()
 	player.name = "ScreenSFXPlayer"
 	player.stream = stream
+	player.bus = &"SE"
 	player.volume_db = volume_db
 	player.finished.connect(func() -> void: player.queue_free())
 	add_child(player)

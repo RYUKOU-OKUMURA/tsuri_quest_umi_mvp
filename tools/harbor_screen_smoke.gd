@@ -57,6 +57,8 @@ func _verify_command_board_structure() -> void:
 	_expect_rect(screen._footer_root, Rect2(40.0, 648.0, 1200.0, 48.0), "footer")
 	var cta := screen._route_buttons.get("fishing_spots", null) as Button
 	_expect_rect(cta, Rect2(864.0, 176.0, 356.0, 64.0), "departure CTA")
+	_verify_compact_header_button(screen._settings_button, "設定", "settings")
+	_verify_compact_header_button(screen._route_buttons.get("title") as Button, "タイトル", "title")
 	_expect(cta.get_parent() == screen._operation_board_root, "departure CTA must exist only in the right operation board")
 	_expect(screen._hero_target_slot.size() > 0, "hero target slot should exist")
 	_expect(screen._secondary_target_slots.size() == 2, "two secondary target slots should exist")
@@ -125,11 +127,43 @@ func _verify_all_routes_and_focus() -> void:
 		_navigated_to = ""
 		button.pressed.emit()
 		_expect(_navigated_to == id, "route button should navigate to its matching route: %s" % id)
-	var cta := screen._route_buttons.get("fishing_spots", null) as Button
+	var settings := screen._settings_button as Button
+	var title := screen._route_buttons.get("title") as Button
+	var cta := screen._route_buttons.get("fishing_spots") as Button
+	_expect(settings.focus_neighbor_right == settings.get_path_to(title), "settings focus should move right to title")
+	_expect(title.focus_neighbor_left == title.get_path_to(settings), "title focus should move left to settings")
+	_expect(settings.focus_neighbor_bottom == settings.get_path_to(cta), "settings focus should move down to departure CTA")
+	_expect(title.focus_neighbor_bottom == title.get_path_to(cta), "title focus should move down to departure CTA")
+	_navigated_to = ""
+	_payload.clear()
+	settings.pressed.emit()
+	_expect(_navigated_to == "settings", "settings button should navigate to settings")
+	_expect(String(_payload.get("return_screen_id", "")) == "harbor", "settings route should preserve harbor return payload")
 	_expect(get_viewport().gui_get_focus_owner() == cta, "departure CTA should receive initial focus")
 	var tile := screen._route_buttons.get("quest_board", null) as Button
 	_expect(cta.size.x * cta.size.y >= tile.size.x * tile.size.y * 2.0, "departure CTA area should be at least twice a facility tile")
 	await _free_screen(screen)
+
+
+func _verify_compact_header_button(button: Button, expected_text: String, context: String) -> void:
+	_expect(button != null, "%s compact button should exist" % context)
+	if button == null:
+		return
+	var label := button.get_node_or_null("HarborCompactLabel") as Label
+	_expect(label != null, "%s compact button should have a runtime display label" % context)
+	if label == null:
+		return
+	_expect(label.text == expected_text, "%s compact label should be complete" % context)
+	var color := label.get_theme_color("font_color")
+	_expect(color.a > 0.9, "%s compact label should use a visible non-transparent color" % context)
+	var button_rect := button.get_global_rect()
+	var label_rect := label.get_global_rect()
+	_expect(button_rect.encloses(label_rect), "%s compact label rect should fit inside its button" % context)
+	var font := label.get_theme_font("font")
+	var font_size := label.get_theme_font_size("font_size")
+	var text_width := font.get_string_size(label.text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+	_expect(text_width <= label.size.x, "%s compact label should fit without clipping" % context)
+	_expect(not label.text.contains("…"), "%s compact label should not be ellipsized" % context)
 
 
 func _verify_interaction_style_contract() -> void:

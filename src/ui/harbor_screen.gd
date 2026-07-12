@@ -30,7 +30,6 @@ const COMMAND_ICON_PIN := 11
 const COMMAND_ICON_GUIDE := 12
 const COMMAND_ICON_RUMOR := 13
 const COMMAND_ICON_LOCK := 14
-
 var _status_label: Label
 var _play_time_label: Label
 var _context_label: Label
@@ -56,6 +55,7 @@ var _time_slot_icons: Dictionary = {}
 var _time_slot_grade_overlay: ColorRect
 var _meal_effect_panel: Control
 var _route_buttons: Dictionary = {}
+var _settings_button: Button
 var _notification_badges: Dictionary = {}
 var _lock_icons: Dictionary = {}
 var _hero_target_slot: Dictionary = {}
@@ -1000,10 +1000,16 @@ func _build_facility_menu(root: Control) -> void:
 	header.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control_px(_operation_board_root, header, Rect2(20.0, 8.0, 170.0, 36.0))
 
+	_settings_button = make_button("", func() -> void: navigate("settings", {"return_screen_id": "harbor"}))
+	_settings_button.name = "HarborSettingsButton"
+	_settings_button.custom_minimum_size = Vector2.ZERO
+	_apply_command_button_skin(_settings_button, "compact")
+	_place_control_px(_operation_board_root, _settings_button, Rect2(220.0, 20.0, 76.0, 28.0))
+	_add_compact_command_content(_settings_button, "設定", 76.0)
 	_build_command_route_button(
 		_operation_board_root,
 		_menu_item_by_id(items, "title"),
-		Rect2(220.0, 20.0, 156.0, 28.0),
+		Rect2(304.0, 20.0, 72.0, 28.0),
 		"compact"
 	)
 	_build_command_route_button(
@@ -1131,13 +1137,8 @@ func _build_command_route_button(
 		arrow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		_place_control_px(button, arrow, Rect2(318.0, 12.0, 28.0, 40.0))
 	elif role == "compact":
-		var back_icon := _command_icon_rect(icon_index)
-		back_icon.modulate = Palette.HARBOR_DETAIL_BODY_SECONDARY
-		_place_control_px(button, back_icon, Rect2(10.0, 5.0, 18.0, 18.0))
-		var title := _harbor_label(title_text, 13, text_color, true, 0)
-		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		_place_control_px(button, title, Rect2(30.0, 1.0, 120.0, 26.0))
+		var compact_text := "タイトル" if id == "title" else title_text
+		_add_compact_command_content(button, compact_text, rect.size.x)
 	else:
 		var icon_size := 24.0 if role == "record" else 26.0
 		var icon_x := 10.0 if role == "record" else 15.0
@@ -1178,6 +1179,15 @@ func _build_command_route_button(
 		_place_control_px(parent, badge_dot, Rect2(rect.end.x - 18.0, rect.position.y + 4.0, 14.0, 14.0))
 		_notification_badges[id] = badge_dot
 	return button
+
+
+func _add_compact_command_content(button: Button, text: String, width: float) -> Label:
+	var label := _harbor_label(text, 12, Palette.HARBOR_DETAIL_BODY_SECONDARY, true, 0)
+	label.name = "HarborCompactLabel"
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_control_px(button, label, Rect2(6.0, 1.0, width - 12.0, 26.0))
+	return label
 
 
 func _build_recommendation_panel(parent: Control, rect: Rect2) -> void:
@@ -1221,6 +1231,8 @@ func _wire_command_focus() -> void:
 	var shark := _route_buttons.get("shark_pen", null) as Button
 	var status := _route_buttons.get("status", null) as Button
 	var book := _route_buttons.get("fish_book", null) as Button
+	_link_focus_horizontal(_settings_button, title)
+	_link_focus_vertical(_settings_button, cta)
 	_link_focus_vertical(title, cta)
 	_link_focus_vertical(cta, quest)
 	_link_focus_horizontal(quest, cooking)
