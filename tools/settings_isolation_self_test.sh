@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+unset TSURI_QA_REJECT_RAW_HOME_PROBE
 if [[ -n "${GODOT_BIN:-}" ]]; then
   GODOT="$GODOT_BIN"
 elif command -v godot >/dev/null 2>&1; then
@@ -27,7 +28,8 @@ NESTED_OUTSIDE="$(mktemp -d /var/tmp/tsuri_settings_nested_outside.XXXXXX)"
 RAW_TARGET="$(mktemp -d /tmp/tsuri_settings_raw.XXXXXX)"
 RAW_TARGET="$(cd "$RAW_TARGET" && pwd -P)"
 RAW_LINK="/private/tmp/tsuri_settings_raw_link.$$"
-trap 'rm -rf "$SAFE_HOME" "$OUTSIDE_HOME" "$LINK_PARENT" "$ANCESTOR_TARGET" "$ANCESTOR_LINK" "$NESTED_ROOT" "$NESTED_OUTSIDE" "$RAW_TARGET" "$RAW_LINK"' EXIT
+CASE_LOG="$(mktemp /tmp/tsuri_settings_isolation_case.XXXXXX)"
+trap 'rm -rf "$SAFE_HOME" "$OUTSIDE_HOME" "$LINK_PARENT" "$ANCESTOR_TARGET" "$ANCESTOR_LINK" "$NESTED_ROOT" "$NESTED_OUTSIDE" "$RAW_TARGET" "$RAW_LINK"; rm -f "$CASE_LOG"' EXIT
 
 data_root() {
   printf '%s/Library/Application Support/tsuri_quest_umi' "$1"
@@ -52,11 +54,11 @@ sentinel_hashes() {
 
 expect_exit_2() {
   set +e
-  "$@" >/tmp/tsuri_settings_isolation_case.log 2>&1
+  "$@" >"$CASE_LOG" 2>&1
   local status=$?
   set -e
   if [[ "$status" -ne 2 ]]; then
-    cat /tmp/tsuri_settings_isolation_case.log >&2
+    cat "$CASE_LOG" >&2
     echo "expected exit 2, got $status" >&2
     exit 1
   fi
