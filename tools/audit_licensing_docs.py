@@ -1298,32 +1298,31 @@ def audit_dated_rights_snapshot(text: str) -> None:
     assert [row[0] for row in rows] == expected_ids, (
         "dated RIGHTS-01A audit must cover U-01 through U-08 once and in order"
     )
+    canonical_judgments = {
+        "U-01": "pending。個別曲の由来と生成日時をrepoから検証不能",
+        "U-02": "pending。申告だけでは生成時点の有料期間を確定不能",
+        "U-03": "pending。既知バッチ以外を推定で補完できず、母集団全件のprovenanceが未確定",
+        "U-04": "pending。Git著者は作者または法的権利者の証明ではない",
+        "U-05": "pending。名前をGit著者等から推定不可",
+        "U-06": "pending。対象範囲未決で検索結果もなく、検索だけで法的保証にもならない",
+        "U-07": "RIGHTS-01A対象外。RIGHTS-01Bでpending",
+        "U-08": "pending。入力権利と第三者権利をrepoから確定不能",
+    }
     for row in rows:
         assert all(row), f"dated RIGHTS-01A audit contains empty cell: {row[0]}"
         evidence_id, judgment = row[0], row[4]
-        if evidence_id == "U-07":
-            assert judgment.startswith("RIGHTS-01A対象外。RIGHTS-01Bでpending"), (
-                "dated U-07 must remain outside RIGHTS-01A and pending in RIGHTS-01B"
-            )
-        else:
-            assert judgment.startswith("pending。"), (
-                f"dated {evidence_id} must remain pending in the historical snapshot"
-            )
-        assert not re.search(r"(?i)\bcomplete(?:d)?\b|完了済み|全体完了", judgment), (
-            f"dated {evidence_id} judgment contains false completion"
+        assert judgment == canonical_judgments[evidence_id], (
+            f"dated {evidence_id} judgment differs from immutable snapshot"
         )
-    conclusion = text.split("## 結論", 1)[1]
-    assert "U-01〜U-06とU-08は外部証拠待ちのためpendingを維持" in conclusion, (
-        "dated RIGHTS-01A conclusion must retain seven pending evidence items"
+    conclusion = text.split("## 結論", 1)[1].strip()
+    canonical_conclusion = (
+        "リポジトリ側で可能な棚卸し、証拠受入形式、機密情報境界、状態判定は準備完了。"
+        "U-01〜U-06とU-08は外部証拠待ちのためpendingを維持し、"
+        "RIGHTS-01A全体は未完了である。U-07はRIGHTS-01Bとして未完了であり、"
+        "この監査でcloseしない。"
     )
-    assert "RIGHTS-01A全体は未完了" in conclusion, (
-        "dated RIGHTS-01A conclusion must remain incomplete"
-    )
-    assert "U-07はRIGHTS-01Bとして未完了" in conclusion, (
-        "dated U-07 conclusion must remain incomplete in RIGHTS-01B"
-    )
-    assert not re.search(r"RIGHTS-01A全体(?:は|が)?(?:complete|完了)", conclusion), (
-        "dated RIGHTS-01A conclusion contains false completion"
+    assert conclusion == canonical_conclusion, (
+        "dated RIGHTS-01A conclusion differs from immutable snapshot"
     )
 
 
@@ -2321,9 +2320,29 @@ def run_negative_self_tests() -> None:
         "dated missing row": "\n".join(
             line for line in dated_snapshot.splitlines() if not line.startswith("| U-05 |")
         ),
+        "dated U-01 pending plus Japanese completion claim": dated_snapshot.replace(
+            "pending。個別曲の由来と生成日時をrepoから検証不能",
+            "pending。個別曲の権利確認は完了",
+            1,
+        ),
+        "dated conclusion retains incomplete plus completion claim": dated_snapshot.replace(
+            "RIGHTS-01A全体は未完了である。",
+            "RIGHTS-01A全体は未完了である。RIGHTS-01Aは完了した。",
+            1,
+        ),
     }
     for label, mutated_snapshot in snapshot_mutations.items():
         must_fail(label, lambda snapshot=mutated_snapshot: audit_dated_rights_snapshot(snapshot))
+    dated_snapshot_path = (
+        ROOT / "docs/qa/evidence/licensing/2026-07-12_RIGHTS-01A_AUDIT.md"
+    ).resolve()
+    for label in (
+        "dated U-01 pending plus Japanese completion claim",
+        "dated conclusion retains incomplete plus completion claim",
+    ):
+        with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            result = main({dated_snapshot_path: snapshot_mutations[label]})
+        assert result != 0, f"production main path accepted negative fixture: {label}"
     with tempfile.TemporaryDirectory() as temp_dir:
         fixture_root = Path(temp_dir)
         audio_dir = fixture_root / "assets/audio"
