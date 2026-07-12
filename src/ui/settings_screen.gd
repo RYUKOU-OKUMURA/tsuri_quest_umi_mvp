@@ -165,7 +165,7 @@ func _build_fullscreen_toggle(parent: Control) -> void:
 	_fullscreen_button.button_up.connect(_on_fullscreen_pressed.bind(false))
 	_fullscreen_button.focus_entered.connect(_on_fullscreen_focus.bind(true))
 	_fullscreen_button.focus_exited.connect(_on_fullscreen_focus.bind(false))
-	_place_in(parent, _fullscreen_button, Rect2(560.0, 20.0, 290.0, 46.0))
+	_place_in(parent, _fullscreen_button, Rect2(500.0, 10.0, 350.0, 58.0))
 
 
 func _wire_focus() -> void:
@@ -548,9 +548,28 @@ static func load_settings() -> Dictionary:
 	if not valid:
 		save_settings(defaults)
 		return defaults
-	if source.size() != normalized.size():
+	if not _settings_match_normalized(source, normalized):
 		save_settings(normalized)
 	return normalized
+
+
+static func _settings_match_normalized(source: Dictionary, normalized: Dictionary) -> bool:
+	if source.size() != normalized.size():
+		return false
+	for key in normalized.keys():
+		if not source.has(key):
+			return false
+		var source_value: Variant = source[key]
+		var normalized_value: Variant = normalized[key]
+		if normalized_value is bool:
+			if not source_value is bool or source_value != normalized_value:
+				return false
+		elif normalized_value is int or normalized_value is float:
+			if not (source_value is int or source_value is float) or not is_equal_approx(float(source_value), float(normalized_value)):
+				return false
+		elif source_value != normalized_value:
+			return false
+	return true
 
 
 static func save_settings(settings: Dictionary) -> bool:

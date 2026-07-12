@@ -34,7 +34,7 @@ RUN_TOKEN="settings-preview-$RANDOM-$RANDOM-$$"
 printf '%s' "$RUN_TOKEN" >"$GODOT_HOME_PHYSICAL/.tsuri_settings_qa_guard"
 unset TSURI_QA_REJECT_RAW_HOME_PROBE
 rm -f /tmp/tsuri_settings_normal.png /tmp/tsuri_settings_confirm1.png /tmp/tsuri_settings_confirm2.png /tmp/tsuri_settings_failure.png /tmp/tsuri_settings_hover.png /tmp/tsuri_settings_pressed.png /tmp/tsuri_settings_focus.png
-rm -f /tmp/tsuri_settings_fullscreen_hover.png /tmp/tsuri_settings_fullscreen_pressed.png /tmp/tsuri_settings_fullscreen_focus.png
+rm -f /tmp/tsuri_settings_fullscreen_hover.png /tmp/tsuri_settings_fullscreen_pressed.png /tmp/tsuri_settings_fullscreen_focus.png /tmp/tsuri_settings_fullscreen_on.png
 rm -f /tmp/tsuri_settings_resolution_1280x720.png /tmp/tsuri_settings_resolution_1280x800.png /tmp/tsuri_settings_resolution_1024x768.png
 mkdir -p "$ROOT/docs/qa/evidence/settings"
 for state in normal confirm1 confirm2 failure hover pressed focus; do
@@ -49,6 +49,10 @@ for state in fullscreen_hover fullscreen_pressed fullscreen_focus; do
   cp "/tmp/tsuri_settings_${state}.png" "$ROOT/docs/qa/evidence/settings/2026-07-13_settings_${state}_1280x720.png"
 done
 
+TSURI_SETTINGS_PREVIEW_ALLOW=1 TSURI_QA_ISOLATED_HOME="$GODOT_HOME_PHYSICAL" TSURI_QA_RUN_TOKEN="$RUN_TOKEN" TSURI_SETTINGS_PREVIEW_STATE=fullscreen_on HOME="$GODOT_HOME_PHYSICAL" "$GODOT" --path "$ROOT" "res://tools/settings_preview.tscn"
+test -s "/tmp/tsuri_settings_fullscreen_on.png"
+cp "/tmp/tsuri_settings_fullscreen_on.png" "$ROOT/docs/qa/evidence/settings/2026-07-13_settings_fullscreen_on_1280x720.png"
+
 for resolution in 1280x720 1280x800 1024x768; do
   output="/tmp/tsuri_settings_resolution_${resolution}.png"
   width="${resolution%x*}"
@@ -59,16 +63,26 @@ for resolution in 1280x720 1280x800 1024x768; do
   captured=0
   for attempt in 1 2 3 4 5 6 7 8; do
     osascript -e 'tell application "Godot" to activate' >/dev/null 2>&1 || true
-    expected_window_width=$((width / 2))
-    expected_window_height=$((height / 2))
-    window_id="$(swift -e "import CoreGraphics; import Foundation; let expectedWidth = $expected_window_width; let expectedHeight = $expected_window_height; let ws = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as! [[String:Any]]; for w in ws { let owner = String(describing: w[kCGWindowOwnerName as String] ?? \"\"); if owner == \"Godot\", let bounds = w[kCGWindowBounds as String] as? [String:Any], let boundsWidth = (bounds[\"Width\"] as? NSNumber)?.intValue, let boundsHeight = (bounds[\"Height\"] as? NSNumber)?.intValue, boundsWidth == expectedWidth, boundsHeight == expectedHeight { print(w[kCGWindowNumber as String] ?? \"\") } }" | tail -1)"
+    window_id="$(swift -e "import CoreGraphics; import Foundation; let expectedWidth = $width; let expectedHeight = $height; let targetPid = $godot_pid; let ws = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as! [[String:Any]]; for w in ws { let owner = String(describing: w[kCGWindowOwnerName as String] ?? \"\"); if owner == \"Godot\", let ownerPid = (w[kCGWindowOwnerPID as String] as? NSNumber)?.intValue, ownerPid == targetPid, let bounds = w[kCGWindowBounds as String] as? [String:Any], let boundsHeight = (bounds[\"Height\"] as? NSNumber)?.intValue, let boundsWidth = (bounds[\"Width\"] as? NSNumber)?.intValue, ((boundsWidth == expectedWidth && boundsHeight == expectedHeight) || (boundsWidth == expectedWidth / 2 && boundsHeight == expectedHeight / 2)) { print(w[kCGWindowNumber as String] ?? \"\"); break } }" | tail -1)"
     if [[ "$window_id" =~ ^[0-9]+$ ]] && screencapture -x -o -l "$window_id" "$output" 2>/dev/null && test -s "$output"; then
       captured=1
       break
     fi
     sleep 1
   done
-  wait "$godot_pid" || true
+  if wait "$godot_pid"; then
+    :
+  else
+    preview_status=$?
+    cat "/tmp/tsuri_settings_resolution_${resolution}.log" >&2
+    echo "settings visual QA: preview failed for ${resolution} (exit ${preview_status})" >&2
+    exit "$preview_status"
+  fi
+  if ! rg -q 'settings_preview\[normal\]: ok' "/tmp/tsuri_settings_resolution_${resolution}.log"; then
+    cat "/tmp/tsuri_settings_resolution_${resolution}.log" >&2
+    echo "settings visual QA: preview completion marker missing for ${resolution}" >&2
+    exit 1
+  fi
   test "$captured" -eq 1
   test -s "$output"
   cp "$output" "$ROOT/docs/qa/evidence/settings/2026-07-13_settings_resolution_${resolution}.png"
@@ -106,7 +120,7 @@ for name, (window_w, window_h) in cases.items():
     offset_y = logical_offset_y * pixel_scale
     assert logical_content_w * 9 == logical_content_h * 16, (name, logical_content_w, logical_content_h)
     pixels = image.load()
-    assert all(pixels[x, y][3] == 255 for y in range(window_h) for x in range(window_w)), name
+    assert all(pixels[x, y][3] == 255 for y in range(image.height) for x in range(image.width)), name
 
     def luminance(pixel):
         return 0.2126 * pixel[0] / 255 + 0.7152 * pixel[1] / 255 + 0.0722 * pixel[2] / 255
@@ -120,14 +134,68 @@ for name, (window_w, window_h) in cases.items():
         bar_points.extend([(0, image.height // 2), (offset_x - 1, image.height // 2), (image.width - offset_x, image.height // 2), (image.width - 1, image.height // 2)])
     for point in bar_points:
         assert luminance(pixels[point]) < 0.12, (name, "bar sample", point, pixels[point])
+    def is_opaque_black(pixel, threshold=0.02):
+        return pixel[3] == 255 and luminance(pixel) <= threshold
+
+    def assert_black_region(x0, y0, x1, y1, label):
+        if x0 >= x1 or y0 >= y1:
+            return
+        total = (x1 - x0) * (y1 - y0)
+        black = sum(
+            1
+            for y in range(y0, y1)
+            for x in range(x0, x1)
+            if is_opaque_black(pixels[x, y])
+        )
+        ratio = black / total
+        assert ratio >= 0.995, (name, label, "black_ratio", ratio)
+
+    def black_run_from_top(x):
+        run = 0
+        while run < image.height and is_opaque_black(pixels[x, run]):
+            run += 1
+        return run
+
+    def black_run_from_bottom(x):
+        run = 0
+        while run < image.height and is_opaque_black(pixels[x, image.height - 1 - run]):
+            run += 1
+        return run
+
+    def black_run_from_left(y):
+        run = 0
+        while run < image.width and is_opaque_black(pixels[run, y]):
+            run += 1
+        return run
+
+    def black_run_from_right(y):
+        run = 0
+        while run < image.width and is_opaque_black(pixels[image.width - 1 - run, y]):
+            run += 1
+        return run
+
     expected_bars = 2 * offset_y * image.width + 2 * offset_x * content_h
-    observed_non_content = 0
-    for y in range(image.height):
-        for x in range(image.width):
-            if not (offset_x <= x < offset_x + content_w and offset_y <= y < offset_y + content_h):
-                observed_non_content += 1
-    assert observed_non_content == expected_bars, (name, observed_non_content, expected_bars)
+    assert_black_region(0, 0, image.width, offset_y, "top bar")
+    assert_black_region(0, offset_y + content_h, image.width, image.height, "bottom bar")
+    assert_black_region(0, offset_y, offset_x, offset_y + content_h, "left bar")
+    assert_black_region(offset_x + content_w, offset_y, image.width, offset_y + content_h, "right bar")
+
+    probe_xs = [offset_x + content_w // 4, offset_x + content_w // 2, offset_x + (content_w * 3) // 4]
+    probe_ys = [offset_y + content_h // 4, offset_y + content_h // 2, offset_y + (content_h * 3) // 4]
+    assert all(black_run_from_top(x) == offset_y for x in probe_xs), (name, "top boundary", probe_xs)
+    assert all(black_run_from_bottom(x) == offset_y for x in probe_xs), (name, "bottom boundary", probe_xs)
+    assert all(black_run_from_left(y) == offset_x for y in probe_ys), (name, "left boundary", probe_ys)
+    assert all(black_run_from_right(y) == offset_x for y in probe_ys), (name, "right boundary", probe_ys)
+
+    inner_boundary_samples = []
+    if offset_y:
+        inner_boundary_samples.extend(pixels[x, offset_y] for x in probe_xs)
+        inner_boundary_samples.extend(pixels[x, offset_y + content_h - 1] for x in probe_xs)
+    if offset_x:
+        inner_boundary_samples.extend(pixels[offset_x, y] for y in probe_ys)
+        inner_boundary_samples.extend(pixels[offset_x + content_w - 1, y] for y in probe_ys)
+    assert all(luminance(pixel) > 0.008 for pixel in inner_boundary_samples), (name, "content boundary", inner_boundary_samples)
     print(f"settings resolution QA: {name} pixels={image.width}x{image.height} content={content_w}x{content_h} offset=({offset_x},{offset_y}) bars={expected_bars}")
 PY
 
-echo "Settings visual QA: normal / confirm1 / confirm2 / failure / hover / pressed / focus / resolution matrix"
+echo "Settings visual QA: normal / confirm1 / confirm2 / failure / hover / pressed / focus / fullscreen_on / resolution matrix"

@@ -32,7 +32,7 @@ Date: 2026-07-13
 | 下部右 | 入口へ戻る主操作。`ScreenBase.make_return_button()` を使用 |
 | 下部左 | キーボード / ゲームパッドの操作ヒント |
 | 確認時中央 | 共通フレームを使うモーダル。二段階とも安全側操作を初期focusにする |
-| 中央パネル上部右 | 「フルスクリーン: オン / オフ」を一目で読める大きな切替。音声行・削除領域とは横方向に分離し、状態だけが変わる |
+| 中央パネル上部右 | panel内`Rect2(500, 10, 350, 58)`（global`Rect2(680, 154, 350, 58)`）で「フルスクリーン: オン / オフ」を一目で読める大きな切替。音声行・削除領域とは横方向に分離し、状態だけが変わる |
 
 ### 存在しない領域・非採用要素
 
@@ -155,7 +155,7 @@ Date: 2026-07-13
 - 0% / 100%でも値表示とレイアウトが崩れない。
 - 共通キットの世界観が上・中央・下で揃う。
 - 通常、確認1、確認2、失敗、hover、pressed、focusを1280x720で保存し、全画素opaque・全画面黒欠損集計を自動確認する。slot/Lv/プレイ時間、不可逆警告、normal/hover/pressed/focusに見切れ・ellipsis・重なりが無い。
-- 通常、確認1、確認2、失敗、hover、pressed、focusを1280x720で保存し、fullscreenのオン/オフ文言と切替ボタンの状態差にも見切れ・ellipsis・重なりが無い。
+- 通常、確認1、確認2、失敗、hover、pressed、focus、fullscreen_onを1280x720で保存し、fullscreenのオン/オフ文言と切替ボタンの状態差にも見切れ・ellipsis・重なりが無い。fullscreen_onはsettings.jsonのtrueを実読込した後、preview隔離内だけwindowedへ戻して安定captureする。
 
 ## 7. E11-SLOT-DELETE UI のfreeze再オープン宣言
 

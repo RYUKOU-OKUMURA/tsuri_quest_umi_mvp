@@ -4,7 +4,7 @@ const SettingsScreenScript = preload("res://src/ui/settings_screen.gd")
 const ThemeFactory = preload("res://src/ui/ui_theme.gd")
 const IsolationGuard = preload("res://tools/settings_isolation_guard.gd")
 const DESIGN_SIZE := Vector2i(1280, 720)
-const STATES := ["normal", "confirm1", "confirm2", "failure", "hover", "pressed", "focus", "fullscreen_hover", "fullscreen_pressed", "fullscreen_focus"]
+const STATES := ["normal", "confirm1", "confirm2", "failure", "hover", "pressed", "focus", "fullscreen_hover", "fullscreen_pressed", "fullscreen_focus", "fullscreen_on"]
 var _capture_size := DESIGN_SIZE
 
 
@@ -27,7 +27,7 @@ func _ready() -> void:
 		get_tree().quit(2)
 		return
 	_cleanup_preview_artifacts()
-	SettingsScreenScript.save_settings({"bgm_volume": 80, "se_volume": 80})
+	SettingsScreenScript.save_settings({"bgm_volume": 80, "se_volume": 80, "fullscreen": state == "fullscreen_on"})
 	PlayerProgress._sandbox_mode = false
 	PlayerProgress._save_storage_ready = true
 	_write_preview_save()
@@ -44,6 +44,16 @@ func _ready() -> void:
 	screen.configure({"return_screen_id": "harbor"})
 	screen.size = Vector2(DESIGN_SIZE)
 	add_child(screen)
+	if state == "fullscreen_on":
+		var loaded_settings := SettingsScreenScript.load_settings()
+		if not bool(loaded_settings.get("fullscreen", false)) or not screen._fullscreen or screen._fullscreen_button.text != "フルスクリーン: オン":
+			push_error("fullscreen_on previewが保存値からオン文言を復元できませんでした")
+			get_tree().quit(1)
+			return
+		# 実保存・実読込・window_set_mode(true)まで通した後、preview隔離内だけwindowedへ戻し、capture viewportを1280x720へ固定する。
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+		get_window().size = _capture_size
+		print("settings_preview[fullscreen_on]: saved fullscreen=true; windowed capture override")
 	await get_tree().process_frame
 	await get_tree().process_frame
 	match state:
