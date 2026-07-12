@@ -159,7 +159,7 @@ func _build_delete_block(parent: Control) -> void:
 	_delete_status_label.name = "SettingsSlotDeleteStatus"
 	_delete_status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_delete_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_place_in(parent, _delete_status_label, Rect2(72.0, 298.0, 778.0, 42.0))
+	_place_in(parent, _delete_status_label, Rect2(72.0, 350.0, 778.0, 48.0))
 
 
 func _build_delete_modals() -> void:
@@ -247,11 +247,13 @@ func _resolve_target_slot_id() -> int:
 
 func _refresh_delete_summary(message := "") -> void:
 	var summary := PlayerProgress.save_slot_summary(_target_slot_id)
+	var artifact_status := PlayerProgress.save_slot_artifact_status(_target_slot_id)
 	_delete_summary_label.text = _summary_line(summary)
-	var has_artifact := bool(summary.get("has_save", false))
-	_delete_button.disabled = not has_artifact
-	_delete_button.focus_mode = Control.FOCUS_ALL if has_artifact else Control.FOCUS_NONE
-	if has_artifact:
+	var storage_blocked := bool(summary.get("storage_blocked", false))
+	var has_artifact := bool(artifact_status.get("any_artifact", false))
+	_delete_button.disabled = storage_blocked or not has_artifact
+	_delete_button.focus_mode = Control.FOCUS_NONE if _delete_button.disabled else Control.FOCUS_ALL
+	if not _delete_button.disabled:
 		_se_slider.focus_neighbor_bottom = _se_slider.get_path_to(_delete_button)
 		_return_button.focus_neighbor_top = _return_button.get_path_to(_delete_button)
 	else:
@@ -259,6 +261,8 @@ func _refresh_delete_summary(message := "") -> void:
 		_return_button.focus_neighbor_top = _return_button.get_path_to(_se_slider)
 	if not message.is_empty():
 		_delete_status_label.text = message
+	elif storage_blocked:
+		_delete_status_label.text = String(summary.get("storage_block_message", "セーブデータを確認できません。ゲームを再起動してください。"))
 	elif not has_artifact:
 		_delete_status_label.text = "このスロットは空です。削除するデータはありません。"
 	elif bool(summary.get("future_guarded", false)):

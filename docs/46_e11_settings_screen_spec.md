@@ -61,6 +61,7 @@ Date: 2026-07-12
 | 空slot | `has_save=false` かつartifactなし | 削除disabled、理由表示 |
 | future/unknown/invalid artifact | 要約可能な範囲＋artifact状態 | 削除は可能、必ず二段階確認 |
 | 削除失敗 | backend `ok=false` | 画面維持、message/reason表示、再操作可能 |
+| tmp-only / 部分削除失敗 | main/backup候補が無くてもartifact残存 | 削除入口を維持し、再試行成功でmain/backup/tmpを完全削除 |
 
 固定アンカーはタイトルと戻るボタン。通常状態内で動くのはスライダーつまみ、百分率、削除対象の状態文だけで、確認は中央モーダルとして重ねる。
 
@@ -93,6 +94,7 @@ Date: 2026-07-12
 - タイトルからはさらに `{target_slot_id = <タイトルで選択中のslot>}` を明示する。港では設定側が `PlayerProgress.active_save_slot` を採用する。
 - 設定画面は任意のroute値を信用せず、上記2値以外を `title` に戻す。
 - 設定表示中も opening BGM は継続し、変更結果をその場で聴ける。
+- 削除可否はロード候補の有無ではなく `save_slot_artifact_status()` のmain/backup/tmp存在で判断する。`storage_blocked` はartifact/空判定より優先し、削除disabledとbackend messageを表示する。
 
 ## 5. smoke 観測点
 
@@ -110,6 +112,10 @@ Date: 2026-07-12
 10. slot/Lv/プレイ時間が両確認に表示され、`delete_save_slot()` は最終確定時だけ1回呼ばれる。
 11. 成功時はtitleへ遷移し、失敗時は画面維持＋理由表示＋再操作可能。
 12. 実ファイル統合では対象slotのmain/backup/tmpだけが消え、他2slotとsettings.jsonがbyte不変、削除slotが終了時に再生成されないことを確認する。
+13. tmp-only初期状態と、main/backup/tmp各段階の削除失敗→同じ画面から再試行成功を検証する。
+14. 削除・続行・最終削除はbutton signal経由で操作し、callback配線を含めて検証する。
+15. smoke/previewは明示opt-in、`TSURI_QA_ISOLATED_HOME` の絶対パスと`HOME`の正規化一致、trusted runnerがHOME直下へ作るguard sentinelと実行tokenの内容一致がすべて揃う前にwrite/cleanupを行わずfail-closed。visual wrapperは既存HOMEを再利用せず、物理パス解決後も`/private/tmp`配下であることを確認した親から毎回fresh HOMEを作り、symlink外周逸脱を拒否して終了時に破棄する。標準release verifierはsettings専用runnerだけへtestごとの隔離HOME絶対パス・opt-in・sentinel/tokenを付与し、削除統合試験を省略せず実行する。
+16. `./tools/settings_isolation_self_test.sh` で、HOME不一致・token不一致・rawの`.`/`..`/前後空白/非正規表記、HOME祖先/final componentとuser-data root / slots / slot directoryのnested symlink（matching sentinel/tokenを含む）をwrite前exit 2とし、main / backup / tmp / settings / markerのbyte不変を検証する。raw expected / raw actual相当は共有pure helperで同じ判定を使い、engine初期化前にraw HOMEが不安定なケースは通常guardを緩めない拒否専用probeで両sceneから直接固定する。guardは`user://`のglobalize先が物理expected HOME配下（`expected + "/"`境界）であること、およびsettings・save root・全slot/artifact親の既存祖先が検査可能で非linkであることも要求する。通常visual/release runnerは拒否専用probeを継承しない。
 
 ## 6. visual QA 観測点
 
@@ -118,10 +124,10 @@ Date: 2026-07-12
 - BGM / SEの情報階層、初期focus、戻る導線が判別できる。
 - 0% / 100%でも値表示とレイアウトが崩れない。
 - 共通キットの世界観が上・中央・下で揃う。
-- 通常、確認1、確認2、失敗の代表状態を1280x720で保存し、slot/Lv/プレイ時間、不可逆警告、normal/hover/pressed/focusに見切れ・ellipsis・重なりが無い。
+- 通常、確認1、確認2、失敗、hover、pressed、focusを1280x720で保存し、全画素opaque・全画面黒欠損集計を自動確認する。slot/Lv/プレイ時間、不可逆警告、normal/hover/pressed/focusに見切れ・ellipsis・重なりが無い。
 
 ## 7. E11-SLOT-DELETE UI のfreeze再オープン宣言
 
-- 再オープン: 中央パネル矩形、音声2行のY位置、focus順。削除ブロックを同一画面へ収めるために限る。
+- 再オープン: 削除状態文のY位置（panel内298→350）とartifact由来のdisabled/focus。footer well活用と再試行契約のために限る。
 - 維持: 1280x720、タイトル/説明、背景、右下戻る矩形、既定音量、音量刻み、設定保存・Audio Bus契約、共通素材、フォント。
 - 差分Top3: ①通常状態で削除対象が判別できること、②二段階確認で不可逆性と安全側focusが読めること、③空/失敗状態でも主導線が崩れないこと。

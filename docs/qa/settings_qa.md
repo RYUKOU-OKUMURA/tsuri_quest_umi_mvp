@@ -12,6 +12,7 @@ QA更新コマンド: `./tools/settings_visual_qa.sh`
 | 設定パネル | `Rect2(180, 144, 920, 430)` | 中央 | 音声2行と対象slot削除ブロックが省略なしで収まる |
 | BGM行 / SE行 | y=`72` / `142`（panel内） | 中央 | 既存の読み順を維持し削除領域を確保 |
 | 削除ブロック | 見出しy=`215`、要約y=`252`、操作y=`250` | 中央下 | slot/Lv/プレイ時間と削除入口を同時判別できる |
+| 削除状態文 | y=`350`、h=`48`（panel内footer well） | 中央下 | 通常/失敗文を金縁から離し、暗色well内に上下余白を確保 |
 | 二段階確認 | `Rect2(270, 130, 740, 460)` | 中央モーダル | 共通フレーム1枚を状態切替で再利用し、情報アンカーを固定 |
 | 戻るボタン | `Rect2(920, 616, 276, 60)` | 右下 | 既存の右下戻る文法を維持 |
 | 既定音量 | BGM=`80` / SE=`80` | `settings.json` | 初回に十分聞こえ、最大音量を避ける |
@@ -33,7 +34,7 @@ QA更新コマンド: `./tools/settings_visual_qa.sh`
 |---|---|---|---|
 | 装飾パス累計 | 0 | 共通キットのみ | close |
 | タイトル / 行文字 | 1 | GameFonts共通ローダーへ統一し、暗部での可読性を確保 | close |
-| 削除説明Y位置 | 1 | 下端フレームとの重なりを避けてpanel内y=298へ移動 | close |
+| 削除状態文footer収束 | 2 | panel内y=298→350、h=42→48。既存footer wellへ移し上下余白を確保 | close |
 
 ## 4. 暫定判定・再検証TODO
 
@@ -45,8 +46,8 @@ QA更新コマンド: `./tools/settings_visual_qa.sh`
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-収束済みのため空欄。E11-SLOT-DELETE UIでは中央パネル矩形・音声行Y・focus順だけを再オープンし、タイトル、背景、右下戻る、音量契約、共通素材は維持した。
+収束済みのため空欄。レビュー修正では削除状態文Yとartifact由来disabled/focusだけを再オープンし、タイトル、背景、中央パネル、音声行、右下戻る、音量契約、共通素材は維持した。
 
 ## 7. 判断ログ（直近パスのみ）
 
-`docs/qa/evidence/settings/2026-07-12_settings_{normal,confirm1,confirm2,failure}_1280x720.png` を原寸確認し、通常状態のslot/Lv/プレイ時間、二段階の不可逆警告、失敗理由、各ボタンに見切れ・ellipsis・重なりが無いことを確認した。初回比較で説明文の下端フレーム重なりと確認フレーム二重所有の描画崩れをP1として検出し、説明Y移動と共通モーダル1枚の状態再利用で解消した。共通 `card_frame.png` と既存ボタンを使用し、専用PNG・表示設定・キー設定は追加していない。
+`docs/qa/evidence/settings/2026-07-12_settings_{normal,confirm1,confirm2,failure,hover,pressed,focus}_1280x720.png` を原寸確認した。beforeはcommit `54b2b91` のnormal/failure（状態文y=298,h=42）で、金縁直上に寄りfooter wellが空いていた。afterは同名の現行evidence（y=350,h=48）で、通常/失敗文を暗色footer well中央へ移し、上下余白と読み順が明確に改善したため採用した。hoverは明るい橙、pressedは暗い茶、focusは金色のfocus枠でnormalから識別できる。screenのready/deferred初期focus完了後に状態を適用し、failure/focusはcapture直前のfocus ownerが削除ボタンであることをruntime assertした。7状態とも1280x720・全画素opaqueで、全画面黒欠損集計を通過し、slot/Lv/プレイ時間、不可逆警告、失敗理由、ボタンに見切れ・ellipsis・重なりが無い。専用PNG・表示設定・キー設定は追加していない。

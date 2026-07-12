@@ -7,6 +7,7 @@ const MainScript = preload("res://src/main.gd")
 const ScreenBaseScript = preload("res://src/ui/screen_base.gd")
 const CatchFanfareScript = preload("res://src/ui/components/catch_fanfare.gd")
 const ThemeFactory = preload("res://src/ui/ui_theme.gd")
+const IsolationGuard = preload("res://tools/settings_isolation_guard.gd")
 const BGM_FIXTURE := "res://assets/audio/opening_bgm.mp3"
 const SE_FIXTURE := "res://assets/audio/逃げられた.mp3"
 
@@ -16,26 +17,99 @@ var _route_payload: Dictionary = {}
 
 
 func _ready() -> void:
-	var deletion_integration_enabled := OS.get_environment("TSURI_SETTINGS_SMOKE_ALLOW") == "1"
-	if deletion_integration_enabled:
-		PlayerProgress._sandbox_mode = false
-	_remove_settings_file()
+	var raw_home_probe := OS.get_environment("TSURI_QA_REJECT_RAW_HOME_PROBE")
+	if not raw_home_probe.is_empty():
+		if IsolationGuard.raw_absolute_path_is_unambiguous(raw_home_probe):
+			push_error("settings_smoke: rejection-only raw HOME probeが曖昧pathを拒否しませんでした")
+			get_tree().quit(1)
+		else:
+			get_tree().quit(2)
+		return
+	if (
+		OS.get_environment("TSURI_SETTINGS_SMOKE_ALLOW") != "1"
+		or not _isolated_home_matches()
+	):
+		push_error("settings_smoke: 隔離runner以外からの実行を拒否しました")
+		get_tree().quit(2)
+		return
+	PlayerProgress._sandbox_mode = false
+	_cleanup_test_artifacts()
 	_verify_bus_layout()
 	await _verify_player_bus_connections()
 	await _verify_defaults_and_input_contract()
 	await _verify_slider_bus_save_reload_restore()
 	_verify_corruption_recovery()
 	await _verify_title_and_harbor_routes()
-	if deletion_integration_enabled:
-		await _verify_slot_target_and_confirmation_flow()
-		await _verify_guarded_and_invalid_artifacts_are_deletable()
-		await _verify_delete_success_file_integration()
-		await _verify_delete_failure_stays_on_screen()
+	await _verify_slot_target_and_confirmation_flow()
+	await _verify_guarded_and_invalid_artifacts_are_deletable()
+	await _verify_tmp_only_and_partial_delete_retries()
+	await _verify_delete_success_file_integration()
+	await _verify_delete_failure_stays_on_screen()
+	await _verify_storage_blocked_message_priority()
+	_cleanup_test_artifacts()
 	if _failed:
 		get_tree().quit(1)
 		return
 	print("settings_smoke: ok")
 	get_tree().quit(0)
+
+
+func _isolated_home_matches() -> bool:
+	var raw_expected := OS.get_environment("TSURI_QA_ISOLATED_HOME")
+	var raw_actual := OS.get_environment("HOME")
+	if not IsolationGuard.raw_absolute_path_is_unambiguous(raw_expected) or not IsolationGuard.raw_absolute_path_is_unambiguous(raw_actual):
+		return false
+	var expected := raw_expected.simplify_path()
+	var actual := raw_actual.simplify_path()
+	var token := OS.get_environment("TSURI_QA_RUN_TOKEN")
+	var sentinel_path := expected.path_join(".tsuri_settings_qa_guard")
+	var user_data_path := ProjectSettings.globalize_path("user://").simplify_path()
+	return (
+		not expected.is_empty()
+		and not token.is_empty()
+		and expected.is_absolute_path()
+		and actual.is_absolute_path()
+		and expected == actual
+		and _write_targets_have_physical_ancestors(expected, user_data_path)
+		and (user_data_path == expected or user_data_path.begins_with(expected + "/"))
+		and FileAccess.file_exists(sentinel_path)
+		and _read_guard_token(sentinel_path) == token
+	)
+
+
+func _read_guard_token(path: String) -> String:
+	var file := FileAccess.open(path, FileAccess.READ)
+	return file.get_as_text() if file != null else ""
+
+
+func _write_targets_have_physical_ancestors(expected: String, user_data_path: String) -> bool:
+	var paths: Array[String] = [
+		expected,
+		user_data_path,
+		ProjectSettings.globalize_path(SettingsScreenScript.SETTINGS_PATH).get_base_dir().simplify_path(),
+		ProjectSettings.globalize_path(PlayerProgress.SAVE_SLOT_ROOT).simplify_path(),
+	]
+	for slot_id in range(1, PlayerProgress.SAVE_SLOT_COUNT + 1):
+		var slot_root := ProjectSettings.globalize_path("%s/%d" % [PlayerProgress.SAVE_SLOT_ROOT, slot_id]).simplify_path()
+		paths.append(slot_root)
+		for file_name in [PlayerProgress.SAVE_FILE_NAME, PlayerProgress.SAVE_BACKUP_FILE_NAME, PlayerProgress.SAVE_TMP_FILE_NAME]:
+			paths.append(slot_root.path_join(file_name).get_base_dir())
+	for path in paths:
+		if not _existing_path_ancestors_are_physical(path):
+			return false
+	return true
+
+
+func _existing_path_ancestors_are_physical(path: String) -> bool:
+	var current := "/"
+	for component in path.trim_prefix("/").split("/", false):
+		var parent_dir := DirAccess.open(current)
+		if parent_dir == null or parent_dir.is_link(component):
+			return false
+		current = current.path_join(component)
+		if not DirAccess.dir_exists_absolute(current) and not FileAccess.file_exists(current):
+			return true
+	return true
 
 
 func _verify_bus_layout() -> void:
@@ -168,8 +242,7 @@ func _verify_slot_target_and_confirmation_flow() -> void:
 	_expect("スロット2" in screen._delete_summary_label.text, "normal summary should show slot number")
 	_expect("Lv.12" in screen._delete_summary_label.text, "normal summary should show level")
 	_expect("2時間33分" in screen._delete_summary_label.text, "normal summary should show play time")
-	screen._show_delete_confirm()
-	await _settle()
+	await _press_button(screen._delete_button)
 	_expect(screen._delete_api_call_count == 0, "confirmation 1 must not call delete API")
 	_expect(screen._delete_stage == 1, "delete entry should open confirmation 1")
 	_expect(get_viewport().gui_get_focus_owner() == screen._delete_confirm_cancel_button, "confirmation 1 should focus safe cancel")
@@ -177,9 +250,8 @@ func _verify_slot_target_and_confirmation_flow() -> void:
 	await _send_action("ui_cancel")
 	_expect(screen._delete_stage == 0, "ui_cancel should return confirmation 1 to normal")
 	_expect(get_viewport().gui_get_focus_owner() == screen._delete_button, "confirmation 1 cancel should restore delete focus")
-	screen._show_delete_confirm()
-	screen._show_delete_final()
-	await _settle()
+	await _press_button(screen._delete_button)
+	await _press_button(screen._delete_continue_button)
 	_expect(screen._delete_api_call_count == 0, "confirmation 2 display must not call delete API")
 	_expect(screen._delete_stage == 2, "continue should open confirmation 2")
 	_expect(get_viewport().gui_get_focus_owner() == screen._delete_final_cancel_button, "confirmation 2 should focus safe back")
@@ -209,11 +281,10 @@ func _verify_guarded_and_invalid_artifacts_are_deletable() -> void:
 		_write_slot_raw(slot_id, "main", String(fixture["raw"]))
 		var screen: Variant = await _make_settings({"return_screen_id": "title", "target_slot_id": slot_id})
 		_expect(not screen._delete_button.disabled, "%s artifact should remain deletable" % fixture["label"])
-		screen._show_delete_confirm()
-		screen._show_delete_final()
+		await _press_button(screen._delete_button)
+		await _press_button(screen._delete_continue_button)
 		_expect(screen._delete_api_call_count == 0, "%s artifact should not delete before final commit" % fixture["label"])
-		screen._commit_delete()
-		await _settle()
+		await _press_button(screen._delete_commit_button)
 		_expect(screen._delete_api_call_count == 1, "%s artifact should call delete API exactly once" % fixture["label"])
 		_expect(not FileAccess.file_exists(_slot_artifact_path(slot_id, "main")), "%s artifact should be deleted" % fixture["label"])
 		await _free_node(screen)
@@ -231,11 +302,10 @@ func _verify_delete_success_file_integration() -> void:
 	PlayerProgress.set_active_save_slot(2, false)
 	var screen: Variant = await _make_settings({"return_screen_id": "title", "target_slot_id": 2})
 	var settings_hash := _file_hash(SettingsScreenScript.SETTINGS_PATH)
-	screen._show_delete_confirm()
-	screen._show_delete_final()
+	await _press_button(screen._delete_button)
+	await _press_button(screen._delete_continue_button)
 	_reset_route()
-	screen._commit_delete()
-	await _settle()
+	await _press_button(screen._delete_commit_button)
 	_expect(screen._delete_api_call_count == 1, "successful final confirmation should call delete API exactly once")
 	_expect(_route_id == "title", "successful deletion should route to title")
 	for artifact in ["main", "backup", "tmp"]:
@@ -254,11 +324,10 @@ func _verify_delete_failure_stays_on_screen() -> void:
 	_write_slot_artifact(1, "main", {"version": 1, "level": 9, "play_seconds": 7200.0})
 	PlayerProgress._delete_failure_injection_stage = "main"
 	var screen: Variant = await _make_settings({"return_screen_id": "title", "target_slot_id": 1})
-	screen._show_delete_confirm()
-	screen._show_delete_final()
+	await _press_button(screen._delete_button)
+	await _press_button(screen._delete_continue_button)
 	_reset_route()
-	screen._commit_delete()
-	await _settle()
+	await _press_button(screen._delete_commit_button)
 	_expect(_route_id.is_empty(), "failed deletion should not navigate")
 	_expect(screen._delete_stage == 0 and not screen._delete_modal_layer.visible, "failed deletion should return to normal settings")
 	_expect(not screen._delete_status_label.text.is_empty(), "failed deletion should show backend message or reason")
@@ -267,6 +336,44 @@ func _verify_delete_failure_stays_on_screen() -> void:
 	_expect(FileAccess.file_exists(_slot_artifact_path(1, "main")), "failed deletion should leave the failed artifact")
 	PlayerProgress._delete_failure_injection_stage = ""
 	await _free_node(screen)
+
+
+func _verify_tmp_only_and_partial_delete_retries() -> void:
+	_write_slot_artifact(1, "tmp", {"version": 1, "marker": "tmp-only"})
+	var tmp_only: Variant = await _make_settings({"return_screen_id": "title", "target_slot_id": 1})
+	_expect(not tmp_only._delete_button.disabled, "tmp-only slot should be deletable")
+	await _press_button(tmp_only._delete_button)
+	await _press_button(tmp_only._delete_continue_button)
+	await _press_button(tmp_only._delete_commit_button)
+	_expect(not FileAccess.file_exists(_slot_artifact_path(1, "tmp")), "tmp-only artifact should be deleted")
+	await _free_node(tmp_only)
+
+	for stage in ["main", "backup", "tmp"]:
+		for artifact in ["main", "backup", "tmp"]:
+			_write_slot_artifact(1, artifact, {"version": 1, "marker": "%s-%s" % [stage, artifact]})
+		PlayerProgress._delete_failure_injection_stage = stage
+		var screen: Variant = await _make_settings({"return_screen_id": "title", "target_slot_id": 1})
+		await _press_button(screen._delete_button)
+		await _press_button(screen._delete_continue_button)
+		await _press_button(screen._delete_commit_button)
+		_expect(not screen._delete_button.disabled, "%s failure should leave retry enabled" % stage)
+		_expect(bool(PlayerProgress.save_slot_artifact_status(1).get("any_artifact", false)), "%s failure should report remaining artifact" % stage)
+		PlayerProgress._delete_failure_injection_stage = ""
+		await _press_button(screen._delete_button)
+		await _press_button(screen._delete_continue_button)
+		await _press_button(screen._delete_commit_button)
+		_expect(not bool(PlayerProgress.save_slot_artifact_status(1).get("any_artifact", true)), "%s retry should remove every artifact" % stage)
+		await _free_node(screen)
+
+
+func _verify_storage_blocked_message_priority() -> void:
+	var previous_ready: bool = PlayerProgress._save_storage_ready
+	PlayerProgress._save_storage_ready = false
+	var screen: Variant = await _make_settings({"return_screen_id": "title", "target_slot_id": 1})
+	_expect(screen._delete_button.disabled, "storage-blocked delete should be disabled")
+	_expect(screen._delete_status_label.text == PlayerProgress.save_storage_block_message(), "storage-blocked message should take priority over empty-slot text")
+	await _free_node(screen)
+	PlayerProgress._save_storage_ready = previous_ready
 
 
 func _make_settings(payload: Dictionary) -> Variant:
@@ -293,6 +400,11 @@ func _settle() -> void:
 	await get_tree().process_frame
 
 
+func _press_button(button: Button) -> void:
+	button.pressed.emit()
+	await _settle()
+
+
 func _send_action(action: StringName) -> void:
 	var pressed := InputEventAction.new()
 	pressed.action = action
@@ -315,6 +427,16 @@ func _free_node(node: Node) -> void:
 func _remove_settings_file() -> void:
 	if FileAccess.file_exists(SettingsScreenScript.SETTINGS_PATH):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(SettingsScreenScript.SETTINGS_PATH))
+
+
+func _cleanup_test_artifacts() -> void:
+	PlayerProgress._delete_failure_injection_stage = ""
+	for slot_id in range(1, PlayerProgress.SAVE_SLOT_COUNT + 1):
+		for artifact in ["main", "backup", "tmp"]:
+			var path := _slot_artifact_path(slot_id, artifact)
+			if FileAccess.file_exists(path):
+				DirAccess.remove_absolute(path)
+	_remove_settings_file()
 
 
 func _write_raw(text: String) -> void:

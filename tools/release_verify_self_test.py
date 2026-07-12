@@ -38,6 +38,12 @@ with tempfile.TemporaryDirectory() as temporary:
     tests = sorted(special_tests + ["tools/a_smoke.gd"])
     manifest.write_text("\n".join(f"{test}|{runner}" for test, runner in (special_manifest | {"tools/a_smoke.gd": "direct_script"}).items()) + "\n")
     assert dict(classify(tests, load_manifest(manifest)))["tools/a_smoke.gd"] == "direct_script"
+    other_settings = "tools/other_settings_smoke.tscn"
+    (root / other_settings).touch()
+    must_fail(
+        "settings runner排他",
+        lambda: classify(sorted(tests + [other_settings]), special_manifest | {"tools/a_smoke.gd": "direct_script", other_settings: "settings_smoke"}),
+    )
     must_fail("特殊同時削除", lambda: classify(["tools/a_smoke.gd"], {"tools/a_smoke.gd": "direct_script"}))
     must_fail("未登録target", lambda: classify(sorted(tests + ["tools/new_audit.gd"]), special_manifest | {"tools/a_smoke.gd": "direct_script"}))
     must_fail("0件", lambda: classify([], {}))
@@ -61,8 +67,11 @@ with tempfile.TemporaryDirectory() as temporary:
     delete_failure_warning = "WARNING: セーブデータを削除できませんでした（コード: 20）。"
     assert not warning_summary(f"{delete_failure_warning}\n", "save_system")["unexplained"]
     assert warning_summary(f"{delete_failure_warning}\n", "direct_scene")["unexplained"] == [delete_failure_warning]
+    assert not warning_summary(f"{delete_failure_warning}\n", "settings_smoke")["unexplained"]
     similar_delete_warning = "WARNING: セーブデータを削除できませんでした（コード: 21）。"
     assert warning_summary(f"{similar_delete_warning}\n", "save_system")["unexplained"] == [similar_delete_warning]
+    assert warning_summary(f"{similar_delete_warning}\n", "direct_scene")["unexplained"] == [similar_delete_warning]
+    assert warning_summary(f"{similar_delete_warning}\n", "settings_smoke")["unexplained"] == [similar_delete_warning]
     for context in ("validation", "save_system", "export"):
         assert not warning_summary("WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details).\n", context)["unexplained"]
     for count in (2, 3):
@@ -106,7 +115,11 @@ with tempfile.TemporaryDirectory() as temporary:
 
     # Godot用HOMEを差し替えても、起動元Pythonのユーザー依存はPYTHONUSERBASEで維持する。
     python_user_base = root / "python_user_base"
-    python_user_site = python_user_base / "lib" / "python" / "site-packages"
+    python_user_site = Path(subprocess.check_output(
+        [sys.executable, "-c", "import site; print(site.getusersitepackages())"],
+        env={**os.environ, "PYTHONUSERBASE": str(python_user_base)},
+        text=True,
+    ).strip())
     python_user_site.mkdir(parents=True)
     (python_user_site / "release_fixture_dependency.py").write_text("VALUE = 7\n")
     isolated_python_home = root / "isolated_python_home"
@@ -184,18 +197,21 @@ with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() a
     (tools / "nushi_encounter_audit.tscn").touch()
     (tools / "save_namespace_migration_smoke.tscn").touch()
     (tools / "save_system_smoke.tscn").touch()
+    (tools / "settings_smoke.tscn").touch()
     (tools / "export_launch_smoke.tscn").touch()
     (tools / "release_test_manifest.txt").write_text(
         "tools/only_audit.gd|direct_script\n"
         "tools/nushi_encounter_audit.tscn|direct_scene\n"
         "tools/save_namespace_migration_smoke.tscn|save_system\n"
         "tools/save_system_smoke.tscn|save_system\n"
+        "tools/settings_smoke.tscn|settings_smoke\n"
         "tools/export_launch_smoke.tscn|export_evidence\n"
     )
     outside = Path(output_temporary)
     engine_marker = outside / "engine_marker"
     orphan_marker = outside / "e2e_orphan"
     outside_marker = outside / "outside_marker"
+    env_log = outside / "env_log"
     outside_marker.write_text("keep")
     mutation = fixture / "mutation_during_run"
     mutation.write_text("base\n")
@@ -203,8 +219,10 @@ with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() a
     fake_godot.write_text(
         "#!/bin/sh\n"
         f"echo fake-engine >> '{engine_marker}'\n"
+        f"guard=missing; [ -f \"${{HOME:-}}/.tsuri_settings_qa_guard\" ] && [ \"$(cat \"${{HOME:-}}/.tsuri_settings_qa_guard\")\" = \"${{TSURI_QA_RUN_TOKEN:-}}\" ] && guard=ok\n"
+        f"printf '%s|%s|%s|%s|%s|%s|%s\\n' \"$*\" \"${{TSURI_SETTINGS_SMOKE_ALLOW:-}}\" \"${{TSURI_QA_ISOLATED_HOME:-}}\" \"${{TSURI_QA_RUN_TOKEN:-}}\" \"${{HOME:-}}\" \"$guard\" \"${{TSURI_QA_REJECT_RAW_HOME_PROBE:-}}\" >> '{env_log}'\n"
         "if [ \"${1:-}\" = --version ]; then echo 4.7.test.official.fixture; exit 0; fi\n"
-        f"if echo \" $* \" | grep -q ' --script '; then echo dirty-after > '{mutation}'; (sleep 1; touch '{orphan_marker}') & wait; fi\n"
+        f"if echo \" $* \" | grep -q ' --script '; then echo dirty-after > '{mutation}'; (sleep 3; touch '{orphan_marker}') & wait; fi\n"
     )
     fake_godot.chmod(0o755)
     (tools / "validate_project.sh").write_text("#!/bin/sh\nset -eu\ngodot --version >/dev/null\n[ \"$HOME\" = \"$TSURI_GODOT_HOME\" ]\n")
@@ -217,7 +235,16 @@ with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() a
     mutation.write_text("dirty-before\n")  # 開始/終了ともporcelainは同じ M、内容digestだけが変わる
     output = outside / "out"
     old_env = os.environ.copy()
-    os.environ.update(GODOT_BIN=str(fake_godot), TSURI_RELEASE_TEST_TIMEOUT_SECONDS="0.5", TSURI_RELEASE_TERM_GRACE_SECONDS="0.1")
+    os.environ.update(
+        GODOT_BIN=str(fake_godot),
+        # 0.5秒では通常fake工程まで稀にtimeoutしたため、意図的な3秒hungだけを落とす。
+        TSURI_RELEASE_TEST_TIMEOUT_SECONDS="1.5",
+        TSURI_RELEASE_TERM_GRACE_SECONDS="0.1",
+        TSURI_SETTINGS_SMOKE_ALLOW="caller-fake-allow",
+        TSURI_QA_ISOLATED_HOME="/caller/fake/home",
+        TSURI_QA_RUN_TOKEN="caller-fake-token",
+        TSURI_QA_REJECT_RAW_HOME_PROBE="caller-fake-probe",
+    )
     try:
         rc = main(["--root", str(fixture), "--output-dir", str(output)])
     finally:
@@ -228,17 +255,27 @@ with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() a
     save_execution = next(item for item in report["tests"] if item["runner"] == "save_system" and "exit_code" in item)
     export_pending = next(item for item in report["tests"] if item["runner"] == "export_evidence")
     nushi_budget_record = next(item for item in report["tests"] if item["test"] == "tools/nushi_encounter_audit.tscn")
+    settings_execution = next(item for item in report["tests"] if item["runner"] == "settings_smoke")
     assert rc == 1 and report["status"] == "failed" and direct["timed_out"] and not report["source"]["stable"], repr(report)
     assert report["source"]["start"]["porcelain_sha256"] == report["source"]["end"]["porcelain_sha256"]
     assert report["source"]["start"]["worktree_content_sha256"] != report["source"]["end"]["worktree_content_sha256"]
     assert report["godot"] == {"version": "4.7.test.official.fixture", "binary": str(fake_godot.resolve())}
     assert report["validation"]["status"] == "passed" and save_execution["status"] == "passed", repr(report)
-    assert direct["timeout_seconds"] == 0.5 and direct["duration_seconds"] >= 0 and export_pending["status"] == "pending_rc_evidence"
-    assert nushi_budget_record["timeout_seconds"] == 0.5  # 明示global overrideはnushi個別defaultより優先
+    assert settings_execution["status"] == "passed", repr(settings_execution)
+    assert direct["timeout_seconds"] == 1.5 and direct["duration_seconds"] >= 0 and export_pending["status"] == "pending_rc_evidence"
+    assert nushi_budget_record["timeout_seconds"] == 1.5  # 明示global overrideはnushi個別defaultより優先
     engine_count = engine_marker.read_text().count("fake-engine")
     assert engine_count >= 3, f"同一engine呼び出し数が不正: {engine_count}"
     assert outside_marker.read_text() == "keep"
-    time.sleep(1.2)
+    env_lines = env_log.read_text().splitlines()
+    settings_env = next(line.split("|", 6) for line in env_lines if "settings_smoke.tscn" in line)
+    assert settings_env[1] == "1" and settings_env[2] == settings_env[4] and Path(settings_env[2]).is_absolute()
+    assert settings_env[3] and settings_env[5] == "ok" and settings_env[6] == ""
+    for line in env_lines:
+        if "settings_smoke.tscn" not in line:
+            fields = line.split("|", 6)
+            assert fields[1] == "" and fields[2] == "" and fields[3] == "" and fields[6] == "", line
+    time.sleep(3.2)
     assert not orphan_marker.exists()
 
 # cleanup failureはPASS確定前にfailed reportへ変換する。

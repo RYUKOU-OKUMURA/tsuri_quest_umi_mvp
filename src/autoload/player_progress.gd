@@ -341,6 +341,32 @@ func delete_save_slot(slot_id: int) -> Dictionary:
 	return {"ok": true, "reason": "", "slot_id": slot_id, "active_deleted": active_deleted}
 
 
+## 指定slotの削除対象artifact存在だけを返す。内容の妥当性やロード可否とは分離する。
+## 部分削除失敗後やtmp-onlyでも、残存artifactをUIから再試行できるようにする契約。
+func save_slot_artifact_status(slot_id: int) -> Dictionary:
+	if slot_id < 1 or slot_id > SAVE_SLOT_COUNT:
+		return {
+			"slot_id": slot_id,
+			"valid_slot": false,
+			"main": false,
+			"backup": false,
+			"tmp": false,
+			"any_artifact": false,
+		}
+	var paths := _slot_save_paths(slot_id)
+	var main_exists := FileAccess.file_exists(paths[0])
+	var backup_exists := FileAccess.file_exists(paths[1])
+	var tmp_exists := FileAccess.file_exists(paths[2])
+	return {
+		"slot_id": slot_id,
+		"valid_slot": true,
+		"main": main_exists,
+		"backup": backup_exists,
+		"tmp": tmp_exists,
+		"any_artifact": main_exists or backup_exists or tmp_exists,
+	}
+
+
 func save_slot_summary(slot_id: int) -> Dictionary:
 	var resolved_slot := _normalized_slot(slot_id)
 	if not _save_storage_ready:
