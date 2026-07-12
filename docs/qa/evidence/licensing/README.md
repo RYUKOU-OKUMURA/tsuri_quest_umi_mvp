@@ -1,6 +1,6 @@
 # 発売権利証拠インデックス
 
-確認日: 2026-07-11
+確認日: 2026-07-12
 
 このフォルダには、公開一次情報へのリンクと、非公開原本を確認したsanitized attestationだけを記録する。このrepositoryはpublicのため、raw screenshot/PDF/email/invoice、アカウント・決済ID、カード下4桁、住所、秘密URL等は保存しない。原本はアクセス制御された非公開保管先に置き、ここには原本SHA-256、確認日、確認者、証拠種別、redaction確認、非秘密の保管参照ID、個人情報を含まない判定だけを残し、通常validateはtracked/untrackedを問わず管理文書を含む本ディレクトリ全体を走査し、公式allowlist外URLと明白なPII/決済labelを拒否する。詳細契約は `OWNER_EVIDENCE_REQUEST.md`。
 
@@ -13,7 +13,7 @@
 | icon追加履歴 | 履歴あり・作者未確定 | commit `9a9974a` で `assets/icon.svg` が新規追加。コミット著者だけでは法的な作者・権利者を確定しない |
 | Godot開発版 | QAログあり | `docs/qa/evidence/refactor/2026-07-05_final_dod_command_log.txt` に 4.7 stable。最終export templateは未決 |
 
-## 公式一次情報（2026-07-11確認）
+## 公式一次情報（2026-07-12確認）
 
 | 対象 | 確認できる条件 | 公式URL |
 |---|---|---|
@@ -40,6 +40,8 @@
 | U-08 | 作成者申告待ち | Suno 10曲とAI画像/source/referenceについて、第三者著作物・音源・画像・商標・人物素材を入力したかの作成者申告が0件。サービス一般規約だけではcloseしない |
 
 所有者へ依頼する確認項目と公開禁止事項は [`OWNER_EVIDENCE_REQUEST.md`](OWNER_EVIDENCE_REQUEST.md) に固定した。アカウント画面等の原本は非公開保管し、公開repositoryには所定のsanitized attestationだけを置く。
+
+2026-07-12時点の「現在の主張 / 必要証拠 / 現存証拠 / 判定 / 残作業」の全件監査と、外部入力の最短チェックリストは [`2026-07-12_RIGHTS-01A_AUDIT.md`](2026-07-12_RIGHTS-01A_AUDIT.md) に保存した。結論は、リポジトリ側の棚卸し・受入契約・検査準備は完了、RIGHTS-01A全体は7件の外部証拠待ちで未完了である。
 
 ## ユーザー入力・保存待ち（未完了）
 

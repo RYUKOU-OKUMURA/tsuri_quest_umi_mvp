@@ -74,7 +74,9 @@ FINDING_CODES = {
     "trademark-clearance": "trademark-clearance-reviewed",
     "ai-input-rights": "ai-input-rights-cleared",
 }
-MANAGEMENT_FILES = {"README.md", "OWNER_EVIDENCE_REQUEST.md"}
+MANAGEMENT_FILES = {
+    "README.md", "OWNER_EVIDENCE_REQUEST.md", "2026-07-12_RIGHTS-01A_AUDIT.md",
+}
 OFFICIAL_PUBLIC_URLS = {
     "https://suno.com/terms/",
     "https://help.suno.com/en/articles/9601665",
@@ -1270,6 +1272,60 @@ def validate_completed_attestation_payload(
         raise AssertionError(f"unsupported completed evidence ID: {evidence_id}")
 
 
+def audit_dated_rights_snapshot(text: str) -> None:
+    """Validate the immutable 2026-07-12 snapshot independently of current state."""
+    assert "監査日: 2026-07-12" in text, "dated RIGHTS-01A audit date changed"
+    assert "2026-07-12時点の歴史的snapshot" in text, (
+        "dated RIGHTS-01A audit missing historical snapshot contract"
+    )
+    section = text.split("## 監査結果", 1)[1].split("\n## ", 1)[0]
+    table_lines = [line.strip() for line in section.splitlines() if line.strip().startswith("|")]
+    assert len(table_lines) == 10, "dated RIGHTS-01A audit table must have header, separator, and 8 rows"
+    parsed_lines = []
+    for line in table_lines:
+        assert line.startswith("|") and line.endswith("|"), "dated audit table row boundary invalid"
+        cells = [cell.strip() for cell in line[1:-1].split("|")]
+        assert len(cells) == 6, f"dated audit table row must have exactly 6 columns: {line}"
+        parsed_lines.append(cells)
+    assert parsed_lines[0] == ["ID", "現在の主張", "必要証拠", "現存証拠", "判定", "残作業"], (
+        "dated RIGHTS-01A audit header changed"
+    )
+    assert all(re.fullmatch(r"-+", cell) for cell in parsed_lines[1]), (
+        "dated RIGHTS-01A audit separator invalid"
+    )
+    rows = parsed_lines[2:]
+    expected_ids = [f"U-{number:02d}" for number in range(1, 9)]
+    assert [row[0] for row in rows] == expected_ids, (
+        "dated RIGHTS-01A audit must cover U-01 through U-08 once and in order"
+    )
+    canonical_judgments = {
+        "U-01": "pending。個別曲の由来と生成日時をrepoから検証不能",
+        "U-02": "pending。申告だけでは生成時点の有料期間を確定不能",
+        "U-03": "pending。既知バッチ以外を推定で補完できず、母集団全件のprovenanceが未確定",
+        "U-04": "pending。Git著者は作者または法的権利者の証明ではない",
+        "U-05": "pending。名前をGit著者等から推定不可",
+        "U-06": "pending。対象範囲未決で検索結果もなく、検索だけで法的保証にもならない",
+        "U-07": "RIGHTS-01A対象外。RIGHTS-01Bでpending",
+        "U-08": "pending。入力権利と第三者権利をrepoから確定不能",
+    }
+    for row in rows:
+        assert all(row), f"dated RIGHTS-01A audit contains empty cell: {row[0]}"
+        evidence_id, judgment = row[0], row[4]
+        assert judgment == canonical_judgments[evidence_id], (
+            f"dated {evidence_id} judgment differs from immutable snapshot"
+        )
+    conclusion = text.split("## 結論", 1)[1].strip()
+    canonical_conclusion = (
+        "リポジトリ側で可能な棚卸し、証拠受入形式、機密情報境界、状態判定は準備完了。"
+        "U-01〜U-06とU-08は外部証拠待ちのためpendingを維持し、"
+        "RIGHTS-01A全体は未完了である。U-07はRIGHTS-01Bとして未完了であり、"
+        "この監査でcloseしない。"
+    )
+    assert conclusion == canonical_conclusion, (
+        "dated RIGHTS-01A conclusion differs from immutable snapshot"
+    )
+
+
 def run_negative_self_tests() -> None:
     def must_fail(label: str, operation) -> None:
         try:
@@ -2242,6 +2298,51 @@ def run_negative_self_tests() -> None:
             "fixture", sorted(EXPECTED_AUDIO),
         ),
     )
+    dated_snapshot = require_file(
+        "docs/qa/evidence/licensing/2026-07-12_RIGHTS-01A_AUDIT.md"
+    )
+    snapshot_mutations = {
+        "dated U-01 false complete": dated_snapshot.replace(
+            "| U-01 |", "| U-01 |", 1
+        ).replace("| pending。個別曲", "| complete。個別曲", 1),
+        "dated overall false complete": dated_snapshot.replace(
+            "RIGHTS-01A全体は未完了", "RIGHTS-01A全体はcomplete", 1
+        ),
+        "dated U-07 moved to RIGHTS-01A complete": dated_snapshot.replace(
+            "RIGHTS-01A対象外。RIGHTS-01Bでpending", "RIGHTS-01A complete", 1
+        ),
+        "dated table column shift": dated_snapshot.replace(
+            "| U-03 | 一部画像", "| U-03 | extra | 一部画像", 1
+        ),
+        "dated duplicate row": dated_snapshot.replace(
+            "| U-08 | AI素材", "| U-06 | duplicate | x | x | pending。x | x |\n| U-08 | AI素材", 1
+        ),
+        "dated missing row": "\n".join(
+            line for line in dated_snapshot.splitlines() if not line.startswith("| U-05 |")
+        ),
+        "dated U-01 pending plus Japanese completion claim": dated_snapshot.replace(
+            "pending。個別曲の由来と生成日時をrepoから検証不能",
+            "pending。個別曲の権利確認は完了",
+            1,
+        ),
+        "dated conclusion retains incomplete plus completion claim": dated_snapshot.replace(
+            "RIGHTS-01A全体は未完了である。",
+            "RIGHTS-01A全体は未完了である。RIGHTS-01Aは完了した。",
+            1,
+        ),
+    }
+    for label, mutated_snapshot in snapshot_mutations.items():
+        must_fail(label, lambda snapshot=mutated_snapshot: audit_dated_rights_snapshot(snapshot))
+    dated_snapshot_path = (
+        ROOT / "docs/qa/evidence/licensing/2026-07-12_RIGHTS-01A_AUDIT.md"
+    ).resolve()
+    for label in (
+        "dated U-01 pending plus Japanese completion claim",
+        "dated conclusion retains incomplete plus completion claim",
+    ):
+        with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            result = main({dated_snapshot_path: snapshot_mutations[label]})
+        assert result != 0, f"production main path accepted negative fixture: {label}"
     with tempfile.TemporaryDirectory() as temp_dir:
         fixture_root = Path(temp_dir)
         audio_dir = fixture_root / "assets/audio"
@@ -2271,7 +2372,7 @@ def run_negative_self_tests() -> None:
             "U-01 MP3 bytes replaced after evidence",
             lambda: validate_u01_tracks(valid_eleven, "fixture", eleven_audio, fixture_root),
         )
-    print("licensing audit negative fixtures: ok (privacy tree/IDs, U-01 mapping, U-02 dependency/period, U-03/U-08 manifests, U-04, ledger/docs30 transitions)")
+    print("licensing audit negative fixtures: ok (privacy tree/IDs, U-01 mapping, U-02 dependency/period, U-03/U-08 manifests, U-04, dated snapshot, ledger/docs30 transitions)")
 
 
 def write_attestation_fixture(path: Path, fields: dict[str, str]) -> None:
@@ -2504,6 +2605,7 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
         allowed_override_paths = {
             (ROOT / "docs/qa/evidence/licensing/README.md").resolve(),
             (ROOT / "docs/qa/evidence/licensing/OWNER_EVIDENCE_REQUEST.md").resolve(),
+            (ROOT / "docs/qa/evidence/licensing/2026-07-12_RIGHTS-01A_AUDIT.md").resolve(),
         }
         assert normalized_overrides.keys() <= allowed_override_paths, (
             "main fixture overrides are limited to licensing management Markdown"
@@ -2513,12 +2615,19 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
         ledger = require_file("docs/31_asset_ledger.md")
         evidence = require_file("docs/qa/evidence/licensing/README.md")
         owner_request = require_file("docs/qa/evidence/licensing/OWNER_EVIDENCE_REQUEST.md")
+        dated_audit = require_file(
+            "docs/qa/evidence/licensing/2026-07-12_RIGHTS-01A_AUDIT.md"
+        )
         evidence = normalized_overrides.get(
             (ROOT / "docs/qa/evidence/licensing/README.md").resolve(), evidence,
         )
         owner_request = normalized_overrides.get(
             (ROOT / "docs/qa/evidence/licensing/OWNER_EVIDENCE_REQUEST.md").resolve(),
             owner_request,
+        )
+        dated_audit = normalized_overrides.get(
+            (ROOT / "docs/qa/evidence/licensing/2026-07-12_RIGHTS-01A_AUDIT.md").resolve(),
+            dated_audit,
         )
         project_config = require_file("project.godot")
         project_overview = require_file("docs/00_プロジェクト概要.md")
@@ -2581,6 +2690,7 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
         non_evidence_management_files = {
             (evidence_root / "README.md").resolve(),
             (evidence_root / "OWNER_EVIDENCE_REQUEST.md").resolve(),
+            (evidence_root / "2026-07-12_RIGHTS-01A_AUDIT.md").resolve(),
         }
         completed_fields: dict[str, list[dict[str, str]]] = {}
         for evidence_id, close_date, saved_evidence in completed_rows:
@@ -2691,6 +2801,16 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
             assert marker in mplus_ofl, f"M PLUS OFL missing: {marker}"
         for marker in ("ユーザー入力・保存待ち",):
             assert marker in evidence, f"licensing evidence index missing: {marker}"
+        assert "2026-07-12_RIGHTS-01A_AUDIT.md" in evidence, (
+            "licensing evidence index missing dated RIGHTS-01A audit link"
+        )
+        for marker in (
+            "| ID | 現在の主張 | 必要証拠 | 現存証拠 | 判定 | 残作業 |",
+            "## 外部入力の最短チェックリスト",
+            "リポジトリ側で可能な棚卸し、証拠受入形式、機密情報境界、状態判定は準備完了",
+        ):
+            assert marker in dated_audit, f"dated RIGHTS-01A audit missing marker: {marker}"
+        audit_dated_rights_snapshot(dated_audit)
         for evidence_id in sorted(evidence_ids):
             assert evidence_id in owner_request, (
                 f"owner evidence request missing unresolved item: {evidence_id}"

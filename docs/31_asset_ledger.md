@@ -21,6 +21,8 @@ RIGHTS-01A状態marker（`docs/qa/evidence/licensing/README.md` の未完/完了
 - `[RIGHTS-01A:U-06]=pending`
 - `[RIGHTS-01A:U-08]=pending`
 
+2026-07-12の全件監査は `docs/qa/evidence/licensing/2026-07-12_RIGHTS-01A_AUDIT.md`。リポジトリ側の棚卸し・証拠受入準備は完了したが、U-01〜U-06・U-08は外部証拠待ちであり、RIGHTS-01A全体は未完了。
+
 ## 1. フォント — 記入済み・問題なし
 
 | 素材 | パス | 作者/出所 | ライセンス | 同梱ライセンス文書 |
