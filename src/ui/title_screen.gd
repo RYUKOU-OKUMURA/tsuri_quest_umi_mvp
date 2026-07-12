@@ -50,7 +50,10 @@ func _build_screen() -> void:
 
 
 func _build_settings_button(root: Control) -> void:
-	_settings_button = make_button("せってい", func() -> void: navigate("settings", {"return_screen_id": "title"}), 220)
+	_settings_button = make_button("せってい", func() -> void: navigate("settings", {
+		"return_screen_id": "title",
+		"target_slot_id": _selected_slot_id,
+	}), 220)
 	_settings_button.name = "TitleSettingsButton"
 	_settings_button.custom_minimum_size = Vector2.ZERO
 	_apply_title_button_skin(_settings_button, false)

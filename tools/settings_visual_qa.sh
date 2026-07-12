@@ -16,9 +16,11 @@ else
   exit 1
 fi
 mkdir -p "$GODOT_HOME"
-rm -f /tmp/tsuri_settings.png
+rm -f /tmp/tsuri_settings_normal.png /tmp/tsuri_settings_confirm1.png /tmp/tsuri_settings_confirm2.png /tmp/tsuri_settings_failure.png
 HOME="$GODOT_HOME" "$GODOT" --path "$ROOT" "res://tools/settings_preview.tscn"
-test -s /tmp/tsuri_settings.png
 mkdir -p "$ROOT/docs/qa/evidence/settings"
-cp /tmp/tsuri_settings.png "$ROOT/docs/qa/evidence/settings/2026-07-12_settings_1280x720.png"
-echo "Settings visual QA: docs/qa/evidence/settings/2026-07-12_settings_1280x720.png"
+for state in normal confirm1 confirm2 failure; do
+  test -s "/tmp/tsuri_settings_${state}.png"
+  cp "/tmp/tsuri_settings_${state}.png" "$ROOT/docs/qa/evidence/settings/2026-07-12_settings_${state}_1280x720.png"
+done
+echo "Settings visual QA: normal / confirm1 / confirm2 / failure"

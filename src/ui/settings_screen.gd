@@ -15,7 +15,23 @@ var _se_slider: HSlider
 var _bgm_value_label: Label
 var _se_value_label: Label
 var _return_button: Button
+var _delete_button: Button
+var _delete_summary_label: Label
+var _delete_status_label: Label
+var _delete_modal_layer: Control
+var _delete_confirm_panel: Control
+var _delete_final_panel: Control
+var _delete_modal_title: Label
+var _delete_confirm_detail: Label
+var _delete_final_detail: Label
+var _delete_continue_button: Button
+var _delete_confirm_cancel_button: Button
+var _delete_commit_button: Button
+var _delete_final_cancel_button: Button
 var _return_screen_id := "title"
+var _target_slot_id := PlayerProgress.DEFAULT_SAVE_SLOT
+var _delete_stage := 0
+var _delete_api_call_count := 0
 var _loading := false
 
 
@@ -23,6 +39,7 @@ func _build_screen() -> void:
 	_return_screen_id = String(route_payload.get("return_screen_id", "title"))
 	if _return_screen_id != "title" and _return_screen_id != "harbor":
 		_return_screen_id = "title"
+	_target_slot_id = _resolve_target_slot_id()
 	add_gradient_background(Palette.SEA_DEEP, Palette.SCREEN_BG_DEFAULT)
 	var scrim := ColorRect.new()
 	scrim.color = Palette.DARK_PANEL_DEEP
@@ -51,17 +68,18 @@ func _build_screen() -> void:
 	panel.patch_margin_bottom = 40
 	panel.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place(panel, Rect2(220.0, 168.0, 840.0, 360.0))
+	_place(panel, Rect2(180.0, 144.0, 920.0, 430.0))
 
 	var heading := make_screen_label("サウンド", 26, Palette.TEXT_BONE, true, 2, Palette.TEXT_OUTLINE_DARK)
 	heading.name = "SettingsAudioHeading"
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	heading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_in(panel, heading, Rect2(70.0, 42.0, 700.0, 44.0))
-	_bgm_slider = _build_volume_row(panel, "BGM音量", 108.0, BGM_BUS)
+	_place_in(panel, heading, Rect2(70.0, 28.0, 780.0, 40.0))
+	_bgm_slider = _build_volume_row(panel, "BGM音量", 72.0, BGM_BUS)
 	_bgm_value_label = panel.get_node("BGM_Value") as Label
-	_se_slider = _build_volume_row(panel, "SE音量", 210.0, SE_BUS)
+	_se_slider = _build_volume_row(panel, "SE音量", 142.0, SE_BUS)
 	_se_value_label = panel.get_node("SE_Value") as Label
+	_build_delete_block(panel)
 
 	var hint := make_screen_label("↑↓ 項目を選ぶ　←→ 音量を変える　Esc / B 戻る", 16, Palette.TEXT_BONE, false, 2, Palette.TEXT_OUTLINE_DARK)
 	hint.name = "SettingsInputHint"
@@ -73,15 +91,22 @@ func _build_screen() -> void:
 	_return_button.text = "タイトルへ戻る" if _return_screen_id == "title" else "港へ戻る"
 	_return_button.custom_minimum_size = Vector2.ZERO
 	_place(_return_button, Rect2(920.0, 616.0, 276.0, 60.0))
+	_build_delete_modals()
 	_wire_focus()
 	_apply_loaded_settings()
+	_refresh_delete_summary()
 	_bgm_slider.call_deferred("grab_focus")
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
-		_return_to_origin()
+		if _delete_stage == 2:
+			_show_delete_confirm()
+		elif _delete_stage == 1:
+			_close_delete_modals()
+		else:
+			_return_to_origin()
 
 
 func _build_volume_row(parent: Control, caption: String, y: float, bus_name: StringName) -> HSlider:
@@ -112,8 +137,233 @@ func _build_volume_row(parent: Control, caption: String, y: float, bus_name: Str
 func _wire_focus() -> void:
 	_bgm_slider.focus_neighbor_bottom = _bgm_slider.get_path_to(_se_slider)
 	_se_slider.focus_neighbor_top = _se_slider.get_path_to(_bgm_slider)
-	_se_slider.focus_neighbor_bottom = _se_slider.get_path_to(_return_button)
-	_return_button.focus_neighbor_top = _return_button.get_path_to(_se_slider)
+	_se_slider.focus_neighbor_bottom = _se_slider.get_path_to(_delete_button)
+	_delete_button.focus_neighbor_top = _delete_button.get_path_to(_se_slider)
+	_delete_button.focus_neighbor_bottom = _delete_button.get_path_to(_return_button)
+	_return_button.focus_neighbor_top = _return_button.get_path_to(_delete_button)
+
+
+func _build_delete_block(parent: Control) -> void:
+	var heading := make_screen_label("セーブデータ", 24, Palette.TEXT_BONE, true, 2, Palette.TEXT_OUTLINE_DARK)
+	heading.name = "SettingsSlotDeleteHeading"
+	_place_in(parent, heading, Rect2(70.0, 215.0, 260.0, 38.0))
+	_delete_summary_label = make_screen_label("", 19, Palette.TEXT_BONE, true, 2, Palette.TEXT_OUTLINE_DARK)
+	_delete_summary_label.name = "SettingsSlotDeleteSummary"
+	_delete_summary_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_in(parent, _delete_summary_label, Rect2(72.0, 252.0, 520.0, 52.0))
+	_delete_button = make_button("このスロットを削除", _show_delete_confirm, 260)
+	_delete_button.name = "SettingsSlotDeleteButton"
+	_delete_button.custom_minimum_size = Vector2.ZERO
+	_place_in(parent, _delete_button, Rect2(610.0, 250.0, 240.0, 58.0))
+	_delete_status_label = make_screen_label("", 15, Palette.TEXT_BONE, false, 2, Palette.TEXT_OUTLINE_DARK)
+	_delete_status_label.name = "SettingsSlotDeleteStatus"
+	_delete_status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_delete_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_place_in(parent, _delete_status_label, Rect2(72.0, 298.0, 778.0, 42.0))
+
+
+func _build_delete_modals() -> void:
+	_delete_modal_layer = Control.new()
+	_delete_modal_layer.name = "SettingsSlotDeleteModalLayer"
+	_delete_modal_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_delete_modal_layer.mouse_filter = Control.MOUSE_FILTER_STOP
+	_delete_modal_layer.visible = false
+	add_child(_delete_modal_layer)
+	var scrim := ColorRect.new()
+	scrim.color = Palette.DARK_PANEL_DEEP
+	scrim.color.a = 0.82
+	scrim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	scrim.mouse_filter = Control.MOUSE_FILTER_STOP
+	_delete_modal_layer.add_child(scrim)
+	_delete_confirm_panel = _make_delete_modal_panel("SettingsSlotDeleteConfirm1")
+	_delete_final_panel = _delete_confirm_panel
+	_delete_modal_title = make_screen_label("セーブデータを削除しますか？", 28, Palette.GOLD_BRIGHT, true, 3, Palette.TEXT_OUTLINE_DARK)
+	_delete_modal_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_delete_modal_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place_in(_delete_confirm_panel, _delete_modal_title, Rect2(70.0, 40.0, 600.0, 54.0))
+	_delete_confirm_detail = _make_delete_modal_content(_delete_confirm_panel)
+	_delete_continue_button = make_button("内容を確認する", _show_delete_final, 280)
+	_delete_continue_button.name = "SettingsSlotDeleteContinue"
+	_delete_continue_button.custom_minimum_size = Vector2.ZERO
+	_place_in(_delete_confirm_panel, _delete_continue_button, Rect2(365.0, 330.0, 280.0, 62.0))
+	_delete_confirm_cancel_button = make_button("やめる", _close_delete_modals, 240, true)
+	_delete_confirm_cancel_button.name = "SettingsSlotDeleteCancel1"
+	_delete_confirm_cancel_button.custom_minimum_size = Vector2.ZERO
+	_place_in(_delete_confirm_panel, _delete_confirm_cancel_button, Rect2(95.0, 330.0, 240.0, 62.0))
+	_delete_final_detail = _make_delete_modal_content(_delete_final_panel)
+	_delete_final_detail.visible = false
+	_delete_commit_button = make_button("削除する", _commit_delete, 240)
+	_delete_commit_button.name = "SettingsSlotDeleteCommit"
+	_delete_commit_button.custom_minimum_size = Vector2.ZERO
+	_delete_commit_button.visible = false
+	_place_in(_delete_final_panel, _delete_commit_button, Rect2(405.0, 330.0, 240.0, 62.0))
+	_delete_final_cancel_button = make_button("確認1へ戻る", _show_delete_confirm, 280, true)
+	_delete_final_cancel_button.name = "SettingsSlotDeleteCancel2"
+	_delete_final_cancel_button.custom_minimum_size = Vector2.ZERO
+	_delete_final_cancel_button.visible = false
+	_place_in(_delete_final_panel, _delete_final_cancel_button, Rect2(95.0, 330.0, 280.0, 62.0))
+
+
+func _make_delete_modal_panel(node_name: String) -> NinePatchRect:
+	var panel := NinePatchRect.new()
+	panel.name = node_name
+	panel.texture = load(COMMON_PANEL_PATH)
+	panel.patch_margin_left = 46
+	panel.patch_margin_top = 40
+	panel.patch_margin_right = 46
+	panel.patch_margin_bottom = 40
+	panel.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_place_in(_delete_modal_layer, panel, Rect2(270.0, 130.0, 740.0, 460.0))
+	return panel
+
+
+func _make_delete_modal_content(panel: Control) -> Label:
+	var detail := make_screen_label("", 20, Palette.TEXT_BONE, true, 2, Palette.TEXT_OUTLINE_DARK)
+	detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	detail.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_place_in(panel, detail, Rect2(72.0, 102.0, 596.0, 210.0))
+	return detail
+
+
+func _resolve_target_slot_id() -> int:
+	var fallback := PlayerProgress.active_save_slot
+	if _return_screen_id == "title":
+		fallback = PlayerProgress.DEFAULT_SAVE_SLOT
+		var payload_value: Variant = route_payload.get("target_slot_id", fallback)
+		if payload_value is int or payload_value is float:
+			var number := float(payload_value)
+			if (
+				is_finite(number)
+				and is_equal_approx(number, round(number))
+				and int(number) >= 1
+				and int(number) <= PlayerProgress.SAVE_SLOT_COUNT
+			):
+				fallback = int(number)
+	if fallback < 1 or fallback > PlayerProgress.SAVE_SLOT_COUNT:
+		fallback = PlayerProgress.DEFAULT_SAVE_SLOT
+	return fallback
+
+
+func _refresh_delete_summary(message := "") -> void:
+	var summary := PlayerProgress.save_slot_summary(_target_slot_id)
+	_delete_summary_label.text = _summary_line(summary)
+	var has_artifact := bool(summary.get("has_save", false))
+	_delete_button.disabled = not has_artifact
+	_delete_button.focus_mode = Control.FOCUS_ALL if has_artifact else Control.FOCUS_NONE
+	if has_artifact:
+		_se_slider.focus_neighbor_bottom = _se_slider.get_path_to(_delete_button)
+		_return_button.focus_neighbor_top = _return_button.get_path_to(_delete_button)
+	else:
+		_se_slider.focus_neighbor_bottom = _se_slider.get_path_to(_return_button)
+		_return_button.focus_neighbor_top = _return_button.get_path_to(_se_slider)
+	if not message.is_empty():
+		_delete_status_label.text = message
+	elif not has_artifact:
+		_delete_status_label.text = "このスロットは空です。削除するデータはありません。"
+	elif bool(summary.get("future_guarded", false)):
+		_delete_status_label.text = "新しい版のデータです。内容は読まずに削除できます。"
+	elif bool(summary.get("invalid_artifact", false)):
+		_delete_status_label.text = "読み込めないデータです。確認後に削除できます。"
+	else:
+		_delete_status_label.text = "削除すると元に戻せません。二段階で確認します。"
+
+
+func _summary_line(summary: Dictionary) -> String:
+	var level_text := "Lv.%d" % int(summary.get("level", 1))
+	if bool(summary.get("future_guarded", false)) or bool(summary.get("invalid_artifact", false)):
+		level_text = "Lv.不明"
+	return "対象: スロット%d　%s　%s" % [
+		_target_slot_id,
+		level_text,
+		_format_play_time(float(summary.get("play_seconds", 0.0))),
+	]
+
+
+func _format_play_time(seconds: float) -> String:
+	var total_minutes := int(maxf(0.0, seconds) / 60.0)
+	var hours := int(total_minutes / 60)
+	var minutes := total_minutes % 60
+	return "%d時間%02d分" % [hours, minutes] if hours > 0 else "%d分" % minutes
+
+
+func _delete_detail(final_step: bool) -> String:
+	var summary := PlayerProgress.save_slot_summary(_target_slot_id)
+	var warning := "この操作は取り消せません。" if not final_step else "本当に削除します。元には戻せません。"
+	return "%s\n\n%s" % [_summary_line(summary), warning]
+
+
+func _show_delete_confirm() -> void:
+	if _delete_button.disabled:
+		return
+	_delete_stage = 1
+	_set_background_focus_enabled(false)
+	_delete_modal_layer.visible = true
+	_delete_modal_title.text = "セーブデータを削除しますか？"
+	_delete_confirm_detail.visible = true
+	_delete_continue_button.visible = true
+	_delete_confirm_cancel_button.visible = true
+	_delete_final_detail.visible = false
+	_delete_commit_button.visible = false
+	_delete_final_cancel_button.visible = false
+	_delete_confirm_detail.text = _delete_detail(false)
+	_delete_confirm_cancel_button.grab_focus()
+
+
+func _show_delete_final() -> void:
+	_delete_stage = 2
+	_delete_modal_title.text = "最終確認"
+	_delete_confirm_detail.visible = false
+	_delete_continue_button.visible = false
+	_delete_confirm_cancel_button.visible = false
+	_delete_final_detail.visible = true
+	_delete_commit_button.visible = true
+	_delete_final_cancel_button.visible = true
+	_delete_final_detail.text = _delete_detail(true)
+	_delete_final_cancel_button.grab_focus()
+
+
+func _close_delete_modals() -> void:
+	_delete_stage = 0
+	_delete_modal_layer.visible = false
+	_set_background_focus_enabled(true)
+	_delete_button.grab_focus()
+
+
+func _set_background_focus_enabled(enabled: bool) -> void:
+	var mode := Control.FOCUS_ALL if enabled else Control.FOCUS_NONE
+	_bgm_slider.focus_mode = mode
+	_se_slider.focus_mode = mode
+	_delete_button.focus_mode = mode if not _delete_button.disabled else Control.FOCUS_NONE
+	_return_button.focus_mode = mode
+
+
+func _commit_delete() -> void:
+	_delete_api_call_count += 1
+	var result := PlayerProgress.delete_save_slot(_target_slot_id)
+	if bool(result.get("ok", false)):
+		navigate("title")
+		return
+	_delete_stage = 0
+	_delete_modal_layer.visible = false
+	_set_background_focus_enabled(true)
+	var message := String(result.get("message", "")).strip_edges()
+	if message.is_empty():
+		message = _delete_reason_message(String(result.get("reason", "unknown")))
+	_refresh_delete_summary(message)
+	_delete_button.grab_focus()
+
+
+func _delete_reason_message(reason: String) -> String:
+	match reason:
+		"invalid_slot":
+			return "削除するスロットを確認できませんでした。"
+		"sandbox_mode":
+			return "この環境ではセーブデータを削除できません。"
+		"storage_blocked":
+			return "セーブデータを確認できません。ゲームを再起動してください。"
+		_:
+			return "削除できませんでした（%s）。もう一度お試しください。" % reason
 
 
 func _apply_loaded_settings() -> void:
