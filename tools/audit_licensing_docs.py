@@ -2966,6 +2966,9 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
             "build_fishing_spot_thumb_contact_sheet.py",
             "build_shark_pen_reference.py",
             "build_screen_visual_comparison.py",
+            # Pixel-preserving save reads existing products only; M2 sources
+            # are existence guards and are never opened by this generator.
+            "generate_fish_market_assets.py",
             "generate_nushi_fish_assets.py",
         }
         detected_consumers = set()
