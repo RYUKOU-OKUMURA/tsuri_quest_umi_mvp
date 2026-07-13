@@ -23,6 +23,10 @@ func _ready() -> void:
 
 	_expect(_screen._design_canvas != null, "fixed design canvas should be present")
 	_expect(_screen._design_canvas.size == DESIGN_SIZE, "design canvas should keep 1280x720 logical size")
+	_expect(_screen._market_asset_slots.size() == 6, "market should render six decomposed asset slots")
+	_expect(_screen.find_child("FishMarketBackplate", true, false) == null, "legacy monolithic backplate node must not remain")
+	for slot: TextureRect in _screen._market_asset_slots:
+		_expect(slot.texture != null, "%s should load its decomposed texture" % slot.name)
 	var expected_scale := minf(float(EXPANDED_VIEWPORT.x) / DESIGN_SIZE.x, float(EXPANDED_VIEWPORT.y) / DESIGN_SIZE.y)
 	_expect(absf(_screen._design_canvas.scale.x - expected_scale) < 0.002, "design canvas should scale uniformly in expanded viewports")
 	_expect(_find_item_lists(_screen).is_empty(), "old ItemList must not remain")

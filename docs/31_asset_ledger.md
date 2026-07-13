@@ -39,7 +39,7 @@ RIGHTS-01A状態marker（`docs/qa/evidence/licensing/README.md` の未完/完了
 | 生成スクリプト | 出力先 |
 |---|---|
 | `tools/generate_fish_book_book_frame.py` / `generate_fish_book_paper_assets.py` | `assets/showcase/fish_book/` |
-| `tools/generate_fish_market_assets.py` | `assets/showcase/fish_market/` |
+| `tools/generate_fish_market_assets.py` | `assets/showcase/fish_market/market_bg.png`, `market_header_frame.png`, `inventory_panel_frame.png`, `detail_panel_frame.png`, `cart_panel_frame.png`, `ice_tray_hero.png`（2026-07-13、純PIL生成。旧一枚backplateを表示同値で分解） |
 | 手作業SVG（港の司令盤モックから分解） | `assets/showcase/common/harbor_command_icon_sheet.svg`（Codex作成、2026-07-10、プロジェクト所有。文字・第三者素材なし） |
 | 手作業SVG（港の司令盤共通フレーム） | `assets/showcase/common/harbor_command_dark_frame.svg`（Codex作成、2026-07-10、プロジェクト所有。端9px内に罫線を収めた文字なし9-slice素材、第三者素材なし） |
 | 既存PIL生成素材のcommon昇格コピー | `assets/showcase/common/harbor_command_cta.png`（`assets/showcase/harbor/harbor_time_slot_btn_selected.png` の司令盤CTA/選択状態向けコピー、2026-07-10、プロジェクト所有。新規外部生成なし） |
