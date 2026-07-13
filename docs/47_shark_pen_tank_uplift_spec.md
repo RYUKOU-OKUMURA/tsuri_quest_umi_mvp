@@ -60,3 +60,12 @@ Avoid: photorealistic public aquarium, coral reef clutter, bright tropical water
 2. 縮小比較で、水槽が単色の青い矩形ではなく、参照と同じ深い海中の主領域として先に読める。
 3. グレースケールで魚と水槽背景が分離し、中央光が魚の白い腹を飛ばさない。
 4. 標準/selected-hover双方でP1ゼロ。
+
+## 5. 採用結果
+
+- 生成経路: OpenAI built-in image generation（`stylized-concept`）。CLI fallbackは不使用。
+- source: `tools/source_assets/shark_pen/shark_pen_tank_bg_source.png`（1672x941）
+- processed: `assets/showcase/shark_pen/tank_environment_bg.png`（1280x768）
+- runtime: `SharkPenAquariumWater` の既存矩形へstretchし、旧runtime直線3本を撤去。素材欠落時だけ従来gradientへfallbackする。
+- 採用根拠: `docs/qa/evidence/shark_pen/2026-07-13_tank_uplift_before_after_reference_original.png` / `..._thumbnail.png` / `..._grayscale.png`。
+- 結果: 標準/selected-hoverで文字・選択行・餌・CTA・魚表示の退行なし。縮小でも水槽の深度・泡・上方環境光が判別でき、Top1差分が縮小した。

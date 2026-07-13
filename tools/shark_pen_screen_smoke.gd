@@ -23,6 +23,7 @@ func _ready() -> void:
 	_expect(_screen._feed_button != null, "feed button should be present")
 	var tank_water := _screen.find_child("SharkPenAquariumWater", true, false) as TextureRect
 	_expect(tank_water != null and tank_water.texture != null, "authored tank background should be visible")
+	_expect(tank_water.texture.get_size() == Vector2(1280.0, 768.0), "authored tank background should not use the 64px fallback")
 	_expect(_screen.find_children("SharkPenCurrentLine", "ColorRect", true, false).is_empty(), "runtime tank lines should be removed")
 
 	_screen._select_shark("nekozame")

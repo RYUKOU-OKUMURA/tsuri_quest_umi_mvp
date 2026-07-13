@@ -77,11 +77,13 @@ func _capture_selected_hover(out_path: String) -> void:
 	var screen: Control = await _make_screen(VW)
 	var selected := screen._shark_rows.get("megalodon", {}) as Dictionary
 	var button := selected.get("button") as Button
-	if button == null:
+	var selected_food := screen._food_rows.get(screen._selected_food_id, {}) as Dictionary
+	var food_button := selected_food.get("button") as Button
+	if button == null or food_button == null:
 		_had_capture_error = true
-		push_error("selected hover target was not built")
+		push_error("selected hover/focus targets were not built")
 		return
-	button.grab_focus()
+	food_button.grab_focus()
 	var motion := InputEventMouseMotion.new()
 	motion.position = button.get_global_rect().get_center()
 	motion.global_position = motion.position
