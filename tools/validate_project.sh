@@ -19,6 +19,7 @@ mkdir -p "$GODOT_HOME"
 python3 "$ROOT/tools/audit_showcase_asset_refs.py"
 python3 "$ROOT/tools/audit_fish_asset_duplicates.py"
 python3 "$ROOT/tools/audit_fish_sheet_contract.py"
+HOME="$GODOT_HOME" "$GODOT" --headless --path "$ROOT" "res://tools/fish_catalog_asset_audit.tscn"
 python3 "$ROOT/tools/audit_product_identifiers.py"
 python3 "$ROOT/tools/audit_licensing_docs.py" --self-test
 python3 "$ROOT/tools/audit_licensing_docs.py"

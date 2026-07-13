@@ -8,6 +8,7 @@ tools/cooking_input_audit.tscn|direct_scene
 tools/cooking_layout_audit.tscn|direct_scene
 tools/difficulty_fight_audit.tscn|direct_scene
 tools/fight_envelope_audit.tscn|direct_scene
+tools/fish_catalog_asset_audit.tscn|direct_scene
 tools/fish_book_smoke.tscn|direct_scene
 tools/fishing_harbor_return_smoke.tscn|direct_scene
 tools/fishing_reveal_smoke.tscn|direct_scene
