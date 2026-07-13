@@ -21,6 +21,9 @@ func _ready() -> void:
 	_expect(not _screen._food_rows.has("nekozame"), "food list should exclude shark inventory entries")
 	_expect(_screen._return_button != null, "return button should be present")
 	_expect(_screen._feed_button != null, "feed button should be present")
+	var tank_water := _screen.find_child("SharkPenAquariumWater", true, false) as TextureRect
+	_expect(tank_water != null and tank_water.texture != null, "authored tank background should be visible")
+	_expect(_screen.find_children("SharkPenCurrentLine", "ColorRect", true, false).is_empty(), "runtime tank lines should be removed")
 
 	_screen._select_shark("nekozame")
 	_screen._select_food("mahaze")
