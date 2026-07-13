@@ -18,13 +18,24 @@ else
 fi
 
 mkdir -p "$GODOT_HOME"
-rm -f /tmp/tsuri_status_normal.png /tmp/tsuri_status_hard.png /tmp/tsuri_status_normal_compare.png /tmp/tsuri_status_hard_compare.png
+CAPTURES=(
+  /tmp/tsuri_status_normal.png
+  /tmp/tsuri_status_hard.png
+)
+rm -f "${CAPTURES[@]}" /tmp/tsuri_status_normal_compare.png /tmp/tsuri_status_hard_compare.png
 
 echo "==> Capture status normal preview"
 TSURI_STATUS_DIFFICULTY=normal HOME="$GODOT_HOME" "$GODOT" --path "$ROOT" "res://tools/status_preview.tscn"
 
 echo "==> Capture status hard preview"
 TSURI_STATUS_DIFFICULTY=hard HOME="$GODOT_HOME" "$GODOT" --path "$ROOT" "res://tools/status_preview.tscn"
+
+for capture in "${CAPTURES[@]}"; do
+  if [[ ! -s "$capture" ]]; then
+    echo "Status preview did not create expected capture: $capture" >&2
+    exit 1
+  fi
+done
 
 echo "==> Build status side-by-side QA output"
 python3 "$ROOT/tools/build_screen_visual_comparison.py" status

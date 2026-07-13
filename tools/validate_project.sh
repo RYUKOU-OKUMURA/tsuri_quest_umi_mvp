@@ -22,5 +22,6 @@ python3 "$ROOT/tools/audit_fish_sheet_contract.py"
 python3 "$ROOT/tools/audit_product_identifiers.py"
 python3 "$ROOT/tools/audit_licensing_docs.py" --self-test
 python3 "$ROOT/tools/audit_licensing_docs.py"
+python3 "$ROOT/tools/build_screen_visual_comparison.py" --self-test
 HOME="$GODOT_HOME" "$GODOT" --headless --editor --path "$ROOT" --quit
 HOME="$GODOT_HOME" "$GODOT" --headless --path "$ROOT" --quit-after 2

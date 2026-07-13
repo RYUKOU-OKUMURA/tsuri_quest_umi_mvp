@@ -18,14 +18,25 @@ else
 fi
 
 mkdir -p "$GODOT_HOME"
-rm -f \
-  /tmp/tsuri_tackle_shop_rod.png \
-  /tmp/tsuri_tackle_shop_rig.png \
+CAPTURES=(
+  /tmp/tsuri_tackle_shop_rod.png
+  /tmp/tsuri_tackle_shop_rig.png
+  /tmp/tsuri_tackle_shop_rod_expanded.png
+  /tmp/tsuri_tackle_shop_rig_expanded.png
+)
+rm -f "${CAPTURES[@]}" \
   /tmp/tsuri_tackle_shop_rod_compare.png \
   /tmp/tsuri_tackle_shop_rig_compare.png
 
 echo "==> Capture tackle shop previews"
 HOME="$GODOT_HOME" "$GODOT" --path "$ROOT" "res://tools/tackle_shop_preview.tscn"
+
+for capture in "${CAPTURES[@]}"; do
+  if [[ ! -s "$capture" ]]; then
+    echo "Tackle shop preview did not create expected capture: $capture" >&2
+    exit 1
+  fi
+done
 
 python3 - <<'PY'
 from pathlib import Path

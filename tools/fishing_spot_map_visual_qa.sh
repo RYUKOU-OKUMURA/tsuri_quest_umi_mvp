@@ -18,16 +18,25 @@ else
 fi
 
 mkdir -p "$GODOT_HOME"
-rm -f \
-  /tmp/tsuri_fishing_spot_map.png \
-  /tmp/tsuri_fishing_spot_map_continue.png \
-  /tmp/tsuri_fishing_spot_map_danger_chart.png \
+CAPTURES=(
+  /tmp/tsuri_fishing_spot_map.png
+  /tmp/tsuri_fishing_spot_map_continue.png
+  /tmp/tsuri_fishing_spot_map_danger_chart.png
+)
+rm -f "${CAPTURES[@]}" \
   /tmp/tsuri_fishing_spot_map_compare.png \
   /tmp/tsuri_fishing_spot_map_continue_compare.png \
   /tmp/tsuri_fishing_spot_map_danger_chart_compare.png
 
 echo "==> Capture fishing spot map previews"
 HOME="$GODOT_HOME" "$GODOT" --path "$ROOT" "res://tools/fishing_spot_map_preview.tscn"
+
+for capture in "${CAPTURES[@]}"; do
+  if [[ ! -s "$capture" ]]; then
+    echo "Fishing spot map preview did not create expected capture: $capture" >&2
+    exit 1
+  fi
+done
 
 echo "==> Build fishing spot map side-by-side QA outputs"
 python3 "$ROOT/tools/build_screen_visual_comparison.py" fishing_spot_map

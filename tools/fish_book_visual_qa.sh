@@ -18,10 +18,18 @@ else
 fi
 
 mkdir -p "$GODOT_HOME"
-rm -f /tmp/tsuri_fish_book.png /tmp/tsuri_fish_book_compare.png
+CAPTURES=(/tmp/tsuri_fish_book.png)
+rm -f "${CAPTURES[@]}" /tmp/tsuri_fish_book_compare.png
 
 echo "==> Capture fish book preview"
 HOME="$GODOT_HOME" "$GODOT" --path "$ROOT" "res://tools/fish_book_preview.tscn"
+
+for capture in "${CAPTURES[@]}"; do
+  if [[ ! -s "$capture" ]]; then
+    echo "Fish book preview did not create expected capture: $capture" >&2
+    exit 1
+  fi
+done
 
 echo "==> Build fish book side-by-side QA output"
 python3 "$ROOT/tools/build_screen_visual_comparison.py" fish_book
