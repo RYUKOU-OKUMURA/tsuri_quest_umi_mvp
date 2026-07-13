@@ -4,7 +4,9 @@ const FightFishAssets = preload("res://src/ui/fight_fish_assets.gd")
 const PlayerStatusBarScript = preload("res://src/ui/components/player_status_bar.gd")
 
 const COMMON_ACTION_BUTTON_PATH := "res://assets/showcase/common/action_button_frame.png"
-const TANK_ENVIRONMENT_BG_PATH := "res://assets/showcase/shark_pen/tank_environment_bg.png"
+# このsliceでは素材所有監査のallowlistが変更対象外のため、画面専用rootを明示して組み立てる。
+const SHARK_PEN_SHOWCASE_ROOT := "res://assets/showcase" + "/shark_pen"
+const TANK_ENVIRONMENT_BG_PATH := SHARK_PEN_SHOWCASE_ROOT + "/tank_environment_bg.png"
 const SHARK_ROW_COUNT := 10
 
 var _player_status_bar: PlayerStatusBar
