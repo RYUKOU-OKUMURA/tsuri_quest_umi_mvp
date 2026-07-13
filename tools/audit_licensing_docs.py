@@ -2963,6 +2963,9 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
             "build_fish_book_portrait_contact_sheet.py",
             # QA-only before/after/reference boards never ship product pixels.
             "build_fish_market_m2_evidence.py",
+            # M3 QA-only triptychs and interaction contact sheets read the
+            # adopted reference solely for docs/qa evidence, never products.
+            "build_market_m3_evidence.py",
             "build_fishing_spot_thumb_contact_sheet.py",
             "build_shark_pen_reference.py",
             "build_screen_visual_comparison.py",
