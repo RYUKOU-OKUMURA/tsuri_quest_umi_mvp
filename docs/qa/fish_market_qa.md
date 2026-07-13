@@ -173,9 +173,9 @@ docs/33 §3.1 と docs/45 §12.2 に基づくP1再発として、空状態だけ
 2026-07-13 M2 `ice_tray_hero`:
 - `docs/49_fish_market_m2_asset_briefs.md` §2の発注仕様に従い、OpenAI built-in image generationで候補1枚を `#ff00ff` クロマキー背景付きで生成。raw sourceとskill標準helperによるcutoutを `tools/source_assets/fish_market/` へ保存した。
 - helperはauto-key border、soft matte、透明threshold 12、opaque threshold 220、despillを使用。透明四隅を確認し、processor後は部分alpha 2,558px、可視マゼンタ画素ゼロ。
-- processorはcutoutのalpha bboxを抽出し、縦横比を保ってbrief指定safe-area `(746, 202)–(1110, 366)` へLANCZOS縮小、`DARK_PANEL`相当の10%環境色ティントを適用。製品alpha bboxは `(746, 254)–(1110, 366)`、SHA-256は `ff3016706f7a39e10f259352cfc258cd65175fc6719f2e52e19eeaded8f9bb63` で再実行同値。
+- processorはcutoutのalpha bboxを抽出し、縦横比を保ってbrief指定safe-area `(746, 202)–(1110, 366)` へLANCZOS縮小、`DARK_PANEL`相当の10%環境色ティントを適用。製品alpha bboxは `(746, 254)–(1110, 366)`、現行製品SHA-256は `ff3016706f7a39e10f259352cfc258cd65175fc6719f2e52e19eeaded8f9bb63`。再実行ではdecoded pixelsを比較し、画素同値時は既存bytesを保持するためSHAを維持する。
 - 同一seedの4状態原寸、before/after、after/reference、320×180、grayを `docs/qa/evidence/fish_market/2026-07-13_m2_ice_*` に保存。差分Top2「hero査定トレーの氷+木箱の質感」が縮み、emptyは画素差分ゼロ。候補1枚を採用した。
 - 他5素材のSHA-256は不変。M1の6レイヤー順序・全freeze矩形・4状態・売却ロジック、M3 CTA/紙面質感は不動。
 - 初回独立レビューのP2（brief safe-areaとprocessorの左右8px不一致）を、processorをbrief値へ合わせて解消した。同レビューのP3（alpha=1の不可視マゼンタ1px）も、alpha 1以下の透明黒正規化で解消。4状態証拠は修正後に再生成した。
-- 修正後の同レビュアー再レビューはP1/P2/P3すべて0、修正不要。safe-area/alpha bbox/可視マゼンタ0px/byte再現、更新後4状態証拠、empty画素一致を独立確認済み。
-- 最終検証（2026-07-13）: `python3 -m py_compile`（市場素材3script）、素材processor再実行byte同値、`./tools/market_visual_qa.sh`、隔離HOMEの `market_smoke.tscn`、`./tools/validate_project.sh`、`git diff --check` はgreen。validateのObjectDB/resource終了時警告は既知ベースラインで終了コード0。
+- 修正後の同レビュアー再レビューはP1/P2/P3すべて0、修正不要。safe-area/alpha bbox/可視マゼンタ0px/decoded pixel決定性・画素同値時の既存bytes保持、更新後4状態証拠、empty画素一致を独立確認済み。
+- 最終検証（2026-07-13）: `python3 -m py_compile`（市場素材3script）、M2の2スロットとM1幾何4出力は再生成時のdecoded pixels同値を確認し、画素同値時に既存bytesを保持して製品SHA不変・worktree clean、`./tools/market_visual_qa.sh`、隔離HOMEの `market_smoke.tscn`、`./tools/validate_project.sh`、`git diff --check` はgreen。validateのObjectDB/resource終了時警告は既知ベースラインで終了コード0。

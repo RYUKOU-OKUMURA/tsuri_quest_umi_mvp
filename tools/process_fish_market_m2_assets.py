@@ -23,6 +23,35 @@ ICE_TRAY_SAFE_BOX = (746, 202, 1110, 366)
 ICE_TRAY_ENVIRONMENT_TINT = 0.10
 
 
+def save_png_if_pixels_changed(candidate: Image.Image, output_path: Path) -> bool:
+    """Preserve existing PNG bytes when decoded pixels are already identical."""
+    candidate.load()
+    if output_path.is_file():
+        with Image.open(output_path) as existing:
+            existing.load()
+            if (
+                existing.size == candidate.size
+                and existing.mode == candidate.mode
+                and existing.tobytes() == candidate.tobytes()
+            ):
+                print(f"preserved pixel-identical {output_path}")
+                return False
+
+    temporary_path = output_path.with_name(f".{output_path.name}.tmp")
+    try:
+        candidate.save(
+            temporary_path,
+            format="PNG",
+            optimize=False,
+            compress_level=9,
+        )
+        temporary_path.replace(output_path)
+    finally:
+        temporary_path.unlink(missing_ok=True)
+    print(f"updated {output_path}")
+    return True
+
+
 def center_crop_aspect(image: Image.Image, target_size: tuple[int, int]) -> Image.Image:
     target_ratio = target_size[0] / target_size[1]
     source_ratio = image.width / image.height
@@ -51,7 +80,7 @@ def process_market_bg() -> Path:
     scrim = Image.new("RGBA", OUTPUT_SIZE, (*DARK_PANEL, BACKGROUND_SCRIM_ALPHA))
     image = Image.alpha_composite(image, scrim)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    image.save(output_path, format="PNG", optimize=False, compress_level=9)
+    save_png_if_pixels_changed(image, output_path)
     return output_path
 
 
@@ -104,7 +133,7 @@ def process_ice_tray_hero() -> Path:
         raise ValueError(f"processed ice tray escaped safe box: {visible_bbox}")
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    canvas.save(output_path, format="PNG", optimize=False, compress_level=9)
+    save_png_if_pixels_changed(canvas, output_path)
     return output_path
 
 

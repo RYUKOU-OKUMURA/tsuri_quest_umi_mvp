@@ -43,6 +43,35 @@ COLORS = {
 }
 
 
+def save_png_if_pixels_changed(candidate: Image.Image, output_path: Path) -> bool:
+    """Preserve existing PNG bytes when decoded pixels are already identical."""
+    candidate.load()
+    if output_path.is_file():
+        with Image.open(output_path) as existing:
+            existing.load()
+            if (
+                existing.size == candidate.size
+                and existing.mode == candidate.mode
+                and existing.tobytes() == candidate.tobytes()
+            ):
+                print(f"preserved pixel-identical {output_path}")
+                return False
+
+    temporary_path = output_path.with_name(f".{output_path.name}.tmp")
+    try:
+        candidate.save(
+            temporary_path,
+            format="PNG",
+            optimize=False,
+            compress_level=9,
+        )
+        temporary_path.replace(output_path)
+    finally:
+        temporary_path.unlink(missing_ok=True)
+    print(f"updated {output_path}")
+    return True
+
+
 def rgba(color: str, alpha: int | None = None) -> tuple[int, int, int, int]:
     r, g, b, a = COLORS[color]
     return (r, g, b, a if alpha is None else alpha)
@@ -376,8 +405,7 @@ def main() -> int:
             # the private M1 chain so downstream geometric deltas stay stable.
             print(f"preserved authored M2 slot {path}")
         else:
-            layer.save(path)
-            print(f"generated {path}")
+            save_png_if_pixels_changed(layer, path)
     return 0
 
 
