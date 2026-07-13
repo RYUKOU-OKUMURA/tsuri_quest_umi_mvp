@@ -61,6 +61,7 @@ RIGHTS-01A状態marker（`docs/qa/evidence/licensing/README.md` の未完/完了
 | `fishing_time_slots/*.png` | `process_fishing_time_slot_assets.py` | `assets/showcase/surface/`, `assets/showcase/underwater/`（一部採用済み、contact sheetは製品非同梱） | 一部にOpenAI・日付記録あり。入力権利はU-08待ち |
 | `harbor_hub_bg_source.png`, `harbor/harbor_plan_panel_source.png`, `harbor/harbor_plan_icons_contact_source.png` | `generate_harbor_showcase_assets.py`, `generate_harbor_info_board_assets.py`（plan processorを間接実行）, `process_harbor_plan_assets.py` | `harbor_hub_bg.png`, `harbor_color_grade.png`, `harbor_scene_window.png`, plan panel / icon 5点（採用済み） | plan以外を含む生成元・日付はU-03待ち、入力権利はU-08待ち |
 | `harbor/harbor_info_board_frame_source.png`, `harbor/harbor_info_fish_card_source.png` | `process_harbor_info_board_assets.py` | Phase B AI一点物候補はQAで**不採用・製品未使用**。現行製品はPIL版を維持 | 不採用証拠: `docs/qa/harbor_qa.md` §2。再採用しない限り製品出力なし |
+| `quest_board/quest_board_wood_source.png`, `quest_board/quest_notice_card_source.png` | `generate_quest_board_assets.py` | `assets/showcase/quest_board/quest_board_wood_panel.png`, `quest_notice_card.png`（採用済み） | OpenAI built-in生成・日付・source/output対応を§4へ記録。入力はテキストプロンプトのみ、第三者画像入力なし。第三者権利clearanceはU-08待ち |
 | `tackle_shop_*_backplate_source.png` | `generate_tackle_shop_assets.py` | `shop_rod_backplate.png`, `shop_rig_backplate.png`, `shop_item_icon_sheet.png`, `shop_detail_item_sheet.png`（採用済み） | 生成元・日付・入力権利はU-03待ち・U-08待ち |
 | `title_opening_bg_source.png` | `generate_title_showcase_assets.py` | `title_ocean_bg.png`, `title_color_grade.png`（採用済み） | 生成元・日付・入力権利はU-03待ち・U-08待ち |
 | `underwater_battle_bg_source.png` | `enhance_underwater_battle_bg.py` | 履歴上の旧採用経路（`bba599ee` 以前）。現行 `underwater_battle_bg.png` には未使用 | sourceがrepoに残るため、再採用時は生成元・日付・入力権利をU-03・U-08で確認 |
@@ -99,6 +100,7 @@ generate外画像に加え、§2.2のsource-consuming出力も対象。OpenAI Te
 | docs/35 P3 魚素材4種（`megochi`, `kurosoi`, `takenokomebaru`, `mejina`） | `tools/source_assets/fish/fish_dedup_2026-07-08_contact_sheet_5.png` → `assets/showcase/fish/{id}_card_portrait.png` / `{id}_showcase_sheet.png` | OpenAI built-in image generationとの作業記録（2026-07-08） | Output帰属の一般条件のみ確認。入力権利・第三者権利clearanceはU-08待ち | 未完 |
 | E5 Stage 2 時間帯READY/釣果ベース4枚（朝まずめ/夜釣り） | `tools/source_assets/fishing_time_slots/*_source.png` → `assets/showcase/surface/surface_scene_ready_asa_mazume.png` / `surface_scene_ready_night.png` / `assets/showcase/underwater/catch_photo_base_asa.png` / `catch_photo_base_night.png` | OpenAI built-in image generationとの作業記録（2026-07-08） | Output帰属の一般条件のみ確認。入力権利・第三者権利clearanceはU-08待ち | 未完 |
 | 港出港プラン紙面＋行アイコン（Phase A） | `tools/source_assets/harbor/harbor_plan_panel_source.png` / `harbor_plan_icons_contact_source.png` → `assets/showcase/harbor/harbor_plan_panel.png` / `harbor_plan_icon_*.png` / `harbor_weather_stub_icon.png` | OpenAI Cursor GenerateImageとの作業記録（2026-07-09） | Output帰属の一般条件のみ確認。入力権利・第三者権利clearanceはU-08待ち | 未完 |
+| 依頼ボード木面＋ピン付き無地紙札 | `tools/source_assets/quest_board/quest_board_wood_source.png` / `quest_notice_card_source.png` → `assets/showcase/quest_board/quest_board_wood_panel.png` / `quest_notice_card.png` | OpenAI built-in image generationとの作業記録（2026-07-13）。`docs/46_quest_board_material_uplift_spec.md` の文字なしプロンプトから生成 | Output帰属の一般条件のみ確認。第三者画像入力なし。出力の第三者権利clearanceはU-08待ち | 未完 |
 | reference 完成イメージ一式 | `reference/`（`.gdignore` 済で原本は製品非同梱） | OpenAI生成画像、またはPIL生成との従前記録 | `reference/02` と `reference/cooking_flow/01` は§2.2のとおり製品PNGへcrop/blendされているため、原本非同梱だけではclearできない。その他referenceも派生利用有無をU-03で監査 | 未完 |
 | 各画面の背景など generate スクリプト外のPNG | 各 `assets/showcase/{screen}/` | **未確定**。OpenAI利用との従前メモはあるが、ファイル単位の生成サービス・日付・作成者申告がなく推定を確定へ昇格できない | サービス確定後、その生成時点の規約と入力権利を確認 | ユーザー入力待ち（証拠index U-03・U-08） |
 
@@ -146,3 +148,4 @@ generate外画像に加え、§2.2のsource-consuming出力も対象。OpenAI Te
 - 2026-07-09: E5 Stage 2釣果写真ベースの下段ボタンクロームを日中版基準へ正規化し、朝まずめ/夜釣りの runtime ボタンラベル位置を揃えた
 - 2026-07-11: Release Gate 0の確定値（正式名、itch.io、macOS Universal）を権利台帳へ同期。U-06/U-07の未完理由を、決定待ちから商標調査証跡・export包装検証待ちへ更新
 - 2026-07-11: ID-01のbundle ID、itch.io予定slug、store App ID未発行をU-07へ同期。export presetへの実配線と最終包装検証は未完のまま維持
+- 2026-07-13: 依頼ボードの画面専用木面・ピン付き紙札をOpenAI built-inで生成し、source、加工スクリプト、製品PNGの対応を追加
