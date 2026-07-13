@@ -79,6 +79,7 @@
 | `45_release_readiness_code_review.md` | リリース前全体監査、阻害要因、優先順位、次タスクbrief | 現行 |
 | `46_e11_settings_screen_spec.md` | E11設定画面の表示・入力・削除導線仕様 | 現行 |
 | `47_launch_foundation_code_review.md` | ローンチ基盤のコード監査、今回の整理、段階リファクタ順 | 現行 |
+| `48_shark_pen_tank_uplift_spec.md` | サメ生簀の水槽背景・泡・環境光uplift仕様と採用記録 | 現行 |
 
 **番号体系外の正本**
 

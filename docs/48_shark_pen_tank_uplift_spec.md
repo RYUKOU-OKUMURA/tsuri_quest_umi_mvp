@@ -1,4 +1,4 @@
-# 47. サメの生簀 水槽背景・環境光 uplift 仕様
+# 48. サメの生簀 水槽背景・環境光 uplift 仕様
 
 Date: 2026-07-13
 対象: `src/ui/shark_pen_screen.gd`
@@ -19,7 +19,7 @@ Date: 2026-07-13
 | 状態 | 固定データ | 固定アンカー | 出力 | smoke契約 |
 |---|---|---|---|---|
 | 標準 | Lv50 / メガロドン84 / 餌5種 / 10枠 | 水槽、選択列、餌、CTA、戻る | `tsuri_shark_pen.png` | 素材表示、10枠、導線維持 |
-| 高リスク | 標準と同一seed / メガロドン選択＋hover/focus | 同上 | `tsuri_shark_pen_selected_hover.png` | 選択中の明背景と濃色文字の可読性維持 |
+| 高リスク | 標準と同一seed / メガロドン行hover＋選択餌focus | 同上 | `tsuri_shark_pen_selected_hover.png` | 選択中の明背景と濃色文字の可読性維持 |
 
 ## 3. 一点物素材 発注仕様（docs/12形式）
 
@@ -67,5 +67,6 @@ Avoid: photorealistic public aquarium, coral reef clutter, bright tropical water
 - source: `tools/source_assets/shark_pen/shark_pen_tank_bg_source.png`（1672x941）
 - processed: `assets/showcase/shark_pen/tank_environment_bg.png`（1280x768）
 - runtime: `SharkPenAquariumWater` の既存矩形へstretchし、旧runtime直線3本を撤去。素材欠落時だけ従来gradientへfallbackする。
-- 採用根拠: `docs/qa/evidence/shark_pen/2026-07-13_tank_uplift_before_after_reference_original.png` / `..._thumbnail.png` / `..._grayscale.png`。
+- 採用根拠: 標準=`docs/qa/evidence/shark_pen/2026-07-13_tank_uplift_before_after_reference_original.png` / `..._thumbnail.png` / `..._grayscale.png`。高リスク=`..._selected_hover_before_after_reference_original.png` / `..._thumbnail.png` / `..._grayscale.png`。
+- 同一状態確認: base `86f6a2c4` と採用後を同じ高リスク入力でcaptureし、pixel差分は水槽矩形内だけ（bbox `(53,133)-(754,553)`、矩形外0px）。
 - 結果: 標準/selected-hoverで文字・選択行・餌・CTA・魚表示の退行なし。縮小でも水槽の深度・泡・上方環境光が判別でき、Top1差分が縮小した。
