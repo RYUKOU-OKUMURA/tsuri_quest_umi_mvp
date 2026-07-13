@@ -17,6 +17,7 @@ from PIL import Image, ImageDraw, ImageFilter
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "assets" / "showcase" / "fish_market"
 M2_SOURCE = ROOT / "tools" / "source_assets" / "fish_market"
+COMMON_PARCHMENT = ROOT / "assets" / "showcase" / "common" / "parchment_card.png"
 W, H = 1280, 720
 RNG = Random(20260704)
 RUNTIME_BACKDROP = (10, 22, 34, 255)
@@ -200,6 +201,12 @@ def draw_top_frame(img: Image.Image) -> None:
 def draw_inventory_panel(img: Image.Image) -> None:
     d = ImageDraw.Draw(img)
     parchment_panel(img, (48, 114, 682, 658), 10)
+    with Image.open(COMMON_PARCHMENT) as source:
+        source.load()
+        paper_center = source.convert("RGBA").crop((42, 24, source.width - 42, source.height - 24))
+    paper_center = paper_center.resize((606, 520), Image.Resampling.LANCZOS)
+    img.alpha_composite(paper_center, (62, 126))
+    d = ImageDraw.Draw(img)
     rounded(d, (86, 132, 176, 182), 5, rgba("blue", 220), rgba("gold_deep"), 2)
     rounded(d, (198, 136, 440, 174), 6, rgba("paper_deep", 190), rgba("gold_deep", 85), 1)
 
@@ -373,6 +380,63 @@ def draw_leaf(d: ImageDraw.ImageDraw, origin, length: int, angle: float) -> None
         d.line((cx, cy, cx - normal[0] * spread, cy - normal[1] * spread), fill=(167, 184, 100, 72), width=1)
 
 
+def draw_cart_action_frame(state: str) -> Image.Image:
+    """Build the text-free market-local primary CTA skin for one UI state."""
+    width, height = 190, 50
+    image = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+    offset_y = 2 if state == "pressed" else 0
+    outline = rgba("teal") if state == "focus" else rgba("gold_deep")
+    if state == "hover":
+        top, bottom = rgba("paper"), rgba("gold")
+    elif state == "pressed":
+        top, bottom = rgba("gold_deep"), mix(rgba("gold_deep"), rgba("wood_dark"), 0.34)
+    elif state == "disabled":
+        top, bottom = mix(rgba("navy"), rgba("gold_deep"), 0.22), rgba("navy_deep")
+    else:
+        top, bottom = rgba("gold"), rgba("gold_deep")
+
+    polygon = [
+        (8, 2 + offset_y),
+        (181, 2 + offset_y),
+        (188, 9 + offset_y),
+        (188, 40 + offset_y),
+        (181, 47 + offset_y),
+        (8, 47 + offset_y),
+        (1, 40 + offset_y),
+        (1, 9 + offset_y),
+    ]
+    shadow = [(x + 1, min(height - 1, y + 2)) for x, y in polygon]
+    draw.polygon(shadow, fill=rgba("shadow", 118))
+
+    fill = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    fill_draw = ImageDraw.Draw(fill)
+    gradient_rect(fill_draw, (0, 0, width, height), top, bottom)
+    mask = Image.new("L", image.size, 0)
+    ImageDraw.Draw(mask).polygon(polygon, fill=255)
+    image.alpha_composite(Image.composite(fill, Image.new("RGBA", image.size), mask))
+    draw = ImageDraw.Draw(image)
+    draw.line(polygon + [polygon[0]], fill=outline, width=3, joint="curve")
+    inner = [(13, 7 + offset_y), (176, 7 + offset_y), (183, 12 + offset_y), (183, 37 + offset_y), (176, 42 + offset_y), (13, 42 + offset_y), (6, 37 + offset_y), (6, 12 + offset_y)]
+    draw.line(inner + [inner[0]], fill=rgba("paper", 210), width=1, joint="curve")
+
+    ink = rgba("navy_deep", 220) if state != "disabled" else rgba("sand", 150)
+    for direction in (-1, 1):
+        anchor = 26 if direction < 0 else 164
+        for step in (0, 10):
+            x = anchor + direction * step
+            draw.line(
+                [(x - direction * 4, 18 + offset_y), (x + direction * 3, 25 + offset_y), (x - direction * 4, 32 + offset_y)],
+                fill=ink,
+                width=3,
+                joint="curve",
+            )
+    if state == "focus":
+        draw.line([(12, 5), (177, 5)], fill=rgba("teal"), width=2)
+        draw.line([(12, 44), (177, 44)], fill=rgba("teal"), width=2)
+    return image
+
+
 def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
@@ -406,6 +470,11 @@ def main() -> int:
             print(f"preserved authored M2 slot {path}")
         else:
             save_png_if_pixels_changed(layer, path)
+    for state in ("normal", "hover", "pressed", "focus", "disabled"):
+        save_png_if_pixels_changed(
+            draw_cart_action_frame(state),
+            OUT / f"cart_action_{state}.png",
+        )
     return 0
 
 

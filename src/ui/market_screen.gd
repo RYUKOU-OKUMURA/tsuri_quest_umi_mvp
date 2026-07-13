@@ -3,6 +3,14 @@ extends ScreenBase
 const PlayerStatusBarScript = preload("res://src/ui/components/player_status_bar.gd")
 const FightFishAssets = preload("res://src/ui/fight_fish_assets.gd")
 
+const CART_ACTION_STYLE_PATHS := {
+	"normal": "res://assets/showcase/fish_market/cart_action_normal.png",
+	"hover": "res://assets/showcase/fish_market/cart_action_hover.png",
+	"pressed": "res://assets/showcase/fish_market/cart_action_pressed.png",
+	"focus": "res://assets/showcase/fish_market/cart_action_focus.png",
+	"disabled": "res://assets/showcase/fish_market/cart_action_disabled.png",
+}
+
 const MARKET_ASSET_PATHS := {
 	"MarketBackground": "res://assets/showcase/fish_market/market_bg.png",
 	"MarketHeaderFrame": "res://assets/showcase/fish_market/market_header_frame.png",
@@ -400,6 +408,7 @@ func _build_cart(parent: Control) -> void:
 	_cart_action_button = _market_button("まとめて売る", _show_confirm_overlay, true, 21)
 	_cart_action_button.name = "MarketSellBatchButton"
 	_cart_action_button.set_meta("market_sell_batch", true)
+	_apply_cart_action_skin(_cart_action_button)
 	_place(parent, _cart_action_button, CART_ACTION_RECT)
 
 	_return_button = _market_button("港へ戻る", func() -> void: navigate("harbor"), false, 15)
@@ -806,6 +815,25 @@ func _market_field_panel(bg: Color, border: Color, alpha: float) -> Panel:
 	style.shadow_offset = Vector2(0.0, 1.0)
 	panel.add_theme_stylebox_override("panel", style)
 	return panel
+
+
+func _apply_cart_action_skin(button: Button) -> void:
+	for state: String in CART_ACTION_STYLE_PATHS:
+		var style := ShowcaseAssetsScript.texture_style(
+			CART_ACTION_STYLE_PATHS[state],
+			Vector4(18.0, 12.0, 18.0, 12.0),
+			Vector4(32.0, 7.0, 32.0, 7.0)
+		)
+		if style != null:
+			button.add_theme_stylebox_override(state, style)
+	button.add_theme_color_override("font_color", Palette.TEXT_DARK)
+	button.add_theme_color_override("font_hover_color", Palette.TEXT_DARK)
+	button.add_theme_color_override("font_pressed_color", Palette.TEXT_DARK)
+	button.add_theme_color_override("font_focus_color", Palette.TEXT_DARK)
+	button.add_theme_color_override("font_disabled_color", Palette.SAND)
+	button.add_theme_color_override("font_outline_color", Palette.GOLD_BRIGHT)
+	button.add_theme_constant_override("outline_size", 0)
+	button.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 
 func _make_button_transparent(button: Button) -> void:
