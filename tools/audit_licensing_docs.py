@@ -2947,6 +2947,8 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
             "generate_title_showcase_assets.py",
             "generate_underwater_ui_frame_assets.py",
             "process_fishing_time_slot_assets.py",
+            # M2 authored market art is a product source-consuming pipeline.
+            "process_fish_market_m2_assets.py",
             "process_harbor_info_board_assets.py",
             "process_harbor_plan_assets.py",
             "process_underwater_fish_assets.py",
@@ -2959,6 +2961,8 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
             "build_fight_top_status_static_compare.py",
             "build_fish_asset_contact_sheet.py",
             "build_fish_book_portrait_contact_sheet.py",
+            # QA-only before/after/reference boards never ship product pixels.
+            "build_fish_market_m2_evidence.py",
             "build_fishing_spot_thumb_contact_sheet.py",
             "build_shark_pen_reference.py",
             "build_screen_visual_comparison.py",
