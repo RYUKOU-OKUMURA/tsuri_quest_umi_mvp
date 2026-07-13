@@ -7,11 +7,9 @@ const GaugeBarScript = preload("res://src/ui/components/gauge_bar.gd")
 const CookingRewardCardsScript = preload("res://src/ui/components/cooking_reward_cards.gd")
 const CookingRewardStatusStripScript = preload("res://src/ui/components/cooking_reward_status_strip.gd")
 const CookingRewardVisualsScript = preload("res://src/ui/components/cooking_reward_visuals.gd")
-const SceneActorVisual = CookingRewardVisualsScript.SceneActorVisual
 const MealTableSpreadVisual = CookingRewardVisualsScript.MealTableSpreadVisual
 const MealSceneTableBridgeVisual = CookingRewardVisualsScript.MealSceneTableBridgeVisual
 const MealSceneForegroundGlowVisual = CookingRewardVisualsScript.MealSceneForegroundGlowVisual
-const ExpMessagePortraitVisual = CookingRewardVisualsScript.ExpMessagePortraitVisual
 const ExpTrailVisual = CookingRewardVisualsScript.ExpTrailVisual
 const MealResultRewardCueVisual = CookingRewardVisualsScript.MealResultRewardCueVisual
 const MealResultBannerSparkVisual = CookingRewardVisualsScript.MealResultBannerSparkVisual
@@ -19,7 +17,6 @@ const MealResultSplitTitleVisual = CookingRewardVisualsScript.MealResultSplitTit
 const MealResultModeTabVisual = CookingRewardVisualsScript.MealResultModeTabVisual
 const MealDishCardBridgeVisual = CookingRewardVisualsScript.MealDishCardBridgeVisual
 const FlowConnectorVisual = CookingRewardVisualsScript.FlowConnectorVisual
-const EffectPreviewVisual = CookingRewardVisualsScript.EffectPreviewVisual
 
 const MEAL_RESULT_SCENE_ART := "res://assets/showcase/cooking/meal_result_scene_art_v2.png"
 const PLAYER_EATING_POSE := "res://assets/showcase/cooking/player_eating_pose_pixel_tight.png"
@@ -32,6 +29,7 @@ const MEAL_RESULT_FRAME := "res://assets/showcase/cooking/meal_result_frame.png"
 const MEAL_BANNER_FRAME := "res://assets/showcase/cooking/meal_banner_frame.png"
 const MEAL_DISH_CARD_FRAME := "res://assets/showcase/cooking/meal_dish_card_frame.png"
 const EXP_BURST_FRAME := "res://assets/showcase/cooking/exp_burst_frame.png"
+const NEXT_EFFECT_ART := "res://assets/showcase/cooking/next_effect_art.png"
 
 
 var _dialog: PanelContainer
@@ -59,7 +57,6 @@ var _scene_visual_stack: Control
 var _scene_table: HBoxContainer
 var _scene_dish_image: MealTableSpreadVisual
 var _scene_actor_panel: PanelContainer
-var _scene_actor_visual: SceneActorVisual
 var _scene_actor_image: TextureRect
 var _exp_trail_visual: ExpTrailVisual
 var _exp_focus_card: PanelContainer
@@ -915,19 +912,10 @@ func _scene_actor_box() -> PanelContainer:
 	_scene_actor_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_scene_actor_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(_scene_actor_image)
-	_scene_actor_visual = SceneActorVisual.new()
-	_scene_actor_visual.name = "MealSceneActorFallback"
-	_scene_actor_visual.custom_minimum_size = Vector2(110.0, 0.0)
-	_scene_actor_visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_scene_actor_visual.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_scene_actor_visual.visible = false
-	panel.add_child(_scene_actor_visual)
 	return panel
 
 
 func _set_scene_actor_mode(mode: String) -> void:
-	if _scene_actor_visual != null:
-		_scene_actor_visual.set_mode(mode)
 	if _scene_actor_image == null:
 		return
 	var path := PLAYER_EXP_SCENE_POSE if mode == "exp" else PLAYER_EATING_POSE
@@ -1277,7 +1265,7 @@ func _build_effect_preview_card(parent: HBoxContainer) -> void:
 
 	_effect_preview_visual = TextureRect.new()
 	_effect_preview_visual.name = "NextEffectArt"
-	_effect_preview_visual.texture = load(EffectPreviewVisual.EFFECT_ART) as Texture2D
+	_effect_preview_visual.texture = load(NEXT_EFFECT_ART) as Texture2D
 	_effect_preview_visual.custom_minimum_size = Vector2(0.0, 102.0)
 	_effect_preview_visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_effect_preview_visual.size_flags_vertical = Control.SIZE_EXPAND_FILL

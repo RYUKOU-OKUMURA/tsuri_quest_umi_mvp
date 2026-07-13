@@ -6,171 +6,11 @@ signal closed
 const LEVEL_UP_FRAME := "res://assets/showcase/cooking/level_up_frame.png"
 const LEVEL_UNLOCK_RIBBON := "res://assets/showcase/cooking/level_unlock_ribbon.png"
 const LEVEL_STAT_ROW_FRAME := "res://assets/showcase/cooking/level_stat_row_frame.png"
-
-
-class LevelUpVisual:
-	extends Control
-
-	const CROWN_ASSET := "res://assets/showcase/cooking/level_crown.png"
-	const LAUREL_LEFT_ASSET := "res://assets/showcase/cooking/level_laurel_left.png"
-	const LAUREL_RIGHT_ASSET := "res://assets/showcase/cooking/level_laurel_right.png"
-	const UNLOCK_MEDALLION_ASSET := "res://assets/showcase/cooking/level_unlock_medallion.png"
-	const UNLOCK_SPOT_ASSET := "res://assets/showcase/cooking/level_unlock_spot.png"
-	const USE_CUTOUT_TEXTURE_ASSETS := false
-
-	var mode := "crown"
-
-	func configure(next_mode: String) -> void:
-		mode = next_mode
-		queue_redraw()
-
-	func _draw() -> void:
-		match mode:
-			"laurel_left":
-				if USE_CUTOUT_TEXTURE_ASSETS and _draw_texture_asset(LAUREL_LEFT_ASSET):
-					return
-				_draw_laurel(-1.0)
-			"laurel_right":
-				if USE_CUTOUT_TEXTURE_ASSETS and _draw_texture_asset(LAUREL_RIGHT_ASSET):
-					return
-				_draw_laurel(1.0)
-			"medal":
-				if USE_CUTOUT_TEXTURE_ASSETS and _draw_texture_asset(UNLOCK_MEDALLION_ASSET):
-					return
-				_draw_medal()
-			"spot":
-				if USE_CUTOUT_TEXTURE_ASSETS and _draw_texture_asset(UNLOCK_SPOT_ASSET):
-					return
-				_draw_spot()
-			_:
-				if USE_CUTOUT_TEXTURE_ASSETS and _draw_texture_asset(CROWN_ASSET):
-					return
-				_draw_crown()
-
-	func _draw_texture_asset(path: String) -> bool:
-		var tex := load(path) as Texture2D
-		if tex == null:
-			return false
-		var tex_size := Vector2(float(tex.get_width()), float(tex.get_height()))
-		if tex_size.x <= 0.0 or tex_size.y <= 0.0:
-			return false
-		var scale := minf(size.x / tex_size.x, size.y / tex_size.y)
-		var draw_size := tex_size * scale
-		var rect := Rect2((size - draw_size) * 0.5, draw_size)
-		draw_texture_rect(tex, rect, false)
-		return true
-
-	func _draw_crown() -> void:
-		var center := size * 0.5
-		var gold := Palette.COOKING_LEVEL_CROWN_GOLD
-		var deep := Palette.COOKING_LEVEL_CROWN_DEEP
-		var points := PackedVector2Array(
-			[
-				center + Vector2(-58.0, 10.0),
-				center + Vector2(-41.0, -22.0),
-				center + Vector2(-18.0, 2.0),
-				center + Vector2(0.0, -31.0),
-				center + Vector2(18.0, 2.0),
-				center + Vector2(41.0, -22.0),
-				center + Vector2(58.0, 10.0),
-			]
-		)
-		var fill_points := PackedVector2Array(points)
-		fill_points.append(center + Vector2(48.0, 26.0))
-		fill_points.append(center + Vector2(-48.0, 26.0))
-		draw_polygon(fill_points, PackedColorArray([deep, deep, deep, deep, deep, deep, deep, deep, deep]))
-		draw_polyline(points, Palette.COOKING_LEVEL_DARK_INK, 9.0)
-		draw_polyline(points, gold, 4.0)
-		draw_rect(Rect2(center.x - 54.0, center.y + 10.0, 108.0, 18.0), Palette.COOKING_LEVEL_DARK_INK)
-		draw_rect(Rect2(center.x - 48.0, center.y + 12.0, 96.0, 12.0), gold)
-		for i in range(points.size()):
-			var p := points[i]
-			draw_circle(p, 7.0, Palette.COOKING_LEVEL_IVORY)
-			draw_circle(p, 4.0, Palette.GAUGE_RED_HI if i % 2 == 0 else Palette.GAUGE_CYAN_HI)
-		for i in range(5):
-			var x := center.x - 32.0 + float(i) * 16.0
-			draw_line(Vector2(x, center.y + 14.0), Vector2(x, center.y + 24.0), deep, 2.0)
-
-	func _draw_laurel(direction: float) -> void:
-		var center := size * 0.5
-		var stem := Palette.COOKING_LEVEL_CROWN_DEEP
-		var leaf := Palette.GOLD_BRIGHT
-		var points := PackedVector2Array()
-		for i in range(9):
-			var t := float(i) / 8.0
-			var y := center.y + 40.0 - t * 78.0
-			var x := center.x + direction * (34.0 - sin(t * PI) * 30.0)
-			points.append(Vector2(x, y))
-		draw_polyline(points, stem, 4.0)
-		for i in range(points.size()):
-			var p := points[i]
-			var len := 16.0 + float(i % 3) * 2.0
-			var outward := Vector2(direction * len, -8.0)
-			var inward := Vector2(-direction * 6.0, -5.0)
-			draw_polygon(
-				PackedVector2Array([p, p + outward, p + inward]),
-				PackedColorArray([leaf, leaf, Palette.COOKING_LEVEL_IVORY])
-			)
-			draw_line(p, p + outward * 0.72, Palette.COOKING_LEVEL_IVORY, 1.0)
-
-	func _draw_medal() -> void:
-		var center := size * 0.5
-		draw_polygon(
-			PackedVector2Array(
-				[
-					center + Vector2(-24.0, -56.0),
-					center + Vector2(-2.0, -24.0),
-					center + Vector2(24.0, -56.0),
-					center + Vector2(14.0, -16.0),
-					center + Vector2(-14.0, -16.0),
-				]
-			),
-			PackedColorArray([Palette.COOKING_LEVEL_RIBBON_FILL, Palette.COOKING_LEVEL_RIBBON_FILL, Palette.COOKING_LEVEL_RIBBON_FILL, Palette.COOKING_LEVEL_RIBBON_DEEP, Palette.COOKING_LEVEL_RIBBON_DEEP])
-		)
-		draw_circle(center, 48.0, Palette.COOKING_LEVEL_DARK_INK)
-		draw_circle(center, 42.0, Palette.COOKING_LEVEL_MEDAL_EDGE)
-		draw_circle(center, 34.0, Palette.COOKING_LEVEL_MEDAL_GOLD)
-		draw_circle(center, 25.0, Palette.COOKING_LEVEL_IVORY)
-		for i in range(14):
-			var a := TAU * float(i) / 14.0
-			var from := center + Vector2(cos(a), sin(a)) * 36.0
-			var to := center + Vector2(cos(a), sin(a)) * 48.0
-			draw_line(from, to, Palette.COOKING_LEVEL_CROWN_GOLD, 3.0)
-		draw_arc(center, 42.0, 0.0, TAU, 48, Palette.COOKING_LEVEL_CROWN_GOLD, 3.0)
-		draw_ellipse(center + Vector2(-2.0, 0.0), 20.0, 11.0, Palette.COOKING_LEVEL_MEDAL_FISH)
-		draw_polygon(
-			PackedVector2Array(
-				[
-					center + Vector2(17.0, -1.0),
-					center + Vector2(34.0, -11.0),
-					center + Vector2(34.0, 10.0),
-				]
-			),
-			PackedColorArray([Palette.COOKING_LEVEL_MEDAL_FISH, Palette.COOKING_LEVEL_MEDAL_FISH, Palette.COOKING_LEVEL_MEDAL_FISH])
-		)
-		draw_circle(center + Vector2(-13.0, -2.0), 3.0, Palette.COOKING_LEVEL_IVORY)
-		draw_line(center + Vector2(-12.0, 19.0), center + Vector2(14.0, 19.0), Palette.COOKING_LEVEL_MEDAL_LINE, 3.0)
-
-	func _draw_spot() -> void:
-		draw_rect(Rect2(Vector2.ZERO, size), Palette.COOKING_LEVEL_SPOT_SEA)
-		draw_rect(Rect2(0.0, 0.0, size.x, size.y * 0.42), Palette.COOKING_LEVEL_SPOT_SKY)
-		draw_rect(Rect2(0.0, size.y * 0.55, size.x, size.y * 0.45), Palette.COOKING_LEVEL_SPOT_WATER)
-		draw_polygon(
-			PackedVector2Array(
-				[
-					Vector2(size.x * 0.48, size.y * 0.18),
-					Vector2(size.x * 0.68, size.y * 0.74),
-					Vector2(size.x * 0.26, size.y * 0.74),
-				]
-			),
-			PackedColorArray([Palette.COOKING_LEVEL_SPOT_ROCK, Palette.COOKING_LEVEL_SPOT_ROCK, Palette.COOKING_LEVEL_SPOT_ROCK])
-		)
-		draw_rect(Rect2(size.x * 0.70, size.y * 0.26, 18.0, size.y * 0.42), Palette.COOKING_LEVEL_IVORY)
-		draw_rect(Rect2(size.x * 0.67, size.y * 0.22, 24.0, 10.0), Palette.COOKING_LEVEL_SPOT_LIGHTHOUSE)
-		draw_circle(Vector2(size.x * 0.79, size.y * 0.20), 5.0, Palette.COOKING_LEVEL_CROWN_GOLD)
-		for i in range(3):
-			var y := size.y * 0.70 + float(i) * 10.0
-			draw_line(Vector2(12.0, y), Vector2(size.x - 12.0, y - 6.0), Palette.COOKING_LEVEL_SPOT_WAKE, 2.0)
+const LEVEL_CROWN_ASSET := "res://assets/showcase/cooking/level_crown.png"
+const LEVEL_LAUREL_LEFT_ASSET := "res://assets/showcase/cooking/level_laurel_left.png"
+const LEVEL_LAUREL_RIGHT_ASSET := "res://assets/showcase/cooking/level_laurel_right.png"
+const LEVEL_UNLOCK_MEDALLION_ASSET := "res://assets/showcase/cooking/level_unlock_medallion.png"
+const LEVEL_UNLOCK_SPOT_ASSET := "res://assets/showcase/cooking/level_unlock_spot.png"
 
 
 class LevelStatIconVisual:
@@ -507,7 +347,7 @@ func _build_screen() -> void:
 	title_band.add_child(title_row)
 
 	var left_laurel := _level_asset_texture(
-		"LevelLaurelLeftAsset", LevelUpVisual.LAUREL_LEFT_ASSET, Vector2(160.0, 136.0)
+		"LevelLaurelLeftAsset", LEVEL_LAUREL_LEFT_ASSET, Vector2(160.0, 136.0)
 	)
 	title_row.add_child(left_laurel)
 
@@ -518,7 +358,7 @@ func _build_screen() -> void:
 	title_row.add_child(title_stack)
 
 	var crown_visual := _level_asset_texture(
-		"LevelCrownAsset", LevelUpVisual.CROWN_ASSET, Vector2(210.0, 44.0)
+		"LevelCrownAsset", LEVEL_CROWN_ASSET, Vector2(210.0, 44.0)
 	)
 	crown_visual.stretch_mode = TextureRect.STRETCH_SCALE
 	crown_visual.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -543,7 +383,7 @@ func _build_screen() -> void:
 	title_stack.add_child(title)
 
 	var right_laurel := _level_asset_texture(
-		"LevelLaurelRightAsset", LevelUpVisual.LAUREL_RIGHT_ASSET, Vector2(160.0, 136.0)
+		"LevelLaurelRightAsset", LEVEL_LAUREL_RIGHT_ASSET, Vector2(160.0, 136.0)
 	)
 	title_row.add_child(right_laurel)
 
@@ -832,7 +672,7 @@ func _stat_icon(mode: String, accent: Color) -> LevelStatIconVisual:
 func _medal_box() -> PanelContainer:
 	var medal := _panel_box(Palette.COOKING_LEVEL_MEDAL_BOX_FILL, Palette.COOKING_LEVEL_MEDAL_BOX_BORDER, Palette.GOLD_BRIGHT, 4)
 	var visual := _level_asset_texture(
-		"LevelUnlockMedallionAsset", LevelUpVisual.UNLOCK_MEDALLION_ASSET, Vector2(96.0, 78.0)
+		"LevelUnlockMedallionAsset", LEVEL_UNLOCK_MEDALLION_ASSET, Vector2(96.0, 78.0)
 	)
 	visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	visual.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -852,7 +692,7 @@ func _spot_thumbnail_box() -> PanelContainer:
 	_spot_tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_spot_tag)
 	var visual := _level_asset_texture(
-		"LevelUnlockSpotAsset", LevelUpVisual.UNLOCK_SPOT_ASSET, Vector2(0.0, 44.0), true
+		"LevelUnlockSpotAsset", LEVEL_UNLOCK_SPOT_ASSET, Vector2(0.0, 44.0), true
 	)
 	visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(visual)
