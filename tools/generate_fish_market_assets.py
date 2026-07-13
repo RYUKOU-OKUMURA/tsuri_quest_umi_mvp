@@ -16,6 +16,7 @@ from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "assets" / "showcase" / "fish_market"
+M2_SOURCE = ROOT / "tools" / "source_assets" / "fish_market"
 W, H = 1280, 720
 RNG = Random(20260704)
 RUNTIME_BACKDROP = (10, 22, 34, 255)
@@ -349,8 +350,13 @@ def main() -> int:
     draw_market_background(img)
     flattened = flatten_for_runtime(img)
     background_path = OUT / "market_bg.png"
-    flattened.save(background_path)
-    print(f"generated {background_path}")
+    if (M2_SOURCE / "market_bg_source.png").exists():
+        # M2 authored art owns this slot. Preserve it when regenerating the M1
+        # geometric layers; use process_fish_market_m2_assets.py to rebuild it.
+        print(f"preserved authored M2 slot {background_path}")
+    else:
+        flattened.save(background_path)
+        print(f"generated {background_path}")
 
     layers = (
         ("market_header_frame.png", draw_top_frame),
