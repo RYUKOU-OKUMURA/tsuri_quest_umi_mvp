@@ -10,7 +10,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from PIL import Image, ImageEnhance
+from PIL import Image, ImageEnhance, ImageOps
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -19,6 +19,8 @@ OUTPUT_DIR = ROOT / "assets" / "showcase" / "fish_market"
 OUTPUT_SIZE = (1280, 720)
 DARK_PANEL = (19, 40, 63)
 BACKGROUND_SCRIM_ALPHA = 71  # 27.8%; docs/19 §4.5 allows 20–40%.
+ICE_TRAY_SAFE_BOX = (738, 216, 1118, 366)
+ICE_TRAY_ENVIRONMENT_TINT = 0.10
 
 
 def center_crop_aspect(image: Image.Image, target_size: tuple[int, int]) -> Image.Image:
@@ -53,13 +55,60 @@ def process_market_bg() -> Path:
     return output_path
 
 
+def process_ice_tray_hero() -> Path:
+    source_path = SOURCE_DIR / "ice_tray_hero_cutout.png"
+    output_path = OUTPUT_DIR / "ice_tray_hero.png"
+    with Image.open(source_path) as source:
+        cutout = source.convert("RGBA")
+
+    alpha_bbox = cutout.getchannel("A").getbbox()
+    if alpha_bbox is None:
+        raise ValueError(f"cutout has no visible pixels: {source_path}")
+    cutout = cutout.crop(alpha_bbox)
+
+    alpha = cutout.getchannel("A")
+    rgb = cutout.convert("RGB")
+    tint = Image.new("RGB", rgb.size, DARK_PANEL)
+    rgb = Image.blend(rgb, tint, ICE_TRAY_ENVIRONMENT_TINT)
+    cutout = rgb.convert("RGBA")
+    cutout.putalpha(alpha)
+
+    x0, y0, x1, y1 = ICE_TRAY_SAFE_BOX
+    cutout = ImageOps.contain(
+        cutout,
+        (x1 - x0, y1 - y0),
+        method=Image.Resampling.LANCZOS,
+    )
+    canvas = Image.new("RGBA", OUTPUT_SIZE, (0, 0, 0, 0))
+    paste_x = x0 + ((x1 - x0) - cutout.width) // 2
+    paste_y = y1 - cutout.height
+    canvas.alpha_composite(cutout, (paste_x, paste_y))
+
+    visible_bbox = canvas.getchannel("A").getbbox()
+    if visible_bbox is None:
+        raise ValueError("processed ice tray is empty")
+    if not (
+        x0 <= visible_bbox[0]
+        and y0 <= visible_bbox[1]
+        and visible_bbox[2] <= x1
+        and visible_bbox[3] <= y1
+    ):
+        raise ValueError(f"processed ice tray escaped safe box: {visible_bbox}")
+
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    canvas.save(output_path, format="PNG", optimize=False, compress_level=9)
+    return output_path
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("slot", choices=("market_bg",))
+    parser.add_argument("slot", choices=("market_bg", "ice_tray_hero"))
     args = parser.parse_args()
 
     if args.slot == "market_bg":
         output_path = process_market_bg()
+    elif args.slot == "ice_tray_hero":
+        output_path = process_ice_tray_hero()
     else:  # pragma: no cover - argparse rejects unsupported slots.
         raise AssertionError(args.slot)
     print(f"processed {output_path}")

@@ -371,8 +371,13 @@ def main() -> int:
         flattened = flatten_for_runtime(img)
         layer = delta_layer(before, flattened)
         path = OUT / filename
-        layer.save(path)
-        print(f"generated {path}")
+        if filename == "ice_tray_hero.png" and (M2_SOURCE / "ice_tray_hero_source.png").exists():
+            # Keep the authored tray while still drawing the legacy tray into
+            # the private M1 chain so downstream geometric deltas stay stable.
+            print(f"preserved authored M2 slot {path}")
+        else:
+            layer.save(path)
+            print(f"generated {path}")
     return 0
 
 
