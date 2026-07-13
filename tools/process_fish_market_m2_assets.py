@@ -19,7 +19,7 @@ OUTPUT_DIR = ROOT / "assets" / "showcase" / "fish_market"
 OUTPUT_SIZE = (1280, 720)
 DARK_PANEL = (19, 40, 63)
 BACKGROUND_SCRIM_ALPHA = 71  # 27.8%; docs/19 §4.5 allows 20–40%.
-ICE_TRAY_SAFE_BOX = (738, 216, 1118, 366)
+ICE_TRAY_SAFE_BOX = (746, 202, 1110, 366)
 ICE_TRAY_ENVIRONMENT_TINT = 0.10
 
 
@@ -83,6 +83,14 @@ def process_ice_tray_hero() -> Path:
     paste_x = x0 + ((x1 - x0) - cutout.width) // 2
     paste_y = y1 - cutout.height
     canvas.alpha_composite(cutout, (paste_x, paste_y))
+
+    # LANCZOS can leave fully imperceptible alpha=1 key-colored pixels at the
+    # edge. Canonicalize those samples to transparent black before shipping.
+    pixels = canvas.load()
+    for y in range(canvas.height):
+        for x in range(canvas.width):
+            if pixels[x, y][3] <= 1:
+                pixels[x, y] = (0, 0, 0, 0)
 
     visible_bbox = canvas.getchannel("A").getbbox()
     if visible_bbox is None:
