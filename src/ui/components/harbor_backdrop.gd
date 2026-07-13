@@ -13,8 +13,8 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	clip_contents = true
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	_harbor_bg = _load_texture_if_exists(HARBOR_BG_PATH)
-	_harbor_grade = _load_texture_if_exists(HARBOR_GRADE_PATH)
+	_harbor_bg = ShowcaseAssets.load_texture(HARBOR_BG_PATH)
+	_harbor_grade = ShowcaseAssets.load_texture(HARBOR_GRADE_PATH)
 
 
 func _process(delta: float) -> void:
@@ -36,12 +36,6 @@ func _draw() -> void:
 	if _harbor_grade != null:
 		_draw_cover_texture(_harbor_grade, rect, Color.WHITE, Vector2(0.5, 0.5))
 	_draw_edge_frame()
-
-
-func _load_texture_if_exists(path: String) -> Texture2D:
-	if ResourceLoader.exists(path) or FileAccess.file_exists(path):
-		return load(path) as Texture2D
-	return null
 
 
 func _draw_cover_texture(texture: Texture2D, target_rect: Rect2, modulate: Color, align := Vector2(0.5, 0.5)) -> void:

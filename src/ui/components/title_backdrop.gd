@@ -15,9 +15,9 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	clip_contents = true
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	_title_bg = _load_texture_if_exists(TITLE_BG_PATH)
-	_title_grade = _load_texture_if_exists(TITLE_GRADE_PATH)
-	_title_ambience = _load_texture_if_exists(TITLE_AMBIENCE_PATH)
+	_title_bg = ShowcaseAssets.load_texture(TITLE_BG_PATH)
+	_title_grade = ShowcaseAssets.load_texture(TITLE_GRADE_PATH)
+	_title_ambience = ShowcaseAssets.load_texture(TITLE_AMBIENCE_PATH)
 
 
 func _process(delta: float) -> void:
@@ -39,12 +39,6 @@ func _draw() -> void:
 	if _title_grade != null:
 		_draw_cover_texture(_title_grade, rect, Color.WHITE, Vector2(0.5, 0.5))
 	_draw_edge_frame()
-
-
-func _load_texture_if_exists(path: String) -> Texture2D:
-	if ResourceLoader.exists(path) or FileAccess.file_exists(path):
-		return load(path) as Texture2D
-	return null
 
 
 func _draw_cover_texture(texture: Texture2D, target_rect: Rect2, modulate: Color, align := Vector2(0.5, 0.5)) -> void:

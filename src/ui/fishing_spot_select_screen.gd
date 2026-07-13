@@ -119,12 +119,12 @@ func _resolve_route_state() -> void:
 
 
 func _load_assets() -> void:
-	_header_frame = _load_texture_if_exists(HEADER_FRAME_PATH)
-	_title_sign_frame = _load_texture_if_exists(TITLE_SIGN_PATH)
-	_detail_frame = _load_texture_if_exists(DETAIL_FRAME_PATH)
-	_detail_icon_sheet = _load_texture_if_exists(DETAIL_ICON_SHEET_PATH)
-	_footer_frame = _load_texture_if_exists(FOOTER_FRAME_PATH)
-	_footer_icon_sheet = _load_texture_if_exists(FOOTER_ICON_SHEET_PATH)
+	_header_frame = ShowcaseAssets.load_texture(HEADER_FRAME_PATH)
+	_title_sign_frame = ShowcaseAssets.load_texture(TITLE_SIGN_PATH)
+	_detail_frame = ShowcaseAssets.load_texture(DETAIL_FRAME_PATH)
+	_detail_icon_sheet = ShowcaseAssets.load_texture(DETAIL_ICON_SHEET_PATH)
+	_footer_frame = ShowcaseAssets.load_texture(FOOTER_FRAME_PATH)
+	_footer_icon_sheet = ShowcaseAssets.load_texture(FOOTER_ICON_SHEET_PATH)
 
 
 func _build_header(parent: Control) -> void:
@@ -1008,16 +1008,4 @@ func _atlas_icon(sheet: Texture2D, cell_size: float, icon_index: int) -> Texture
 
 func _thumbnail_for_spot(spot_id: String) -> Texture2D:
 	var path := "%s/%s.png" % [THUMB_BASE_PATH, spot_id]
-	return _load_texture_if_exists(path)
-
-
-func _load_texture_if_exists(path: String) -> Texture2D:
-	if ResourceLoader.exists(path):
-		return load(path) as Texture2D
-	var absolute_path := ProjectSettings.globalize_path(path)
-	if FileAccess.file_exists(absolute_path):
-		var image := Image.new()
-		var err := image.load(absolute_path)
-		if err == OK:
-			return ImageTexture.create_from_image(image)
-	return null
+	return ShowcaseAssets.load_texture(path)

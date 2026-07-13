@@ -95,7 +95,7 @@ func _build_fish_feature(root: Control) -> void:
 	var feature := _anchored_control(root, 0.050, 0.555, 0.430, 0.930)
 	feature.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-	var fish_texture := _load_texture_if_exists(FightFishAssets.card_portrait_path({"id": "boss_kurodai"}))
+	var fish_texture := ShowcaseAssets.load_texture(FightFishAssets.card_portrait_path({"id": "boss_kurodai"}))
 	if fish_texture != null:
 		var fish := TextureRect.new()
 		fish.texture = fish_texture
@@ -128,7 +128,7 @@ func _build_menu(root: Control) -> void:
 	menu_frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	menu.add_child(menu_frame)
 
-	var bait_texture := _load_texture_if_exists(TITLE_BAIT_PATH)
+	var bait_texture := ShowcaseAssets.load_texture(TITLE_BAIT_PATH)
 	if bait_texture != null:
 		var bait := TextureRect.new()
 		bait.texture = bait_texture
@@ -286,18 +286,12 @@ func _modal_label(text: String, font_size: int, bold: bool) -> Label:
 
 func _texture_rect(path: String) -> TextureRect:
 	var rect := TextureRect.new()
-	rect.texture = _load_texture_if_exists(path)
+	rect.texture = ShowcaseAssets.load_texture(path)
 	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	rect.stretch_mode = TextureRect.STRETCH_SCALE
 	rect.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return rect
-
-
-func _load_texture_if_exists(path: String) -> Texture2D:
-	if ResourceLoader.exists(path) or FileAccess.file_exists(path):
-		return load(path) as Texture2D
-	return null
 
 
 func _apply_title_font(label: Label, bold: bool) -> void:
@@ -333,7 +327,7 @@ func _apply_title_button_skin(button: Button, primary: bool) -> void:
 
 
 func _make_button_style(path: String) -> StyleBoxTexture:
-	var texture := _load_texture_if_exists(path)
+	var texture := ShowcaseAssets.load_texture(path)
 	if texture == null:
 		return null
 	var style := StyleBoxTexture.new()
@@ -399,7 +393,7 @@ func _slot_button_text(summary: Dictionary) -> String:
 	return "スロット%d　Lv.%d　%s" % [
 		slot_id,
 		int(summary.get("level", 1)),
-		_format_play_time(float(summary.get("play_seconds", 0.0))),
+		ScreenBase.format_compact_play_time(float(summary.get("play_seconds", 0.0))),
 	]
 
 
@@ -416,17 +410,8 @@ func _slot_status_text(summary: Dictionary) -> String:
 	return "スロット%dを選択中　最終保存 %s　%s" % [
 		slot_id,
 		_format_updated_time(int(summary.get("updated_unix", 0))),
-		_format_play_time(float(summary.get("play_seconds", 0.0))),
+		ScreenBase.format_compact_play_time(float(summary.get("play_seconds", 0.0))),
 	]
-
-
-func _format_play_time(seconds: float) -> String:
-	var total_minutes := int(maxf(0.0, seconds) / 60.0)
-	var hours := int(total_minutes / 60)
-	var minutes := total_minutes % 60
-	if hours > 0:
-		return "%d時間%02d分" % [hours, minutes]
-	return "%d分" % minutes
 
 
 func _format_updated_time(unix_time: int) -> String:
@@ -491,7 +476,7 @@ func _show_overwrite_confirmation(summary: Dictionary) -> void:
 		% [
 			_selected_slot_id,
 			int(summary.get("level", 1)),
-			_format_play_time(float(summary.get("play_seconds", 0.0))),
+			ScreenBase.format_compact_play_time(float(summary.get("play_seconds", 0.0))),
 			difficulty_name,
 		]
 	)

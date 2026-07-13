@@ -87,7 +87,7 @@ func set_shark_lure_selector(data: Dictionary) -> void:
 		_lure_portrait_id = ""
 	elif fish_id != _lure_portrait_id:
 		var fish: Dictionary = shark_lure_selector.get("fish", {})
-		_lure_portrait = _load_texture_if_exists(FightFishAssetsScript.card_portrait_path(fish))
+		_lure_portrait = ShowcaseAssets.load_texture(FightFishAssetsScript.card_portrait_path(fish))
 		_lure_portrait_id = fish_id
 	queue_redraw()
 
@@ -120,14 +120,6 @@ func _ready() -> void:
 		_common_card_frame = load(COMMON_CARD_FRAME_PATH) as Texture2D
 	if ResourceLoader.exists(COMMON_PARCHMENT_CARD_PATH):
 		_common_parchment_card = load(COMMON_PARCHMENT_CARD_PATH) as Texture2D
-
-
-func _load_texture_if_exists(path: String) -> Texture2D:
-	if path.is_empty():
-		return null
-	if ResourceLoader.exists(path) or FileAccess.file_exists(path):
-		return load(path) as Texture2D
-	return null
 
 
 func _process(_delta: float) -> void:

@@ -65,18 +65,12 @@ func _ready() -> void:
 
 
 func _load_fish_assets_for_current_fish() -> void:
-	_fish_sheet = _load_texture_if_exists(FightFishAssetsScript.sheet_path(fish_data))
+	_fish_sheet = ShowcaseAssets.load_texture(FightFishAssetsScript.sheet_path(fish_data))
 	if _fish_sheet == null:
-		_fish_sheet = _load_texture_if_exists(FightFishAssetsScript.LEGACY_SHEET_PATH)
-	_fish_card_portrait = _load_texture_if_exists(FightFishAssetsScript.card_portrait_path(fish_data))
+		_fish_sheet = ShowcaseAssets.load_texture(FightFishAssetsScript.LEGACY_SHEET_PATH)
+	_fish_card_portrait = ShowcaseAssets.load_texture(FightFishAssetsScript.card_portrait_path(fish_data))
 	if _fish_card_portrait == null:
-		_fish_card_portrait = _load_texture_if_exists(FightFishAssetsScript.LEGACY_CARD_PORTRAIT_PATH)
-
-
-func _load_texture_if_exists(path: String) -> Texture2D:
-	if ResourceLoader.exists(path) or FileAccess.file_exists(path):
-		return load(path) as Texture2D
-	return null
+		_fish_card_portrait = ShowcaseAssets.load_texture(FightFishAssetsScript.LEGACY_CARD_PORTRAIT_PATH)
 
 
 func _process(_delta: float) -> void:

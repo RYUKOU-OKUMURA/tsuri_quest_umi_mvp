@@ -316,15 +316,8 @@ func _summary_line(summary: Dictionary) -> String:
 	return "対象: スロット%d　%s　%s" % [
 		_target_slot_id,
 		level_text,
-		_format_play_time(float(summary.get("play_seconds", 0.0))),
+		ScreenBase.format_compact_play_time(float(summary.get("play_seconds", 0.0))),
 	]
-
-
-func _format_play_time(seconds: float) -> String:
-	var total_minutes := int(maxf(0.0, seconds) / 60.0)
-	var hours := int(total_minutes / 60)
-	var minutes := total_minutes % 60
-	return "%d時間%02d分" % [hours, minutes] if hours > 0 else "%d分" % minutes
 
 
 func _delete_detail(final_step: bool) -> String:

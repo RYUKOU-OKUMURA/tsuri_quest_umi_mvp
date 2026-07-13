@@ -744,7 +744,7 @@ func show_summary() -> void:
 		_meal_hint_label.text = "次回の釣行で\n%s" % _effect_sentence(String(PlayerProgress.pending_buff.get("text", "")))
 
 	_cooler_count_label.text = "%d / 20" % _total_fish_count()
-	_money_label.text = "%s G" % _format_money(PlayerProgress.money)
+	_money_label.text = "%s G" % ScreenBase.format_money(maxi(PlayerProgress.money, 0))
 	_play_label.text = format_play_time(PlayerProgress.play_seconds)
 	if PlayerProgress.level >= GameData.BOSS_UNLOCK_LEVEL:
 		_footer_message_label.text = (
@@ -799,16 +799,6 @@ func _status_card(parent: HBoxContainer, title: String) -> VBoxContainer:
 	title_label.add_theme_color_override("font_shadow_color", Palette.COOKING_STATUS_TITLE_SHADOW)
 	title_band.add_child(title_label)
 	return box
-
-
-func _format_money(value: int) -> String:
-	var digits := str(maxi(0, value))
-	var grouped := ""
-	for index in range(digits.length()):
-		if index > 0 and (digits.length() - index) % 3 == 0:
-			grouped += ","
-		grouped += digits[index]
-	return grouped
 
 
 func _build_player_hero(parent: VBoxContainer) -> void:

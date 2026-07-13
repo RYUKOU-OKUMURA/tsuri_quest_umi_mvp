@@ -374,6 +374,13 @@ func format_play_time(total_seconds: float) -> String:
 	return "%02d:%02d:%02d" % [hours, minutes, remaining]
 
 
+static func format_compact_play_time(total_seconds: float) -> String:
+	var total_minutes := int(maxf(0.0, total_seconds) / 60.0)
+	var hours := int(total_minutes / 60)
+	var minutes := total_minutes % 60
+	return "%d時間%02d分" % [hours, minutes] if hours > 0 else "%d分" % minutes
+
+
 static func format_money(value: int) -> String:
 	var raw := str(value)
 	var result := ""

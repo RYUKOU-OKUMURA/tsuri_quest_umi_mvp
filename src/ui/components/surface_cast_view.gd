@@ -173,46 +173,34 @@ func _draw() -> void:
 
 
 func _load_surface_assets() -> void:
-	_surface_bg = _load_texture_if_exists(SURFACE_BG_PATH)
-	_surface_color_grade = _load_texture_if_exists(SURFACE_COLOR_GRADE_PATH)
-	_surface_dock_foreground = _load_texture_if_exists(SURFACE_DOCK_FOREGROUND_PATH)
-	_surface_ambience = _load_texture_if_exists(SURFACE_AMBIENCE_PATH)
-	_surface_angler_idle = _load_texture_if_exists(SURFACE_ANGLER_IDLE_PATH)
-	_surface_angler_cast = _load_texture_if_exists(SURFACE_ANGLER_CAST_PATH)
-	_surface_bobber = _load_texture_if_exists(SURFACE_BOBBER_PATH)
-	_surface_fish_shadow = _load_texture_if_exists(SURFACE_FISH_SHADOW_SOFT_PATH)
+	_surface_bg = ShowcaseAssets.load_texture(SURFACE_BG_PATH)
+	_surface_color_grade = ShowcaseAssets.load_texture(SURFACE_COLOR_GRADE_PATH)
+	_surface_dock_foreground = ShowcaseAssets.load_texture(SURFACE_DOCK_FOREGROUND_PATH)
+	_surface_ambience = ShowcaseAssets.load_texture(SURFACE_AMBIENCE_PATH)
+	_surface_angler_idle = ShowcaseAssets.load_texture(SURFACE_ANGLER_IDLE_PATH)
+	_surface_angler_cast = ShowcaseAssets.load_texture(SURFACE_ANGLER_CAST_PATH)
+	_surface_bobber = ShowcaseAssets.load_texture(SURFACE_BOBBER_PATH)
+	_surface_fish_shadow = ShowcaseAssets.load_texture(SURFACE_FISH_SHADOW_SOFT_PATH)
 	if _surface_fish_shadow != null:
 		_surface_fish_shadow_frame_count = 3
 	else:
-		_surface_fish_shadow = _load_texture_if_exists(SURFACE_FISH_SHADOW_PATH)
+		_surface_fish_shadow = ShowcaseAssets.load_texture(SURFACE_FISH_SHADOW_PATH)
 		_surface_fish_shadow_frame_count = 1
-	_surface_splash = _load_texture_if_exists(SURFACE_SPLASH_PATH)
-	_surface_bird_swarm = _load_texture_if_exists(SURFACE_BIRD_SWARM_PATH)
-	_surface_scene_ready = _load_texture_if_exists(SURFACE_SCENE_READY_PATH)
-	_surface_scene_casting = _load_texture_if_exists(SURFACE_SCENE_CASTING_PATH)
-	_surface_scene_waiting = _load_texture_if_exists(SURFACE_SCENE_WAITING_PATH)
-	_surface_scene_approach = _load_texture_if_exists(SURFACE_SCENE_APPROACH_PATH)
-	_surface_scene_bite = _load_texture_if_exists(SURFACE_SCENE_BITE_PATH)
+	_surface_splash = ShowcaseAssets.load_texture(SURFACE_SPLASH_PATH)
+	_surface_bird_swarm = ShowcaseAssets.load_texture(SURFACE_BIRD_SWARM_PATH)
+	_surface_scene_ready = ShowcaseAssets.load_texture(SURFACE_SCENE_READY_PATH)
+	_surface_scene_casting = ShowcaseAssets.load_texture(SURFACE_SCENE_CASTING_PATH)
+	_surface_scene_waiting = ShowcaseAssets.load_texture(SURFACE_SCENE_WAITING_PATH)
+	_surface_scene_approach = ShowcaseAssets.load_texture(SURFACE_SCENE_APPROACH_PATH)
+	_surface_scene_bite = ShowcaseAssets.load_texture(SURFACE_SCENE_BITE_PATH)
 	for weather_id in READY_WEATHER_SCENE_PATHS.keys():
-		_surface_scene_ready_weather[weather_id] = _load_texture_if_exists(String(READY_WEATHER_SCENE_PATHS[weather_id]))
+		_surface_scene_ready_weather[weather_id] = ShowcaseAssets.load_texture(String(READY_WEATHER_SCENE_PATHS[weather_id]))
 	for time_slot_id in READY_TIME_SLOT_SCENE_PATHS.keys():
-		_surface_scene_ready_time_slot[time_slot_id] = _load_texture_if_exists(String(READY_TIME_SLOT_SCENE_PATHS[time_slot_id]))
+		_surface_scene_ready_time_slot[time_slot_id] = ShowcaseAssets.load_texture(String(READY_TIME_SLOT_SCENE_PATHS[time_slot_id]))
 	for weather_id in WEATHER_GRADE_PATHS.keys():
-		_weather_grades[weather_id] = _load_texture_if_exists(String(WEATHER_GRADE_PATHS[weather_id]))
+		_weather_grades[weather_id] = ShowcaseAssets.load_texture(String(WEATHER_GRADE_PATHS[weather_id]))
 	for weather_id in WEATHER_OVERLAY_PATHS.keys():
-		_weather_overlays[weather_id] = _load_texture_if_exists(String(WEATHER_OVERLAY_PATHS[weather_id]))
-
-
-func _load_texture_if_exists(path: String) -> Texture2D:
-	if ResourceLoader.exists(path):
-		var texture := load(path) as Texture2D
-		if texture != null:
-			return texture
-	if FileAccess.file_exists(path):
-		var image := Image.new()
-		if image.load(path) == OK:
-			return ImageTexture.create_from_image(image)
-	return null
+		_weather_overlays[weather_id] = ShowcaseAssets.load_texture(String(WEATHER_OVERLAY_PATHS[weather_id]))
 
 
 func _draw_asset_scene() -> void:

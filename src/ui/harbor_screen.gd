@@ -772,7 +772,7 @@ func _refresh_info_board() -> void:
 		var candidate: Dictionary = candidates[index]
 		var fish_id := String(candidate.get("fish_id", ""))
 		var fish_data := GameData.get_fish(fish_id)
-		portrait.texture = _load_texture_if_exists(FightFishAssets.card_portrait_path(fish_data))
+		portrait.texture = ShowcaseAssets.load_texture(FightFishAssets.card_portrait_path(fish_data))
 		name_label.text = String(fish_data.get("name", fish_id))
 		_fit_label_font(name_label, name_label.text, 26 if hero else 18, 12 if hero else 13, 104.0 if hero else 156.0)
 		var reason := String(candidate.get("reason", ""))
@@ -1397,7 +1397,7 @@ func _place_control_px(parent: Control, control: Control, rect: Rect2) -> void:
 
 func _nine_patch_rect(path: String, margins: Vector4) -> NinePatchRect:
 	var rect := NinePatchRect.new()
-	rect.texture = _load_texture_if_exists(path)
+	rect.texture = ShowcaseAssets.load_texture(path)
 	rect.patch_margin_left = int(margins.x)
 	rect.patch_margin_top = int(margins.y)
 	rect.patch_margin_right = int(margins.z)
@@ -1496,7 +1496,7 @@ func _make_command_focus_style(role: String) -> StyleBoxFlat:
 
 func _texture_rect(path: String) -> TextureRect:
 	var rect := TextureRect.new()
-	rect.texture = _load_texture_if_exists(path)
+	rect.texture = ShowcaseAssets.load_texture(path)
 	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	rect.stretch_mode = TextureRect.STRETCH_SCALE
 	rect.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
@@ -1508,10 +1508,6 @@ func _icon_rect(path: String) -> TextureRect:
 	var icon := _texture_rect(path)
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	return icon
-
-
-func _load_texture_if_exists(path: String) -> Texture2D:
-	return ShowcaseAssetsScript.load_texture(path)
 
 
 func _harbor_label(
@@ -1526,7 +1522,7 @@ func _harbor_label(
 
 
 func _make_time_slot_button_style(path: String) -> StyleBoxTexture:
-	var texture := _load_texture_if_exists(path)
+	var texture := ShowcaseAssets.load_texture(path)
 	if texture == null:
 		return null
 	var style := StyleBoxTexture.new()

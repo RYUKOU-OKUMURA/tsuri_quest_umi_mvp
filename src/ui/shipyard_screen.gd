@@ -274,7 +274,7 @@ func _refresh() -> void:
 	var best_rank := PlayerProgress.best_boat_rank()
 	var current_boat := "船なし" if best_boat.is_empty() else String(best_boat.get("short_name", best_boat.get("name", "船")))
 	_top_level_label.text = "%d" % PlayerProgress.level
-	_top_money_label.text = "%s G" % _format_money(PlayerProgress.money)
+	_top_money_label.text = "%s G" % ScreenBase.format_money(maxi(PlayerProgress.money, 0))
 	_top_boat_label.text = current_boat
 	_top_rank_label.text = "%d / 3" % best_rank
 
@@ -322,8 +322,8 @@ func _refresh_detail() -> void:
 	_detail_unlock_label.text = "%d航路" % unlocked_names.size()
 	_detail_type_label.text = "恒久"
 	_detail_range_label.text = String(boat.get("access_text", "出航範囲未設定")).replace("出航可能", "").strip_edges()
-	_price_label.text = "登録済み" if owned else "%s G" % _format_money(price)
-	_shortage_label.text = "" if owned or can_buy else "あと %s G" % _format_money(price - PlayerProgress.money)
+	_price_label.text = "登録済み" if owned else "%s G" % ScreenBase.format_money(maxi(price, 0))
+	_shortage_label.text = "" if owned or can_buy else "あと %s G" % ScreenBase.format_money(maxi(price - PlayerProgress.money, 0))
 	_route_title_label.text = "航路図　%s" % String(boat.get("short_name", "船"))
 	_route_status_label.text = "現在 %d/%d" % [_accessible_offshore_count(PlayerProgress.best_boat_rank()), OFFSHORE_SPOT_TOTAL]
 	_route_locked_label.text = "未達 %d" % maxi(0, OFFSHORE_SPOT_TOTAL - _accessible_offshore_count(PlayerProgress.best_boat_rank()))
@@ -349,7 +349,7 @@ func _refresh_detail() -> void:
 		]
 	else:
 		_footer_label.text = "あと %s G で%sを購入できます。魚市場で釣果を売って資金を作ろう。" % [
-			_format_money(price - PlayerProgress.money),
+			ScreenBase.format_money(maxi(price - PlayerProgress.money, 0)),
 			String(boat.get("short_name", "船")),
 		]
 
@@ -389,7 +389,7 @@ func _boat_card_price_text(boat_id: String) -> String:
 	var boat := GameData.get_boat(boat_id)
 	if PlayerProgress.has_boat(boat_id):
 		return "所持"
-	return "%s G" % _format_money(int(boat.get("price", 0)))
+	return "%s G" % ScreenBase.format_money(maxi(int(boat.get("price", 0)), 0))
 
 
 func _boat_compact_range_text(rank: int) -> String:
@@ -436,22 +436,12 @@ func _route_hint_text(rank: int) -> String:
 
 func _texture_rect(path: String) -> TextureRect:
 	var rect := TextureRect.new()
-	rect.texture = _load_texture_if_exists(path)
+	rect.texture = ShowcaseAssets.load_texture(path)
 	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	rect.stretch_mode = TextureRect.STRETCH_SCALE
 	rect.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return rect
-
-
-func _load_texture_if_exists(path: String) -> Texture2D:
-	if ResourceLoader.exists(path):
-		return load(path) as Texture2D
-	if FileAccess.file_exists(path):
-		var image := Image.new()
-		if image.load(path) == OK:
-			return ImageTexture.create_from_image(image)
-	return null
 
 
 func _transparent_button(callback: Callable) -> Button:
@@ -520,15 +510,3 @@ func _shipyard_label(
 	outline_color := Palette.SHIPYARD_LABEL_OUTLINE
 ) -> Label:
 	return make_screen_label(text, font_size, color, bold, outline, outline_color, Palette.SHIPYARD_LABEL_SHADOW, true)
-
-
-func _format_money(value: int) -> String:
-	var raw := str(maxi(value, 0))
-	var result := ""
-	var count := 0
-	for index in range(raw.length() - 1, -1, -1):
-		if count > 0 and count % 3 == 0:
-			result = "," + result
-		result = raw[index] + result
-		count += 1
-	return result

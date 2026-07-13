@@ -108,10 +108,10 @@ func set_player_level(level: int) -> void:
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	_map_bg = _load_texture_if_exists(MAP_BG_PATH)
-	_map_grade = _load_texture_if_exists(MAP_GRADE_PATH)
-	_marker_sheet = _load_texture_if_exists(MARKER_SHEET_PATH)
-	_spot_marker_sheet = _load_texture_if_exists(SPOT_MARKER_SHEET_PATH)
+	_map_bg = ShowcaseAssets.load_texture(MAP_BG_PATH)
+	_map_grade = ShowcaseAssets.load_texture(MAP_GRADE_PATH)
+	_marker_sheet = ShowcaseAssets.load_texture(MARKER_SHEET_PATH)
+	_spot_marker_sheet = ShowcaseAssets.load_texture(SPOT_MARKER_SHEET_PATH)
 
 
 func _process(delta: float) -> void:
@@ -699,9 +699,3 @@ func _draw_text(font: Font, text: String, baseline: Vector2, font_size: int, col
 	if outline > 0:
 		draw_string_outline(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, outline, Color(Color.BLACK, 0.62))
 	draw_string(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
-
-
-func _load_texture_if_exists(path: String) -> Texture2D:
-	if ResourceLoader.exists(path):
-		return load(path) as Texture2D
-	return null

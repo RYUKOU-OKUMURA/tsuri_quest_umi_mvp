@@ -93,27 +93,21 @@ func _draw() -> void:
 
 
 func _load_showcase_assets() -> void:
-	_showcase_bg = _load_texture_if_exists(SHOWCASE_BG_PATH)
-	_showcase_color_grade = _load_texture_if_exists(SHOWCASE_COLOR_GRADE_PATH)
-	_showcase_seabed_detail = _load_texture_if_exists(SHOWCASE_SEABED_DETAIL_PATH)
-	_showcase_fg_ambience = _load_texture_if_exists(SHOWCASE_FG_AMBIENCE_PATH)
+	_showcase_bg = ShowcaseAssets.load_texture(SHOWCASE_BG_PATH)
+	_showcase_color_grade = ShowcaseAssets.load_texture(SHOWCASE_COLOR_GRADE_PATH)
+	_showcase_seabed_detail = ShowcaseAssets.load_texture(SHOWCASE_SEABED_DETAIL_PATH)
+	_showcase_fg_ambience = ShowcaseAssets.load_texture(SHOWCASE_FG_AMBIENCE_PATH)
 	_load_fish_assets_for_current_fish()
-	_showcase_hit_burst = _load_texture_if_exists(SHOWCASE_HIT_BURST_PATH)
-	_showcase_hit_badge_full = _load_texture_if_exists(SHOWCASE_HIT_BADGE_FULL_PATH)
-	_showcase_lure = _load_texture_if_exists(SHOWCASE_LURE_PATH)
+	_showcase_hit_burst = ShowcaseAssets.load_texture(SHOWCASE_HIT_BURST_PATH)
+	_showcase_hit_badge_full = ShowcaseAssets.load_texture(SHOWCASE_HIT_BADGE_FULL_PATH)
+	_showcase_lure = ShowcaseAssets.load_texture(SHOWCASE_LURE_PATH)
 
 
 func _load_fish_assets_for_current_fish() -> void:
 	var fish_sheet_path := FightFishAssetsScript.sheet_path(fish_data)
-	_showcase_fish_sheet = _load_texture_if_exists(fish_sheet_path)
+	_showcase_fish_sheet = ShowcaseAssets.load_texture(fish_sheet_path)
 	if _showcase_fish_sheet == null:
-		_showcase_fish_sheet = _load_texture_if_exists(FightFishAssetsScript.LEGACY_SHEET_PATH)
-
-
-func _load_texture_if_exists(path: String) -> Texture2D:
-	if ResourceLoader.exists(path) or FileAccess.file_exists(path):
-		return load(path) as Texture2D
-	return null
+		_showcase_fish_sheet = ShowcaseAssets.load_texture(FightFishAssetsScript.LEGACY_SHEET_PATH)
 
 
 func _draw_showcase_background() -> void:
