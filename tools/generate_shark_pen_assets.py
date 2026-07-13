@@ -4,7 +4,6 @@
 from pathlib import Path
 
 from PIL import Image, ImageEnhance
-from PIL.Image import open as open_image
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -29,7 +28,7 @@ def center_crop(image: Image.Image) -> Image.Image:
 def main() -> None:
     if not SOURCE.exists():
         raise SystemExit(f"missing source: {SOURCE}")
-    image = open_image(SOURCE).convert("RGB")
+    image = Image.open(SOURCE).convert("RGB")
     image = center_crop(image).resize(OUTPUT_SIZE, Image.Resampling.LANCZOS)
     image = ImageEnhance.Color(image).enhance(0.78)
     image = ImageEnhance.Contrast(image).enhance(0.96)
