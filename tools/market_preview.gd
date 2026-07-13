@@ -9,6 +9,10 @@ const OUT_SELECT := "/tmp/tsuri_market_select.png"
 const OUT_CONFIRM := "/tmp/tsuri_market_confirm.png"
 const OUT_SOLD := "/tmp/tsuri_market_sold.png"
 const OUT_EMPTY := "/tmp/tsuri_market_empty.png"
+const OUT_CTA_NORMAL := "/tmp/tsuri_market_cta_normal.png"
+const OUT_CTA_HOVER := "/tmp/tsuri_market_cta_hover.png"
+const OUT_CTA_PRESSED := "/tmp/tsuri_market_cta_pressed.png"
+const OUT_CTA_FOCUS := "/tmp/tsuri_market_cta_focus.png"
 
 var _had_capture_error := false
 
@@ -22,12 +26,24 @@ func _ready() -> void:
 	await _capture_sold()
 	_seed_empty()
 	await _capture_plain(OUT_EMPTY)
+	for state_and_path in [
+		["normal", OUT_CTA_NORMAL],
+		["hover", OUT_CTA_HOVER],
+		["pressed", OUT_CTA_PRESSED],
+		["focus", OUT_CTA_FOCUS],
+	]:
+		_seed_progress()
+		await _capture_cta_style(state_and_path[0], state_and_path[1])
 
 	print("market_preview:")
 	print(OUT_SELECT)
 	print(OUT_CONFIRM)
 	print(OUT_SOLD)
 	print(OUT_EMPTY)
+	print(OUT_CTA_NORMAL)
+	print(OUT_CTA_HOVER)
+	print(OUT_CTA_PRESSED)
+	print(OUT_CTA_FOCUS)
 	get_tree().quit(1 if _had_capture_error else 0)
 
 
@@ -108,6 +124,15 @@ func _capture_sold() -> void:
 
 func _capture_plain(out_path: String) -> void:
 	var screen: Control = await _make_screen(VW)
+	await _capture_screen(screen, out_path)
+
+
+func _capture_cta_style(style_name: String, out_path: String) -> void:
+	var screen: Control = await _make_screen(VW)
+	screen._set_quantity("aji", 3)
+	screen._set_quantity("madai", 1)
+	var button := screen._cart_action_button as Button
+	button.add_theme_stylebox_override("normal", button.get_theme_stylebox(style_name))
 	await _capture_screen(screen, out_path)
 
 

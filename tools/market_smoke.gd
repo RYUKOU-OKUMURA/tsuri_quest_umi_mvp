@@ -35,6 +35,23 @@ func _ready() -> void:
 	_expect(String((_screen._row_nodes[0]["name_label"] as Label).text).length() > 0, "row fish name should be populated")
 	_expect(String(_screen._detail_title_label.text).length() > 0, "detail fish name should be populated")
 	_expect(_screen._next_page_button.disabled == false, "next page should be available with more than seven fish")
+	_expect(_screen._cart_action_button.position.is_equal_approx(MarketScreenScript.CART_ACTION_RECT.position), "cart action should keep the frozen position")
+	_expect(
+		_screen._cart_action_button.size.is_equal_approx(MarketScreenScript.CART_ACTION_RECT.size),
+		"cart action should keep the frozen size: actual=%s expected=%s" % [_screen._cart_action_button.size, MarketScreenScript.CART_ACTION_RECT.size]
+	)
+	_expect(_screen._cart_action_button.focus_mode == Control.FOCUS_ALL, "cart action should remain keyboard/gamepad focusable")
+	var cart_styles: Array[StyleBoxTexture] = []
+	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
+		var style := _screen._cart_action_button.get_theme_stylebox(state) as StyleBoxTexture
+		_expect(style != null and style.texture != null, "cart action %s should use a loaded market-local texture style" % state)
+		if style != null:
+			cart_styles.append(style)
+	_expect(cart_styles.size() == 5, "cart action should expose all five interaction style signatures")
+	if cart_styles.size() == 5:
+		for left in range(cart_styles.size()):
+			for right in range(left + 1, cart_styles.size()):
+				_expect(cart_styles[left].texture != cart_styles[right].texture, "cart action interaction states should not share a texture")
 
 	_screen._set_quantity("aji", 99)
 	_expect_eq(int(_screen._sell_quantities.get("aji", 0)), 3, "quantity should clamp to owned count")
