@@ -1,6 +1,6 @@
 # サメの生簀 QA判断ログ
 
-最終更新: 2026-07-07 / 状態: v1構成確認中
+最終更新: 2026-07-13 / 状態: 水槽背景・環境光uplift作業中
 参照画像: `reference/12_shark_pen_mockup.png`
 QA更新コマンド: `./tools/shark_pen_visual_qa.sh`
 
@@ -43,8 +43,16 @@ QA更新コマンド: `./tools/shark_pen_visual_qa.sh`
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-- 現在のスコープ: 新規画面v1構成、給餌接続、visual QA/smokeの追加。
-- 触らない: E4危険海域・釣り場マップのfreeze値、既存画面素材、専用水槽背景PNG。
+- 現在のスコープ: 差分Top1「runtime描画の水槽背景・泡・照明」を画面専用authored背景PNGへ置換する局所uplift。
+- 動かすもの: 水槽wellの背景texture、旧runtime流線3本の撤去、素材表示smoke、標準/selected-hover visual QA。
+- 触らない: freeze表の全矩形、サメ選択10枠、なつき度、餌カード、給餌CTA、港へ戻る、魚素材/配置、王冠、メガロドン最終演出、他画面素材。
+- 採否条件: 同一seedの原寸before/afterでP1ゼロ、全画面でbeforeへ明確に勝ち、縮小after/referenceでも水槽Top1差分が縮む。
+
+### 参照との差分Top3（面積×視線優先度）
+
+1. P2 / Top1: 水槽が明るい単色青＋直線3本で、参照の深いteal水槽・有機的な泡・環境光へ未到達。
+2. P2 / 今回対象外: 好物の王冠がruntime小チップ。
+3. P2 / 今回対象外: メガロドン最終演出と全サメ同時遊泳が未実装。
 
 ## 7. 判断ログ（直近パスのみ）
 
