@@ -142,28 +142,6 @@ static func _system_font() -> SystemFont:
 	return font
 
 
-# 9スライス StyleBoxTexture。margin=枠幅, shadow_expand=焼き込み影の描画拡張。
-static func _tex(tex: Texture2D, margin: int = 10, shadow_expand: int = 4) -> StyleBoxTexture:
-	var sb := StyleBoxTexture.new()
-	sb.texture = tex
-	sb.texture_margin_left = margin
-	sb.texture_margin_top = margin
-	sb.texture_margin_right = margin
-	sb.texture_margin_bottom = margin
-	sb.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
-	sb.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
-	sb.expand_margin_left = shadow_expand
-	sb.expand_margin_top = shadow_expand
-	sb.expand_margin_right = shadow_expand
-	sb.expand_margin_bottom = shadow_expand
-	sb.content_margin_left = 14.0
-	sb.content_margin_top = 10.0
-	sb.content_margin_right = 14.0
-	sb.content_margin_bottom = 10.0
-	# texture_filtering は設定しない（プロジェクト既定 NEAREST でチャンキーピクセル枠になる）
-	return sb
-
-
 static func _panel_style(fill: Color, outer: Color, inner: Color, dark_text: bool) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = fill

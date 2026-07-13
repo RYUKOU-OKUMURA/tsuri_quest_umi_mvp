@@ -1440,10 +1440,6 @@ func _style_box(fill: Color, border: Color, inner: Color, border_width: int, rad
 	return CookingAssets.style_box(fill, border, inner, border_width, radius)
 
 
-func _compact_style_box(fill: Color, border: Color, inner: Color, border_width: int, radius: int) -> StyleBoxFlat:
-	return CookingAssets.compact_style_box(fill, border, inner, border_width, radius)
-
-
 func _texture_style_box(
 	path: String, margin: int, fallback: StyleBox, content_x: float, content_y: float
 ) -> StyleBox:
@@ -1452,7 +1448,3 @@ func _texture_style_box(
 
 func _featured_dish_texture(recipe_id: String) -> Texture2D:
 	return CookingAssets.featured_dish_texture_or_icon(recipe_id)
-
-
-func _recipe_icon(recipe_id: String) -> Texture2D:
-	return CookingAssets.recipe_icon(recipe_id)

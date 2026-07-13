@@ -829,21 +829,6 @@ func _stat_icon(mode: String, accent: Color) -> LevelStatIconVisual:
 	return icon
 
 
-func _badge_box(text: String, fill: Color, text_color: Color) -> PanelContainer:
-	var badge := PanelContainer.new()
-	badge.add_theme_stylebox_override(
-		"panel",
-		_style_box(fill.darkened(0.18), Palette.COOKING_LEVEL_BADGE_DARK, Palette.GOLD_BRIGHT, 2, 4)
-	)
-	var label := make_shadow_label(text, 17, text_color, 2)
-	label.custom_minimum_size = Vector2(54.0, 24.0)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	badge.add_child(label)
-	return badge
-
-
 func _medal_box() -> PanelContainer:
 	var medal := _panel_box(Palette.COOKING_LEVEL_MEDAL_BOX_FILL, Palette.COOKING_LEVEL_MEDAL_BOX_BORDER, Palette.GOLD_BRIGHT, 4)
 	var visual := _level_asset_texture(

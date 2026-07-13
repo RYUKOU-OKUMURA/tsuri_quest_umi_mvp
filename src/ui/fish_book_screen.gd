@@ -955,18 +955,6 @@ func _style_scrollbar(scroll: ScrollContainer) -> void:
 	vbar.add_theme_stylebox_override("grabber_pressed", grabber_hot)
 
 
-func _header_chip(parent: Control, left: float, top: float, right: float, bottom: float, value: String, font_size := 17) -> Label:
-	var bg := ColorRect.new()
-	bg.color = Palette.FISH_BOOK_HEADER_CHIP_BG
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(parent, bg, left, top, right, bottom)
-	var label := _book_label(value, font_size, Palette.FISH_BOOK_HEADER_CHIP_TEXT, true, 2, Palette.FISH_BOOK_HEADER_CHIP_OUTLINE)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_place_control(parent, label, left + 0.006, top + 0.030, right - 0.006, bottom - 0.030)
-	return label
-
-
 func _book_label(
 	text: String,
 	font_size: int,
@@ -1141,13 +1129,6 @@ func _alpha(color: Color, alpha: float) -> Color:
 	var result := color
 	result.a = alpha
 	return result
-
-
-func _short_rod_name(rod_name: String) -> String:
-	var parts := rod_name.split("・")
-	if parts.size() >= 2:
-		return String(parts[1])
-	return rod_name
 
 
 func _paper_wash() -> TextureRect:

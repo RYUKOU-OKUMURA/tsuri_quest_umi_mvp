@@ -555,11 +555,6 @@ func _draw_action_message(font: Font, text: String, pos: Vector2, max_width: flo
 	_draw_wrapped(font, text, pos, max_width, font_size, Palette.TEXT_DARK, 2, gap)
 
 
-func _draw_bullet(font: Font, text: String, pos: Vector2, max_width: float) -> void:
-	draw_circle(pos + Vector2(2.0, -3.0), 4.0, Palette.FIGHT_SIDEBAR_BULLET)
-	_draw_wrapped(font, text, pos + Vector2(14.0, -15.0), max_width - 14.0, 13, Palette.TEXT_DARK, 1)
-
-
 func _draw_info_paragraph(font: Font, text: String, pos: Vector2, max_width: float) -> void:
 	var font_size := 14
 	var gap := 16.0 if _sidebar_frame != null else float(font_size + 3)
@@ -859,13 +854,6 @@ func _draw_texture_centered(texture: Texture2D, center: Vector2, max_size: Vecto
 	var draw_size := tex_size * scale
 	var rect := Rect2(center - draw_size * 0.5, draw_size)
 	draw_texture_rect(texture, rect, false, Color.WHITE)
-
-
-func _draw_texture_region_centered(texture: Texture2D, src: Rect2, center: Vector2, max_size: Vector2) -> void:
-	var scale := minf(max_size.x / src.size.x, max_size.y / src.size.y)
-	var draw_size := src.size * scale
-	var rect := Rect2(center - draw_size * 0.5, draw_size)
-	draw_texture_rect_region(texture, rect, src, Color.WHITE)
 
 
 func _display_fish_name(name: String) -> String:

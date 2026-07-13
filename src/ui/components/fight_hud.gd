@@ -853,63 +853,6 @@ func _draw_text_fit(
 	_draw_text_clipped(font, display, baseline, fitted_size, color, max_width, outline)
 
 
-func _draw_text_center_fit(
-	font: Font,
-	text: String,
-	rect: Rect2,
-	font_size: int,
-	min_size: int,
-	color: Color,
-	outline: int
-) -> void:
-	var fitted_size := _fit_font_size(font, text, font_size, min_size, rect.size.x)
-	var display := _fit_text(font, text, fitted_size, rect.size.x)
-	var ascent := font.get_ascent(fitted_size)
-	var descent := font.get_descent(fitted_size)
-	var baseline := rect.position + Vector2(0.0, (rect.size.y - ascent - descent) * 0.5 + ascent)
-	if outline > 0:
-		draw_string_outline(font, baseline, display, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, fitted_size, outline, Palette.FIGHT_HUD_TEXT_OUTLINE)
-	draw_string(font, baseline, display, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, fitted_size, color)
-
-
-func _draw_text_left_fit(
-	font: Font,
-	text: String,
-	rect: Rect2,
-	font_size: int,
-	min_size: int,
-	color: Color,
-	outline: int
-) -> void:
-	var fitted_size := _fit_font_size(font, text, font_size, min_size, rect.size.x)
-	var display := _fit_text(font, text, fitted_size, rect.size.x)
-	var ascent := font.get_ascent(fitted_size)
-	var descent := font.get_descent(fitted_size)
-	var baseline := rect.position + Vector2(0.0, (rect.size.y - ascent - descent) * 0.5 + ascent)
-	if outline > 0:
-		draw_string_outline(font, baseline, display, HORIZONTAL_ALIGNMENT_LEFT, rect.size.x, fitted_size, outline, Palette.FIGHT_HUD_TEXT_OUTLINE)
-	draw_string(font, baseline, display, HORIZONTAL_ALIGNMENT_LEFT, rect.size.x, fitted_size, color)
-
-
-func _draw_text_right_fit(
-	font: Font,
-	text: String,
-	rect: Rect2,
-	font_size: int,
-	min_size: int,
-	color: Color,
-	outline: int
-) -> void:
-	var fitted_size := _fit_font_size(font, text, font_size, min_size, rect.size.x)
-	var display := _fit_text(font, text, fitted_size, rect.size.x)
-	var ascent := font.get_ascent(fitted_size)
-	var descent := font.get_descent(fitted_size)
-	var baseline := rect.position + Vector2(0.0, (rect.size.y - ascent - descent) * 0.5 + ascent)
-	if outline > 0:
-		draw_string_outline(font, baseline, display, HORIZONTAL_ALIGNMENT_RIGHT, rect.size.x, fitted_size, outline, Palette.FIGHT_HUD_TEXT_OUTLINE)
-	draw_string(font, baseline, display, HORIZONTAL_ALIGNMENT_RIGHT, rect.size.x, fitted_size, color)
-
-
 func _fit_font_size(font: Font, text: String, base_size: int, minimum_size: int, max_width: float) -> int:
 	for size_value in range(base_size, minimum_size - 1, -1):
 		if font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size_value).x <= max_width:

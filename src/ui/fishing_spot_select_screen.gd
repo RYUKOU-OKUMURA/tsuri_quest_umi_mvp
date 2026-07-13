@@ -24,7 +24,6 @@ const MAP_BGM_PATH_BY_SPOT := {
 }
 const DETAIL_ICON_SIZE := 96.0
 const FOOTER_ICON_SIZE := 96.0
-const COMPLETION_SLOT_SIZE := Vector2(220.0, 44.0)
 const DETAIL_FRAME_SOURCE_SIZE := Vector2(520.0, 760.0)
 
 var _selected_spot_id: String = GameData.DEFAULT_FISHING_SPOT_ID
@@ -186,59 +185,6 @@ func _build_header(parent: Control) -> void:
 	panel.add_child(status_bar)
 
 
-func _add_header_status(parent: Control, rect: Rect2, caption: String, value: String) -> Label:
-	var box := PanelContainer.new()
-	box.position = rect.position
-	box.size = rect.size
-	box.add_theme_stylebox_override("panel", _header_status_style())
-	parent.add_child(box)
-
-	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 0)
-	box.add_child(layout)
-
-	var caption_label := make_label(caption, 11, Palette.MAP_STATUS_MUTED, 1, Palette.TEXT_OUTLINE_DARK)
-	caption_label.custom_minimum_size = Vector2(0.0, 18.0)
-	caption_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	caption_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	caption_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	layout.add_child(caption_label)
-
-	var rule := ColorRect.new()
-	rule.custom_minimum_size = Vector2(0.0, 1.0)
-	rule.color = Color(Palette.MAP_RULE_GOLD, 0.42)
-	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	layout.add_child(rule)
-
-	var value_label := make_label(value, 17, Palette.TEXT_BONE, 1, Palette.TEXT_OUTLINE_DARK)
-	value_label.custom_minimum_size = Vector2(0.0, 31.0)
-	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	value_label.clip_text = true
-	value_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	layout.add_child(value_label)
-	return value_label
-
-
-func _add_rivet(parent: Control, position: Vector2) -> void:
-	var rivet := PanelContainer.new()
-	rivet.position = position
-	rivet.size = Vector2(8.0, 8.0)
-	rivet.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	rivet.add_theme_stylebox_override("panel", _rivet_style())
-	parent.add_child(rivet)
-
-
-func _rivet_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(Palette.MAP_RIVET_FILL, 0.96)
-	style.border_color = Color(Palette.MAP_RIVET_EDGE, 0.72)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	return style
-
-
 func _header_title_plate_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(Palette.MAP_TITLE_PLATE, 0.94)
@@ -252,38 +198,6 @@ func _header_title_plate_style() -> StyleBoxFlat:
 	style.shadow_color = Color(Color.BLACK, 0.30)
 	style.shadow_size = 4
 	style.shadow_offset = Vector2(2.0, 2.0)
-	return style
-
-
-func _header_status_group_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(Palette.MAP_HEADER_BACKDROP, 0.36)
-	style.border_color = Color(Palette.MAP_FOOTER_SECONDARY_BORDER, 0.46)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(5)
-	style.content_margin_left = 0
-	style.content_margin_right = 0
-	style.content_margin_top = 0
-	style.content_margin_bottom = 0
-	style.shadow_color = Color(Color.BLACK, 0.16)
-	style.shadow_size = 2
-	style.shadow_offset = Vector2(1.0, 1.0)
-	return style
-
-
-func _header_status_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(Palette.MAP_HEADER_STATUS_BG, 0.88)
-	style.border_color = Color(Palette.MAP_HEADER_STATUS_BORDER, 0.80)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	style.content_margin_left = 12
-	style.content_margin_right = 12
-	style.content_margin_top = 3
-	style.content_margin_bottom = 4
-	style.shadow_color = Color(Color.BLACK, 0.20)
-	style.shadow_size = 2
-	style.shadow_offset = Vector2(1.0, 1.0)
 	return style
 
 
@@ -761,269 +675,6 @@ func _show_menu_hint() -> void:
 		_message_detail_label.text = "設定や手帳を開く準備中です。"
 
 
-func _memo_line_style(primary: bool) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(Palette.MAP_MEMO_PRIMARY_BG, 0.96) if primary else Color(Palette.MAP_MEMO_SECONDARY_BG, 0.92)
-	style.border_color = Color(Palette.MAP_FOOTER_SECONDARY_BORDER, 0.45 if primary else 0.24)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	style.content_margin_left = 9
-	style.content_margin_right = 9
-	style.content_margin_top = 3
-	style.content_margin_bottom = 3
-	return style
-
-
-func _memo_frame_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(Palette.MAP_MEMO_FRAME_BG, 0.66)
-	style.border_color = Color(Palette.MAP_FOOTER_SECONDARY_BORDER, 0.50)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	style.content_margin_left = 0
-	style.content_margin_right = 0
-	style.content_margin_top = 0
-	style.content_margin_bottom = 0
-	return style
-
-
-func _make_ledger_header_chip(parent: Control, width: float, strong: bool) -> Label:
-	var chip := PanelContainer.new()
-	chip.custom_minimum_size = Vector2(width, 0.0)
-	chip.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	chip.add_theme_stylebox_override("panel", _ledger_header_chip_style(strong))
-	parent.add_child(chip)
-
-	var label := make_label("", 11, Palette.GOLD_BRIGHT if strong else Palette.MAP_LEDGER_LABEL_DIM, 1, Palette.TEXT_OUTLINE_DARK)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	label.clip_text = true
-	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	chip.add_child(label)
-	return label
-
-
-func _ledger_header_chip_style(strong: bool) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(Palette.MAP_LEDGER_STRONG_BG, 0.96) if strong else Color(Palette.MAP_LEDGER_WEAK_BG, 0.72)
-	style.border_color = Color(Palette.MAP_LEDGER_STRONG_BORDER, 0.72) if strong else Color(Palette.MAP_LEDGER_WEAK_BORDER, 0.36)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(3)
-	style.content_margin_left = 7
-	style.content_margin_right = 7
-	style.content_margin_top = 1
-	style.content_margin_bottom = 1
-	return style
-
-
-func _ledger_header_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(Palette.MAP_FOOTER_PRIMARY_BG, 0.94)
-	style.border_color = Color(Palette.MAP_FOOTER_SECONDARY_BORDER, 0.52)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	style.content_margin_left = 10
-	style.content_margin_right = 10
-	style.content_margin_top = 2
-	style.content_margin_bottom = 2
-	return style
-
-
-func _ledger_body_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(Palette.MAP_MEMO_FRAME_BG, 0.78)
-	style.border_color = Color(Palette.MAP_FOOTER_SECONDARY_BORDER, 0.42)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	style.content_margin_left = 0
-	style.content_margin_right = 0
-	style.content_margin_top = 0
-	style.content_margin_bottom = 0
-	return style
-
-
-func _memo_header_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(Palette.MAP_FOOTER_PRIMARY_BG, 0.94)
-	style.border_color = Color(Palette.MAP_FOOTER_SECONDARY_BORDER, 0.48)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	style.content_margin_left = 8
-	style.content_margin_right = 8
-	style.content_margin_top = 2
-	style.content_margin_bottom = 2
-	return style
-
-
-func _rebuild_completion_entries() -> void:
-	return
-
-
-func _make_completion_entry(spot: Dictionary) -> Control:
-	var spot_id := String(spot.get("id", GameData.DEFAULT_FISHING_SPOT_ID))
-	var unlocked := PlayerProgress.can_access_fishing_spot(spot_id)
-	var selected := spot_id == _selected_spot_id
-	var completion := _spot_completion_counts(spot)
-	var entry := Control.new()
-	entry.clip_contents = true
-	entry.custom_minimum_size = COMPLETION_SLOT_SIZE
-	entry.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	entry.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	entry.set_meta("spot_progress_entry", true)
-	entry.set_meta("spot_id", spot_id)
-	entry.set_meta("locked", not unlocked)
-	entry.set_meta("caught_species", int(completion.get("caught", 0)))
-	entry.set_meta("target_species", int(completion.get("total", 0)))
-
-	_add_completion_slot_fallback(entry, unlocked, selected)
-
-	var title_color := Palette.MAP_ENTRY_TITLE if unlocked else Palette.MAP_ENTRY_TITLE_LOCKED
-	var title := _card_label(String(spot.get("short_name", spot.get("name", spot_id))), 12, title_color, 0)
-	title.position = Vector2(12.0, 4.0)
-	title.size = Vector2(112.0, 15.0)
-	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	entry.add_child(title)
-
-	var badge_color := Palette.MAP_ENTRY_BADGE if unlocked else Palette.MAP_ENTRY_BADGE_LOCKED
-	if selected and unlocked:
-		badge_color = Palette.MAP_ENTRY_BADGE_SELECTED
-	var badge := _card_label(_completion_badge_text(spot, unlocked, completion), 11, badge_color, 0)
-	badge.position = Vector2(158.0, 4.0)
-	badge.size = Vector2(48.0, 15.0)
-	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	entry.add_child(badge)
-
-	var body_color := Palette.MAP_ENTRY_BODY if unlocked else Palette.MAP_ENTRY_BODY_LOCKED
-	var summary_text := _completion_summary_text(spot, unlocked, completion)
-	var summary := _card_label(summary_text, 11, body_color)
-	summary.position = Vector2(12.0, 24.0)
-	summary.size = Vector2(88.0, 15.0)
-	summary.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	entry.add_child(summary)
-
-	_add_completion_bar(entry, unlocked, selected, float(completion.get("ratio", 0.0)))
-	return entry
-
-
-func _add_completion_slot_fallback(parent: Control, unlocked: bool, selected: bool) -> void:
-	var frame := PanelContainer.new()
-	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	frame.add_theme_stylebox_override("panel", _completion_entry_style(unlocked, selected))
-	parent.add_child(frame)
-
-	var body := ColorRect.new()
-	body.color = Color(Palette.MAP_ENTRY_BODY_UNLOCKED_WASH, 0.16) if unlocked else Color(Palette.MAP_ENTRY_BODY_LOCKED_WASH, 0.16)
-	if selected and unlocked:
-		body.color = Color(Palette.MAP_ENTRY_SELECTED_WASH, 0.11)
-	body.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	body.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	parent.add_child(body)
-
-	var top_rule := ColorRect.new()
-	top_rule.color = Color(Palette.MAP_FOOTER_PRIMARY_BG, 0.58) if unlocked else Color(Palette.MAP_ENTRY_LOCKED_RULE, 0.42)
-	if selected and unlocked:
-		top_rule.color = Palette.GOLD_BRIGHT
-	top_rule.anchor_left = 0.0
-	top_rule.anchor_top = 0.0
-	top_rule.anchor_right = 1.0
-	top_rule.anchor_bottom = 0.0
-	top_rule.offset_left = 8.0
-	top_rule.offset_top = 2.0
-	top_rule.offset_right = -8.0
-	top_rule.offset_bottom = 4.0
-	top_rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	parent.add_child(top_rule)
-
-	var rule := ColorRect.new()
-	rule.color = Color(Palette.MAP_ENTRY_BOTTOM_RULE, 0.35)
-	rule.anchor_left = 0.0
-	rule.anchor_top = 1.0
-	rule.anchor_right = 1.0
-	rule.anchor_bottom = 1.0
-	rule.offset_left = 7.0
-	rule.offset_right = -7.0
-	rule.offset_top = -2.0
-	rule.offset_bottom = -1.0
-	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	parent.add_child(rule)
-
-	if selected and unlocked:
-		var accent := ColorRect.new()
-		accent.color = Palette.GOLD_BRIGHT
-		accent.anchor_left = 0.0
-		accent.anchor_top = 0.0
-		accent.anchor_right = 0.0
-		accent.anchor_bottom = 1.0
-		accent.offset_left = 2.0
-		accent.offset_right = 5.0
-		accent.offset_top = 3.0
-		accent.offset_bottom = -3.0
-		accent.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		parent.add_child(accent)
-
-
-func _completion_entry_style(unlocked: bool, selected: bool) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(Palette.MAP_ENTRY_BG, 0.04) if unlocked else Color(Palette.MAP_ENTRY_BG_LOCKED, 0.08)
-	style.border_color = Color(Palette.MAP_ENTRY_BORDER, 0.24) if unlocked else Color(Palette.MAP_ENTRY_BORDER_LOCKED, 0.20)
-	if selected and unlocked:
-		style.bg_color = Color(Palette.MAP_ENTRY_SELECTED_BG, 0.10)
-		style.border_color = Color(Palette.MAP_ENTRY_SELECTED_BORDER, 0.86)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(2)
-	style.content_margin_left = 0
-	style.content_margin_right = 0
-	style.content_margin_top = 0
-	style.content_margin_bottom = 0
-	return style
-
-
-func _add_completion_marks(parent: Control, unlocked: bool, caught: int, total: int) -> void:
-	var marks := mini(total, 5)
-	if marks <= 0:
-		return
-	var start_x := 14.0
-	var y := 60.0
-	for index in range(marks):
-		var mark := ColorRect.new()
-		mark.position = Vector2(start_x + float(index) * 8.0, y)
-		mark.size = Vector2(5.0, 5.0)
-		var filled := unlocked and index < caught
-		mark.color = Palette.MAP_MARK_FILLED if filled else Color(Palette.MAP_MARK_EMPTY, 0.55)
-		if not unlocked:
-			mark.color = Color(Palette.MAP_MARK_LOCKED, 0.50)
-		mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		parent.add_child(mark)
-
-
-func _add_completion_bar(parent: Control, unlocked: bool, selected: bool, ratio: float) -> void:
-	var back := ColorRect.new()
-	back.color = Color(Palette.MAP_BAR_BACK, 0.52) if unlocked else Color(Palette.MAP_BAR_BACK_LOCKED, 0.44)
-	back.position = Vector2(104.0, 31.0)
-	back.size = Vector2(100.0, 5.0)
-	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	parent.add_child(back)
-
-	var fill := ColorRect.new()
-	fill.color = Palette.GOLD_BRIGHT if selected else Palette.MAP_BAR_FILL
-	fill.position = back.position
-	fill.size = Vector2(back.size.x * clampf(ratio, 0.0, 1.0), back.size.y)
-	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	parent.add_child(fill)
-
-
-func _card_label(text: String, font_size: int, color: Color, outline: int = 0) -> Label:
-	var label := make_label(text, font_size, color, outline, Palette.TEXT_OUTLINE_DARK)
-	label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	label.clip_text = true
-	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	return label
-
-
 func _focus_spot(spot_id: String, update_message: bool = true) -> void:
 	if GameData.get_fishing_spot(spot_id).is_empty():
 		return
@@ -1031,7 +682,6 @@ func _focus_spot(spot_id: String, update_message: bool = true) -> void:
 	if _map_view != null:
 		_map_view.set_selected_spot(spot_id)
 	_refresh_detail()
-	_rebuild_completion_entries()
 	_refresh_ledger_header()
 	_play_map_bgm_for_spot(spot_id)
 	if update_message or (_message_label != null and _message_label.text.is_empty()):
@@ -1301,31 +951,12 @@ func _spot_completion_counts(spot: Dictionary) -> Dictionary:
 	}
 
 
-func _completion_badge_text(spot: Dictionary, unlocked: bool, completion: Dictionary) -> String:
-	if not unlocked:
-		return "Lv.%d" % int(spot.get("unlock_level", 1))
-	if bool(spot.get("boss_spot", false)):
-		return "%d/%d" % [int(completion.get("caught", 0)), int(completion.get("total", 0))]
-	return "%d%%" % int(round(float(completion.get("ratio", 0.0)) * 100.0))
-
-
 func _completion_summary_text(spot: Dictionary, unlocked: bool, completion: Dictionary) -> String:
 	if not unlocked:
 		return "未解放"
 	return "記録 %d/%d 種" % [
 		int(completion.get("caught", 0)),
 		int(completion.get("total", 0)),
-	]
-
-
-func _survey_message_text(spot: Dictionary) -> String:
-	var completion := _spot_completion_counts(spot)
-	var spot_id := String(spot.get("id", GameData.DEFAULT_FISHING_SPOT_ID))
-	return "%s\n達成度 %d/%d 種　%s" % [
-		String(spot.get("name", spot_id)),
-		int(completion.get("caught", 0)),
-		int(completion.get("total", 0)),
-		_survey_missing_text(spot),
 	]
 
 

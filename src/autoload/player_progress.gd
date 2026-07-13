@@ -1439,10 +1439,6 @@ func _is_number_at_least(value: Variant, minimum: float) -> bool:
 	return _is_json_number(value) and float(value) >= minimum
 
 
-func _is_number_in_range(value: Variant, minimum: float, maximum: float) -> bool:
-	return _is_json_number(value) and float(value) >= minimum and float(value) <= maximum
-
-
 func _is_json_integer(value: Variant) -> bool:
 	return _is_json_number(value) and float(value) == floorf(float(value))
 

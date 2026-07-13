@@ -453,13 +453,6 @@ func _featured_fish_text(spot: Dictionary) -> String:
 	return "、".join(PackedStringArray(names))
 
 
-func _bait_text(spot: Dictionary) -> String:
-	var baits: Array[String] = []
-	for bait_variant in Array(spot.get("recommended_baits", [])):
-		baits.append(String(bait_variant))
-	return "、".join(PackedStringArray(baits))
-
-
 func _rig_summary_text() -> String:
 	var rig_name := String(_trip_stats.get("rig_name", "サビキ仕掛け"))
 	var bait_types: Array[String] = []
@@ -967,10 +960,6 @@ func _update_shark_ambush_flash(delta: float) -> void:
 		_shark_ambush_flash.visible = false
 
 
-func _sync_fish_info_scroll_size() -> void:
-	pass
-
-
 func _on_main_action_pressed() -> void:
 	match _simulator.state:
 		FishingSimulator.State.READY:
@@ -1054,11 +1043,6 @@ func _spot_change_message() -> String:
 func _hide_harbor_confirm() -> void:
 	if _quit_overlay != null:
 		_quit_overlay.visible = false
-
-
-func _confirm_harbor_return() -> void:
-	_quit_target = "harbor"
-	_confirm_quit_action()
 
 
 func _confirm_quit_action() -> void:

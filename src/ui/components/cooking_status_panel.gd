@@ -1267,9 +1267,3 @@ func _recipe_icon(recipe_id: String) -> Texture2D:
 	var cell_h := float(tex.get_height()) / 2.0
 	atlas.region = Rect2(float(icon_index % 3) * cell_w, float(int(icon_index / 3)) * cell_h, cell_w, cell_h)
 	return atlas
-
-
-func _texture_style_box(
-	path: String, margin: int, fallback: StyleBox, content_x: float, content_y: float
-) -> StyleBox:
-	return CookingAssets.texture_style_box(path, margin, fallback, content_x, content_y, 5.0)
