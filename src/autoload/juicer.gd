@@ -10,6 +10,7 @@ const DECAY := 1.6         # trauma の減衰速度(1秒あたり)
 var _trauma := 0.0
 var _time := 0.0
 var _freeze := 0.0
+var _owns_tree_pause := false
 var _noise := FastNoiseLite.new()
 
 
@@ -24,8 +25,13 @@ func add_trauma(amount: float) -> void:
 
 
 func hit_stop(seconds: float) -> void:
-	_freeze = maxf(_freeze, clampf(seconds, 0.0, 0.12))
-	get_tree().paused = true
+	var duration := clampf(seconds, 0.0, 0.12)
+	if duration <= 0.0:
+		return
+	_freeze = maxf(_freeze, duration)
+	if not get_tree().paused:
+		get_tree().paused = true
+		_owns_tree_pause = true
 
 
 func get_offset() -> Vector2:
@@ -43,7 +49,9 @@ func _process(delta: float) -> void:
 		_freeze -= delta
 		if _freeze <= 0.0:
 			_freeze = 0.0
-			get_tree().paused = false
+			if _owns_tree_pause:
+				get_tree().paused = false
+			_owns_tree_pause = false
 		return
 	_time += delta
 	_trauma = maxf(_trauma - delta * DECAY, 0.0)
