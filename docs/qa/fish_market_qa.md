@@ -1,6 +1,6 @@
 # 魚市場 QA判断ログ
 
-最終更新: 2026-07-13 / 状態: v1 freeze・M1分解完了・M2一点物2スロット完了・M3局所uplift作業中 / RarityStyles共通化済み / R1 Palette確認済み / 帰港導線右下統一済み
+最終更新: 2026-07-13 / 状態: v1 freeze・M1分解完了・M2一点物2スロット完了・M3主CTA/紙面質感完了 / RarityStyles共通化済み / R1 Palette確認済み / 帰港導線右下統一済み
 参照画像: reference/10_fish_market_mockup.png
 QA更新コマンド: ./tools/market_visual_qa.sh（通常選択・売却確認・売却完了・空状態）
 
@@ -122,18 +122,7 @@ docs/33 §3.1 と docs/45 §12.2 に基づくP1再発として、空状態だけ
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-- M3は局所uplift。変更仮説は「`CART_ACTION_RECT` 内だけを魚市場専用9-slice CTAへ替えてnormal/hover/pressed/focusの視覚署名を分け、既存common parchmentをruntime紙面フィールドへ配線すれば、参照の主CTA優先度と紙面の有機的な面質へ同時に収束する」。
-- 参照との差分Top3（面積×視線優先度）: 1) 右下主CTAが平板で、参照の金色カートCTAより読み順が弱い、2) 左一覧のruntimeフィールドが単色面で紙面から浮く、3) normal/hover/pressed/focusの操作差が同一署名。M3はこの3点だけを扱う。
-- 動かすパラメータ: `MarketSellBatchButton` のstyle/font色（矩形不動）、左一覧のruntime field style（矩形・文字・行順不動）、CTA操作状態のsmoke契約。新規日本語・数字・魚のPNG焼き込みはしない。
-- 不動: M1の6レイヤー順序、論理画面サイズ、一覧7行、全freeze矩形（`CART_ACTION_RECT`を含む）、上部ステータス、主操作文言/意味、`RETURN_RECT`、4状態の情報構成、売却/確認/一括売却ロジック、魚価格、背景/氷台/header/パネル枠3種、他画面consumer、Palette正本。
-- 採否条件: 同一seed 4状態の原寸before/afterでP1ゼロ、320×180とgrayscaleで主CTAの読み順と紙面一体感がbeforeより明確に勝ち参照へ近づくこと。CTA normal/hover/pressed/focusが原寸で識別でき、disabledを含む既存売却契約が維持されること。
-
-| 状態 | 固定seed/データ | 表示/非表示 | 固定アンカー | 可変領域 | evidence出力名 | smoke契約 |
-|---|---|---|---|---|---|---|
-| 通常選択 | market preview既定seed・アジ3/メジナ4ほか | 一覧7行・査定・カート表示 | `CART_ACTION_RECT` / 全freeze矩形 | なし | `2026-07-13_m3_{before,after}_select.png` | CTA enabled、style署名、矩形不変 |
-| 売却確認 | 同seed・選択4匹 | 確認overlay表示 | 同上 / `CONFIRM_OVERLAY_Z` | なし | `2026-07-13_m3_{before,after}_confirm.png` | overlay前景性・CTA背面維持 |
-| 売却完了 | 同seed・売却後 | 結果メッセージ表示 | 同上 | カート内容のみ | `2026-07-13_m3_{before,after}_sold.png` | 売却結果・CTA状態更新 |
-| 空状態 | 同seed・在庫0 | 空面表示、通常詳細非表示 | 同上 | 既存empty意味領域 | `2026-07-13_m3_{before,after}_empty.png` | CTA disabled、空→再入荷→空復帰 |
+- 現在作業中のP2フェーズなし。M3の有効値・状態契約・採用根拠は§1・§4.3へfreeze済み。
 
 ## 7. 判断ログ（直近パスのみ）
 
@@ -204,3 +193,10 @@ docs/33 §3.1 と docs/45 §12.2 に基づくP1再発として、空状態だけ
 - 初回独立レビューのP2（brief safe-areaとprocessorの左右8px不一致）を、processorをbrief値へ合わせて解消した。同レビューのP3（alpha=1の不可視マゼンタ1px）も、alpha 1以下の透明黒正規化で解消。4状態証拠は修正後に再生成した。
 - 修正後の同レビュアー再レビューはP1/P2/P3すべて0、修正不要。safe-area/alpha bbox/可視マゼンタ0px/decoded pixel決定性・画素同値時の既存bytes保持、更新後4状態証拠、empty画素一致を独立確認済み。
 - 最終検証（2026-07-13）: `python3 -m py_compile`（市場素材3script）、M2の2スロットとM1幾何4出力は再生成時のdecoded pixels同値を確認し、画素同値時に既存bytesを保持して製品SHA不変・worktree clean、`./tools/market_visual_qa.sh`、隔離HOMEの `market_smoke.tscn`、`./tools/validate_project.sh`、`git diff --check` はgreen。validateのObjectDB/resource終了時警告は既知ベースラインで終了コード0。
+
+2026-07-13 M3 主CTA・紙面質感:
+- `CART_ACTION_RECT`定数を動かさず、魚市場専用の文字なし幾何9-sliceをnormal/hover/pressed/focus/disabledへ分離した。runtimeの「まとめて売る」/「売却 N匹」を維持し、common CTA consumerは変更していない。
+- 一覧紙面は既存 `common/parchment_card.png` の中央テクスチャを `inventory_panel_frame.png` 内側へ決定的合成。小フィールド直接9-slice案は罫線が文字を横断するP1のため不採用とした。
+- 同一seed 4状態の原寸・320×180・grayscaleと5状態CTA証拠を§4.3へ保存。独立read-onlyレビューはP1/P2なし。P3は操作状態を実入力ではなく同styleのnormal強制描画で撮る点のみで、実配線・相互差・focus可能性はsmokeで確認済み。
+- 製品SHA-256: `inventory_panel_frame=841f91a1…fb67`, `normal=74b91d15…1a40`, `hover=39f4c613…1a40`, `pressed=8faf4a6f…2081`, `focus=a026d297…dc9`, `disabled=810d0b08…abe`。再生成でdecoded pixels/bytesとも同一。
+- 最終検証: `./tools/market_visual_qa.sh`、隔離HOME `res://tools/market_smoke.tscn`、`./tools/validate_project.sh`、`git diff --check` はgreen。validateのObjectDB snapshot作成エラー、終了時2 ObjectDB/1 resource警告は既知で終了コード0。
