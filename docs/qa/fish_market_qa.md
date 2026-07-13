@@ -1,6 +1,6 @@
 # 魚市場 QA判断ログ
 
-最終更新: 2026-07-13 / 状態: v1 freeze・M1分解完了・M2一点物2スロット完了 / RarityStyles共通化済み / R1 Palette確認済み / 帰港導線右下統一済み
+最終更新: 2026-07-13 / 状態: v1 freeze・M1分解完了・M2一点物2スロット完了・M3局所uplift作業中 / RarityStyles共通化済み / R1 Palette確認済み / 帰港導線右下統一済み
 参照画像: reference/10_fish_market_mockup.png
 QA更新コマンド: ./tools/market_visual_qa.sh（通常選択・売却確認・売却完了・空状態）
 
@@ -106,9 +106,18 @@ docs/33 §3.1 と docs/45 §12.2 に基づくP1再発として、空状態だけ
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-- M2完了。`market_bg` → `ice_tray_hero` の順で1スロットずつ採否し、両候補をfreezeした。
-- 不動を確認: M1の6レイヤー順序、論理画面サイズ、一覧7行、全freeze矩形、上部ステータス、主操作、`RETURN_RECT`、4状態の情報構成、売却/確認/一括売却ロジック、魚価格、パネル枠3種/header、common/palette/ScreenBase、他画面。
-- 残る差分Top3の3) CTA/紙面質感はM3対象として未着手。
+- M3は局所uplift。変更仮説は「`CART_ACTION_RECT` 内だけを魚市場専用9-slice CTAへ替えてnormal/hover/pressed/focusの視覚署名を分け、既存common parchmentをruntime紙面フィールドへ配線すれば、参照の主CTA優先度と紙面の有機的な面質へ同時に収束する」。
+- 参照との差分Top3（面積×視線優先度）: 1) 右下主CTAが平板で、参照の金色カートCTAより読み順が弱い、2) 左一覧のruntimeフィールドが単色面で紙面から浮く、3) normal/hover/pressed/focusの操作差が同一署名。M3はこの3点だけを扱う。
+- 動かすパラメータ: `MarketSellBatchButton` のstyle/font色（矩形不動）、左一覧のruntime field style（矩形・文字・行順不動）、CTA操作状態のsmoke契約。新規日本語・数字・魚のPNG焼き込みはしない。
+- 不動: M1の6レイヤー順序、論理画面サイズ、一覧7行、全freeze矩形（`CART_ACTION_RECT`を含む）、上部ステータス、主操作文言/意味、`RETURN_RECT`、4状態の情報構成、売却/確認/一括売却ロジック、魚価格、背景/氷台/header/パネル枠3種、他画面consumer、Palette正本。
+- 採否条件: 同一seed 4状態の原寸before/afterでP1ゼロ、320×180とgrayscaleで主CTAの読み順と紙面一体感がbeforeより明確に勝ち参照へ近づくこと。CTA normal/hover/pressed/focusが原寸で識別でき、disabledを含む既存売却契約が維持されること。
+
+| 状態 | 固定seed/データ | 表示/非表示 | 固定アンカー | 可変領域 | evidence出力名 | smoke契約 |
+|---|---|---|---|---|---|---|
+| 通常選択 | market preview既定seed・アジ3/メジナ4ほか | 一覧7行・査定・カート表示 | `CART_ACTION_RECT` / 全freeze矩形 | なし | `2026-07-13_m3_{before,after}_select.png` | CTA enabled、style署名、矩形不変 |
+| 売却確認 | 同seed・選択4匹 | 確認overlay表示 | 同上 / `CONFIRM_OVERLAY_Z` | なし | `2026-07-13_m3_{before,after}_confirm.png` | overlay前景性・CTA背面維持 |
+| 売却完了 | 同seed・売却後 | 結果メッセージ表示 | 同上 | カート内容のみ | `2026-07-13_m3_{before,after}_sold.png` | 売却結果・CTA状態更新 |
+| 空状態 | 同seed・在庫0 | 空面表示、通常詳細非表示 | 同上 | 既存empty意味領域 | `2026-07-13_m3_{before,after}_empty.png` | CTA disabled、空→再入荷→空復帰 |
 
 ## 7. 判断ログ（直近パスのみ）
 
