@@ -165,13 +165,13 @@ docs/33 §3.1 と docs/45 §12.2 に基づくP1再発として、空状態だけ
 - 検証（2026-07-13）: `python3 -m py_compile tools/generate_fish_market_assets.py`、`./tools/market_visual_qa.sh`、`market_smoke.tscn`、`./tools/validate_project.sh`、`git diff --check` はgreen。validateのObjectDB/resource終了時警告は既知ベースラインで終了コード0。
 
 2026-07-13 M2 `market_bg`:
-- `docs/46_fish_market_m2_asset_briefs.md` §1の発注仕様に従い、OpenAI built-in image generationで候補1枚を生成。sourceを `tools/source_assets/fish_market/market_bg_source.png` に保存し、専用processorで16:9中央crop、1280×720縮小、彩度0.90、`DARK_PANEL`相当色の28%スクリムを決定的に適用した。
+- `docs/49_fish_market_m2_asset_briefs.md` §1の発注仕様に従い、OpenAI built-in image generationで候補1枚を生成。sourceを `tools/source_assets/fish_market/market_bg_source.png` に保存し、専用processorで16:9中央crop、1280×720縮小、彩度0.90、`DARK_PANEL`相当色の28%スクリムを決定的に適用した。
 - 背景source/出力には魚・UI・文字・数字・ロゴがない。木梁、空の木箱/魚箱、吊り秤、ランタン、奥の海を周辺で読ませ、中央のM1パネル群とは競合させない。
 - 同一seedの4状態原寸、before/after、after/reference、320×180、grayを `docs/qa/evidence/fish_market/2026-07-13_m2_bg_*` に保存。縮小比較でも差分Top1「市場背景の不在」が明確に縮み、空状態に魚残像なし。候補1枚を採用した。
 - 他5素材のSHA-256はM1から不変。6レイヤー順序、全freeze矩形、一覧7行、4状態、売却ロジック、PlayerStatusBar、common/palette/ScreenBase、M3対象は不動。
 
 2026-07-13 M2 `ice_tray_hero`:
-- `docs/46_fish_market_m2_asset_briefs.md` §2の発注仕様に従い、OpenAI built-in image generationで候補1枚を `#ff00ff` クロマキー背景付きで生成。raw sourceとskill標準helperによるcutoutを `tools/source_assets/fish_market/` へ保存した。
+- `docs/49_fish_market_m2_asset_briefs.md` §2の発注仕様に従い、OpenAI built-in image generationで候補1枚を `#ff00ff` クロマキー背景付きで生成。raw sourceとskill標準helperによるcutoutを `tools/source_assets/fish_market/` へ保存した。
 - helperはauto-key border、soft matte、透明threshold 12、opaque threshold 220、despillを使用。透明四隅を確認し、processor後は部分alpha 2,558px、可視マゼンタ画素ゼロ。
 - processorはcutoutのalpha bboxを抽出し、縦横比を保ってbrief指定safe-area `(746, 202)–(1110, 366)` へLANCZOS縮小、`DARK_PANEL`相当の10%環境色ティントを適用。製品alpha bboxは `(746, 254)–(1110, 366)`、SHA-256は `ff3016706f7a39e10f259352cfc258cd65175fc6719f2e52e19eeaded8f9bb63` で再実行同値。
 - 同一seedの4状態原寸、before/after、after/reference、320×180、grayを `docs/qa/evidence/fish_market/2026-07-13_m2_ice_*` に保存。差分Top2「hero査定トレーの氷+木箱の質感」が縮み、emptyは画素差分ゼロ。候補1枚を採用した。
