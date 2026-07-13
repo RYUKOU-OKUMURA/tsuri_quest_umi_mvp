@@ -198,5 +198,5 @@ docs/33 §3.1 と docs/45 §12.2 に基づくP1再発として、空状態だけ
 - `CART_ACTION_RECT`定数を動かさず、魚市場専用の文字なし幾何9-sliceをnormal/hover/pressed/focus/disabledへ分離した。runtimeの「まとめて売る」/「売却 N匹」を維持し、common CTA consumerは変更していない。
 - 一覧紙面は既存 `common/parchment_card.png` の中央テクスチャを `inventory_panel_frame.png` 内側へ決定的合成。小フィールド直接9-slice案は罫線が文字を横断するP1のため不採用とした。
 - 同一seed 4状態の原寸・320×180・grayscaleと5状態CTA証拠を§4.3へ保存。独立read-onlyレビューはP1/P2なし。P3は操作状態を実入力ではなく同styleのnormal強制描画で撮る点のみで、実配線・相互差・focus可能性はsmokeで確認済み。
-- 製品SHA-256: `inventory_panel_frame=841f91a1…fb67`, `normal=74b91d15…1a40`, `hover=39f4c613…1a40`, `pressed=8faf4a6f…2081`, `focus=a026d297…dc9`, `disabled=810d0b08…abe`。再生成でdecoded pixels/bytesとも同一。
+- 製品SHA-256: `inventory_panel_frame=841f91a1…fb67`, `normal=74b91d15…b3cad`, `hover=39f4c613…1a40`, `pressed=8faf4a6f…2081`, `focus=a026d297…dc9`, `disabled=810d0b08…abe`。再生成でdecoded pixels/bytesとも同一。
 - 最終検証: `./tools/market_visual_qa.sh`、隔離HOME `res://tools/market_smoke.tscn`、`./tools/validate_project.sh`、`git diff --check` はgreen。validateのObjectDB snapshot作成エラー、終了時2 ObjectDB/1 resource警告は既知で終了コード0。
