@@ -1,6 +1,6 @@
 # docs 索引
 
-最終更新: 2026-07-10
+最終更新: 2026-07-13
 
 ## 1. 分類の定義
 
@@ -21,8 +21,9 @@
 1. `docs/19_ui_production_playbook.md` — UI作業ルールの正本
 2. `docs/30_v2_expansion_overview.md` — V2拡張台帳・現在地
 3. `docs/45_release_readiness_code_review.md` — リリース前監査・優先順位・次タスクbrief
-4. 実装対象の仕様doc（現在の本線は `docs/v2/E7_difficulty.md`、発売外周は `docs/v2/E11_launch_readiness.md`）
-5. `docs/qa/` — 画面別freeze値・不採用リスト
+4. `docs/47_launch_foundation_code_review.md` — ローンチ基盤の構造課題と段階リファクタ順
+5. 実装対象の仕様doc（現在の本線は `docs/v2/E11_launch_readiness.md`）
+6. `docs/qa/` — 画面別freeze値・不採用リスト
 
 ## 4. 索引本体
 
@@ -76,6 +77,8 @@
 | `43_harbor_info_board_plan.md` | 港情報板の旧レイアウト計画。画面仕様はdocs/44へ移行。天候先読み案のみ未決メモ | 履歴 |
 | `44_harbor_command_board_spec.md` | 港の司令盤の現行route / focus / layout契約（実装済み）。freeze正本はharbor_qa | 現行 |
 | `45_release_readiness_code_review.md` | リリース前全体監査、阻害要因、優先順位、次タスクbrief | 現行 |
+| `46_e11_settings_screen_spec.md` | E11設定画面の表示・入力・削除導線仕様 | 現行 |
+| `47_launch_foundation_code_review.md` | ローンチ基盤のコード監査、今回の整理、段階リファクタ順 | 現行 |
 
 **番号体系外の正本**
 
