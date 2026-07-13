@@ -8,7 +8,7 @@
 
 ## 1. 結論
 
-現行コードは、32件のrelease test discovery、セーブ破損・移行fixture、素材所有監査、画面別visual QAを持ち、ローンチ後の拡張を始められる水準にある。一方、長期運用上の最大リスクは `PlayerProgress` への責務集中である。状態、取引、save schema、候補選択、原子的I/O、namespace移行の接続が1ファイルに集まり、新しい保存フィールドの追加時に複数箇所を同期する必要がある。
+現行コードは、33件のrelease test discovery、セーブ破損・移行fixture、素材所有監査、画面別visual QAを持ち、ローンチ後の拡張を始められる水準にある。一方、長期運用上の最大リスクは `PlayerProgress` への責務集中である。状態、取引、save schema、候補選択、原子的I/O、namespace移行の接続が1ファイルに集まり、新しい保存フィールドの追加時に複数箇所を同期する必要がある。
 
 今回の判断は次のとおり。
 
@@ -38,8 +38,10 @@
 | LF-03 | visual QA false green | `aed15646` | 1280x720 / mode / alpha / content / 分散を共通検査。透明・真黒・単色・誤サイズ・誤mode負fixtureとstale capture除去を追加 |
 | LF-04 | 画面横断helper重複 | `8c4528bb` | テクスチャ59呼出を `ShowcaseAssets.load_texture()` へ統一。プレイ時間・金額formatも既存共通helperへ統合 |
 | LF-05 | 調理フロー旧Visual | `3d353b03` | 現行PNGへ置換済みの未生成classと常時非表示fallbackだけを削除。調理freezeと5状態の見た目は維持 |
+| LF-06 | visual QAレビュー追補 | `aaa674c6` | runtime生成referenceと釣具店expanded状態も共通検査へ接続。平均alpha / opaque比で半透明全面画像を拒否 |
+| LF-07 | 魚catalog完全性 | `988d9ab9` | 固定件数を持たず全catalog魚からsheet / cardとファイト必須metadataを検証するrelease testを追加 |
 
-実装後の `src/**/*.gd` は33,476行で、基準から1,048行減った。新しいJuicer smokeを加え、release manifest / discoveryは32 / 32で一致している。
+実装後の `src/**/*.gd` は33,476行で、基準から1,048行減った。新しいJuicer smokeと魚catalog素材監査を加え、release manifest / discoveryは33 / 33で一致している。
 
 ## 4. 残る構造課題
 
