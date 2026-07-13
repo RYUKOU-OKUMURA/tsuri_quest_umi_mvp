@@ -58,8 +58,9 @@ QA更新コマンド: `./tools/shark_pen_visual_qa.sh`
 
 - 変更: `tools/source_assets/shark_pen/shark_pen_tank_bg_source.png` をOpenAI built-in image generationで生成し、`tools/generate_shark_pen_assets.py` で1280x768・teal/deep-navyへ統一処理。`SharkPenAquariumWater` へ配線し、旧runtime直線3本を撤去。
 - 変えていない: freeze表の全矩形、サメ10枠、選択/なつき度、餌5枠/全件scroll、給餌CTA、港へ戻る、魚素材/配置、王冠、メガロドン最終演出。
-- 状態: 標準=`メガロドン84/餌5種`、高リスク=`同一seed＋選択サメhover＋選択餌focus`。両方1280x720。
-- 判断画像: `docs/qa/evidence/shark_pen/2026-07-13_tank_uplift_before_after_reference_original.png`、`..._thumbnail.png`、`..._grayscale.png`、`..._after_selected_hover.png`、`..._asset_contact.png`。
+- 状態: 標準=`メガロドン84/餌5種`、高リスク=`同一seed＋メガロドン行hover＋選択餌focus`。両方1280x720。高リスクbeforeはbase `86f6a2c4` の一時worktreeで同じ入力を再現して取得し、一時fixture変更は製品branchへ持ち込んでいない。
+- 判断画像: 標準=`docs/qa/evidence/shark_pen/2026-07-13_tank_uplift_before_after_reference_original.png`、`..._thumbnail.png`、`..._grayscale.png`。高リスク=`..._selected_hover_before_after_reference_original.png`、`..._thumbnail.png`、`..._grayscale.png`。個別原寸=`..._before_selected_hover.png` / `..._after_selected_hover.png`。素材=`..._asset_contact.png`。
+- 同一状態pixel確認: 高リスクbefore/afterの差分bboxは `(53,133)-(754,553)`、変更260,595px。freeze済み水槽矩形 `x=44..761 / y=127..557` の外側は0pxで、背景以外のhover/focus・文字・矩形は同一。
 - 採用理由: beforeの明るい単色blueとHUD状の直線から、参照のdeep teal水槽・有機的な泡・上方環境光へ縮小でも明確に近づいた。標準/高リスクで文字衝突・見切れ・選択状態の可読性退行はなくP1ゼロ。
 - 固定条件: 背景の中央は大サメ用safe-areaとして静かに保ち、タイトル/下段情報帯のcontrastを下げない。runtime装飾の再加算で質感を補わない。
 
