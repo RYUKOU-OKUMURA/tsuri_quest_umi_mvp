@@ -97,6 +97,8 @@ func _validate_catalog_metadata(fish_id: String, fish: Dictionary, is_nushi: boo
 			if not _is_finite_number(weight):
 				_failures.append("%s: action_profile.%s must be a finite number" % [fish_id, key])
 				continue
+			if float(weight) < 0.0:
+				_failures.append("%s: action_profile.%s must not be negative" % [fish_id, key])
 			total_weight += float(weight)
 		if not is_finite(total_weight) or total_weight <= 0.0:
 			_failures.append("%s: action_profile total weight must be positive" % fish_id)
