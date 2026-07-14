@@ -189,7 +189,9 @@ func _test_cart_interaction_states() -> void:
 	_expect(int(press_events["down"]) == 1 and int(press_events["up"]) == 0, "real mouse input should enter pressed transition")
 	await _push_mouse_button(viewport, center, false)
 	_expect(int(press_events["up"]) == 1, "mouse release should return pressed transition to hover")
+	_expect(interaction_screen._confirm_overlay.visible, "real cart-action release should invoke the production confirm callback")
 	interaction_screen._hide_confirm_overlay()
+	_expect(not interaction_screen._confirm_overlay.visible, "confirm overlay should close before the remaining interaction checks")
 	await _push_mouse_motion(viewport, outside)
 
 	button.grab_focus()

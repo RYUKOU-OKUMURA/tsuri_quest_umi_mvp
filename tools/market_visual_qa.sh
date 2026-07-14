@@ -62,6 +62,9 @@ PY
 echo "==> Build market side-by-side QA outputs"
 python3 "$ROOT/tools/build_screen_visual_comparison.py" market
 
+echo "==> Build and verify market M3 acceptance evidence"
+python3 "$ROOT/tools/build_market_m3_evidence.py"
+
 echo "Market visual QA outputs:"
 echo "/tmp/tsuri_market_select.png"
 echo "/tmp/tsuri_market_confirm.png"

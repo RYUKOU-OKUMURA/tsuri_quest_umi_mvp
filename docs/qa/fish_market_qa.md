@@ -117,12 +117,12 @@ docs/33 §3.1 と docs/45 §12.2 に基づくP1再発として、空状態だけ
 
 ## 5. 現在の残ギャップ
 
-- P1/P2なし。参照のCTAは現行より横幅比が大きいが、`CART_ACTION_RECT` freezeを再オープンする根拠はなくM3対象外のP3とする。
+- 製品コードのP1/P2なし。受入証拠P2として、AppKit sandbox外のGUI可能環境で実入力CTA原寸とcommon昇格後4状態画素同値を再生成する作業が残る。参照のCTAは現行より横幅比が大きいが、`CART_ACTION_RECT` freezeを再オープンする根拠はなくM3対象外のP3とする。
 - M0の空状態メッセージ面はM3後も残像ゼロで、空→再入荷→空復帰をsmokeで維持する。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-- 親レビューP2のコード・所有修正は完了。残作業はGUI可能環境で `./tools/market_visual_qa.sh` を再実行し、実入力CTA証拠と4状態画素同値を保存することだけ。freeze値は動かさない。
+- 親レビューP2のコード・所有修正は完了。残作業はGUI可能環境で `./tools/market_visual_qa.sh` を再実行すること。同scriptはpreview後に `build_market_m3_evidence.py` を呼び、実入力CTA原寸5状態とcommon昇格後4状態画素同値を検証・保存する。freeze値は動かさない。
 
 ## 7. 判断ログ（直近パスのみ）
 
@@ -204,4 +204,4 @@ docs/33 §3.1 と docs/45 §12.2 に基づくP1再発として、空状態だけ
 2026-07-14 M3 親レビューP2修正:
 - `fish_market/cart_action_*` 5素材とscreen-local生成責務を削除し、画素同値のcommon追加variant `common/primary_action_*` と専用の決定的generatorへ昇格した。既存common素材の上書き・既存consumer変更・監査allowlist追加はない。
 - 移動前後5素材はdecoded pixels・PNG SHA-256とも完全一致。SHA-256は `normal=74b91d15…b3cad`, `hover=39f4c613…1a40`, `pressed=8faf4a6f…2081`, `focus=a026d297…dc9`, `disabled=810d0b08…abe` を維持する。画面側の変更は同一margin/rectのtexture pathだけで、画素同値の必要条件を満たした。
-- previewはnormal/hover/pressed/focus/disabledをproduction Buttonの実状態で撮るよう修正。hover/pressedは実MouseMotion/MouseButton、focusは `grab_focus()`、disabledはproperty切替を使用する。smokeはproduction配線のsignalと各A→B→A復帰、focus可能性、共通texture path、freeze rect不変をexit 0で確認した。GUI再撮影のみAppKit sandboxのAbort 134で保留。
+- previewはnormal/hover/pressed/focus/disabledをproduction Buttonの実状態で撮るよう修正。hover/pressedは実MouseMotion/MouseButton、focusは `grab_focus()`、disabledはproperty切替を使用する。smokeはrelease後の確認overlay表示を含むproduction callback、signalと各A→B→A復帰、focus可能性、共通texture path、freeze rect不変をexit 0で確認した。visual QAから証拠builderを自動実行する。GUI再撮影のみAppKit sandboxのAbort 134で保留。
