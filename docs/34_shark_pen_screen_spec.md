@@ -1,9 +1,10 @@
 # 34. サメの生簀画面 v1 実装仕様
 
-Date: 2026-07-07
+Date: 2026-07-07（2026-07-13 水槽背景採用同期）
 対象: `src/ui/shark_pen_screen.gd`
 参照画像: `reference/12_shark_pen_mockup.png`
 根拠: `docs/30_v2_expansion_overview.md` / `docs/v2/E10_shark_raising.md` / `docs/19_ui_production_playbook.md`
+水槽背景uplift: `docs/48_shark_pen_tank_uplift_spec.md`
 
 ## 1. 参照画像の分解
 
@@ -33,7 +34,7 @@ Date: 2026-07-07
 |---|---|
 | 参照画像内の文字入りパネル | 製品ではすべてGodot runtime描画。参照画像は構成確認用 |
 | 餌一覧の王冠アイコン | v1ではruntime描画の小チップで代替。専用PNG王冠はv2候補 |
-| 水槽背景の質感 | v1ではruntimeグラデーション＋軽い泡/軌跡で構成固定。専用水槽背景PNGはv2候補 |
+| 水槽背景の質感 | `assets/showcase/shark_pen/tank_environment_bg.png` を採用済み。素材欠落時だけruntimeグラデーションへfallbackし、旧runtime直線3本は撤去 |
 | メガロドン最終演出 | E10本体の到達演出候補として残し、v1画面には常時表示しない |
 
 ## 2. 主操作と補助操作
@@ -46,10 +47,10 @@ Date: 2026-07-07
 
 | 種別 | 担当 |
 |---|---|
-| PNG素材 | 共通フレーム/ボタン/カード、魚素材（`assets/showcase/fish/*_showcase_sheet.png` / `*_card_portrait.png`） |
-| runtime描画 | 水槽グラデーション、泡、サメ選択行、ゲージ、好物チップ、数値、メッセージ |
-| 新規PNG | `megalodon_card_portrait.png` / `megalodon_showcase_sheet.png` の2点のみ |
-| v2送り | 専用水槽背景、専用王冠/完全成長バッジ、全サメが揃って泳ぐ最終演出 |
+| PNG素材 | 共通フレーム/ボタン/カード、魚素材（`assets/showcase/fish/*_showcase_sheet.png` / `*_card_portrait.png`）、画面専用水槽背景 `tank_environment_bg.png` |
+| runtime描画 | サメ選択行、ゲージ、好物チップ、数値、メッセージ。水槽背景欠落時のみgradient fallback |
+| 新規PNG | `megalodon_card_portrait.png` / `megalodon_showcase_sheet.png`、`assets/showcase/shark_pen/tank_environment_bg.png` |
+| v2送り | 専用王冠/完全成長バッジ、全サメが揃って泳ぐ最終演出 |
 
 ## 4. smoke観点
 
@@ -67,7 +68,9 @@ Date: 2026-07-07
 - QAコマンド: `./tools/shark_pen_visual_qa.sh`
 - 出力:
   - `/tmp/tsuri_shark_pen.png`
+  - `/tmp/tsuri_shark_pen_selected_hover.png`
   - `/tmp/tsuri_shark_pen_compare.png`
+  - `/tmp/tsuri_shark_pen_selected_hover_compare.png`
 - 採用判断の証拠画像は `docs/qa/evidence/shark_pen/` へコピーする
 
 ## 6. v1完了条件

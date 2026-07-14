@@ -6,6 +6,7 @@ const ThemeFactory = preload("res://src/ui/ui_theme.gd")
 
 const VW := Vector2i(1280, 720)
 const OUT := "/tmp/tsuri_shark_pen.png"
+const SELECTED_HOVER_OUT := "/tmp/tsuri_shark_pen_selected_hover.png"
 
 var _had_capture_error := false
 
@@ -13,8 +14,10 @@ var _had_capture_error := false
 func _ready() -> void:
 	_seed_progress()
 	await _capture_plain(OUT)
+	await _capture_selected_hover(SELECTED_HOVER_OUT)
 	print("shark_pen_preview:")
 	print(OUT)
+	print(SELECTED_HOVER_OUT)
 	get_tree().quit(1 if _had_capture_error else 0)
 
 
@@ -67,6 +70,27 @@ func _seed_progress() -> void:
 
 func _capture_plain(out_path: String) -> void:
 	var screen: Control = await _make_screen(VW)
+	await _capture_screen(screen, out_path)
+
+
+func _capture_selected_hover(out_path: String) -> void:
+	var screen: Control = await _make_screen(VW)
+	var selected := screen._shark_rows.get("megalodon", {}) as Dictionary
+	var button := selected.get("button") as Button
+	var selected_food := screen._food_rows.get(screen._selected_food_id, {}) as Dictionary
+	var food_button := selected_food.get("button") as Button
+	if button == null or food_button == null:
+		_had_capture_error = true
+		push_error("selected hover/focus targets were not built")
+		return
+	food_button.grab_focus()
+	var motion := InputEventMouseMotion.new()
+	motion.position = button.get_global_rect().get_center()
+	motion.global_position = motion.position
+	var vp := screen.get_parent() as SubViewport
+	vp.push_input(motion)
+	await get_tree().process_frame
+	await get_tree().process_frame
 	await _capture_screen(screen, out_path)
 
 

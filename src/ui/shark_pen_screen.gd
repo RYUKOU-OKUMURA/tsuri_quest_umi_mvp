@@ -4,6 +4,7 @@ const FightFishAssets = preload("res://src/ui/fight_fish_assets.gd")
 const PlayerStatusBarScript = preload("res://src/ui/components/player_status_bar.gd")
 
 const COMMON_ACTION_BUTTON_PATH := "res://assets/showcase/common/action_button_frame.png"
+const TANK_ENVIRONMENT_BG_PATH := "res://assets/showcase/shark_pen/tank_environment_bg.png"
 const SHARK_ROW_COUNT := 10
 
 var _player_status_bar: PlayerStatusBar
@@ -75,9 +76,12 @@ func _build_aquarium(root: Control) -> void:
 
 	var water := TextureRect.new()
 	water.name = "SharkPenAquariumWater"
-	water.texture = _gradient_texture(Palette.SEA_MID, Palette.SEA_DEEP)
+	water.texture = ShowcaseAssetsScript.load_texture(TANK_ENVIRONMENT_BG_PATH)
+	if water.texture == null:
+		water.texture = _gradient_texture(Palette.SEA_MID, Palette.SEA_DEEP)
 	water.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	water.stretch_mode = TextureRect.STRETCH_SCALE
+	water.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	water.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_place_control(aquarium, water, 0.012, 0.014, 0.988, 0.988)
 
@@ -86,10 +90,6 @@ func _build_aquarium(root: Control) -> void:
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(aquarium, title, 0.030, 0.035, 0.420, 0.120)
-
-	_add_current_arc(aquarium, 0.18)
-	_add_current_arc(aquarium, 0.42)
-	_add_current_arc(aquarium, 0.68)
 
 	_aquarium_layer = Control.new()
 	_aquarium_layer.name = "SharkPenAquariumFishLayer"
@@ -493,14 +493,6 @@ func _add_fish_sprite(fish_id: String, ratios: Rect2, modulate_alpha: float) -> 
 		ratios.position.x + ratios.size.x,
 		ratios.position.y + ratios.size.y
 	)
-
-
-func _add_current_arc(parent: Control, center_y: float) -> void:
-	var line := ColorRect.new()
-	line.name = "SharkPenCurrentLine"
-	line.color = _alpha(Palette.GAUGE_CYAN_HI, 0.34)
-	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(parent, line, 0.085, center_y, 0.915, center_y + 0.006)
 
 
 func _add_panel(parent: Control, fill: Color, border: Color, radius: int, border_width := 2, shadow := false) -> void:

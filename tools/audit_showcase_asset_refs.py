@@ -42,6 +42,10 @@ EXPLICIT_OWNERS: dict[Path, set[str]] = {
     Path("src/ui/fish_book_screen.gd"): {"fish_book", "common"},
     Path("src/ui/market_screen.gd"): {"fish_market", "common"},
     Path("src/ui/shop_screen.gd"): {"tackle_shop", "common"},
+    # 依頼ボードは画面専用の木面/紙札と既存common操作部品だけを所有する。
+    Path("src/ui/quest_board_screen.gd"): {"quest_board", "common"},
+    # サメ生簀のauthored水槽背景は画面専用素材として所有する。
+    Path("src/ui/shark_pen_screen.gd"): {"shark_pen", "common"},
     Path("src/ui/fishing_spot_select_screen.gd"): {"fishing_spots", "common"},
     Path("src/ui/components/fishing_spot_map_view.gd"): {"fishing_spots"},
     Path("src/ui/components/catch_fanfare.gd"): {"underwater"},

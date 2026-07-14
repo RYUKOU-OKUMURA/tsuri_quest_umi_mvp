@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c0lq5q3o0fbo0"
-path="res://.godot/imported/fish_market_backplate.png-26d86a3db3eda9112f273bce58272431.ctex"
+uid="uid://dk18upaiymcgw"
+path="res://.godot/imported/quest_board_wood_panel.png-9ab693858423853b1ce8e7cc9f40ced8.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/fish_market/fish_market_backplate.png"
-dest_files=["res://.godot/imported/fish_market_backplate.png-26d86a3db3eda9112f273bce58272431.ctex"]
+source_file="res://assets/showcase/quest_board/quest_board_wood_panel.png"
+dest_files=["res://.godot/imported/quest_board_wood_panel.png-9ab693858423853b1ce8e7cc9f40ced8.ctex"]
 
 [params]
 

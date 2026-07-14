@@ -23,6 +23,11 @@ rm -f \
   /tmp/tsuri_market_confirm.png \
   /tmp/tsuri_market_sold.png \
   /tmp/tsuri_market_empty.png \
+  /tmp/tsuri_market_cta_normal.png \
+  /tmp/tsuri_market_cta_hover.png \
+  /tmp/tsuri_market_cta_pressed.png \
+  /tmp/tsuri_market_cta_focus.png \
+  /tmp/tsuri_market_cta_disabled.png \
   /tmp/tsuri_market_select_compare.png \
   /tmp/tsuri_market_confirm_compare.png \
   /tmp/tsuri_market_sold_compare.png \
@@ -40,6 +45,11 @@ for path in [
     Path("/tmp/tsuri_market_confirm.png"),
     Path("/tmp/tsuri_market_sold.png"),
     Path("/tmp/tsuri_market_empty.png"),
+    Path("/tmp/tsuri_market_cta_normal.png"),
+    Path("/tmp/tsuri_market_cta_hover.png"),
+    Path("/tmp/tsuri_market_cta_pressed.png"),
+    Path("/tmp/tsuri_market_cta_focus.png"),
+    Path("/tmp/tsuri_market_cta_disabled.png"),
 ]:
     img = Image.open(path).convert("RGB")
     pixels = img.getdata()
@@ -52,11 +62,19 @@ PY
 echo "==> Build market side-by-side QA outputs"
 python3 "$ROOT/tools/build_screen_visual_comparison.py" market
 
+echo "==> Build and verify market M3 acceptance evidence"
+python3 "$ROOT/tools/build_market_m3_evidence.py"
+
 echo "Market visual QA outputs:"
 echo "/tmp/tsuri_market_select.png"
 echo "/tmp/tsuri_market_confirm.png"
 echo "/tmp/tsuri_market_sold.png"
 echo "/tmp/tsuri_market_empty.png"
+echo "/tmp/tsuri_market_cta_normal.png"
+echo "/tmp/tsuri_market_cta_hover.png"
+echo "/tmp/tsuri_market_cta_pressed.png"
+echo "/tmp/tsuri_market_cta_focus.png"
+echo "/tmp/tsuri_market_cta_disabled.png"
 echo "/tmp/tsuri_market_select_compare.png"
 echo "/tmp/tsuri_market_confirm_compare.png"
 echo "/tmp/tsuri_market_sold_compare.png"

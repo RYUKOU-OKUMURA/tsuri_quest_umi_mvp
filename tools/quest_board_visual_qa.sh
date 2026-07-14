@@ -78,8 +78,47 @@ PY
 echo "==> Build quest board side-by-side QA output"
 python3 "$ROOT/tools/build_screen_visual_comparison.py" quest_board
 
+echo "==> Build quest board material uplift evidence"
+ROOT="$ROOT" python3 - <<'PY'
+import os
+from pathlib import Path
+
+from PIL import Image, ImageDraw, ImageFont
+
+root = Path(os.environ["ROOT"])
+items = [
+    ("BEFORE", root / "docs/qa/evidence/quest_board/2026-07-13_wave-a-before.png"),
+    ("AFTER", Path("/tmp/tsuri_quest_board.png")),
+    ("REFERENCE", root / "reference/11_quest_board_mockup.png"),
+]
+font_path = root / "assets/fonts/line_seed/LINESeedJP_A_TTF_Bd.ttf"
+font = ImageFont.truetype(str(font_path), 18)
+
+
+def build(size, grayscale=False):
+    label_h = 32
+    canvas = Image.new("RGB", (size[0] * len(items), size[1] + label_h), "#10151d")
+    draw = ImageDraw.Draw(canvas)
+    for index, (label, path) in enumerate(items):
+        image = Image.open(path).convert("RGB").resize(size, Image.Resampling.LANCZOS)
+        if grayscale:
+            image = image.convert("L").convert("RGB")
+        x = index * size[0]
+        canvas.paste(image, (x, label_h))
+        draw.text((x + 10, 5), label, font=font, fill="#f4ead1")
+    return canvas
+
+
+build((1280, 720)).save("/tmp/tsuri_quest_board_material_before_after_reference.png", optimize=True)
+build((320, 180)).save("/tmp/tsuri_quest_board_material_thumbnail.png", optimize=True)
+build((320, 180), grayscale=True).save("/tmp/tsuri_quest_board_material_grayscale.png", optimize=True)
+PY
+
 echo "Quest board visual QA outputs:"
 echo "/tmp/tsuri_quest_board.png"
 echo "/tmp/tsuri_quest_board_compare.png"
 echo "/tmp/tsuri_quest_board_long_text_a.png"
 echo "/tmp/tsuri_quest_board_long_text_b.png"
+echo "/tmp/tsuri_quest_board_material_before_after_reference.png"
+echo "/tmp/tsuri_quest_board_material_thumbnail.png"
+echo "/tmp/tsuri_quest_board_material_grayscale.png"

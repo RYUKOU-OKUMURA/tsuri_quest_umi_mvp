@@ -2942,11 +2942,15 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
             "generate_fishing_spot_map_assets.py",
             "generate_harbor_showcase_assets.py",
             "generate_megalodon_fish_assets.py",
+            "generate_quest_board_assets.py",
+            "generate_shark_pen_assets.py",
             "generate_shark_fish_assets.py",
             "generate_tackle_shop_assets.py",
             "generate_title_showcase_assets.py",
             "generate_underwater_ui_frame_assets.py",
             "process_fishing_time_slot_assets.py",
+            # M2 authored market art is a product source-consuming pipeline.
+            "process_fish_market_m2_assets.py",
             "process_harbor_info_board_assets.py",
             "process_harbor_plan_assets.py",
             "process_underwater_fish_assets.py",
@@ -2959,9 +2963,17 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
             "build_fight_top_status_static_compare.py",
             "build_fish_asset_contact_sheet.py",
             "build_fish_book_portrait_contact_sheet.py",
+            # QA-only before/after/reference boards never ship product pixels.
+            "build_fish_market_m2_evidence.py",
+            # M3 QA-only triptychs and interaction contact sheets read the
+            # adopted reference solely for docs/qa evidence, never products.
+            "build_market_m3_evidence.py",
             "build_fishing_spot_thumb_contact_sheet.py",
             "build_shark_pen_reference.py",
             "build_screen_visual_comparison.py",
+            # Pixel-preserving save reads existing products only; M2 sources
+            # are existence guards and are never opened by this generator.
+            "generate_fish_market_assets.py",
             "generate_nushi_fish_assets.py",
         }
         detected_consumers = set()

@@ -235,6 +235,16 @@ func _verify_screen_build() -> void:
 		_assert_action_button_layout(screen, action)
 	var return_button := screen.find_child("QuestBoardReturnButton", true, false) as Button
 	_expect(return_button != null, "quest board screen should expose return button")
+	var wood := screen.find_child("QuestBoardWood", true, false) as TextureRect
+	var notice := screen.find_child("QuestBoardTexturePanel", true, false) as TextureRect
+	_expect(wood != null and wood.texture != null, "quest board should load the authored wood texture")
+	_expect(notice != null and notice.texture != null, "quest card should load the authored notice texture")
+	if wood != null and wood.texture != null:
+		_expect_eq(wood.texture.get_size(), Vector2(1280.0, 512.0), "authored wood texture size")
+	if notice != null and notice.texture != null:
+		_expect_eq(notice.texture.get_size(), Vector2(384.0, 432.0), "authored notice texture size")
+	_expect(FileAccess.file_exists(QuestBoardScreen.QUEST_BOARD_WOOD_PATH), "authored wood path should exist")
+	_expect(FileAccess.file_exists(QuestBoardScreen.QUEST_NOTICE_CARD_PATH), "authored notice path should exist")
 	viewport.queue_free()
 	await get_tree().process_frame
 
