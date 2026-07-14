@@ -170,6 +170,14 @@ def draw_corner_brackets(draw: ImageDraw.ImageDraw, box: tuple[int, int, int, in
 
 
 def cooking_room_bg() -> None:
+    authored_source = ROOT / "tools" / "source_assets" / "cooking" / "c1a_kitchen_bg_source.png"
+    if authored_source.exists():
+        # C1-A owns this organic one-off slot. Keep the procedural generator
+        # from overwriting the authored output; rebuild it with the dedicated
+        # deterministic processor instead.
+        print("preserved authored cooking_room_bg.png; run tools/process_cooking_c1a_assets.py")
+        return
+
     w, h = 1280, 720
     img = Image.new("RGBA", (w, h), rgba("1c2c32"))
     draw = ImageDraw.Draw(img, "RGBA")
