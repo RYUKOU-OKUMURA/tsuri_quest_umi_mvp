@@ -812,7 +812,7 @@ func _recent_fish_ids(limit: int) -> Array[String]:
 
 func _inventory_fish_ids(limit: int) -> Array[String]:
 	var ids: Array[String] = []
-	for fish_id in GameData.get_all_fish_ids():
+	for fish_id in GameData.get_all_inventory_fish_ids():
 		if PlayerProgress.fish_count(fish_id) > 0:
 			ids.append(fish_id)
 	ids.sort_custom(

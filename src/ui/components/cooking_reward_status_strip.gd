@@ -318,10 +318,7 @@ func _draw_status_card_backdrop(card: Control, icon_mode: String, accent: Color)
 
 
 func _total_fish_count() -> int:
-	var total := 0
-	for fish_id in GameData.get_all_fish_ids():
-		total += PlayerProgress.fish_count(fish_id)
-	return total
+	return GameData.inventory_fish_total(PlayerProgress.inventory)
 
 
 func _format_number(value: int) -> String:

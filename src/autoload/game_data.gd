@@ -178,15 +178,35 @@ func get_all_nushi_fish_ids() -> Array[String]:
 	return ids
 
 
-func get_all_sellable_fish_ids() -> Array[String]:
+func get_all_inventory_fish_ids() -> Array[String]:
+	# 捕獲時にsharkは生簀へ送られるため、クーラー正本には非sharkだけを含める。
 	var ids: Array[String] = []
 	for fish_id in get_all_fish_ids():
 		if not bool(get_fish(fish_id).get("shark", false)):
 			ids.append(fish_id)
 	for fish_id in get_all_nushi_fish_ids():
-		if not bool(get_fish(fish_id).get("shark", false)):
+		if not ids.has(fish_id) and not bool(get_fish(fish_id).get("shark", false)):
 			ids.append(fish_id)
 	return ids
+
+
+func inventory_fish_total(inventory: Dictionary) -> int:
+	var total := 0
+	for fish_id in get_all_inventory_fish_ids():
+		total += maxi(0, int(inventory.get(fish_id, 0)))
+	return total
+
+
+func inventory_fish_kind_count(inventory: Dictionary) -> int:
+	var kinds := 0
+	for fish_id in get_all_inventory_fish_ids():
+		if maxi(0, int(inventory.get(fish_id, 0))) > 0:
+			kinds += 1
+	return kinds
+
+
+func get_all_sellable_fish_ids() -> Array[String]:
+	return get_all_inventory_fish_ids()
 
 
 func get_all_cookable_fish_ids() -> Array[String]:

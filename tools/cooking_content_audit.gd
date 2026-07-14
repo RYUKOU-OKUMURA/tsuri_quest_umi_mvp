@@ -1246,10 +1246,7 @@ func _meal_status_snapshot(level_before: int, exp_before: int, exp_max_before: i
 
 
 func _total_fish_count() -> int:
-	var total := 0
-	for fish_id in GameData.get_all_fish_ids():
-		total += PlayerProgress.fish_count(fish_id)
-	return total
+	return GameData.inventory_fish_total(PlayerProgress.inventory)
 
 
 func _seed_exp_gain_state() -> void:

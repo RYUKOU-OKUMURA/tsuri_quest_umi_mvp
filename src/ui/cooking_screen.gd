@@ -2203,10 +2203,7 @@ func _show_post_level_status_summary() -> void:
 
 
 func _total_fish_count() -> int:
-	var total := 0
-	for fish_id in GameData.get_all_cookable_fish_ids():
-		total += PlayerProgress.fish_count(fish_id)
-	return total
+	return GameData.inventory_fish_total(PlayerProgress.inventory)
 
 
 func _clear_container(container: Container) -> void:

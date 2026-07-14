@@ -1204,18 +1204,11 @@ func _complete_close() -> void:
 
 
 func _total_fish_count() -> int:
-	var total := 0
-	for fish_id in GameData.get_all_fish_ids():
-		total += PlayerProgress.fish_count(fish_id)
-	return total
+	return GameData.inventory_fish_total(PlayerProgress.inventory)
 
 
 func _owned_fish_kinds() -> int:
-	var kinds := 0
-	for fish_id in GameData.get_all_fish_ids():
-		if PlayerProgress.fish_count(fish_id) > 0:
-			kinds += 1
-	return kinds
+	return GameData.inventory_fish_kind_count(PlayerProgress.inventory)
 
 
 func _clear_container(container: Container) -> void:

@@ -4,6 +4,7 @@ extends Control
 const ThemeFactory = preload("res://src/ui/ui_theme.gd")
 const CookingScreen = preload("res://src/ui/cooking_screen.gd")
 const CookingRewardPanelScript = preload("res://src/ui/components/cooking_reward_panel.gd")
+const CookingRewardStatusStripScript = preload("res://src/ui/components/cooking_reward_status_strip.gd")
 const CookingStatusPanelScript = preload("res://src/ui/components/cooking_status_panel.gd")
 const LevelUpPanelScript = preload("res://src/ui/components/level_up_panel.gd")
 const ScreenBaseScript = preload("res://src/ui/screen_base.gd")
@@ -94,6 +95,9 @@ func _ready() -> void:
 
 	var expanded_fish_flow_ok := await _run_expanded_fish_cooking_flow()
 	if not expanded_fish_flow_ok:
+		return
+
+	if not await _run_inventory_domain_display_contract():
 		return
 
 	var level_panel := LevelUpPanelScript.new()
@@ -266,6 +270,102 @@ func _run_expanded_fish_cooking_flow() -> bool:
 	):
 		return false
 	screen.queue_free()
+	await _tick()
+	return true
+
+
+func _run_inventory_domain_display_contract() -> bool:
+	var nushi_id := GameData.get_all_nushi_fish_ids()[0]
+	var shark_id := GameData.get_normal_shark_ids()[0]
+	PlayerProgress.level = 5
+	PlayerProgress.exp = 20
+	PlayerProgress.money = 1250
+	PlayerProgress.play_seconds = 12345.0
+	PlayerProgress.inventory.clear()
+	PlayerProgress.inventory["aji"] = 2
+	PlayerProgress.inventory[nushi_id] = 1
+	PlayerProgress.inventory[shark_id] = 4
+	PlayerProgress.inventory["saba"] = -3
+	PlayerProgress.inventory["unknown_inventory_fish"] = 8
+	PlayerProgress.pending_buff = {
+		"recipe_id": "salt_grill",
+		"name": "アジの塩焼き",
+		"stat": "max_energy",
+		"value": 0.05,
+		"text": "次の釣行で最大体力 +5%",
+	}
+
+	if not _expect_eq(
+		GameData.inventory_fish_total(PlayerProgress.inventory),
+		3,
+		"Inventory total should include normal fish and nushi only."
+	):
+		return false
+	if not _expect_eq(
+		GameData.inventory_fish_kind_count(PlayerProgress.inventory),
+		2,
+		"Inventory kinds should include normal fish and nushi only."
+	):
+		return false
+	if not _expect_true(
+		not GameData.get_all_cookable_fish_ids().has(nushi_id),
+		"Nushi should remain outside the cooking domain."
+	):
+		return false
+
+	var screen := await _mount_cooking_screen()
+	if not _expect_true(
+		_find_named(screen, "FishRow_%s" % nushi_id) == null,
+		"Cooking fish rows should not expose nushi."
+	):
+		return false
+	if not _expect_true(
+		_find_named(screen, "FishRow_%s" % shark_id) == null,
+		"Cooking fish rows should not expose sharks."
+	):
+		return false
+	var prep_fish_card := _find_named(screen, "PrepSummaryCardFish")
+	if not _expect_true(
+		prep_fish_card != null and _find_label_containing(prep_fish_card, "3 / 20") != null,
+		"Cooking preparation summary should use the inventory-domain total."
+	):
+		return false
+	var snapshot := Dictionary(screen.call("_meal_status_snapshot", 5, 20, 150))
+	if not _expect_eq(
+		int(snapshot.get("fish_total", -1)),
+		3,
+		"Meal reward snapshot should use the inventory-domain total."
+	):
+		return false
+
+	screen.preview_show_status_overlay()
+	await _tick()
+	var status_cooler_value := _find_named(screen, "StatusCoolerValue") as Label
+	if not _expect_true(
+		status_cooler_value != null and status_cooler_value.text == "3 / 20",
+		"Cooking status summary should use the inventory-domain total."
+	):
+		return false
+
+	var reward_strip := CookingRewardStatusStripScript.new()
+	reward_strip.theme = ThemeFactory.build_theme()
+	_stage.add_child(reward_strip)
+	reward_strip.refresh(
+		{
+			"dish_name": "アジの塩焼き",
+			"buff": PlayerProgress.pending_buff.duplicate(true),
+		}
+	)
+	await _tick()
+	var reward_cooler_card := _find_named(reward_strip, "RewardStatusCoolerCard")
+	if not _expect_true(
+		reward_cooler_card != null and _find_label_containing(reward_cooler_card, "3 / 20") != null,
+		"Cooking reward strip should use the inventory-domain total."
+	):
+		return false
+
+	screen.queue_free()
+	reward_strip.queue_free()
 	await _tick()
 	return true
 
@@ -509,6 +609,16 @@ func _find_named(node: Node, node_name: String) -> Node:
 		return node
 	for child in node.get_children():
 		var found := _find_named(child, node_name)
+		if found != null:
+			return found
+	return null
+
+
+func _find_label_containing(node: Node, text: String) -> Label:
+	if node is Label and String((node as Label).text).contains(text):
+		return node as Label
+	for child in node.get_children():
+		var found := _find_label_containing(child, text)
 		if found != null:
 			return found
 	return null

@@ -330,10 +330,7 @@ func _fake_meal_result() -> Dictionary:
 
 
 func _total_fish_count() -> int:
-	var total := 0
-	for fish_id in GameData.get_all_fish_ids():
-		total += PlayerProgress.fish_count(fish_id)
-	return total
+	return GameData.inventory_fish_total(PlayerProgress.inventory)
 
 
 func _fake_non_level_result() -> Dictionary:

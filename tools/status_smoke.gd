@@ -7,6 +7,8 @@ var _screen: Variant
 var _navigated_to := ""
 var _payload: Dictionary = {}
 var _failed := false
+var _inventory_nushi_id := ""
+var _inventory_shark_id := ""
 
 
 func _ready() -> void:
@@ -29,6 +31,7 @@ func _ready() -> void:
 	_expect(_screen._discovered_fish_count() == 4, "discovered fish count should match seeded progress")
 	_expect(_screen._total_catch_count() == 21, "total catch count should match seeded progress")
 	_expect(_screen._recorded_spot_count() == 3, "recorded spot count should match seeded progress")
+	_verify_inventory_domain_contract()
 	var earned_titles := GameData.compute_earned_titles(PlayerProgress.title_stats_snapshot())
 	_expect(earned_titles.has("total_10"), "seeded progress should earn total_10 title")
 	_expect(not earned_titles.has("total_100"), "seeded progress should not earn total_100 title")
@@ -52,6 +55,15 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_expect(_find_named(_screen, "StatusRecentFish_aji") != null, "recent fish cards should be present")
 	_expect(_find_named(_screen, "StatusCoolerSlot_0") != null, "cooler item slots should be present")
+	var nushi_name := String(GameData.get_fish(_inventory_nushi_id).get("name", _inventory_nushi_id))
+	_expect(
+		_find_label_containing(_screen, "アジ ×2") != null,
+		"cooler should show the normal inventory fish count"
+	)
+	_expect(
+		_find_label_containing(_screen, "%s ×1" % nushi_name) != null,
+		"cooler should show inventory nushi"
+	)
 	_expect(_find_label_containing(_screen, "カジキ竿・蒼槍（装備中）") != null, "equipped marlin rod should be visible in owned rods")
 	_expect(_find_named(_screen, "FishBookGrid") == null, "old fish book grid must not remain in status")
 	_expect(_buttons_with_meta(_screen, "fish_book_card").is_empty(), "status must not contain full fish book cards")
@@ -99,11 +111,15 @@ func _seed_progress() -> void:
 		"kasago": 26.4,
 		"saba": 38.6,
 	}
+	_inventory_nushi_id = GameData.get_all_nushi_fish_ids()[0]
+	_inventory_shark_id = GameData.get_normal_shark_ids()[0]
 	PlayerProgress.inventory = {
-		"aji": 1,
-		"kasago": 2,
-		"saba": 3,
+		"aji": 2,
+		"saba": -3,
+		"unknown_inventory_fish": 8,
 	}
+	PlayerProgress.inventory[_inventory_nushi_id] = 1
+	PlayerProgress.inventory[_inventory_shark_id] = 4
 	PlayerProgress.spot_caught_counts = {
 		"harbor_pier": {"aji": 12},
 		"rock_breakwater": {"mejina": 5, "kasago": 3},
@@ -120,6 +136,38 @@ func _seed_progress() -> void:
 		"aji:salt_grill": 2,
 		"mejina:simmered": 1,
 	}
+
+
+func _verify_inventory_domain_contract() -> void:
+	var inventory_ids := GameData.get_all_inventory_fish_ids()
+	var cookable_ids := GameData.get_all_cookable_fish_ids()
+	var inventory_nushi_ids: Array[String] = []
+	for nushi_id in GameData.get_all_nushi_fish_ids():
+		if not bool(GameData.get_fish(nushi_id).get("shark", false)):
+			inventory_nushi_ids.append(nushi_id)
+	_expect(
+		inventory_ids.slice(0, cookable_ids.size()) == cookable_ids,
+		"inventory domain should keep the existing normal non-shark order"
+	)
+	_expect(
+		inventory_ids.slice(cookable_ids.size()) == inventory_nushi_ids,
+		"inventory domain should append non-shark nushi in fishing-spot order"
+	)
+	var unique_ids: Dictionary = {}
+	for fish_id in inventory_ids:
+		unique_ids[fish_id] = true
+	_expect(unique_ids.size() == inventory_ids.size(), "inventory domain should not contain duplicates")
+	_expect(inventory_ids.has(_inventory_nushi_id), "inventory domain should include nushi")
+	_expect(not inventory_ids.has(_inventory_shark_id), "inventory domain should exclude sharks")
+	_expect(not cookable_ids.has(_inventory_nushi_id), "nushi should remain outside the cookable domain")
+	_expect(
+		GameData.inventory_fish_total(PlayerProgress.inventory) == 3,
+		"inventory total should include normal fish and nushi only"
+	)
+	_expect(
+		GameData.inventory_fish_kind_count(PlayerProgress.inventory) == 2,
+		"inventory kinds should include normal fish and nushi only"
+	)
 
 
 func _make_screen(payload: Dictionary = {}) -> Control:
