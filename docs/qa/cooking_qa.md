@@ -1,6 +1,6 @@
 # 調理場 QA判断ログ
 
-最終更新: 2026-07-11 / 状態: 調理場cooking_screen R1完了 / C0 runtime P1修正・headless構造契約完了 / EXP_GAIN P2構成改善完了 / STATUS_SUMMARY P2構成改善完了 / COOK_SELECT P2構成改善完了 / LEVEL_UP P2構成改善完了 / 残: P3素材密度
+最終更新: 2026-07-14 / 状態: C1-A COOK_SELECT厨房背景 進行中 / C0・既存構成freeze維持
 参照画像: reference/cooking_flow/01_cook_select_concept.png, reference/cooking_flow/02_meal_result_concept.png, reference/cooking_flow/03_exp_gain_concept.png, reference/cooking_flow/04_level_up_overlay_concept.png, reference/cooking_flow/05_status_summary_concept.png
 QA更新コマンド: ./tools/cooking_visual_qa.sh
 
@@ -59,12 +59,14 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-2026-07-10: `C0 runtime表示破綻` を、docs/33 C0 / docs/45 UI-C0-01 に基づく **P1再発** として局所再オープンし、同日完了。
+2026-07-14: `C1-A COOK_SELECT厨房背景` を、docs/33 C1の1スロット素材フェーズとして開始。
 
-- 対象状態・差分: MEAL_RESULT（前状態の残像wash）、STATUS_SUMMARY（カードタイトル帯と文字の衝突）、EXP_GAIN / LEVEL_UP_OVERLAY（下部導線グリフ潰れ）、STATUS_SUMMARY所持金（3桁区切りなし）。
-- 動かすもの: 報酬画面の不透明ステージ下地、STATUS_SUMMARYカードタイトル帯の表示方式、上記2導線のランタイムグリフ、所持金表示format、headless構造監査と決定的プレビューの表示契約。
-- 不動値: §1の全freeze値、調理/EXP/レベルアップの進行ロジック、料理・魚データ、既存素材、COOK_SELECT構成、C1〜C5の素材課題。
-- 比較条件: `tools/cooking_preview.gd` の固定Lv/所持金/料理状態で、5状態の1280x720 before / afterを保存し、参照02〜05との横並びでP1消失を確認する。
+- 差分Top1: COOK_SELECTの現行 `cooking_room_bg.png` は平面的な矩形・単色面が支配的で、参照01の暖色ランタン光、海の見える窓、調理棚が作る authored 厨房の空気に届いていない。
+- 背景slotの実可視領域: 1280x720全面に敷かれるが、COOK_SELECTでは主にヘッダー/3列/下部stripの外周と12pxガター、中央列と右詳細の間の縦窓で見える。前景情報面の背後では減光・彩度統一を行い、背景の高周波を主役にしない。
+- 動かすもの: `tools/source_assets/cooking/c1a_kitchen_bg_source.png`、`tools/process_cooking_c1a_assets.py`、既存製品slot `assets/showcase/cooking/cooking_room_bg.png`、発注brief、台帳、C1-A証拠。
+- 不動値: COOK_SELECTの3列、カード/詳細/CTA矩形、`PlayerStatusBar`、下部strip、§1の全freeze値、料理/材料/EXP/バフ/レベルアップ/セーブロジック、MEAL_RESULT専用素材、C1-B〜C5、common/palette/project.godot、他画面。
+- 採用条件: 同一決定状態の原寸beforeに明確に勝ち、320x180のafter/referenceでも「暖色ランタン光・海窓・調理棚」の差が縮むこと。COOK_SELECT以外は背面利用状態の背景差のみを許可し、専用不透明状態は意図しない差ゼロとする。
+- baseline: `docs/qa/evidence/cooking/2026-07-14_c1a_before_{select,result,exp,levelup,status}.png`（5状態1280x720、2026-07-14固定）。
 
 ## 7. 判断ログ（直近パスのみ）
 
