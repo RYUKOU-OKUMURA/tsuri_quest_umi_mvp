@@ -1,0 +1,515 @@
+{
+  "cook_action_runway_frame.png": {
+    "file_sha256": "3141c50b25f2024485a6c6c0252995596bee8c660cf9b8bcc6f659832a7c6db1",
+    "decoded_rgba_sha256": "87a5aedda7be92219af15028ed404eadc95174102d81ebb0afedf80aa04933ae",
+    "size": [
+      560,
+      88
+    ],
+    "mode": "RGBA"
+  },
+  "cook_button_frame.png": {
+    "file_sha256": "cdfc010c61301443029159d9fccf98fe4191668cb62ec7b38b27618f50dc2ba6",
+    "decoded_rgba_sha256": "b8183cb20e75e67abe512069641d99ddd7b1024d708aaf634f923fb42aa5b6e7",
+    "size": [
+      360,
+      82
+    ],
+    "mode": "RGBA"
+  },
+  "cook_detail_row_frame.png": {
+    "file_sha256": "3fdb7513b291697640be3c6e580eeab00a344fa95c2a0b8c933b154437c1c3ee",
+    "decoded_rgba_sha256": "92256827faf965a19658d72ecb6a306e084287e8de13bb34aa416dd2c9cbc088",
+    "size": [
+      560,
+      46
+    ],
+    "mode": "RGBA"
+  },
+  "cooking_icon_sheet.png": {
+    "file_sha256": "ee266129bc919c5a7e40f4ca0fe91ee4048c8457c6dc28076d7f072409716995",
+    "decoded_rgba_sha256": "9e7d8d83016e33d0de00f51097a00efabb1fe9bc190c7cdf4973bea1da910ffc",
+    "size": [
+      960,
+      96
+    ],
+    "mode": "RGBA"
+  },
+  "cooking_room_bg.png": {
+    "file_sha256": "67157172b2743e2b9ab7562e955dcc4ff3360bfc6b67118917b7c40f0c981106",
+    "decoded_rgba_sha256": "9e65dce4b3976ad65ffd19ac64ca2f277dcc299902c080942e193cc7a239df76",
+    "size": [
+      1280,
+      720
+    ],
+    "mode": "RGBA"
+  },
+  "cooking_section_ribbon.png": {
+    "file_sha256": "304efadca7febf939838170d1aa0bb9ab11134ab0936ee58023c3af5443ab2a4",
+    "decoded_rgba_sha256": "839c1690b340f6adae557fad640ce6d0677dd162586090f8aa800731c41e866a",
+    "size": [
+      520,
+      72
+    ],
+    "mode": "RGBA"
+  },
+  "cooking_title_banner.png": {
+    "file_sha256": "6a283efaf1f0ba717345af3b34af70ab0e15a4d287b3ba60270d64c59d8b8814",
+    "decoded_rgba_sha256": "1a00a02de8093255d357b0d70fa5725ab150c8f129b4ae2936bdac610422f8d8",
+    "size": [
+      420,
+      110
+    ],
+    "mode": "RGBA"
+  },
+  "dish_detail_frame.png": {
+    "file_sha256": "47f57b701cec1680efab8cef34cb8384a1a6e1b39402283fc8be3cc0a86b71f0",
+    "decoded_rgba_sha256": "a8b80d28f038b8d68cfe2ff41b03b94bcd4ce48db5774b272d43825ad6be8aea",
+    "size": [
+      620,
+      560
+    ],
+    "mode": "RGBA"
+  },
+  "dish_feature_aji_shioyaki.png": {
+    "file_sha256": "209b2f21d071a86520246701912d6254ca1be5efa7de670c7e6736adaee0b95f",
+    "decoded_rgba_sha256": "60ddfce85b5dc5de295d1cc67ae70a55b38d708ed26bb303ce70569b9debe518",
+    "size": [
+      620,
+      330
+    ],
+    "mode": "RGBA"
+  },
+  "dish_feature_fry.png": {
+    "file_sha256": "6b3f08b7a7b128e723ccff16d9c18539cec9d0b4f4aed6ab97170f1967ad9c5c",
+    "decoded_rgba_sha256": "c1a98a4a6fd4acd0141de20cd0703ad9db918f7e89c501a6afae6a1015f189fe",
+    "size": [
+      620,
+      330
+    ],
+    "mode": "RGBA"
+  },
+  "dish_feature_sashimi.png": {
+    "file_sha256": "bc585df7e93c4d67b64bf6e8f1d829181d4a6e773a3cdba7c7b92bdaf3e41331",
+    "decoded_rgba_sha256": "4423ebb84eb3bc3ba1673da702d3f1d933c285a8c2688004aa034b2d55239900",
+    "size": [
+      620,
+      330
+    ],
+    "mode": "RGBA"
+  },
+  "dish_feature_simmered.png": {
+    "file_sha256": "61621f26d893e6b17d418bf7772ef4a63da775567a2510ad007600aa51d52bf4",
+    "decoded_rgba_sha256": "f09903cf2e511a7820b9df97e8bfa6b85af0c7ddc2a5bd56507722a082e58113",
+    "size": [
+      620,
+      330
+    ],
+    "mode": "RGBA"
+  },
+  "dish_feature_soup.png": {
+    "file_sha256": "75b67e5711ada800e496592134684713087710c24db7ee5ca333adfb4f014a4e",
+    "decoded_rgba_sha256": "aeecd2a0d8a20b4f55c653afc3e74e26bf52c4c2e802d09f635d7d5e2790786d",
+    "size": [
+      620,
+      330
+    ],
+    "mode": "RGBA"
+  },
+  "dish_icon_sheet.png": {
+    "file_sha256": "7926a5118a89af1709971dc083c9d9d03bc89bdc4a6d3aff80798d1a31933d50",
+    "decoded_rgba_sha256": "a75ab56456844412b7376f9d4cd7ee61877489475ce754da9313adf149ee3623",
+    "size": [
+      660,
+      300
+    ],
+    "mode": "RGBA"
+  },
+  "exp_burst_frame.png": {
+    "file_sha256": "4d5b2095baa5646c8581f40fa8970e1716cbae01f934852a07c05aee0753659f",
+    "decoded_rgba_sha256": "12df7a4f345a43ea698dc2946c090e495726df9b7e79c464979bcc4c1ca9651a",
+    "size": [
+      760,
+      220
+    ],
+    "mode": "RGBA"
+  },
+  "exp_stage_bg.png": {
+    "file_sha256": "dd4c07c9db84d2c8a1ddee5da40812327c40ea55b970d9d33b8d298b418ed628",
+    "decoded_rgba_sha256": "83f8ec1b90b69b4f759ca1d87a7cd408efb98b8a8c2c9a96f57d029ea4f198bd",
+    "size": [
+      1280,
+      720
+    ],
+    "mode": "RGBA"
+  },
+  "fish_icon_sheet.png": {
+    "file_sha256": "6c5e6132fbf26dd69bb9eefa424fe495fc8b0e448010ea3185929ebfac15e4e6",
+    "decoded_rgba_sha256": "e66b69651be6a76440896ea364cb4aa3bb5128356ff59b527781a4776978a9a2",
+    "size": [
+      192,
+      528
+    ],
+    "mode": "RGBA"
+  },
+  "fish_row_frame.png": {
+    "file_sha256": "cb2da651c1678ee11540d553d8af67c767e2802713cb1cbed774f0e928f2f194",
+    "decoded_rgba_sha256": "9465640c259922a2b468f49272bef962b23dd6a9ffd4b3653539883fb98f401e",
+    "size": [
+      340,
+      82
+    ],
+    "mode": "RGBA"
+  },
+  "flow_action_button_frame.png": {
+    "file_sha256": "7b9a24a7b8aaec9da2517b35c847145eb6580e24d45e4f18ade6b0102ec96912",
+    "decoded_rgba_sha256": "bf2a8372f7c46443d5d4d00870aad2eec6cb544e7e646606a02ce583e2723936",
+    "size": [
+      380,
+      88
+    ],
+    "mode": "RGBA"
+  },
+  "level_crown.png": {
+    "file_sha256": "bfb1c0b95f997dacdbb526bdbf8d901d0f94df6ef568dc10ab2c8c398fa9235e",
+    "decoded_rgba_sha256": "0eb3831ff504cc6db5eba390fc38cb9c399342d94fa9bdf79eb5f31348c44d84",
+    "size": [
+      220,
+      96
+    ],
+    "mode": "RGBA"
+  },
+  "level_laurel_left.png": {
+    "file_sha256": "6c1dcea226a3d499f6c4377d0c242bab985e59834c68fba2c6f8b4dfd4ed6216",
+    "decoded_rgba_sha256": "dff76093fb7020157908fb77d895b1d6c7f51d5a22d7c4998642d96056383308",
+    "size": [
+      140,
+      120
+    ],
+    "mode": "RGBA"
+  },
+  "level_laurel_right.png": {
+    "file_sha256": "b068d8b5e313857cde14d6d454acc5edecd322c2ada2c2fe26008d3366df81d8",
+    "decoded_rgba_sha256": "ba3315fb122a3d242d3193d7c968369a376cddcd554cda9a1512ffd7217663e8",
+    "size": [
+      140,
+      120
+    ],
+    "mode": "RGBA"
+  },
+  "level_stat_row_frame.png": {
+    "file_sha256": "c24dbf1bfa43955d929df2bf2bab32b5de213f6c47ac91bf1d30625ffa0ee599",
+    "decoded_rgba_sha256": "2ddffeb6e13e1dc9325cfe13d2ebad5dcae360730ba5d46a12044cac00e7ac97",
+    "size": [
+      420,
+      76
+    ],
+    "mode": "RGBA"
+  },
+  "level_unlock_medallion.png": {
+    "file_sha256": "7eabda0d1d9745ea819a28420e978f682040594a46947363d09b08a122a69779",
+    "decoded_rgba_sha256": "d681d4125def97f6948ce4267cb65f9f1db10ec15407c40df6ee3fdbf78d94e9",
+    "size": [
+      150,
+      150
+    ],
+    "mode": "RGBA"
+  },
+  "level_unlock_ribbon.png": {
+    "file_sha256": "0a528b6dd0264d5814adeeaa2893a3270e88b1f006dba1029b739839ed104f2c",
+    "decoded_rgba_sha256": "fab8ccc687bf9a1dccd8d080af26a3b57fe00c60cb87cb8efb448eaa1c44b1e6",
+    "size": [
+      760,
+      72
+    ],
+    "mode": "RGBA"
+  },
+  "level_unlock_spot.png": {
+    "file_sha256": "bf41d0ab648287a508fa39daef05d74fadeb6c39ab753440501809b8917bcd9f",
+    "decoded_rgba_sha256": "948e59c51ea69fac22d1fd071b8e5efda58f3e4eb030e68e4442a64d56c45deb",
+    "size": [
+      260,
+      110
+    ],
+    "mode": "RGBA"
+  },
+  "level_up_frame.png": {
+    "file_sha256": "b578ac532dda9835001daf6daf973c27bb4f5487b112ce89ef2e80317684b182",
+    "decoded_rgba_sha256": "2a21ddda46a09c4eb71da388c9dd466b617923cdac2e29e475a493a7b34a8747",
+    "size": [
+      680,
+      460
+    ],
+    "mode": "RGBA"
+  },
+  "meal_banner_frame.png": {
+    "file_sha256": "efd58dadc743813498259132307b34c72d00b31adae9c1e2070f560ec1fa92b9",
+    "decoded_rgba_sha256": "5271e8179bfc5d573679feb43ef6d8983f9323a7b48ac67cce31681e580bc96c",
+    "size": [
+      760,
+      128
+    ],
+    "mode": "RGBA"
+  },
+  "meal_dish_card_frame.png": {
+    "file_sha256": "65c4e6b1651c408399448355ecef16f5ca821749248058361f26273d54f21ccc",
+    "decoded_rgba_sha256": "8edf4180e926ca8b0dfa4e8f1fa5ad7bc86f40937240fda913d6066cdd27e166",
+    "size": [
+      760,
+      170
+    ],
+    "mode": "RGBA"
+  },
+  "meal_result_frame.png": {
+    "file_sha256": "9195c5c756da69112f08177facb7d3008f97edc071100032ce3f5613e3a870a6",
+    "decoded_rgba_sha256": "e5e30aa85cacd2803e74da35c7aae1bdd725046ebabf7c00dd237332fc52fd51",
+    "size": [
+      760,
+      240
+    ],
+    "mode": "RGBA"
+  },
+  "meal_result_scene_art_v2.png": {
+    "file_sha256": "3f8cbc2c968c4e42cca6264151740ba84dcbd627a3c8e9ed8f14dd998850953d",
+    "decoded_rgba_sha256": "4a2198042a7972280f4321c31227883fa94594b1867005ab15178ab2cf364606",
+    "size": [
+      896,
+      512
+    ],
+    "mode": "RGB"
+  },
+  "meal_scene_bg.png": {
+    "file_sha256": "4076dc35e744e0b3ad067a742fe264b4353d93ac5abdf74d33a098648f983ffc",
+    "decoded_rgba_sha256": "32977a2b6cc214466f9acbcbf2766f950b506d9b50f939b40e57051477d93607",
+    "size": [
+      1280,
+      720
+    ],
+    "mode": "RGBA"
+  },
+  "meal_table_spread.png": {
+    "file_sha256": "6f8bb0f32c5e01571dcdcb40cf6e48ee6a36edc2b270be1d7a0c49db438bfd32",
+    "decoded_rgba_sha256": "04fc116f8bee0d5c4bb05c615b8502b8ce58e6a9c2a0526cf0946f5f98055aac",
+    "size": [
+      420,
+      190
+    ],
+    "mode": "RGBA"
+  },
+  "next_effect_art.png": {
+    "file_sha256": "508466da79b8d0eda820298fe963a1120e3f472d4e14704b476a0cdb4db8bb7c",
+    "decoded_rgba_sha256": "b701435aac8167084dc668e8d6fc4c633c6085649224a6aa5e9d067dec218b62",
+    "size": [
+      280,
+      120
+    ],
+    "mode": "RGBA"
+  },
+  "player_eating_pose.png": {
+    "file_sha256": "2e77c12b4346b6e679520163651cba443149e3ef089a62dc2683c4704820e2fe",
+    "decoded_rgba_sha256": "845a835350b7743068e8dfe9f3ee2793039a1ca7219250434ea140ed7bc7c298",
+    "size": [
+      360,
+      280
+    ],
+    "mode": "RGBA"
+  },
+  "player_eating_pose_pixel.png": {
+    "file_sha256": "aef211baed722e73380f23830f37166828956b3b3dd6df1f6a7c8708c9878a10",
+    "decoded_rgba_sha256": "a68511de5809a11f83c2bbbf526182f4da4063c8bce6c477816d10a234315be2",
+    "size": [
+      360,
+      280
+    ],
+    "mode": "RGBA"
+  },
+  "player_eating_pose_pixel_tight.png": {
+    "file_sha256": "790c7f91b0e70e2422aab3e472cf60f3438962c1e8eeb0c87cc5e334deaddf3f",
+    "decoded_rgba_sha256": "cbc036029506f80e62c0191c284f506e0ef89ff736ed4fb805df84e0da3173bd",
+    "size": [
+      190,
+      280
+    ],
+    "mode": "RGBA"
+  },
+  "player_eating_upper_scene.png": {
+    "file_sha256": "924aa74f797ceb693485d10af91430b65df8d399bd5d33bf2fda41f46915f9e9",
+    "decoded_rgba_sha256": "893a6e48f26c3b15b2636e63982a12e51cde8fe5ef67630c38b68b49d601be4b",
+    "size": [
+      250,
+      185
+    ],
+    "mode": "RGBA"
+  },
+  "player_exp_message_pose.png": {
+    "file_sha256": "f72db037936f4542a87b034ac29ea0466773cfd1a26db402454831ca294b13c7",
+    "decoded_rgba_sha256": "44a3e6fcb6b0bcac3b0a2b1fee249e5fae58ec3ec37c4374b10fb0aa11ff9904",
+    "size": [
+      180,
+      130
+    ],
+    "mode": "RGBA"
+  },
+  "player_exp_message_pose_pixel.png": {
+    "file_sha256": "e230ad8e5c7129b5ad708b466e6ee76a689f0066c984f4dba6098f572002ac04",
+    "decoded_rgba_sha256": "a7aa7bde829390279b026e8b1dd23c717be68ae9fc759dc30ffccd66c52204d4",
+    "size": [
+      180,
+      130
+    ],
+    "mode": "RGBA"
+  },
+  "player_exp_pose_pixel_tight.png": {
+    "file_sha256": "e746f5f3c5687d4c1da23449fdf951039f50c7fff833b0f42e78ab93deca180e",
+    "decoded_rgba_sha256": "8fc07f4283a9c5b78d31d10d218e1754b20fd65dd3c23f7e44751dcbc9bcee79",
+    "size": [
+      150,
+      190
+    ],
+    "mode": "RGBA"
+  },
+  "player_status_portrait.png": {
+    "file_sha256": "2adefbdd386e7e242050ab4735353e7c2a05efb1fb052849dada122291f79c6a",
+    "decoded_rgba_sha256": "4029d750c0ef715ed090440263e6a93c55380dba6917ad547298aebd350ac7ee",
+    "size": [
+      240,
+      240
+    ],
+    "mode": "RGBA"
+  },
+  "player_status_portrait_pixel.png": {
+    "file_sha256": "f0a9e1e9a0854775e3dbb7d7bb85385e5077ac46af3a1deb6b77af4b029b3269",
+    "decoded_rgba_sha256": "7cd71e2f1f53208daa2483b69dd5da601e71a2e59209b360d9f1d20add1caaa1",
+    "size": [
+      240,
+      240
+    ],
+    "mode": "RGBA"
+  },
+  "prep_summary_bar_frame.png": {
+    "file_sha256": "992da1fc40ab1dfaabfc8f069b556af73ac6e02b58c1b42bea2b5945f4191daa",
+    "decoded_rgba_sha256": "0442e941f2a31e9fc9b096a9d0d967462956675f68c62bb55fcac04f34fa087d",
+    "size": [
+      1280,
+      92
+    ],
+    "mode": "RGBA"
+  },
+  "prep_summary_card_frame.png": {
+    "file_sha256": "57e3d8d3becb92cc2b524883118259ed01bb26693c745715e853122b54b5f37f",
+    "decoded_rgba_sha256": "20409439c21ff67dbe0f24feb3dbd5bc6c287197981ab37a0342e3e2f00c7bee",
+    "size": [
+      340,
+      62
+    ],
+    "mode": "RGBA"
+  },
+  "recipe_card_frame.png": {
+    "file_sha256": "57924b9abcfb14a43231a33de3b12a507bdce8f07e92c3f1445095097af47302",
+    "decoded_rgba_sha256": "5709ed2b2f9d348040e04b889ed46116040651836c75a803213aa043bc04bf2d",
+    "size": [
+      280,
+      220
+    ],
+    "mode": "RGBA"
+  },
+  "recipe_dish_thumb_frame.png": {
+    "file_sha256": "afd35949ce6c28b2eef52bbceb3567fd087896e0b6ed561deafc9470ee727ca9",
+    "decoded_rgba_sha256": "2d2f0dd7aa2348e079a0b5cbd692325575f5e2832e38161f1ef46d4b83c77192",
+    "size": [
+      260,
+      170
+    ],
+    "mode": "RGBA"
+  },
+  "recipe_grid_frame.png": {
+    "file_sha256": "639644ca3f156e4c75b24bb0e2b0d9486b1dd954f08f790ddb4fec7eeb80fcd7",
+    "decoded_rgba_sha256": "84e4e75e6067eb05e0caf00c60bc21b25b50395fce021e578b1e0b562dfa8bd1",
+    "size": [
+      460,
+      560
+    ],
+    "mode": "RGBA"
+  },
+  "recipe_material_strip_frame.png": {
+    "file_sha256": "47c1d842880ffd4781d5650e5e529a721363d90b605e377ae10241447a95a804",
+    "decoded_rgba_sha256": "206a459e12f0e393022ce5845b5cc201aec2f98f88fecedfec896776fe73df7e",
+    "size": [
+      240,
+      54
+    ],
+    "mode": "RGBA"
+  },
+  "recipe_selected_card_frame.png": {
+    "file_sha256": "523e7807fe16e3c42299537d028b93a8f556e630fab9e6ed4d9f4c7547590c0c",
+    "decoded_rgba_sha256": "4214622ad84a116bbb30c3d51361600abddd3c766b26b2c8ef553651dab6dafd",
+    "size": [
+      280,
+      220
+    ],
+    "mode": "RGBA"
+  },
+  "recipe_to_detail_arrow.png": {
+    "file_sha256": "5defc73fbed12b35970980af634634b0b871c042dec98bce7bbfd89c993d5911",
+    "decoded_rgba_sha256": "1f29c7a47f98b8a76a85c8f1a4cb2b8d4194c4e18ffe97ffc09993d30c3b9e37",
+    "size": [
+      96,
+      220
+    ],
+    "mode": "RGBA"
+  },
+  "reward_card_frame.png": {
+    "file_sha256": "824f077e888f90213b9061e244bcc852afa5b65041099a5768ee10e7b1e8ae06",
+    "decoded_rgba_sha256": "6d21786ca52c0cc657a5727604b39af51d7b7e4cf9d8ca7735581f485ab0a9c5",
+    "size": [
+      360,
+      150
+    ],
+    "mode": "RGBA"
+  },
+  "status_card_frame.png": {
+    "file_sha256": "addf6322e569817925f510e8cbdc2d7064d0cc33ede0b76f2e927bc38228f370",
+    "decoded_rgba_sha256": "6c22f75350dbd215fe67f37729ff80467c2297a8851ec7bde49fb4a3b451efd2",
+    "size": [
+      320,
+      120
+    ],
+    "mode": "RGBA"
+  },
+  "status_clock_art.png": {
+    "file_sha256": "37674ccbb58512bb84fcdbc3432f9a14e40c990951f8438da16c8d638c0e68be",
+    "decoded_rgba_sha256": "09c8ac6dabef1cb9ee154368c136b19579e8a06442829a4319d98d0168c86d0b",
+    "size": [
+      260,
+      170
+    ],
+    "mode": "RGBA"
+  },
+  "status_cooler_art.png": {
+    "file_sha256": "037827a5b1e2051f23f73f6b7dcb2b6b5944a7ef1a7c72ecd4ac4bce3c11df09",
+    "decoded_rgba_sha256": "f71928f099f780a54b36b4ef2215c7f77357828b4d63a86a64f4a62e3cb8432f",
+    "size": [
+      260,
+      170
+    ],
+    "mode": "RGBA"
+  },
+  "status_money_art.png": {
+    "file_sha256": "7759c46ab58c72db0ff829194648ff20158857b546b43dd85642a4f933948ce2",
+    "decoded_rgba_sha256": "208634cb608d3a6a8275c4651136f9032edac3bcb959dad1eb1b1f189d014c56",
+    "size": [
+      260,
+      170
+    ],
+    "mode": "RGBA"
+  },
+  "status_summary_bg.png": {
+    "file_sha256": "5b1f4c50fb516761094538c5b22e57055afb8845ccbd6cb355c60e1b80d0ed4b",
+    "decoded_rgba_sha256": "c03ad9a023af52ba977c0597225d519430f11b46e3e65499b923775e60ff6432",
+    "size": [
+      1280,
+      720
+    ],
+    "mode": "RGBA"
+  }
+}

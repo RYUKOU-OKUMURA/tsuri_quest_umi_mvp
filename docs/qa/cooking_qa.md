@@ -1,6 +1,6 @@
 # 調理場 QA判断ログ
 
-最終更新: 2026-07-14 / 状態: C1-A COOK_SELECT厨房背景 完了 / C0・既存構成freeze維持 / 次: C1-B
+最終更新: 2026-07-14 / 状態: 旧調理一括generator決定性修正 完了 / C1-A・C0・既存構成freeze維持 / 次: C1-B
 参照画像: reference/cooking_flow/01_cook_select_concept.png, reference/cooking_flow/02_meal_result_concept.png, reference/cooking_flow/03_exp_gain_concept.png, reference/cooking_flow/04_level_up_overlay_concept.png, reference/cooking_flow/05_status_summary_concept.png
 QA更新コマンド: ./tools/cooking_visual_qa.sh
 
@@ -24,6 +24,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 | EXP_GAIN / LEVEL_UP 下部導線 | 本文左content margin `Reward=88px` / `LevelUp=92px`、各Button直下は単一の命名Label cue（`RewardConfirmCue` / `LevelUpConfirmCue`）のみ。`MEAL_RESULT` / `EXP_GAIN` / `LEVEL_UP` は `▶`、`EXP_GAIN_LEVELUP` は `▲` | `cooking_reward_panel.gd` / `level_up_panel.gd` / `tools/cooking_content_audit.gd` | 40px高の導線で複数小グリフが本文と潰れるP1を防ぐ。余白・cue名・単一Label構造・draw接続なし・状態別glyphはheadless監査する |
 | STATUS_SUMMARY 所持金 | 整数部は3桁カンマ区切り（例: `10,170 G`） | `src/ui/components/cooking_status_panel.gd` | docs/19 §4.3の金額表記規格 |
 | COOK_SELECT厨房背景 | source `b3e7d525...686cb` / output `67157172...81106`、1280x720、彩度 `0.84`、濃紺scrim alpha `48` | `tools/source_assets/cooking/c1a_kitchen_bg_source.png` / `tools/process_cooking_c1a_assets.py` / `assets/showcase/cooking/cooking_room_bg.png` | C1-A採用値。暖色ランタン光・海窓・調理棚を持つ環境のみ一点物。3列・全前景矩形・runtime glazeは不変 |
+| 旧調理一括generatorの製品保存 | size / mode / decoded pixels完全一致なら既存bytes保持。真の差・欠損・読込不能だけ同一directory tempへ `flush` + `fsync` 後atomic replace。C1-A背景は専用processor、採用済み11 slotは明示guard | `tools/generate_cooking_showcase_assets.py` / `tools/cooking_generator_determinism_verify.py` | Pillow版差で採用品を再encode・再描画しない。保存失敗時は旧製品とtemp cleanupを保証。製品57点のfile/decoded hash・size/modeをfocused検証で固定 |
 
 ## 2. 不採用・再試行禁止リスト
 
@@ -62,6 +63,13 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
+2026-07-14: `旧調理一括generator決定性修正` を、UI Wave B横断P2として開始し、同日完了。
+
+- 動かしたもの: `tools/generate_cooking_showcase_assets.py` の保存契約、focused verification、generator所有権記録、baseline manifest。
+- 不動値: `assets/showcase/cooking/*.png` 全57点、accepted evidence画像、§1の既存freeze値、runtime UI、C2配線、新規アート、C1-B以降、common/palette/project.godot/他画面。
+- 採用条件: Pillow 10.2 / 12.xの両方でclean baseline相当のgeneratorを2回実行し、全57製品のfile SHA-256 / decoded RGBA SHA-256 / size / modeが実行前と完全一致すること。保存契約の同値保持・atomic更新・例外rollback/cleanupをfocused testで確認すること。
+- baseline証拠: `docs/qa/evidence/cooking/2026-07-14_generator_baseline_{before_manifest,after_manifest,diff_report}.json`。`bc596c56` の隔離snapshotで採取し、製品追加/削除なし、全57点size/mode不変。
+
 2026-07-14: `C1-A COOK_SELECT厨房背景` を、docs/33 C1の1スロット素材フェーズとして開始し、同日完了。
 
 - 差分Top1: COOK_SELECTの現行 `cooking_room_bg.png` は平面的な矩形・単色面が支配的で、参照01の暖色ランタン光、海の見える窓、調理棚が作る authored 厨房の空気に届いていない。
@@ -72,6 +80,15 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 - baseline: `docs/qa/evidence/cooking/2026-07-14_c1a_before_{select,result,exp,levelup,status}.png`（5状態1280x720、2026-07-14固定）。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-14: `旧調理一括generator決定性修正` 完了。採用済み製品PNG・runtime・freeze・accepted evidenceの意図的画素変更は0。
+
+- 独立再計測: `bc596c56` の隔離snapshotをPython 3.12.3 / Pillow 12.0で実行すると57点中32点がdirty。byte-only 21点は `cook_action_runway_frame`, `cook_button_frame`, `cooking_section_ribbon`, `dish_detail_frame`, `fish_row_frame`, `flow_action_button_frame`, `level_stat_row_frame`, `level_unlock_ribbon`, `level_up_frame`, `meal_result_frame`, `meal_scene_bg`, `player_eating_pose`, `player_exp_message_pose`, `player_status_portrait`, `recipe_grid_frame`, `recipe_to_detail_arrow`, `reward_card_frame`, `status_clock_art`, `status_cooler_art`, `status_money_art`, `status_summary_bg`。decoded差11点は `cooking_icon_sheet`, `cooking_title_banner`, `dish_feature_aji_shioyaki`, `dish_icon_sheet`, `exp_stage_bg`, `fish_icon_sheet`, `level_unlock_medallion`, `level_unlock_spot`, `meal_banner_frame`, `meal_table_spread`, `next_effect_art`。
+- 親観測との差: 既知の22 byte-only / 10 decoded差に対し、独立2計測はともに21/11。差分1点の `cooking_title_banner.png` は420x110中1px（channel absolute delta 248）だがdecoded RGBA SHAが異なるため、証拠上はdecoded差へ分類した。Pillow 10.2では13点dirty・全byte-only、Pillow 11.3では45点dirty・34/11で、PNG encoder・ImageDraw・filter/resize境界の版依存を確認した。
+- 原因/採否: 旧 `save()` の無条件上書きがbyte差を作り、decoded差はPillow版による描画境界とLANCZOS差。`fish_icon_sheet` / `dish_feature_aji_shioyaki` / `meal_table_spread` はreference crop/二次派生、他の有機一点物・個別採用品も現行コミット済み製品を正本とし、専用processorへ移るまで明示guard。C1-A `cooking_room_bg.png` は既存どおり `process_cooking_c1a_assets.py` へ委譲する。
+- 保存契約: candidateと既存PNGをsize/mode/decoded bytesで比較し、同値なら既存file bytesを保持。真の差・欠損・読込不能は同directoryのtempへPNG保存し、flush/fsync/chmod後に`os.replace`。例外時はfinallyでtempを削除し、replace前の旧製品を保持する。guard対象の欠損/読込不能は勝手にprocedural復旧せず明示失敗する。
+- focused検証: `tools/cooking_generator_determinism_verify.py` は同値bytes保持、真の画素差atomic更新、欠損/読込不能復旧、replace例外時のtemp cleanup/旧output保持、guard、および全57点manifest不変を2実行で検証する。Pillow 10.2 / 12.1ともgreen。
+- 固定条件: generator保守で製品画素を更新する場合は、対象slotの所有契約・現行採用証拠・専用processorを先に確定する。単なるPillow候補差を採用品更新理由にしない。
 
 2026-07-14: `C1-A COOK_SELECT厨房背景` 完了。既存の純PIL背景をOpenAI生成source + 決定的processorへ移行した。
 
