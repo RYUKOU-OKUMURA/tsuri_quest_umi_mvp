@@ -40,6 +40,8 @@ EXPLICIT_OWNERS: dict[Path, set[str]] = {
     Path("src/ui/components/cooking_reward_visuals.gd"): {"cooking"},
     Path("src/ui/components/level_up_panel.gd"): {"cooking"},
     Path("src/ui/fish_book_screen.gd"): {"fish_book", "common"},
+    # R5-Aの人物portraitはstatus画面だけが所有するauthored一点物。
+    Path("src/ui/status_screen.gd"): {"status", "common"},
     Path("src/ui/market_screen.gd"): {"fish_market", "common"},
     Path("src/ui/shop_screen.gd"): {"tackle_shop", "common"},
     # 依頼ボードは画面専用の木面/紙札と既存common操作部品だけを所有する。
