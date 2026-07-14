@@ -50,7 +50,7 @@
 
 ## 5. 検証
 
-親エージェントはworker報告だけを採用せず、`e4a1ec18..HEAD`の全diffと各修正のfocused fixtureを確認した。最終受入で次を実行する。
+親エージェントはworker報告だけを採用せず、`e4a1ec18..HEAD`の全diffと各修正のfocused fixtureを確認した。最終受入で次を実行し、すべてgreenを確認した。
 
 - `git diff --check e4a1ec18..HEAD`
 - Python syntax、`tools/export_command_runner_self_test.py`、`tools/release_verify_self_test.py`
