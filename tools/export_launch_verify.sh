@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 GODOT_BIN="${GODOT_BIN:-/Applications/Godot.app/Contents/MacOS/Godot}"
+COMMAND_RUNNER="$ROOT_DIR/tools/export_command_runner.py"
 PRESET="macOS Universal"
 BUILD_ROOT="${TSURI_EXPORT_BUILD_ROOT:-/tmp/tsuri_quest_umi_export_spike}"
 DEBUG_APP="$BUILD_ROOT/debug/tsuri_quest_umi.app"
@@ -15,10 +16,64 @@ ARTIFACT_LOG="$LOG_DIR/artifacts.sha256"
 RELEASE_PACK_MANIFEST="$LOG_DIR/release_pack_manifest.txt"
 BUNDLE_ID="net.physical-balance-lab.tsuri-quest-umi"
 SOURCE_REF="${TSURI_EXPORT_SOURCE_REF:-HEAD}"
+SETUP_TIMEOUT_SECONDS="${TSURI_EXPORT_SETUP_TIMEOUT_SECONDS:-30}"
+BUILD_TIMEOUT_SECONDS="${TSURI_EXPORT_BUILD_TIMEOUT_SECONDS:-900}"
+SMOKE_TIMEOUT_SECONDS="${TSURI_EXPORT_SMOKE_TIMEOUT_SECONDS:-30}"
+TERM_GRACE_SECONDS="${TSURI_EXPORT_TERM_GRACE_SECONDS:-1}"
+VERSION_LOG_TMP=""
+ACTIVE_RUNNER_PID=""
 
 fail() {
 	echo "export_launch_verify: FAIL: $*" >&2
 	exit 1
+}
+
+cleanup_version_log() {
+	if [[ -n "$VERSION_LOG_TMP" && -f "$VERSION_LOG_TMP" && ! -L "$VERSION_LOG_TMP" ]]; then
+		rm -f -- "$VERSION_LOG_TMP"
+	fi
+}
+trap cleanup_version_log EXIT
+
+interrupt_export() {
+	local signal_name="$1"
+	local exit_code="$2"
+	trap - INT TERM HUP
+	if [[ -n "$ACTIVE_RUNNER_PID" ]] && kill -0 "$ACTIVE_RUNNER_PID" 2>/dev/null; then
+		kill -s "$signal_name" "$ACTIVE_RUNNER_PID" 2>/dev/null || true
+		wait "$ACTIVE_RUNNER_PID" 2>/dev/null || true
+	fi
+	ACTIVE_RUNNER_PID=""
+	exit "$exit_code"
+}
+trap 'interrupt_export INT 130' INT
+trap 'interrupt_export TERM 143' TERM
+trap 'interrupt_export HUP 129' HUP
+
+run_export_command() {
+	local timeout_seconds="$1"
+	local log_path="$2"
+	local replay="$3"
+	shift 3
+	local -a runner=(
+		python3 "$COMMAND_RUNNER" run
+		--timeout-seconds "$timeout_seconds"
+		--term-grace-seconds "$TERM_GRACE_SECONDS"
+		--log "$log_path"
+	)
+	if [[ "$replay" == "yes" ]]; then
+		runner+=(--echo)
+	fi
+	"${runner[@]}" -- "$@" &
+	ACTIVE_RUNNER_PID=$!
+	local return_code=0
+	if wait "$ACTIVE_RUNNER_PID"; then
+		return_code=0
+	else
+		return_code=$?
+	fi
+	ACTIVE_RUNNER_PID=""
+	return "$return_code"
 }
 
 BUILD_PARENT="$(cd "$(dirname "$BUILD_ROOT")" 2>/dev/null && pwd -P)" || fail "build parent does not exist: $(dirname "$BUILD_ROOT")"
@@ -36,7 +91,18 @@ ARTIFACT_LOG="$LOG_DIR/artifacts.sha256"
 RELEASE_PACK_MANIFEST="$LOG_DIR/release_pack_manifest.txt"
 
 [[ -x "$GODOT_BIN" ]] || fail "Godot not found: $GODOT_BIN"
-GODOT_VERSION="$($GODOT_BIN --version | tr -d '\r')"
+[[ -f "$COMMAND_RUNNER" ]] || fail "export command runner not found: $COMMAND_RUNNER"
+python3 "$COMMAND_RUNNER" validate \
+	"setup=$SETUP_TIMEOUT_SECONDS" \
+	"export=$BUILD_TIMEOUT_SECONDS" \
+	"smoke=$SMOKE_TIMEOUT_SECONDS" \
+	"term_grace=$TERM_GRACE_SECONDS" \
+	|| fail "timeout values must be positive finite numbers"
+VERSION_LOG_TMP="$(mktemp "$BUILD_PARENT/.${BUILD_BASENAME}.godot-version.XXXXXX")" \
+	|| fail "could not create Godot version log"
+run_export_command "$SETUP_TIMEOUT_SECONDS" "$VERSION_LOG_TMP" no "$GODOT_BIN" --version
+GODOT_VERSION="$(LC_ALL=C sed -n '/^[0-9][0-9.]*.*official/{s/\r$//;p;q;}' "$VERSION_LOG_TMP")"
+[[ -n "$GODOT_VERSION" ]] || fail "Godot version output is empty"
 TEMPLATE_VERSION="${GODOT_VERSION%%.official.*}"
 TEMPLATE_ROOT="$HOME/Library/Application Support/Godot/export_templates/$TEMPLATE_VERSION"
 [[ -f "$TEMPLATE_ROOT/macos.zip" ]] || fail "macOS export template missing: $TEMPLATE_ROOT/macos.zip (Godot $GODOT_VERSION)"
@@ -45,6 +111,8 @@ SOURCE_OBJECT="$(git -C "$ROOT_DIR" rev-parse --verify "$SOURCE_COMMIT^{tree}")"
 
 rm -rf "$BUILD_ROOT"
 mkdir -p "$BUILD_ROOT/debug" "$BUILD_ROOT/release" "$LOG_DIR"
+mv -- "$VERSION_LOG_TMP" "$LOG_DIR/godot_version.log"
+VERSION_LOG_TMP=""
 
 # trackedかつ指定Git objectに固定したtreeだけを展開する。worktreeのdirty/untracked/ignoredは
 # 入力にしない。Universal向け設定とsmoke autoloadはstageだけへ追加する。
@@ -56,8 +124,10 @@ perl -0pi -e 's/\[rendering\]\n/[rendering]\ntextures\/vram_compression\/import_
 perl -0pi -e 's/\[autoload\]\n/[autoload]\n\nExportLaunchPreflight="*res:\/\/src\/__export_spike\/export_launch_smoke.gd"\n/' "$STAGE_ROOT/project.godot"
 perl -0pi -e 's/(Juicer=.*\n)/$1ExportLaunchSmoke="*res:\/\/src\/__export_spike\/export_launch_smoke.gd"\n/' "$STAGE_ROOT/project.godot"
 
-"$GODOT_BIN" --headless --path "$STAGE_ROOT" --export-debug "$PRESET" "$DEBUG_APP" 2>&1 | tee "$LOG_DIR/export_debug.log"
-"$GODOT_BIN" --headless --path "$STAGE_ROOT" --export-release "$PRESET" "$RELEASE_APP" 2>&1 | tee "$LOG_DIR/export_release.log"
+run_export_command "$BUILD_TIMEOUT_SECONDS" "$LOG_DIR/export_debug.log" yes \
+	"$GODOT_BIN" --headless --path "$STAGE_ROOT" --export-debug "$PRESET" "$DEBUG_APP"
+run_export_command "$BUILD_TIMEOUT_SECONDS" "$LOG_DIR/export_release.log" yes \
+	"$GODOT_BIN" --headless --path "$STAGE_ROOT" --export-release "$PRESET" "$RELEASE_APP"
 
 # Godotのlocalized progress logからsavepack対象だけを抽出し、順序とANSI表示に
 # 依存しないcanonical manifestを残す。不要素材検査も同じmanifestを正とする。
@@ -116,12 +186,15 @@ mkdir -p "$NEGATIVE_HOME"
 NEGATIVE_ACTUAL_USER_DIR="$NEGATIVE_HOME/Library/Application Support/tsuri_quest_umi"
 NEGATIVE_EXPECTED_USER_DIR="$NEGATIVE_HOME/expected_mismatch/tsuri_quest_umi"
 set +e
-HOME="$NEGATIVE_HOME" "$EXECUTABLE" --headless -- \
-	--tsuri-export-smoke=create "--tsuri-expected-user-dir=$NEGATIVE_EXPECTED_USER_DIR" \
-	> "$LOG_DIR/user_dir_mismatch.log" 2>&1
+HOME="$NEGATIVE_HOME" run_export_command "$SMOKE_TIMEOUT_SECONDS" "$LOG_DIR/user_dir_mismatch.log" yes \
+	"$EXECUTABLE" --headless -- \
+	--tsuri-export-smoke=create "--tsuri-expected-user-dir=$NEGATIVE_EXPECTED_USER_DIR"
 NEGATIVE_RC=$?
 set -e
-cat "$LOG_DIR/user_dir_mismatch.log"
+if [[ "$NEGATIVE_RC" -eq 124 ]]; then
+	echo "export_launch_verify: user-data mismatch smoke timed out" >&2
+	exit 124
+fi
 [[ "$NEGATIVE_RC" -ne 0 ]] || fail "user-data mismatch smoke unexpectedly succeeded"
 grep -q 'EXPORT_LAUNCH_PREFLIGHT_FAILED' "$LOG_DIR/user_dir_mismatch.log" || fail "user-data mismatch did not fail in preflight"
 if [[ -d "$NEGATIVE_ACTUAL_USER_DIR" ]] && find "$NEGATIVE_ACTUAL_USER_DIR" -type f \( \
@@ -136,12 +209,15 @@ fi
 rm -rf "$NEGATIVE_HOME"
 mkdir -p "$NEGATIVE_HOME"
 set +e
-HOME="$NEGATIVE_HOME" "$EXECUTABLE" --headless -- \
-	--tsuri-export-smoke=unknown "--tsuri-expected-user-dir=$NEGATIVE_ACTUAL_USER_DIR" \
-	> "$LOG_DIR/unknown_phase.log" 2>&1
+HOME="$NEGATIVE_HOME" run_export_command "$SMOKE_TIMEOUT_SECONDS" "$LOG_DIR/unknown_phase.log" yes \
+	"$EXECUTABLE" --headless -- \
+	--tsuri-export-smoke=unknown "--tsuri-expected-user-dir=$NEGATIVE_ACTUAL_USER_DIR"
 UNKNOWN_RC=$?
 set -e
-cat "$LOG_DIR/unknown_phase.log"
+if [[ "$UNKNOWN_RC" -eq 124 ]]; then
+	echo "export_launch_verify: unknown phase smoke timed out" >&2
+	exit 124
+fi
 [[ "$UNKNOWN_RC" -ne 0 ]] || fail "unknown phase smoke unexpectedly succeeded"
 grep -q 'EXPORT_LAUNCH_PREFLIGHT_FAILED: phase=unknown' "$LOG_DIR/unknown_phase.log" || fail "unknown phase did not fail in preflight"
 if [[ -d "$NEGATIVE_ACTUAL_USER_DIR" ]] && find "$NEGATIVE_ACTUAL_USER_DIR" -type f \( \
@@ -158,8 +234,9 @@ EXPECTED_USER_DIR="$FIXTURE_HOME/Library/Application Support/tsuri_quest_umi"
 run_smoke() {
 	local phase="$1"
 	local log_path="$2"
-	HOME="$FIXTURE_HOME" "$EXECUTABLE" --headless -- \
-		"--tsuri-export-smoke=$phase" "--tsuri-expected-user-dir=$EXPECTED_USER_DIR" 2>&1 | tee "$log_path"
+	HOME="$FIXTURE_HOME" run_export_command "$SMOKE_TIMEOUT_SECONDS" "$log_path" yes \
+		"$EXECUTABLE" --headless -- \
+		"--tsuri-export-smoke=$phase" "--tsuri-expected-user-dir=$EXPECTED_USER_DIR"
 	grep -q "EXPORT_LAUNCH_SMOKE_OK phase=$phase title=ready" "$log_path" || fail "$phase smoke did not complete"
 	if grep -a 'ERROR:' "$log_path" | grep -a -v 'ERROR: 1 resources still in use at exit' >/dev/null; then
 		fail "$phase smoke emitted an unexplained ERROR"
@@ -181,6 +258,7 @@ LEGACY_HASH_AFTER="$(shasum -a 256 "$LEGACY_SAVE" | awk '{print $1}')"
 
 echo "Godot: $GODOT_VERSION"
 echo "Template: $TEMPLATE_VERSION ($TEMPLATE_ROOT/macos.zip)"
+echo "Timeouts: setup=${SETUP_TIMEOUT_SECONDS}s export=${BUILD_TIMEOUT_SECONDS}s smoke=${SMOKE_TIMEOUT_SECONDS}s grace=${TERM_GRACE_SECONDS}s"
 echo "Source object: $SOURCE_OBJECT"
 echo "Source commit: $SOURCE_COMMIT"
 echo "Artifact hashes: $ARTIFACT_LOG"
