@@ -21,6 +21,7 @@ func _ready() -> void:
 	_expect(_count_labels_containing(_screen, "難易度:") == 1, "status should not duplicate difficulty information")
 	_expect(_screen._player_panel != null, "player panel should be present")
 	_expect(_screen._summary_panel != null, "catch summary panel should be present")
+	_expect(_find_named(_screen, "StatusPlayerFishingPortrait") != null, "player fishing portrait should be present in summary medallion")
 	_expect(_screen._inventory_panel != null, "inventory panel should be present")
 	_expect(_screen._fish_book_button != null, "fish book navigation should be present")
 	_expect(_screen._cooking_button != null, "cooking navigation should be present")

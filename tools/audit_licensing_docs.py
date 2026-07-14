@@ -2955,6 +2955,8 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
             "process_cooking_c1a_assets.py",
             "process_harbor_info_board_assets.py",
             "process_harbor_plan_assets.py",
+            # R5-A authored player portrait is a product source-consuming pipeline.
+            "process_status_r5a_assets.py",
             "process_underwater_fish_assets.py",
         }
         known_non_product_or_intermediate_consumers = {
@@ -2972,6 +2974,8 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
             # M3 QA-only triptychs and interaction contact sheets read the
             # adopted reference solely for docs/qa evidence, never products.
             "build_market_m3_evidence.py",
+            # R5-A QA-only boards read source/reference for evidence, never product output.
+            "build_status_r5a_evidence.py",
             "build_fishing_spot_thumb_contact_sheet.py",
             "build_shark_pen_reference.py",
             "build_screen_visual_comparison.py",

@@ -77,6 +77,7 @@ RIGHTS-01A状態marker（`docs/qa/evidence/licensing/README.md` の未完/完了
 | `fish_market/market_bg_source.png` | `process_fish_market_m2_assets.py market_bg` | `assets/showcase/fish_market/market_bg.png`（2026-07-13、採用済み。1280×720、魚/UI/文字なし、28%減光スクリム） | OpenAI built-in image generationによるsource。生成時のスタイル参照入力と第三者権利clearanceはU-08待ち |
 | `fish_market/ice_tray_hero_source.png`, `fish_market/ice_tray_hero_cutout.png` | imagegen skill標準 `remove_chroma_key.py` → `process_fish_market_m2_assets.py ice_tray_hero` | `assets/showcase/fish_market/ice_tray_hero.png`（2026-07-13、採用済み。1280×720透明レイヤー、魚/UI/文字なし） | OpenAI built-in image generationによるsource。生成時のスタイル参照入力と第三者権利clearanceはU-08待ち |
 | `cooking/c2_meal_scene_bg_source.png` | `process_cooking_c2_candidate.py` | `tools/source_assets/cooking/c2_meal_scene_bg_candidate.png`（2026-07-14、C2配線レビュー候補。製品未使用・採用/freeze未実施） | OpenAI built-in image generationによるsource。`reference/cooking_flow/02_meal_result_concept.png`、現行runtime capture、現行 `meal_scene_bg.png` は方向性/safe-area参照として生成入力に使用し、processorは生成sourceだけを消費。入力権利・第三者権利clearanceはU-08待ち |
+| `status/status_player_fishing_source.png` | `process_status_r5a_assets.py` | `assets/showcase/status/status_player_fishing_portrait.png`（2026-07-14、採用済み。256×256円形alpha、文字/UI/魚なし） | OpenAI built-in image generationによるsource。`reference/08_status_screen_mockup.png`をスタイル/構図参照入力に使用。入力権利・第三者権利clearanceはU-08待ち |
 
 ## 3. 音源（BGM / SE） — 条件確認済み・証拠待ち
 
@@ -112,6 +113,7 @@ generate外画像に加え、§2.2のsource-consuming出力も対象。OpenAI Te
 | 依頼ボード木面＋ピン付き無地紙札 | `tools/source_assets/quest_board/quest_board_wood_source.png` / `quest_notice_card_source.png` → `assets/showcase/quest_board/quest_board_wood_panel.png` / `quest_notice_card.png` | OpenAI built-in image generationとの作業記録（2026-07-13）。`docs/46_quest_board_material_uplift_spec.md` の文字なしプロンプトから生成 | Output帰属の一般条件のみ確認。第三者画像入力なし。出力の第三者権利clearanceはU-08待ち | 未完 |
 | サメ生簀 水槽背景・泡・環境光 | `tools/source_assets/shark_pen/shark_pen_tank_bg_source.png` → `assets/showcase/shark_pen/tank_environment_bg.png` | OpenAI built-in image generation（2026-07-13）。正式参照 `reference/12_shark_pen_mockup.png` と同日baselineを方向性/safe-area入力に使用 | Output帰属の一般条件のみ確認。入力権利・第三者権利clearanceはU-08待ち | 未完 |
 | 調理C2 食事シーン背景候補 | `tools/source_assets/cooking/c2_meal_scene_bg_source.png` → `tools/source_assets/cooking/c2_meal_scene_bg_candidate.png` | OpenAI built-in image generation（2026-07-14）。`docs/51_cooking_c2_meal_scene_asset_brief.md` の文字なし・人物なし・料理なしプロンプトで生成。正式参照、現行runtime、現行背景は方向性/safe-area入力に使用し、processorはsourceだけを決定的加工 | OpenAI Terms上のOutput帰属という一般条件のみ確認。候補は製品未使用。入力権利・出力の第三者権利clearanceはU-08待ち | 未完 |
+| ステータスR5-A 海釣り人portrait | `tools/source_assets/status/status_player_fishing_source.png` → `assets/showcase/status/status_player_fishing_portrait.png` | OpenAI built-in image generation（2026-07-14）。`reference/08_status_screen_mockup.png` はスタイル/円形構図参照として生成入力に使用し、processorは生成sourceだけを消費 | OpenAI Terms上のOutput帰属という一般条件のみ確認。参照入力の権利・出力の第三者権利clearanceはU-08待ち | 未完 |
 | reference 完成イメージ一式 | `reference/`（`.gdignore` 済で原本は製品非同梱） | OpenAI生成画像、またはPIL生成との従前記録 | `reference/02` と `reference/cooking_flow/01` は§2.2のとおり製品PNGへcrop/blendされているため、原本非同梱だけではclearできない。その他referenceも派生利用有無をU-03で監査 | 未完 |
 | 各画面の背景など generate スクリプト外のPNG | 各 `assets/showcase/{screen}/` | **未確定**。OpenAI利用との従前メモはあるが、ファイル単位の生成サービス・日付・作成者申告がなく推定を確定へ昇格できない | サービス確定後、その生成時点の規約と入力権利を確認 | ユーザー入力待ち（証拠index U-03・U-08） |
 
@@ -165,3 +167,4 @@ generate外画像に加え、§2.2のsource-consuming出力も対象。OpenAI Te
 - 2026-07-13: サメ生簀の水槽背景・泡・環境光をOpenAI built-in image generationで生成し、screen-local authored背景へ統一処理して採用
 - 2026-07-14: 調理C1-A `cooking_room_bg.png` をOpenAI built-in生成source + 決定的processorへ移行。source・作者/生成サービス・生成日・output対応を登録し、U-08待ちを維持
 - 2026-07-14: 調理C2 `meal_scene_bg` の配線レビュー候補をOpenAI built-in image generation source + 決定的processorで準備。source・candidate・生成日・参照入力を登録し、製品未使用・U-08待ちを維持
+- 2026-07-14: ステータスR5-Aの海釣り人sourceをOpenAI built-in image generationで生成し、決定的processorで円形portraitへ整形
