@@ -103,6 +103,7 @@ func _ready() -> void:
 
 	# SAVE-03: 構文正常でも意味破損したmainは、同じ検証を通ったbackupへfallbackする。
 	await _verify_semantic_save_candidate_selection()
+	_verify_pending_buff_save_contract()
 	_verify_safe_integer_and_outbound_contract()
 	_verify_saturating_progress_mutations()
 	_verify_fallback_lifecycle()
@@ -1128,6 +1129,200 @@ func _verify_title_invalid_slot_is_blocked(expected_hashes: Dictionary) -> void:
 	_expect_eq(_file_hash(_slot_backup_path(1)), expected_hashes["backup"], "blocked title start preserves invalid backup")
 	viewport.queue_free()
 	await get_tree().process_frame
+
+
+func _verify_pending_buff_save_contract() -> void:
+	_remove_all_save_files()
+	var valid_buff := _pending_buff_fixture()
+	var valid_main := {
+		"version": PlayerProgress.SAVE_VERSION,
+		"level": 7,
+		"money": 1357,
+		"pending_buff": valid_buff,
+	}
+	_write_text(_slot_save_path(1), JSON.stringify(valid_main, "\t"))
+	_expect_eq(
+		int(PlayerProgress.save_slot_summary(1).get("money", -1)),
+		1357,
+		"valid pending buff main should remain selected"
+	)
+	PlayerProgress.load_game()
+	_expect_eq(
+		String(PlayerProgress.pending_buff.get("recipe_id", "")),
+		"salt_grill",
+		"valid pending buff should load"
+	)
+	_expect_eq(
+		String(PlayerProgress.pending_buff.get("future_payload", "")),
+		"keep compatible",
+		"unknown pending buff fields should load"
+	)
+	_expect(PlayerProgress.save_game(), "valid pending buff should save")
+	PlayerProgress.pending_buff = {}
+	PlayerProgress.load_game()
+	_expect_eq(
+		String(PlayerProgress.pending_buff.get("future_payload", "")),
+		"keep compatible",
+		"valid pending buff unknown fields should round-trip"
+	)
+
+	# buffなしの空Dictionaryは従来どおり正常候補としてmainを選ぶ。
+	_remove_all_save_files()
+	_write_text(
+		_slot_save_path(1),
+		JSON.stringify(
+			{
+				"version": PlayerProgress.SAVE_VERSION,
+				"level": 6,
+				"money": 600,
+				"pending_buff": {},
+			},
+			"\t"
+		)
+	)
+	_write_text(
+		_slot_backup_path(1),
+		JSON.stringify(
+			{
+				"version": PlayerProgress.SAVE_VERSION,
+				"level": 12,
+				"money": 2468,
+				"pending_buff": valid_buff,
+			},
+			"\t"
+		)
+	)
+	_expect_eq(
+		int(PlayerProgress.save_slot_summary(1).get("money", -1)),
+		600,
+		"empty pending buff should keep main selected"
+	)
+	PlayerProgress.load_game()
+	_expect(PlayerProgress.pending_buff.is_empty(), "empty pending buff should load as no buff")
+
+	var invalid_cases: Array[Dictionary] = []
+	var missing_value := valid_buff.duplicate(true)
+	missing_value.erase("value")
+	invalid_cases.append({"label": "missing value", "buff": missing_value})
+	var non_numeric := valid_buff.duplicate(true)
+	non_numeric["value"] = "0.05"
+	invalid_cases.append({"label": "non-numeric value", "buff": non_numeric})
+	var non_finite := valid_buff.duplicate(true)
+	non_finite["value"] = INF
+	invalid_cases.append({"label": "non-finite value", "buff": non_finite})
+	var negative := valid_buff.duplicate(true)
+	negative["value"] = -0.05
+	invalid_cases.append({"label": "negative value", "buff": negative})
+	var zero := valid_buff.duplicate(true)
+	zero["value"] = 0.0
+	invalid_cases.append({"label": "zero value", "buff": zero})
+	var oversized := valid_buff.duplicate(true)
+	oversized["value"] = 1e100
+	invalid_cases.append({"label": "oversized value", "buff": oversized})
+	var unknown_stat := valid_buff.duplicate(true)
+	unknown_stat["stat"] = "future_power"
+	invalid_cases.append({"label": "unknown stat", "buff": unknown_stat})
+	var unknown_recipe := valid_buff.duplicate(true)
+	unknown_recipe["recipe_id"] = "future_recipe"
+	invalid_cases.append({"label": "unknown recipe", "buff": unknown_recipe})
+	var mismatched_stat := valid_buff.duplicate(true)
+	mismatched_stat["stat"] = "reel_power"
+	invalid_cases.append({"label": "mismatched stat", "buff": mismatched_stat})
+	var mismatched_value := valid_buff.duplicate(true)
+	mismatched_value["value"] = 0.10
+	invalid_cases.append({"label": "mismatched value", "buff": mismatched_value})
+	var mismatched_text := valid_buff.duplicate(true)
+	mismatched_text["text"] = "次の釣行で巻力 +10%"
+	invalid_cases.append({"label": "mismatched text", "buff": mismatched_text})
+	var empty_name := valid_buff.duplicate(true)
+	empty_name["name"] = "  "
+	invalid_cases.append({"label": "empty name", "buff": empty_name})
+
+	var valid_backup := {
+		"version": PlayerProgress.SAVE_VERSION,
+		"level": 12,
+		"money": 2468,
+		"pending_buff": valid_buff,
+	}
+	_write_text(_slot_backup_path(1), JSON.stringify(valid_backup, "\t"))
+	for invalid_case in invalid_cases:
+		var label := String(invalid_case["label"])
+		var invalid_main := {
+			"version": PlayerProgress.SAVE_VERSION,
+			"level": 30,
+			"money": 9999,
+			"pending_buff": invalid_case["buff"],
+		}
+		_expect(
+			not PlayerProgress._is_valid_save_candidate(invalid_main),
+			"%s pending buff should be rejected by candidate validation" % label
+		)
+		_write_text(_slot_save_path(1), JSON.stringify(invalid_main, "\t"))
+		_expect_eq(
+			int(PlayerProgress.save_slot_summary(1).get("money", -1)),
+			2468,
+			"%s pending buff should make summary select backup" % label
+		)
+		PlayerProgress.pending_buff = {}
+		PlayerProgress.load_game()
+		_expect_eq(PlayerProgress.level, 12, "%s pending buff should make load select backup" % label)
+		_expect_eq(
+			String(PlayerProgress.pending_buff.get("recipe_id", "")),
+			"salt_grill",
+			"%s pending buff fallback should load the valid buff" % label
+		)
+
+	# 両候補がbuff意味不正ならload/saveで原本とruntimeを維持する。
+	var invalid_main_buff := missing_value.duplicate(true)
+	var invalid_backup_buff := unknown_recipe.duplicate(true)
+	var both_invalid_main := {
+		"version": PlayerProgress.SAVE_VERSION,
+		"money": 1111,
+		"pending_buff": invalid_main_buff,
+	}
+	var both_invalid_backup := {
+		"version": PlayerProgress.SAVE_VERSION,
+		"money": 2222,
+		"pending_buff": invalid_backup_buff,
+	}
+	_write_text(_slot_save_path(1), JSON.stringify(both_invalid_main, "\t"))
+	_write_text(_slot_backup_path(1), JSON.stringify(both_invalid_backup, "\t"))
+	var invalid_hashes := _slot_artifact_hashes(1)
+	PlayerProgress.pending_buff = valid_buff.duplicate(true)
+	PlayerProgress.load_game()
+	_expect_eq(
+		String(PlayerProgress.pending_buff.get("recipe_id", "")),
+		"salt_grill",
+		"two invalid pending buffs should preserve runtime"
+	)
+	_expect_slot_artifact_hashes(1, invalid_hashes, "two invalid pending buffs should preserve originals")
+	_expect(not PlayerProgress.save_game(), "two invalid pending buff artifacts should block save")
+	_expect_slot_artifact_hashes(1, invalid_hashes, "blocked buff save should preserve originals")
+
+	# 正常artifactがある場合も、不正runtime buffはtmp作成前にoutbound拒否する。
+	_remove_all_save_files()
+	PlayerProgress.pending_buff = {}
+	_expect(PlayerProgress.reset_game(), "pending buff outbound fixture should create a valid main")
+	PlayerProgress.money = 654
+	_expect(PlayerProgress.save_game(), "pending buff outbound fixture should create a backup")
+	var outbound_hashes := _slot_artifact_hashes(1)
+	PlayerProgress.pending_buff = missing_value.duplicate(true)
+	_expect(not PlayerProgress.save_game(), "invalid runtime pending buff should refuse outbound save")
+	_expect_slot_artifact_hashes(1, outbound_hashes, "invalid runtime buff should preserve save generations")
+	PlayerProgress.pending_buff = {}
+	_remove_all_save_files()
+
+
+func _pending_buff_fixture() -> Dictionary:
+	var recipe := GameData.get_recipe("salt_grill")
+	return {
+		"recipe_id": "salt_grill",
+		"name": "アジの%s" % String(recipe.get("name", "塩焼き")),
+		"stat": String(recipe.get("buff_stat", "")),
+		"value": float(recipe.get("buff_value", 0.0)),
+		"text": String(recipe.get("buff_text", "")),
+		"future_payload": "keep compatible",
+	}
 
 
 func _verify_safe_integer_and_outbound_contract() -> void:

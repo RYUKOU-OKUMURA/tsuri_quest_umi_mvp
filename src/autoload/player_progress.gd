@@ -25,6 +25,14 @@ const SAVE_STORAGE_MIGRATION_BLOCK_MESSAGE := SaveNamespaceMigrator.DEFAULT_FAIL
 const SEA_CHART_FRAGMENT_MAX := 3
 const MAX_SAFE_JSON_INTEGER := 9007199254740991
 const DIFFICULTY_MULTIPLIER_SCALE := 10000
+const MAX_PENDING_BUFF_VALUE := 1.0
+const PENDING_BUFF_STATS: Array[String] = [
+	"max_energy",
+	"bite_window",
+	"safe_range",
+	"energy_regen",
+	"reel_power",
+]
 # GameData._build_quest_from_template() が現行版で生成できる依頼だけを復元対象にする。
 const ACTIVE_QUEST_TEMPLATE_IDS: Array[String] = [
 	"bulk_common",
@@ -1418,7 +1426,7 @@ func _is_valid_save_candidate(data: Dictionary) -> bool:
 		return false
 	if data.has("spot_caught_counts") and not _is_valid_spot_caught_counts(data["spot_caught_counts"]):
 		return false
-	if data.has("pending_buff") and typeof(data["pending_buff"]) != TYPE_DICTIONARY:
+	if data.has("pending_buff") and not _is_valid_pending_buff(data["pending_buff"]):
 		return false
 	for key in ["owned_rods", "owned_rigs", "owned_boats"]:
 		if data.has(key) and not _is_string_array(data[key]):
@@ -1437,6 +1445,42 @@ func _is_valid_save_candidate(data: Dictionary) -> bool:
 			if not _is_integer_at_least(value, 0):
 				return false
 	return true
+
+
+func _is_valid_pending_buff(value: Variant) -> bool:
+	if typeof(value) != TYPE_DICTIONARY:
+		return false
+	var buff := Dictionary(value)
+	if buff.is_empty():
+		return true
+	for key in ["recipe_id", "name", "stat", "value", "text"]:
+		if not buff.has(key):
+			return false
+	for key in ["recipe_id", "name", "stat", "text"]:
+		if typeof(buff[key]) != TYPE_STRING:
+			return false
+	var recipe_id := String(buff["recipe_id"])
+	var name := String(buff["name"])
+	var stat := String(buff["stat"])
+	if (
+		recipe_id.strip_edges().is_empty()
+		or name.strip_edges().is_empty()
+		or stat.strip_edges().is_empty()
+	):
+		return false
+	if not PENDING_BUFF_STATS.has(stat) or not _is_json_number(buff["value"]):
+		return false
+	var buff_value := float(buff["value"])
+	if buff_value <= 0.0 or buff_value > MAX_PENDING_BUFF_VALUE:
+		return false
+	var recipe := GameData.get_recipe(recipe_id)
+	if recipe.is_empty():
+		return false
+	return (
+		stat == String(recipe.get("buff_stat", ""))
+		and buff_value == float(recipe.get("buff_value", 0.0))
+		and String(buff["text"]) == String(recipe.get("buff_text", ""))
+	)
 
 
 func _is_json_number(value: Variant) -> bool:
