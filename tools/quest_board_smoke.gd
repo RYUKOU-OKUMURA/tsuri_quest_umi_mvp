@@ -4,6 +4,13 @@ const QuestBoardScreen = preload("res://src/ui/quest_board_screen.gd")
 const ThemeFactory = preload("res://src/ui/ui_theme.gd")
 const CUISINE_COVERAGE_SEED_START := 2026071100
 const CUISINE_COVERAGE_SEED_COUNT_PER_FISH := 256
+const ACTIVE_QUEST_TEMPLATE_IDS: Array[String] = [
+	"bulk_common",
+	"bulk_uncommon",
+	"cuisine",
+	"size_record",
+	"rare_order",
+]
 
 var _failed := false
 
@@ -186,8 +193,65 @@ func _verify_legacy_quest_repair() -> void:
 			"owned_boats": ["skiff", "offshore_boat", "bluewater_boat"],
 			"quest_board": [
 				valid_quest,
+				{
+					"template_id": "bulk_common",
+					"kind": "gift",
+					"fish_id": "mejina",
+					"count": 0,
+					"reward_money": 999999,
+					"text": "free reward",
+					"repair_marker": "unknown_kind",
+				},
+				{
+					"template_id": "bulk_common",
+					"kind": "delivery",
+					"fish_id": "iwashi",
+					"count": 0,
+					"text": "zero delivery",
+					"repair_marker": "zero_count",
+				},
+				{
+					"template_id": "size_record",
+					"kind": "record",
+					"fish_id": "kasago",
+					"target_size_cm": 0.0,
+					"text": "zero record",
+					"repair_marker": "zero_target",
+				},
+				{
+					"template_id": "size_record",
+					"kind": "delivery",
+					"fish_id": "kawahagi",
+					"count": 1,
+					"text": "kind mismatch",
+					"repair_marker": "template_kind_mismatch",
+				},
+				{
+					"template_id": "bulk_uncommon",
+					"kind": "delivery",
+					"fish_id": "aji",
+					"count": 2,
+					"text": "rarity mismatch",
+					"repair_marker": "template_fish_mismatch",
+				},
+				{
+					"template_id": "legacy_unknown",
+					"kind": "delivery",
+					"fish_id": "shirogisu",
+					"count": 1,
+					"text": "unknown template",
+					"repair_marker": "unknown_template",
+				},
 				{"kind": "delivery", "fish_id": "unknown_fish", "text": "unknown"},
 				second_valid_quest,
+				{
+					"template_id": "bulk_common",
+					"kind": "delivery",
+					"fish_id": "aji",
+					"count": 3,
+					"text": "duplicate fish",
+					"repair_marker": "duplicate_fish",
+				},
 				{"kind": "delivery", "fish_id": "nekozame", "text": "shark"},
 				{"kind": "record", "fish_id": "nushi_deep_ocean", "text": "boss"},
 			],
@@ -205,8 +269,25 @@ func _verify_legacy_quest_repair() -> void:
 	_expect_eq(float(second_preserved.get("target_size_cm", 0.0)), 45.5, "record target should stay")
 	_expect_eq(float(second_preserved.get("posted_best_cm", 0.0)), 40.25, "posted progress should stay")
 	_expect_eq(int(second_preserved.get("reward_money", 0)), 1200, "second reward should stay")
+	var rejected_markers := [
+		"unknown_kind",
+		"zero_count",
+		"zero_target",
+		"template_kind_mismatch",
+		"template_fish_mismatch",
+		"unknown_template",
+		"duplicate_fish",
+	]
+	var fish_ids: Array[String] = []
 	for quest in PlayerProgress.quest_board:
 		_expect_valid_quest(quest)
+		_expect(
+			not rejected_markers.has(String(quest.get("repair_marker", ""))),
+			"invalid loaded quest should be removed before refill"
+		)
+		var fish_id := String(quest.get("fish_id", ""))
+		_expect(not fish_ids.has(fish_id), "repaired quest board should not duplicate fish id")
+		fish_ids.append(fish_id)
 
 
 func _verify_screen_build() -> void:
@@ -494,6 +575,13 @@ func _quest_context(template_id: String = "") -> Dictionary:
 
 func _expect_valid_quest(quest: Dictionary) -> void:
 	_expect(not quest.is_empty(), "quest should not be empty")
+	var template_id := String(quest.get("template_id", ""))
+	_expect(ACTIVE_QUEST_TEMPLATE_IDS.has(template_id), "quest template should be active: %s" % template_id)
+	var template := GameData.get_quest_template(template_id)
+	_expect(not template.is_empty(), "quest template should exist: %s" % template_id)
+	var kind := String(quest.get("kind", ""))
+	_expect(kind in ["delivery", "record"], "quest kind should be supported: %s" % kind)
+	_expect_eq(kind, String(template.get("kind", "")), "quest kind should match template")
 	var fish_id := String(quest.get("fish_id", ""))
 	var fish := GameData.get_fish(fish_id)
 	_expect(not fish.is_empty(), "quest fish should exist: %s" % fish_id)
@@ -501,6 +589,23 @@ func _expect_valid_quest(quest: Dictionary) -> void:
 	_expect(not bool(fish.get("nushi", false)), "quest should not target nushi fish: %s" % fish_id)
 	_expect(not bool(fish.get("boss", false)), "quest should not target boss fish: %s" % fish_id)
 	_expect(not GameData.NUSHI_FISH.has(fish_id), "quest should not target NUSHI_FISH: %s" % fish_id)
+	if template.has("rarity"):
+		_expect_eq(
+			String(fish.get("rarity", "")),
+			String(template.get("rarity", "")),
+			"quest fish rarity should match template"
+		)
+	if kind == "delivery":
+		_expect(int(quest.get("count", 0)) > 0, "delivery quest count should be positive")
+	else:
+		_expect(float(quest.get("target_size_cm", 0.0)) > 0.0, "record target should be positive")
+	if template_id == "cuisine":
+		var recipe := GameData.get_recipe(String(quest.get("recipe_id", "")))
+		_expect(not recipe.is_empty(), "cuisine quest recipe should exist")
+		_expect(
+			Array(recipe.get("allowed_fish", [])).has(fish_id),
+			"cuisine quest fish should match recipe"
+		)
 
 
 func _expect(condition: bool, message: String) -> void:

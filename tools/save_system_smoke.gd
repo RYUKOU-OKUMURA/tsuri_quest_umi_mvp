@@ -1304,7 +1304,7 @@ func _verify_saturating_progress_mutations() -> void:
 			"quest_completed_count": max_safe,
 			"quest_board": [
 				{
-					"template_id": "saturation_delivery",
+					"template_id": "bulk_common",
 					"kind": "delivery",
 					"fish_id": "aji",
 					"count": 1,
@@ -1312,7 +1312,7 @@ func _verify_saturating_progress_mutations() -> void:
 					"text": "アジを1匹届けてほしい",
 				},
 				{
-					"template_id": "saturation_record_a",
+					"template_id": "size_record",
 					"kind": "record",
 					"fish_id": "mejina",
 					"target_size_cm": 9999.0,
@@ -1320,7 +1320,7 @@ func _verify_saturating_progress_mutations() -> void:
 					"text": "fixture a",
 				},
 				{
-					"template_id": "saturation_record_b",
+					"template_id": "size_record",
 					"kind": "record",
 					"fish_id": "kasago",
 					"target_size_cm": 9999.0,

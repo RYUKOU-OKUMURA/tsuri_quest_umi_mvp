@@ -25,6 +25,14 @@ const SAVE_STORAGE_MIGRATION_BLOCK_MESSAGE := SaveNamespaceMigrator.DEFAULT_FAIL
 const SEA_CHART_FRAGMENT_MAX := 3
 const MAX_SAFE_JSON_INTEGER := 9007199254740991
 const DIFFICULTY_MULTIPLIER_SCALE := 10000
+# GameData._build_quest_from_template() が現行版で生成できる依頼だけを復元対象にする。
+const ACTIVE_QUEST_TEMPLATE_IDS: Array[String] = [
+	"bulk_common",
+	"bulk_uncommon",
+	"cuisine",
+	"size_record",
+	"rare_order",
+]
 const EXP_REQUIREMENTS: Array[int] = [
 	0,
 	60,
@@ -1643,6 +1651,7 @@ func _apply_save_data(data: Dictionary) -> void:
 
 func _normalized_quest_board(value: Variant) -> Array[Dictionary]:
 	var normalized: Array[Dictionary] = []
+	var seen_fish_ids: Array[String] = []
 	if typeof(value) != TYPE_ARRAY:
 		return normalized
 	for quest_variant in Array(value):
@@ -1657,14 +1666,47 @@ func _normalized_quest_board(value: Variant) -> Array[Dictionary]:
 		quest["posted_best_cm"] = float(quest.get("posted_best_cm", 0.0))
 		quest["reward_money"] = int(quest.get("reward_money", 0))
 		quest["text"] = String(quest.get("text", ""))
-		if String(quest.get("fish_id", "")).is_empty() or String(quest.get("text", "")).is_empty():
+		if not _is_valid_loaded_quest(quest):
 			continue
-		if GameData.is_quest_excluded_fish_id(String(quest.get("fish_id", ""))):
+		var fish_id := String(quest.get("fish_id", ""))
+		if seen_fish_ids.has(fish_id):
 			continue
 		normalized.append(quest)
+		seen_fish_ids.append(fish_id)
 		if normalized.size() >= 3:
 			break
 	return normalized
+
+
+func _is_valid_loaded_quest(quest: Dictionary) -> bool:
+	var template_id := String(quest.get("template_id", ""))
+	if not ACTIVE_QUEST_TEMPLATE_IDS.has(template_id):
+		return false
+	var template := GameData.get_quest_template(template_id)
+	if template.is_empty():
+		return false
+	var kind := String(quest.get("kind", ""))
+	if kind not in ["delivery", "record"] or kind != String(template.get("kind", "")):
+		return false
+	var fish_id := String(quest.get("fish_id", ""))
+	var fish := GameData.get_fish(fish_id)
+	if fish_id.is_empty() or fish.is_empty() or GameData.is_quest_excluded_fish_id(fish_id):
+		return false
+	if String(quest.get("text", "")).is_empty():
+		return false
+	if template.has("fish_id") and fish_id != String(template.get("fish_id", "")):
+		return false
+	if template.has("rarity") and String(fish.get("rarity", "")) != String(template.get("rarity", "")):
+		return false
+	if kind == "delivery":
+		if int(quest.get("count", 0)) <= 0:
+			return false
+		if template_id == "cuisine":
+			var recipe := GameData.get_recipe(String(quest.get("recipe_id", "")))
+			if recipe.is_empty() or not Array(recipe.get("allowed_fish", [])).has(fish_id):
+				return false
+		return true
+	return float(quest.get("target_size_cm", 0.0)) > 0.0
 
 
 func _repair_loaded_quest_board() -> void:
