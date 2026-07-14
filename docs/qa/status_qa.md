@@ -1,6 +1,6 @@
 # ステータス画面 QA判断ログ
 
-最終更新: 2026-07-12 / 状態: E7難易度表示freeze
+最終更新: 2026-07-14 / 状態: R5-Aプレイヤーhero作業中
 参照画像: reference/08_status_screen_mockup.png
 QA更新コマンド: ./tools/status_visual_qa.sh
 
@@ -38,6 +38,19 @@ QA更新コマンド: ./tools/status_visual_qa.sh
 - 存在する領域: `PlayerProgress.difficulty()["name"]` を使う「難易度: <名>」。存在しない領域: 倍率詳細、ID、変更操作、他ペインへの重複表示。
 - 動かす値: 左ヘッダー内の副文言領域の分割のみ。不動freeze: ヘッダー外形、`PlayerStatusBar`、3ペイン、フッター、素材、配色、フォント。
 - 状態契約: normal / hardの実値が同一アンカーに表示され、見切れ・省略・重なりがないこと。
+
+## 6.1 R5-Aフェーズスコープ宣言（作業中）
+
+- 変更仮説: 中央上部の最近魚アイコンを海辺で釣る人物portraitへ置換すると、「誰の釣果か」が縮小表示でも読め、参照のプレイヤーidentityへ近づく。
+- 採否条件: normal / hardの全画面でbeforeへ明確に勝ち、after / referenceの320×180比較でも人物・竿・海が読めること。
+- 動かす値: `StatusSummaryBadge` 約x419–529 / y184–298内のportrait textureだけ。円形crop成立に必要な場合のみ既存内側slotを最小調整する。
+- 不動freeze: `PlayerStatusBar`、難易度名1回、3ペイン外形、フッター/戻る、魚図鑑/料理ボタン、badgeのruntime「記録」、右側4指標、最近魚、称号、図鑑率、クーラー/竿/料理ログ、全ロジック。
+- 差分Top3: Top1=魚アイコンで人物identity不在（P2、本パス対象）。Top2=全画面authored枠質感（P2、対象外）。Top3=参照と現行の情報構成差（現契約上P3、対象外）。
+
+| 状態 | 固定seed/データ | 表示/非表示 | 固定アンカー | 可変領域 | evidence出力 | smoke契約 |
+|---|---|---|---|---|---|---|
+| normal | preview既定seed、難易度normal | 全要素表示 | 3ペイン・header・footer・badge外形 | なし | `2026-07-14_r5a_after_normal.png` | portrait存在、難易度1回、既存釣果/導線 |
+| hard | normalと同じseed、難易度hard | 全要素表示 | normalと同一 | なし | `2026-07-14_r5a_after_hard.png` | portrait存在、難易度1回、安全域実値、既存釣果/導線 |
 
 ## 7. 判断ログ（直近パスのみ）
 
