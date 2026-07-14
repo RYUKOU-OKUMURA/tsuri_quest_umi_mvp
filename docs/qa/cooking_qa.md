@@ -81,6 +81,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 - 証拠画像: 原寸 `2026-07-14_c1a_full_before_after_reference.png`、縮小 `2026-07-14_c1a_thumbnail_after_reference.png`、gray `2026-07-14_c1a_gray_before_after_reference.png`、5状態 `2026-07-14_c1a_{before,after}_{select,result,exp,levelup,status}.png`。
 - 5状態判定: COOK_SELECTは背景差のみ。背面を透かすEXP_GAIN / LEVEL_UP_OVERLAYも新背景由来の差だけ。専用不透明のMEAL_RESULTはbefore/after SHA-256 `c1af9079...44ed` で一致、STATUS_SUMMARYは `2b0ff0f8...fc92` で一致。5状態ともP1ゼロ。
 - 再現性: source SHA-256 `b3e7d525...686cb`、output `67157172...81106`。processorを2回再実行し、hash・decoded RGBA pixelsとも不変。`generate_cooking_showcase_assets.py` もC1-A source存在時はこのslotを上書きしない。
+- 独立レビュー: 結論を伏せた原寸証拠+diffレビューは `PASS_WITH_P3`。P1/P2なし。P3は「実画面では海窓が強く、ランタン本体は前景UIにほぼ隠れるため、暖色感は主に環境光として伝わる」。採用条件を満たし、再調整理由にはしない。
 - 固定条件: source/output/processor値をfreezeし、P1再発またはユーザー承認済みの方向更新なしに背景を再調整しない。次はC1-Bへ進め、背景とカード質感を同じ仮説に混ぜない。
 
 2026-07-11: `C0 runtime表示破綻` のレビュー差し戻しを反映。見た目の回帰は許容せず、C0契約をGUIキャプチャからheadless監査へ移した。
