@@ -119,6 +119,7 @@ ID-01で固定した `project.godot` の `config/use_custom_user_dir=true` と `
 | E11-EXTERIOR | `project.godot`（name / version / icon / splashだけ）、`src/ui/title_screen.gd`、製品icon / splash、title preview / visual QA / QA、owner移譲中の`docs/31_asset_ledger.md` |
 
 REL-01の `export_presets.cfg` / export smokeと、QA-RELEASEのmanifest / runner / CIはE11実装sliceのtouch範囲に含めない。docs/30 §6の別レーンで実装し、E11 Gateでは回帰結果だけを受け取る。
+QA-RELEASEのRC証跡は、全smoke完了後のdebug/release `.app` をdirectory・file・symlink・mode・file hashまで列挙したcanonical manifestとlive treeの一致を必須とする。PCK / pack manifestだけの旧証跡は再exportする。
 
 E11実装DoD:
 

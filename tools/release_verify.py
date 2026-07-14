@@ -19,6 +19,13 @@ import time
 import shutil
 from typing import Iterable
 
+# E11 harnessのspec_from_file_location経路でも、同階層helperを同じ正本から読む。
+_TOOLS_DIR = str(Path(__file__).resolve().parent)
+if _TOOLS_DIR not in sys.path:
+    sys.path.insert(0, _TOOLS_DIR)
+
+from app_bundle_manifest import bundle_manifest_snapshot, validate_bundle_root, validate_manifest_file
+
 TEST_RE = re.compile(r"^tools/.+_(?:smoke|audit)\.(?:tscn|gd)$")
 ALLOWED_RUNNERS = {"direct_scene", "direct_script", "settings_smoke", "save_system", "export_evidence"}
 EXPLAINED_ERROR_RULES = {
@@ -286,18 +293,83 @@ def parse_export_evidence(path: Path | None) -> dict[str, object]:
     if path is None or not path.is_file():
         return {"status": "not_provided", "contract": "export_launch_verify.sh生成のartifacts.sha256をRC時に指定"}
     fields = dict(line.split("=", 1) for line in path.read_text(encoding="utf-8").splitlines() if "=" in line)
-    required = {"source_commit", "source_tree", "debug_pck_sha256", "release_pck_sha256", "release_pack_manifest_sha256"}
+    required = {
+        "source_commit",
+        "source_tree",
+        "debug_pck_sha256",
+        "debug_pck",
+        "release_pck_sha256",
+        "release_pck",
+        "release_pack_manifest_sha256",
+        "release_pack_manifest",
+        "release_pack_manifest_count",
+        "debug_app",
+        "debug_app_manifest",
+        "debug_app_manifest_count",
+        "debug_app_manifest_sha256",
+        "release_app",
+        "release_app_manifest",
+        "release_app_manifest_count",
+        "release_app_manifest_sha256",
+    }
     missing = sorted(required - set(fields))
     if missing:
         raise ValueError(f"export証跡の必須field不足: {', '.join(missing)}")
-    for key in required:
+    hash_fields = {
+        "source_commit",
+        "source_tree",
+        "debug_pck_sha256",
+        "release_pck_sha256",
+        "release_pack_manifest_sha256",
+        "debug_app_manifest_sha256",
+        "release_app_manifest_sha256",
+    }
+    for key in hash_fields:
         if not re.fullmatch(r"[0-9a-f]{40,64}", fields[key]):
             raise ValueError(f"export証跡のhash形式不正: {key}")
     for path_key, hash_key in (("debug_pck", "debug_pck_sha256"), ("release_pck", "release_pck_sha256"), ("release_pack_manifest", "release_pack_manifest_sha256")):
         artifact = Path(fields.get(path_key, ""))
         if not artifact.is_file() or sha256(artifact) != fields[hash_key]:
             raise ValueError(f"export成果物hash不一致または消失: {path_key}")
-    return {"status": "consumed", "path": str(path), "sha256": sha256(path), "fields": fields}
+    pack_count = fields["release_pack_manifest_count"]
+    if not re.fullmatch(r"[1-9][0-9]*", pack_count):
+        raise ValueError("release pack manifest count形式不正")
+    pack_manifest = Path(fields["release_pack_manifest"])
+    if len(pack_manifest.read_bytes().splitlines()) != int(pack_count):
+        raise ValueError("release pack manifest entry数不一致")
+    bundles: dict[str, dict[str, object]] = {}
+    for prefix in ("debug", "release"):
+        app_field = Path(fields[f"{prefix}_app"])
+        manifest_field = Path(fields[f"{prefix}_app_manifest"])
+        if not app_field.is_absolute() or not manifest_field.is_absolute():
+            raise ValueError(f"export app/manifest pathは絶対path必須です: {prefix}")
+        app = validate_bundle_root(app_field)
+        manifest = validate_manifest_file(manifest_field, app)
+        count_value = fields[f"{prefix}_app_manifest_count"]
+        if not re.fullmatch(r"[1-9][0-9]*", count_value):
+            raise ValueError(f"export app manifest count形式不正: {prefix}")
+        expected_count = int(count_value)
+        expected_sha256 = fields[f"{prefix}_app_manifest_sha256"]
+        if sha256(manifest) != expected_sha256:
+            raise ValueError(f"export app manifest hash不一致: {prefix}")
+        snapshot = bundle_manifest_snapshot(app)
+        if snapshot["count"] != expected_count:
+            raise ValueError(f"export app bundle entry数不一致: {prefix}")
+        if snapshot["sha256"] != expected_sha256 or manifest.read_bytes() != snapshot["data"]:
+            raise ValueError(f"export app bundle manifest不一致: {prefix}")
+        bundles[prefix] = {
+            "app": str(app),
+            "manifest": str(manifest),
+            "count": expected_count,
+            "sha256": expected_sha256,
+        }
+    return {
+        "status": "consumed",
+        "path": str(path),
+        "sha256": sha256(path),
+        "fields": fields,
+        "bundles": bundles,
+    }
 
 
 def validate_export_run_log(path: Path, artifact_log: Path, godot_version: str, template_version: str, template: Path) -> dict[str, object]:

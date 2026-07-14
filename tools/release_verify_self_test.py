@@ -10,7 +10,8 @@ import time
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from release_verify import REQUIRED_SPECIAL, TEST_TIMEOUT_OVERRIDES, atomic_json, classify, create_run_home, discover, load_manifest, main, normalize_output, prepare_output_root, prepare_run_logs, preserve_python_user_base, run, sha256, timeout_budget, unexplained_errors, validate_export_run_log, warning_summary
+from app_bundle_manifest import bundle_manifest_snapshot, write_bundle_manifest
+from release_verify import REQUIRED_SPECIAL, TEST_TIMEOUT_OVERRIDES, atomic_json, classify, create_run_home, discover, load_manifest, main, normalize_output, parse_export_evidence, prepare_output_root, prepare_run_logs, preserve_python_user_base, run, sha256, timeout_budget, unexplained_errors, validate_export_run_log, warning_summary
 
 
 def must_fail(label, callback):
@@ -19,6 +20,60 @@ def must_fail(label, callback):
     except ValueError:
         return
     raise AssertionError(f"負ケースが成功しました: {label}")
+
+
+def create_fixture_app(app: Path, label: str) -> tuple[Path, Path, Path]:
+    executable = app / "Contents/MacOS/game"
+    info_plist = app / "Contents/Info.plist"
+    pck = app / "Contents/Resources/game.pck"
+    executable.parent.mkdir(parents=True)
+    pck.parent.mkdir(parents=True)
+    executable.write_bytes(f"{label}-binary".encode())
+    executable.chmod(0o755)
+    info_plist.write_bytes(f"{label}-plist".encode())
+    pck.write_bytes(f"{label}-pck".encode())
+    return executable, info_plist, pck
+
+
+def write_export_evidence(
+    artifact_log: Path,
+    source_commit: str,
+    source_tree: str,
+    debug_app: Path,
+    release_app: Path,
+    pack_manifest: Path,
+) -> dict[str, object]:
+    debug_manifest = artifact_log.parent / "debug_app_bundle_manifest.jsonl"
+    release_manifest = artifact_log.parent / "release_app_bundle_manifest.jsonl"
+    debug_result = write_bundle_manifest(debug_app, debug_manifest)
+    release_result = write_bundle_manifest(release_app, release_manifest)
+    debug_pck = debug_app / "Contents/Resources/game.pck"
+    release_pck = release_app / "Contents/Resources/game.pck"
+    artifact_log.write_text(
+        f"source_commit={source_commit}\n"
+        f"source_tree={source_tree}\n"
+        f"debug_pck={debug_pck}\n"
+        f"debug_pck_sha256={sha256(debug_pck)}\n"
+        f"release_pck={release_pck}\n"
+        f"release_pck_sha256={sha256(release_pck)}\n"
+        f"release_pack_manifest={pack_manifest}\n"
+        f"release_pack_manifest_count={len(pack_manifest.read_text().splitlines())}\n"
+        f"release_pack_manifest_sha256={sha256(pack_manifest)}\n"
+        f"debug_app={debug_app}\n"
+        f"debug_app_manifest={debug_manifest}\n"
+        f"debug_app_manifest_count={debug_result['count']}\n"
+        f"debug_app_manifest_sha256={debug_result['sha256']}\n"
+        f"release_app={release_app}\n"
+        f"release_app_manifest={release_manifest}\n"
+        f"release_app_manifest_count={release_result['count']}\n"
+        f"release_app_manifest_sha256={release_result['sha256']}\n"
+    )
+    return {
+        "debug_manifest": debug_manifest,
+        "release_manifest": release_manifest,
+        "debug_result": debug_result,
+        "release_result": release_result,
+    }
 
 
 with tempfile.TemporaryDirectory() as temporary:
@@ -187,6 +242,137 @@ with tempfile.TemporaryDirectory() as temporary:
     assert validate_export_run_log(export_log, artifact_log, "4.7", "4.7", template)["warnings"]["unexplained"] == []
     export_log.write_text(f"WARNING: unknown\nGodot: 4.7\nTemplate: 4.7 ({template})\nArtifact hashes: {artifact_log}\nexport_launch_verify: PASS\n")
     must_fail("export未知WARNING", lambda: validate_export_run_log(export_log, artifact_log, "4.7", "4.7", template))
+
+# app bundle evidenceはcanonical treeとlive treeを一致させ、外部symlinkを追跡しない。
+with tempfile.TemporaryDirectory() as temporary:
+    evidence = Path(temporary).resolve()
+    debug_app = evidence / "Debug.app"
+    release_app = evidence / "Release.app"
+    debug_executable, debug_info, _debug_pck = create_fixture_app(debug_app, "debug")
+    create_fixture_app(release_app, "release")
+    external_target = evidence / "external_target"
+    external_target.write_bytes(b"outside-v1")
+    external_link = debug_app / "Contents/Frameworks/External"
+    external_link.parent.mkdir()
+    external_link.symlink_to(external_target)
+    pack_manifest = evidence / "pack.txt"
+    pack_manifest.write_text("res://main.tscn\n")
+    artifact_log = evidence / "artifacts.sha256"
+    bundle_evidence = write_export_evidence(
+        artifact_log,
+        "a" * 40,
+        "b" * 40,
+        debug_app,
+        release_app,
+        pack_manifest,
+    )
+    parsed = parse_export_evidence(artifact_log)
+    assert parsed["status"] == "consumed"
+    debug_manifest = Path(bundle_evidence["debug_manifest"])
+    manifest_entries = [json.loads(line) for line in debug_manifest.read_text().splitlines()]
+    manifest_paths = [entry["path"] for entry in manifest_entries]
+    assert manifest_paths == sorted(manifest_paths) and manifest_paths[0] == "."
+    assert {entry["type"] for entry in manifest_entries} == {"directory", "file", "symlink"}
+    link_entry = next(entry for entry in manifest_entries if entry["path"] == "Contents/Frameworks/External")
+    assert link_entry["target"] == str(external_target)
+
+    atomic_probe = evidence / "atomic_probe.jsonl"
+    write_bundle_manifest(debug_app, atomic_probe)
+    atomic_probe_before = atomic_probe.read_bytes()
+    with mock.patch("app_bundle_manifest.os.replace", side_effect=OSError("replace failed")):
+        try:
+            write_bundle_manifest(debug_app, atomic_probe)
+        except OSError:
+            pass
+        else:
+            raise AssertionError("負ケースが成功しました: manifest atomic replace")
+    assert atomic_probe.read_bytes() == atomic_probe_before
+    assert not list(evidence.glob(f".{atomic_probe.name}.*"))
+
+    app_root_link = evidence / "DebugLink.app"
+    app_root_link.symlink_to(debug_app, target_is_directory=True)
+    must_fail("app root symlink", lambda: bundle_manifest_snapshot(app_root_link))
+    linked_parent = evidence / "linked_parent"
+    linked_parent.symlink_to(evidence, target_is_directory=True)
+    must_fail("app ancestor symlink", lambda: bundle_manifest_snapshot(linked_parent / debug_app.name))
+    must_fail(
+        "manifest inside app",
+        lambda: write_bundle_manifest(debug_app, debug_app / "Contents/manifest.jsonl"),
+    )
+
+    # target file自体はbundle外なので、内容変更してもmanifest/live検証へ影響しない。
+    external_target.write_bytes(b"outside-v2")
+    assert parse_export_evidence(artifact_log)["status"] == "consumed"
+
+    debug_binary = debug_executable.read_bytes()
+    debug_binary_mode = debug_executable.stat().st_mode & 0o777
+    debug_plist = debug_info.read_bytes()
+    debug_plist_mode = debug_info.stat().st_mode & 0o777
+    original_link_target = os.readlink(external_link)
+    original_manifest = debug_manifest.read_bytes()
+
+    debug_executable.write_bytes(debug_binary + b"-tampered")
+    must_fail("bundle binary tamper", lambda: parse_export_evidence(artifact_log))
+    debug_executable.write_bytes(debug_binary)
+    debug_executable.chmod(debug_binary_mode)
+
+    debug_info.write_bytes(debug_plist + b"-tampered")
+    must_fail("bundle Info.plist tamper", lambda: parse_export_evidence(artifact_log))
+    debug_info.write_bytes(debug_plist)
+    debug_info.chmod(debug_plist_mode)
+
+    debug_executable.chmod(0o700)
+    must_fail("bundle mode tamper", lambda: parse_export_evidence(artifact_log))
+    debug_executable.chmod(debug_binary_mode)
+
+    external_link.unlink()
+    external_link.symlink_to(evidence / "different_target")
+    must_fail("bundle symlink target tamper", lambda: parse_export_evidence(artifact_log))
+    external_link.unlink()
+    external_link.symlink_to(original_link_target)
+
+    added = debug_app / "Contents/added.txt"
+    added.write_text("added")
+    must_fail("bundle added entry", lambda: parse_export_evidence(artifact_log))
+    added.unlink()
+
+    debug_info.unlink()
+    must_fail("bundle deleted entry", lambda: parse_export_evidence(artifact_log))
+    debug_info.write_bytes(debug_plist)
+    debug_info.chmod(debug_plist_mode)
+
+    debug_manifest.write_bytes(original_manifest + b"tampered\n")
+    must_fail("bundle manifest tamper", lambda: parse_export_evidence(artifact_log))
+    debug_manifest.write_bytes(original_manifest)
+    assert parse_export_evidence(artifact_log)["status"] == "consumed"
+
+    manifest_target = evidence / "manifest_target"
+    manifest_target.mkdir()
+    copied_manifest = manifest_target / debug_manifest.name
+    copied_manifest.write_bytes(original_manifest)
+    manifest_parent_link = evidence / "manifest_parent_link"
+    manifest_parent_link.symlink_to(manifest_target, target_is_directory=True)
+    original_artifact_log = artifact_log.read_text()
+    artifact_log.write_text(
+        original_artifact_log.replace(
+            f"debug_app_manifest={debug_manifest}",
+            f"debug_app_manifest={manifest_parent_link / debug_manifest.name}",
+        )
+    )
+    must_fail("bundle manifest ancestor symlink", lambda: parse_export_evidence(artifact_log))
+    artifact_log.write_text(original_artifact_log)
+    assert parse_export_evidence(artifact_log)["status"] == "consumed"
+
+    old_artifact_log = evidence / "old_artifacts.sha256"
+    old_artifact_log.write_text(
+        f"source_commit={'a' * 40}\nsource_tree={'b' * 40}\n"
+        f"debug_pck={debug_app / 'Contents/Resources/game.pck'}\n"
+        f"debug_pck_sha256={sha256(debug_app / 'Contents/Resources/game.pck')}\n"
+        f"release_pck={release_app / 'Contents/Resources/game.pck'}\n"
+        f"release_pck_sha256={sha256(release_app / 'Contents/Resources/game.pck')}\n"
+        f"release_pack_manifest={pack_manifest}\nrelease_pack_manifest_sha256={sha256(pack_manifest)}\n"
+    )
+    must_fail("legacy export evidence", lambda: parse_export_evidence(old_artifact_log))
 
 # end-to-end: validate/save wrapperも同一GODOT_BINを使い、隔離・source変化・timeout失敗を固定する。
 with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() as output_temporary:
@@ -363,7 +549,7 @@ with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() a
 # RC成果物をrun中に差し替えると終了時再hashでfailedになる。
 with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() as evidence_temporary:
     fixture = Path(temporary)
-    evidence = Path(evidence_temporary)
+    evidence = Path(evidence_temporary).resolve()
     tools = fixture / "tools"
     tools.mkdir()
     for special in REQUIRED_SPECIAL:
@@ -374,10 +560,12 @@ with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() a
     fake.chmod(0o755)
     (tools / "validate_project.sh").write_text("#!/bin/sh\nexit 0\n")
     (tools / "validate_project.sh").chmod(0o755)
-    debug_pck, release_pck, pack_manifest = evidence / "debug.pck", evidence / "release.pck", evidence / "pack.txt"
-    for path, value in ((debug_pck, b"debug"), (release_pck, b"release"), (pack_manifest, b"manifest")):
-        path.write_bytes(value)
-    (tools / "save_system_verify.sh").write_text(f"#!/bin/sh\nif [ \"${{MUTATE_RC_ARTIFACT:-0}}\" = 1 ]; then printf changed >> '{release_pck}'; fi\n")
+    debug_app, release_app = evidence / "debug.app", evidence / "release.app"
+    create_fixture_app(debug_app, "debug")
+    release_executable, _release_info, _release_pck = create_fixture_app(release_app, "release")
+    pack_manifest = evidence / "pack.txt"
+    pack_manifest.write_bytes(b"manifest\n")
+    (tools / "save_system_verify.sh").write_text(f"#!/bin/sh\nif [ \"${{MUTATE_RC_ARTIFACT:-0}}\" = 1 ]; then printf changed >> '{release_executable}'; fi\n")
     (tools / "save_system_verify.sh").chmod(0o755)
     subprocess.run(["git", "init", "-q"], cwd=fixture, check=True)
     subprocess.run(["git", "add", "."], cwd=fixture, check=True)
@@ -385,11 +573,7 @@ with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() a
     commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=fixture, text=True).strip()
     tree = subprocess.check_output(["git", "rev-parse", "HEAD^{tree}"], cwd=fixture, text=True).strip()
     artifact_log = evidence / "artifacts.sha256"
-    artifact_log.write_text(
-        f"source_commit={commit}\nsource_tree={tree}\ndebug_pck={debug_pck}\ndebug_pck_sha256={sha256(debug_pck)}\n"
-        f"release_pck={release_pck}\nrelease_pck_sha256={sha256(release_pck)}\nrelease_pack_manifest={pack_manifest}\n"
-        f"release_pack_manifest_sha256={sha256(pack_manifest)}\n"
-    )
+    write_export_evidence(artifact_log, commit, tree, debug_app, release_app, pack_manifest)
     template_home = evidence / "home"
     template = template_home / "Library/Application Support/Godot/export_templates/4.7.rc/macos.zip"
     template.parent.mkdir(parents=True)
@@ -413,6 +597,6 @@ with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() a
     finally:
         os.environ.clear(); os.environ.update(old_env)
     swapped_report = json.loads((evidence / "out/release_verify_report.json").read_text())
-    assert rc == 1 and swapped_report["status"] == "failed" and "export成果物hash不一致" in swapped_report["error"]
+    assert rc == 1 and swapped_report["status"] == "failed" and "export app bundle manifest不一致" in swapped_report["error"]
 
 print("release_verify self-test: ok (列挙/process-group/atomic report/HOME/engine/warning)")
