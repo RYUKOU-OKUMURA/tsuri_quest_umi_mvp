@@ -16,6 +16,7 @@ tools/fishing_spot_select_smoke.tscn|direct_scene
 tools/harbor_screen_smoke.tscn|direct_scene
 tools/juicer_smoke.tscn|direct_scene
 tools/level_curve_audit.tscn|direct_scene
+tools/main_navigation_smoke.tscn|direct_scene
 tools/market_smoke.tscn|direct_scene
 tools/nushi_encounter_audit.tscn|direct_scene
 tools/quest_board_smoke.tscn|direct_scene

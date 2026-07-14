@@ -24,6 +24,8 @@ var _fade: ColorRect
 var _app_bgm_player: AudioStreamPlayer
 var _app_bgm_path := ""
 var _save_exit_dialog: ConfirmationDialog
+var _transition_tween: Tween
+var _transition_in_progress := false
 
 
 func _ready() -> void:
@@ -41,6 +43,15 @@ func _ready() -> void:
 	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_fade)
 	_show_screen("title")
+
+
+func _exit_tree() -> void:
+	if _transition_tween != null and _transition_tween.is_valid():
+		_transition_tween.kill()
+	_transition_tween = null
+	_transition_in_progress = false
+	if _fade != null and is_instance_valid(_fade):
+		_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
 func _notification(what: int) -> void:
@@ -83,12 +94,18 @@ func _retry_save_and_quit() -> void:
 
 
 func _show_screen(screen_id: String, payload: Dictionary = {}) -> void:
+	if _transition_in_progress:
+		return
 	# フェードアウト → 差し替え → フェードイン
-	var tw := create_tween()
-	tw.tween_property(_fade, "color", Color(0.0, 0.0, 0.0, 1.0), 0.12)
-	tw.tween_callback(_swap.bind(screen_id, payload))
-	tw.tween_interval(0.03)
-	tw.tween_property(_fade, "color", Color(0.0, 0.0, 0.0, 0.0), 0.15)
+	_transition_in_progress = true
+	_fade.mouse_filter = Control.MOUSE_FILTER_STOP
+	move_child(_fade, get_child_count() - 1)
+	_transition_tween = create_tween()
+	_transition_tween.tween_property(_fade, "color", Color(0.0, 0.0, 0.0, 1.0), 0.12)
+	_transition_tween.tween_callback(_swap.bind(screen_id, payload))
+	_transition_tween.tween_interval(0.03)
+	_transition_tween.tween_property(_fade, "color", Color(0.0, 0.0, 0.0, 0.0), 0.15)
+	_transition_tween.tween_callback(_finish_screen_transition)
 
 
 func _swap(screen_id: String, payload: Dictionary) -> void:
@@ -135,6 +152,14 @@ func _swap(screen_id: String, payload: Dictionary) -> void:
 	_current_screen.navigate_requested.connect(_on_navigate_requested)
 	add_child(_current_screen)
 	_update_bgm_for_screen(resolved_screen_id)
+	move_child(_fade, get_child_count() - 1)
+
+
+func _finish_screen_transition() -> void:
+	_transition_tween = null
+	_transition_in_progress = false
+	if _fade != null and is_instance_valid(_fade):
+		_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
 func _on_navigate_requested(screen_id: String, payload: Dictionary) -> void:
