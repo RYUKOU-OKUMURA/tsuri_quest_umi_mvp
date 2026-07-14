@@ -455,6 +455,7 @@ var _footer_message_label: Label
 var _header_panel: Control
 var _footer_panel: Control
 var _summary_cards: Array[Control] = []
+var _closing := false
 
 
 func _build_screen() -> void:
@@ -1168,23 +1169,38 @@ func _animate_entry_part(part: Control, delay: float, offset_y: float) -> void:
 
 
 func _close() -> void:
+	if not _begin_close():
+		return
 	var tw := create_tween()
 	tw.set_ease(Tween.EASE_IN)
 	tw.set_trans(Tween.TRANS_QUAD)
 	tw.tween_property(self, "modulate:a", 0.0, 0.12)
 	tw.tween_callback(
-		func() -> void:
-			closed.emit()
-			queue_free()
+		_complete_close
 	)
 
 
 func preview_accept() -> void:
 	if is_qa_deterministic():
-		closed.emit()
-		queue_free()
+		if not _begin_close():
+			return
+		_complete_close()
 		return
 	_close()
+
+
+func _begin_close() -> bool:
+	if _closing:
+		return false
+	_closing = true
+	return true
+
+
+func _complete_close() -> void:
+	if is_queued_for_deletion():
+		return
+	closed.emit()
+	queue_free()
 
 
 func _total_fish_count() -> int:

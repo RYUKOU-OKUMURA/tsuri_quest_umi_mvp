@@ -6,6 +6,7 @@ const CookingScreen = preload("res://src/ui/cooking_screen.gd")
 const CookingRewardPanelScript = preload("res://src/ui/components/cooking_reward_panel.gd")
 const CookingStatusPanelScript = preload("res://src/ui/components/cooking_status_panel.gd")
 const LevelUpPanelScript = preload("res://src/ui/components/level_up_panel.gd")
+const ScreenBaseScript = preload("res://src/ui/screen_base.gd")
 
 const VIEWPORT_RECT := Rect2(Vector2.ZERO, Vector2(1280.0, 720.0))
 
@@ -129,6 +130,11 @@ func _ready() -> void:
 	):
 		return
 	if not _expect_overlay_count(screen, CookingStatusPanelScript, 0, "status harbor return"):
+		return
+	screen.queue_free()
+	await _tick()
+
+	if not await _verify_close_one_shot_contracts():
 		return
 
 	print("cooking_flow_smoke: ok")
@@ -274,6 +280,136 @@ func _mount_cooking_screen(suppress_level_overlay := true) -> Control:
 	_stage.add_child(screen)
 	await _tick()
 	return screen
+
+
+func _verify_close_one_shot_contracts() -> bool:
+	var original_qa_deterministic: Variant = ScreenBaseScript._qa_deterministic
+	ScreenBaseScript._qa_deterministic = false
+
+	_seed_after_meal_state()
+	var level_panel := await _mount_level_up_panel()
+	if not await _verify_animated_close_one_shot(
+		level_panel, "LevelUpConfirmButton", 0.16, "LEVEL_UP normal close"
+	):
+		return false
+
+	_seed_after_meal_state()
+	var status_panel := await _mount_status_panel()
+	if not await _verify_animated_close_one_shot(
+		status_panel, "StatusReturnButton", 0.12, "STATUS_SUMMARY normal close"
+	):
+		return false
+
+	ScreenBaseScript._qa_deterministic = true
+	_seed_after_meal_state()
+	level_panel = await _mount_level_up_panel()
+	if not await _verify_deterministic_close_one_shot(
+		level_panel, "LevelUpConfirmButton", "LEVEL_UP deterministic close"
+	):
+		return false
+
+	_seed_after_meal_state()
+	status_panel = await _mount_status_panel()
+	if not await _verify_deterministic_close_one_shot(
+		status_panel, "StatusReturnButton", "STATUS_SUMMARY deterministic close"
+	):
+		return false
+
+	ScreenBaseScript._qa_deterministic = original_qa_deterministic
+	return true
+
+
+func _mount_level_up_panel() -> Control:
+	var panel := LevelUpPanelScript.new()
+	panel.theme = ThemeFactory.build_theme()
+	panel.size = VIEWPORT_RECT.size
+	panel.custom_minimum_size = VIEWPORT_RECT.size
+	_stage.add_child(panel)
+	await _tick()
+	panel.show_level_up(4, 5, _old_stats(), PlayerProgress.get_base_stats())
+	return panel
+
+
+func _mount_status_panel() -> Control:
+	var panel := CookingStatusPanelScript.new()
+	panel.theme = ThemeFactory.build_theme()
+	panel.size = VIEWPORT_RECT.size
+	panel.custom_minimum_size = VIEWPORT_RECT.size
+	_stage.add_child(panel)
+	await _tick()
+	panel.show_summary()
+	return panel
+
+
+func _verify_animated_close_one_shot(
+	panel: Control, button_name: String, close_duration: float, context: String
+) -> bool:
+	var closed_events: Array[String] = []
+	var tree_exit_events: Array[String] = []
+	panel.connect("closed", func() -> void: closed_events.append("closed"))
+	panel.tree_exited.connect(func() -> void: tree_exit_events.append("tree_exited"))
+	await get_tree().create_timer(0.45).timeout
+
+	var button := _find_named(panel, button_name) as Button
+	if not _expect_true(button != null, "%s should expose %s." % [context, button_name]):
+		return false
+	var tween_count_before := get_tree().get_processed_tweens().size()
+	button.pressed.emit()
+	var tween_count_after_first := get_tree().get_processed_tweens().size()
+	panel.call("preview_accept")
+	panel.call("_close")
+	button.pressed.emit()
+	var tween_count_after_repeats := get_tree().get_processed_tweens().size()
+
+	if not _expect_eq(tween_count_after_first, tween_count_before + 1, "%s should create one close tween." % context):
+		return false
+	if not _expect_eq(tween_count_after_repeats, tween_count_after_first, "%s should not create another close tween." % context):
+		return false
+	if not _expect_true(bool(panel.get("_closing")), "%s should keep the close guard set." % context):
+		return false
+	if not _expect_eq(closed_events.size(), 0, "%s should emit only after the existing close duration." % context):
+		return false
+
+	await get_tree().create_timer(close_duration + 0.12).timeout
+	await _tick()
+	if not _expect_eq(closed_events.size(), 1, "%s should emit closed once." % context):
+		return false
+	if not _expect_eq(tree_exit_events.size(), 1, "%s should exit the tree once." % context):
+		return false
+	return _expect_true(not is_instance_valid(panel), "%s should free the panel once." % context)
+
+
+func _verify_deterministic_close_one_shot(
+	panel: Control, button_name: String, context: String
+) -> bool:
+	var closed_events: Array[String] = []
+	var tree_exit_events: Array[String] = []
+	panel.connect("closed", func() -> void: closed_events.append("closed"))
+	panel.tree_exited.connect(func() -> void: tree_exit_events.append("tree_exited"))
+	await _tick()
+
+	var button := _find_named(panel, button_name) as Button
+	if not _expect_true(button != null, "%s should expose %s." % [context, button_name]):
+		return false
+	var tween_count_before := get_tree().get_processed_tweens().size()
+	panel.call("preview_accept")
+	panel.call("_close")
+	button.pressed.emit()
+	var tween_count_after_repeats := get_tree().get_processed_tweens().size()
+
+	if not _expect_eq(tween_count_after_repeats, tween_count_before, "%s should remain immediate without a close tween." % context):
+		return false
+	if not _expect_true(bool(panel.get("_closing")), "%s should keep the close guard set." % context):
+		return false
+	if not _expect_eq(closed_events.size(), 1, "%s should emit closed once in the same frame." % context):
+		return false
+	if not _expect_true(panel.is_queued_for_deletion(), "%s should queue one deferred free." % context):
+		return false
+
+	await _tick()
+	if not _expect_eq(tree_exit_events.size(), 1, "%s should exit the tree once." % context):
+		return false
+	return _expect_true(not is_instance_valid(panel), "%s should free the panel once." % context)
 
 
 func _tick() -> void:

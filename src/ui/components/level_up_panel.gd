@@ -292,6 +292,7 @@ var _spot_title: Label
 var _spot_subtitle: Label
 var _confirm_button: Button
 var _confirm_cue: Label
+var _closing := false
 
 
 func _build_screen() -> void:
@@ -526,8 +527,9 @@ func show_level_up(
 
 
 func preview_accept() -> void:
-	closed.emit()
-	queue_free()
+	if not _begin_close():
+		return
+	_complete_close()
 
 
 func _rebuild_stats(old_stats: Dictionary, new_stats: Dictionary) -> void:
@@ -825,6 +827,8 @@ func _present() -> void:
 
 
 func _close() -> void:
+	if not _begin_close():
+		return
 	_dialog.pivot_offset = _dialog.size * 0.5
 	var tw := create_tween()
 	tw.set_ease(Tween.EASE_IN)
@@ -832,10 +836,22 @@ func _close() -> void:
 	tw.tween_property(_dialog, "scale", Vector2(0.86, 0.86), 0.16)
 	tw.parallel().tween_property(_dialog, "modulate:a", 0.0, 0.16)
 	tw.tween_callback(
-		func() -> void:
-			closed.emit()
-			queue_free()
+		_complete_close
 	)
+
+
+func _begin_close() -> bool:
+	if _closing:
+		return false
+	_closing = true
+	return true
+
+
+func _complete_close() -> void:
+	if is_queued_for_deletion():
+		return
+	closed.emit()
+	queue_free()
 
 
 func _apply_flow_button_style(button: Button) -> void:
