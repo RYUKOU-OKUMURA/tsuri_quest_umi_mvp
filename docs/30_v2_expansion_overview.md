@@ -413,12 +413,18 @@ V2フェーズ外。ローンチ品質のための欠陥修正・素材工事。
 | docs/33 M0（市場P1掃除） | 完了 | ローンチ品質 | 空状態の氷トレー・行残骸・未ロード風バーをruntime空状態表示へ置換。2026-07-11に被覆残像を再修正し、4状態QA・包含smoke・validateを実施 |
 | docs/33 C0（調理P1掃除） | 完了 | ローンチ品質 | 残像wash・タイトル帯衝突・導線グリフ・金額formatを修正。構造契約はheadless `cooking_verify.sh`、実画像は独立 `cooking_visual_qa.sh` で検証 |
 | docs/45 リリース前監査フォローアップ | 是正中 | **現在の最優先** | Release Gate 0/1・ID-01・REL-01最小export・SAVE-01〜04・UI-QUEST-01・UI-READY-01・M0・C0・QA-RELEASE骨格・DOCS-RELEASE草案・E7は完了。E11、RIGHTS / TARGET / SIGN、固定RC検証が残る。詳細briefはdocs/45 |
-| docs/33 M1〜M3 / C1〜C5（素材工事） | 未着手 | **ローンチ後**。E8/E9 前に素材供給ラインを1周確立 | AI素材差し替え。ローンチブロッカーではない |
+| docs/33 M1〜M3（魚市場素材工事） | 完了 | 品質トラック | backplate分解、市場背景、氷台、common CTA、4状態と実入力CTA 5状態の受入を完了 |
+| `docs/46_quest_board_material_uplift_spec.md` / `docs/48_shark_pen_tank_uplift_spec.md` | 完了 | 品質トラック | authored木面/紙札と専用水槽背景・環境光を採用し、各screen QAをfreeze |
+| docs/33 C1-A / docs/52 R5-A（調理背景・Status hero） | 完了 | 品質トラック | 厨房背景と中央釣り人portraitを採用。既存構成・ロジックは維持 |
+| docs/51 C2素材準備 | 準備完了 / runtime未採用 | 次の調理候補 | brief、source、candidate、safe-area証拠、決定的processorまで完了。製品slotは未変更 |
+| docs/33 C1-B / C2 runtime / C3〜C5 | 未着手 | 次のvisualトラック | C1-B → C2 runtime採否 → C3 → C4 → C5を同一調理レーンで直列実装 |
+| docs/54 UIブラッシュアップ総合計画 | 現行 | INPUT-COMMON後の実行計画 | 入力共通基盤→画面別3並列→C1-B/R5-B/FIGHT authored 3並列の順を定義 |
 
 フェーズ完了・仕様変更・横展開障害リストは本docに追記する。オーケストレーション様式は docs/26 と同じ（Fable が計画・レビュー、Composer に scoped brief で fan-out）。
 
 ## 7. 更新履歴
 
+- 2026-07-14: UI Wave A/Bの統合状態へ品質トラックを同期。魚市場M1〜M3、依頼ボード、水槽背景、調理C1-A、Status R5-Aを完了、C2を素材準備済み・runtime未採用として分離し、以後の順をdocs/54へ定義
 - 2026-07-06: 初版。docs/archive/27_retention_expansion_plan.md・docs/archive/28_retention_expansion_implementation_specs.md を V2体系（総覧＋フェーズ別doc）へ再編。決定 #10〜#13（レベル上限50・サメ飼育E10・餌の消費制・メガロドン）を追加
 - 2026-07-13: E11-DISPLAY実装に同期。fullscreen保存/復元、起動時DisplayServer適用、`stretch/aspect=keep`、1280x720/16:10/4:3の実runtime黒帯matrix QAを完了し、次タスクをINPUT-COMMONへ更新
 - 2026-07-06: ローンチ耐久調査の反映。E11（ローンチ準備）新設、決定 #14〜#16（E4+E10同時リリース・ヌシ売却許容・チート対策なし）、不変条件に依頼のサメ除外、§3-4 未決4件、JSON型補正の流儀、監査共通ハーネス、docs/31 素材台帳の新設

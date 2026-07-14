@@ -22,8 +22,9 @@
 2. `docs/30_v2_expansion_overview.md` — V2拡張台帳・現在地
 3. `docs/45_release_readiness_code_review.md` — リリース前監査・優先順位・次タスクbrief
 4. `docs/47_launch_foundation_code_review.md` — ローンチ基盤の構造課題と段階リファクタ順
-5. 実装対象の仕様doc（現在の本線は `docs/v2/E11_launch_readiness.md`）
-6. `docs/qa/` — 画面別freeze値・不採用リスト
+5. `docs/54_ui_uplift_master_plan.md` — INPUT-COMMON後のUI実行順・並列境界
+6. 実装対象の仕様doc（現在の本線は `docs/v2/E11_launch_readiness.md`）
+7. `docs/qa/` — 画面別freeze値・不採用リスト
 
 ## 4. 索引本体
 
@@ -86,6 +87,7 @@
 | `51_cooking_c2_meal_scene_asset_brief.md` | 調理C2の食事シーン背景候補briefと配線前の採否条件 | 現行 |
 | `52_status_r5a_player_hero_spec.md` | ステータスR5-Aの中央プレイヤーhero素材仕様と採用記録 | 現行 |
 | `53_pre_ui_code_review_and_refactor.md` | UI Wave継続前の全体コードレビュー、behavior-preserving修正、残課題 | 現行 |
+| `54_ui_uplift_master_plan.md` | 今後のUIブラッシュアップ順、画面別残課題、並列owner、DoD、レビュー契約 | 現行 |
 
 **番号体系外の正本**
 

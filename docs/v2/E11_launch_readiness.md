@@ -114,7 +114,7 @@ ID-01で固定した `project.godot` の `config/use_custom_user_dir=true` と `
 | E11-SLOT-DELETE backend（state owner） | `src/autoload/player_progress.gd`、`tools/save_system_smoke.gd`、`tools/save_system_verify.sh` |
 | E11-SLOT-DELETE UI（settings spine） | `src/ui/settings_screen.gd`、`src/ui/title_screen.gd`、`src/main.gd`、`tools/settings_smoke.gd` / `.tscn` |
 | E11-DISPLAY | `src/ui/settings_screen.gd`、`project.godot`（表示設定だけ）、`tools/settings_smoke.gd` / `.tscn`、解像度別preview / visual QA script |
-| E11-INPUT-COMMON | `project.godot`（input mapだけ）、`src/ui/screen_base.gd`、`tools/input_focus_audit.gd` / `.tscn`（新設） |
+| E11-INPUT-COMMON | `project.godot`（input mapだけ）、`src/ui/screen_base.gd`、`tools/e11_input_focus_probe.gd` / `.tscn`、`tools/e11_qa_harness_verify.sh` |
 | INPUT-<SCREEN> | 監査で失敗した1画面のscreen / smoke / QA / evidenceだけ。1画面1brief |
 | E11-EXTERIOR | `project.godot`（name / version / icon / splashだけ）、`src/ui/title_screen.gd`、製品icon / splash、title preview / visual QA / QA、owner移譲中の`docs/31_asset_ledger.md` |
 
