@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Build the deterministic Status R5-A player medallion portrait."""
 
+import os
+import tempfile
 from pathlib import Path
 
 from PIL import Image, ImageEnhance, ImageFilter, ImageOps
@@ -10,6 +12,43 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "tools/source_assets/status/status_player_fishing_source.png"
 OUTPUT = ROOT / "assets/showcase/status/status_player_fishing_portrait.png"
 OUTPUT_SIZE = 256
+
+
+def _same_decoded_image(path: Path, candidate: Image.Image) -> bool:
+    if not path.is_file():
+        return False
+    try:
+        with Image.open(path) as existing_image:
+            existing_image.load()
+            return (
+                existing_image.size == candidate.size
+                and existing_image.mode == candidate.mode
+                and existing_image.tobytes() == candidate.tobytes()
+            )
+    except (OSError, ValueError):
+        return False
+
+
+def _save_if_pixels_changed(candidate: Image.Image, output_path: Path) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    if _same_decoded_image(output_path, candidate):
+        return
+
+    temp_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            dir=output_path.parent,
+            prefix=f".{output_path.stem}.",
+            suffix=output_path.suffix,
+            delete=False,
+        ) as temp_file:
+            temp_path = Path(temp_file.name)
+        candidate.save(temp_path, format="PNG", optimize=False, compress_level=9)
+        os.replace(temp_path, output_path)
+        temp_path = None
+    finally:
+        if temp_path is not None:
+            temp_path.unlink(missing_ok=True)
 
 
 def build_portrait(source_path: Path = SOURCE, output_path: Path = OUTPUT) -> None:
@@ -44,8 +83,7 @@ def build_portrait(source_path: Path = SOURCE, output_path: Path = OUTPUT) -> No
 
     output = portrait.convert("RGBA")
     output.putalpha(mask)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output.save(output_path, format="PNG", optimize=False, compress_level=9)
+    _save_if_pixels_changed(output, output_path)
 
 
 if __name__ == "__main__":

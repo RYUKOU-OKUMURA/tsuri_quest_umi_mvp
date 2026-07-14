@@ -50,6 +50,6 @@ Date: 2026-07-14
 
 ## 5. 決定的加工と検証
 
-processorはsourceを中央正方形cropし、256×256へ高品質縮小、色数とコントラストを本作の小型portrait向けに正規化し、円形alpha maskを適用する。人物そのものをPIL描画しない。processorを2回実行し、ファイルhashとdecoded pixelsが一致することを確認する。
+processorはsourceを中央正方形cropし、256×256へ高品質縮小、色数とコントラストを本作の小型portrait向けに正規化し、円形alpha maskを適用する。人物そのものをPIL描画しない。candidateと既存製品PNGのsize / mode / decoded pixelsが完全一致する場合は既存bytesを保持し、画素差がある場合だけ同一directoryの一時PNGからatomic replaceする。clean checkoutからprocessorを2回実行し、各回worktree clean、製品file hashとdecoded-pixel hashが不変であることを確認する。
 
 比較証拠は原寸before/after/reference、320×180 thumbnail、grayscale、source/product/実表示のasset contactを `docs/qa/evidence/status/2026-07-14_r5a_*` に保存する。

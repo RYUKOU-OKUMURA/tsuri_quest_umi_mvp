@@ -45,7 +45,7 @@ QA更新コマンド: ./tools/status_visual_qa.sh
 
 2026-07-14 R5-A局所upliftを採用。
 
-- 変えたもの: 中央「釣果サマリー」上部medallionの最近魚アイコンを、OpenAI built-in image generationで生成した海釣り人portraitへ置換。source→256×256円形alpha製品PNGは`tools/process_status_r5a_assets.py`で決定的に加工する。
+- 変えたもの: 中央「釣果サマリー」上部medallionの最近魚アイコンを、OpenAI built-in image generationで生成した海釣り人portraitへ置換。source→256×256円形alpha製品PNGは`tools/process_status_r5a_assets.py`で決定的に加工し、decoded pixel同値の再生成では既存製品bytesを保持する。
 - 変えていないもの: `PlayerStatusBar`、難易度1回表示、3ペイン/hero badge外形、runtime「記録」、右側4指標、最近魚4枚、称号、図鑑率、クーラー/装備/料理ログ、フッター3導線、難易度・保存ロジック。
 - 状態契約: normal / hardは同一seed・同一構成。差は難易度名と安全域の実値だけ。両状態で人物の頭部、竿、海が円形内に読み取れ、P1ゼロ。
 - 採否理由: 原寸beforeより「誰の釣果か」が明確で、320×180のbefore / after / reference比較でも魚アイコンから釣り人identityへ変わったことを判別できる。gray比較でも中央heroの人物シルエットを維持する。
