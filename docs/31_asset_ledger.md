@@ -75,7 +75,7 @@ RIGHTS-01A状態marker（`docs/qa/evidence/licensing/README.md` の未完/完了
 | `reference/cooking_flow/01_cook_select_concept.png` | `generate_cooking_showcase_assets.py` | `cooking_room_bg.png`, `fish_icon_sheet.png`, `dish_feature_aji_shioyaki.png`、紙質blendを使う各frame、二次派生 `meal_table_spread.png`（採用済み） | referenceの生成元・日付・入力権利と派生利用権はU-03待ち・U-08待ち |
 | `fish_market/market_bg_source.png` | `process_fish_market_m2_assets.py market_bg` | `assets/showcase/fish_market/market_bg.png`（2026-07-13、採用済み。1280×720、魚/UI/文字なし、28%減光スクリム） | OpenAI built-in image generationによるsource。生成時のスタイル参照入力と第三者権利clearanceはU-08待ち |
 | `fish_market/ice_tray_hero_source.png`, `fish_market/ice_tray_hero_cutout.png` | imagegen skill標準 `remove_chroma_key.py` → `process_fish_market_m2_assets.py ice_tray_hero` | `assets/showcase/fish_market/ice_tray_hero.png`（2026-07-13、採用済み。1280×720透明レイヤー、魚/UI/文字なし） | OpenAI built-in image generationによるsource。生成時のスタイル参照入力と第三者権利clearanceはU-08待ち |
-| `status/status_player_fishing_source.png` | `process_status_r5a_assets.py` | `assets/showcase/status/status_player_fishing_portrait.png`（2026-07-14、採用候補。256×256円形alpha、文字/UI/魚なし） | OpenAI built-in image generationによるsource。`reference/08_status_screen_mockup.png`をスタイル/構図参照入力に使用。入力権利・第三者権利clearanceはU-08待ち |
+| `status/status_player_fishing_source.png` | `process_status_r5a_assets.py` | `assets/showcase/status/status_player_fishing_portrait.png`（2026-07-14、採用済み。256×256円形alpha、文字/UI/魚なし） | OpenAI built-in image generationによるsource。`reference/08_status_screen_mockup.png`をスタイル/構図参照入力に使用。入力権利・第三者権利clearanceはU-08待ち |
 
 ## 3. 音源（BGM / SE） — 条件確認済み・証拠待ち
 
