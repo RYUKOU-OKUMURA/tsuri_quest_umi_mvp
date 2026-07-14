@@ -2943,6 +2943,7 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
             "generate_harbor_showcase_assets.py",
             "generate_megalodon_fish_assets.py",
             "generate_quest_board_assets.py",
+            "generate_shark_pen_assets.py",
             "generate_shark_fish_assets.py",
             "generate_tackle_shop_assets.py",
             "generate_title_showcase_assets.py",
