@@ -87,7 +87,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 - 親観測との差: 既知の22 byte-only / 10 decoded差に対し、独立2計測はともに21/11。差分1点の `cooking_title_banner.png` は420x110中1px（channel absolute delta 248）だがdecoded RGBA SHAが異なるため、証拠上はdecoded差へ分類した。Pillow 10.2では13点dirty・全byte-only、Pillow 11.3では45点dirty・34/11で、PNG encoder・ImageDraw・filter/resize境界の版依存を確認した。
 - 原因/採否: 旧 `save()` の無条件上書きがbyte差を作り、decoded差はPillow版による描画境界とLANCZOS差。`fish_icon_sheet` / `dish_feature_aji_shioyaki` / `meal_table_spread` はreference crop/二次派生、他の有機一点物・個別採用品も現行コミット済み製品を正本とし、専用processorへ移るまで明示guard。C1-A `cooking_room_bg.png` は既存どおり `process_cooking_c1a_assets.py` へ委譲する。
 - 保存契約: candidateと既存PNGをsize/mode/decoded bytesで比較し、同値なら既存file bytesを保持。真の差・欠損・読込不能は同directoryのtempへPNG保存し、flush/fsync/chmod後に`os.replace`。例外時はfinallyでtempを削除し、replace前の旧製品を保持する。guard対象の欠損/読込不能は勝手にprocedural復旧せず明示失敗する。
-- focused検証: `tools/cooking_generator_determinism_verify.py` は同値bytes保持、真の画素差atomic更新、欠損/読込不能復旧、replace例外時のtemp cleanup/旧output保持、guard、および全57点manifest不変を2実行で検証する。Pillow 10.2 / 12.1ともgreen。
+- 必須gate: `tools/cooking_generator_determinism_verify.py` はproduction全57点を一時directoryへbyte copyし、そのcopyだけを `generator.OUT` にして2回実行する。同値bytes保持、size/mode/画素の真差atomic更新、欠損/読込不能復旧、replace例外時のtemp cleanup/旧output保持、guard、productionのfile/decoded hash・size/mode不変を検証し、`tools/validate_project.sh` から毎回実行する。
 - 固定条件: generator保守で製品画素を更新する場合は、対象slotの所有契約・現行採用証拠・専用processorを先に確定する。単なるPillow候補差を採用品更新理由にしない。
 
 2026-07-14: `C1-A COOK_SELECT厨房背景` 完了。既存の純PIL背景をOpenAI生成source + 決定的processorへ移行した。
