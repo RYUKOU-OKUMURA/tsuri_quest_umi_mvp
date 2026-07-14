@@ -18,8 +18,10 @@ const SettingsScreen = preload("res://src/ui/settings_screen.gd")
 const OPENING_BGM_PATH := "res://assets/audio/opening_bgm.mp3"
 const OPENING_BGM_VOLUME_DB := -10.0
 const OPENING_BGM_SCREEN_IDS := ["title", "harbor", "settings"]
+const TRANSITION_FADE_CANVAS_LAYER := 100
 
 var _current_screen
+var _fade_layer: CanvasLayer
 var _fade: ColorRect
 var _app_bgm_player: AudioStreamPlayer
 var _app_bgm_path := ""
@@ -36,12 +38,17 @@ func _ready() -> void:
 	# close requestを保存結果に応じて制御するため、SceneTreeの自動終了を無効化する。
 	get_tree().auto_accept_quit = false
 	PlayerProgress.save_failed.connect(_on_save_failed)
-	# 画面遷移フェード（最前面）
+	# 画面内のz_indexと独立したCanvasLayerで、遷移フェードを必ず最前面へ描画する。
+	_fade_layer = CanvasLayer.new()
+	_fade_layer.name = "TransitionFadeLayer"
+	_fade_layer.layer = TRANSITION_FADE_CANVAS_LAYER
+	add_child(_fade_layer)
 	_fade = ColorRect.new()
+	_fade.name = "TransitionFade"
 	_fade.color = Color(0.0, 0.0, 0.0, 1.0)
 	_fade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_fade)
+	_fade_layer.add_child(_fade)
 	_show_screen("title")
 
 
@@ -99,7 +106,6 @@ func _show_screen(screen_id: String, payload: Dictionary = {}) -> void:
 	# フェードアウト → 差し替え → フェードイン
 	_transition_in_progress = true
 	_fade.mouse_filter = Control.MOUSE_FILTER_STOP
-	move_child(_fade, get_child_count() - 1)
 	_transition_tween = create_tween()
 	_transition_tween.tween_property(_fade, "color", Color(0.0, 0.0, 0.0, 1.0), 0.12)
 	_transition_tween.tween_callback(_swap.bind(screen_id, payload))
@@ -152,7 +158,6 @@ func _swap(screen_id: String, payload: Dictionary) -> void:
 	_current_screen.navigate_requested.connect(_on_navigate_requested)
 	add_child(_current_screen)
 	_update_bgm_for_screen(resolved_screen_id)
-	move_child(_fade, get_child_count() - 1)
 
 
 func _finish_screen_transition() -> void:
