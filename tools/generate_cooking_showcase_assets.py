@@ -9,7 +9,9 @@ project-owned and deterministic.
 from __future__ import annotations
 
 import math
+import os
 import random
+import tempfile
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
@@ -18,6 +20,26 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "assets" / "showcase" / "cooking"
 COOK_SELECT_REFERENCE = ROOT / "reference" / "cooking_flow" / "01_cook_select_concept.png"
+
+# These adopted products are not generic procedural slots anymore.  They are
+# organic/reference-derived art, or Pillow-version-sensitive sheets whose
+# committed pixels were individually reviewed and adopted.  Until each slot
+# moves to a dedicated source + processor, the committed product is the source
+# of truth; this legacy bulk generator must not silently replace it with a
+# different rendering.
+ADOPTED_PRODUCT_GUARDS: dict[str, str] = {
+    "cooking_icon_sheet.png": "adopted icon sheet; ImageDraw rasterization varies by Pillow version",
+    "cooking_title_banner.png": "adopted screen-specific banner",
+    "dish_feature_aji_shioyaki.png": "reference-derived organic dish art",
+    "dish_icon_sheet.png": "adopted dish art sheet",
+    "exp_stage_bg.png": "organic one-off EXP background",
+    "fish_icon_sheet.png": "reference-derived fish art sheet",
+    "level_unlock_medallion.png": "organic one-off reward motif",
+    "level_unlock_spot.png": "organic one-off fishing-spot art",
+    "meal_banner_frame.png": "individually polished and adopted meal banner",
+    "meal_table_spread.png": "reference-derived organic meal art",
+    "next_effect_art.png": "organic one-off effect illustration",
+}
 
 
 def rgba(hex_color: str, alpha: int = 255) -> tuple[int, int, int, int]:
@@ -30,9 +52,69 @@ def rgba(hex_color: str, alpha: int = 255) -> tuple[int, int, int, int]:
     )
 
 
+def _images_are_identical(existing: Image.Image, candidate: Image.Image) -> bool:
+    """Compare the complete decoded product contract, not PNG encoding bytes."""
+    existing.load()
+    candidate.load()
+    return (
+        existing.size == candidate.size
+        and existing.mode == candidate.mode
+        and existing.tobytes() == candidate.tobytes()
+    )
+
+
+def _atomic_save_png(img: Image.Image, output_path: Path) -> None:
+    """Durably stage a PNG beside its product, then atomically replace it."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_mode = output_path.stat().st_mode & 0o777 if output_path.exists() else 0o644
+    temp_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w+b",
+            prefix=f".{output_path.name}.",
+            suffix=".tmp",
+            dir=output_path.parent,
+            delete=False,
+        ) as temp_file:
+            temp_path = Path(temp_file.name)
+            img.save(temp_file, format="PNG")
+            temp_file.flush()
+            os.fsync(temp_file.fileno())
+        os.chmod(temp_path, output_mode)
+        os.replace(temp_path, output_path)
+        temp_path = None
+    finally:
+        if temp_path is not None:
+            temp_path.unlink(missing_ok=True)
+
+
 def save(img: Image.Image, name: str) -> None:
+    """Preserve identical products and safely publish genuine owned changes."""
     OUT.mkdir(parents=True, exist_ok=True)
-    img.save(OUT / name)
+    output_path = OUT / name
+    guard_reason = ADOPTED_PRODUCT_GUARDS.get(name)
+
+    if output_path.exists():
+        try:
+            with Image.open(output_path) as existing:
+                if _images_are_identical(existing, img):
+                    return
+        except (OSError, ValueError) as error:
+            if guard_reason is not None:
+                raise RuntimeError(
+                    f"refusing to replace unreadable guarded product {name}: {guard_reason}"
+                ) from error
+
+        if guard_reason is not None:
+            print(f"preserved adopted {name}: {guard_reason}")
+            return
+    elif guard_reason is not None:
+        raise FileNotFoundError(
+            f"guarded product {name} is missing; restore the committed product or add a dedicated processor: "
+            f"{guard_reason}"
+        )
+
+    _atomic_save_png(img, output_path)
 
 
 def draw_panel(
