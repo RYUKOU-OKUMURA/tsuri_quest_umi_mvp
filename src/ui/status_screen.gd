@@ -15,6 +15,7 @@ const COMMON_CARD_SELECTED_FRAME_PATH := "res://assets/showcase/common/card_sele
 const COMMON_PARCHMENT_CARD_PATH := "res://assets/showcase/common/parchment_card.png"
 const ICON_FISH_BOOK_PATH := "res://assets/showcase/common/nav_status_icon.png"
 const ICON_COOKING_PATH := "res://assets/showcase/common/nav_cooking_icon.png"
+const STATUS_PLAYER_PORTRAIT_PATH := "res://assets/showcase/status/status_player_fishing_portrait.png"
 
 var _player_status_bar: PlayerStatusBar
 var _player_panel: Control
@@ -374,11 +375,11 @@ func _summary_badge() -> Control:
 	disk.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	badge.add_child(disk)
 
-	var fish_ids := _recent_fish_ids(1)
-	if not fish_ids.is_empty():
-		var fish := GameData.get_fish(fish_ids[0])
+	var portrait_texture := ShowcaseAssets.load_texture(STATUS_PLAYER_PORTRAIT_PATH)
+	if portrait_texture != null:
 		var portrait := TextureRect.new()
-		portrait.texture = _fish_portrait_texture(fish)
+		portrait.name = "StatusPlayerFishingPortrait"
+		portrait.texture = portrait_texture
 		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
