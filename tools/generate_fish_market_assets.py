@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate first-pass fish market showcase assets.
+"""Generate decomposed fish market showcase assets.
 
 The generated image intentionally contains no Japanese labels, fish names,
 prices, or quantities. Runtime UI draws all variable state.
@@ -16,8 +16,11 @@ from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "assets" / "showcase" / "fish_market"
+M2_SOURCE = ROOT / "tools" / "source_assets" / "fish_market"
+COMMON_PARCHMENT = ROOT / "assets" / "showcase" / "common" / "parchment_card.png"
 W, H = 1280, 720
 RNG = Random(20260704)
+RUNTIME_BACKDROP = (10, 22, 34, 255)
 
 
 COLORS = {
@@ -39,6 +42,35 @@ COLORS = {
     "ice": (214, 238, 247, 255),
     "ice_shadow": (120, 151, 162, 255),
 }
+
+
+def save_png_if_pixels_changed(candidate: Image.Image, output_path: Path) -> bool:
+    """Preserve existing PNG bytes when decoded pixels are already identical."""
+    candidate.load()
+    if output_path.is_file():
+        with Image.open(output_path) as existing:
+            existing.load()
+            if (
+                existing.size == candidate.size
+                and existing.mode == candidate.mode
+                and existing.tobytes() == candidate.tobytes()
+            ):
+                print(f"preserved pixel-identical {output_path}")
+                return False
+
+    temporary_path = output_path.with_name(f".{output_path.name}.tmp")
+    try:
+        candidate.save(
+            temporary_path,
+            format="PNG",
+            optimize=False,
+            compress_level=9,
+        )
+        temporary_path.replace(output_path)
+    finally:
+        temporary_path.unlink(missing_ok=True)
+    print(f"updated {output_path}")
+    return True
 
 
 def rgba(color: str, alpha: int | None = None) -> tuple[int, int, int, int]:
@@ -169,6 +201,12 @@ def draw_top_frame(img: Image.Image) -> None:
 def draw_inventory_panel(img: Image.Image) -> None:
     d = ImageDraw.Draw(img)
     parchment_panel(img, (48, 114, 682, 658), 10)
+    with Image.open(COMMON_PARCHMENT) as source:
+        source.load()
+        paper_center = source.convert("RGBA").crop((42, 24, source.width - 42, source.height - 24))
+    paper_center = paper_center.resize((606, 520), Image.Resampling.LANCZOS)
+    img.alpha_composite(paper_center, (62, 126))
+    d = ImageDraw.Draw(img)
     rounded(d, (86, 132, 176, 182), 5, rgba("blue", 220), rgba("gold_deep"), 2)
     rounded(d, (198, 136, 440, 174), 6, rgba("paper_deep", 190), rgba("gold_deep", 85), 1)
 
@@ -189,7 +227,7 @@ def draw_inventory_panel(img: Image.Image) -> None:
         rounded(d, (640, y + 12, 660, y + 46), 4, rgba("blue"), rgba("gold_deep"), 1)
 
 
-def draw_detail_panel(img: Image.Image) -> None:
+def draw_detail_panel_frame(img: Image.Image) -> None:
     d = ImageDraw.Draw(img)
     navy_panel(img, (704, 122, 1234, 486), 10)
     rounded(d, (760, 142, 1098, 182), 8, rgba("paper"), rgba("gold_deep"), 2)
@@ -197,7 +235,21 @@ def draw_detail_panel(img: Image.Image) -> None:
     for x in (1148, 1172, 1196):
         d.polygon([(x, 232), (x + 10, 222), (x + 20, 232), (x + 10, 242)], fill=rgba("navy_deep"), outline=rgba("gold"))
 
-    # Fish art socket on a market tray; runtime fish portrait sits on top.
+    rounded(d, (724, 382, 1214, 450), 6, rgba("navy_deep", 220), rgba("gold_deep"), 1)
+    for idx, y in enumerate((397, 426)):
+        d.rectangle((820, y, 1128, y + 14), fill=(198, 211, 213, 120))
+        if idx == 0:
+            d.ellipse((754, y - 3, 774, y + 17), fill=rgba("sand"))
+        else:
+            d.arc((750, y - 10, 780, y + 20), 10, 170, fill=rgba("teal"), width=3)
+
+    for x, w in ((724, 140), (888, 144), (1056, 150)):
+        rounded(d, (x, 456, x + w, 480), 5, (42, 52, 58, 180), rgba("gold_deep"), 1)
+
+
+def draw_ice_tray_hero(img: Image.Image) -> None:
+    """Draw the fish-free appraisal tray; runtime fish art is layered above it."""
+    d = ImageDraw.Draw(img)
     rounded(d, (738, 198, 1118, 370), 8, (38, 70, 86, 230), rgba("gold_deep"), 2)
     rounded(d, (772, 244, 1104, 358), 8, rgba("wood", 214), rgba("wood_dark", 180), 2)
     d.rectangle((784, 254, 1092, 272), fill=rgba("wood_hi", 130))
@@ -215,18 +267,6 @@ def draw_detail_panel(img: Image.Image) -> None:
         y = 248 + offset * 13
         d.arc((792, y - 38, 1064, y + 58), 185, 350, fill=(255, 255, 255, 34), width=2)
 
-    rounded(d, (724, 382, 1214, 450), 6, rgba("navy_deep", 220), rgba("gold_deep"), 1)
-    for idx, y in enumerate((397, 426)):
-        d.rectangle((820, y, 1128, y + 14), fill=(198, 211, 213, 120))
-        if idx == 0:
-            d.ellipse((754, y - 3, 774, y + 17), fill=rgba("sand"))
-        else:
-            d.arc((750, y - 10, 780, y + 20), 10, 170, fill=rgba("teal"), width=3)
-
-    for x, w in ((724, 140), (888, 144), (1056, 150)):
-        rounded(d, (x, 456, x + w, 480), 5, (42, 52, 58, 180), rgba("gold_deep"), 1)
-
-
 def draw_cart_panel(img: Image.Image) -> None:
     d = ImageDraw.Draw(img)
     navy_panel(img, (704, 504, 1234, 666), 10)
@@ -241,12 +281,24 @@ def draw_cart_panel(img: Image.Image) -> None:
     rounded(d, (1008, 612, 1198, 662), 10, rgba("gold"), rgba("gold_deep"), 3)
 
 
-def draw_return_button(img: Image.Image) -> None:
-    d = ImageDraw.Draw(img)
-    shadowed_panel(img, (52, 666, 172, 706), 10, rgba("blue"), rgba("gold_deep"), 2, shadow=4)
-    d.line((100, 686, 132, 686), fill=rgba("paper"), width=5)
-    d.line((100, 686, 116, 674), fill=rgba("paper"), width=5)
-    d.line((100, 686, 116, 698), fill=rgba("paper"), width=5)
+def flatten_for_runtime(img: Image.Image) -> Image.Image:
+    """Match Godot's composition over MarketScreen's opaque letterbox color."""
+    backdrop = Image.new("RGBA", img.size, RUNTIME_BACKDROP)
+    return Image.alpha_composite(backdrop, img)
+
+
+def delta_layer(before: Image.Image, after: Image.Image) -> Image.Image:
+    """Create a replacement-only layer that reproduces ``after`` over ``before``."""
+    layer = Image.new("RGBA", after.size, (0, 0, 0, 0))
+    before_data = before.load()
+    after_data = after.load()
+    layer_data = layer.load()
+    for y in range(after.height):
+        for x in range(after.width):
+            if before_data[x, y] != after_data[x, y]:
+                r, g, b, _ = after_data[x, y]
+                layer_data[x, y] = (r, g, b, 255)
+    return layer
 
 
 def draw_coin(d: ImageDraw.ImageDraw, cx: int, cy: int, r: int) -> None:
@@ -332,13 +384,35 @@ def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     draw_market_background(img)
-    draw_top_frame(img)
-    draw_inventory_panel(img)
-    draw_detail_panel(img)
-    draw_cart_panel(img)
-    draw_return_button(img)
-    img.save(OUT / "fish_market_backplate.png")
-    print(f"generated {OUT / 'fish_market_backplate.png'}")
+    flattened = flatten_for_runtime(img)
+    background_path = OUT / "market_bg.png"
+    if (M2_SOURCE / "market_bg_source.png").exists():
+        # M2 authored art owns this slot. Preserve it when regenerating the M1
+        # geometric layers; use process_fish_market_m2_assets.py to rebuild it.
+        print(f"preserved authored M2 slot {background_path}")
+    else:
+        flattened.save(background_path)
+        print(f"generated {background_path}")
+
+    layers = (
+        ("market_header_frame.png", draw_top_frame),
+        ("inventory_panel_frame.png", draw_inventory_panel),
+        ("detail_panel_frame.png", draw_detail_panel_frame),
+        ("ice_tray_hero.png", draw_ice_tray_hero),
+        ("cart_panel_frame.png", draw_cart_panel),
+    )
+    for filename, draw_layer in layers:
+        before = flattened
+        draw_layer(img)
+        flattened = flatten_for_runtime(img)
+        layer = delta_layer(before, flattened)
+        path = OUT / filename
+        if filename == "ice_tray_hero.png" and (M2_SOURCE / "ice_tray_hero_source.png").exists():
+            # Keep the authored tray while still drawing the legacy tray into
+            # the private M1 chain so downstream geometric deltas stay stable.
+            print(f"preserved authored M2 slot {path}")
+        else:
+            save_png_if_pixels_changed(layer, path)
     return 0
 
 

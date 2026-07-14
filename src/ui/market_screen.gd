@@ -3,7 +3,22 @@ extends ScreenBase
 const PlayerStatusBarScript = preload("res://src/ui/components/player_status_bar.gd")
 const FightFishAssets = preload("res://src/ui/fight_fish_assets.gd")
 
-const BACKPLATE_PATH := "res://assets/showcase/fish_market/fish_market_backplate.png"
+const CART_ACTION_STYLE_PATHS := {
+	"normal": "res://assets/showcase/common/primary_action_normal.png",
+	"hover": "res://assets/showcase/common/primary_action_hover.png",
+	"pressed": "res://assets/showcase/common/primary_action_pressed.png",
+	"focus": "res://assets/showcase/common/primary_action_focus.png",
+	"disabled": "res://assets/showcase/common/primary_action_disabled.png",
+}
+
+const MARKET_ASSET_PATHS := {
+	"MarketBackground": "res://assets/showcase/fish_market/market_bg.png",
+	"MarketHeaderFrame": "res://assets/showcase/fish_market/market_header_frame.png",
+	"MarketInventoryPanelFrame": "res://assets/showcase/fish_market/inventory_panel_frame.png",
+	"MarketDetailPanelFrame": "res://assets/showcase/fish_market/detail_panel_frame.png",
+	"MarketIceTrayHero": "res://assets/showcase/fish_market/ice_tray_hero.png",
+	"MarketCartPanelFrame": "res://assets/showcase/fish_market/cart_panel_frame.png",
+}
 const DESIGN_SIZE := Vector2(1280.0, 720.0)
 const VISIBLE_ROW_COUNT := 7
 const CONFIRM_OVERLAY_Z := 100
@@ -39,7 +54,7 @@ const CART_THUMB_SIZE := Vector2(58.0, 52.0)
 
 var _letterbox_backdrop: ColorRect
 var _design_canvas: Control
-var _backplate: TextureRect
+var _market_asset_slots: Array[TextureRect] = []
 var _status_bar: Control
 var _title_label: Label
 var _inventory_title_label: Label
@@ -77,7 +92,7 @@ var _last_message := "売る数を選んでください。"
 
 func _build_screen() -> void:
 	_build_fixed_canvas()
-	_build_backplate(_design_canvas)
+	_build_market_asset_slots(_design_canvas)
 
 	var root := Control.new()
 	root.name = "FishMarketOverlay"
@@ -134,16 +149,19 @@ func _layout_design_canvas() -> void:
 	_design_canvas.scale = Vector2(scale_factor, scale_factor)
 
 
-func _build_backplate(parent: Control) -> void:
-	_backplate = TextureRect.new()
-	_backplate.name = "FishMarketBackplate"
-	_backplate.texture = ShowcaseAssetsScript.load_texture(BACKPLATE_PATH)
-	_backplate.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_backplate.stretch_mode = TextureRect.STRETCH_SCALE
-	_backplate.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	_backplate.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_backplate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	parent.add_child(_backplate)
+func _build_market_asset_slots(parent: Control) -> void:
+	_market_asset_slots.clear()
+	for slot_name: String in MARKET_ASSET_PATHS:
+		var slot := TextureRect.new()
+		slot.name = slot_name
+		slot.texture = ShowcaseAssetsScript.load_texture(MARKET_ASSET_PATHS[slot_name])
+		slot.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		slot.stretch_mode = TextureRect.STRETCH_SCALE
+		slot.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		slot.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		parent.add_child(slot)
+		_market_asset_slots.append(slot)
 
 
 func _build_header(parent: Control) -> void:
@@ -390,6 +408,7 @@ func _build_cart(parent: Control) -> void:
 	_cart_action_button = _market_button("まとめて売る", _show_confirm_overlay, true, 21)
 	_cart_action_button.name = "MarketSellBatchButton"
 	_cart_action_button.set_meta("market_sell_batch", true)
+	_apply_cart_action_skin(_cart_action_button)
 	_place(parent, _cart_action_button, CART_ACTION_RECT)
 
 	_return_button = _market_button("港へ戻る", func() -> void: navigate("harbor"), false, 15)
@@ -796,6 +815,25 @@ func _market_field_panel(bg: Color, border: Color, alpha: float) -> Panel:
 	style.shadow_offset = Vector2(0.0, 1.0)
 	panel.add_theme_stylebox_override("panel", style)
 	return panel
+
+
+func _apply_cart_action_skin(button: Button) -> void:
+	for state: String in CART_ACTION_STYLE_PATHS:
+		var style := ShowcaseAssetsScript.texture_style(
+			CART_ACTION_STYLE_PATHS[state],
+			Vector4(18.0, 12.0, 18.0, 12.0),
+			Vector4(32.0, 7.0, 32.0, 7.0)
+		)
+		if style != null:
+			button.add_theme_stylebox_override(state, style)
+	button.add_theme_color_override("font_color", Palette.TEXT_DARK)
+	button.add_theme_color_override("font_hover_color", Palette.TEXT_DARK)
+	button.add_theme_color_override("font_pressed_color", Palette.TEXT_DARK)
+	button.add_theme_color_override("font_focus_color", Palette.TEXT_DARK)
+	button.add_theme_color_override("font_disabled_color", Palette.SAND)
+	button.add_theme_color_override("font_outline_color", Palette.GOLD_BRIGHT)
+	button.add_theme_constant_override("outline_size", 0)
+	button.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 
 func _make_button_transparent(button: Button) -> void:

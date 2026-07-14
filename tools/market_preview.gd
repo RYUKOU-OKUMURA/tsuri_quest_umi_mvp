@@ -9,6 +9,11 @@ const OUT_SELECT := "/tmp/tsuri_market_select.png"
 const OUT_CONFIRM := "/tmp/tsuri_market_confirm.png"
 const OUT_SOLD := "/tmp/tsuri_market_sold.png"
 const OUT_EMPTY := "/tmp/tsuri_market_empty.png"
+const OUT_CTA_NORMAL := "/tmp/tsuri_market_cta_normal.png"
+const OUT_CTA_HOVER := "/tmp/tsuri_market_cta_hover.png"
+const OUT_CTA_PRESSED := "/tmp/tsuri_market_cta_pressed.png"
+const OUT_CTA_FOCUS := "/tmp/tsuri_market_cta_focus.png"
+const OUT_CTA_DISABLED := "/tmp/tsuri_market_cta_disabled.png"
 
 var _had_capture_error := false
 
@@ -22,12 +27,26 @@ func _ready() -> void:
 	await _capture_sold()
 	_seed_empty()
 	await _capture_plain(OUT_EMPTY)
+	for state_and_path in [
+		["normal", OUT_CTA_NORMAL],
+		["hover", OUT_CTA_HOVER],
+		["pressed", OUT_CTA_PRESSED],
+		["focus", OUT_CTA_FOCUS],
+		["disabled", OUT_CTA_DISABLED],
+	]:
+		_seed_progress()
+		await _capture_cta_input_state(state_and_path[0], state_and_path[1])
 
 	print("market_preview:")
 	print(OUT_SELECT)
 	print(OUT_CONFIRM)
 	print(OUT_SOLD)
 	print(OUT_EMPTY)
+	print(OUT_CTA_NORMAL)
+	print(OUT_CTA_HOVER)
+	print(OUT_CTA_PRESSED)
+	print(OUT_CTA_FOCUS)
+	print(OUT_CTA_DISABLED)
 	get_tree().quit(1 if _had_capture_error else 0)
 
 
@@ -109,6 +128,66 @@ func _capture_sold() -> void:
 func _capture_plain(out_path: String) -> void:
 	var screen: Control = await _make_screen(VW)
 	await _capture_screen(screen, out_path)
+
+
+func _capture_cta_input_state(state_name: String, out_path: String) -> void:
+	var screen: Control = await _make_screen(VW)
+	screen._set_quantity("aji", 3)
+	screen._set_quantity("madai", 1)
+	var button := screen._cart_action_button as Button
+	var viewport := screen.get_viewport()
+	var button_center := button.get_global_rect().get_center()
+	await _move_pointer(viewport, Vector2(8.0, 8.0))
+	button.release_focus()
+	match state_name:
+		"normal":
+			pass
+		"hover":
+			await _move_pointer(viewport, button_center)
+			_expect_capture_state(button.is_hovered(), "hover input should set the real hovered state")
+		"pressed":
+			var press_events := {"down": 0}
+			button.button_down.connect(func() -> void: press_events["down"] += 1)
+			await _move_pointer(viewport, button_center)
+			await _push_mouse_button(viewport, button_center, true)
+			_expect_capture_state(int(press_events["down"]) == 1, "button-down input should emit the real pressed transition")
+		"focus":
+			button.grab_focus()
+			await get_tree().process_frame
+			_expect_capture_state(button.has_focus(), "grab_focus should set the real focus state")
+		"disabled":
+			button.disabled = true
+			await get_tree().process_frame
+			_expect_capture_state(button.disabled, "disabled capture should use the real disabled property")
+	await _capture_screen(screen, out_path)
+
+
+func _move_pointer(viewport: Viewport, position: Vector2) -> void:
+	var event := InputEventMouseMotion.new()
+	event.position = position
+	event.global_position = position
+	viewport.push_input(event, true)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+
+func _push_mouse_button(viewport: Viewport, position: Vector2, pressed: bool) -> void:
+	var event := InputEventMouseButton.new()
+	event.button_index = MOUSE_BUTTON_LEFT
+	event.pressed = pressed
+	event.button_mask = MOUSE_BUTTON_MASK_LEFT if pressed else 0
+	event.position = position
+	event.global_position = position
+	viewport.push_input(event, true)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+
+func _expect_capture_state(condition: bool, message: String) -> void:
+	if condition:
+		return
+	_had_capture_error = true
+	push_error(message)
 
 
 func _make_screen(viewport_size: Vector2i) -> Control:

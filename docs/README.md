@@ -79,6 +79,7 @@
 | `45_release_readiness_code_review.md` | リリース前全体監査、阻害要因、優先順位、次タスクbrief | 現行 |
 | `46_e11_settings_screen_spec.md` | E11設定画面の表示・入力・削除導線仕様 | 現行 |
 | `47_launch_foundation_code_review.md` | ローンチ基盤のコード監査、今回の整理、段階リファクタ順 | 現行 |
+| `49_fish_market_m2_asset_briefs.md` | 魚市場M2の市場背景・査定トレー一点物素材発注仕様（48は並列Wave統合用に予約） | 現行 |
 
 **番号体系外の正本**
 
