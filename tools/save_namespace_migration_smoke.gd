@@ -4,6 +4,7 @@ const Migrator = preload("res://src/autoload/save_namespace_migrator.gd")
 const PlayerProgressScript = preload("res://src/autoload/player_progress.gd")
 const ThemeFactory = preload("res://src/ui/ui_theme.gd")
 const TitleScreen = preload("res://src/ui/title_screen.gd")
+const IsolationGuard = preload("res://tools/settings_isolation_guard.gd")
 
 # production helperから生成せず、移行契約の12 artifactをtest側で固定する。
 const ARTIFACT_RELATIVE_PATHS: Array[String] = [
@@ -28,10 +29,15 @@ var _failed := false
 
 
 func _ready() -> void:
+	if (
+		OS.get_environment("TSURI_SAVE_MIGRATION_SMOKE_ALLOW") != "1"
+		or not _isolated_home_matches()
+	):
+		push_error("save_namespace_migration_smoke: 隔離runner以外からの実行を拒否しました")
+		get_tree().quit(2)
+		return
 	_expect(PlayerProgress.is_sandbox_mode(), "tools scene should keep autoload save sandboxed")
-	if OS.get_environment("TSURI_SAVE_MIGRATION_SMOKE_ALLOW") != "1":
-		push_error("save_namespace_migration_smoke は専用verify経由で実行してください。")
-		get_tree().quit(1)
+	if _failed:
 		return
 	_verify_three_slot_copy_and_root_precedence()
 	_verify_root_copy_normalization_and_no_resurrection()
@@ -51,6 +57,78 @@ func _ready() -> void:
 		return
 	print("save_namespace_migration_smoke: ok")
 	get_tree().quit(0)
+
+
+func _isolated_home_matches() -> bool:
+	var raw_expected := OS.get_environment("TSURI_QA_ISOLATED_HOME")
+	var raw_actual := OS.get_environment("HOME")
+	if (
+		not IsolationGuard.raw_absolute_path_is_unambiguous(raw_expected)
+		or not IsolationGuard.raw_absolute_path_is_unambiguous(raw_actual)
+	):
+		return false
+	var expected := raw_expected.simplify_path()
+	var actual := raw_actual.simplify_path()
+	var token := OS.get_environment("TSURI_QA_RUN_TOKEN")
+	var sentinel_path := expected.path_join(".tsuri_save_qa_guard")
+	var data_path := OS.get_data_dir().simplify_path()
+	var old_root := _old_root().simplify_path()
+	var new_root := OS.get_user_data_dir().simplify_path()
+	return (
+		not token.is_empty()
+		and expected == actual
+		and _path_is_within(expected, data_path)
+		and _path_is_within(expected, old_root)
+		and _path_is_within(expected, new_root)
+		and _write_targets_have_physical_ancestors(expected, data_path, old_root, new_root)
+		and FileAccess.file_exists(sentinel_path)
+		and _read_guard_token(sentinel_path) == token
+	)
+
+
+func _path_is_within(parent: String, child: String) -> bool:
+	return child == parent or child.begins_with(parent + "/")
+
+
+func _read_guard_token(path: String) -> String:
+	var file := FileAccess.open(path, FileAccess.READ)
+	return file.get_as_text() if file != null else ""
+
+
+func _write_targets_have_physical_ancestors(
+	expected: String, data_path: String, old_root: String, new_root: String
+) -> bool:
+	var paths: Array[String] = [expected, data_path, old_root, new_root]
+	for relative_path in ARTIFACT_RELATIVE_PATHS:
+		paths.append(old_root.path_join(relative_path).get_base_dir())
+		paths.append(new_root.path_join(relative_path).get_base_dir())
+		paths.append(
+			(new_root.path_join(relative_path) + Migrator.COPY_TMP_SUFFIX).get_base_dir()
+		)
+	paths.append(new_root.path_join(Migrator.MARKER_FILE_NAME).get_base_dir())
+	paths.append(new_root.path_join(Migrator.MARKER_TMP_FILE_NAME).get_base_dir())
+	paths.append(new_root.path_join(Migrator.LOCK_DIR_NAME))
+	paths.append(
+		new_root.path_join(Migrator.LOCK_DIR_NAME).path_join(
+			Migrator.LOCK_OWNER_FILE_NAME
+		).get_base_dir()
+	)
+	for path in paths:
+		if not _path_is_within(expected, path) or not _existing_path_ancestors_are_physical(path):
+			return false
+	return true
+
+
+func _existing_path_ancestors_are_physical(path: String) -> bool:
+	var current := "/"
+	for component in path.trim_prefix("/").split("/", false):
+		var parent_dir := DirAccess.open(current)
+		if parent_dir == null or parent_dir.is_link(component):
+			return false
+		current = current.path_join(component)
+		if not DirAccess.dir_exists_absolute(current) and not FileAccess.file_exists(current):
+			return true
+	return DirAccess.dir_exists_absolute(current)
 
 
 func _verify_three_slot_copy_and_root_precedence() -> void:

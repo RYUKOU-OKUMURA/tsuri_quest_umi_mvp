@@ -8,19 +8,22 @@ const MainScript = preload("res://src/main.gd")
 const ThemeFactory = preload("res://src/ui/ui_theme.gd")
 const TitleScreen = preload("res://src/ui/title_screen.gd")
 const PlayerProgressScript = preload("res://src/autoload/player_progress.gd")
+const IsolationGuard = preload("res://tools/settings_isolation_guard.gd")
 
 var _failed := false
 
 
 func _ready() -> void:
-	# tools/ 配下のシーン起動なので、まずサンドボックス検出自体を確認
+	if (
+		OS.get_environment("TSURI_SAVE_SMOKE_ALLOW") != "1"
+		or not _isolated_home_matches()
+	):
+		push_error("save_system_smoke: 隔離runner以外からの実行を拒否しました")
+		get_tree().quit(2)
+		return
+	# tools/ 配下のシーン起動なので、sandbox解除前に検出自体を確認する。
 	_expect(PlayerProgress.is_sandbox_mode(), "tools scene launch should enable sandbox mode")
-
-	if OS.get_environment("TSURI_SAVE_SMOKE_ALLOW") != "1":
-		push_error(
-			"save_system_smoke はディスクへ書き込みます。tools/save_system_verify.sh から実行してください。"
-		)
-		get_tree().quit(1)
+	if _failed:
 		return
 
 	# ここから先は隔離された HOME の user:// を実際に読み書きする
@@ -266,6 +269,79 @@ func _ready() -> void:
 		return
 	print("save_system_smoke: ok")
 	get_tree().quit(0)
+
+
+func _isolated_home_matches() -> bool:
+	var raw_expected := OS.get_environment("TSURI_QA_ISOLATED_HOME")
+	var raw_actual := OS.get_environment("HOME")
+	if (
+		not IsolationGuard.raw_absolute_path_is_unambiguous(raw_expected)
+		or not IsolationGuard.raw_absolute_path_is_unambiguous(raw_actual)
+	):
+		return false
+	var expected := raw_expected.simplify_path()
+	var actual := raw_actual.simplify_path()
+	var token := OS.get_environment("TSURI_QA_RUN_TOKEN")
+	var sentinel_path := expected.path_join(".tsuri_save_qa_guard")
+	var user_data_path := ProjectSettings.globalize_path("user://").simplify_path()
+	var data_path := OS.get_data_dir().simplify_path()
+	return (
+		not token.is_empty()
+		and expected == actual
+		and _path_is_within(expected, user_data_path)
+		and _path_is_within(expected, data_path)
+		and _write_targets_have_physical_ancestors(expected, user_data_path, data_path)
+		and FileAccess.file_exists(sentinel_path)
+		and _read_guard_token(sentinel_path) == token
+	)
+
+
+func _path_is_within(parent: String, child: String) -> bool:
+	return child == parent or child.begins_with(parent + "/")
+
+
+func _read_guard_token(path: String) -> String:
+	var file := FileAccess.open(path, FileAccess.READ)
+	return file.get_as_text() if file != null else ""
+
+
+func _write_targets_have_physical_ancestors(
+	expected: String, user_data_path: String, data_path: String
+) -> bool:
+	var paths: Array[String] = [
+		expected,
+		data_path,
+		user_data_path,
+		ProjectSettings.globalize_path("user://settings.json").get_base_dir().simplify_path(),
+		ProjectSettings.globalize_path(PlayerProgress.SAVE_SLOT_ROOT).simplify_path(),
+	]
+	for slot_id in range(1, PlayerProgress.SAVE_SLOT_COUNT + 1):
+		var slot_root := ProjectSettings.globalize_path(
+			"%s/%d" % [PlayerProgress.SAVE_SLOT_ROOT, slot_id]
+		).simplify_path()
+		paths.append(slot_root)
+		for file_name in [
+			PlayerProgress.SAVE_FILE_NAME,
+			PlayerProgress.SAVE_BACKUP_FILE_NAME,
+			PlayerProgress.SAVE_TMP_FILE_NAME,
+		]:
+			paths.append(slot_root.path_join(file_name).get_base_dir())
+	for path in paths:
+		if not _path_is_within(expected, path) or not _existing_path_ancestors_are_physical(path):
+			return false
+	return true
+
+
+func _existing_path_ancestors_are_physical(path: String) -> bool:
+	var current := "/"
+	for component in path.trim_prefix("/").split("/", false):
+		var parent_dir := DirAccess.open(current)
+		if parent_dir == null or parent_dir.is_link(component):
+			return false
+		current = current.path_join(component)
+		if not DirAccess.dir_exists_absolute(current) and not FileAccess.file_exists(current):
+			return true
+	return DirAccess.dir_exists_absolute(current)
 
 
 func _verify_save_slot_deletion_contract() -> void:
