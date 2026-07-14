@@ -1,0 +1,142 @@
+{
+  "source": "tools/source_assets/cooking/c2_meal_scene_bg_source.png",
+  "candidate": "tools/source_assets/cooking/c2_meal_scene_bg_candidate.png",
+  "source_sha256": "673783a3d9c2bab5dc4d0410fa3468137b732a8538c135206b8007081b38a245",
+  "candidate_sha256": "88b404ed323faa6e258a062e13c3928cc2b70b8db3b1d7bbecc39665c60f9e43",
+  "candidate_decoded_rgba_sha256": "fcdfcd62a75a916d22055717d7ebfb1923cef26eedbba8aa34762d47673ee873",
+  "validation": {
+    "size": [
+      1280,
+      720
+    ],
+    "mode": "RGBA",
+    "alpha_range": [
+      255,
+      255
+    ],
+    "safe_areas": {
+      "A_banner": {
+        "rect": [
+          520,
+          20,
+          1215,
+          140
+        ],
+        "metrics": {
+          "mean_luma": 32.031,
+          "stdev_luma": 22.656,
+          "edge_density": 0.017482
+        },
+        "limits": {
+          "mean_luma": 150.0,
+          "stdev_luma": 72.0,
+          "edge_density": 0.135
+        },
+        "failures": []
+      },
+      "B_actor": {
+        "rect": [
+          55,
+          25,
+          510,
+          355
+        ],
+        "metrics": {
+          "mean_luma": 35.871,
+          "stdev_luma": 16.932,
+          "edge_density": 0.01009
+        },
+        "limits": {
+          "mean_luma": 145.0,
+          "stdev_luma": 75.0,
+          "edge_density": 0.155
+        },
+        "failures": []
+      },
+      "C_dish": {
+        "rect": [
+          525,
+          155,
+          1210,
+          350
+        ],
+        "metrics": {
+          "mean_luma": 57.328,
+          "stdev_luma": 31.256,
+          "edge_density": 0.043316
+        },
+        "limits": {
+          "mean_luma": 145.0,
+          "stdev_luma": 72.0,
+          "edge_density": 0.145
+        },
+        "failures": []
+      },
+      "D_rewards": {
+        "rect": [
+          55,
+          380,
+          1220,
+          515
+        ],
+        "metrics": {
+          "mean_luma": 38.8,
+          "stdev_luma": 21.76,
+          "edge_density": 0.021199
+        },
+        "limits": {
+          "mean_luma": 120.0,
+          "stdev_luma": 65.0,
+          "edge_density": 0.135
+        },
+        "failures": []
+      },
+      "E_status": {
+        "rect": [
+          55,
+          525,
+          1220,
+          625
+        ],
+        "metrics": {
+          "mean_luma": 22.654,
+          "stdev_luma": 8.866,
+          "edge_density": 0.00188
+        },
+        "limits": {
+          "mean_luma": 108.0,
+          "stdev_luma": 60.0,
+          "edge_density": 0.135
+        },
+        "failures": []
+      },
+      "F_cta": {
+        "rect": [
+          420,
+          635,
+          860,
+          690
+        ],
+        "metrics": {
+          "mean_luma": 15.983,
+          "stdev_luma": 2.398,
+          "edge_density": 0.0
+        },
+        "limits": {
+          "mean_luma": 105.0,
+          "stdev_luma": 58.0,
+          "edge_density": 0.125
+        },
+        "failures": []
+      }
+    },
+    "machine_forbidden_checks": {
+      "transparent_pixels": 0,
+      "png_text_chunks": 0,
+      "reference_pixels_consumed_by_processor": 0,
+      "runtime_pixels_consumed_by_processor": 0
+    },
+    "semantic_forbidden_elements": "独立アートレビューで0件を確認する（ローカル物体検出器なし）"
+  },
+  "verdict": "C2配線レビューへ進められる候補（本番採用・freezeではない）"
+}
