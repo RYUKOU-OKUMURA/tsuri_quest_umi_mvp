@@ -4,11 +4,11 @@ const PlayerStatusBarScript = preload("res://src/ui/components/player_status_bar
 const FightFishAssets = preload("res://src/ui/fight_fish_assets.gd")
 
 const CART_ACTION_STYLE_PATHS := {
-	"normal": "res://assets/showcase/fish_market/cart_action_normal.png",
-	"hover": "res://assets/showcase/fish_market/cart_action_hover.png",
-	"pressed": "res://assets/showcase/fish_market/cart_action_pressed.png",
-	"focus": "res://assets/showcase/fish_market/cart_action_focus.png",
-	"disabled": "res://assets/showcase/fish_market/cart_action_disabled.png",
+	"normal": "res://assets/showcase/common/primary_action_normal.png",
+	"hover": "res://assets/showcase/common/primary_action_hover.png",
+	"pressed": "res://assets/showcase/common/primary_action_pressed.png",
+	"focus": "res://assets/showcase/common/primary_action_focus.png",
+	"disabled": "res://assets/showcase/common/primary_action_disabled.png",
 }
 
 const MARKET_ASSET_PATHS := {

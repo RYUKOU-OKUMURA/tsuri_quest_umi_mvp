@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cbs8m3yfwco5i"
-path="res://.godot/imported/cart_action_hover.png-336e08333671095d0988da78d9aa8eb4.ctex"
+uid="uid://byat2xjb1wbbs"
+path="res://.godot/imported/primary_action_pressed.png-c4c402068fca9064d4214578b703b242.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/showcase/fish_market/cart_action_hover.png"
-dest_files=["res://.godot/imported/cart_action_hover.png-336e08333671095d0988da78d9aa8eb4.ctex"]
+source_file="res://assets/showcase/common/primary_action_pressed.png"
+dest_files=["res://.godot/imported/primary_action_pressed.png-c4c402068fca9064d4214578b703b242.ctex"]
 
 [params]
 

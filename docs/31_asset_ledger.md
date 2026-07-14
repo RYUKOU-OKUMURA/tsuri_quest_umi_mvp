@@ -39,7 +39,8 @@ RIGHTS-01A状態marker（`docs/qa/evidence/licensing/README.md` の未完/完了
 | 生成スクリプト | 出力先 |
 |---|---|
 | `tools/generate_fish_book_book_frame.py` / `generate_fish_book_paper_assets.py` | `assets/showcase/fish_book/` |
-| `tools/generate_fish_market_assets.py` | `assets/showcase/fish_market/market_header_frame.png`, `inventory_panel_frame.png`, `detail_panel_frame.png`, `cart_panel_frame.png`, `cart_action_{normal,hover,pressed,focus,disabled}.png`（2026-07-13時点。プロジェクト所有の純PIL生成と既存 `common/parchment_card.png` の中央紙面テクスチャ再利用。CTAは文字・数字・魚なしの魚市場専用幾何9-slice。旧一枚backplateを表示同値で分解。`market_bg` / `ice_tray_hero` はM2で§2.2 へ移行） |
+| `tools/generate_fish_market_assets.py` | `assets/showcase/fish_market/market_header_frame.png`, `inventory_panel_frame.png`, `detail_panel_frame.png`, `cart_panel_frame.png`（2026-07-14時点。プロジェクト所有の純PIL生成と既存 `common/parchment_card.png` の中央紙面テクスチャ再利用。旧一枚backplateを表示同値で分解。`market_bg` / `ice_tray_hero` はM2で§2.2、汎用主CTAは下記common生成経路へ移行） |
+| `tools/generate_common_primary_action_assets.py` | `assets/showcase/common/primary_action_{normal,hover,pressed,focus,disabled}.png`（2026-07-14、プロジェクト所有の純PIL決定的生成。文字・数字・魚・画面固有意匠なしの汎用9-slice追加variant。既存common素材を上書きせず、魚市場から参照。旧 `fish_market/cart_action_*` とdecoded pixels完全同一） |
 | 手作業SVG（港の司令盤モックから分解） | `assets/showcase/common/harbor_command_icon_sheet.svg`（Codex作成、2026-07-10、プロジェクト所有。文字・第三者素材なし） |
 | 手作業SVG（港の司令盤共通フレーム） | `assets/showcase/common/harbor_command_dark_frame.svg`（Codex作成、2026-07-10、プロジェクト所有。端9px内に罫線を収めた文字なし9-slice素材、第三者素材なし） |
 | 既存PIL生成素材のcommon昇格コピー | `assets/showcase/common/harbor_command_cta.png`（`assets/showcase/harbor/harbor_time_slot_btn_selected.png` の司令盤CTA/選択状態向けコピー、2026-07-10、プロジェクト所有。新規外部生成なし） |
