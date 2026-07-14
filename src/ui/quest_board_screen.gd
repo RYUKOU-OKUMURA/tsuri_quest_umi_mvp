@@ -9,7 +9,8 @@ const COMMON_BUTTON_PATH := "res://assets/showcase/common/button_frame.png"
 const COMMON_BUTTON_HOVER_PATH := "res://assets/showcase/common/button_frame_hover.png"
 const COMMON_BUTTON_PRIMARY_PATH := "res://assets/showcase/common/button_frame_primary.png"
 const COMMON_CARD_FRAME_PATH := "res://assets/showcase/common/card_frame.png"
-const COMMON_PARCHMENT_CARD_PATH := "res://assets/showcase/common/parchment_card.png"
+const QUEST_BOARD_WOOD_PATH := "res://assets/showcase/quest_board/quest_board_wood_panel.png"
+const QUEST_NOTICE_CARD_PATH := "res://assets/showcase/quest_board/quest_notice_card.png"
 const QUEST_ACTION_BUTTON_MIN_HEIGHT := 54.0
 const QUEST_ACTION_BUTTON_SAFE_BOTTOM := 0.905
 const QUEST_ACTION_BUTTON_STYLE_VERTICAL_MARGIN := 14.0
@@ -88,7 +89,7 @@ func _build_quest_card(parent: Control, index: int, left: float, top: float, rig
 	var card := _anchored_control(parent, left, top, right, bottom)
 	card.name = "QuestCard%d" % (index + 1)
 	card.clip_contents = true
-	_add_texture_panel(card, COMMON_PARCHMENT_CARD_PATH)
+	_add_texture_panel(card, QUEST_NOTICE_CARD_PATH)
 
 	var index_label := _quest_label("依頼札 %d" % (index + 1), 20, Palette.TEXT_DARK, true, 0, Palette.TEXT_OUTLINE_DARK, Color.TRANSPARENT)
 	index_label.name = "QuestCardIndex"
@@ -277,26 +278,10 @@ func _progress_ratio(progress: Dictionary) -> float:
 
 
 func _add_wood_board(parent: Control) -> void:
-	var base := Panel.new()
-	base.name = "QuestBoardWood"
-	base.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	base.add_theme_stylebox_override("panel", _flat_style(Palette.WOOD_DARK, Palette.GOLD, 7, 3, true))
-	base.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	parent.add_child(base)
-
-	for index in range(9):
-		var plank := ColorRect.new()
-		plank.name = "QuestBoardPlank%d" % index
-		plank.color = _alpha(Palette.WOOD if index % 2 == 0 else Palette.WOOD_DARK, 0.32)
-		plank.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var left := float(index) / 9.0
-		_place_control(parent, plank, left, 0.015, left + 0.105, 0.985)
-
-	var top_rule := ColorRect.new()
-	top_rule.name = "QuestBoardTopRule"
-	top_rule.color = _alpha(Palette.GOLD_BRIGHT, 0.28)
-	top_rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(parent, top_rule, 0.018, 0.045, 0.982, 0.052)
+	var texture := ShowcaseAssetsScript.texture_rect(QUEST_BOARD_WOOD_PATH)
+	texture.name = "QuestBoardWood"
+	texture.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	parent.add_child(texture)
 
 
 func _add_texture_panel(parent: Control, path: String) -> void:
