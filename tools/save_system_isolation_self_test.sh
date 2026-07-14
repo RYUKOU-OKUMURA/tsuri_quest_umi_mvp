@@ -1,7 +1,58 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_PATH="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+COMMAND_RUNNER="$ROOT/tools/export_command_runner.py"
+TOTAL_TIMEOUT_SECONDS="${TSURI_SAVE_ISOLATION_TOTAL_TIMEOUT_SECONDS:-180}"
+COMMAND_TIMEOUT_SECONDS="${TSURI_SAVE_ISOLATION_COMMAND_TIMEOUT_SECONDS:-60}"
+TERM_GRACE_SECONDS="${TSURI_SAVE_ISOLATION_TERM_GRACE_SECONDS:-1}"
+TOTAL_TERM_GRACE_SECONDS="${TSURI_SAVE_ISOLATION_TOTAL_TERM_GRACE_SECONDS:-3}"
+[[ -f "$COMMAND_RUNNER" ]]
+
+# self-test全体も既存のprocess-group runnerで監督する。内側runnerがwarm-up/sceneを
+# 掃除してから終了できるよう、全体側のTERM猶予は別契約にする。
+if [[ "${TSURI_SAVE_ISOLATION_SUPERVISED:-}" != "1" ]]; then
+  OUTER_LOG="$(mktemp /tmp/tsuri_save_isolation_outer.XXXXXX)"
+  ACTIVE_RUNNER_PID=""
+  cleanup_outer_log() {
+    if [[ -f "$OUTER_LOG" && ! -L "$OUTER_LOG" ]]; then
+      rm -f -- "$OUTER_LOG"
+    fi
+  }
+  interrupt_outer_runner() {
+    local signal_name="$1"
+    local exit_code="$2"
+    trap - HUP INT TERM
+    if [[ -n "$ACTIVE_RUNNER_PID" ]] && kill -0 "$ACTIVE_RUNNER_PID" 2>/dev/null; then
+      kill -s "$signal_name" "$ACTIVE_RUNNER_PID" 2>/dev/null || true
+      wait "$ACTIVE_RUNNER_PID" 2>/dev/null || true
+    fi
+    ACTIVE_RUNNER_PID=""
+    exit "$exit_code"
+  }
+  trap cleanup_outer_log EXIT
+  trap 'interrupt_outer_runner HUP 129' HUP
+  trap 'interrupt_outer_runner INT 130' INT
+  trap 'interrupt_outer_runner TERM 143' TERM
+
+  python3 "$COMMAND_RUNNER" run \
+    --timeout-seconds "$TOTAL_TIMEOUT_SECONDS" \
+    --term-grace-seconds "$TOTAL_TERM_GRACE_SECONDS" \
+    --log "$OUTER_LOG" --echo -- \
+    env TSURI_SAVE_ISOLATION_SUPERVISED=1 "$SCRIPT_PATH" "$@" &
+  ACTIVE_RUNNER_PID=$!
+  outer_status=0
+  if wait "$ACTIVE_RUNNER_PID"; then
+    outer_status=0
+  else
+    outer_status=$?
+  fi
+  ACTIVE_RUNNER_PID=""
+  exit "$outer_status"
+fi
+
 if [[ -n "${GODOT_BIN:-}" ]]; then
   GODOT="$GODOT_BIN"
 elif command -v godot >/dev/null 2>&1; then
@@ -15,9 +66,62 @@ else
   exit 1
 fi
 
-TEST_ROOT="$(mktemp -d /tmp/tsuri_save_isolation_test.XXXXXX)"
+TEST_PARENT="${TMPDIR:-/tmp}"
+while [[ "$TEST_PARENT" != "/" && "$TEST_PARENT" == */ ]]; do
+  TEST_PARENT="${TEST_PARENT%/}"
+done
+[[ -d "$TEST_PARENT" ]]
+TEST_PARENT="$(cd "$TEST_PARENT" && pwd -P)"
+TEST_ROOT="$(mktemp -d "$TEST_PARENT/tsuri_save_isolation_test.XXXXXX")"
 TEST_ROOT="$(cd "$TEST_ROOT" && pwd -P)"
-trap 'rm -rf -- "$TEST_ROOT"' EXIT
+cleanup_test_root() {
+  rm -rf -- "$TEST_ROOT"
+}
+trap cleanup_test_root EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+run_bounded_command() {
+  local timeout_seconds="$1"
+  local grace_seconds="$2"
+  local log_path="$3"
+  shift 3
+  python3 "$COMMAND_RUNNER" run \
+    --timeout-seconds "$timeout_seconds" \
+    --term-grace-seconds "$grace_seconds" \
+    --log "$log_path" -- "$@"
+}
+
+run_import_warmup() {
+  local godot_bin="$1"
+  local warmup_home="$2"
+  local log_path="$3"
+  local timeout_seconds="$4"
+  local grace_seconds="$5"
+  local status=0
+  mkdir -p "$warmup_home"
+  run_bounded_command "$timeout_seconds" "$grace_seconds" "$log_path" \
+    env HOME="$warmup_home" TSURI_GODOT_HOME="$warmup_home" \
+    "$godot_bin" --headless --editor --path "$ROOT" --quit \
+    || status=$?
+  rm -rf -- "$warmup_home"
+  return "$status"
+}
+
+assert_process_gone() {
+  local process_id="$1"
+  local attempt
+  for attempt in {1..100}; do
+    if ! kill -0 "$process_id" 2>/dev/null; then
+      return
+    fi
+    sleep 0.02
+  done
+  echo "timeout後もdescendant processが残っています: $process_id" >&2
+  exit 1
+}
+
 FAKE_GODOT="$TEST_ROOT/fake_godot"
 FAKE_LOG="$TEST_ROOT/fake.log"
 cat > "$FAKE_GODOT" <<'SH'
@@ -111,14 +215,123 @@ if find "$FAIL_PARENT" -mindepth 1 -maxdepth 1 -name 'tsuri_save_system.*' -prin
   exit 1
 fi
 
+# bounded runnerのwarm-up/actual timeoutを、TERM無視descendantとmarkerで固定する。
+HUNG_GODOT="$TEST_ROOT/hung_godot.py"
+cat > "$HUNG_GODOT" <<'PY'
+#!/usr/bin/env python3
+import os
+from pathlib import Path
+import subprocess
+import sys
+import time
+
+ready = os.environ["TSURI_HUNG_READY"]
+marker = os.environ["TSURI_HUNG_MARKER"]
+pid_path = os.environ["TSURI_HUNG_PID_PATH"]
+child_code = (
+    "import os, pathlib, signal, time; "
+    "signal.signal(signal.SIGTERM, signal.SIG_IGN); "
+    f"pathlib.Path({pid_path!r}).write_text(str(os.getpid())); "
+    f"pathlib.Path({ready!r}).write_text('ready'); "
+    "time.sleep(1.5); "
+    f"pathlib.Path({marker!r}).write_text('orphan')"
+)
+subprocess.Popen([sys.executable, "-c", child_code])
+deadline = time.monotonic() + 2.0
+while not Path(ready).exists() and time.monotonic() < deadline:
+    time.sleep(0.01)
+time.sleep(10)
+PY
+chmod +x "$HUNG_GODOT"
+
+HUNG_WARMUP_HOME="$TEST_ROOT/hung_warmup_home"
+HUNG_WARMUP_READY="$TEST_ROOT/hung_warmup_ready"
+HUNG_WARMUP_MARKER="$TEST_ROOT/hung_warmup_marker"
+HUNG_WARMUP_PID="$TEST_ROOT/hung_warmup.pid"
+export TSURI_HUNG_READY="$HUNG_WARMUP_READY"
+export TSURI_HUNG_MARKER="$HUNG_WARMUP_MARKER"
+export TSURI_HUNG_PID_PATH="$HUNG_WARMUP_PID"
+set +e
+run_import_warmup \
+  "$HUNG_GODOT" "$HUNG_WARMUP_HOME" "$TEST_ROOT/hung-warmup.log" 0.75 0.1
+hung_warmup_status=$?
+set -e
+if [[ "$hung_warmup_status" -ne 124 ]]; then
+  cat "$TEST_ROOT/hung-warmup.log" >&2
+  echo "hung warm-upのtimeout codeが不正です: $hung_warmup_status" >&2
+  exit 1
+fi
+if [[ ! -f "$HUNG_WARMUP_READY" || ! -f "$HUNG_WARMUP_PID" || -e "$HUNG_WARMUP_HOME" ]]; then
+  cat "$TEST_ROOT/hung-warmup.log" >&2
+  echo "hung warm-up fixture準備またはHOME cleanupに失敗しました" >&2
+  exit 1
+fi
+assert_process_gone "$(cat "$HUNG_WARMUP_PID")"
+sleep 1.55
+if [[ -e "$HUNG_WARMUP_MARKER" ]]; then
+  echo "hung warm-up descendantがtimeout後にmarkerを書きました" >&2
+  exit 1
+fi
+
+HUNG_ACTUAL_PARENT="$TEST_ROOT/hung_actual_parent"
+HUNG_ACTUAL_READY="$TEST_ROOT/hung_actual_ready"
+HUNG_ACTUAL_MARKER="$TEST_ROOT/hung_actual_marker"
+HUNG_ACTUAL_PID="$TEST_ROOT/hung_actual.pid"
+mkdir -p "$HUNG_ACTUAL_PARENT"
+export TSURI_HUNG_READY="$HUNG_ACTUAL_READY"
+export TSURI_HUNG_MARKER="$HUNG_ACTUAL_MARKER"
+export TSURI_HUNG_PID_PATH="$HUNG_ACTUAL_PID"
+set +e
+run_bounded_command 1 0.1 "$TEST_ROOT/hung-actual.log" \
+  env TSURI_GODOT_HOME="$HUNG_ACTUAL_PARENT" GODOT_BIN="$HUNG_GODOT" \
+  "$ROOT/tools/save_system_verify.sh"
+hung_actual_status=$?
+set -e
+if [[ "$hung_actual_status" -ne 124 ]]; then
+  cat "$TEST_ROOT/hung-actual.log" >&2
+  echo "hung actual sceneのtimeout codeが不正です: $hung_actual_status" >&2
+  exit 1
+fi
+if [[ ! -f "$HUNG_ACTUAL_READY" || ! -f "$HUNG_ACTUAL_PID" ]]; then
+  cat "$TEST_ROOT/hung-actual.log" >&2
+  echo "hung actual scene fixtureの準備に失敗しました" >&2
+  exit 1
+fi
+assert_process_gone "$(cat "$HUNG_ACTUAL_PID")"
+sleep 1.55
+if [[ -e "$HUNG_ACTUAL_MARKER" ]]; then
+  echo "hung actual scene descendantがtimeout後にmarkerを書きました" >&2
+  exit 1
+fi
+if find "$HUNG_ACTUAL_PARENT" -mindepth 1 -maxdepth 1 -name 'tsuri_save_system.*' -print -quit | grep -q .; then
+  echo "timeoutしたactual wrapperのrun rootが残っています" >&2
+  exit 1
+fi
+unset TSURI_HUNG_READY TSURI_HUNG_MARKER TSURI_HUNG_PID_PATH
+
+# cold checkoutでも共有.godot importを並列起動しないよう、run固有HOMEで直列warm-upする。
+IMPORT_WARMUP_HOME="$TEST_ROOT/import_warmup_home"
+if ! run_import_warmup \
+  "$GODOT" "$IMPORT_WARMUP_HOME" "$TEST_ROOT/import-warmup.log" \
+  "$COMMAND_TIMEOUT_SECONDS" "$TERM_GRACE_SECONDS"; then
+  cat "$TEST_ROOT/import-warmup.log" >&2
+  echo "save isolation import warm-up failed" >&2
+  exit 1
+fi
+[[ ! -e "$IMPORT_WARMUP_HOME" ]]
+
 # 実sceneも同じ既定親で2並列実行し、旧固定HOMEの相互破壊が再発しないことを確認する。
 ACTUAL_PARALLEL_PARENT="$TEST_ROOT/actual_parallel"
 mkdir -p "$ACTUAL_PARALLEL_PARENT"
-env -u TSURI_GODOT_HOME TMPDIR="$ACTUAL_PARALLEL_PARENT" GODOT_BIN="$GODOT" \
-  "$ROOT/tools/save_system_verify.sh" >"$TEST_ROOT/actual-parallel-1.log" 2>&1 &
+run_bounded_command \
+  "$COMMAND_TIMEOUT_SECONDS" "$TERM_GRACE_SECONDS" "$TEST_ROOT/actual-parallel-1.log" \
+  env -u TSURI_GODOT_HOME TMPDIR="$ACTUAL_PARALLEL_PARENT" GODOT_BIN="$GODOT" \
+  "$ROOT/tools/save_system_verify.sh" &
 first_pid=$!
-env -u TSURI_GODOT_HOME TMPDIR="$ACTUAL_PARALLEL_PARENT" GODOT_BIN="$GODOT" \
-  "$ROOT/tools/save_system_verify.sh" >"$TEST_ROOT/actual-parallel-2.log" 2>&1 &
+run_bounded_command \
+  "$COMMAND_TIMEOUT_SECONDS" "$TERM_GRACE_SECONDS" "$TEST_ROOT/actual-parallel-2.log" \
+  env -u TSURI_GODOT_HOME TMPDIR="$ACTUAL_PARALLEL_PARENT" GODOT_BIN="$GODOT" \
+  "$ROOT/tools/save_system_verify.sh" &
 second_pid=$!
 set +e
 wait "$first_pid"
