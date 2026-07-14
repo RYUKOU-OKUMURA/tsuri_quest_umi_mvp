@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE = ROOT / "docs" / "qa" / "evidence" / "fish_market"
 REFERENCE = ROOT / "reference" / "10_fish_market_mockup.png"
 STATES = ("select", "confirm", "sold", "empty")
-CTA_STATES = ("normal", "hover", "pressed", "focus")
+CTA_STATES = ("normal", "hover", "pressed", "focus", "disabled")
 # The CTA comparison includes the old StyleBoxFlat shadow halo while the
 # Control itself remains frozen at CART_ACTION_RECT=(1008,612,190,50).
 ALLOWED_RECTS = ((41, 109, 701, 677), (1004, 610, 1210, 668))
@@ -61,6 +61,12 @@ def build_state_evidence() -> None:
         before = load_rgb(EVIDENCE / f"2026-07-13_m3_before_{state}.png")
         after = load_rgb(Path(f"/tmp/tsuri_market_{state}.png"))
         assert_diff_is_scoped(before, after, state)
+        accepted = load_rgb(EVIDENCE / f"2026-07-13_m3_after_{state}.png")
+        promotion_diff = ImageChops.difference(accepted, after)
+        if promotion_diff.getbbox() is not None:
+            raise SystemExit(f"{state}: common promotion changed the accepted M3 screen pixels: {promotion_diff.getbbox()}")
+        print(f"{state}: common promotion full-screen pixels identical")
+        save(after, EVIDENCE / f"2026-07-14_m3_common_after_{state}.png")
         save(after, EVIDENCE / f"2026-07-13_m3_after_{state}.png")
         save(
             triptych((before, after, reference_runtime)),
@@ -85,18 +91,17 @@ def build_cta_evidence() -> None:
     full_states: list[Image.Image] = []
     for state in CTA_STATES:
         image = load_rgb(Path(f"/tmp/tsuri_market_cta_{state}.png"))
-        save(image, EVIDENCE / f"2026-07-13_m3_cta_{state}.png")
+        save(image, EVIDENCE / f"2026-07-14_m3_cta_{state}.png")
         full_states.append(image)
-    disabled = load_rgb(Path("/tmp/tsuri_market_empty.png"))
-    crops = [image.crop((996, 600, 1210, 674)) for image in (*full_states, disabled)]
+    crops = [image.crop((996, 600, 1210, 674)) for image in full_states]
     save(
         triptych((crops[0], crops[1], crops[2])),
-        EVIDENCE / "2026-07-13_m3_cta_normal_hover_pressed.png",
+        EVIDENCE / "2026-07-14_m3_cta_normal_hover_pressed.png",
     )
     focus_disabled = Image.new("RGB", (crops[3].width + crops[4].width, crops[3].height))
     focus_disabled.paste(crops[3], (0, 0))
     focus_disabled.paste(crops[4], (crops[3].width, 0))
-    save(focus_disabled, EVIDENCE / "2026-07-13_m3_cta_focus_disabled.png")
+    save(focus_disabled, EVIDENCE / "2026-07-14_m3_cta_focus_disabled.png")
 
 
 def main() -> int:

@@ -44,14 +44,16 @@ func _ready() -> void:
 	var cart_styles: Array[StyleBoxTexture] = []
 	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
 		var style := _screen._cart_action_button.get_theme_stylebox(state) as StyleBoxTexture
-		_expect(style != null and style.texture != null, "cart action %s should use a loaded market-local texture style" % state)
+		_expect(style != null and style.texture != null, "cart action %s should use a loaded common texture style" % state)
 		if style != null:
 			cart_styles.append(style)
+			_expect(style.texture.resource_path.begins_with("res://assets/showcase/common/primary_action_"), "cart action %s should resolve through the common primary-action variant" % state)
 	_expect(cart_styles.size() == 5, "cart action should expose all five interaction style signatures")
 	if cart_styles.size() == 5:
 		for left in range(cart_styles.size()):
 			for right in range(left + 1, cart_styles.size()):
 				_expect(cart_styles[left].texture != cart_styles[right].texture, "cart action interaction states should not share a texture")
+	await _test_cart_interaction_states()
 
 	_screen._set_quantity("aji", 99)
 	_expect_eq(int(_screen._sell_quantities.get("aji", 0)), 3, "quantity should clamp to owned count")
@@ -149,6 +151,83 @@ func _test_batch_api() -> void:
 	_expect_eq(PlayerProgress.fish_count("aji"), 1, "sell_fish_batch should subtract aji")
 	var failed := PlayerProgress.sell_fish_batch({"saba": 99})
 	_expect(not bool(failed.get("ok", false)), "sell_fish_batch should reject unavailable orders")
+
+
+func _test_cart_interaction_states() -> void:
+	# Exercise the production button wiring on a short-lived root-Viewport screen;
+	# the visual/layout smoke itself renders in an off-screen SubViewport.
+	var interaction_screen := MarketScreenScript.new()
+	interaction_screen.theme = ThemeFactory.build_theme()
+	interaction_screen.configure({})
+	interaction_screen.size = DESIGN_SIZE
+	add_child(interaction_screen)
+	await _tick()
+	interaction_screen._set_quantity("aji", 1)
+	await _tick()
+	var button := interaction_screen._cart_action_button as Button
+	_expect(not button.disabled, "cart action should be enabled before real interaction checks")
+	var initial_position := button.position
+	var initial_size := button.size
+	var viewport := button.get_viewport()
+	var center := button.get_global_rect().get_center()
+	var outside := Vector2(8.0, 8.0)
+
+	button.release_focus()
+	await _push_mouse_motion(viewport, outside)
+	_expect(not button.has_focus() and not button.is_hovered(), "cart action should start in normal state")
+
+	await _push_mouse_motion(viewport, center)
+	_expect(button.is_hovered(), "real mouse motion should enter hover state")
+	await _push_mouse_motion(viewport, outside)
+	_expect(not button.is_hovered(), "hover state should return to normal after pointer exit")
+
+	var press_events := {"down": 0, "up": 0}
+	button.button_down.connect(func() -> void: press_events["down"] += 1)
+	button.button_up.connect(func() -> void: press_events["up"] += 1)
+	await _push_mouse_motion(viewport, center)
+	await _push_mouse_button(viewport, center, true)
+	_expect(int(press_events["down"]) == 1 and int(press_events["up"]) == 0, "real mouse input should enter pressed transition")
+	await _push_mouse_button(viewport, center, false)
+	_expect(int(press_events["up"]) == 1, "mouse release should return pressed transition to hover")
+	interaction_screen._hide_confirm_overlay()
+	await _push_mouse_motion(viewport, outside)
+
+	button.grab_focus()
+	await _tick()
+	_expect(button.has_focus(), "grab_focus should enter focus state")
+	button.release_focus()
+	await _tick()
+	_expect(not button.has_focus(), "release_focus should return focus state to normal")
+
+	button.disabled = true
+	await _tick()
+	_expect(button.disabled, "disabled property should enter disabled state")
+	button.disabled = false
+	await _tick()
+	_expect(not button.disabled, "disabled state should return to enabled state")
+	_expect(button.position.is_equal_approx(initial_position), "interaction A-B-A should preserve cart action position")
+	_expect(button.size.is_equal_approx(initial_size), "interaction A-B-A should preserve cart action size")
+	interaction_screen.queue_free()
+	await _tick()
+
+
+func _push_mouse_motion(viewport: Viewport, position: Vector2) -> void:
+	var event := InputEventMouseMotion.new()
+	event.position = position
+	event.global_position = position
+	viewport.push_input(event, true)
+	await _tick()
+
+
+func _push_mouse_button(viewport: Viewport, position: Vector2, pressed: bool) -> void:
+	var event := InputEventMouseButton.new()
+	event.button_index = MOUSE_BUTTON_LEFT
+	event.pressed = pressed
+	event.button_mask = MOUSE_BUTTON_MASK_LEFT if pressed else 0
+	event.position = position
+	event.global_position = position
+	viewport.push_input(event, true)
+	await _tick()
 
 
 func _test_saturating_cart_flow() -> void:

@@ -27,6 +27,7 @@ rm -f \
   /tmp/tsuri_market_cta_hover.png \
   /tmp/tsuri_market_cta_pressed.png \
   /tmp/tsuri_market_cta_focus.png \
+  /tmp/tsuri_market_cta_disabled.png \
   /tmp/tsuri_market_select_compare.png \
   /tmp/tsuri_market_confirm_compare.png \
   /tmp/tsuri_market_sold_compare.png \
@@ -48,6 +49,7 @@ for path in [
     Path("/tmp/tsuri_market_cta_hover.png"),
     Path("/tmp/tsuri_market_cta_pressed.png"),
     Path("/tmp/tsuri_market_cta_focus.png"),
+    Path("/tmp/tsuri_market_cta_disabled.png"),
 ]:
     img = Image.open(path).convert("RGB")
     pixels = img.getdata()
@@ -69,6 +71,7 @@ echo "/tmp/tsuri_market_cta_normal.png"
 echo "/tmp/tsuri_market_cta_hover.png"
 echo "/tmp/tsuri_market_cta_pressed.png"
 echo "/tmp/tsuri_market_cta_focus.png"
+echo "/tmp/tsuri_market_cta_disabled.png"
 echo "/tmp/tsuri_market_select_compare.png"
 echo "/tmp/tsuri_market_confirm_compare.png"
 echo "/tmp/tsuri_market_sold_compare.png"
