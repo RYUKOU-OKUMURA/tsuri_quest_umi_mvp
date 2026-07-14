@@ -470,10 +470,7 @@ func _has_deliverable_quest() -> bool:
 ## クーラーボックス（インベントリ）内の魚の総数。フッター表示（`_refresh_labels`）と
 ## 右メニューの通知バッジ／ヒント判定で共有する。
 func _cooler_fish_total() -> int:
-	var total := 0
-	for count in PlayerProgress.inventory.values():
-		total += int(count)
-	return total
+	return GameData.inventory_fish_total(PlayerProgress.inventory)
 
 
 ## 右メニュー詳細パネルのデフォルト表示（コンテキストヒント）。優先度:

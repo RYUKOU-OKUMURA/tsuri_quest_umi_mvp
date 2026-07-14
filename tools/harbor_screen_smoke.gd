@@ -225,6 +225,25 @@ func _verify_notifications_and_recommendation() -> void:
 	_expect(screen._facility_detail_body_label.text.contains("クーラーボックスに2匹"), "cooler-only recommendation should include fish count")
 	await _free_screen(screen)
 
+	_seed_base()
+	var nushi_id := GameData.get_all_nushi_fish_ids()[0]
+	var shark_id := GameData.get_normal_shark_ids()[0]
+	PlayerProgress.inventory = {
+		"aji": 2,
+		nushi_id: 1,
+		shark_id: 4,
+		"unknown_inventory_fish": 8,
+		"saba": -3,
+	}
+	PlayerProgress.quest_board = []
+	screen = _make_screen()
+	await _settle()
+	_expect(screen._cooler_fish_total() == 3, "harbor cooler total should use the canonical inventory fish domain")
+	_expect(screen._notification_badges.keys() == ["market"], "canonical cooler fish should show only the market badge")
+	_expect(screen._facility_detail_body_label.text.contains("クーラーボックスに3匹"), "market recommendation should use the canonical cooler total")
+	_expect(screen._status_label.text.contains("クーラーボックス　3匹"), "harbor footer should use the canonical cooler total")
+	await _free_screen(screen)
+
 
 func _verify_locked_and_unlocked_shark_pen() -> void:
 	_seed_base(29)
