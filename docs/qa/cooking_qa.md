@@ -1,6 +1,6 @@
 # 調理場 QA判断ログ
 
-最終更新: 2026-07-11 / 状態: 調理場cooking_screen R1完了 / C0 runtime P1修正・headless構造契約完了 / EXP_GAIN P2構成改善完了 / STATUS_SUMMARY P2構成改善完了 / COOK_SELECT P2構成改善完了 / LEVEL_UP P2構成改善完了 / 残: P3素材密度
+最終更新: 2026-07-14 / 状態: C1-A COOK_SELECT厨房背景 完了 / C0・既存構成freeze維持 / 次: C1-B
 参照画像: reference/cooking_flow/01_cook_select_concept.png, reference/cooking_flow/02_meal_result_concept.png, reference/cooking_flow/03_exp_gain_concept.png, reference/cooking_flow/04_level_up_overlay_concept.png, reference/cooking_flow/05_status_summary_concept.png
 QA更新コマンド: ./tools/cooking_visual_qa.sh
 
@@ -23,6 +23,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 | STATUS_SUMMARY カード見出し帯 | `StatusSummaryTitleBand*` は `PanelBox`（文字を横断するボタン枠PNGを使わない） | `src/ui/components/cooking_status_panel.gd` | 5カードのタイトルを原寸で常に読めるようにする。カード矩形・見出し文字サイズは不変 |
 | EXP_GAIN / LEVEL_UP 下部導線 | 本文左content margin `Reward=88px` / `LevelUp=92px`、各Button直下は単一の命名Label cue（`RewardConfirmCue` / `LevelUpConfirmCue`）のみ。`MEAL_RESULT` / `EXP_GAIN` / `LEVEL_UP` は `▶`、`EXP_GAIN_LEVELUP` は `▲` | `cooking_reward_panel.gd` / `level_up_panel.gd` / `tools/cooking_content_audit.gd` | 40px高の導線で複数小グリフが本文と潰れるP1を防ぐ。余白・cue名・単一Label構造・draw接続なし・状態別glyphはheadless監査する |
 | STATUS_SUMMARY 所持金 | 整数部は3桁カンマ区切り（例: `10,170 G`） | `src/ui/components/cooking_status_panel.gd` | docs/19 §4.3の金額表記規格 |
+| COOK_SELECT厨房背景 | source `b3e7d525...686cb` / output `67157172...81106`、1280x720、彩度 `0.84`、濃紺scrim alpha `48` | `tools/source_assets/cooking/c1a_kitchen_bg_source.png` / `tools/process_cooking_c1a_assets.py` / `assets/showcase/cooking/cooking_room_bg.png` | C1-A採用値。暖色ランタン光・海窓・調理棚を持つ環境のみ一点物。3列・全前景矩形・runtime glazeは不変 |
 
 ## 2. 不採用・再試行禁止リスト
 
@@ -43,6 +44,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 | COOK_SELECT 料理カード星ランク表示 | 1 | Label幅中央寄せを試したが実スクショで星文字が弱く、runtimeポリゴン描画 `RecipeStarRank` へ切替 | 完了 |
 | COOK_SELECT 右詳細料理名/大皿階層 | 1 | 右詳細上部を `SelectedDishTitlePlate` に組み替え、料理名を太字・省略禁止・監査対象にした | 構成改善完了 |
 | C0 runtime表示破綻 | 1 | 不透明ステージ下地、静かなカード見出し帯、単一導線グリフ、金額formatへ置換 | 完了 |
+| C1-A厨房背景 | 1 | OpenAI生成sourceを彩度統一・濃紺減光して既存slotへ差し替え | 素材採用・freeze |
 
 ## 4. 暫定判定・再検証TODO
 
@@ -54,19 +56,33 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 - P2 Top1完了: `EXP_GAIN` はステップ行を退け、中央の大見出し・巨大 `+EXP`・EXPゲージを先に読める構成へ改善済み。参照の一点物祝祭密度、巨大タイトルの余白、背景/光の素材差は残るが、次に触るなら数px調整ではなくAI生成一点物素材または祝祭設計フェーズとして扱う。
 - P2 Top2完了: `STATUS_SUMMARY` はヘッダーsubtitle、プレイヤーhero、ステータス5行、各カードのアート高さを見直し、人物・Lv/次EXP・ステータス名/数値が読める独立ステータス画面へ改善済み。参照ほどの人物一点物アート密度やカード装飾密度は残るが、次に触るなら素材フェーズとして扱う。
 - P2 Top3完了: `COOK_SELECT` は右詳細上部を料理タイトル帯に組み替え、料理名・説明・大皿・材料/EXP/効果・調理ボタンの順に読める構成へ改善済み。参照ほど行ラベルと効果行の一体感は残っていないが、残差はカード素材/行フレームの一点物素材フェーズとして扱う。
+- C1-A完了: COOK_SELECT厨房背景は、暖色ランタン光・海の見える窓・調理棚が読める authored sourceへ移行した。原寸と320x180比較で現行の平坦な矩形背景に明確に勝ち、参照01の背景差が縮んだ。次のCOOK_SELECT素材課題はC1-Bのカード質感であり、背景の再調整へ戻らない。
 - P2完了: `LEVEL_UP_OVERLAY` はタイトル帯を報酬プレート化し、`LEVEL UP!` と `Lv.4 -> Lv.5` を通常パネルより強い主導線へ改善済み。ステータス行とLv.5解放カードも下段に残り、報酬ピークとして読める。
 - P3止まり: 参照の立体的な巨大金文字、より密な金色光線/紙吹雪、月桂樹とメダルの一点物アート密度、魚種差、所持数差、枠線数px、星/小アイコン/紙汚れ/影/粒子の微差は、今後触るなら一点物素材/演出フェーズとして扱う。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-2026-07-10: `C0 runtime表示破綻` を、docs/33 C0 / docs/45 UI-C0-01 に基づく **P1再発** として局所再オープンし、同日完了。
+2026-07-14: `C1-A COOK_SELECT厨房背景` を、docs/33 C1の1スロット素材フェーズとして開始し、同日完了。
 
-- 対象状態・差分: MEAL_RESULT（前状態の残像wash）、STATUS_SUMMARY（カードタイトル帯と文字の衝突）、EXP_GAIN / LEVEL_UP_OVERLAY（下部導線グリフ潰れ）、STATUS_SUMMARY所持金（3桁区切りなし）。
-- 動かすもの: 報酬画面の不透明ステージ下地、STATUS_SUMMARYカードタイトル帯の表示方式、上記2導線のランタイムグリフ、所持金表示format、headless構造監査と決定的プレビューの表示契約。
-- 不動値: §1の全freeze値、調理/EXP/レベルアップの進行ロジック、料理・魚データ、既存素材、COOK_SELECT構成、C1〜C5の素材課題。
-- 比較条件: `tools/cooking_preview.gd` の固定Lv/所持金/料理状態で、5状態の1280x720 before / afterを保存し、参照02〜05との横並びでP1消失を確認する。
+- 差分Top1: COOK_SELECTの現行 `cooking_room_bg.png` は平面的な矩形・単色面が支配的で、参照01の暖色ランタン光、海の見える窓、調理棚が作る authored 厨房の空気に届いていない。
+- 背景slotの実可視領域: 1280x720全面に敷かれるが、COOK_SELECTでは主にヘッダー/3列/下部stripの外周と12pxガター、中央列と右詳細の間の縦窓で見える。前景情報面の背後では減光・彩度統一を行い、背景の高周波を主役にしない。
+- 動かすもの: `tools/source_assets/cooking/c1a_kitchen_bg_source.png`、`tools/process_cooking_c1a_assets.py`、既存製品slot `assets/showcase/cooking/cooking_room_bg.png`、発注brief、台帳、C1-A証拠。
+- 不動値: COOK_SELECTの3列、カード/詳細/CTA矩形、`PlayerStatusBar`、下部strip、§1の全freeze値、料理/材料/EXP/バフ/レベルアップ/セーブロジック、MEAL_RESULT専用素材、C1-B〜C5、common/palette/project.godot、他画面。
+- 採用条件: 同一決定状態の原寸beforeに明確に勝ち、320x180のafter/referenceでも「暖色ランタン光・海窓・調理棚」の差が縮むこと。COOK_SELECT以外は背面利用状態の背景差のみを許可し、専用不透明状態は意図しない差ゼロとする。
+- baseline: `docs/qa/evidence/cooking/2026-07-14_c1a_before_{select,result,exp,levelup,status}.png`（5状態1280x720、2026-07-14固定）。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-14: `C1-A COOK_SELECT厨房背景` 完了。既存の純PIL背景をOpenAI生成source + 決定的processorへ移行した。
+
+- 選定理由: beforeは平面的な茶壁/矩形窓で、狭い可視ガターでも厨房の空気が読めなかった。afterは中央列と右詳細の間に海・灯台・港が明確に現れ、上端/外周には木棚・瓶・ランタン光が残る。320x180でも参照01との「海窓と暖色厨房」の差が縮み、beforeに明確に勝つため採用。
+- 変えたもの: `c1a_kitchen_bg_source.png`、決定的processor、既存 `cooking_room_bg.png`、旧全素材generatorによる背景上書き防止、素材台帳/監査登録、C1-A証拠。
+- 変えていないもの: COOK_SELECTの3列、カード/詳細/CTA矩形、`PlayerStatusBar`、下部strip、§1の既存freeze値、料理/材料/EXP/バフ/レベルアップ/セーブロジック、MEAL_RESULT専用素材、C1-B〜C5、common/palette/project.godot、他画面。既存slot表示済みのため `cooking_screen.gd` は無変更。
+- 証拠画像: 原寸 `2026-07-14_c1a_full_before_after_reference.png`、縮小 `2026-07-14_c1a_thumbnail_after_reference.png`、gray `2026-07-14_c1a_gray_before_after_reference.png`、5状態 `2026-07-14_c1a_{before,after}_{select,result,exp,levelup,status}.png`。
+- 5状態判定: COOK_SELECTは背景差のみ。背面を透かすEXP_GAIN / LEVEL_UP_OVERLAYも新背景由来の差だけ。専用不透明のMEAL_RESULTはbefore/after SHA-256 `c1af9079...44ed` で一致、STATUS_SUMMARYは `2b0ff0f8...fc92` で一致。5状態ともP1ゼロ。
+- 再現性: source SHA-256 `b3e7d525...686cb`、output `67157172...81106`。processorを2回再実行し、hash・decoded RGBA pixelsとも不変。`generate_cooking_showcase_assets.py` もC1-A source存在時はこのslotを上書きしない。
+- 独立レビュー: 結論を伏せた原寸証拠+diffレビューは `PASS_WITH_P3`。P1/P2なし。P3は「実画面では海窓が強く、ランタン本体は前景UIにほぼ隠れるため、暖色感は主に環境光として伝わる」。採用条件を満たし、再調整理由にはしない。
+- 固定条件: source/output/processor値をfreezeし、P1再発またはユーザー承認済みの方向更新なしに背景を再調整しない。次はC1-Bへ進め、背景とカード質感を同じ仮説に混ぜない。
 
 2026-07-11: `C0 runtime表示破綻` のレビュー差し戻しを反映。見た目の回帰は許容せず、C0契約をGUIキャプチャからheadless監査へ移した。
 

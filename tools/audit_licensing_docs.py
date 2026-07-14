@@ -2951,6 +2951,8 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
             "process_fishing_time_slot_assets.py",
             # M2 authored market art is a product source-consuming pipeline.
             "process_fish_market_m2_assets.py",
+            # C1-A authored kitchen art is a product source-consuming pipeline.
+            "process_cooking_c1a_assets.py",
             "process_harbor_info_board_assets.py",
             "process_harbor_plan_assets.py",
             "process_underwater_fish_assets.py",
