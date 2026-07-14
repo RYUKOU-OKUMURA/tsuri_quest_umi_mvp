@@ -79,7 +79,7 @@ Avoid: photorealism, smooth 3D render, modern restaurant, banquet hall, centered
 
 ## 決定的加工
 
-processor は source を中央 cover-crop して 1280×720 へ Lanczos 縮小し、軽い色調統一と減光を一定値で適用する。乱数、時刻、メタデータ依存、参照画像・runtime screenshot の画素読み込みは禁止する。candidate の再生成2回で decoded RGBA bytes と保存PNG bytes が一致すること。
+processor は source を中央 cover-crop して 1280×720 へ Lanczos 縮小し、軽い色調統一と減光を一定値で適用する。乱数、時刻、メタデータ依存、参照画像・runtime screenshot の画素読み込みは禁止する。candidate本体とevidence PNGは、既存PNGとsize / mode / decoded pixelsが完全同値なら既存bytesを保持し、画素差がある時だけatomic replaceする。clean checkout相当の状態から `--evidence` を再生成してもworktreeがcleanであり、candidateのdecoded RGBAと保存PNG SHA-256が既存値を維持すること。
 
 機械検査:
 

@@ -17,6 +17,8 @@
 - `*_grayscale.png`: 情報階層・明度比較。
 - `2026-07-14_c2_assetprep_report.json`: hash、safe-area、crop、色調、機械検査結果。
 
+processorのPNG保存は、既存ファイルとsize / mode / decoded pixelsが完全同値なら既存bytesを保持し、画素差がある時だけatomic replaceする。これによりPillow等のencoder差があっても、clean checkout相当の状態から `--evidence` を再生成してworktree clean、candidate PNG SHA-256 `88b404ed…`、decoded RGBA `fcdfcd62…` を維持する。
+
 ## safe-area判断
 
 - 左人物域: 大きな主役物・人物・料理がなく、壁の大きな色面が人物シルエットを受ける。左ランタンは端部にあり、既存人物の顔・手の中心と競合しない。

@@ -6,6 +6,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
+import tempfile
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps, PngImagePlugin
@@ -53,10 +55,53 @@ def decoded_sha256(image: Image.Image) -> str:
     return hashlib.sha256(image.convert("RGBA").tobytes()).hexdigest()
 
 
-def save_png(image: Image.Image, path: Path) -> None:
+def _has_same_decoded_pixels(image: Image.Image, path: Path) -> bool:
+    if not path.exists():
+        return False
+    try:
+        with Image.open(path) as existing:
+            existing.load()
+            return (
+                existing.size == image.size
+                and existing.mode == image.mode
+                and existing.tobytes() == image.tobytes()
+            )
+    except (OSError, ValueError):
+        return False
+
+
+def save_png(image: Image.Image, path: Path) -> bool:
+    """画素同値なら既存bytesを保持し、差分時だけatomic replaceする。"""
     path.parent.mkdir(parents=True, exist_ok=True)
+    if _has_same_decoded_pixels(image, path):
+        return False
+
     pnginfo = PngImagePlugin.PngInfo()
-    image.save(path, format="PNG", optimize=False, compress_level=9, pnginfo=pnginfo)
+    temporary_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w+b",
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            dir=path.parent,
+            delete=False,
+        ) as temporary:
+            temporary_path = Path(temporary.name)
+            image.save(
+                temporary,
+                format="PNG",
+                optimize=False,
+                compress_level=9,
+                pnginfo=pnginfo,
+            )
+            temporary.flush()
+            os.fsync(temporary.fileno())
+        os.replace(temporary_path, path)
+        temporary_path = None
+    finally:
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
+    return True
 
 
 def process_source(source_path: Path = SOURCE) -> Image.Image:
