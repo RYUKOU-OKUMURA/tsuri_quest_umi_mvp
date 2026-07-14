@@ -1,6 +1,6 @@
 # docs 索引
 
-最終更新: 2026-07-13
+最終更新: 2026-07-14
 
 ## 1. 分類の定義
 
@@ -77,10 +77,15 @@
 | `43_harbor_info_board_plan.md` | 港情報板の旧レイアウト計画。画面仕様はdocs/44へ移行。天候先読み案のみ未決メモ | 履歴 |
 | `44_harbor_command_board_spec.md` | 港の司令盤の現行route / focus / layout契約（実装済み）。freeze正本はharbor_qa | 現行 |
 | `45_release_readiness_code_review.md` | リリース前全体監査、阻害要因、優先順位、次タスクbrief | 現行 |
+| `46_e11_settings_screen_spec.md` | E11設定画面の表示・音量・セーブ枠削除仕様。**番号46が重複** | 現行 |
 | `46_quest_board_material_uplift_spec.md` | 依頼ボードの木面・ピン付き紙札uplift仕様と採用記録 | 現行 |
 | `47_launch_foundation_code_review.md` | ローンチ基盤のコード監査、今回の整理、段階リファクタ順 | 現行 |
 | `48_shark_pen_tank_uplift_spec.md` | サメ生簀の水槽背景・泡・環境光uplift仕様と採用記録 | 現行 |
 | `49_fish_market_m2_asset_briefs.md` | 魚市場M2の市場背景・査定トレー一点物素材発注仕様 | 現行 |
+| `50_cooking_c1a_kitchen_background_brief.md` | 調理C1-Aの厨房背景一点物素材briefと採用条件 | 現行 |
+| `51_cooking_c2_meal_scene_asset_brief.md` | 調理C2の食事シーン背景候補briefと配線前の採否条件 | 現行 |
+| `52_status_r5a_player_hero_spec.md` | ステータスR5-Aの中央プレイヤーhero素材仕様と採用記録 | 現行 |
+| `53_pre_ui_code_review_and_refactor.md` | UI Wave継続前の全体コードレビュー、behavior-preserving修正、残課題 | 現行 |
 
 **番号体系外の正本**
 
