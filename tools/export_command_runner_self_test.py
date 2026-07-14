@@ -69,6 +69,48 @@ def descendant_command(ready: Path, marker: Path, pid_path: Path) -> list[str]:
     return [sys.executable, "-c", parent_code]
 
 
+def early_exit_descendant_command(
+    ready: Path,
+    marker: Path,
+    pid_path: Path,
+    return_code: int,
+) -> list[str]:
+    child_code = (
+        "import os, pathlib, signal, time; "
+        "signal.signal(signal.SIGTERM, signal.SIG_IGN); "
+        f"pathlib.Path({str(pid_path)!r}).write_text(str(os.getpid())); "
+        f"pathlib.Path({str(ready)!r}).write_text('ready'); "
+        "time.sleep(0.4); "
+        f"pathlib.Path({str(marker)!r}).write_text('orphan')"
+    )
+    parent_code = (
+        "import pathlib, subprocess, sys, time\n"
+        f"ready = pathlib.Path({str(ready)!r})\n"
+        f"subprocess.Popen([sys.executable, '-c', {child_code!r}])\n"
+        "deadline = time.monotonic() + 2.0\n"
+        "while not ready.exists() and time.monotonic() < deadline:\n"
+        "    time.sleep(0.01)\n"
+        f"raise SystemExit({return_code})\n"
+    )
+    return [sys.executable, "-c", parent_code]
+
+
+def short_lived_descendant_command(ready: Path, marker: Path, pid_path: Path) -> list[str]:
+    child_code = (
+        "import os, pathlib, time; "
+        f"pathlib.Path({str(pid_path)!r}).write_text(str(os.getpid())); "
+        f"pathlib.Path({str(ready)!r}).write_text('ready'); "
+        "time.sleep(0.05)"
+    )
+    parent_code = (
+        "import subprocess, sys; "
+        f"child = subprocess.Popen([sys.executable, '-c', {child_code!r}]); "
+        "child.wait(); "
+        "raise SystemExit(0)"
+    )
+    return [sys.executable, "-c", parent_code]
+
+
 with tempfile.TemporaryDirectory(prefix="export-command-runner-test-") as temporary:
     root = Path(temporary)
 
@@ -85,6 +127,36 @@ with tempfile.TemporaryDirectory(prefix="export-command-runner-test-") as tempor
     nonzero_log = root / "nonzero.log"
     nonzero = invoke(nonzero_log, [sys.executable, "-c", "raise SystemExit(7)"])
     assert nonzero.returncode == 7 and nonzero_log.is_file()
+
+    for label, parent_exit in (("early_success", 0), ("early_nonzero", 7)):
+        early_ready = root / f"{label}_ready"
+        early_marker = root / f"{label}_marker"
+        early_pid_path = root / f"{label}.pid"
+        early_log = root / f"{label}.log"
+        early_result = invoke(
+            early_log,
+            early_exit_descendant_command(early_ready, early_marker, early_pid_path, parent_exit),
+        )
+        assert early_result.returncode == parent_exit
+        assert early_ready.is_file() and early_pid_path.is_file()
+        assert "cleaned surviving process group after command exit" in early_log.read_text()
+        assert_process_gone(int(early_pid_path.read_text()))
+        time.sleep(0.45)
+        assert not early_marker.exists(), f"親exit {parent_exit}後のdescendantがmarkerを書きました"
+
+    short_ready = root / "short_lived_ready"
+    short_marker = root / "short_lived_marker"
+    short_pid_path = root / "short_lived.pid"
+    short_log = root / "short_lived.log"
+    short_result = invoke(
+        short_log,
+        short_lived_descendant_command(short_ready, short_marker, short_pid_path),
+    )
+    assert short_result.returncode == 0
+    assert short_ready.is_file() and short_pid_path.is_file()
+    assert_process_gone(int(short_pid_path.read_text()))
+    assert not short_marker.exists()
+    assert "surviving process group" not in short_log.read_text()
 
     binary_log = root / "binary.log"
     binary = invoke(

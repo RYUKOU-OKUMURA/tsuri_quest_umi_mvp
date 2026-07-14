@@ -15,6 +15,7 @@ from typing import NoReturn
 
 
 TIMEOUT_EXIT_CODE = 124
+PROCESS_GROUP_CLEANUP_EXIT_CODE = 125
 DEFAULT_TERM_GRACE_SECONDS = 1.0
 HANDLED_SIGNALS = (signal.SIGINT, signal.SIGTERM, signal.SIGHUP)
 
@@ -52,24 +53,32 @@ def _signal_group(process_group_id: int, signum: int) -> None:
         pass
 
 
-def terminate_process_group(process: subprocess.Popen[bytes], grace_seconds: float) -> None:
-    """Terminate the complete child session, including TERM-ignoring descendants."""
-    process_group_id = process.pid
-    _signal_group(process_group_id, signal.SIGTERM)
-    deadline = time.monotonic() + grace_seconds
-    while time.monotonic() < deadline:
+def _wait_for_group_exit(
+    process: subprocess.Popen[bytes],
+    process_group_id: int,
+    timeout_seconds: float,
+) -> bool:
+    deadline = time.monotonic() + timeout_seconds
+    while True:
         process.poll()
         if not _group_exists(process_group_id):
-            break
-        time.sleep(min(0.02, max(0.0, deadline - time.monotonic())))
-    process.poll()
-    if _group_exists(process_group_id):
-        _signal_group(process_group_id, signal.SIGKILL)
-    try:
-        process.wait(timeout=grace_seconds)
-    except subprocess.TimeoutExpired:
-        _signal_group(process_group_id, signal.SIGKILL)
-        process.wait()
+            return True
+        remaining = deadline - time.monotonic()
+        if remaining <= 0.0:
+            return False
+        time.sleep(min(0.02, remaining))
+
+
+def terminate_process_group(process: subprocess.Popen[bytes], grace_seconds: float) -> bool:
+    """Terminate the complete child session, including TERM-ignoring descendants."""
+    process_group_id = process.pid
+    if not _group_exists(process_group_id):
+        return True
+    _signal_group(process_group_id, signal.SIGTERM)
+    if _wait_for_group_exit(process, process_group_id, grace_seconds):
+        return True
+    _signal_group(process_group_id, signal.SIGKILL)
+    return _wait_for_group_exit(process, process_group_id, grace_seconds)
 
 
 def _open_log(log_path: Path):
@@ -130,21 +139,45 @@ def run_command(
                 except subprocess.TimeoutExpired:
                     for signum in HANDLED_SIGNALS:
                         signal.signal(signum, signal.SIG_IGN)
-                    terminate_process_group(process, grace_seconds)
+                    cleanup_succeeded = terminate_process_group(process, grace_seconds)
                     _append_diagnostic(log_file, f"timeout after {timeout_seconds:g}s")
-                    return_code = TIMEOUT_EXIT_CODE
+                    if cleanup_succeeded:
+                        return_code = TIMEOUT_EXIT_CODE
+                    else:
+                        _append_diagnostic(log_file, "failed to clean process group after timeout")
+                        return_code = PROCESS_GROUP_CLEANUP_EXIT_CODE
+                else:
+                    original_return_code = return_code
+                    if _group_exists(process.pid):
+                        cleanup_succeeded = terminate_process_group(process, grace_seconds)
+                        if cleanup_succeeded:
+                            _append_diagnostic(
+                                log_file,
+                                f"cleaned surviving process group after command exit {original_return_code}",
+                            )
+                        else:
+                            _append_diagnostic(
+                                log_file,
+                                f"failed to clean surviving process group after command exit {original_return_code}",
+                            )
+                            return_code = PROCESS_GROUP_CLEANUP_EXIT_CODE
             except CommandInterrupted as interrupted:
                 for signum in HANDLED_SIGNALS:
                     signal.signal(signum, signal.SIG_IGN)
+                cleanup_succeeded = True
                 if process is not None:
-                    terminate_process_group(process, grace_seconds)
+                    cleanup_succeeded = terminate_process_group(process, grace_seconds)
                 signal_name = signal.Signals(interrupted.signum).name
                 _append_diagnostic(log_file, f"interrupted by {signal_name}")
-                return_code = 128 + interrupted.signum
+                if cleanup_succeeded:
+                    return_code = 128 + interrupted.signum
+                else:
+                    _append_diagnostic(log_file, "failed to clean process group after interrupt")
+                    return_code = PROCESS_GROUP_CLEANUP_EXIT_CODE
         finally:
             for signum in previous_handlers:
                 signal.signal(signum, signal.SIG_IGN)
-            if process is not None and process.poll() is None:
+            if process is not None and _group_exists(process.pid):
                 terminate_process_group(process, grace_seconds)
             for signum, previous_handler in previous_handlers.items():
                 signal.signal(signum, previous_handler)
