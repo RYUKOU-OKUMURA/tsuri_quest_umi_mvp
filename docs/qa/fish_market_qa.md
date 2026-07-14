@@ -1,6 +1,6 @@
 # 魚市場 QA判断ログ
 
-最終更新: 2026-07-14 / 状態: v1 freeze・M1/M2完了・M3親レビューP2コード修正済み（GUI証拠再撮影待ち） / RarityStyles共通化済み / R1 Palette確認済み / 帰港導線右下統一済み
+最終更新: 2026-07-14 / 状態: v1 freeze・M1/M2/M3完了・M3親レビューP2解消済み / RarityStyles共通化済み / R1 Palette確認済み / 帰港導線右下統一済み
 参照画像: reference/10_fish_market_mockup.png
 QA更新コマンド: ./tools/market_visual_qa.sh（通常選択・売却確認・売却完了・空状態）
 
@@ -113,16 +113,16 @@ docs/33 §3.1 と docs/45 §12.2 に基づくP1再発として、空状態だけ
 | 売却完了 | 採用。結果表示・CTA disabled復帰・7行構成を維持 | `2026-07-13_m3_sold_original_triptych.png` / `2026-07-13_m3_sold_thumbnail_triptych.png` / `2026-07-13_m3_sold_gray_triptych.png` |
 | 空状態 | 採用。空面の残像ゼロ、CTA disabled、通常状態復帰を維持 | `2026-07-13_m3_empty_original_triptych.png` / `2026-07-13_m3_empty_thumbnail_triptych.png` / `2026-07-13_m3_empty_gray_triptych.png` |
 
-各証拠のパス先頭は `docs/qa/evidence/fish_market/`。原寸raw before/after/referenceも同ディレクトリへ保存。2026-07-13のCTA証拠は旧style強制描画のため履歴扱いとし、採否の操作証拠には使わない。更新済みpreviewはnormalをpointer外、hoverを実 `InputEventMouseMotion`、pressedを実 `InputEventMouseButton` downのrelease前、focusを `grab_focus()`、disabledを実 `disabled` propertyで原寸撮影する。smokeはproductionの `MarketSellBatchButton` に対しnormal→hover→normal、normal→pressed→hover→normal、focus取得→解放、disabled→enabledのA→B→Aとsignal配線をexit 0で検証済み。common昇格前後の5素材はdecoded pixels・PNG SHA-256とも完全一致し、画面側の変更は同一margin/rectのtexture resource pathだけである。GUI証拠再撮影は2026-07-14の実行sandboxでAppKit Abort 134となったため未完了で、再撮影後に4状態の実画面完全一致を確定する。M3初回差分は一覧内側 `(62,126)–(668,646)` とCTA旧shadow haloを含む `(1004,610)–(1210,668)` の許可領域内だけで、他freeze領域への漏出はない。
+各証拠のパス先頭は `docs/qa/evidence/fish_market/`。原寸raw before/after/referenceも同ディレクトリへ保存。2026-07-13のCTA証拠は旧style強制描画のため履歴扱いとし、採否の操作証拠には使わない。2026-07-14の採用証拠は `2026-07-14_m3_cta_{normal,hover,pressed,focus,disabled}.png` と contact sheet `2026-07-14_m3_cta_normal_hover_pressed.png` / `2026-07-14_m3_cta_focus_disabled.png`。normalはpointer外、hoverは実 `InputEventMouseMotion`、pressedは実 `InputEventMouseButton` downのrelease前、focusは `grab_focus()`、disabledは実 `disabled` propertyで原寸撮影した。文字干渉なし、5状態の差を原寸で確認済み。smokeはproductionの `MarketSellBatchButton` に対しnormal→hover→normal、normal→pressed→hover→normal、focus取得→解放、disabled→enabledのA→B→Aとsignal/callback配線をexit 0で検証済み。common昇格前後の5素材はdecoded pixels・PNG SHA-256とも完全一致し、`2026-07-14_m3_common_after_{select,confirm,sold,empty}.png` は昇格前の採用済み4状態と全画面画素完全一致。M3初回差分は一覧内側 `(62,126)–(668,646)` とCTA旧shadow haloを含む `(1004,610)–(1210,668)` の許可領域内だけで、他freeze領域への漏出はない。
 
 ## 5. 現在の残ギャップ
 
-- 製品コードのP1/P2なし。受入証拠P2として、AppKit sandbox外のGUI可能環境で実入力CTA原寸とcommon昇格後4状態画素同値を再生成する作業が残る。参照のCTAは現行より横幅比が大きいが、`CART_ACTION_RECT` freezeを再オープンする根拠はなくM3対象外のP3とする。
+- P1/P2なし。実入力CTA原寸5状態とcommon昇格後4状態の全画面画素同値を2026-07-14証拠で受入済み。参照のCTAは現行より横幅比が大きいが、`CART_ACTION_RECT` freezeを再オープンする根拠はなくM3対象外のP3とする。
 - M0の空状態メッセージ面はM3後も残像ゼロで、空→再入荷→空復帰をsmokeで維持する。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-- 親レビューP2のコード・所有修正は完了。残作業はGUI可能環境で `./tools/market_visual_qa.sh` を再実行すること。同scriptはpreview後に `build_market_m3_evidence.py` を呼び、実入力CTA原寸5状態とcommon昇格後4状態画素同値を検証・保存する。freeze値は動かさない。
+- 現在作業中のP2フェーズなし。M3のcommon所有・操作状態・4状態画素同値・採用根拠は§1・§4.3へfreeze済み。
 
 ## 7. 判断ログ（直近パスのみ）
 
@@ -197,11 +197,11 @@ docs/33 §3.1 と docs/45 §12.2 に基づくP1再発として、空状態だけ
 2026-07-13 M3 主CTA・紙面質感:
 - `CART_ACTION_RECT`定数を動かさず、文字なし幾何9-sliceをnormal/hover/pressed/focus/disabledへ分離した。2026-07-14の所有修正後はcommon追加variant `primary_action_*` が正本。runtimeの「まとめて売る」/「売却 N匹」を維持し、既存common CTA consumerは変更していない。
 - 一覧紙面は既存 `common/parchment_card.png` の中央テクスチャを `inventory_panel_frame.png` 内側へ決定的合成。小フィールド直接9-slice案は罫線が文字を横断するP1のため不採用とした。
-- 同一seed 4状態の原寸・320×180・grayscaleと5状態CTA証拠を§4.3へ保存。初回のstyle強制描画証拠は履歴扱いとし、2026-07-14に実入力状態へ置換する撮影コードを実装した（GUI再撮影待ち）。
+- 同一seed 4状態の原寸・320×180・grayscaleと5状態CTA証拠を§4.3へ保存。初回のstyle強制描画証拠は履歴扱いとし、2026-07-14の実入力状態証拠へ置換した。
 - 製品SHA-256: `inventory_panel_frame=841f91a1…fb67`, `normal=74b91d15…b3cad`, `hover=39f4c613…1a40`, `pressed=8faf4a6f…2081`, `focus=a026d297…dc9`, `disabled=810d0b08…abe`。再生成でdecoded pixels/bytesとも同一。
 - 最終検証: `./tools/market_visual_qa.sh`、隔離HOME `res://tools/market_smoke.tscn`、`./tools/validate_project.sh`、`git diff --check` はgreen。validateのObjectDB snapshot作成エラー、終了時2 ObjectDB/1 resource警告は既知で終了コード0。
 
 2026-07-14 M3 親レビューP2修正:
 - `fish_market/cart_action_*` 5素材とscreen-local生成責務を削除し、画素同値のcommon追加variant `common/primary_action_*` と専用の決定的generatorへ昇格した。既存common素材の上書き・既存consumer変更・監査allowlist追加はない。
 - 移動前後5素材はdecoded pixels・PNG SHA-256とも完全一致。SHA-256は `normal=74b91d15…b3cad`, `hover=39f4c613…1a40`, `pressed=8faf4a6f…2081`, `focus=a026d297…dc9`, `disabled=810d0b08…abe` を維持する。画面側の変更は同一margin/rectのtexture pathだけで、画素同値の必要条件を満たした。
-- previewはnormal/hover/pressed/focus/disabledをproduction Buttonの実状態で撮るよう修正。hover/pressedは実MouseMotion/MouseButton、focusは `grab_focus()`、disabledはproperty切替を使用する。smokeはrelease後の確認overlay表示を含むproduction callback、signalと各A→B→A復帰、focus可能性、共通texture path、freeze rect不変をexit 0で確認した。visual QAから証拠builderを自動実行する。GUI再撮影のみAppKit sandboxのAbort 134で保留。
+- previewはnormal/hover/pressed/focus/disabledをproduction Buttonの実状態で撮るよう修正。hover/pressedは実MouseMotion/MouseButton、focusは `grab_focus()`、disabledはproperty切替を使用する。smokeはrelease後の確認overlay表示を含むproduction callback、signalと各A→B→A復帰、focus可能性、共通texture path、freeze rect不変をexit 0で確認した。親GUI環境で `./tools/market_visual_qa.sh` がexit 0で完走し、実入力CTA原寸5状態とcontact sheet、common昇格後4状態原寸を保存。select/confirm/sold/emptyの全画面画素同値assert、320×180・grayscale再生成、文字干渉なしを確認し、受入証拠P2を解消した。
