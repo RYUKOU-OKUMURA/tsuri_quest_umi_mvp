@@ -28,7 +28,7 @@ func _ready() -> void:
 	_verify_casting_spot_change_requires_confirmation()
 	_verify_fight_uses_escape_confirmation()
 	_verify_fight_spot_change_uses_escape_confirmation()
-	_verify_keyboard_confirmation_flow()
+	await _verify_keyboard_confirmation_flow()
 	_verify_bite_escape_sfx()
 	await _verify_continue_trip_does_not_consume_pending_buff()
 	await _verify_shark_lure_cast_stats()
@@ -125,14 +125,20 @@ func _verify_fight_spot_change_uses_escape_confirmation() -> void:
 func _verify_keyboard_confirmation_flow() -> void:
 	_reset_attempt()
 	_expect(_screen._simulator.cast(), "cast should start keyboard attempt")
-	_press_key(KEY_MINUS)
+	await _press_key(KEY_MINUS)
 	_expect(_screen._quit_overlay.visible, "minus key should open harbor confirmation")
-	_press_key(KEY_ESCAPE)
+	_expect(get_viewport().gui_get_focus_owner() == _screen._quit_cancel_button, "confirmation should focus safe continue first")
+	await _press_key(KEY_ESCAPE)
 	_expect(not _screen._quit_overlay.visible, "escape should cancel harbor confirmation")
-	_press_key(KEY_ESCAPE)
+	await _press_key(KEY_ESCAPE)
 	_expect(_screen._quit_overlay.visible, "escape key should open harbor confirmation outside the overlay")
+	await _press_key(KEY_ENTER)
+	_expect(not _screen._quit_overlay.visible, "enter on safe initial focus should continue fishing")
+	await _press_key(KEY_ESCAPE)
+	await _press_key(KEY_TAB)
+	_expect(get_viewport().gui_get_focus_owner() == _screen._quit_confirm_button, "tab should reach confirm action")
 	_navigated_to = ""
-	_press_key(KEY_ENTER)
+	await _press_key(KEY_ENTER)
 	_expect(_navigated_to == "harbor", "enter should confirm harbor return")
 
 
@@ -419,10 +425,16 @@ func _advance_until_bite() -> void:
 
 
 func _press_key(keycode: Key) -> void:
-	var event := InputEventKey.new()
-	event.keycode = keycode
-	event.pressed = true
-	_screen._input(event)
+	var pressed := InputEventKey.new()
+	pressed.keycode = keycode
+	pressed.pressed = true
+	get_viewport().push_input(pressed)
+	await get_tree().process_frame
+	var released := InputEventKey.new()
+	released.keycode = keycode
+	released.pressed = false
+	get_viewport().push_input(released)
+	await get_tree().process_frame
 
 
 func _expected_surface_bgm_path(screen: Variant) -> String:
