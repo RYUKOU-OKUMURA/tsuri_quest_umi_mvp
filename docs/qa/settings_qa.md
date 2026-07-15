@@ -1,6 +1,6 @@
 # 設定画面 QA判断ログ
 
-最終更新: 2026-07-13 / 状態: E11-DISPLAY freeze
+最終更新: 2026-07-15 / 状態: INPUT-SETTINGS focus契約freeze
 参照画像: 専用参照なし。`docs/19_ui_production_playbook.md` のメニュー画面文法と共通キットを正とする
 QA更新コマンド: `./tools/settings_visual_qa.sh`
 
@@ -17,7 +17,7 @@ QA更新コマンド: `./tools/settings_visual_qa.sh`
 | 戻るボタン | `Rect2(920, 616, 276, 60)` | 右下 | 既存の右下戻る文法を維持 |
 | 既定音量 | BGM=`80` / SE=`80` | `settings.json` | 初回に十分聞こえ、最大音量を避ける |
 | 音量刻み | 5 | 両slider | キーボード / ゲームパッドで調整回数を抑える |
-| focus順 | BGM → SE → フルスクリーン → 削除 → 戻る | 画面内 | 空slotではdisabled削除を飛ばし、安全側操作を確認時の初期focusにする |
+| focus順 / 可視署名 | BGM → SE → フルスクリーン → 削除（enabled時のみ）→ 戻る。初期BGM、上下/Tabは循環 | 画面内 | 空slotではdisabled削除を飛ばす。全対象はScreenBase共通4px focus ringを使い、確認modalは安全側操作を初期focusにする |
 | フルスクリーン切替 | panel内`Rect2(500, 10, 350, 58)` / global`Rect2(680, 154, 350, 58)`、文言 `フルスクリーン: オン / オフ` | 中央パネル上部右 | action_button_frame.pngのvertical patch margin 24+24を吸収し、heading/BGM行と分離。装飾線が文字へ干渉しない |
 | 表示設定 | `fullscreen` bool、既定`false`、`stretch/aspect=keep` | `settings_screen.gd` / `project.godot` | 起動時・再生成時に`DisplayServer.window_set_mode`へ適用。16:9領域を維持 |
 | 解像度matrix | 1280x720 / 1280x800 / 1024x768 | `settings_visual_qa.sh` | 実ウィンドウcaptureで16:9領域、上下黒帯なし / 各40px / 各96pxを確認 |
@@ -39,10 +39,12 @@ QA更新コマンド: `./tools/settings_visual_qa.sh`
 | 装飾パス累計 | 0 | 共通キットのみ | close |
 | タイトル / 行文字 | 1 | GameFonts共通ローダーへ統一し、暗部での可読性を確保 | close |
 | 削除状態文footer収束 | 2 | panel内y=298→350、h=42→48。既存footer wellへ移し上下余白を確保 | close |
+| focus可視署名 | 1 | ScreenBase共通4px ringをBGM/SE sliderとfullscreenへ適用。既存Buttonも同じ署名へ統一 | close |
 
 ## 4. 暫定判定・再検証TODO
 
-なし。
+- `settings_visual_qa.sh` は1280x720の11状態を再生成・合格したが、解像度matrix開始時にローカルSwift/SDK不整合でCoreGraphicsをbuildできず、画面起動前に停止した。既存matrix evidenceは変更せず、ツールチェーン復旧後に再実行する。
+- 既存 `settings_smoke.tscn` はclean main `19bf7aad` と本branchの双方で、Title復帰payload/slotの同じ2 assertionが失敗した。INPUT-SETTINGS差分外の基盤既知failureとして分離し、正規runnerで再確認する。
 
 ## 5. 現在の残ギャップ
 
@@ -50,13 +52,10 @@ QA更新コマンド: `./tools/settings_visual_qa.sh`
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-| 状態 | 固定seed/データ | 表示/非表示 | 固定アンカー | 可変領域 | evidence出力 | smoke契約 |
-|---|---|---|---|---|---|---|
-| windowed / fullscreen | 既存settings・slot seed、BGM80/SE80 | fullscreen切替とオン/オフ文言を表示。解像度選択は非表示 | 既存タイトル、音声行、削除ブロック、確認モーダル、右下戻る | 追加切替ボタンの状態文言とwindow mode | `settings_fullscreen_{hover,pressed,focus,on}_1280x720.png`、解像度matrix画像 | settings保存、再読込、DisplayServer適用、既存全契約回帰 |
-| 16:10 / 4:3 | 1280x800 / 1024x768 | 16:9ゲーム領域＋黒帯 | ゲーム座標1280x720 | 余剰領域の黒帯だけ | `settings_resolution_{1280x800,1024x768}.png` | 黒帯寸法・色を画像検査 |
-
-再オープン理由と差分を明記する。beforeはfullscreen UIなし、`stretch/aspect=expand`、解像度matrix未実装。afterは中央パネル上部右の大きなruntime切替、`fullscreen`保存/復元、`stretch/aspect=keep`、16:10/4:3の実runtime黒帯証拠。既存音声行、削除ブロック、確認モーダル、右下戻る矩形、BGM/SE bus、フォントは不動値とする。
+（現在作業中のフェーズなし。INPUT-SETTINGSは採用・freeze済み。）
 
 ## 7. 判断ログ（直近パスのみ）
 
 `docs/qa/evidence/settings/2026-07-12_settings_{normal,confirm1,confirm2,failure,hover,pressed,focus}_1280x720.png` をE11-DISPLAY前の既存evidenceとして原寸確認した。beforeはcommit `54b2b91` のnormal/failure（状態文y=298,h=42）で、金縁直上に寄りfooter wellが空いていた。E11-DISPLAYのafterは同じ7状態へ切替ボタンを追加し、`2026-07-13_settings_{normal,confirm1,confirm2,failure,hover,pressed,focus}_1280x720.png` と `2026-07-13_settings_{fullscreen_hover,fullscreen_pressed,fullscreen_focus,fullscreen_on}_1280x720.png` で設定画面と切替ボタンのnormal/hover/pressed/focus、および保存値fullscreen=trueから復元したオン文言を原寸確認した。fullscreen_onは実保存・実読込・表示モード適用後にpreview隔離内だけwindowedへ戻してcaptureした。追加P2対応では切替ボタンをbefore global`Rect2(740,164,290,46)`からafter global`Rect2(680,154,350,58)`へ再収束し、装飾線とオン/オフ文言の干渉がないことを原寸確認した。さらに`2026-07-13_settings_resolution_{1280x720,1280x800,1024x768}.png`を実ウィンドウcaptureし、黒帯全領域の黒画素率・連続境界・content内側境界を実画素検査した。slot/Lv/プレイ時間、不可逆警告、失敗理由、fullscreen文言、ボタンに見切れ・ellipsis・重なりは無い。専用PNG・fullscreen以外の表示設定・キー設定は追加していない。
+
+2026-07-15 INPUT-SETTINGSでは、全freeze矩形、文言、素材、font、palette、音量/save/display/deleteロジックを不動のまま、BGM/SE sliderとfullscreenへScreenBase共通focus styleを適用した。focus graphはBGM→SE→fullscreen→削除（enabled時のみ）→戻るの循環へ明示し、`2026-07-15_input_bgm_focus.png` と `2026-07-15_input_fullscreen_focus.png` を1280x720原寸で確認した。実 `Viewport.push_input(InputEventKey)` のsmokeでslider左右、Tab/上下巡回、disabled削除skip、Enter/Escapeの単発発火、二段階確認の安全側初期focus・背景隔離・復帰を確認した。E11 probeのSETTINGSは `INPUT_FOCUS_STYLE_MISSING` 3件→0件、全体finding 35件→34件となった。
