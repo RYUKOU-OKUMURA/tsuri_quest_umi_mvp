@@ -43,10 +43,12 @@ func _build_screen() -> void:
 
 	_build_logo(root)
 	_build_fish_feature(root)
-	_build_menu(root)
 	_build_settings_button(root)
+	_build_menu(root)
 	_build_version(root)
 	_build_new_game_modals(root)
+	set_common_cancel_handler(_on_title_cancel_pressed)
+	_sync_keyboard_focus_for_current_state()
 
 
 func _build_settings_button(root: Control) -> void:
@@ -312,7 +314,6 @@ func _apply_title_button_skin(button: Button, primary: bool) -> void:
 		return
 	button.add_theme_stylebox_override("normal", normal)
 	button.add_theme_stylebox_override("hover", hover)
-	button.add_theme_stylebox_override("focus", hover)
 	button.add_theme_stylebox_override("pressed", pressed)
 	button.add_theme_stylebox_override("disabled", disabled)
 	button.add_theme_font_override("font", GameFontsScript.bold(get_theme_default_font()))
@@ -378,6 +379,7 @@ func _refresh_slot_ui() -> void:
 		if future_guarded or invalid_artifact
 		else ("最初から" if has_save else "ゲームを始める")
 	)
+	_sync_keyboard_focus_for_current_state()
 
 
 func _slot_button_text(summary: Dictionary) -> String:
@@ -449,8 +451,7 @@ func _show_difficulty_modal() -> void:
 	_difficulty_panel.visible = true
 	_overwrite_panel.visible = false
 	var default_button: Button = _difficulty_buttons.get(GameData.DEFAULT_DIFFICULTY_ID)
-	if default_button != null:
-		default_button.grab_focus()
+	_setup_focus_scope(_difficulty_focus_controls(), default_button)
 
 
 func _on_difficulty_selected(difficulty_id: String) -> void:
@@ -482,7 +483,7 @@ func _show_overwrite_confirmation(summary: Dictionary) -> void:
 	)
 	_difficulty_panel.visible = false
 	_overwrite_panel.visible = true
-	_overwrite_cancel_button.grab_focus()
+	_setup_focus_scope(_overwrite_focus_controls(), _overwrite_cancel_button)
 
 
 func _confirm_overwrite() -> void:
@@ -494,7 +495,75 @@ func _close_new_game_modals() -> void:
 	_difficulty_panel.visible = true
 	_overwrite_panel.visible = false
 	_set_background_focus_enabled(true)
-	_new_button.grab_focus()
+	_setup_focus_scope(_background_focus_controls(), _new_button)
+
+
+func _on_title_cancel_pressed() -> void:
+	if _modal_layer != null and _modal_layer.visible:
+		_close_new_game_modals()
+
+
+func _sync_keyboard_focus_for_current_state() -> void:
+	if _modal_layer != null and _modal_layer.visible:
+		if _overwrite_panel != null and _overwrite_panel.visible:
+			_setup_focus_scope(_overwrite_focus_controls(), _overwrite_cancel_button)
+		else:
+			var default_button: Button = _difficulty_buttons.get(GameData.DEFAULT_DIFFICULTY_ID)
+			_setup_focus_scope(_difficulty_focus_controls(), default_button)
+		return
+	var preferred: Control = null
+	if _selected_slot_id >= 1 and _selected_slot_id <= _slot_buttons.size():
+		preferred = _slot_buttons[_selected_slot_id - 1]
+	_setup_focus_scope(_background_focus_controls(), preferred)
+
+
+func _background_focus_controls() -> Array[Control]:
+	var controls: Array[Control] = []
+	for button in _slot_buttons:
+		controls.append(button)
+	for button in [_continue_button, _new_button, _settings_button]:
+		if button != null:
+			controls.append(button)
+	return controls
+
+
+func _difficulty_focus_controls() -> Array[Control]:
+	var controls: Array[Control] = []
+	for difficulty_id in GameData.DIFFICULTY_ORDER:
+		var button: Button = _difficulty_buttons.get(difficulty_id)
+		if button != null:
+			controls.append(button)
+	if _difficulty_cancel_button != null:
+		controls.append(_difficulty_cancel_button)
+	return controls
+
+
+func _overwrite_focus_controls() -> Array[Control]:
+	var controls: Array[Control] = []
+	if _overwrite_confirm_button != null:
+		controls.append(_overwrite_confirm_button)
+	if _overwrite_cancel_button != null:
+		controls.append(_overwrite_cancel_button)
+	return controls
+
+
+func _setup_focus_scope(candidates: Array[Control], preferred: Control) -> void:
+	setup_keyboard_focus(candidates, preferred)
+	var available := keyboard_focus_candidates()
+	if available.is_empty():
+		return
+	var initial := preferred if available.has(preferred) else available[0]
+	initial.grab_focus()
+	for index in range(available.size()):
+		var control := available[index]
+		var previous := available[(index - 1 + available.size()) % available.size()]
+		var next := available[(index + 1) % available.size()]
+		control.focus_neighbor_top = control.get_path_to(previous)
+		control.focus_neighbor_bottom = control.get_path_to(next)
+		control.focus_neighbor_left = control.get_path_to(previous)
+		control.focus_neighbor_right = control.get_path_to(next)
+		control.focus_previous = control.get_path_to(previous)
+		control.focus_next = control.get_path_to(next)
 
 
 func _set_background_focus_enabled(enabled: bool) -> void:

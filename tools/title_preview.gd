@@ -70,6 +70,8 @@ func _ready() -> void:
 	elif mode == "overwrite":
 		screen._show_difficulty_modal()
 		screen._on_difficulty_selected("hard")
+	elif OS.get_environment("TSURI_TITLE_PREVIEW_FOCUS_TARGET") == "settings":
+		screen._settings_button.grab_focus()
 	for _frame in range(2):
 		await get_tree().process_frame
 	if mode == "invalid_artifact":
