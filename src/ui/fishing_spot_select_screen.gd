@@ -220,7 +220,7 @@ func _build_map_panel(parent: Control) -> void:
 	_map_view.configure(_selected_spot_id, PlayerProgress.level)
 	_map_view.spot_focused.connect(func(spot_id: String) -> void: _focus_spot(spot_id))
 	_map_view.spot_selected.connect(func(spot_id: String) -> void: _focus_spot(spot_id))
-	_map_view.locked_spot_pressed.connect(_show_locked_message)
+	_map_view.locked_spot_pressed.connect(func(spot_id: String) -> void: _focus_spot(spot_id))
 	panel.add_child(_map_view)
 
 
@@ -687,6 +687,7 @@ func _show_menu_hint() -> void:
 
 func _configure_keyboard_focus() -> void:
 	var candidates: Array[Control] = [
+		_map_view,
 		_rig_cycle_button,
 		_action_button,
 		_return_button,
@@ -700,6 +701,7 @@ func _configure_keyboard_focus() -> void:
 
 func _refresh_keyboard_navigation() -> void:
 	var all_controls: Array[Control] = [
+		_map_view,
 		_rig_cycle_button,
 		_action_button,
 		_return_button,

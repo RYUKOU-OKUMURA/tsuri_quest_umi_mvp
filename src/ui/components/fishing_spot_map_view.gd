@@ -125,6 +125,9 @@ func _process(delta: float) -> void:
 
 
 func _gui_input(event: InputEvent) -> void:
+	if _handle_keyboard_input(event):
+		accept_event()
+		return
 	if event is InputEventMouseMotion:
 		var motion := event as InputEventMouseMotion
 		var hover_id := _spot_at_position(motion.position)
@@ -141,12 +144,59 @@ func _gui_input(event: InputEvent) -> void:
 	var spot_id := _spot_at_position(mouse.position)
 	if spot_id.is_empty():
 		return
-	spot_focused.emit(spot_id)
+	grab_focus()
+	_activate_spot(spot_id)
+	accept_event()
+
+
+func _handle_keyboard_input(event: InputEvent) -> bool:
+	if not event is InputEventKey:
+		return false
+	var key := event as InputEventKey
+	if not key.pressed or key.echo:
+		return false
+	if event.is_action_pressed(&"ui_left") or event.is_action_pressed(&"ui_up"):
+		_focus_relative_spot(-1)
+		return true
+	if event.is_action_pressed(&"ui_right") or event.is_action_pressed(&"ui_down"):
+		_focus_relative_spot(1)
+		return true
+	if event.is_action_pressed(&"ui_accept"):
+		_activate_spot(selected_spot_id)
+		return true
+	return false
+
+
+func _focus_relative_spot(offset: int) -> void:
+	var spot_ids := _keyboard_spot_ids()
+	if spot_ids.is_empty():
+		return
+	var current_index := spot_ids.find(selected_spot_id)
+	if current_index < 0:
+		current_index = 0
+	var next_index := posmod(current_index + offset, spot_ids.size())
+	selected_spot_id = spot_ids[next_index]
+	queue_redraw()
+	spot_focused.emit(selected_spot_id)
+
+
+func _keyboard_spot_ids() -> Array[String]:
+	var spot_ids: Array[String] = []
+	for spot_id in SPOT_MARKER_ORDER:
+		if SPOT_POINTS.has(spot_id) and not GameData.get_fishing_spot(spot_id).is_empty():
+			spot_ids.append(spot_id)
+	return spot_ids
+
+
+func _activate_spot(spot_id: String) -> void:
+	if GameData.get_fishing_spot(spot_id).is_empty():
+		return
+	selected_spot_id = spot_id
+	queue_redraw()
 	if _spot_accessible(spot_id):
 		spot_selected.emit(spot_id)
 	else:
 		locked_spot_pressed.emit(spot_id)
-	accept_event()
 
 
 func _draw() -> void:
