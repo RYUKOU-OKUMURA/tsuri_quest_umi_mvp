@@ -133,6 +133,7 @@ var _rig_status_label: Label
 var _rod_tab_button: Button
 var _rig_tab_button: Button
 var _cards_layer: Control
+var _card_buttons: Dictionary = {}
 var _detail_art: TextureRect
 var _detail_icon: TextureRect
 var _detail_title_label: Label
@@ -167,6 +168,7 @@ func _build_screen() -> void:
 	_build_footer(root)
 	_layout_design_canvas()
 	_refresh()
+	set_common_cancel_handler(func() -> void: navigate("harbor"))
 
 
 func _load_assets() -> void:
@@ -324,6 +326,7 @@ func _build_footer(parent: Control) -> void:
 
 
 func _refresh() -> void:
+	var retained_focus_id := _focused_control_identity()
 	_ensure_selected_item()
 	_refresh_backplate()
 	_refresh_header()
@@ -331,6 +334,7 @@ func _refresh() -> void:
 	_rebuild_cards()
 	_refresh_detail()
 	_result_label.text = _result_message
+	_sync_keyboard_focus_context(retained_focus_id)
 
 
 func _refresh_backplate() -> void:
@@ -364,6 +368,7 @@ func _refresh_tabs() -> void:
 
 
 func _rebuild_cards() -> void:
+	_card_buttons.clear()
 	for child in _cards_layer.get_children():
 		child.queue_free()
 
@@ -371,6 +376,7 @@ func _rebuild_cards() -> void:
 		var item_id := String(item_id_variant)
 		var card := _make_item_card(item_id)
 		_place_at_rect(_cards_layer, card, _card_rect(item_id))
+		_card_buttons[item_id] = card
 		_add_card_labels(_cards_layer, item_id)
 
 
@@ -528,6 +534,119 @@ func _buy_or_equip() -> void:
 	)
 	_result_message = String(result.get("message", "処理できませんでした。"))
 	_refresh()
+
+
+func _sync_keyboard_focus_context(retained_focus_id: String = "") -> void:
+	var candidates: Array[Control] = [_rod_tab_button, _rig_tab_button]
+	for item_id in _current_item_ids():
+		var card := _card_buttons.get(String(item_id)) as Button
+		if card != null:
+			candidates.append(card)
+	candidates.append(_action_button)
+	candidates.append(_return_button)
+
+	var preferred := _focus_control_for_identity(retained_focus_id)
+	if preferred == null:
+		preferred = _selected_card_button()
+	setup_keyboard_focus(candidates, preferred)
+	_link_keyboard_focus_graph(keyboard_focus_candidates())
+
+
+func _focused_control_identity() -> String:
+	if not is_inside_tree():
+		return ""
+	return _control_focus_identity(get_viewport().gui_get_focus_owner())
+
+
+func _control_focus_identity(control: Control) -> String:
+	if control == null or not is_instance_valid(control):
+		return ""
+	if control == _rod_tab_button:
+		return "tab:rod"
+	if control == _rig_tab_button:
+		return "tab:rig"
+	if control == _action_button:
+		return "action"
+	if control == _return_button:
+		return "return"
+	if bool(control.get_meta("shop_item_card", false)):
+		return "card:%s" % String(control.get_meta("shop_item_id", ""))
+	return ""
+
+
+func _focus_control_for_identity(identity: String) -> Control:
+	match identity:
+		"tab:rod":
+			return _rod_tab_button
+		"tab:rig":
+			return _rig_tab_button
+		"action":
+			return _action_button if not _action_button.disabled else null
+		"return":
+			return _return_button
+	if identity.begins_with("card:"):
+		return _card_buttons.get(identity.trim_prefix("card:")) as Button
+	return null
+
+
+func _selected_card_button() -> Button:
+	return _card_buttons.get(_selected_item_id) as Button
+
+
+func _link_keyboard_focus_graph(available: Array[Control]) -> void:
+	for control in available:
+		control.focus_neighbor_left = NodePath()
+		control.focus_neighbor_right = NodePath()
+		control.focus_neighbor_top = NodePath()
+		control.focus_neighbor_bottom = NodePath()
+		control.focus_next = NodePath()
+		control.focus_previous = NodePath()
+	if available.size() <= 1:
+		return
+
+	for index in range(available.size()):
+		var control := available[index]
+		var previous := available[(index - 1 + available.size()) % available.size()]
+		var next := available[(index + 1) % available.size()]
+		control.focus_previous = control.get_path_to(previous)
+		control.focus_next = control.get_path_to(next)
+		control.focus_neighbor_left = control.get_path_to(
+			_nearest_focus_control(control, available, Vector2.LEFT, previous)
+		)
+		control.focus_neighbor_right = control.get_path_to(
+			_nearest_focus_control(control, available, Vector2.RIGHT, next)
+		)
+		control.focus_neighbor_top = control.get_path_to(
+			_nearest_focus_control(control, available, Vector2.UP, previous)
+		)
+		control.focus_neighbor_bottom = control.get_path_to(
+			_nearest_focus_control(control, available, Vector2.DOWN, next)
+		)
+
+
+func _nearest_focus_control(
+	origin: Control,
+	available: Array[Control],
+	direction: Vector2,
+	fallback: Control
+) -> Control:
+	var origin_center := origin.get_global_rect().get_center()
+	var lateral_axis := Vector2(-direction.y, direction.x)
+	var best := fallback
+	var best_score := INF
+	for candidate in available:
+		if candidate == origin:
+			continue
+		var delta := candidate.get_global_rect().get_center() - origin_center
+		var primary := delta.dot(direction)
+		if primary <= 0.5:
+			continue
+		var lateral := absf(delta.dot(lateral_axis))
+		var score := primary + lateral * 2.0
+		if score < best_score:
+			best_score = score
+			best = candidate
+	return best
 
 
 func _current_item_ids() -> Array[String]:
