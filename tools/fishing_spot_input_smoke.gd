@@ -182,6 +182,15 @@ func _capture_route(screen_id: String, payload: Dictionary) -> void:
 	_last_payload = payload.duplicate(true)
 
 
+# 実製品と同じく親AppがBGMを所有し、入力fixture内にfallback playerを残さない。
+func play_app_bgm(_path: String, _volume_db: float) -> void:
+	pass
+
+
+func stop_app_bgm(_path: String) -> void:
+	pass
+
+
 func _reset_route() -> void:
 	_navigation_count = 0
 	_last_route = ""
