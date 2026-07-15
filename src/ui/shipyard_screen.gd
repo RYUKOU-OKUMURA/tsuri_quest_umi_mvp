@@ -2,6 +2,7 @@ extends ScreenBase
 
 const SHIPYARD_BG_PATH := "res://assets/showcase/shipyard/shipyard_purchase_bg.png"
 const OFFSHORE_SPOT_TOTAL := 3
+const BOAT_CARD_IDS := [&"skiff", &"offshore_boat", &"bluewater_boat"]
 
 var _background_rect: TextureRect
 var _selected_boat_id := ""
@@ -16,6 +17,7 @@ var _boat_card_price_labels: Dictionary = {}
 var _boat_card_range_labels: Dictionary = {}
 var _boat_card_rank_labels: Dictionary = {}
 var _boat_card_frames: Dictionary = {}
+var _boat_card_buttons: Dictionary = {}
 var _detail_status_label: Label
 var _detail_name_label: Label
 var _detail_range_label: Label
@@ -31,6 +33,8 @@ var _route_locked_label: Label
 var _route_after_label: Label
 var _route_hint_label: Label
 var _footer_label: Label
+var _return_button: Button
+var _keyboard_focus_initialized := false
 
 
 func _build_screen() -> void:
@@ -51,11 +55,8 @@ func _build_screen() -> void:
 	_build_route_panel(root)
 	_build_footer(root)
 	_refresh()
-
-
-func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
-		navigate("harbor")
+	_configure_keyboard_focus()
+	set_common_cancel_handler(_return_to_harbor)
 
 
 func _build_top_bar(root: Control) -> void:
@@ -156,6 +157,7 @@ func _build_boat_cards(root: Control) -> void:
 		var hit := _transparent_button(func() -> void: _select_boat(boat_id))
 		hit.set_meta("shipyard_boat_card", boat_id)
 		_place_control(holder, hit, 0.0, 0.0, 1.0, 1.0)
+		_boat_card_buttons[boat_id] = hit
 
 
 func _build_center_detail(root: Control) -> void:
@@ -258,9 +260,9 @@ func _build_route_panel(root: Control) -> void:
 
 
 func _build_footer(root: Control) -> void:
-	var back := _image_text_button("港へ戻る", func() -> void: navigate("harbor"), 20)
-	back.set_meta("shipyard_return", true)
-	_place_control(root, back, 0.842, 0.912, 0.976, 0.976)
+	_return_button = _image_text_button("港へ戻る", _return_to_harbor, 20)
+	_return_button.set_meta("shipyard_return", true)
+	_place_control(root, _return_button, 0.842, 0.912, 0.976, 0.976)
 
 	_footer_label = _shipyard_label("", 18, Palette.SHIPYARD_FOOTER_TEXT, true, 0)
 	_footer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -353,6 +355,72 @@ func _refresh_detail() -> void:
 			String(boat.get("short_name", "船")),
 		]
 
+	if _keyboard_focus_initialized:
+		refresh_keyboard_focus()
+		_refresh_keyboard_navigation()
+
+
+func _configure_keyboard_focus() -> void:
+	var candidates: Array[Control] = []
+	for boat_id in BOAT_CARD_IDS:
+		var card_button := _boat_card_buttons.get(String(boat_id)) as Button
+		if card_button != null:
+			candidates.append(card_button)
+	candidates.append(_buy_button)
+	candidates.append(_return_button)
+	var preferred := _boat_card_buttons.get(_selected_boat_id) as Button
+	setup_keyboard_focus(candidates, preferred)
+	_keyboard_focus_initialized = true
+	_refresh_keyboard_navigation()
+
+
+func _refresh_keyboard_navigation() -> void:
+	var available := keyboard_focus_candidates()
+	if available.is_empty():
+		return
+	for control in available:
+		control.focus_neighbor_left = NodePath()
+		control.focus_neighbor_right = NodePath()
+		control.focus_neighbor_top = NodePath()
+		control.focus_neighbor_bottom = NodePath()
+	var count := available.size()
+	for index in range(count):
+		var control := available[index]
+		control.focus_next = control.get_path_to(available[(index + 1) % count])
+		control.focus_previous = control.get_path_to(available[(index - 1 + count) % count])
+
+	var skiff := _boat_card_buttons.get("skiff") as Button
+	var offshore := _boat_card_buttons.get("offshore_boat") as Button
+	var bluewater := _boat_card_buttons.get("bluewater_boat") as Button
+	var primary := _buy_button if available.has(_buy_button) else _return_button
+	_set_direction_neighbors(skiff, _return_button, primary, _return_button, offshore)
+	_set_direction_neighbors(offshore, skiff, primary, skiff, bluewater)
+	_set_direction_neighbors(bluewater, offshore, primary, offshore, primary)
+	if primary == _buy_button:
+		_set_direction_neighbors(_buy_button, bluewater, _return_button, bluewater, _return_button)
+		_set_direction_neighbors(_return_button, _buy_button, skiff, _buy_button, skiff)
+	else:
+		_set_direction_neighbors(_return_button, bluewater, skiff, bluewater, skiff)
+
+
+func _set_direction_neighbors(
+	control: Control,
+	left: Control,
+	right: Control,
+	top: Control,
+	bottom: Control
+) -> void:
+	if control == null or control.focus_mode == Control.FOCUS_NONE:
+		return
+	control.focus_neighbor_left = control.get_path_to(left)
+	control.focus_neighbor_right = control.get_path_to(right)
+	control.focus_neighbor_top = control.get_path_to(top)
+	control.focus_neighbor_bottom = control.get_path_to(bottom)
+
+
+func _return_to_harbor() -> void:
+	navigate("harbor")
+
 
 func _select_boat(boat_id: String) -> void:
 	if GameData.get_boat(boat_id).is_empty():
@@ -362,9 +430,12 @@ func _select_boat(boat_id: String) -> void:
 
 
 func _buy_selected_boat() -> void:
+	var focus_fallback := _boat_card_buttons.get(_selected_boat_id) as Button
 	var result := PlayerProgress.buy_boat(_selected_boat_id)
 	_footer_label.text = String(result.get("message", "購入できませんでした。"))
 	_refresh()
+	if bool(result.get("ok", false)) and focus_fallback != null:
+		focus_fallback.call_deferred("grab_focus")
 
 
 func _default_boat_id() -> String:
