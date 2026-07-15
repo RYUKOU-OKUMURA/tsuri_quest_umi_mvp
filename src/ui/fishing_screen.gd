@@ -538,12 +538,19 @@ func _create_quit_overlay() -> void:
 
 	_quit_title = make_label("港へ戻る", 32, Palette.FISHING_RESULT_TITLE_TEXT)
 	_quit_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_quit_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_quit_title.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_quit_title.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+	_quit_title.custom_minimum_size = Vector2(0.0, 44.0)
 	_quit_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(_quit_title)
 
 	_quit_details = make_label("", 19)
 	_quit_details.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_quit_details.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_quit_details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_quit_details.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+	_quit_details.custom_minimum_size = Vector2(0.0, 56.0)
 	_quit_details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(_quit_details)
 

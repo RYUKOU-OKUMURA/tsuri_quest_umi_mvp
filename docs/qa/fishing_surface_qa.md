@@ -75,11 +75,11 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `./tools/fishing_
 | 状態 | focus候補 / 初期focus | evidence |
 |---|---|---|
 | 通常READY | 3候補 / `投げる` | `docs/qa/evidence/fishing_surface/2026-07-15_input_ready_focus.png` |
-| 危険海域READY・餌魚複数 | 5候補 / `投げる`（証拠では左矢印へ移動し巡回を確認） | `docs/qa/evidence/fishing_surface/2026-07-15_input_danger_ready_focus.png` |
+| 危険海域READY・餌魚複数 | 5候補 / `投げる`（証拠では左矢印をfocusし、Enterで `アジ` → `餌魚なし` の1回変更を確認） | `docs/qa/evidence/fishing_surface/2026-07-15_input_danger_ready_focus.png` |
 
 採用理由:
 - 1280x720実キャプチャで既存の構成・質感を維持したまま、主操作と矢印に共通focus ringを視認できる。
-- 実ViewportイベントでTab/左右/Enter/Eを通し、画面遷移と投げる操作が各1回だけ発火する。
+- 実ViewportイベントでTab/左右/Enter/Eを通し、画面遷移・投げる操作・focus中の餌魚矢印が各1回だけ発火する。
 
 検証:
 - `fishing_input_smoke.tscn`: `fishing_input_smoke: ok`。

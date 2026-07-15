@@ -88,6 +88,17 @@ func _verify_danger_lure_focus_contract() -> void:
 	danger_targets[0].grab_focus()
 	await get_tree().process_frame
 	_expect(_has_visible_common_focus(danger_targets[0]), "danger lure arrow should show common focus")
+	var previous_press_count := [0]
+	_screen._fight_hud.shark_lure_previous_pressed.connect(func() -> void: previous_press_count[0] += 1)
+	await _send_key(KEY_ENTER)
+	_expect(previous_press_count[0] == 1, "Enter on focused lure arrow should emit exactly once")
+	_expect(
+		String(_screen._selected_shark_lure_fish_id) != selected_before,
+		"Enter on focused lure arrow should change the selected lure once"
+	)
+	danger_targets[0].grab_focus()
+	await get_tree().process_frame
+	_expect(_has_visible_common_focus(danger_targets[0]), "danger evidence should restore focus to the tested lure arrow")
 	await _capture(EVIDENCE_DANGER, false)
 	await _free_screen()
 
@@ -98,6 +109,18 @@ func _verify_state_keys_modal_and_mouse() -> void:
 	_expect(_screen._simulator.state == FishingSimulator.State.CASTING, "READY Enter should enter CASTING")
 	await _send_key(KEY_ENTER)
 	_expect(_screen._simulator.state != FishingSimulator.State.FIGHT, "CASTING Enter must not hook early")
+	_advance_until_state(FishingSimulator.State.WAITING)
+	_expect(_screen._simulator.state == FishingSimulator.State.WAITING, "attempt should reach WAITING")
+	_expect(_screen._fight_hud.keyboard_focus_targets().is_empty(), "WAITING should expose no focus candidates")
+	_expect(get_viewport().gui_get_focus_owner() == null, "WAITING should retain no stale focus owner")
+	await _send_key(KEY_ENTER)
+	_expect(_screen._simulator.state == FishingSimulator.State.WAITING, "WAITING Enter must not hook early")
+	_advance_until_state(FishingSimulator.State.APPROACH)
+	_expect(_screen._simulator.state == FishingSimulator.State.APPROACH, "attempt should reach APPROACH")
+	_expect(_screen._fight_hud.keyboard_focus_targets().is_empty(), "APPROACH should expose no focus candidates")
+	_expect(get_viewport().gui_get_focus_owner() == null, "APPROACH should retain no stale focus owner")
+	await _send_key(KEY_ENTER)
+	_expect(_screen._simulator.state == FishingSimulator.State.APPROACH, "APPROACH Enter must not hook early")
 	_advance_until_bite()
 	_expect(_screen._simulator.state == FishingSimulator.State.BITE, "attempt should reach BITE")
 	await _wait_for_hit_stop()
@@ -137,6 +160,24 @@ func _verify_state_keys_modal_and_mouse() -> void:
 	await _send_key(KEY_ESCAPE)
 	_expect(_screen._quit_overlay.visible, "FIGHT Escape should open quit confirmation")
 	_expect(get_viewport().gui_get_focus_owner() == _screen._quit_cancel_button, "quit modal should focus safe continue")
+	_expect(not _screen._quit_title.text.strip_edges().is_empty(), "quit modal title should be populated")
+	_expect(not _screen._quit_details.text.strip_edges().is_empty(), "quit modal details should be populated")
+	_expect(
+		_screen._quit_title.is_visible_in_tree() and _screen._quit_title.size.y >= 44.0,
+		"quit modal title should retain its visible layout height"
+	)
+	_expect(
+		_screen._quit_details.is_visible_in_tree() and _screen._quit_details.size.y >= 56.0,
+		"quit modal details should retain its visible layout height"
+	)
+	_expect(
+		_screen._quit_title.get_visible_line_count() == _screen._quit_title.get_line_count(),
+		"quit modal title should show every line"
+	)
+	_expect(
+		_screen._quit_details.get_visible_line_count() == _screen._quit_details.get_line_count(),
+		"quit modal details should show every line"
+	)
 	await _push_key(KEY_SPACE, true)
 	_expect(not _screen._simulator.reeling, "quit modal should block background Space input")
 	await _push_key(KEY_SPACE, false)
@@ -180,6 +221,13 @@ func _verify_fanfare_focus_contract() -> void:
 	await _push_key(KEY_SPACE, false)
 	_expect(continue_count[0] == 1, "fanfare Space shortcut should fire continue exactly once")
 	_expect(_screen._simulator.state == FishingSimulator.State.READY, "fanfare continue should restore READY")
+
+	_screen._catch_fanfare.play(GameData.get_fish("aji"), 20.0, {})
+	await _settle()
+	_navigation_events.clear()
+	await _send_key(KEY_ESCAPE)
+	_expect(_navigation_events == ["harbor"], "fanfare Escape should navigate to harbor exactly once")
+	_expect(not _screen._catch_fanfare.is_playing(), "fanfare Escape should close the decision screen")
 	await _free_screen()
 
 
@@ -209,6 +257,14 @@ func _advance_until_bite() -> void:
 		if _screen._simulator.state == FishingSimulator.State.BITE:
 			return
 	_expect(false, "simulator did not reach BITE")
+
+
+func _advance_until_state(target_state: int) -> void:
+	for _index in range(240):
+		if _screen._simulator.state == target_state:
+			return
+		_screen._simulator.tick(0.05)
+	_expect(false, "simulator did not reach state %d" % target_state)
 
 
 func _send_key(keycode: Key, shift := false) -> void:
