@@ -2,7 +2,7 @@
 
 正本: `docs/30_v2_expansion_overview.md`（読む順: docs/30 §4 共通仕様 → 本doc）
 前提フェーズ: 実施時期は分割型（下記 §E11-0）。画面実装はE7完了後
-状態: E11進行中（SETTINGS-AUDIO、SLOT-DELETE UI、DISPLAY、INPUT-COMMON、3スロット、素材台帳基盤、Release Gate 0、ID-01完了）。残りは画面別INPUT修正、EXTERIOR、最終受入。進行状況はdocs/30 §6、監査追加事項はdocs/45参照
+状態: E11進行中（SETTINGS-AUDIO、SLOT-DELETE UI、DISPLAY、INPUT-COMMON、画面別INPUT第1round、3スロット、素材台帳基盤、Release Gate 0、ID-01完了）。入力baselineは35件（P1 27 / P2 8）。残りは画面別INPUT修正、EXTERIOR、最終受入。進行状況はdocs/30 §6、監査追加事項はdocs/45参照
 
 目的: ローンチ対象（E0〜E7＋E10）の外周——設定・セーブ保護・表示・入力・権利・export・製品外装——を販売品質にする。2026-07-10の横断監査結果はdocs/45を正とする。
 
@@ -53,7 +53,8 @@
 - §E11-7 の確定方針に従い、対応入力は**マウス＋キーボード専用**とし、ゲームパッドには対応しない。ストアページと製品文書にも同じ対応範囲を明示する
 - マウスでは全操作対象のクリック到達性、キーボードでは各画面の初期focus・隣接遷移・決定・戻る・disabled項目のスキップと可視focusを実操作で確認する。ゲームパッド操作は検証対象に含めない
 - 釣行中の中断（ウィンドウを閉じる）は現行の「ファイト中の魚を失うだけ・進行は直前セーブ済み」を仕様として明文化（対策コード不要）
-- INPUT-COMMONは2026-07-15完了。実キー8 action、共通focus / cancel契約、13画面registry、self-test / baseline / strict harnessを統合し、画面別baselineは42件（P1 34 / P2 8）
+- INPUT-COMMONは2026-07-15完了。実キー8 action、共通focus / cancel契約、13画面registry、self-test / baseline / strict harnessを統合し、初期の画面別baselineは42件（P1 34 / P2 8）
+- 画面別INPUT第1roundは2026-07-15完了。TITLE / FISHING / SHIPYARDを別セッションで実装・独立レビューし、専用smokeと原寸証拠を固定。3画面のfindingを0件にして最新baselineを35件（P1 27 / P2 8）へ更新した。次はSETTINGS / FISHING_SPOTS / SHOP
 
 ## E11-5. 権利・台帳（docs/31）
 
