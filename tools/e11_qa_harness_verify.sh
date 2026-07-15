@@ -54,6 +54,7 @@ set -e
 python3 - "$RUN_DIR" "$ROOT" "$input_strict_rc" <<'PY'
 import importlib.util
 import json
+import os
 import pathlib
 import sys
 
@@ -160,6 +161,56 @@ manifest = module.load_manifest(root / "tools/release_test_manifest.txt")
 module.classify(tests, manifest)
 assert set(tests) == set(manifest)
 assert not any("e11_" in item for item in tests)
+
+# 意図的なwarningはrunner全体でなく、発生させる負ケースtestにだけ閉じる。
+main_navigation_warning = "WARNING: 未知の画面IDです: unknown_screen"
+main_navigation_test = "tools/main_navigation_smoke.tscn"
+assert not module.warning_summary(main_navigation_warning, "direct_scene", main_navigation_test)["unexplained"]
+assert module.warning_summary(main_navigation_warning, "direct_scene", "tools/harbor_screen_smoke.tscn")["unexplained"] == [main_navigation_warning]
+assert module.warning_summary(main_navigation_warning, "save_system", main_navigation_test)["unexplained"] == [main_navigation_warning]
+similar_navigation_warning = "WARNING: 未知の画面IDです: unknown_screen_2"
+assert module.warning_summary(similar_navigation_warning, "direct_scene", main_navigation_test)["unexplained"] == [similar_navigation_warning]
+
+exponent_warning = "WARNING: Exponent too high"
+save_negative_test = "tools/save_namespace_migration_smoke.tscn"
+save_composite_scope = module.SAVE_SYSTEM_WARNING_SCOPE
+assert save_composite_scope == "tools/save_system_verify.sh"
+assert module.warning_scope_for("save_system", save_negative_test) == save_composite_scope
+assert not module.warning_summary(exponent_warning, "save_system", save_composite_scope)["unexplained"]
+assert module.warning_summary(exponent_warning, "save_system", save_negative_test)["unexplained"] == [exponent_warning]
+assert module.warning_summary(exponent_warning, "save_system", "tools/save_system_smoke.tscn")["unexplained"] == [exponent_warning]
+assert module.warning_summary(exponent_warning, "direct_scene", save_negative_test)["unexplained"] == [exponent_warning]
+similar_exponent_warning = "WARNING: Exponent too high: 101"
+assert module.warning_summary(similar_exponent_warning, "save_system", save_composite_scope)["unexplained"] == [similar_exponent_warning]
+
+# productionと同じrun経路がmanifest上のproxy testでなくcomposite commandをscopeにする。
+routing_env = os.environ.copy()
+routing_env["TSURI_RELEASE_TEST_TIMEOUT_SECONDS"] = "5"
+save_routing = module.run(
+    [sys.executable, "-c", f"print({exponent_warning!r})"],
+    root,
+    routing_env,
+    run_dir / "warning-save-routing.log",
+    "save_system",
+    save_negative_test,
+)
+assert save_routing["warning_scope"] == save_composite_scope
+assert not save_routing["warnings"]["unexplained"]
+other_routing = module.run(
+    [sys.executable, "-c", f"print({exponent_warning!r})"],
+    root,
+    routing_env,
+    run_dir / "warning-other-routing.log",
+    "direct_scene",
+    save_negative_test,
+)
+assert other_routing["warning_scope"] == save_negative_test
+assert other_routing["warnings"]["unexplained"] == [exponent_warning]
+assert module.warning_summary("main_navigation_smoke: ok", "direct_scene", main_navigation_test) == {
+    "count": 0,
+    "distinct_samples": [],
+    "unexplained": [],
+}
 print(f"e11_qa_harness: schema/fixtures/baseline ok; release tests={len(tests)}")
 PY
 
