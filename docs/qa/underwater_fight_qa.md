@@ -1,8 +1,8 @@
 # 水中ファイト画面 QA判断ログ
 
-最終更新: 2026-07-09 / 状態: **docs/39 水中ファイト基盤UI刷新 採用・freeze改定済み / docs/35 魚素材重複修正 完了 / アラ右端見切れP1修正済み**
+最終更新: 2026-07-15 / 状態: **docs/39 水中ファイト基盤UI刷新 採用・freeze改定済み / docs/35 魚素材重複修正 完了 / E11 INPUT-FISHING入力契約freeze**
 参照画像: `reference/14_underwater_fight_simple_mockup.png`（基盤レイアウト） / `reference/02_underwater_fight_mockup.png`（旧v1素材・質感参照）
-QA更新コマンド: `./tools/fight_visual_qa.sh`（reference/14 + runtime capture標準） / 水面天候確認: `./tools/surface_weather_visual_qa.sh` / 釣り上げ結果確認: `godot --path . res://tools/catch_fanfare_preview.tscn`（通常魚確認は `TSURI_CATCH_FANFARE_FISH_ID=aji`）
+QA更新コマンド: `./tools/fight_visual_qa.sh`（reference/14 + runtime capture標準） / 入力確認: `godot --headless --path . res://tools/fishing_input_smoke.tscn` / 水面天候確認: `./tools/surface_weather_visual_qa.sh` / 釣り上げ結果確認: `godot --path . res://tools/catch_fanfare_preview.tscn`（通常魚確認は `TSURI_CATCH_FANFARE_FISH_ID=aji`）
 詳細な経過履歴: `docs/qa/archive/underwater_fight_design_qa_2026-06.md`（旧 `design-qa.md`）
 
 ## 新魚素材投入時チェックリスト
@@ -68,6 +68,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 | 表示高さ | READY=224px / CASTING〜FIGHT=140px | `fishing_screen.gd` / `fight_hud.gd` | docs/39採用による改定。旧214px試行の不採用理由はREADY側にのみ残す |
 | 下段構成 | READY=docs/38専用バー / CASTING〜BITE=タナ・アワセ・反応+餌情報 / FIGHT=テンション・巻く/糸を出す+タナ・魚体力 | `fight_hud.gd` | 旧「エサ26.5% / メニュー17.5% / 操作ヒント」はFIGHT/中間状態では廃止 |
 | 操作表記 | 実キー `Space` / `Shift` / `E / Enter`。FIGHT中は `Space` / `Shift` の主操作のみ、CASTING〜BITEは `E / Enter` のアワセを中心表示 | `fight_hud.gd` ほか | A/B/L/R 表記へ戻さない。`+ 釣り場変更` / `- 港へ戻る` はREADYのみ。FIGHT中の離脱はEscオーバーレイ |
+| BITE/FIGHT入力focus契約 | BITEはアワセ1候補へ初期focusし、`E` またはfocus中の `Enter/KP Enter` でFIGHTへ移る。FIGHTは `巻く` → `糸を出す` の2候補へ共通focus ringを付け、`Space` / `Shift` のpress/release契約を維持する。Esc確認は安全側の `続ける` を初期focusにし、背景入力を遮断して閉じた後に直前のFIGHT focusへ戻す | `src/ui/fishing_screen.gd` / `src/ui/components/fight_hud.gd` | キーechoではheld actionを重複変更しない。modal表示時はmouse held actionも解放する。各HUD Rect2・ゲージ・ゲームロジックは変更しない |
 | ゲージ | 18分割セグメント | `fight_hud.gd` | |
 
 ### 上部ステータス
@@ -97,6 +98,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 | 音 | `AudioStreamGenerator` による短い合成ファンファーレ | `catch_fanfare.gd` | 専用SE素材がないため、P0ではruntime生成で効果音経路を成立させる |
 | 検証画像 | `docs/qa/evidence/underwater_fight/2026-07-03_catch_result_photo_boss.png` / `2026-07-03_catch_result_photo_aji.png` | `tools/catch_fanfare_preview.gd` | 通常起動キャプチャ。ぬし魚と通常魚で魚差し替え、ボタン統合、文字視認性を確認 |
 | レアリティ色責務 | `RarityStyles.text_color()` 経由 | `src/ui/components/catch_fanfare.gd` | レア紙吹雪色を含め、UI側で `Palette.RARITY_*` を直接参照しない |
+| 釣果決定focus契約 | `続けて釣る` → `港へ戻る` の2候補、初期focusは安全側の `続けて釣る`。`Enter/KP Enter` は現在focus中のボタン、`Space` は続行、`Escape` は港帰還を各1回だけ実行する | `src/ui/components/catch_fanfare.gd` / `src/ui/fishing_screen.gd` | 写真ベース・ボタンRect・演出時間・結果文言は変更しない |
 
 ### フォント
 
@@ -156,6 +158,8 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 （現在作業中のフェーズなし。docs/39は2026-07-07に採用・freeze改定済み）
 
 ## 7. 判断ログ（直近パスのみ）
+
+- 2026-07-15: E11 INPUT-FISHINGのBITE/FIGHT・離脱modal・釣果決定入力契約を採用・freeze。BITEはアワセへ初期focus、FIGHTは `巻く` / `糸を出す` の2候補、Esc確認は安全側 `続ける` 初期focus、釣果は `続けて釣る` / `港へ戻る` の2候補とした。実ViewportイベントでEnter/E、Space/Shiftのpress/release、mouse down/up、Esc/Tab/Enter、釣果Spaceを検証し、画面遷移・続行は各1回だけ発火した。既存のHUD/overlay/写真ベースのRect、素材、ゲージ、釣行ロジック、魚データ、バランスは変更なし。証拠: `docs/qa/evidence/underwater_fight/2026-07-15_input_fight_focus.png`、`2026-07-15_input_quit_focus.png`、`2026-07-15_input_fanfare_focus.png`。検証: `fishing_input_smoke.tscn` / `fishing_harbor_return_smoke.tscn` / `catch_fanfare_smoke.tscn` green、E11 strict input probeの `FISHING` finding 0件、`./tools/fight_visual_qa.sh` runtime横並び比較exit 0、`./tools/validate_project.sh` exit 0。
 
 - 2026-07-09: アラがファイト中に右端へ寄ったとき、顔が水窓外へ切れるP1を修正。`UnderwaterView._clamp_showcase_fish_center()` を上下だけでなく左右にも適用し、泳ぎシートの描画サイズからX/Y中心を水窓内へclampする。`FishingSimulator.visual_position`、魚素材、ラインアンカー、上部ステータス、下段HUD、釣行ロジックは変更なし。再現用に `tools/fishing_fight_preview.gd` へ `TSURI_FIGHT_VISUAL_X/Y/DIRECTION` を追加し、通常のQAキャプチャ既定値は維持した。検証: `TSURI_FIGHT_FISH_ID=ara TSURI_FIGHT_VISUAL_X=0.86 TSURI_FIGHT_VISUAL_Y=0.46 TSURI_FIGHT_VISUAL_DIRECTION=1 ./tools/fight_visual_qa.sh` exit 0。証拠: `docs/qa/evidence/underwater_fight/2026-07-09_ara_right_edge_clip_fix.png`、`docs/qa/evidence/underwater_fight/2026-07-09_ara_right_edge_reference_compare.png`。
 - 2026-07-08: E5時間帯対応として上部ステータス1枠目を固定の `AM 08:47` から `時間帯` + 選択ラベルへ変更。夜釣りで時計表示が矛盾しないようにするためで、スロット比率、アイコンサイズ、天候/所持金/ロケーション枠は維持した。検証: `./tools/fight_visual_qa.sh` exit 0。証拠: `docs/qa/evidence/underwater_fight/2026-07-08_e5_time_slot_top_status_compare.png`。
