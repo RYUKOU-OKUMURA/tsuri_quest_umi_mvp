@@ -116,6 +116,26 @@ assert {item["action"] for item in input_baseline["input_actions"]} == expected_
 assert all(item["explicit"] for item in input_baseline["input_actions"])
 assert all(item["keyboard_events"] for item in input_baseline["input_actions"])
 assert all(not item["non_keyboard_events"] for item in input_baseline["input_actions"])
+action_rows = {item["action"]: item for item in input_baseline["input_actions"]}
+required_key_signatures = {
+    "ui_accept": {(4194309, False), (4194310, False)},
+    "ui_cancel": {(4194305, False)},
+    "ui_left": {(4194319, False)},
+    "ui_right": {(4194321, False)},
+    "ui_up": {(4194320, False)},
+    "ui_down": {(4194322, False)},
+    "ui_focus_next": {(4194306, False)},
+    "ui_focus_prev": {(4194306, True)},
+}
+for action, required_signatures in required_key_signatures.items():
+    observed = {
+        (item["keycode"], item["shift"])
+        for item in action_rows[action]["keyboard_signatures"]
+        if not item["alt"] and not item["ctrl"] and not item["meta"]
+    }
+    assert required_signatures <= observed, f"{action}: required key signature missing"
+assert not any(item["keycode"] == 32 for item in action_rows["ui_accept"]["keyboard_signatures"])
+assert not any(item["target"] in expected_actions for item in input_baseline["findings"])
 def summary(data):
     return json.dumps({"findings": data["findings"], "screens": data["screens"]}, ensure_ascii=False, sort_keys=True)
 assert summary(input_baseline) == summary(input_baseline_2) == summary(input_baseline_3)

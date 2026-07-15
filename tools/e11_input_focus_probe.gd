@@ -13,6 +13,20 @@ const REQUIRED_KEYBOARD_ACTIONS: Array[StringName] = [
 	&"ui_focus_next",
 	&"ui_focus_prev",
 ]
+const REQUIRED_KEY_SIGNATURES := {
+	&"ui_accept": [{"keycode": KEY_ENTER}, {"keycode": KEY_KP_ENTER}],
+	&"ui_cancel": [{"keycode": KEY_ESCAPE}],
+	&"ui_left": [{"keycode": KEY_LEFT}],
+	&"ui_right": [{"keycode": KEY_RIGHT}],
+	&"ui_up": [{"keycode": KEY_UP}],
+	&"ui_down": [{"keycode": KEY_DOWN}],
+	&"ui_focus_next": [{"keycode": KEY_TAB}],
+	&"ui_focus_prev": [{"keycode": KEY_TAB, "shift": true}],
+}
+const FORBIDDEN_KEY_SIGNATURES := {
+	# FIGHT中のSpace押下/離上はreeling専用。global acceptへ戻すと同時発火する。
+	&"ui_accept": [{"keycode": KEY_SPACE, "any_modifiers": true}],
+}
 const SCREEN_REGISTRY := [
 	{"id": "title", "state": "default", "script": "res://src/ui/title_screen.gd", "payload": {}, "cancel": {"kind": "none"}},
 	{"id": "harbor", "state": "default", "script": "res://src/ui/harbor_screen.gd", "payload": {}, "cancel": {"kind": "none"}},
@@ -148,16 +162,20 @@ func _audit_input_actions() -> void:
 			action_events[action] = events
 		explicit_actions[action] = ProjectSettings.has_setting("input/%s" % action)
 		var keyboard_events: Array[String] = []
+		var keyboard_signatures: Array[Dictionary] = []
 		var non_keyboard_events: Array[String] = []
 		for event in events:
 			if event is InputEventKey:
-				keyboard_events.append((event as InputEventKey).as_text())
+				var key_event := event as InputEventKey
+				keyboard_events.append(key_event.as_text())
+				keyboard_signatures.append(_key_event_signature(key_event))
 			else:
 				non_keyboard_events.append(event.get_class())
 		_input_actions.append({
 			"action": String(action),
 			"explicit": bool(explicit_actions[action]),
 			"keyboard_events": keyboard_events,
+			"keyboard_signatures": keyboard_signatures,
 			"non_keyboard_events": non_keyboard_events,
 		})
 	_findings.append_array(_input_action_contract_findings(action_events, explicit_actions))
@@ -182,7 +200,54 @@ func _input_action_contract_findings(action_events: Dictionary, explicit_actions
 			result.append(Common.finding("INPUT_ACTION_NO_KEYBOARD", "P1", String(action), "必須input actionにkeyboard割当がありません"))
 		if not non_keyboard_classes.is_empty():
 			result.append(Common.finding("INPUT_ACTION_NON_KEYBOARD", "P1", String(action), "keyboard以外の割当があります", {"classes": non_keyboard_classes}))
+		for required_signature in REQUIRED_KEY_SIGNATURES.get(action, []):
+			if not _events_have_key_signature(action_events[action], required_signature):
+				result.append(Common.finding("INPUT_ACTION_KEY_MISSING", "P1", String(action), "必須key signatureがありません", {"signature": required_signature}))
+		for forbidden_signature in FORBIDDEN_KEY_SIGNATURES.get(action, []):
+			if _events_have_key_signature(action_events[action], forbidden_signature):
+				result.append(Common.finding("INPUT_ACTION_KEY_FORBIDDEN", "P1", String(action), "画面固有操作と競合するkey signatureがあります", {"signature": forbidden_signature}))
 	return result
+
+
+func _events_have_key_signature(events: Array, signature: Dictionary) -> bool:
+	for event in events:
+		if event is InputEventKey and _key_event_matches_signature(event as InputEventKey, signature):
+			return true
+	return false
+
+
+func _key_event_matches_signature(event: InputEventKey, signature: Dictionary) -> bool:
+	if event.keycode != int(signature.get("keycode", KEY_NONE)):
+		return false
+	if bool(signature.get("any_modifiers", false)):
+		return true
+	return (
+		event.alt_pressed == bool(signature.get("alt", false))
+		and event.shift_pressed == bool(signature.get("shift", false))
+		and event.ctrl_pressed == bool(signature.get("ctrl", false))
+		and event.meta_pressed == bool(signature.get("meta", false))
+	)
+
+
+func _key_event_signature(event: InputEventKey) -> Dictionary:
+	return {
+		"keycode": int(event.keycode),
+		"physical_keycode": int(event.physical_keycode),
+		"alt": event.alt_pressed,
+		"shift": event.shift_pressed,
+		"ctrl": event.ctrl_pressed,
+		"meta": event.meta_pressed,
+	}
+
+
+func _key_event_from_signature(signature: Dictionary) -> InputEventKey:
+	var event := InputEventKey.new()
+	event.keycode = int(signature.get("keycode", KEY_NONE)) as Key
+	event.alt_pressed = bool(signature.get("alt", false))
+	event.shift_pressed = bool(signature.get("shift", false))
+	event.ctrl_pressed = bool(signature.get("ctrl", false))
+	event.meta_pressed = bool(signature.get("meta", false))
+	return event
 
 
 func _audit_main_routes() -> void:
@@ -527,7 +592,10 @@ func _run_self_test() -> void:
 	var good_action_events := {}
 	var good_explicit_actions := {}
 	for action in REQUIRED_KEYBOARD_ACTIONS:
-		good_action_events[action] = [InputEventKey.new()]
+		var required_events: Array[InputEvent] = []
+		for signature in REQUIRED_KEY_SIGNATURES.get(action, []):
+			required_events.append(_key_event_from_signature(signature))
+		good_action_events[action] = required_events
 		good_explicit_actions[action] = true
 	if not _input_action_contract_findings(good_action_events, good_explicit_actions).is_empty():
 		_harness_errors.append(Common.finding("HARNESS_INPUT_MAP_VALID", "harness_error", "fixture", "正常keyboard action mapを異常分類しました"))
@@ -540,6 +608,14 @@ func _run_self_test() -> void:
 	for expected_action_code in ["INPUT_ACTION_MISSING", "INPUT_ACTION_NOT_EXPLICIT", "INPUT_ACTION_NO_KEYBOARD", "INPUT_ACTION_NON_KEYBOARD"]:
 		if not bad_action_codes.has(expected_action_code):
 			_harness_errors.append(Common.finding("HARNESS_INPUT_MAP_INVALID", "harness_error", "fixture", "異常action mapのfindingが不足しています", {"missing": expected_action_code, "actual": bad_action_codes}))
+	var signature_action_events := good_action_events.duplicate(true)
+	signature_action_events[&"ui_right"] = [_key_event_from_signature({"keycode": KEY_LEFT})]
+	var accept_signature_events := signature_action_events[&"ui_accept"] as Array
+	accept_signature_events.append(_key_event_from_signature({"keycode": KEY_SPACE}))
+	var signature_action_codes := _input_action_contract_findings(signature_action_events, good_explicit_actions).map(func(item: Dictionary) -> String: return String(item["code"]))
+	for expected_signature_code in ["INPUT_ACTION_KEY_MISSING", "INPUT_ACTION_KEY_FORBIDDEN"]:
+		if not signature_action_codes.has(expected_signature_code):
+			_harness_errors.append(Common.finding("HARNESS_INPUT_KEY_SIGNATURE", "harness_error", "fixture", "key signature違反を検出できません", {"missing": expected_signature_code, "actual": signature_action_codes}))
 	var screen_base_script := load("res://src/ui/screen_base.gd") as Script
 	var screen_base := screen_base_script.new() as Control if screen_base_script != null else null
 	if screen_base == null:
@@ -596,6 +672,11 @@ func _run_self_test() -> void:
 			var cancel_released := cancel_template.duplicate() as InputEventKey
 			cancel_released.pressed = false
 			screen_base.call("handle_common_cancel", cancel_pressed)
+			var cancel_echo := cancel_pressed.duplicate() as InputEventKey
+			cancel_echo.echo = true
+			var echo_consumed := bool(screen_base.call("handle_common_cancel", cancel_echo))
+			if not echo_consumed or common_cancel_count[0] != 1:
+				_harness_errors.append(Common.finding("HARNESS_SCREEN_BASE_CANCEL_ECHO", "harness_error", "fixture", "ScreenBaseが戻るechoを副作用なしで消費できません", {"consumed": echo_consumed, "actual": common_cancel_count[0]}))
 			screen_base.call("handle_common_cancel", cancel_pressed)
 			if common_cancel_count[0] != 1:
 				_harness_errors.append(Common.finding("HARNESS_SCREEN_BASE_CANCEL_ONCE", "harness_error", "fixture", "ScreenBaseが同一戻るpressを一重処理できません", {"actual": common_cancel_count[0]}))

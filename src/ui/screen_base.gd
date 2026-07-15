@@ -186,12 +186,12 @@ func handle_common_cancel(event: InputEvent) -> bool:
 	if event.is_action_released("ui_cancel"):
 		_common_cancel_latched = false
 		return false
-	if (
-		not event.is_action_pressed("ui_cancel")
-		or event.is_echo()
-		or not _common_cancel_handler.is_valid()
-	):
+	if not event.is_action_pressed("ui_cancel", true) or not _common_cancel_handler.is_valid():
 		return false
+	# repeat echoもここで消費し、画面側に残る旧cancel処理へ落とさない。
+	if event.is_echo():
+		get_viewport().set_input_as_handled()
+		return true
 	if not _common_cancel_latched:
 		_common_cancel_latched = true
 		get_viewport().set_input_as_handled()
