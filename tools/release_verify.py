@@ -48,11 +48,12 @@ EXPLAINED_WARNING_RULES = {
         (re.compile(r"^WARNING: (?:新しい版で作られたセーブのため、対応する新しい版で開いてください。|旧版セーブの移行を完了できなかったため、セーブの読み書きを停止しました。ゲームを再起動してください。|移行markerのない一時コピーがあるため、移行を停止します。|旧namespace移行markerが不正なため、移行を停止します。|セーブデータが壊れていたため、バックアップから復元します。|セーブデータとバックアップが壊れているため、読み込めませんでした。原本は変更していません。|セーブファイルの差し替えに失敗しました（コード: 20）。|進行データがセーブ可能な範囲を超えたため、原本を変更せず保存を中止しました。|セーブ用の一時ファイルを開けませんでした。|セーブデータを書き込めませんでした。|セーブのバックアップ作成に失敗しました（コード: 20）。|選択した難易度が見つからないため、セーブを初期化できませんでした。)$"), "save verifierの意図的な移行・破損・I/O失敗fixture"),
     ],
 }
-EXPLAINED_WARNING_TEST_RULES = {
+SAVE_SYSTEM_WARNING_SCOPE = "tools/save_system_verify.sh"
+EXPLAINED_WARNING_SCOPE_RULES = {
     ("direct_scene", "tools/main_navigation_smoke.tscn"): [
         (re.compile(r"^WARNING: 未知の画面IDです: unknown_screen$"), "main navigation smokeの未知route拒否fixture"),
     ],
-    ("save_system", "tools/save_namespace_migration_smoke.tscn"): [
+    ("save_system", SAVE_SYSTEM_WARNING_SCOPE): [
         (re.compile(r"^WARNING: Exponent too high$"), "save verifierの極端な指数を含む破損JSON fixture"),
     ],
 }
@@ -173,13 +174,19 @@ def unexplained_errors(output: str, context: str = "all") -> list[str]:
     return [line.strip() for line in output.splitlines() if "ERROR:" in line and not any(pattern.search(line.strip()) for pattern, _ in rules)]
 
 
-def warning_summary(output: str, context: str = "all", test: str | None = None) -> dict[str, object]:
+def warning_summary(output: str, context: str = "all", scope: str | None = None) -> dict[str, object]:
     found = [line.strip() for line in output.splitlines() if "WARNING:" in line]
     rules = EXPLAINED_WARNING_RULES["all"] + EXPLAINED_WARNING_RULES.get(context, [])
-    if test is not None:
-        rules += EXPLAINED_WARNING_TEST_RULES.get((context, test), [])
+    if scope is not None:
+        rules += EXPLAINED_WARNING_SCOPE_RULES.get((context, scope), [])
     unknown = [line for line in found if not any(pattern.fullmatch(line) for pattern, _ in rules)]
     return {"count": len(found), "distinct_samples": sorted(set(found))[:20], "unexplained": unknown}
+
+
+def warning_scope_for(context: str, test: str | None) -> str | None:
+    if context == "save_system" and test is not None:
+        return SAVE_SYSTEM_WARNING_SCOPE
+    return test
 
 
 def timeout_budget(test: str, env: dict[str, str]) -> float:
@@ -222,11 +229,13 @@ def run(command: list[str], cwd: Path, env: dict[str, str], log: Path, context: 
     if timed_out:
         output += f"\nrelease_verify: timeout after {timeout:g}s\n"
     log.write_text(output, encoding="utf-8")
+    warning_scope = warning_scope_for(context, test)
     return {
         "exit_code": 124 if timed_out else process.returncode,
         "timed_out": timed_out,
         "unexplained_errors": unexplained_errors(output, context),
-        "warnings": warning_summary(output, context, test),
+        "warnings": warning_summary(output, context, warning_scope),
+        "warning_scope": warning_scope,
         "log": str(log),
         "log_sha256": sha256(log),
         "duration_seconds": round(time.monotonic() - started, 3),
