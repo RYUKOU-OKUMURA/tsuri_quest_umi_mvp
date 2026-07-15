@@ -540,6 +540,47 @@ func _run_self_test() -> void:
 	for expected_action_code in ["INPUT_ACTION_MISSING", "INPUT_ACTION_NOT_EXPLICIT", "INPUT_ACTION_NO_KEYBOARD", "INPUT_ACTION_NON_KEYBOARD"]:
 		if not bad_action_codes.has(expected_action_code):
 			_harness_errors.append(Common.finding("HARNESS_INPUT_MAP_INVALID", "harness_error", "fixture", "異常action mapのfindingが不足しています", {"missing": expected_action_code, "actual": bad_action_codes}))
+	var screen_base_script := load("res://src/ui/screen_base.gd") as Script
+	var screen_base := screen_base_script.new() as Control if screen_base_script != null else null
+	if screen_base == null:
+		_harness_errors.append(Common.finding("HARNESS_SCREEN_BASE_LOAD", "harness_error", "fixture", "ScreenBase共通入力APIを読み込めません"))
+	else:
+		add_child(screen_base)
+		var focus_button := Button.new()
+		var disabled_button := Button.new()
+		disabled_button.disabled = true
+		screen_base.add_child(focus_button)
+		screen_base.add_child(disabled_button)
+		var focus_candidates: Array[Control] = [focus_button, disabled_button]
+		screen_base.call("setup_keyboard_focus", focus_candidates, disabled_button)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var available_candidates := screen_base.call("keyboard_focus_candidates") as Array
+		var focus_indicator := focus_button.get_node_or_null("CommonFocusIndicator") as Control
+		if available_candidates.size() != 1 or available_candidates[0] != focus_button:
+			_harness_errors.append(Common.finding("HARNESS_SCREEN_BASE_DISABLED", "harness_error", "fixture", "ScreenBaseがdisabled候補を除外できません"))
+		if get_viewport().gui_get_focus_owner() != focus_button:
+			_harness_errors.append(Common.finding("HARNESS_SCREEN_BASE_INITIAL", "harness_error", "fixture", "ScreenBaseが利用可能な初期focusを選べません"))
+		if not Common.has_distinct_focus_style(focus_button) or focus_indicator == null or not focus_indicator.visible:
+			_harness_errors.append(Common.finding("HARNESS_SCREEN_BASE_STYLE", "harness_error", "fixture", "ScreenBaseの可視focus styleを観測できません"))
+		var common_cancel_count := [0]
+		screen_base.call("set_common_cancel_handler", func() -> void: common_cancel_count[0] += 1)
+		var cancel_template := _keyboard_event_for_action(&"ui_cancel")
+		if cancel_template != null:
+			var cancel_pressed := cancel_template.duplicate() as InputEventKey
+			cancel_pressed.pressed = true
+			var cancel_released := cancel_template.duplicate() as InputEventKey
+			cancel_released.pressed = false
+			screen_base.call("handle_common_cancel", cancel_pressed)
+			screen_base.call("handle_common_cancel", cancel_pressed)
+			if common_cancel_count[0] != 1:
+				_harness_errors.append(Common.finding("HARNESS_SCREEN_BASE_CANCEL_ONCE", "harness_error", "fixture", "ScreenBaseが同一戻るpressを一重処理できません", {"actual": common_cancel_count[0]}))
+			screen_base.call("handle_common_cancel", cancel_released)
+			screen_base.call("handle_common_cancel", cancel_pressed)
+			if common_cancel_count[0] != 2:
+				_harness_errors.append(Common.finding("HARNESS_SCREEN_BASE_CANCEL_RESET", "harness_error", "fixture", "ScreenBaseが戻るrelease後の次pressを処理できません", {"actual": common_cancel_count[0]}))
+		remove_child(screen_base)
+		screen_base.queue_free()
 	var cancel_fixture := InputFixture.new()
 	add_child(cancel_fixture)
 	get_viewport().gui_release_focus()

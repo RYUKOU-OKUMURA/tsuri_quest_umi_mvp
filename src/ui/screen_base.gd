@@ -3,6 +3,9 @@ extends Control
 
 const ShowcaseAssetsScript = preload("res://src/ui/showcase_assets.gd")
 const GameFontsScript = preload("res://src/ui/game_fonts.gd")
+const COMMON_FOCUS_INDICATOR_NAME := "CommonFocusIndicator"
+const COMMON_FOCUS_ENABLED_META := &"screen_base_focus_enabled"
+const COMMON_FOCUS_STYLE_META := &"screen_base_focus_style"
 
 static var _qa_deterministic: Variant = null
 
@@ -21,6 +24,10 @@ var _screen_bgm_delegated := false
 var _last_sfx_path := ""
 var _common_notification: Label
 var _common_notification_tween: Tween
+var _keyboard_focus_controls: Array[Control] = []
+var _preferred_keyboard_focus: Control
+var _common_cancel_handler := Callable()
+var _common_cancel_latched := false
 
 
 func configure(payload: Dictionary) -> void:
@@ -38,6 +45,152 @@ func _exit_tree() -> void:
 
 func _build_screen() -> void:
 	pass
+
+
+## 画面がキーボード操作対象として明示したControlだけを共通契約へ登録する。
+## 個別の方向graphは各画面が設定し、本APIは可視・有効判定と初期focusを担当する。
+func setup_keyboard_focus(candidates: Array[Control], preferred: Control = null) -> void:
+	_keyboard_focus_controls.clear()
+	for control in candidates:
+		if control == null or not is_instance_valid(control) or _keyboard_focus_controls.has(control):
+			continue
+		_keyboard_focus_controls.append(control)
+		apply_common_focus_style(control)
+	_preferred_keyboard_focus = preferred
+	refresh_keyboard_focus()
+	call_deferred("_grab_initial_keyboard_focus")
+
+
+## 表示状態やdisabled状態が変化した後に呼び、focus対象を同じ候補集合から再評価する。
+func refresh_keyboard_focus() -> Array[Control]:
+	var available: Array[Control] = []
+	for control in _keyboard_focus_controls:
+		if control == null or not is_instance_valid(control):
+			continue
+		var enabled := is_keyboard_focus_available(control)
+		control.focus_mode = Control.FOCUS_ALL if enabled else Control.FOCUS_NONE
+		if enabled:
+			available.append(control)
+	var owner := get_viewport().gui_get_focus_owner() if is_inside_tree() else null
+	if owner != null and _keyboard_focus_controls.has(owner) and not available.has(owner):
+		owner.release_focus()
+		call_deferred("_grab_initial_keyboard_focus")
+	return available
+
+
+func keyboard_focus_candidates() -> Array[Control]:
+	var available: Array[Control] = []
+	for control in _keyboard_focus_controls:
+		if is_keyboard_focus_available(control):
+			available.append(control)
+	return available
+
+
+func set_keyboard_focus_enabled(control: Control, enabled: bool) -> void:
+	if control == null or not is_instance_valid(control):
+		return
+	control.set_meta(COMMON_FOCUS_ENABLED_META, enabled)
+	if not _keyboard_focus_controls.has(control):
+		_keyboard_focus_controls.append(control)
+		apply_common_focus_style(control)
+	refresh_keyboard_focus()
+
+
+func is_keyboard_focus_available(control: Control) -> bool:
+	if control == null or not is_instance_valid(control) or not control.is_inside_tree():
+		return false
+	if not control.is_visible_in_tree() or not bool(control.get_meta(COMMON_FOCUS_ENABLED_META, true)):
+		return false
+	if control is BaseButton and (control as BaseButton).disabled:
+		return false
+	if control is Slider and not (control as Slider).editable:
+		return false
+	if control is LineEdit and not (control as LineEdit).editable:
+		return false
+	if control is TextEdit and not (control as TextEdit).editable:
+		return false
+	return true
+
+
+func apply_common_focus_style(control: Control) -> void:
+	if control == null or not is_instance_valid(control) or control.has_meta(COMMON_FOCUS_STYLE_META):
+		return
+	control.set_meta(COMMON_FOCUS_STYLE_META, true)
+	var focus_style := _common_focus_stylebox()
+	control.add_theme_stylebox_override("focus", focus_style)
+	var indicator := Panel.new()
+	indicator.name = COMMON_FOCUS_INDICATOR_NAME
+	indicator.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	indicator.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	indicator.focus_mode = Control.FOCUS_NONE
+	indicator.z_index = 100
+	indicator.visible = control.has_focus()
+	indicator.add_theme_stylebox_override("panel", focus_style.duplicate() as StyleBox)
+	indicator.set_meta(COMMON_FOCUS_STYLE_META, true)
+	control.add_child(indicator)
+	control.focus_entered.connect(func() -> void:
+		if is_instance_valid(indicator):
+			indicator.visible = true
+	)
+	control.focus_exited.connect(func() -> void:
+		if is_instance_valid(indicator):
+			indicator.visible = false
+	)
+
+
+func _common_focus_stylebox() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color.TRANSPARENT
+	style.border_color = Palette.GOLD_BRIGHT
+	style.set_border_width_all(4)
+	style.set_corner_radius_all(6)
+	style.anti_aliasing = false
+	return style
+
+
+func _grab_initial_keyboard_focus() -> void:
+	if not is_inside_tree():
+		return
+	var available := keyboard_focus_candidates()
+	if available.is_empty():
+		get_viewport().gui_release_focus()
+		return
+	var target := _preferred_keyboard_focus if available.has(_preferred_keyboard_focus) else available[0]
+	target.grab_focus()
+
+
+## 戻る遷移先は画面側がCallableで渡す。ScreenBaseは1 key pressにつき1回だけ消費する。
+func set_common_cancel_handler(handler: Callable) -> void:
+	_common_cancel_handler = handler
+	_common_cancel_latched = false
+
+
+func clear_common_cancel_handler() -> void:
+	_common_cancel_handler = Callable()
+	_common_cancel_latched = false
+
+
+func handle_common_cancel(event: InputEvent) -> bool:
+	if event.is_action_released("ui_cancel"):
+		_common_cancel_latched = false
+		return false
+	if (
+		not event.is_action_pressed("ui_cancel")
+		or event.is_echo()
+		or not _common_cancel_handler.is_valid()
+	):
+		return false
+	if not _common_cancel_latched:
+		_common_cancel_latched = true
+		get_viewport().set_input_as_handled()
+		_common_cancel_handler.call()
+	else:
+		get_viewport().set_input_as_handled()
+	return true
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	handle_common_cancel(event)
 
 
 func show_common_notification(message: String) -> void:
