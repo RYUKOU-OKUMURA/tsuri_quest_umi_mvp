@@ -6,6 +6,8 @@ const ProbeCommon = preload("res://tools/e11_probe_common.gd")
 const DESIGN_SIZE := Vector2(1280.0, 720.0)
 const EVIDENCE_BGM := "2026-07-15_input_bgm_focus.png"
 const EVIDENCE_FULLSCREEN := "2026-07-15_input_fullscreen_focus.png"
+const CAPTURE_BGM_FOCUS := &"bgm_focus"
+const CAPTURE_FULLSCREEN_FOCUS := &"fullscreen_focus"
 
 var _failed := false
 var _navigation_count := 0
@@ -16,6 +18,10 @@ func _ready() -> void:
 	if not _isolated_home_is_safe():
 		push_error("settings_input_smoke: 専用の隔離HOME以外からの実行を拒否しました")
 		get_tree().quit(2)
+		return
+	_verify_capture_contract_self_check()
+	if _failed:
+		get_tree().quit(1)
 		return
 	PlayerProgress._sandbox_mode = false
 	_reset_fixture()
@@ -49,7 +55,7 @@ func _verify_empty_slot_focus_and_controls() -> void:
 		var indicator := control.get_node_or_null(ScreenBase.COMMON_FOCUS_INDICATOR_NAME) as Panel
 		_expect(indicator != null, "%s should own the common focus indicator" % control.name)
 	_expect(_common_focus_indicator_is_visible(screen._bgm_slider), "focused BGM slider should show the common ring")
-	await _capture(EVIDENCE_BGM, screen._bgm_slider)
+	await _capture(EVIDENCE_BGM, screen._bgm_slider, CAPTURE_BGM_FOCUS)
 
 	var bgm_before: float = screen._bgm_slider.value
 	await _send_key_action(&"ui_right")
@@ -70,7 +76,7 @@ func _verify_empty_slot_focus_and_controls() -> void:
 	await _send_key_action(&"ui_focus_next")
 	_expect(_focus_owner() == screen._fullscreen_button, "Tab should move SE to fullscreen")
 	_expect(_common_focus_indicator_is_visible(screen._fullscreen_button), "focused fullscreen should show the common ring")
-	await _capture(EVIDENCE_FULLSCREEN, screen._fullscreen_button)
+	await _capture(EVIDENCE_FULLSCREEN, screen._fullscreen_button, CAPTURE_FULLSCREEN_FOCUS)
 	await _send_key_action(&"ui_focus_next")
 	_expect(_focus_owner() == screen._return_button, "empty slot Tab should skip delete and reach return")
 	await _send_key_action(&"ui_focus_next")
@@ -242,14 +248,18 @@ func _mouse_click(control: Control) -> void:
 	await _settle()
 
 
-func _capture(file_name: String, expected_focus: Control) -> void:
+func _capture(file_name: String, expected_focus: Control, state: StringName) -> void:
 	var output_dir := OS.get_environment("TSURI_SETTINGS_INPUT_EVIDENCE_DIR").strip_edges()
 	if output_dir.is_empty():
 		return
 	DirAccess.make_dir_recursive_absolute(output_dir)
 	await _settle()
+	await get_tree().create_timer(0.45).timeout
 	var image: Image
-	for _attempt in range(8):
+	var capture_attempt := 0
+	var missing_anchors: Array[String] = []
+	for attempt in range(12):
+		capture_attempt = attempt + 1
 		_expect(_focus_owner() == expected_focus, "evidence capture should preserve expected focus: %s" % file_name)
 		if _failed:
 			return
@@ -257,7 +267,8 @@ func _capture(file_name: String, expected_focus: Control) -> void:
 		await get_tree().process_frame
 		RenderingServer.force_draw(false, 0.0)
 		image = get_viewport().get_texture().get_image()
-		if _full_frame_is_complete(image):
+		missing_anchors = _missing_capture_anchors(image, state)
+		if missing_anchors.is_empty():
 			break
 		await get_tree().process_frame
 	_expect(image != null and not image.is_empty(), "evidence capture requires a real display renderer")
@@ -266,9 +277,19 @@ func _capture(file_name: String, expected_focus: Control) -> void:
 	_expect(image.get_size() == Vector2i(1280, 720), "evidence must be exact 1280x720")
 	if _failed:
 		return
-	_expect(_full_frame_is_complete(image), "evidence capture must contain one complete opaque frame: %s" % file_name)
+	_expect(
+		missing_anchors.is_empty(),
+		"evidence capture is missing required regions for %s: %s" % [file_name, ", ".join(missing_anchors)]
+	)
 	if _failed:
 		return
+	_expect(_capture_contract_rejects_missing_regions(image, state), "capture missing-region self-check failed: %s" % file_name)
+	if _failed:
+		return
+	print(
+		"settings_input_capture[%s]: attempt=%d anchors=%s"
+		% [file_name, capture_attempt, _format_capture_anchor_counts(image, state)]
+	)
 	# 不透明なQA証拠はRGB8へ正規化し、decoderごとのalpha合成差を避ける。
 	var evidence_image: Image = image.duplicate()
 	evidence_image.convert(Image.FORMAT_RGB8)
@@ -276,17 +297,145 @@ func _capture(file_name: String, expected_focus: Control) -> void:
 	_expect(error == OK, "failed to save evidence: %s" % file_name)
 
 
-func _full_frame_is_complete(image: Image) -> bool:
+func _missing_capture_anchors(image: Image, state: StringName) -> Array[String]:
+	var missing: Array[String] = []
 	if image == null or image.is_empty() or image.get_size() != Vector2i(1280, 720):
-		return false
-	var visible_pixels := 0
-	for y in range(720):
-		for x in range(1280):
+		missing.append("frame_size")
+		return missing
+	if not _frame_samples_are_opaque(image):
+		missing.append("frame_opacity")
+	for anchor in _capture_anchor_specs(state):
+		var count := _capture_anchor_count(image, anchor)
+		var mode := StringName(anchor["mode"])
+		if mode == &"maximum":
+			var maximum := int(anchor["maximum"])
+			if not _capture_anchor_passes(count, anchor):
+				missing.append("%s=%d>%d" % [anchor["name"], count, maximum])
+		else:
+			var minimum := int(anchor["minimum"])
+			if not _capture_anchor_passes(count, anchor):
+				missing.append("%s=%d<%d" % [anchor["name"], count, minimum])
+	return missing
+
+
+func _capture_anchor_specs(state: StringName) -> Array[Dictionary]:
+	var anchors: Array[Dictionary] = [
+		_bright_anchor("title", Rect2i(360, 42, 560, 56), 0.30, 80),
+		_bright_anchor("panel_left", Rect2i(185, 145, 80, 70), 0.18, 300),
+		_bright_anchor("panel_right", Rect2i(1040, 145, 45, 70), 0.18, 200),
+		_bright_anchor("bgm_row", Rect2i(245, 214, 205, 62), 0.30, 80),
+		_bright_anchor("se_row", Rect2i(245, 284, 205, 62), 0.30, 60),
+		_bright_anchor("delete_block", Rect2i(245, 352, 330, 90), 0.30, 120),
+		_bright_anchor("footer", Rect2i(240, 488, 790, 62), 0.22, 600),
+		_bright_anchor("return_button", Rect2i(920, 616, 276, 60), 0.25, 300),
+		_bright_anchor("fullscreen_button", Rect2i(690, 160, 330, 46), 0.25, 500),
+	]
+	if state == CAPTURE_BGM_FOCUS:
+		anchors.append(_focus_anchor("bgm_focus_top", Rect2i(442, 221, 390, 4), 1000))
+		anchors.append(_focus_anchor("bgm_focus_left", Rect2i(442, 221, 4, 48), 100))
+		anchors.append(_inactive_focus_anchor("fullscreen_focus_absent", Rect2i(680, 154, 350, 4), 16))
+	else:
+		anchors.append(_focus_anchor("fullscreen_focus_top", Rect2i(680, 154, 350, 4), 1000))
+		anchors.append(_focus_anchor("fullscreen_focus_left", Rect2i(680, 154, 4, 58), 100))
+		anchors.append(_inactive_focus_anchor("bgm_focus_absent", Rect2i(442, 221, 390, 4), 16))
+	return anchors
+
+
+func _bright_anchor(name: String, rect: Rect2i, threshold: float, minimum: int) -> Dictionary:
+	return {"name": name, "rect": rect, "mode": &"minimum", "kind": &"bright", "threshold": threshold, "minimum": minimum}
+
+
+func _focus_anchor(name: String, rect: Rect2i, minimum: int) -> Dictionary:
+	return {"name": name, "rect": rect, "mode": &"minimum", "kind": &"focus", "minimum": minimum}
+
+
+func _inactive_focus_anchor(name: String, rect: Rect2i, maximum: int) -> Dictionary:
+	return {"name": name, "rect": rect, "mode": &"maximum", "kind": &"focus", "maximum": maximum}
+
+
+func _capture_anchor_count(image: Image, anchor: Dictionary) -> int:
+	var rect: Rect2i = anchor["rect"]
+	var count := 0
+	if StringName(anchor["kind"]) == &"focus":
+		for y in range(rect.position.y, rect.end.y):
+			for x in range(rect.position.x, rect.end.x):
+				if _pixel_matches_focus_color(image.get_pixel(x, y)):
+					count += 1
+		return count
+	var threshold := float(anchor["threshold"])
+	for y in range(rect.position.y, rect.end.y, 2):
+		for x in range(rect.position.x, rect.end.x, 2):
 			var pixel := image.get_pixel(x, y)
-			if pixel.a <= 0.99:
+			if pixel.a > 0.99 and pixel.get_luminance() > threshold:
+				count += 1
+	return count
+
+
+func _capture_anchor_passes(count: int, anchor: Dictionary) -> bool:
+	if StringName(anchor["mode"]) == &"maximum":
+		return count <= int(anchor["maximum"])
+	return count >= int(anchor["minimum"])
+
+
+func _pixel_matches_focus_color(pixel: Color) -> bool:
+	return (
+		pixel.a > 0.99
+		and absf(pixel.r - Palette.GOLD_BRIGHT.r) <= 0.01
+		and absf(pixel.g - Palette.GOLD_BRIGHT.g) <= 0.01
+		and absf(pixel.b - Palette.GOLD_BRIGHT.b) <= 0.01
+	)
+
+
+func _frame_samples_are_opaque(image: Image) -> bool:
+	for y in range(0, 720, 4):
+		for x in range(0, 1280, 4):
+			if image.get_pixel(x, y).a <= 0.99:
 				return false
-			visible_pixels += int(pixel.get_luminance() > 0.008)
-	return visible_pixels >= int(1280 * 720 * 0.70)
+	return true
+
+
+func _format_capture_anchor_counts(image: Image, state: StringName) -> String:
+	var parts: PackedStringArray = []
+	for anchor in _capture_anchor_specs(state):
+		parts.append("%s:%d" % [anchor["name"], _capture_anchor_count(image, anchor)])
+	return "|".join(parts)
+
+
+func _capture_contract_rejects_missing_regions(image: Image, state: StringName) -> bool:
+	for anchor in _capture_anchor_specs(state):
+		var fixture: Image = image.duplicate()
+		var rect: Rect2i = anchor["rect"]
+		if StringName(anchor["mode"]) == &"maximum":
+			fixture.fill_rect(rect, Palette.GOLD_BRIGHT)
+		else:
+			fixture.fill_rect(rect, Color.BLACK)
+		if _capture_anchor_passes(_capture_anchor_count(fixture, anchor), anchor):
+			return false
+		if _missing_capture_anchors(fixture, state).is_empty():
+			return false
+	return true
+
+
+func _verify_capture_contract_self_check() -> void:
+	for state in [CAPTURE_BGM_FOCUS, CAPTURE_FULLSCREEN_FOCUS]:
+		var complete := Image.create(1280, 720, false, Image.FORMAT_RGBA8)
+		complete.fill(Palette.SEA_DEEP)
+		for anchor in _capture_anchor_specs(state):
+			var rect: Rect2i = anchor["rect"]
+			if StringName(anchor["mode"]) == &"maximum":
+				continue
+			complete.fill_rect(rect, Palette.GOLD_BRIGHT if StringName(anchor["kind"]) == &"focus" else Color.WHITE)
+		_expect(_missing_capture_anchors(complete, state).is_empty(), "synthetic complete capture should pass: %s" % state)
+		if _failed:
+			return
+		var background_only := Image.create(1280, 720, false, Image.FORMAT_RGBA8)
+		background_only.fill(Palette.SEA_DEEP)
+		_expect(not _missing_capture_anchors(background_only, state).is_empty(), "background-only capture must fail: %s" % state)
+		if _failed:
+			return
+		_expect(_capture_contract_rejects_missing_regions(complete, state), "every missing anchor fixture must fail: %s" % state)
+		if _failed:
+			return
 
 
 func _common_focus_indicator_is_visible(control: Control) -> bool:
