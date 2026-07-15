@@ -13,6 +13,7 @@ tools/fish_book_smoke.tscn|direct_scene
 tools/fishing_harbor_return_smoke.tscn|direct_scene
 tools/fishing_input_smoke.tscn|direct_scene
 tools/fishing_reveal_smoke.tscn|direct_scene
+tools/fishing_spot_input_smoke.tscn|direct_scene
 tools/fishing_spot_select_smoke.tscn|direct_scene
 tools/harbor_screen_smoke.tscn|direct_scene
 tools/juicer_smoke.tscn|direct_scene
@@ -30,8 +31,10 @@ tools/shark_pen_screen_smoke.tscn|direct_scene
 tools/shark_pen_smoke.tscn|direct_scene
 tools/shipyard_input_smoke.tscn|direct_scene
 tools/shipyard_smoke.tscn|direct_scene
+tools/settings_input_smoke.tscn|direct_scene
 tools/settings_smoke.tscn|settings_smoke
 tools/status_smoke.tscn|direct_scene
+tools/tackle_shop_input_smoke.tscn|direct_scene
 tools/tackle_shop_smoke.tscn|direct_scene
 tools/time_slot_encounter_audit.tscn|direct_scene
 tools/title_input_smoke.tscn|direct_scene
