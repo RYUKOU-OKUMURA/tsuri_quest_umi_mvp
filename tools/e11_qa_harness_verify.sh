@@ -15,6 +15,12 @@ fi
 
 RUN_DIR="$(mktemp -d "${TMPDIR:-/tmp}/e11-qa-harness.XXXXXX")"
 trap 'rm -rf "$RUN_DIR"' EXIT
+WARM_HOME="$RUN_DIR/home-warmup"
+mkdir -p "$WARM_HOME"
+if ! HOME="$WARM_HOME" "$GODOT" --headless --editor --path "$ROOT" --quit >"$RUN_DIR/editor-warmup.log" 2>&1; then
+  sed -n '1,240p' "$RUN_DIR/editor-warmup.log" >&2
+  exit 1
+fi
 run_probe() {
   local scene="$1"
   local output="$2"
@@ -38,18 +44,22 @@ run_probe e11_input_focus_probe.tscn "$RUN_DIR/strict-finding.json" --self-test 
 finding_rc=$?
 run_probe e11_input_focus_probe.tscn "$RUN_DIR/harness-error.json" --self-test --self-test-harness-error
 harness_rc=$?
+run_probe e11_input_focus_probe.tscn "$RUN_DIR/input-strict.json" --strict
+input_strict_rc=$?
 set -e
 [[ "$pass_rc" -eq 0 ]] || { echo "strict pass fixtureの終了コードが0ではありません: $pass_rc" >&2; exit 1; }
 [[ "$finding_rc" -eq 1 ]] || { echo "strict finding fixtureの終了コードが1ではありません: $finding_rc" >&2; exit 1; }
 [[ "$harness_rc" -eq 2 ]] || { echo "harness errorの終了コードが2ではありません: $harness_rc" >&2; exit 1; }
 
-python3 - "$RUN_DIR" "$ROOT" <<'PY'
+python3 - "$RUN_DIR" "$ROOT" "$input_strict_rc" <<'PY'
 import importlib.util
 import json
 import pathlib
 import sys
 
-run_dir, root = map(pathlib.Path, sys.argv[1:])
+run_dir = pathlib.Path(sys.argv[1])
+root = pathlib.Path(sys.argv[2])
+input_strict_rc = int(sys.argv[3])
 required = {
     "schema_version": int,
     "probe": str,
@@ -79,29 +89,48 @@ resolution_self = load("resolution-self.json")
 input_baseline = load("input-baseline.json")
 input_baseline_2 = load("input-baseline-2.json")
 input_baseline_3 = load("input-baseline-3.json")
+input_strict = load("input-strict.json")
 resolution_baseline = load("resolution-baseline.json")
 strict_pass = load("strict-pass.json")
 strict_finding = load("strict-finding.json")
 harness_error = load("harness-error.json")
 fixtures = {item["id"]: item["classification"] for item in input_self["screens"]}
 assert fixtures == {"fixture_good": "pass", "fixture_bad": "finding"}
+assert input_self["mode"] == "self_test" and input_self["strict_requested"] is False
 assert not input_self["findings"]
 assert not resolution_self["findings"]
 assert len(input_baseline["screens"]) == input_baseline["registry_count"]
-assert input_baseline["registry_count"] in {12, 13}
-assert any(item["id"] == "settings" for item in input_baseline["screens"]) == (input_baseline["registry_count"] == 13)
+assert input_baseline["mode"] == "baseline" and input_baseline["strict_requested"] is False
+assert input_baseline["registry_count"] == 13
+expected_screen_ids = {
+    "title", "harbor", "fishing_spots", "fishing", "cooking", "market", "shop",
+    "shipyard", "status", "fish_book", "quest_board", "shark_pen", "settings",
+}
+assert {item["id"] for item in input_baseline["screens"]} == expected_screen_ids
+expected_actions = {
+    "ui_accept", "ui_cancel", "ui_left", "ui_right", "ui_up", "ui_down",
+    "ui_focus_next", "ui_focus_prev",
+}
+assert input_baseline["input_event_type"] == "InputEventKey"
+assert {item["action"] for item in input_baseline["input_actions"]} == expected_actions
+assert all(item["explicit"] for item in input_baseline["input_actions"])
+assert all(item["keyboard_events"] for item in input_baseline["input_actions"])
+assert all(not item["non_keyboard_events"] for item in input_baseline["input_actions"])
 def summary(data):
     return json.dumps({"findings": data["findings"], "screens": data["screens"]}, ensure_ascii=False, sort_keys=True)
 assert summary(input_baseline) == summary(input_baseline_2) == summary(input_baseline_3)
+assert input_strict["mode"] == "strict" and input_strict["strict_requested"] is True
+assert summary(input_strict) == summary(input_baseline)
+assert input_strict_rc == (1 if input_strict["findings"] else 0)
 shipyard = next(item for item in input_baseline["screens"] if item["id"] == "shipyard")
-assert shipyard["cancel_contract"] == "navigation" and shipyard["cancel_observed"] is True
+assert shipyard["cancel_contract"] == "navigation" and shipyard["cancel_observed_count"] == 1
 assert input_baseline["product_status"] in {"pass", "findings"}
 assert resolution_baseline["product_status"] in {"pass", "findings"}
 assert len(resolution_baseline["measurements"]) == 3
 assert all("observed" in item and "matches_expected_keep" in item for item in resolution_baseline["measurements"])
-assert strict_pass["mode"] == "strict" and not strict_pass["findings"]
-assert strict_finding["mode"] == "strict" and strict_finding["findings"]
-assert harness_error["harness_status"] == "error" and harness_error["harness_errors"]
+assert strict_pass["mode"] == "self_test" and strict_pass["strict_requested"] is True and not strict_pass["findings"]
+assert strict_finding["mode"] == "self_test" and strict_finding["strict_requested"] is True and strict_finding["findings"]
+assert harness_error["mode"] == "self_test" and harness_error["harness_status"] == "error" and harness_error["harness_errors"]
 
 spec = importlib.util.spec_from_file_location("release_verify", root / "tools/release_verify.py")
 module = importlib.util.module_from_spec(spec)
