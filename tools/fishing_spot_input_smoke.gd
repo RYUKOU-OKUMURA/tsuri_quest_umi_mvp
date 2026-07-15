@@ -257,6 +257,9 @@ func _settle() -> void:
 
 func _free_screen(screen: Node) -> void:
 	if screen != null and is_instance_valid(screen):
+		if screen.has_method("stop_screen_bgm"):
+			screen.call("stop_screen_bgm")
+			await _settle()
 		screen.queue_free()
 	await _settle()
 	get_viewport().gui_release_focus()
