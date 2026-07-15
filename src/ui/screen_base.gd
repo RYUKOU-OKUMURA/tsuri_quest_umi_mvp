@@ -48,8 +48,19 @@ func _build_screen() -> void:
 
 
 ## 画面がキーボード操作対象として明示したControlだけを共通契約へ登録する。
+## 候補scopeは呼び出しごとに置換し、外れた旧候補をFOCUS_NONEへ退避する。
 ## 個別の方向graphは各画面が設定し、本APIは可視・有効判定と初期focusを担当する。
 func setup_keyboard_focus(candidates: Array[Control], preferred: Control = null) -> void:
+	var previous_controls := _keyboard_focus_controls.duplicate()
+	for old_control in previous_controls:
+		if (
+			old_control != null
+			and is_instance_valid(old_control)
+			and not candidates.has(old_control)
+		):
+			if old_control.has_focus():
+				old_control.release_focus()
+			old_control.focus_mode = Control.FOCUS_NONE
 	_keyboard_focus_controls.clear()
 	for control in candidates:
 		if control == null or not is_instance_valid(control) or _keyboard_focus_controls.has(control):
@@ -64,6 +75,7 @@ func setup_keyboard_focus(candidates: Array[Control], preferred: Control = null)
 ## 表示状態やdisabled状態が変化した後に呼び、focus対象を同じ候補集合から再評価する。
 func refresh_keyboard_focus() -> Array[Control]:
 	var available: Array[Control] = []
+	var owner_before := get_viewport().gui_get_focus_owner() if is_inside_tree() else null
 	for control in _keyboard_focus_controls:
 		if control == null or not is_instance_valid(control):
 			continue
@@ -71,9 +83,9 @@ func refresh_keyboard_focus() -> Array[Control]:
 		control.focus_mode = Control.FOCUS_ALL if enabled else Control.FOCUS_NONE
 		if enabled:
 			available.append(control)
-	var owner := get_viewport().gui_get_focus_owner() if is_inside_tree() else null
-	if owner != null and _keyboard_focus_controls.has(owner) and not available.has(owner):
-		owner.release_focus()
+	if owner_before != null and _keyboard_focus_controls.has(owner_before) and not available.has(owner_before):
+		if owner_before.has_focus():
+			owner_before.release_focus()
 		call_deferred("_grab_initial_keyboard_focus")
 	return available
 

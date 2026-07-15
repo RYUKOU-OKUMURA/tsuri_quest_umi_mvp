@@ -547,22 +547,46 @@ func _run_self_test() -> void:
 	else:
 		add_child(screen_base)
 		var focus_button := Button.new()
+		var preferred_button := Button.new()
 		var disabled_button := Button.new()
 		disabled_button.disabled = true
 		screen_base.add_child(focus_button)
+		screen_base.add_child(preferred_button)
 		screen_base.add_child(disabled_button)
-		var focus_candidates: Array[Control] = [focus_button, disabled_button]
-		screen_base.call("setup_keyboard_focus", focus_candidates, disabled_button)
+		var focus_candidates: Array[Control] = [focus_button, preferred_button, disabled_button]
+		screen_base.call("setup_keyboard_focus", focus_candidates, preferred_button)
 		await get_tree().process_frame
 		await get_tree().process_frame
 		var available_candidates := screen_base.call("keyboard_focus_candidates") as Array
-		var focus_indicator := focus_button.get_node_or_null("CommonFocusIndicator") as Control
-		if available_candidates.size() != 1 or available_candidates[0] != focus_button:
+		var focus_indicator := preferred_button.get_node_or_null("CommonFocusIndicator") as Control
+		if available_candidates.size() != 2 or available_candidates.has(disabled_button):
 			_harness_errors.append(Common.finding("HARNESS_SCREEN_BASE_DISABLED", "harness_error", "fixture", "ScreenBaseがdisabled候補を除外できません"))
-		if get_viewport().gui_get_focus_owner() != focus_button:
-			_harness_errors.append(Common.finding("HARNESS_SCREEN_BASE_INITIAL", "harness_error", "fixture", "ScreenBaseが利用可能な初期focusを選べません"))
-		if not Common.has_distinct_focus_style(focus_button) or focus_indicator == null or not focus_indicator.visible:
+		if get_viewport().gui_get_focus_owner() != preferred_button:
+			_harness_errors.append(Common.finding("HARNESS_SCREEN_BASE_INITIAL", "harness_error", "fixture", "ScreenBaseが指定した有効preferredへ初期focusできません"))
+		if not Common.has_distinct_focus_style(preferred_button) or focus_indicator == null or not focus_indicator.visible:
 			_harness_errors.append(Common.finding("HARNESS_SCREEN_BASE_STYLE", "harness_error", "fixture", "ScreenBaseの可視focus styleを観測できません"))
+		preferred_button.disabled = true
+		screen_base.call("refresh_keyboard_focus")
+		await get_tree().process_frame
+		await get_tree().process_frame
+		if get_viewport().gui_get_focus_owner() != focus_button or preferred_button.focus_mode != Control.FOCUS_NONE:
+			_harness_errors.append(Common.finding("HARNESS_SCREEN_BASE_DISABLED_REFRESH", "harness_error", "fixture", "focus中候補のdisabled化をskipできません"))
+		var modal_button := Button.new()
+		screen_base.add_child(modal_button)
+		var modal_candidates: Array[Control] = [modal_button]
+		screen_base.call("setup_keyboard_focus", modal_candidates, modal_button)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var modal_available := screen_base.call("keyboard_focus_candidates") as Array
+		if (
+			modal_available.size() != 1
+			or modal_available[0] != modal_button
+			or get_viewport().gui_get_focus_owner() != modal_button
+			or focus_button.focus_mode != Control.FOCUS_NONE
+			or preferred_button.focus_mode != Control.FOCUS_NONE
+			or disabled_button.focus_mode != Control.FOCUS_NONE
+		):
+			_harness_errors.append(Common.finding("HARNESS_SCREEN_BASE_SCOPE_REPLACE", "harness_error", "fixture", "候補scope置換後も旧focus候補が残っています"))
 		var common_cancel_count := [0]
 		screen_base.call("set_common_cancel_handler", func() -> void: common_cancel_count[0] += 1)
 		var cancel_template := _keyboard_event_for_action(&"ui_cancel")
