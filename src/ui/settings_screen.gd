@@ -96,10 +96,12 @@ func _build_screen() -> void:
 	_return_button.custom_minimum_size = Vector2.ZERO
 	_place(_return_button, Rect2(920.0, 616.0, 276.0, 60.0))
 	_build_delete_modals()
-	_wire_focus()
 	_apply_loaded_settings()
 	_refresh_delete_summary()
-	_bgm_slider.call_deferred("grab_focus")
+	setup_keyboard_focus(
+		[_bgm_slider, _se_slider, _fullscreen_button, _delete_button, _return_button],
+		_bgm_slider
+	)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -169,14 +171,25 @@ func _build_fullscreen_toggle(parent: Control) -> void:
 
 
 func _wire_focus() -> void:
-	_bgm_slider.focus_neighbor_bottom = _bgm_slider.get_path_to(_se_slider)
-	_se_slider.focus_neighbor_top = _se_slider.get_path_to(_bgm_slider)
-	_se_slider.focus_neighbor_bottom = _se_slider.get_path_to(_fullscreen_button)
-	_fullscreen_button.focus_neighbor_top = _fullscreen_button.get_path_to(_se_slider)
-	_fullscreen_button.focus_neighbor_bottom = _fullscreen_button.get_path_to(_delete_button)
-	_delete_button.focus_neighbor_top = _delete_button.get_path_to(_fullscreen_button)
-	_delete_button.focus_neighbor_bottom = _delete_button.get_path_to(_return_button)
-	_return_button.focus_neighbor_top = _return_button.get_path_to(_delete_button)
+	var sequence: Array[Control] = [_bgm_slider, _se_slider, _fullscreen_button]
+	if not _delete_button.disabled:
+		sequence.append(_delete_button)
+	sequence.append(_return_button)
+	for control in [_bgm_slider, _se_slider, _fullscreen_button, _delete_button, _return_button]:
+		control.focus_neighbor_top = NodePath()
+		control.focus_neighbor_bottom = NodePath()
+		control.focus_next = NodePath()
+		control.focus_previous = NodePath()
+	for index in sequence.size():
+		var control := sequence[index]
+		var previous := sequence[(index - 1 + sequence.size()) % sequence.size()]
+		var next := sequence[(index + 1) % sequence.size()]
+		var previous_path := control.get_path_to(previous)
+		var next_path := control.get_path_to(next)
+		control.focus_neighbor_top = previous_path
+		control.focus_neighbor_bottom = next_path
+		control.focus_previous = previous_path
+		control.focus_next = next_path
 
 
 func _build_delete_block(parent: Control) -> void:
@@ -289,12 +302,7 @@ func _refresh_delete_summary(message := "") -> void:
 	var has_artifact := bool(artifact_status.get("any_artifact", false))
 	_delete_button.disabled = storage_blocked or not has_artifact
 	_delete_button.focus_mode = Control.FOCUS_NONE if _delete_button.disabled else Control.FOCUS_ALL
-	if not _delete_button.disabled:
-		_fullscreen_button.focus_neighbor_bottom = _fullscreen_button.get_path_to(_delete_button)
-		_return_button.focus_neighbor_top = _return_button.get_path_to(_delete_button)
-	else:
-		_fullscreen_button.focus_neighbor_bottom = _fullscreen_button.get_path_to(_return_button)
-		_return_button.focus_neighbor_top = _return_button.get_path_to(_fullscreen_button)
+	_wire_focus()
 	if not message.is_empty():
 		_delete_status_label.text = message
 	elif storage_blocked:
