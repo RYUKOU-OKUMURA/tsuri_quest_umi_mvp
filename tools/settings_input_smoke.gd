@@ -49,7 +49,7 @@ func _verify_empty_slot_focus_and_controls() -> void:
 		var indicator := control.get_node_or_null(ScreenBase.COMMON_FOCUS_INDICATOR_NAME) as Panel
 		_expect(indicator != null, "%s should own the common focus indicator" % control.name)
 	_expect(_common_focus_indicator_is_visible(screen._bgm_slider), "focused BGM slider should show the common ring")
-	await _capture(EVIDENCE_BGM)
+	await _capture(EVIDENCE_BGM, screen._bgm_slider)
 
 	var bgm_before: float = screen._bgm_slider.value
 	await _send_key_action(&"ui_right")
@@ -70,7 +70,7 @@ func _verify_empty_slot_focus_and_controls() -> void:
 	await _send_key_action(&"ui_focus_next")
 	_expect(_focus_owner() == screen._fullscreen_button, "Tab should move SE to fullscreen")
 	_expect(_common_focus_indicator_is_visible(screen._fullscreen_button), "focused fullscreen should show the common ring")
-	await _capture(EVIDENCE_FULLSCREEN)
+	await _capture(EVIDENCE_FULLSCREEN, screen._fullscreen_button)
 	await _send_key_action(&"ui_focus_next")
 	_expect(_focus_owner() == screen._return_button, "empty slot Tab should skip delete and reach return")
 	await _send_key_action(&"ui_focus_next")
@@ -242,21 +242,51 @@ func _mouse_click(control: Control) -> void:
 	await _settle()
 
 
-func _capture(file_name: String) -> void:
+func _capture(file_name: String, expected_focus: Control) -> void:
 	var output_dir := OS.get_environment("TSURI_SETTINGS_INPUT_EVIDENCE_DIR").strip_edges()
 	if output_dir.is_empty():
 		return
 	DirAccess.make_dir_recursive_absolute(output_dir)
-	await RenderingServer.frame_post_draw
-	var image := get_viewport().get_texture().get_image()
+	await _settle()
+	var image: Image
+	for _attempt in range(8):
+		_expect(_focus_owner() == expected_focus, "evidence capture should preserve expected focus: %s" % file_name)
+		if _failed:
+			return
+		RenderingServer.force_draw(false, 0.0)
+		await get_tree().process_frame
+		RenderingServer.force_draw(false, 0.0)
+		image = get_viewport().get_texture().get_image()
+		if _full_frame_is_complete(image):
+			break
+		await get_tree().process_frame
 	_expect(image != null and not image.is_empty(), "evidence capture requires a real display renderer")
 	if _failed:
 		return
 	_expect(image.get_size() == Vector2i(1280, 720), "evidence must be exact 1280x720")
 	if _failed:
 		return
-	var error := image.save_png(output_dir.path_join(file_name))
+	_expect(_full_frame_is_complete(image), "evidence capture must contain one complete opaque frame: %s" % file_name)
+	if _failed:
+		return
+	# 不透明なQA証拠はRGB8へ正規化し、decoderごとのalpha合成差を避ける。
+	var evidence_image: Image = image.duplicate()
+	evidence_image.convert(Image.FORMAT_RGB8)
+	var error := evidence_image.save_png(output_dir.path_join(file_name))
 	_expect(error == OK, "failed to save evidence: %s" % file_name)
+
+
+func _full_frame_is_complete(image: Image) -> bool:
+	if image == null or image.is_empty() or image.get_size() != Vector2i(1280, 720):
+		return false
+	var visible_pixels := 0
+	for y in range(720):
+		for x in range(1280):
+			var pixel := image.get_pixel(x, y)
+			if pixel.a <= 0.99:
+				return false
+			visible_pixels += int(pixel.get_luminance() > 0.008)
+	return visible_pixels >= int(1280 * 720 * 0.70)
 
 
 func _common_focus_indicator_is_visible(control: Control) -> bool:
