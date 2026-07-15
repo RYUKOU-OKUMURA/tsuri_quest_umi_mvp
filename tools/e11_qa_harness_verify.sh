@@ -160,6 +160,28 @@ manifest = module.load_manifest(root / "tools/release_test_manifest.txt")
 module.classify(tests, manifest)
 assert set(tests) == set(manifest)
 assert not any("e11_" in item for item in tests)
+
+# 意図的なwarningはrunner全体でなく、発生させる負ケースtestにだけ閉じる。
+main_navigation_warning = "WARNING: 未知の画面IDです: unknown_screen"
+main_navigation_test = "tools/main_navigation_smoke.tscn"
+assert not module.warning_summary(main_navigation_warning, "direct_scene", main_navigation_test)["unexplained"]
+assert module.warning_summary(main_navigation_warning, "direct_scene", "tools/harbor_screen_smoke.tscn")["unexplained"] == [main_navigation_warning]
+assert module.warning_summary(main_navigation_warning, "save_system", main_navigation_test)["unexplained"] == [main_navigation_warning]
+similar_navigation_warning = "WARNING: 未知の画面IDです: unknown_screen_2"
+assert module.warning_summary(similar_navigation_warning, "direct_scene", main_navigation_test)["unexplained"] == [similar_navigation_warning]
+
+exponent_warning = "WARNING: Exponent too high"
+save_negative_test = "tools/save_namespace_migration_smoke.tscn"
+assert not module.warning_summary(exponent_warning, "save_system", save_negative_test)["unexplained"]
+assert module.warning_summary(exponent_warning, "save_system", "tools/save_system_smoke.tscn")["unexplained"] == [exponent_warning]
+assert module.warning_summary(exponent_warning, "direct_scene", save_negative_test)["unexplained"] == [exponent_warning]
+similar_exponent_warning = "WARNING: Exponent too high: 101"
+assert module.warning_summary(similar_exponent_warning, "save_system", save_negative_test)["unexplained"] == [similar_exponent_warning]
+assert module.warning_summary("main_navigation_smoke: ok", "direct_scene", main_navigation_test) == {
+    "count": 0,
+    "distinct_samples": [],
+    "unexplained": [],
+}
 print(f"e11_qa_harness: schema/fixtures/baseline ok; release tests={len(tests)}")
 PY
 
