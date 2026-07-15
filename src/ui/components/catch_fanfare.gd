@@ -7,6 +7,7 @@ const ShowcaseAssetsScript = preload("res://src/ui/showcase_assets.gd")
 
 signal continue_requested
 signal harbor_requested
+signal focus_context_changed(active: bool)
 
 const DESIGN_SIZE := Vector2(1280.0, 720.0)
 const AUDIO_MIX_RATE := 22050
@@ -108,6 +109,9 @@ func play(
 	_prepare_intro_state()
 	_start_animation()
 	_start_fanfare_audio()
+	_configure_button_focus()
+	call_deferred("_grab_initial_button_focus")
+	focus_context_changed.emit(true)
 	queue_redraw()
 
 
@@ -125,11 +129,9 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey:
 		var key_event := event as InputEventKey
 		if key_event.pressed and not key_event.echo:
-			if (
-				key_event.keycode == KEY_SPACE
-				or key_event.keycode == KEY_ENTER
-				or key_event.keycode == KEY_KP_ENTER
-			):
+			# Enter/KP Enterは現在focus中の2ボタンへ渡す。Spaceだけを
+			# 「続けて釣る」の固定ショートカットとして維持する。
+			if key_event.keycode == KEY_SPACE:
 				_request_continue()
 				get_viewport().set_input_as_handled()
 			elif key_event.keycode == KEY_ESCAPE:
@@ -231,6 +233,7 @@ func _build_nodes() -> void:
 	_harbor_button = _make_photo_button("港へ戻る")
 	_harbor_button.pressed.connect(_request_harbor)
 	add_child(_harbor_button)
+	_configure_button_focus()
 
 	add_child(_flash)
 
@@ -390,7 +393,12 @@ func _close_result_screen() -> void:
 	_playing = false
 	_stop_tweens()
 	_stop_audio()
+	if _continue_button != null and _continue_button.has_focus():
+		_continue_button.release_focus()
+	if _harbor_button != null and _harbor_button.has_focus():
+		_harbor_button.release_focus()
 	visible = false
+	focus_context_changed.emit(false)
 
 
 func _request_continue() -> void:
@@ -405,6 +413,40 @@ func _request_harbor() -> void:
 		return
 	_close_result_screen()
 	harbor_requested.emit()
+
+
+func keyboard_focus_targets() -> Array[Control]:
+	var targets: Array[Control] = []
+	if _continue_button != null:
+		targets.append(_continue_button)
+	if _harbor_button != null:
+		targets.append(_harbor_button)
+	return targets
+
+
+func preferred_keyboard_focus_target() -> Control:
+	return _continue_button
+
+
+func _configure_button_focus() -> void:
+	if _continue_button == null or _harbor_button == null:
+		return
+	_continue_button.focus_mode = Control.FOCUS_ALL
+	_harbor_button.focus_mode = Control.FOCUS_ALL
+	_continue_button.focus_neighbor_left = _continue_button.get_path_to(_harbor_button)
+	_continue_button.focus_neighbor_right = _continue_button.get_path_to(_harbor_button)
+	_continue_button.focus_next = _continue_button.get_path_to(_harbor_button)
+	_continue_button.focus_previous = _continue_button.get_path_to(_harbor_button)
+	_harbor_button.focus_neighbor_left = _harbor_button.get_path_to(_continue_button)
+	_harbor_button.focus_neighbor_right = _harbor_button.get_path_to(_continue_button)
+	_harbor_button.focus_next = _harbor_button.get_path_to(_continue_button)
+	_harbor_button.focus_previous = _harbor_button.get_path_to(_continue_button)
+
+
+func _grab_initial_button_focus() -> void:
+	if not _playing or _continue_button == null or not _continue_button.is_visible_in_tree():
+		return
+	_continue_button.grab_focus()
 
 
 func _stop_tweens() -> void:

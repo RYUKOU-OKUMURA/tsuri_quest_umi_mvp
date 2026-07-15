@@ -59,11 +59,14 @@ var _result_overlay: ColorRect
 var _result_title: Label
 var _result_details: Label
 var _retry_button: Button
+var _result_harbor_button: Button
 var _quit_overlay: ColorRect
 var _quit_title: Label
 var _quit_details: Label
+var _quit_cancel_button: Button
 var _quit_confirm_button: Button
 var _quit_target := "harbor"
+var _focus_before_modal: Control
 var _shark_ambush_flash: ColorRect
 var _nushi_omen_shown := false
 var _trip_event_message: String = ""
@@ -508,9 +511,9 @@ func _create_result_overlay() -> void:
 	_retry_button = make_button("もう一度挑戦", _retry, 0)
 	_retry_button.custom_minimum_size = Vector2(200, 50)
 	row.add_child(_retry_button)
-	var harbor_button := make_button("港へ戻る", func() -> void: navigate("harbor"), 0)
-	harbor_button.custom_minimum_size = Vector2(200, 50)
-	row.add_child(harbor_button)
+	_result_harbor_button = make_button("港へ戻る", func() -> void: navigate("harbor"), 0)
+	_result_harbor_button.custom_minimum_size = Vector2(200, 50)
+	row.add_child(_result_harbor_button)
 
 
 func _create_quit_overlay() -> void:
@@ -535,12 +538,19 @@ func _create_quit_overlay() -> void:
 
 	_quit_title = make_label("港へ戻る", 32, Palette.FISHING_RESULT_TITLE_TEXT)
 	_quit_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_quit_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_quit_title.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_quit_title.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+	_quit_title.custom_minimum_size = Vector2(0.0, 44.0)
 	_quit_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(_quit_title)
 
 	_quit_details = make_label("", 19)
 	_quit_details.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_quit_details.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_quit_details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_quit_details.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+	_quit_details.custom_minimum_size = Vector2(0.0, 56.0)
 	_quit_details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(_quit_details)
 
@@ -548,8 +558,8 @@ func _create_quit_overlay() -> void:
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_theme_constant_override("separation", 12)
 	box.add_child(row)
-	var cancel_button := make_button("続ける", _hide_harbor_confirm, 180)
-	row.add_child(cancel_button)
+	_quit_cancel_button = make_button("続ける", _hide_harbor_confirm, 180)
+	row.add_child(_quit_cancel_button)
 	_quit_confirm_button = make_button("港へ戻る", _confirm_quit_action, 180, true)
 	row.add_child(_quit_confirm_button)
 
@@ -567,6 +577,7 @@ func _create_shark_ambush_flash() -> void:
 func _create_catch_fanfare() -> void:
 	_catch_fanfare = CatchFanfareScript.new()
 	_catch_fanfare.z_index = 80
+	_catch_fanfare.focus_context_changed.connect(func(_active: bool) -> void: _sync_keyboard_focus_context())
 	_catch_fanfare.continue_requested.connect(_on_catch_fanfare_continue_requested)
 	_catch_fanfare.harbor_requested.connect(_on_catch_fanfare_harbor_requested)
 	add_child(_catch_fanfare)
@@ -599,20 +610,19 @@ func _input(event: InputEvent) -> void:
 	var key_event := event as InputEventKey
 	if _quit_overlay != null and _quit_overlay.visible:
 		if key_event.pressed and not key_event.echo:
-			if key_event.keycode == KEY_ENTER or key_event.keycode == KEY_KP_ENTER:
-				_confirm_quit_action()
-				get_viewport().set_input_as_handled()
-			elif key_event.keycode == KEY_ESCAPE:
+			if key_event.keycode == KEY_ESCAPE:
 				_hide_harbor_confirm()
 				get_viewport().set_input_as_handled()
 		return
 	if _result_overlay != null and _result_overlay.visible:
 		return
 	if key_event.keycode == KEY_SPACE and _simulator.state == FishingSimulator.State.FIGHT:
-		_simulator.set_reeling(key_event.pressed)
+		if not key_event.echo:
+			_simulator.set_reeling(key_event.pressed)
 		get_viewport().set_input_as_handled()
 	elif key_event.keycode == KEY_SHIFT and _simulator.state == FishingSimulator.State.FIGHT:
-		_simulator.set_giving_line(key_event.pressed)
+		if not key_event.echo:
+			_simulator.set_giving_line(key_event.pressed)
 		get_viewport().set_input_as_handled()
 	elif (
 		key_event.pressed
@@ -625,7 +635,8 @@ func _input(event: InputEvent) -> void:
 	elif (
 		key_event.pressed
 		and not key_event.echo
-		and (key_event.keycode == KEY_E or key_event.keycode == KEY_ENTER)
+		and _simulator.state in [FishingSimulator.State.READY, FishingSimulator.State.BITE]
+		and key_event.keycode == KEY_E
 	):
 		_on_main_action_pressed()
 		get_viewport().set_input_as_handled()
@@ -652,6 +663,64 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
+func _sync_keyboard_focus_context(preferred_override: Control = null) -> void:
+	if not is_inside_tree():
+		return
+	var targets: Array[Control] = []
+	var preferred: Control = null
+	if _catch_fanfare != null and _catch_fanfare.is_playing():
+		targets = _catch_fanfare.keyboard_focus_targets()
+		preferred = _catch_fanfare.preferred_keyboard_focus_target()
+	elif _quit_overlay != null and _quit_overlay.visible:
+		targets = [_quit_cancel_button, _quit_confirm_button]
+		preferred = _quit_cancel_button
+	elif _result_overlay != null and _result_overlay.visible:
+		targets = [_retry_button, _result_harbor_button]
+		preferred = _retry_button
+	elif _fight_hud != null:
+		targets = _fight_hud.keyboard_focus_targets()
+		preferred = _fight_hud.preferred_keyboard_focus_target()
+	if preferred_override != null and targets.has(preferred_override):
+		preferred = preferred_override
+	_link_keyboard_focus_cycle(targets)
+	setup_keyboard_focus(targets, preferred)
+
+
+func _link_keyboard_focus_cycle(targets: Array[Control]) -> void:
+	for control in targets:
+		if control == null:
+			continue
+		control.focus_neighbor_left = NodePath()
+		control.focus_neighbor_right = NodePath()
+		control.focus_neighbor_top = NodePath()
+		control.focus_neighbor_bottom = NodePath()
+		control.focus_next = NodePath()
+		control.focus_previous = NodePath()
+	if targets.size() <= 1:
+		return
+	for index in targets.size():
+		var control := targets[index]
+		var previous := targets[(index - 1 + targets.size()) % targets.size()]
+		var next := targets[(index + 1) % targets.size()]
+		var previous_path := control.get_path_to(previous)
+		var next_path := control.get_path_to(next)
+		control.focus_neighbor_left = previous_path
+		control.focus_neighbor_top = previous_path
+		control.focus_previous = previous_path
+		control.focus_neighbor_right = next_path
+		control.focus_neighbor_bottom = next_path
+		control.focus_next = next_path
+
+
+func _remember_gameplay_focus() -> void:
+	_focus_before_modal = null
+	if _fight_hud == null:
+		return
+	var owner := get_viewport().gui_get_focus_owner()
+	if owner != null and _fight_hud.keyboard_focus_targets().has(owner):
+		_focus_before_modal = owner
+
+
 func _prepare_new_attempt() -> void:
 	_result_recorded = false
 	_result_overlay.visible = false
@@ -670,6 +739,7 @@ func _prepare_new_attempt() -> void:
 	_view.modulate.a = 0.0
 	_surface_view.modulate.a = 1.0
 	_refresh_fish_info()
+	_sync_keyboard_focus_context()
 
 
 func _prepare_simulator_with_current_fish() -> void:
@@ -780,6 +850,8 @@ func _cycle_selected_shark_lure(direction: int) -> void:
 	var candidates := _shark_lure_candidate_ids()
 	if candidates.is_empty():
 		candidates.append("")
+	if candidates.size() <= 1:
+		return
 	var current_index := candidates.find(_selected_shark_lure_fish_id)
 	if current_index < 0:
 		current_index = 0
@@ -815,6 +887,7 @@ func _refresh_ready_lure_selection_display() -> void:
 		_spot_detail_label.text = _spot_detail_text()
 	_sync_ready_shark_lure_selector()
 	_update_ui()
+	_sync_keyboard_focus_context()
 
 
 func _sync_ready_shark_lure_selector() -> void:
@@ -993,6 +1066,7 @@ func _request_harbor_return() -> void:
 	if _simulator.state == FishingSimulator.State.READY:
 		navigate("harbor")
 		return
+	_remember_gameplay_focus()
 	_quit_target = "harbor"
 	if _quit_title != null:
 		_quit_title.text = "港へ戻る"
@@ -1002,8 +1076,11 @@ func _request_harbor_return() -> void:
 	_simulator.set_giving_line(false)
 	if _quit_details != null:
 		_quit_details.text = _harbor_return_message()
+	if _fight_hud != null:
+		_fight_hud.release_held_actions()
 	if _quit_overlay != null:
 		_quit_overlay.visible = true
+	_sync_keyboard_focus_context()
 
 
 func _request_spot_change() -> void:
@@ -1015,6 +1092,7 @@ func _request_spot_change() -> void:
 	if _simulator.state == FishingSimulator.State.READY:
 		_navigate_to_spot_select()
 		return
+	_remember_gameplay_focus()
 	_quit_target = "fishing_spots"
 	if _quit_title != null:
 		_quit_title.text = "釣り場を変える"
@@ -1024,8 +1102,11 @@ func _request_spot_change() -> void:
 	_simulator.set_giving_line(false)
 	if _quit_details != null:
 		_quit_details.text = _spot_change_message()
+	if _fight_hud != null:
+		_fight_hud.release_held_actions()
 	if _quit_overlay != null:
 		_quit_overlay.visible = true
+	_sync_keyboard_focus_context()
 
 
 func _harbor_return_message() -> String:
@@ -1043,11 +1124,16 @@ func _spot_change_message() -> String:
 func _hide_harbor_confirm() -> void:
 	if _quit_overlay != null:
 		_quit_overlay.visible = false
+	var restore_target := _focus_before_modal
+	_focus_before_modal = null
+	_sync_keyboard_focus_context(restore_target)
 
 
 func _confirm_quit_action() -> void:
 	if _quit_overlay != null:
 		_quit_overlay.visible = false
+	_focus_before_modal = null
+	_sync_keyboard_focus_context()
 	if _quit_target == "fishing_spots":
 		_navigate_to_spot_select()
 		return
@@ -1067,6 +1153,7 @@ func _on_state_changed(new_state: int) -> void:
 		_roll_and_apply_trip_event()
 	_update_bgm_for_state(new_state)
 	_update_ui()
+	_sync_keyboard_focus_context()
 
 
 func _update_bgm_for_state(state: int) -> void:
@@ -1097,6 +1184,7 @@ func _on_fight_finished(caught: bool, reason: String) -> void:
 		if _catch_fanfare != null:
 			_result_overlay.visible = false
 			_catch_fanfare.play(_current_fish, _simulator.result_size_cm, catch_result, _trip_stats)
+			_sync_keyboard_focus_context()
 			return
 	else:
 		if reason == SHARK_AMBUSH_REASON:
@@ -1108,6 +1196,7 @@ func _on_fight_finished(caught: bool, reason: String) -> void:
 		_retry_button.text = "再挑戦"
 		play_screen_sfx(ESCAPED_SFX_PATH, FISHING_SFX_VOLUME_DB)
 	_result_overlay.visible = true
+	_sync_keyboard_focus_context()
 
 
 func _on_catch_fanfare_continue_requested() -> void:

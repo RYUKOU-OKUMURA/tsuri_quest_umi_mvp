@@ -70,6 +70,13 @@ var _reeling := false
 var _giving := false
 var _lure_portrait: Texture2D
 var _lure_portrait_id := ""
+var _main_focus_target: Control
+var _reel_focus_target: Control
+var _give_focus_target: Control
+var _lure_prev_focus_button: Button
+var _lure_next_focus_button: Button
+var _change_spot_focus_button: Button
+var _harbor_focus_button: Button
 
 
 func bind(value: FishingSimulator, fish: Dictionary, stats: Dictionary) -> void:
@@ -96,6 +103,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	custom_minimum_size = Vector2(0.0, DEFAULT_HUD_HEIGHT)
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_build_keyboard_focus_targets()
 	if ResourceLoader.exists(HUD_FRAME_PATH):
 		_hud_frame = load(HUD_FRAME_PATH) as Texture2D
 	if ResourceLoader.exists(ICON_SHEET_PATH):
@@ -120,6 +128,137 @@ func _ready() -> void:
 		_common_card_frame = load(COMMON_CARD_FRAME_PATH) as Texture2D
 	if ResourceLoader.exists(COMMON_PARCHMENT_CARD_PATH):
 		_common_parchment_card = load(COMMON_PARCHMENT_CARD_PATH) as Texture2D
+
+
+## custom drawのRect2へ重ねるキーボード専用proxy。mouseは従来どおり
+## FightHud._gui_inputへ通し、freeze済みのhit矩形とdown/up契約を維持する。
+func _build_keyboard_focus_targets() -> void:
+	_change_spot_focus_button = _make_keyboard_focus_button("ChangeSpotFocusTarget")
+	_change_spot_focus_button.pressed.connect(func() -> void: change_spot_pressed.emit())
+	add_child(_change_spot_focus_button)
+	_harbor_focus_button = _make_keyboard_focus_button("HarborFocusTarget")
+	_harbor_focus_button.pressed.connect(func() -> void: harbor_pressed.emit())
+	add_child(_harbor_focus_button)
+	_lure_prev_focus_button = _make_keyboard_focus_button("SharkLurePreviousFocusTarget")
+	_lure_prev_focus_button.pressed.connect(func() -> void: shark_lure_previous_pressed.emit())
+	add_child(_lure_prev_focus_button)
+	_lure_next_focus_button = _make_keyboard_focus_button("SharkLureNextFocusTarget")
+	_lure_next_focus_button.pressed.connect(func() -> void: shark_lure_next_pressed.emit())
+	add_child(_lure_next_focus_button)
+	_main_focus_target = _make_keyboard_focus_control("MainActionFocusTarget")
+	_main_focus_target.gui_input.connect(_on_main_focus_gui_input)
+	add_child(_main_focus_target)
+	_reel_focus_target = _make_keyboard_focus_control("ReelFocusTarget")
+	add_child(_reel_focus_target)
+	_give_focus_target = _make_keyboard_focus_control("GiveLineFocusTarget")
+	add_child(_give_focus_target)
+
+
+func _make_keyboard_focus_control(target_name: String) -> Control:
+	var control := Control.new()
+	control.name = target_name
+	control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	control.focus_mode = Control.FOCUS_NONE
+	control.z_index = 20
+	return control
+
+
+func _make_keyboard_focus_button(target_name: String) -> Button:
+	var button := Button.new()
+	button.name = target_name
+	button.flat = true
+	button.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.focus_mode = Control.FOCUS_NONE
+	button.z_index = 20
+	var empty := StyleBoxEmpty.new()
+	button.add_theme_stylebox_override("normal", empty)
+	button.add_theme_stylebox_override("hover", empty)
+	button.add_theme_stylebox_override("pressed", empty)
+	return button
+
+
+func keyboard_focus_targets() -> Array[Control]:
+	var targets: Array[Control] = []
+	match _simulator_state():
+		FishingSimulator.State.READY:
+			if (
+				bool(shark_lure_selector.get("danger", false))
+				and int(shark_lure_selector.get("candidate_count", 0)) > 1
+			):
+				targets.append(_lure_prev_focus_button)
+				targets.append(_lure_next_focus_button)
+			targets.append(_main_focus_target)
+			targets.append(_change_spot_focus_button)
+			targets.append(_harbor_focus_button)
+		FishingSimulator.State.BITE:
+			targets.append(_main_focus_target)
+		FishingSimulator.State.FIGHT:
+			targets.append(_reel_focus_target)
+			targets.append(_give_focus_target)
+	return targets
+
+
+func preferred_keyboard_focus_target() -> Control:
+	match _simulator_state():
+		FishingSimulator.State.READY, FishingSimulator.State.BITE:
+			return _main_focus_target
+		FishingSimulator.State.FIGHT:
+			return _reel_focus_target
+	return null
+
+
+func main_focus_target() -> Control:
+	return _main_focus_target
+
+
+func _on_main_focus_gui_input(event: InputEvent) -> void:
+	if not event is InputEventKey:
+		return
+	var key_event := event as InputEventKey
+	if (
+		key_event.pressed
+		and not key_event.echo
+		and key_event.keycode in [KEY_ENTER, KEY_KP_ENTER]
+	):
+		main_action_pressed.emit()
+		_main_focus_target.accept_event()
+
+
+func release_held_actions() -> void:
+	if _reeling:
+		_reeling = false
+		reel_changed.emit(false)
+	if _giving:
+		_giving = false
+		give_line_changed.emit(false)
+
+
+func _sync_keyboard_focus_target_rects() -> void:
+	var state := _simulator_state()
+	_set_keyboard_target_rect(_main_focus_target, _main_rect, state == FishingSimulator.State.READY or state == FishingSimulator.State.BITE)
+	_set_keyboard_target_rect(_reel_focus_target, _reel_rect, state == FishingSimulator.State.FIGHT)
+	_set_keyboard_target_rect(_give_focus_target, _give_rect, state == FishingSimulator.State.FIGHT)
+	var arrows_enabled := (
+		state == FishingSimulator.State.READY
+		and bool(shark_lure_selector.get("danger", false))
+		and int(shark_lure_selector.get("candidate_count", 0)) > 1
+	)
+	_set_keyboard_target_rect(_lure_prev_focus_button, _lure_prev_rect, arrows_enabled)
+	_set_keyboard_target_rect(_lure_next_focus_button, _lure_next_rect, arrows_enabled)
+	_set_keyboard_target_rect(_change_spot_focus_button, _change_spot_rect, state == FishingSimulator.State.READY)
+	_set_keyboard_target_rect(_harbor_focus_button, _harbor_rect, state == FishingSimulator.State.READY)
+
+
+func _set_keyboard_target_rect(control: Control, rect: Rect2, enabled: bool) -> void:
+	if control == null:
+		return
+	control.position = rect.position
+	control.size = rect.size
+	# candidate scopeはFishingScreenが置換する。proxy自体は常にtree内へ残し、
+	# state変更直後（次のdraw前）でも初期focusを受け取れるようにする。
+	control.visible = true
+	if control is BaseButton:
+		(control as BaseButton).disabled = not enabled or rect.size.x <= 0.0 or rect.size.y <= 0.0
 
 
 func _process(_delta: float) -> void:
@@ -180,6 +319,7 @@ func _draw() -> void:
 		_draw_ready_bar_background(rect)
 		var ready_rect := Rect2(size.x * 0.014, size.y * 0.070, size.x * 0.972, size.y * 0.840)
 		_draw_ready_controls(font, ready_rect)
+		_sync_keyboard_focus_target_rects()
 		return
 
 	if state == FishingSimulator.State.FIGHT or _is_intermediate_state(state):
@@ -194,12 +334,14 @@ func _draw() -> void:
 		if _hud_frame == null:
 			fight_rect = rect.grow(-10.0)
 		_draw_fight_slim_controls(font, fight_rect)
+		_sync_keyboard_focus_target_rects()
 		return
 	if _is_intermediate_state(state):
 		var intermediate_rect := Rect2(size.x * 0.014, size.y * 0.085, size.x * 0.972, size.y * 0.83)
 		if _hud_frame == null:
 			intermediate_rect = rect.grow(-10.0)
 		_draw_intermediate_slim_controls(font, intermediate_rect)
+		_sync_keyboard_focus_target_rects()
 		return
 
 	var gap := 10.0
@@ -222,6 +364,7 @@ func _draw() -> void:
 	_draw_depth(font, depth_rect)
 	_draw_stamina(font, stamina_rect)
 	_draw_bottom_controls(font, bottom)
+	_sync_keyboard_focus_target_rects()
 
 
 func _draw_fight_slim_controls(font: Font, rect: Rect2) -> void:
@@ -580,8 +723,8 @@ func _draw_ready_shark_lure_panel(font: Font, rect: Rect2) -> void:
 	var arrow_y := card_y + (card_h - arrow_h) * 0.5
 	var prev_arrow_rect := Rect2(inner.position + Vector2(0.0, arrow_y - inner.position.y), Vector2(arrow_w, arrow_h))
 	var next_arrow_rect := Rect2(Vector2(inner.end.x - arrow_w, arrow_y), Vector2(arrow_w, arrow_h))
-	_lure_prev_rect = prev_arrow_rect.grow_individual(0.0, 0.0, arrow_hit_w - arrow_w, 0.0)
-	_lure_next_rect = next_arrow_rect.grow_individual(arrow_hit_w - arrow_w, 0.0, 0.0, 0.0)
+	_lure_prev_rect = prev_arrow_rect.grow_individual(0.0, 0.0, arrow_hit_w - arrow_w, 0.0) if arrows_enabled else Rect2()
+	_lure_next_rect = next_arrow_rect.grow_individual(arrow_hit_w - arrow_w, 0.0, 0.0, 0.0) if arrows_enabled else Rect2()
 	_draw_ready_arrow(font, prev_arrow_rect, "◀", arrows_enabled)
 	_draw_ready_arrow(font, next_arrow_rect, "▶", arrows_enabled)
 

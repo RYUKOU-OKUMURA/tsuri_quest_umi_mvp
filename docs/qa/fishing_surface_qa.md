@@ -1,8 +1,8 @@
 # 水上キャスト画面 QA判断ログ
 
-最終更新: 2026-07-10 / 状態: UI-READY局所P1対応済み（名前スロットfreeze）
+最終更新: 2026-07-15 / 状態: UI-READY局所P1対応済み（名前スロットfreeze）/ E11 INPUT-FISHING入力契約freeze
 参照画像: `reference/01_surface_fishing_mockup.png` / `reference/13_fishing_ready_danger_mockup.png`
-QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `./tools/fishing_time_slot_visual_qa.sh` / `godot --path . res://tools/fishing_surface_states_preview.tscn` / `godot --path . res://tools/catch_fanfare_preview.tscn` / `./tools/fight_visual_qa.sh`
+QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `./tools/fishing_time_slot_visual_qa.sh` / `godot --path . res://tools/fishing_surface_states_preview.tscn` / `godot --path . res://tools/catch_fanfare_preview.tscn` / `godot --headless --path . res://tools/fishing_input_smoke.tscn` / `./tools/fight_visual_qa.sh`
 
 ## 1. freeze値（正本）
 
@@ -15,6 +15,7 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `./tools/fishing_
 | rain/fogオーバーレイ | rain=2枚縦スクロール、fog=横ドリフト+alpha揺らぎ | `_draw_weather_texture_overlay()` | 静止合成をやめ、天候の動きを出す |
 | READY専用下段バー品質 | READY時は `fight_hud_frame.png` を背景に描かない。下段バーは `common/button_frame_primary.png`、セレクタ/通常エサカードは `common/parchment_card.png` + `common/card_frame.png`、投げるボタンは `common/action_button_frame.png`、矢印・右メニューは `common/button_frame*.png` で構成する。READYキーチップは濃色の `common/button_frame_primary.png` + 白文字で表示する。`投げる` はfont ascent/descentで中央に収め、READYで見える餌アイコンは `underwater/hud_bait_icon.png` または魚ポートレートを使う | `src/ui/components/fight_hud.gd` / `tools/audit_showcase_asset_refs.py` | docs/40準拠。FIGHT用の焼き込み区画・分割線がREADYバー背面に覗かないことをfreeze。監査allowlistはこのため `fight_hud.gd` に common を明示許可。READY実表示でコード描画の餌アイコンを出さない |
 | サメ餌魚READYセレクタ | `spot_id == "danger_reef"` のREADY時だけ下段HUD左をサメ餌魚セレクタに差し替え。`餌魚なし`・所持魚・残チャージ中の魚を左右で選ぶ。表示は魚ポートレート＋右側の固定情報スロット、下部フッターに `投げると1匹つかう` / `あとN回` / `在庫0` を出す。名前は固定幅の2行までで描き、`港のぬし・大岩クロダイ` を省略しない。左右矢印は34px幅で、カード幅を優先する | `src/ui/fishing_screen.gd` / `src/ui/components/fight_hud.gd` | docs/38・docs/40準拠。餌魚は釣り場選択では消費せず、投げる時に1匹消費してチャージを付与する。名前・在庫数・チャージを別スロットへ固定し、`港のぬし・大岩クロダイ`＋`x99` / `メダイ`＋`x101` で省略・重心揺れがないことをfreeze |
+| READY入力focus契約 | 通常READYは `投げる` → `釣り場変更` → `港へ戻る` の3候補、初期focusは `投げる`。危険海域で餌魚候補が複数ある時だけ左右矢印を先頭2候補へ追加する。候補1件以下では矢印をfocus対象・mouse hit矩形の両方から外す。`Enter/KP Enter` はfocus中の操作を1回だけ実行し、`E` は主操作ショートカットを維持する | `src/ui/fishing_screen.gd` / `src/ui/components/fight_hud.gd` | custom drawのfreeze済みRect2へ透明なfocus proxyを重ね、共通focus ringを表示する。レイアウト・素材・抽選/消費ロジックは変更しない |
 | READY餌魚名前スロット | 魚ポートレート幅82px、右側情報スロット内の名前領域は16px（必要時14px）・最大2行・中央揃え。個数は幅74pxの右下固定スロット、チャージピップはその左へ固定 | `src/ui/components/fight_hud.gd` | UI-READY-01のP1再発。末尾 `…` へのフォールバックを廃止し、3桁在庫・通常名・在庫0・残チャージ・餌なしの4状態で同じカード矩形を維持 |
 | サメ餌魚チャージ表示 | READYでは旧 `所持 xN` / `1匹で最大N回` 表記を廃止し、`魚名 xN` + ピップ + `あとN回` / `投げると1匹つかう` に集約。CASTING以降は下段HUDに `餌魚：<魚名>（あとN回）` を表示 | `src/ui/components/fight_hud.gd` | レア=3回、ぬし=5回の耐久をUI上で追えるようにする。READYの情報階層を参照13へ寄せたため旧freezeを上書き |
 | サメ餌魚APPROACH/BITE文 | 餌魚ありの時だけ `魚影が餌の<魚名>へ近づいている` / `<魚名>に何かが食いついた`。ヒット魚名・サメ名は出さない | `src/core/fishing_simulator.gd` / `src/ui/components/fight_sidebar.gd` | 上部メッセージパネルはAPPROACH/BITEで非表示のため、実表示される右サイドカードにも反映 |
@@ -58,6 +59,35 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `./tools/fishing_
 完了済みのためなし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-15 E11 INPUT-FISHINGのREADY入力契約を採用・freeze。
+
+変更したもの:
+- custom drawのREADY操作矩形へキーボード専用focus proxyを重ね、通常3候補・危険海域の複数餌魚時5候補をTab/方向キーで巡回できるようにした。
+- 主操作へ初期focusと共通focus ringを付与し、focus中の `Enter/KP Enter` と既存の `E` を投げる操作へ接続した。
+- 餌魚候補1件以下では左右矢印のfocus候補だけでなくmouse hit矩形も空にし、見た目disabledなのにクリックできる状態を閉じた。
+
+変更していないもの:
+- READY下段バー3ゾーン、各Rect2の配置値、ボタン/カード素材、時間帯・天候、水面演出、餌魚の抽選・消費・チャージ、魚データ、釣行バランス。
+
+状態契約と証拠:
+
+| 状態 | focus候補 / 初期focus | evidence |
+|---|---|---|
+| 通常READY | 3候補 / `投げる` | `docs/qa/evidence/fishing_surface/2026-07-15_input_ready_focus.png` |
+| 危険海域READY・餌魚複数 | 5候補 / `投げる`（証拠では左矢印をfocusし、Enterで `アジ` → `餌魚なし` の1回変更を確認） | `docs/qa/evidence/fishing_surface/2026-07-15_input_danger_ready_focus.png` |
+
+採用理由:
+- 1280x720実キャプチャで既存の構成・質感を維持したまま、主操作と矢印に共通focus ringを視認できる。
+- 実ViewportイベントでTab/左右/Enter/Eを通し、画面遷移・投げる操作・focus中の餌魚矢印が各1回だけ発火する。
+
+検証:
+- `fishing_input_smoke.tscn`: `fishing_input_smoke: ok`。
+- `fishing_harbor_return_smoke.tscn`: `fishing_harbor_return_smoke: ok`。
+- `fishing_reveal_smoke.tscn`: `fishing_reveal_smoke: ok`。
+- E11 strict input probe: `FISHING` finding 0件。
+- `./tools/fight_visual_qa.sh`: runtime capture・reference/14横並び比較までexit 0。
+- `./tools/validate_project.sh`: 素材監査・魚シート監査・Godotロード確認を含めexit 0。
 
 2026-07-10 UI-READY-01（最長餌魚名P1再発）を採用・freeze。
 
