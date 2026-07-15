@@ -1,6 +1,6 @@
 # 釣具店画面 QA判断ログ
 
-最終更新: 2026-07-05 / 状態: 座標再同期 + ラベル位置ブラッシュアップ済み v1 freeze中 / R1 Palette確認済み
+最終更新: 2026-07-15 / 状態: 座標・素材・入力契約 v1 freeze中 / E11 INPUT-SHOP確認済み
 参照画像: `reference/09_tackle_shop_rod_mockup.png` / `reference/09_tackle_shop_gear_mockup.png`
 QA更新コマンド: `./tools/tackle_shop_visual_qa.sh`
 
@@ -16,7 +16,7 @@ QA更新コマンド: `./tools/tackle_shop_visual_qa.sh`
 | 商品名/状態プレート | 商品名はカード上部プレート中央、価格/所持/装備中/Lv不足は下部プレート中央。太字・輪郭付き | `shop_screen.gd` / `ROD_CARD_*_RECTS` / `RIG_CARD_*_RECTS` | 竿/仕掛けで微妙に異なる実プレート位置へruntime文字を合わせ、列が右へ流れる再発を防ぐ |
 | 詳細表示 | 右紙面上にruntime表示 + 選択商品詳細大絵 | `shop_screen.gd` / `shop_detail_item_sheet.png` | 商品名、状態、説明、性能、対応エサ、購入/装備文言は焼き込まない。詳細大絵は384x224セルで商品ID差し替え |
 | 下部操作 | 右下購入/装備、下部右の紙面中央に港戻り | `shop_screen.gd` | 戻る文言が紙面ボタン内の縦横中央に乗るよう透明Button領域を合わせる |
-| 入力検証 | 実クリックでタブ切替、商品選択、購入/装備、港戻りを検証 | `tools/tackle_shop_smoke.gd` | 内部メソッド直呼びだけでは、レイヤーが入力を塞ぐP1を検出できないため |
+| 入力検証 | 初期focus=選択カード。タブ・表示カード・有効な購入/装備・港戻りを閉じたgraphで結び、disabled主操作をskipする。refresh/rebuild後は意味IDでfocusを保持し、Escapeは港へ1回戻る | `src/ui/shop_screen.gd` / `tools/tackle_shop_input_smoke.gd` / `tools/tackle_shop_smoke.gd` | 実Viewportのキーpress/releaseとmouse clickで、カード可視focus・決定・購入後fallback・戻るを固定する。1280x720矩形と既存mouse hit領域は不変 |
 
 ## 2. 不採用・再試行禁止リスト
 
@@ -45,6 +45,7 @@ QA更新コマンド: `./tools/tackle_shop_visual_qa.sh`
 | ヘッダー装備表示 | 1 | Lv/竿/所持金/仕掛けのruntime文字を上部プレート中央へ下げ、所持金は実プレート中心へ左寄せ | P1解消としてfreeze |
 | 港戻り導線 | 3 | 右端飾りではなく紙面ボタン中央へ透明Button/文字位置を再配置 | P1解消としてfreeze |
 | visual QA拡大キャプチャ | 2 | キャプチャごとにSubViewportを作り、描画待ちと`RenderingServer.force_draw()`を追加 | P1再発防止としてfreeze |
+| 入力focus収束 | 1 | 選択カード初期focus、closed graph、disabled skip、意味ID復元、共通Escapeを追加 | 採用・freeze |
 
 ## 4. 暫定判定・再検証TODO
 
@@ -59,6 +60,15 @@ QA更新コマンド: `./tools/tackle_shop_visual_qa.sh`
 （現在作業中のフェーズなし）
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-15:
+- E11 INPUT-SHOPとして、選択中カードを安全な初期focusにし、竿/仕掛けタブ・現在表示中の商品カード・有効な購入/装備・港戻りを閉じたfocus graphへ登録した。disabledの購入/装備は候補から除外する。
+- カードはrefreshごとに再生成されるため、`tab:<mode>` / `card:<item_id>` / `action` / `return` の意味IDで操作文脈を復元する。購入直後にfocus中の主操作がdisabledになった場合は、選択カードへfallbackする。
+- 代表状態は「竿・入門竿装備中（主操作disabled）」、高リスク状態は「磯竿を選択して購入可能→購入後disabled」と「仕掛けタブ・6カード」。実キーのTab/Shift+Tab/Enter/Escapeと実mouse clickで、全enabled到達、disabled skip、カード選択、購入1回、タブ切替、港戻り1回を確認した。
+- 原寸証拠: `docs/qa/evidence/tackle_shop/2026-07-15_input_card_focus.png`。1280x720で入門竿カードの共通4px focus ringを確認した。
+- 変えていないもの: 1280x720 design canvas、backplate、3x2カード、全Rect、商品/詳細素材、runtime文言、GameData、PlayerProgress、価格・購入・装備ロジック、既存mouse hit領域。
+- 検証: `tackle_shop_input_smoke.tscn` / `tackle_shop_smoke.tscn` / `tackle_shop_visual_qa.sh` / E11 input baselineのSHOP finding 0件 / `./tools/validate_project.sh` / `git diff --check`。
+- 固定条件: カード再生成後のfocusは意味IDで復元し、disabled操作をgraphへ戻さない。カードのローカル透明styleで共通focus ringを上書きしない。
 
 2026-07-05:
 - R1 / Palette移行として、詳細アイコンtint、選択カードwash、タブactive/inactive tint、選択枠透明fillを `Palette.TACKLE_*` へ移行した。
