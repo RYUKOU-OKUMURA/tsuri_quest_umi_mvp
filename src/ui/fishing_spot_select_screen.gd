@@ -45,9 +45,13 @@ var _detail_hint_value_label: Label
 var _detail_rig_value_label: Label
 var _rig_cycle_button: Button
 var _action_button: Button
+var _return_button: Button
+var _notebook_button: Button
+var _menu_button: Button
 var _footer_completion_value_label: Label
 var _footer_completion_fill: ColorRect
 var _footer_completion_back: ColorRect
+var _keyboard_focus_initialized := false
 
 var _header_frame: Texture2D
 var _title_sign_frame: Texture2D
@@ -81,6 +85,8 @@ func _build_screen() -> void:
 	_build_detail_panel(body)
 	_build_footer(layout)
 	_focus_spot(_selected_spot_id, false)
+	_configure_keyboard_focus()
+	set_common_cancel_handler(_return_to_harbor)
 
 
 func _resolve_route_state() -> void:
@@ -283,13 +289,14 @@ func _build_detail_panel(parent: Control) -> void:
 	_apply_detail_frame_rect(_detail_row_panel(_detail_rig_value_label), Rect2(44.0, 563.0, 432.0, 44.0))
 
 	_action_button = make_button("ここで釣る", func() -> void: _select_spot(_selected_spot_id), 0, true)
+	_action_button.name = "FishingActionButton"
 	_apply_button_style(_action_button, _detail_primary_button_style(false), _detail_primary_button_style(true), _detail_primary_button_pressed_style())
 	_action_button.add_theme_font_size_override("font_size", 21)
 	_add_detail_frame_child(panel, _action_button, Rect2(38.0, 613.0, 444.0, 56.0))
 
-	var back := make_return_button(func() -> void: navigate("harbor"), 0.0)
-	back.add_theme_font_size_override("font_size", 20)
-	_add_detail_frame_child(panel, back, Rect2(38.0, 675.0, 444.0, 77.0))
+	_return_button = make_return_button(_return_to_harbor, 0.0)
+	_return_button.add_theme_font_size_override("font_size", 20)
+	_add_detail_frame_child(panel, _return_button, Rect2(38.0, 675.0, 444.0, 77.0))
 
 
 func _add_detail_frame_child(parent: Control, child: Control, frame_rect: Rect2) -> void:
@@ -449,6 +456,7 @@ func _make_rig_control_row(parent: Control) -> void:
 	row.add_child(_detail_rig_value_label)
 
 	_rig_cycle_button = Button.new()
+	_rig_cycle_button.name = "RigCycleButton"
 	_rig_cycle_button.text = "切替"
 	_rig_cycle_button.custom_minimum_size = Vector2(82.0, 0.0)
 	_rig_cycle_button.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -492,10 +500,11 @@ func _build_footer(parent: Control) -> void:
 		fallback.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		panel.add_child(fallback)
 
-	var notebook := _make_footer_button("釣り手帳", _footer_icon(0), _show_notebook_hint, true)
-	notebook.position = Vector2(22.0, 20.0)
-	notebook.size = Vector2(220.0, 64.0)
-	panel.add_child(notebook)
+	_notebook_button = _make_footer_button("釣り手帳", _footer_icon(0), _show_notebook_hint, true)
+	_notebook_button.name = "NotebookButton"
+	_notebook_button.position = Vector2(22.0, 20.0)
+	_notebook_button.size = Vector2(220.0, 64.0)
+	panel.add_child(_notebook_button)
 
 	var progress_panel := PanelContainer.new()
 	progress_panel.position = Vector2(260.0, 22.0)
@@ -574,10 +583,11 @@ func _build_footer(parent: Control) -> void:
 	_message_detail_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	panel.add_child(_message_detail_label)
 
-	var menu := _make_footer_button("メニュー", _footer_icon(3), _show_menu_hint, false)
-	menu.position = Vector2(1104.0, 20.0)
-	menu.size = Vector2(138.0, 64.0)
-	panel.add_child(menu)
+	_menu_button = _make_footer_button("メニュー", _footer_icon(3), _show_menu_hint, false)
+	_menu_button.name = "MenuButton"
+	_menu_button.position = Vector2(1104.0, 20.0)
+	_menu_button.size = Vector2(138.0, 64.0)
+	panel.add_child(_menu_button)
 
 
 func _make_footer_button(text: String, icon: Texture2D, callback: Callable, primary: bool) -> Button:
@@ -675,6 +685,57 @@ func _show_menu_hint() -> void:
 		_message_detail_label.text = "設定や手帳を開く準備中です。"
 
 
+func _configure_keyboard_focus() -> void:
+	var candidates: Array[Control] = [
+		_rig_cycle_button,
+		_action_button,
+		_return_button,
+		_notebook_button,
+		_menu_button,
+	]
+	setup_keyboard_focus(candidates, _action_button)
+	_keyboard_focus_initialized = true
+	_refresh_keyboard_navigation()
+
+
+func _refresh_keyboard_navigation() -> void:
+	var all_controls: Array[Control] = [
+		_rig_cycle_button,
+		_action_button,
+		_return_button,
+		_notebook_button,
+		_menu_button,
+	]
+	for control in all_controls:
+		if control == null:
+			continue
+		control.focus_neighbor_left = NodePath()
+		control.focus_neighbor_right = NodePath()
+		control.focus_neighbor_top = NodePath()
+		control.focus_neighbor_bottom = NodePath()
+		control.focus_next = NodePath()
+		control.focus_previous = NodePath()
+	var available := keyboard_focus_candidates()
+	if available.is_empty():
+		return
+	for index in range(available.size()):
+		var control := available[index]
+		var previous := available[(index - 1 + available.size()) % available.size()]
+		var next := available[(index + 1) % available.size()]
+		var previous_path := control.get_path_to(previous)
+		var next_path := control.get_path_to(next)
+		control.focus_neighbor_left = previous_path
+		control.focus_neighbor_top = previous_path
+		control.focus_previous = previous_path
+		control.focus_neighbor_right = next_path
+		control.focus_neighbor_bottom = next_path
+		control.focus_next = next_path
+
+
+func _return_to_harbor() -> void:
+	navigate("harbor")
+
+
 func _focus_spot(spot_id: String, update_message: bool = true) -> void:
 	if GameData.get_fishing_spot(spot_id).is_empty():
 		return
@@ -759,6 +820,9 @@ func _refresh_detail() -> void:
 	if _action_button != null:
 		_action_button.disabled = not accessible
 		_action_button.text = String(access.get("button_text", "ここで釣る"))
+	if _keyboard_focus_initialized:
+		refresh_keyboard_focus()
+		_refresh_keyboard_navigation()
 
 
 func _select_spot(spot_id: String) -> void:
