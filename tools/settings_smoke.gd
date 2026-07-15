@@ -270,6 +270,7 @@ func _verify_startup_display_restore() -> void:
 
 
 func _verify_title_and_harbor_routes() -> void:
+	_reset_route()
 	var title := TitleScreenScript.new()
 	title.theme = ThemeFactory.build_theme()
 	title.navigate_requested.connect(_capture_route)
@@ -277,8 +278,13 @@ func _verify_title_and_harbor_routes() -> void:
 	await _settle()
 	_expect(title._settings_button != null, "title should expose settings button")
 	title._select_slot(2)
+	var selected_slot_focus_stable := await _wait_for_stable_focus_owner(title._slot_buttons[1])
+	_expect(selected_slot_focus_stable, "title selected slot focus should settle before settings input")
 	title._settings_button.grab_focus()
+	var settings_focus_stable := await _wait_for_stable_focus_owner(title._settings_button)
+	_expect(settings_focus_stable, "title settings focus should remain stable before input")
 	await _send_action("ui_accept")
+	await _wait_for_route_payload("settings", {"return_screen_id": "title", "target_slot_id": 2})
 	_expect(_route_id == "settings" and String(_route_payload.get("return_screen_id", "")) == "title", "title route should carry title return payload")
 	_expect(int(_route_payload.get("target_slot_id", 0)) == 2, "title route should carry the selected slot")
 	await _free_node(title)
@@ -291,7 +297,10 @@ func _verify_title_and_harbor_routes() -> void:
 	await _settle()
 	_expect(harbor._settings_button != null, "harbor should expose settings button")
 	harbor._settings_button.grab_focus()
+	settings_focus_stable = await _wait_for_stable_focus_owner(harbor._settings_button)
+	_expect(settings_focus_stable, "harbor settings focus should remain stable before input")
 	await _send_action("ui_accept")
+	await _wait_for_route_payload("settings", {"return_screen_id": "harbor"})
 	_expect(_route_id == "settings" and String(_route_payload.get("return_screen_id", "")) == "harbor", "harbor route should carry harbor return payload")
 	await _free_node(harbor)
 	PlayerProgress.set_active_save_slot(1, false)
@@ -490,6 +499,36 @@ func _send_action(action: StringName) -> void:
 	Input.parse_input_event(released)
 	await get_tree().process_frame
 	await get_tree().process_frame
+
+
+func _wait_for_stable_focus_owner(control: Control, max_frames: int = 30, required_frames: int = 2) -> bool:
+	var stable_frames := 0
+	for _frame in range(max_frames):
+		await get_tree().process_frame
+		if get_viewport().gui_get_focus_owner() == control:
+			stable_frames += 1
+			if stable_frames >= required_frames:
+				return true
+		else:
+			stable_frames = 0
+	return false
+
+
+func _wait_for_route_payload(expected_id: String, expected_payload: Dictionary, max_frames: int = 30) -> bool:
+	for _frame in range(max_frames):
+		if _route_matches(expected_id, expected_payload):
+			return true
+		await get_tree().process_frame
+	return _route_matches(expected_id, expected_payload)
+
+
+func _route_matches(expected_id: String, expected_payload: Dictionary) -> bool:
+	if _route_id != expected_id:
+		return false
+	for key in expected_payload:
+		if not _route_payload.has(key) or _route_payload[key] != expected_payload[key]:
+			return false
+	return true
 
 
 func _free_node(node: Node) -> void:
