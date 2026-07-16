@@ -120,9 +120,11 @@ func _verify_delivery_and_record_once() -> void:
 	var inventory_before := PlayerProgress.inventory.duplicate(true)
 	var second_quest: Dictionary = PlayerProgress.quest_board[1].duplicate(true)
 	completed_before = PlayerProgress.quest_completed_count
+	money_before = PlayerProgress.money
 	await _send_key_with_echo(KEY_ENTER)
 	_expect(action_two_pressed[0] == 1, "Enter press including echo should emit one record report")
 	_expect(PlayerProgress.quest_completed_count == completed_before + 1, "record report should increment completion once")
+	_expect(PlayerProgress.money == money_before + int(second_quest.get("reward_money", 0)), "keyboard record report should add one reward including Enter echo")
 	_expect(PlayerProgress.inventory == inventory_before, "record report should not consume any fish")
 	_expect(PlayerProgress.quest_board.size() == 3 and PlayerProgress.quest_board[1] != second_quest, "record report should replace its slot once")
 	await _free_screen(screen)
@@ -167,6 +169,20 @@ func _verify_mouse_regression() -> void:
 	_navigation_events.clear()
 	await _click_control(screen._return_button)
 	_expect(_navigation_events == ["harbor"], "mouse return should navigate exactly once")
+	await _free_screen(screen)
+
+	_seed_mixed_board()
+	screen = await _make_screen()
+	var record_quest: Dictionary = PlayerProgress.quest_board[1].duplicate(true)
+	var inventory_before := PlayerProgress.inventory.duplicate(true)
+	money_before = PlayerProgress.money
+	completed_before = PlayerProgress.quest_completed_count
+	await _click_control(_action(screen, 1))
+	_expect(PlayerProgress.inventory == inventory_before, "mouse record report should not consume any fish")
+	_expect(PlayerProgress.money == money_before + int(record_quest.get("reward_money", 0)), "mouse record report should add exactly one reward")
+	_expect(PlayerProgress.quest_completed_count == completed_before + 1, "mouse record report should increment completion exactly once")
+	_expect(PlayerProgress.quest_board.size() == 3, "mouse record report should keep three posted quests")
+	_expect(PlayerProgress.quest_board[1] != record_quest, "mouse record report should replace its slot exactly once")
 	await _free_screen(screen)
 
 
