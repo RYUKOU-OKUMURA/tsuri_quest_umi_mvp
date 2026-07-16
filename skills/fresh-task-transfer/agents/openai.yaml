@@ -1,0 +1,7 @@
+interface:
+  display_name: "Fresh Task Transfer"
+  short_description: "長いCodex会話を新規タスクへ安全・簡潔に引き継ぐ"
+  default_prompt: "Use $fresh-task-transfer to move this conversation into a fresh Codex task with a compact, decision-complete handoff."
+
+policy:
+  allow_implicit_invocation: false
