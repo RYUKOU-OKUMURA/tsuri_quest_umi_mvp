@@ -107,6 +107,7 @@ func _capture_select() -> void:
 	screen._set_quantity("aji", 3)
 	screen._set_quantity("madai", 1)
 	screen._select_visible_row(1)
+	await _release_visual_baseline_focus(screen)
 	await _capture_screen(screen, OUT_SELECT)
 
 
@@ -114,6 +115,7 @@ func _capture_confirm() -> void:
 	var screen: Control = await _make_screen(VW)
 	screen._set_quantity("hirame", 1)
 	screen._show_confirm_overlay()
+	await _release_visual_baseline_focus(screen)
 	await _capture_screen(screen, OUT_CONFIRM)
 
 
@@ -122,12 +124,22 @@ func _capture_sold() -> void:
 	screen._set_quantity("aji", 2)
 	screen._set_quantity("hirame", 1)
 	screen._confirm_sell()
+	await _release_visual_baseline_focus(screen)
 	await _capture_screen(screen, OUT_SOLD)
 
 
 func _capture_plain(out_path: String) -> void:
 	var screen: Control = await _make_screen(VW)
+	await _release_visual_baseline_focus(screen)
 	await _capture_screen(screen, out_path)
+
+
+func _release_visual_baseline_focus(screen: Control) -> void:
+	# M1〜M3の4状態baselineは非focus契約。製品の初期focusは解除せず、
+	# INPUT-MARKET専用smokeの原寸focus証拠で別に受け入れる。
+	await get_tree().process_frame
+	screen.get_viewport().gui_release_focus()
+	await get_tree().process_frame
 
 
 func _capture_cta_input_state(state_name: String, out_path: String) -> void:
@@ -138,7 +150,8 @@ func _capture_cta_input_state(state_name: String, out_path: String) -> void:
 	var viewport := screen.get_viewport()
 	var button_center := button.get_global_rect().get_center()
 	await _move_pointer(viewport, Vector2(8.0, 8.0))
-	button.release_focus()
+	# CTA 5状態は共通の非focus起点から作り、focusだけを明示的に取得する。
+	await _release_visual_baseline_focus(screen)
 	match state_name:
 		"normal":
 			pass

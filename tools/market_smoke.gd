@@ -40,7 +40,8 @@ func _ready() -> void:
 		_screen._cart_action_button.size.is_equal_approx(MarketScreenScript.CART_ACTION_RECT.size),
 		"cart action should keep the frozen size: actual=%s expected=%s" % [_screen._cart_action_button.size, MarketScreenScript.CART_ACTION_RECT.size]
 	)
-	_expect(_screen._cart_action_button.focus_mode == Control.FOCUS_ALL, "cart action should remain keyboard/gamepad focusable")
+	_expect(_screen._cart_action_button.disabled, "empty cart action should start disabled")
+	_expect(_screen._cart_action_button.focus_mode == Control.FOCUS_NONE, "disabled cart action should leave the keyboard focus graph")
 	var cart_styles: Array[StyleBoxTexture] = []
 	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
 		var style := _screen._cart_action_button.get_theme_stylebox(state) as StyleBoxTexture

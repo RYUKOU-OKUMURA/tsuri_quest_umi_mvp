@@ -82,6 +82,7 @@ var _confirm_title_label: Label
 var _confirm_body_label: Label
 var _confirm_cancel_button: Button
 var _confirm_sell_button: Button
+var _focus_before_confirm := ""
 
 var _fish_ids: Array[String] = []
 var _selected_fish_id := ""
@@ -109,6 +110,7 @@ func _build_screen() -> void:
 	_build_cart(root)
 	_build_confirm_overlay(root)
 	_layout_design_canvas()
+	set_common_cancel_handler(_handle_cancel)
 	_refresh()
 
 
@@ -219,8 +221,11 @@ func _build_inventory_row(parent: Control, row_index: int) -> void:
 	var select_button := _market_button("", _select_visible_row.bind(row_index), false, 1)
 	select_button.name = "MarketRowSelect_%d" % row_index
 	select_button.set_meta("market_row_select", true)
+	select_button.set_meta("market_focus_kind", "select")
+	select_button.set_meta("market_row_index", row_index)
 	_make_button_transparent(select_button)
-	_place(parent, select_button, Rect2(rect.position, Vector2(510.0, rect.size.y)))
+	# 数量Buttonとhit領域を重ねず、行focus枠が数量表示を横断しない幅に閉じる。
+	_place(parent, select_button, Rect2(rect.position, Vector2(448.0, rect.size.y)))
 	row["select_button"] = select_button
 
 	var fish_image := TextureRect.new()
@@ -269,6 +274,8 @@ func _build_inventory_row(parent: Control, row_index: int) -> void:
 	var minus_button := _market_button("-", _adjust_visible_row.bind(row_index, -1), false, 18)
 	minus_button.name = "MarketRowMinus_%d" % row_index
 	minus_button.set_meta("market_quantity_button", true)
+	minus_button.set_meta("market_focus_kind", "minus")
+	minus_button.set_meta("market_row_index", row_index)
 	_place(parent, minus_button, Rect2(524.0, rect.position.y + 14.0, 28.0, 34.0))
 	row["minus_button"] = minus_button
 
@@ -280,12 +287,16 @@ func _build_inventory_row(parent: Control, row_index: int) -> void:
 	var plus_button := _market_button("+", _adjust_visible_row.bind(row_index, 1), false, 18)
 	plus_button.name = "MarketRowPlus_%d" % row_index
 	plus_button.set_meta("market_quantity_button", true)
+	plus_button.set_meta("market_focus_kind", "plus")
+	plus_button.set_meta("market_row_index", row_index)
 	_place(parent, plus_button, Rect2(608.0, rect.position.y + 14.0, 28.0, 34.0))
 	row["plus_button"] = plus_button
 
 	var all_button := _market_button("全", _set_visible_row_all.bind(row_index), false, 16)
 	all_button.name = "MarketRowAll_%d" % row_index
 	all_button.set_meta("market_quantity_button", true)
+	all_button.set_meta("market_focus_kind", "all")
+	all_button.set_meta("market_row_index", row_index)
 	_place(parent, all_button, Rect2(640.0, rect.position.y + 14.0, 28.0, 34.0))
 	row["all_button"] = all_button
 
@@ -459,7 +470,10 @@ func _build_confirm_overlay(parent: Control) -> void:
 	_place(_confirm_overlay, _confirm_sell_button, Rect2(690.0, 414.0, 180.0, 46.0))
 
 
-func _refresh() -> void:
+func _refresh(preferred_focus_identity: String = "") -> void:
+	var retained_focus_identity := preferred_focus_identity
+	if retained_focus_identity.is_empty():
+		retained_focus_identity = _focused_control_identity()
 	_rebuild_fish_ids()
 	_clamp_scroll_offset()
 	_prune_quantities()
@@ -468,6 +482,7 @@ func _refresh() -> void:
 	_refresh_inventory()
 	_refresh_detail()
 	_refresh_cart()
+	_sync_keyboard_focus_context(retained_focus_identity)
 
 
 func _rebuild_fish_ids() -> void:
@@ -705,15 +720,23 @@ func _show_confirm_overlay() -> void:
 	]
 	if _has_last_fish_warning():
 		body += "\n最後の1匹を含みます。料理素材には残りません。"
+	_focus_before_confirm = _focused_control_identity()
 	_confirm_body_label.text = body
 	_confirm_overlay.visible = true
+	setup_keyboard_focus([_confirm_cancel_button, _confirm_sell_button], _confirm_cancel_button)
+	_link_keyboard_focus_graph(keyboard_focus_candidates())
 
 
 func _hide_confirm_overlay() -> void:
 	_confirm_overlay.visible = false
+	var restore_identity := _focus_before_confirm
+	_focus_before_confirm = ""
+	_sync_keyboard_focus_context(restore_identity)
 
 
 func _confirm_sell() -> Dictionary:
+	var restore_identity := _focus_before_confirm
+	_focus_before_confirm = ""
 	var result := PlayerProgress.sell_fish_batch(_sell_quantities)
 	_confirm_overlay.visible = false
 	if bool(result.get("ok", false)):
@@ -724,8 +747,176 @@ func _confirm_sell() -> Dictionary:
 		_selected_fish_id = ""
 	else:
 		_last_message = String(result.get("message", "売却できませんでした。"))
-	_refresh()
+	_refresh(restore_identity)
 	return result
+
+
+func _handle_cancel() -> void:
+	if _confirm_overlay != null and _confirm_overlay.visible:
+		_hide_confirm_overlay()
+		return
+	navigate("harbor")
+
+
+func _sync_keyboard_focus_context(retained_identity: String = "") -> void:
+	if _confirm_overlay != null and _confirm_overlay.visible:
+		setup_keyboard_focus([_confirm_cancel_button, _confirm_sell_button], _confirm_cancel_button)
+		_link_keyboard_focus_graph(keyboard_focus_candidates())
+		return
+
+	var candidates: Array[Control] = [_prev_page_button, _next_page_button]
+	for row in _row_nodes:
+		candidates.append(row["select_button"] as Button)
+		candidates.append(row["minus_button"] as Button)
+		candidates.append(row["plus_button"] as Button)
+		candidates.append(row["all_button"] as Button)
+	candidates.append(_select_all_button)
+	candidates.append(_cart_action_button)
+	candidates.append(_return_button)
+
+	var preferred := _focus_control_for_identity(retained_identity)
+	if preferred == null:
+		preferred = _selected_row_button()
+	if preferred == null:
+		preferred = _return_button
+	setup_keyboard_focus(candidates, preferred)
+	_preserve_cart_action_focus_skin()
+	_link_keyboard_focus_graph(keyboard_focus_candidates())
+
+
+func _preserve_cart_action_focus_skin() -> void:
+	# M3で採用済みのfocus texture自体が可視契約なので、共通focus枠は重ねない。
+	_apply_cart_action_skin(_cart_action_button)
+	var indicator := _cart_action_button.get_node_or_null(COMMON_FOCUS_INDICATOR_NAME) as Control
+	if indicator == null:
+		return
+	indicator.visible = false
+	if bool(_cart_action_button.get_meta("market_cart_focus_skin_wired", false)):
+		return
+	_cart_action_button.set_meta("market_cart_focus_skin_wired", true)
+	_cart_action_button.focus_entered.connect(func() -> void:
+		if is_instance_valid(indicator):
+			indicator.visible = false
+	)
+	_cart_action_button.focus_exited.connect(func() -> void:
+		if is_instance_valid(indicator):
+			indicator.visible = false
+	)
+
+
+func _focused_control_identity() -> String:
+	if not is_inside_tree():
+		return ""
+	return _control_focus_identity(get_viewport().gui_get_focus_owner())
+
+
+func _control_focus_identity(control: Control) -> String:
+	if control == null or not is_instance_valid(control):
+		return ""
+	if control == _prev_page_button:
+		return "page_prev"
+	if control == _next_page_button:
+		return "page_next"
+	if control == _select_all_button:
+		return "select_all"
+	if control == _cart_action_button:
+		return "cart_action"
+	if control == _return_button:
+		return "return"
+	if control.has_meta("market_row_index"):
+		var row_index := int(control.get_meta("market_row_index", -1))
+		var fish_id := _visible_fish_id(row_index)
+		var kind := String(control.get_meta("market_focus_kind", ""))
+		if not fish_id.is_empty() and not kind.is_empty():
+			return "row:%s:%s" % [fish_id, kind]
+	return ""
+
+
+func _focus_control_for_identity(identity: String) -> Control:
+	match identity:
+		"page_prev":
+			return _prev_page_button if not _prev_page_button.disabled else null
+		"page_next":
+			return _next_page_button if not _next_page_button.disabled else null
+		"select_all":
+			return _select_all_button if not _select_all_button.disabled else null
+		"cart_action":
+			return _cart_action_button if not _cart_action_button.disabled else null
+		"return":
+			return _return_button
+	if identity.begins_with("row:"):
+		var parts := identity.split(":", false)
+		if parts.size() == 3:
+			var fish_index := _fish_ids.find(parts[1])
+			if fish_index >= _scroll_offset and fish_index < _scroll_offset + VISIBLE_ROW_COUNT:
+				var row := _row_nodes[fish_index - _scroll_offset] as Dictionary
+				var button := row.get("%s_button" % parts[2]) as Button
+				if parts[2] == "select":
+					button = row.get("select_button") as Button
+				return button if button != null and not button.disabled else null
+	return null
+
+
+func _selected_row_button() -> Button:
+	var selected_index := _fish_ids.find(_selected_fish_id)
+	if selected_index < _scroll_offset or selected_index >= _scroll_offset + VISIBLE_ROW_COUNT:
+		return null
+	return _row_nodes[selected_index - _scroll_offset].get("select_button") as Button
+
+
+func _link_keyboard_focus_graph(available: Array[Control]) -> void:
+	for control in available:
+		control.focus_neighbor_left = NodePath()
+		control.focus_neighbor_right = NodePath()
+		control.focus_neighbor_top = NodePath()
+		control.focus_neighbor_bottom = NodePath()
+		control.focus_next = NodePath()
+		control.focus_previous = NodePath()
+	if available.size() <= 1:
+		return
+	for index in range(available.size()):
+		var control := available[index]
+		var previous := available[(index - 1 + available.size()) % available.size()]
+		var next := available[(index + 1) % available.size()]
+		control.focus_previous = control.get_path_to(previous)
+		control.focus_next = control.get_path_to(next)
+		control.focus_neighbor_left = control.get_path_to(
+			_nearest_focus_control(control, available, Vector2.LEFT, previous)
+		)
+		control.focus_neighbor_right = control.get_path_to(
+			_nearest_focus_control(control, available, Vector2.RIGHT, next)
+		)
+		control.focus_neighbor_top = control.get_path_to(
+			_nearest_focus_control(control, available, Vector2.UP, previous)
+		)
+		control.focus_neighbor_bottom = control.get_path_to(
+			_nearest_focus_control(control, available, Vector2.DOWN, next)
+		)
+
+
+func _nearest_focus_control(
+	origin: Control,
+	available: Array[Control],
+	direction: Vector2,
+	fallback: Control
+) -> Control:
+	var origin_center := origin.get_global_rect().get_center()
+	var lateral_axis := Vector2(-direction.y, direction.x)
+	var best := fallback
+	var best_score := INF
+	for candidate in available:
+		if candidate == origin:
+			continue
+		var delta := candidate.get_global_rect().get_center() - origin_center
+		var primary := delta.dot(direction)
+		if primary <= 0.5:
+			continue
+		var lateral := absf(delta.dot(lateral_axis))
+		var score := primary + lateral * 2.0
+		if score < best_score:
+			best_score = score
+			best = candidate
+	return best
 
 
 func _cart_summary() -> Dictionary:
