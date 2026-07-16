@@ -1,6 +1,6 @@
 # 港画面 QA判断ログ
 
-最終更新: 2026-07-12 / 状態: 「港の司令盤」採用・freeze
+最終更新: 2026-07-16 / 状態: 「港の司令盤」採用・freeze＋keyboard入力契約収束
 参照画像: `docs/qa/evidence/harbor/2026-07-10_harbor_command_board_mockup_v1.png`
 実装仕様: `docs/44_harbor_command_board_spec.md`
 QA更新コマンド: `./tools/harbor_visual_qa.sh`（固定previewデータで3時間帯、食事効果なし日中、モック横並び、grayscale、thumbnailを一括生成）
@@ -24,7 +24,7 @@ QA更新コマンド: `./tools/harbor_visual_qa.sh`（固定previewデータで3
 | 記録・システム | ステータス/魚図鑑 `(864/1046,494,174,42)`。設定 `(1064,140,76,28)`、タイトル `(1148,140,72,28)`。両方とも非透明runtime子Labelを中央配置し、省略なし。共通 `harbor_command_dark_frame.svg` | `_build_facility_menu` | 設定とタイトルを右上へ分離し、既存compact描画文法を共有 |
 | 推薦 | `(864,544,356,68)`。共通 `harbor_command_dark_frame.svg`。納品可能依頼→クーラー内の魚→出港の優先順。施設hover/focus時だけ説明へ切替 | `_facility_menu_hint` | 常設の初心者契約 |
 | 通知・ロック | 依頼/市場は14px通知丸。生簀ロック中も押下可能で、推薦欄に解放条件を表示 | `_build_command_route_button` | 読めないdisabled導線にしない |
-| 10既存導線＋設定とフォーカス | 既存route 10件は不変。追加設定は `settings` へ遷移し港戻りpayloadを渡す。右上は設定↔タイトル、両方から下の主CTAへ隣接。全route/timeはhover=明度差、pressed=暗化、focus=透明fill＋金色2px枠（CTAは3px） | `_route_buttons` / `_settings_button` / `_wire_command_focus` | ゲームパッドでも現在地を可視化 |
+| 10既存導線＋設定とフォーカス | 既存route 10件は不変。追加設定は `settings` へ遷移し港戻りpayloadを渡す。右上は設定↔タイトル、両方から下の主CTAへ隣接。全routeと解放済みtimeはhover=明度差、pressed=暗化、focus=透明fill＋金色2px枠（CTAは3px）。ロックtimeは`FOCUS_NONE`、解放済みtime集合を表示順にCTAと閉じた横graphへ再配線し、動的再ロック時はCTAへ退避 | `_route_buttons` / `_settings_button` / `_wire_command_focus` / `_wire_time_slot_focus` | マウス＋キーボードで現在地を可視化。初期focusは主CTA |
 | 共通ラインアイコン | `assets/showcase/common/harbor_command_icon_sheet.svg`（15セル×32px） | `_command_icon_rect` | モックの線画へ統一 |
 | フッター | `(40,648,1200,48)`。共通 `harbor_command_dark_frame.svg`。左にクーラー匹数、右にプレイ時間。区切り記号なし | `_build_footer` | 情報重複なし |
 | 背景 | 全画面減光スクリム＋朝/夜の既存時間帯グレード | `_build_screen` / `_refresh_time_slot_grade_overlay` | 背景と情報盤の競合を抑える |
@@ -68,23 +68,23 @@ QA更新コマンド: `./tools/harbor_visual_qa.sh`（固定previewデータで3
 
 ## 7. 判断ログ（直近パスのみ）
 
-2026-07-12 右上の設定／タイトル導線P1修正を採用し、局所freeze。
+2026-07-16 keyboard入力P1修正を採用し、港のfindingを0件へ収束。
 
-- 再オープン: 右操作盤ヘッダーの設定 `(1064,140,76,28)` とタイトル `(1148,140,72,28)` の表示文字だけ。
-- 変更: 標準Button文字を使わず、既存compactスキン上へ非透明の12px runtime子Labelを置く共通描画へ統一。タイトル表示はボタン幅に合う完全語「タイトル」とした。
-- 維持: 主CTA、施設2x3、記録2件、推薦、左主情報盤、上部ステータス、フッター、既存route 10件、素材、Palette、他freezeは変更していない。
-- smoke: 子Labelの存在、非透明色、完全な文言、文字実測幅、ボタン矩形内包含、設定／タイトル遷移、設定↔タイトルと主CTAへのfocus隣接を契約化した。
+- 再オープン: 時間帯3ボタンのfocus対象判定と、時間帯↔主CTAの隣接graphだけ。入力baselineの `INPUT_DISABLED_REACHED` / `INPUT_FOCUS_ISOLATED` を根拠とするP1再オープン。
+- 変更: 朝／日中／夜を手作業で常時連結せず、現在解放済みの時間帯集合を表示順に集めて主CTAとの閉じた横graphを再構築。ロック中は`FOCUS_NONE`、解放後はgraphへ復帰し、focus中に再ロックされた場合は主CTAへ退避する。
+- 維持: 全freeze矩形、文言、route 10件、ゲームロジック、時間帯解放Lv、mouse選択、主CTA初期focus、既存focus skin、素材、Paletteは変更していない。EscapeはE11 registryの`cancel:none`（港では無遷移）を維持。
+- smoke: 実viewportの矢印／Tab／Enter／Escape／mouseを使用。Lv1の朝・夜skip、Lv15解放、Lv1へ戻したA→B→A graph／矩形復帰、Enter echo一重、mouse route/time、全enabled操作到達を契約化した。旧実装ではロック中の朝が`FOCUS_ALL`のため専用smokeが失敗することも確認した。
 
 判断根拠:
 
-- `docs/qa/evidence/harbor/2026-07-12_settings_title_before_after.png`（左=空設定／切れたタイトル、右=設定／タイトル完全表示。同一seed・1280x720）
-- `docs/qa/evidence/harbor/2026-07-12_settings_title_after.png`（採用原寸normal）
-- `docs/qa/evidence/harbor/2026-07-12_settings_title_hover.png` / `2026-07-12_settings_title_pressed.png` / `2026-07-12_settings_title_focus.png`（操作状態原寸）
+- `docs/qa/evidence/harbor/2026-07-16_input_default_focus.png`（Lv1・初期主CTA、1280x720）
+- `docs/qa/evidence/harbor/2026-07-16_input_locked_time_focus.png`（Lv1・ロック朝／夜をskipして日中focus、1280x720）
+- `docs/qa/evidence/harbor/2026-07-16_input_unlocked_time_focus.png`（Lv15・動的解放後の朝focus、1280x720）
 
 採用理由:
 
-- beforeの空ボタンと文字切れが解消し、原寸で「設定」「タイトル」を完全に読める。
-- normal / hover / pressed / focusで文字が維持され、focus枠と押下状態を識別できる。
-- 同一seedの全画面比較で、右上以外の港freezeに視覚差がない。
+- ロック済み時間帯へ方向操作が到達せず、初期主CTAからroute／time／system／recordの全enabled操作へ到達できる。
+- 解放状態が変化してもロック済み要素への古い隣接を残さず、focus中要素の再ロックでも安全な主CTAへ戻る。
+- 原寸3状態で既存focus枠が判別でき、`harbor_visual_qa`で全freeze矩形・情報階層・素材に回帰がない。
 
-検証結果: `settings_smoke: ok` / `harbor_screen_smoke: ok` / `./tools/harbor_visual_qa.sh` green / `./tools/validate_project.sh` green / `git diff --check` green。
+検証結果: `harbor_input_smoke: ok` / `harbor_screen_smoke: ok` / E11 harbor finding 0 / `./tools/harbor_visual_qa.sh` green / `./tools/validate_project.sh` green / `git diff --check` green。`./tools/e11_qa_harness_verify.sh` はfocus/resolution/strict probeまでgreen、親ownerのrelease manifestへ新smokeを登録する最終整合だけ統合時に実施する。

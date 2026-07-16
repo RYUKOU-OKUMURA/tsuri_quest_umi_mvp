@@ -816,6 +816,7 @@ func _select_time_slot(time_slot_id: String) -> void:
 
 
 func _refresh_time_slot_buttons() -> void:
+	var focused_time_slot_was_locked := false
 	for time_slot_id in GameData.get_all_time_slot_ids():
 		var button := _time_slot_buttons.get(time_slot_id, null) as Button
 		if button == null:
@@ -825,7 +826,10 @@ func _refresh_time_slot_buttons() -> void:
 		var unlock_level := int(time_slot.get("unlock_level", 1))
 		var locked := not GameData.is_time_slot_unlocked(time_slot_id, PlayerProgress.level)
 		var selected := PlayerProgress.selected_time_slot_id == time_slot_id
+		if locked and button.has_focus():
+			focused_time_slot_was_locked = true
 		button.disabled = locked
+		button.focus_mode = Control.FOCUS_NONE if locked else Control.FOCUS_ALL
 		if locked:
 			button.text = "Lv.%dで解放" % unlock_level
 		else:
@@ -842,6 +846,11 @@ func _refresh_time_slot_buttons() -> void:
 		var icon := _time_slot_icons.get(time_slot_id, null) as TextureRect
 		if icon != null:
 			icon.modulate = Palette.HARBOR_ICON_MODULATE if not locked else Palette.HARBOR_LOCKED_ICON_MODULATE
+	_wire_time_slot_focus()
+	if focused_time_slot_was_locked:
+		var cta := _route_buttons.get("fishing_spots", null) as Button
+		if cta != null:
+			cta.call_deferred("grab_focus")
 
 
 func _has_caught_raiseable_shark() -> bool:
@@ -1242,14 +1251,35 @@ func _wire_command_focus() -> void:
 	_link_focus_vertical(cooking, shop)
 	_link_focus_vertical(shop, shark)
 	_link_focus_vertical(shark, book)
-	var asa := _time_slot_buttons.get("asa_mazume", null) as Button
-	var daytime := _time_slot_buttons.get("daytime", null) as Button
-	var night := _time_slot_buttons.get("night", null) as Button
-	_link_focus_horizontal(asa, daytime)
-	_link_focus_horizontal(daytime, night)
-	if cta != null and night != null:
-		cta.focus_neighbor_left = cta.get_path_to(night)
-		night.focus_neighbor_right = night.get_path_to(cta)
+	_wire_time_slot_focus()
+
+
+## 時間帯の解放状態を正本にし、ロック済みslotを経由しない閉じた横方向graphを組む。
+func _wire_time_slot_focus() -> void:
+	var cta := _route_buttons.get("fishing_spots", null) as Button
+	if cta == null:
+		return
+	cta.focus_neighbor_left = NodePath()
+	cta.focus_neighbor_right = NodePath()
+	var enabled: Array[Button] = []
+	for time_slot_id in GameData.get_all_time_slot_ids():
+		var button := _time_slot_buttons.get(time_slot_id, null) as Button
+		if button == null:
+			continue
+		button.focus_neighbor_left = NodePath()
+		button.focus_neighbor_right = NodePath()
+		if button.focus_mode != Control.FOCUS_NONE and not button.disabled:
+			enabled.append(button)
+	if enabled.is_empty():
+		return
+	for index in range(enabled.size() - 1):
+		_link_focus_horizontal(enabled[index], enabled[index + 1])
+	var first := enabled[0]
+	var last := enabled[enabled.size() - 1]
+	first.focus_neighbor_left = first.get_path_to(cta)
+	cta.focus_neighbor_right = cta.get_path_to(first)
+	last.focus_neighbor_right = last.get_path_to(cta)
+	cta.focus_neighbor_left = cta.get_path_to(last)
 
 
 func _link_focus_horizontal(left: Control, right: Control) -> void:
