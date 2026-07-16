@@ -1,6 +1,6 @@
 # ステータス画面 QA判断ログ
 
-最終更新: 2026-07-16 / 状態: INPUT-STATUS freeze（共通probe追従待ち）
+最終更新: 2026-07-16 / 状態: INPUT-STATUS close・freeze
 参照画像: reference/08_status_screen_mockup.png
 QA更新コマンド: ./tools/status_visual_qa.sh
 
@@ -29,7 +29,7 @@ QA更新コマンド: ./tools/status_visual_qa.sh
 
 ## 4. 暫定判定・再検証TODO
 
-- 共通`e11_input_focus_probe`は、`StatusTitleListButton`のacceptで正しくmodal trapした後も初期snapshotの背景Buttonへaccept巡回を続けるため、`StatusFishBookButton`を`INPUT_ACCEPT_UNOBSERVED`として1件誤検知する。製品側のtrapは弱めず、親統合でprobeの可視・focusable再評価を入れて再実行する。
+- なし。共通`e11_input_focus_probe`は各acceptを同じsetupのfresh画面で隔離し、STATUSの到達4件・accept 4/4・未観測0をverify自身で固定した。
 
 ## 5. 現在の残ギャップ
 
@@ -50,5 +50,5 @@ QA更新コマンド: ./tools/status_visual_qa.sh
 - 変えていないもの: `PlayerStatusBar`、難易度表示、3ペイン、hero、称号文言/獲得判定、釣果/所持品/料理ログ、フッター矩形、素材、配色、フォント、normal/hard実値、保存・成長ロジック。
 - 状態契約: 代表=normal初期focus、高リスク=称号overlay。A→B→Aでheader/3ペイン/footer/4操作の矩形が一致し、normal/hardでも同じ入力graphとanchorを維持する。overlayは背景mouse入力を遮断する。
 - 証拠: `docs/qa/evidence/status/2026-07-16_input_initial_focus.png`、`2026-07-16_input_overlay_focus.png`。各1280×720を単独で実見し、focus可視・見切れ・重なり・背景focus漏れのP1がないことを確認した。
-- 回帰確認: `status_input_smoke`（旧実装red→新実装green）、`status_smoke`、`status_visual_qa.sh`（normal/hard capture green）。共通E11の初期focus/4操作到達/neighbor/Escapeはgreenだが、accept巡回の既知誤検知1件は§4へ記録した。`e11_qa_harness_verify.sh`は新規smokeが親管理manifest未登録のため失敗し、親統合で追加後に再実行する。
+- 回帰確認: `status_input_smoke`（旧実装red→新実装green）、`status_smoke`、`status_visual_qa.sh`（normal/hard capture green）。親統合後の共通E11はSTATUS findings 0、到達4件・accept 4/4・cancel 1・孤立0。新規smokeを含むrelease manifest 46対象と`e11_qa_harness_verify.sh`もgreen。
 - 固定条件: modal trapを共通probe都合で弱めない。レイアウト・素材・表示階層の変更は本input concernへ混ぜない。

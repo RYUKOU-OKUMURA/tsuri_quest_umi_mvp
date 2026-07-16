@@ -48,7 +48,7 @@ INPUT-QUEST-BOARDは局所入力uplift。再オープン範囲は`QuestActionBut
 - E11入力baselineの`INPUT_NO_INITIAL_FOCUS`、`INPUT_DISABLED_REACHED`、`INPUT_FOCUS_ISOLATED`、`INPUT_CANCEL_UNOBSERVED`を局所修正した。左から最初のenabled CTAを初期focusとし、全件未達成では帰港だけのsingleton閉路を作る。disabled CTAは`FOCUS_NONE`へ外し、refresh前のslot indexまたは帰港というsemantic identityを維持する。同枠がdisabledになったときだけ次のenabled CTAへ循環し、候補がなければ帰港へ復旧する。
 - `tools/quest_board_input_smoke.tscn`を追加し、slot 1納品可能・slot 2記録報告可能・slot 3未達成、全件未達成、空boardの3件補充、外部進捗によるdisabled/enabled往復、納品/報告後の即時入替、魚を消費しない記録報告、マウス回帰を実`InputEventKey` / `InputEventMouseButton`で固定した。EnterとEscapeはpress→echo→releaseでも副作用1回、ランダムな入替依頼IDには依存しない。
 - 1280x720原寸証拠は`evidence/quest_board/2026-07-16_input_initial_ready.png`（左端の納品CTA）、`..._input_all_unmet_return.png`（全件未達成の帰港）、`..._input_post_delivery.png`（納品後に右隣の報告CTAへ復旧）へ保存して個別確認した。表示構成、CTA矩形、素材、文言のfreezeは変更していない。
-- 専用input smoke、既存`quest_board_smoke`（料理条件190/190を含む）、`quest_board_visual_qa.sh`、fresh E11 baseline（quest_board finding 0）をgreen確認した。`e11_qa_harness_verify.sh`は、本branchでは新規`quest_board_input_smoke.tscn`が親owner管理のrelease manifestへ未登録のため、追跡後の再実行でmissing testとしてexit 1になる。manifest自体は本スライスで触らず、親統合時の登録後にgreenを再確認する。
+- 専用input smoke、既存`quest_board_smoke`（料理条件190/190を含む）、`quest_board_visual_qa.sh`、fresh E11 baseline（quest_board finding 0）をgreen確認した。親統合後は新規smokeをrelease manifestへ登録し、46対象の集合一致と`e11_qa_harness_verify.sh` greenを再確認した。
 
 2026-07-13:
 
