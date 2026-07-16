@@ -1,6 +1,6 @@
 # サメの生簀 QA判断ログ
 
-最終更新: 2026-07-13 / 状態: 水槽背景・環境光uplift freeze済み
+最終更新: 2026-07-16 / 状態: 水槽背景・環境光・入力契約freeze済み
 参照画像: `reference/12_shark_pen_mockup.png`
 QA更新コマンド: `./tools/shark_pen_visual_qa.sh`
 
@@ -16,6 +16,8 @@ QA更新コマンド: `./tools/shark_pen_visual_qa.sh`
 | 餌やりパネル | x 3.4% / y 80.7% / w 73.8% / h 14.8% | `src/ui/shark_pen_screen.gd` | 好物・獲得EXP・主操作を下部に集約 |
 | 戻る導線 | 右下パネル内 | `src/ui/shark_pen_screen.gd` | docs/19 の右下規約に準拠 |
 | 餌カード表示 | 実インベントリ全件 | `src/ui/shark_pen_screen.gd` | 実プレイで餌魚が到達不能にならないよう全件を横スクロール対象にする。QA seedは5件に抑えて初期表示を確認 |
+| キーボード入力 | 捕獲済みサメ上→下 → 餌左→右 → 有効な「あたえる」 → 港へ戻るの閉路 | `src/ui/shark_pen_screen.gd` | 未捕獲行・disabled feedを除外。初期は選択中の捕獲サメ、捕獲0では港へ戻る |
+| 再構築時focus | `shark:<id>` / `food:<id>` / `feed` / `return` | `src/ui/shark_pen_screen.gd` | 餌一覧再生成後も意味単位で復元。最後の餌でfeedがdisabled化したら選択中サメへ退避 |
 
 ## 2. 不採用・再試行禁止リスト
 
@@ -44,7 +46,7 @@ QA更新コマンド: `./tools/shark_pen_visual_qa.sh`
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-- なし（2026-07-13の水槽背景・環境光upliftは採用・freeze済み）。
+- なし（2026-07-16のINPUT-SHARK-PENは採用・freeze済み）。
 
 ### 参照との差分Top3（面積×視線優先度）
 
@@ -53,6 +55,23 @@ QA更新コマンド: `./tools/shark_pen_visual_qa.sh`
 3. P2 / 現行Top2: メガロドン最終演出と全サメ同時遊泳が未実装。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-16 INPUT-SHARK-PEN:
+
+- 変更: 捕獲済みサメ・実在する餌・有効な「あたえる」・港へ戻るだけを共通focus対象へ登録し、Tab/Shift+Tabと上下左右を閉路化。Escapeは共通cancel契約で港へ1回だけ戻す。餌一覧の再生成前にfocusを意味IDで保持し、消滅/disabled時の決定的fallbackを追加した。
+- 変えていない: freeze表の全矩形、水槽背景・サメ素材、選択/なつき度、餌カード幅/全件scroll、給餌量・EXP・なつき度・在庫・save、王冠、メガロドン最終演出。
+- 状態対応:
+
+| 状態 | 固定seed / 操作 | 出力 | smoke契約 |
+|---|---|---|---|
+| 通常 | 捕獲サメ=`nekozame,inuzame`、餌=`mahaze,aji,buri`各3、`nekozame`選択 | `docs/qa/evidence/shark_pen/2026-07-16_input_normal_initial_focus.png` | 初期focus、enabled全到達、disabled skip、Tab/方向閉路、Enter/KP Enter一重、サメ/餌A→B→A、feed有効維持 |
+| 高リスク locked/empty | 捕獲0、餌0、feed disabled | `docs/qa/evidence/shark_pen/2026-07-16_input_locked_empty_return_focus.png` | return singleton、全方向/Tab閉路、未捕獲/disabled到達0 |
+| 高リスク last-stock | `nekozame`捕獲、`mahaze`在庫1、feedへ実Enter | smoke内実入力（画像採否は上記2状態） | 在庫0→餌一覧再構築→feed除外→選択中サメへfocus復帰 |
+
+- 実入力回帰: `tools/shark_pen_input_smoke.tscn` はSubViewportへ実`InputEventKey` / mouse press-releaseを注入し、Enter/KP Enterのecho、Escape一重、マウスのサメ/餌/給餌/戻るを検証する。private handler直呼びだけを合格根拠にしない。
+- finding close: fresh E11の `INPUT_NO_INITIAL_FOCUS` / `INPUT_DISABLED_REACHED` / `INPUT_FOCUS_ISOLATED` / `INPUT_CANCEL_UNOBSERVED` を画面実装で解消する契約。監査registry・分類・assertは変更していない。
+- 採用理由: 通常では選択中サメの4px金focusが原寸で識別でき、locked/emptyでは港へ戻るだけが明示focusされる。既存の選択紙面・hover可読性と全freeze矩形を維持したまま、キーボード導線を閉じた。
+- 固定条件: 未捕獲サメ行やdisabled feedをfocusへ戻さない。餌一覧再生成後のfocus復元をControlインスタンスではなく意味IDで行い、最後の餌消費後にfocusを消失させない。
 
 2026-07-13 水槽背景・環境光uplift:
 

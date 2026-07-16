@@ -137,8 +137,16 @@ func _expect_selected_hover_matches_normal(button: Button, label: String) -> voi
 	var normal := button.get_theme_stylebox("normal") as StyleBoxFlat
 	var hover := button.get_theme_stylebox("hover") as StyleBoxFlat
 	var focus := button.get_theme_stylebox("focus") as StyleBoxFlat
+	var indicator := button.get_node_or_null("CommonFocusIndicator") as Panel
+	var indicator_style := indicator.get_theme_stylebox("panel") as StyleBoxFlat if indicator != null else null
 	_expect(normal != null and hover != null and focus != null, "%s should define selected state styles" % label)
 	if _failed:
 		return
 	_expect(hover.bg_color == normal.bg_color, "%s hover should keep selected text readable" % label)
-	_expect(focus.bg_color == normal.bg_color, "%s focus should keep selected text readable" % label)
+	_expect(
+		indicator_style != null
+		and indicator_style.bg_color.a == 0.0
+		and indicator_style.border_width_left >= 4
+		and (focus.bg_color == normal.bg_color or focus.bg_color.a == 0.0),
+		"%s focus should preserve the selected fill under a distinct common outline" % label
+	)

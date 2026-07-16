@@ -23,6 +23,7 @@ var _selected_food_id := ""
 
 
 func _build_screen() -> void:
+	set_common_cancel_handler(func() -> void: navigate("harbor"))
 	add_gradient_background(Palette.SEA_DEEP, Palette.DARK_PANEL_DEEP)
 	var shade := ColorRect.new()
 	shade.name = "SharkPenBackdropShade"
@@ -225,6 +226,7 @@ func _build_feed_panel(root: Control) -> void:
 
 
 func _refresh_all() -> void:
+	var retained_focus_identity := _current_focus_identity()
 	if _selected_shark_id.is_empty():
 		_selected_shark_id = _initial_shark_id()
 	if _selected_food_id.is_empty() or PlayerProgress.fish_count(_selected_food_id) <= 0:
@@ -235,6 +237,7 @@ func _refresh_all() -> void:
 	_refresh_feed_state()
 	if _player_status_bar != null:
 		_player_status_bar.refresh()
+	_sync_keyboard_focus_context(retained_focus_identity)
 
 
 func _refresh_aquarium() -> void:
@@ -275,6 +278,7 @@ func _refresh_roster() -> void:
 		var selected: bool = shark_id == _selected_shark_id
 		var bond := _shark_bond(shark_id)
 		button.disabled = not caught
+		button.focus_mode = Control.FOCUS_ALL if caught else Control.FOCUS_NONE
 		_apply_row_skin(button, selected, caught)
 		name_label.text = String(shark.get("name", shark_id)) if caught else "？？？"
 		name_label.add_theme_color_override("font_color", Palette.TEXT_DARK if selected else Palette.TEXT_BONE)
@@ -346,6 +350,7 @@ func _add_food_card(fish_id: String) -> void:
 func _refresh_feed_state() -> void:
 	var can_feed := _can_feed_selected()
 	_feed_button.disabled = not can_feed
+	_feed_button.focus_mode = Control.FOCUS_ALL if can_feed else Control.FOCUS_NONE
 	if _selected_food_id.is_empty():
 		_feed_preview_label.text = "餌魚を選んでください。"
 		return
@@ -359,6 +364,183 @@ func _refresh_feed_state() -> void:
 	_feed_preview_label.text = "%s：なつき度 +%d / EXP +%d" % [status, bond_gain, exp_gain]
 	if _message_label.text.is_empty():
 		_message_label.text = "サメと餌魚を選んでください。"
+
+
+func _sync_keyboard_focus_context(retained_identity: String) -> void:
+	var all_candidates: Array[Control] = []
+	for button in _shark_focus_buttons(false):
+		all_candidates.append(button)
+	for button in _food_focus_buttons():
+		all_candidates.append(button)
+	all_candidates.append(_feed_button)
+	all_candidates.append(_return_button)
+
+	var preferred := _focus_control_for_identity(retained_identity)
+	if preferred == null:
+		preferred = _fallback_focus_control(retained_identity)
+	_clear_keyboard_focus_graph(all_candidates)
+	setup_keyboard_focus(all_candidates, preferred)
+	_link_keyboard_focus_graph()
+
+
+func _current_focus_identity() -> String:
+	if not is_inside_tree():
+		return ""
+	return _focus_identity_for_control(get_viewport().gui_get_focus_owner())
+
+
+func _focus_identity_for_control(control: Control) -> String:
+	if control == null or not is_instance_valid(control):
+		return ""
+	if control == _feed_button:
+		return "feed"
+	if control == _return_button:
+		return "return"
+	for shark_id_variant in _shark_rows.keys():
+		var shark_id := String(shark_id_variant)
+		if control == (_shark_rows[shark_id]["button"] as Button):
+			return "shark:%s" % shark_id
+	for food_id_variant in _food_rows.keys():
+		var food_id := String(food_id_variant)
+		if control == (_food_rows[food_id]["button"] as Button):
+			return "food:%s" % food_id
+	return ""
+
+
+func _focus_control_for_identity(identity: String) -> Control:
+	if identity == "feed":
+		return _feed_button if _can_feed_selected() else null
+	if identity == "return":
+		return _return_button
+	if identity.begins_with("shark:"):
+		var shark_id := identity.trim_prefix("shark:")
+		if _shark_rows.has(shark_id) and _is_shark_caught(shark_id):
+			return _shark_rows[shark_id]["button"] as Button
+	if identity.begins_with("food:"):
+		var food_id := identity.trim_prefix("food:")
+		if _food_rows.has(food_id):
+			return _food_rows[food_id]["button"] as Button
+	return null
+
+
+func _fallback_focus_control(retained_identity: String) -> Control:
+	# 餌カードだけが再構築で消えた場合は、現在選択中の在庫へ意味単位で移す。
+	if retained_identity.begins_with("food:") and _food_rows.has(_selected_food_id):
+		return _food_rows[_selected_food_id]["button"] as Button
+	var selected_shark := _selected_shark_button()
+	if selected_shark != null:
+		return selected_shark
+	# 捕獲サメがいない状態では餌を選んでも給餌できないため、安全な戻る導線を優先する。
+	return _return_button
+
+
+func _selected_shark_button() -> Button:
+	if _shark_rows.has(_selected_shark_id) and _is_shark_caught(_selected_shark_id):
+		return _shark_rows[_selected_shark_id]["button"] as Button
+	var enabled := _shark_focus_buttons(true)
+	return enabled[0] as Button if not enabled.is_empty() else null
+
+
+func _shark_focus_buttons(enabled_only: bool) -> Array[Button]:
+	var buttons: Array[Button] = []
+	for shark_id in GameData.get_raiseable_shark_ids():
+		if not _shark_rows.has(shark_id):
+			continue
+		var button := _shark_rows[shark_id]["button"] as Button
+		if not enabled_only or _is_shark_caught(shark_id):
+			buttons.append(button)
+	return buttons
+
+
+func _food_focus_buttons() -> Array[Button]:
+	var buttons: Array[Button] = []
+	for fish_id in _food_options(_selected_shark_id):
+		if _food_rows.has(fish_id):
+			buttons.append(_food_rows[fish_id]["button"] as Button)
+	return buttons
+
+
+func _clear_keyboard_focus_graph(controls: Array[Control]) -> void:
+	for control in controls:
+		if control == null or not is_instance_valid(control):
+			continue
+		control.focus_neighbor_left = NodePath()
+		control.focus_neighbor_right = NodePath()
+		control.focus_neighbor_top = NodePath()
+		control.focus_neighbor_bottom = NodePath()
+		control.focus_next = NodePath()
+		control.focus_previous = NodePath()
+
+
+func _link_keyboard_focus_graph() -> void:
+	var available := keyboard_focus_candidates()
+	if available.is_empty():
+		return
+	for index in range(available.size()):
+		var control := available[index]
+		var previous := available[(index - 1 + available.size()) % available.size()]
+		var next := available[(index + 1) % available.size()]
+		control.focus_previous = control.get_path_to(previous)
+		control.focus_next = control.get_path_to(next)
+
+	var sharks: Array[Button] = []
+	for button in _shark_focus_buttons(true):
+		if available.has(button):
+			sharks.append(button)
+	var foods: Array[Button] = []
+	for button in _food_focus_buttons():
+		if available.has(button):
+			foods.append(button)
+	var feed: Control = _feed_button if available.has(_feed_button) else null
+	var selected_shark: Control = _selected_shark_button()
+	if selected_shark == null or not available.has(selected_shark):
+		selected_shark = sharks[0] if not sharks.is_empty() else null
+	var first_lower: Control = foods[0] if not foods.is_empty() else feed
+	if first_lower == null:
+		first_lower = _return_button
+
+	if available.size() == 1:
+		_set_focus_neighbors(available[0], available[0], available[0], available[0], available[0])
+		return
+
+	for index in range(sharks.size()):
+		var shark := sharks[index]
+		var up: Control = sharks[index - 1] if index > 0 else _return_button
+		var down: Control = sharks[index + 1] if index + 1 < sharks.size() else first_lower
+		_set_focus_neighbors(shark, first_lower, shark, up, down)
+
+	for index in range(foods.size()):
+		var food := foods[index]
+		var left: Control = foods[index - 1] if index > 0 else food
+		var right: Control = foods[index + 1] if index + 1 < foods.size() else (feed if feed != null else _return_button)
+		var up: Control = selected_shark if selected_shark != null else _return_button
+		var down: Control = feed if feed != null else _return_button
+		_set_focus_neighbors(food, left, right, up, down)
+
+	if feed != null:
+		var feed_left: Control = foods.back() if not foods.is_empty() else (selected_shark if selected_shark != null else _return_button)
+		var feed_up: Control = selected_shark if selected_shark != null else (foods.back() if not foods.is_empty() else _return_button)
+		_set_focus_neighbors(feed, feed_left, _return_button, feed_up, _return_button)
+
+	var return_left: Control = feed if feed != null else (foods.back() if not foods.is_empty() else selected_shark)
+	if return_left == null:
+		return_left = _return_button
+	var return_up: Control = sharks.back() if not sharks.is_empty() else return_left
+	var return_right: Control = sharks[0] if not sharks.is_empty() else (foods[0] if not foods.is_empty() else return_left)
+	_set_focus_neighbors(_return_button, return_left, return_right, return_up, return_right)
+
+
+func _set_focus_neighbors(
+	control: Control,
+	left: Control,
+	right: Control,
+	top: Control,
+	bottom: Control
+) -> void:
+	control.focus_neighbor_left = control.get_path_to(left)
+	control.focus_neighbor_right = control.get_path_to(right)
+	control.focus_neighbor_top = control.get_path_to(top)
+	control.focus_neighbor_bottom = control.get_path_to(bottom)
 
 
 func _select_shark(shark_id: String) -> void:
@@ -511,7 +693,8 @@ func _apply_row_skin(button: Button, selected: bool, caught: bool) -> void:
 	var hover := normal if selected else _flat_style(Palette.BLUE_PANEL, Palette.GOLD, 5, 1)
 	button.add_theme_stylebox_override("normal", normal)
 	button.add_theme_stylebox_override("hover", hover)
-	button.add_theme_stylebox_override("focus", hover)
+	if not button.has_meta(COMMON_FOCUS_STYLE_META):
+		button.add_theme_stylebox_override("focus", hover)
 	button.add_theme_stylebox_override("pressed", _flat_style(Palette.PARCHMENT_DEEP, Palette.GOLD_BRIGHT, 5, 2))
 	button.add_theme_stylebox_override("disabled", normal)
 
