@@ -48,7 +48,9 @@ var _filter_buttons: Dictionary = {}
 var _found_label: Label
 var _found_progress_fill: ColorRect
 var _player_status_bar: PlayerStatusBar
+var _fish_scroll: ScrollContainer
 var _grid: GridContainer
+var _return_button: Button
 var _detail_no_label: Label
 var _detail_name_label: Label
 var _detail_rarity_label: Label
@@ -66,6 +68,7 @@ var _detail_spots: Control
 var _detail_icon_sheet: Texture2D
 var _footer_icon_sheet: Texture2D
 var _portrait_crop_cache: Dictionary = {}
+var _keyboard_focus_initialized := false
 
 
 func _build_screen() -> void:
@@ -85,6 +88,8 @@ func _build_screen() -> void:
 	_build_footer(root)
 	_ensure_valid_selection()
 	_refresh_all()
+	_configure_keyboard_focus()
+	set_common_cancel_handler(_return_to_harbor)
 
 
 func _build_background() -> void:
@@ -205,6 +210,7 @@ func _build_book_grid(root: Control) -> void:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_style_scrollbar(scroll)
 	_place_control(left, scroll, 0.047, 0.105, 0.955, 0.970)
+	_fish_scroll = scroll
 
 	_grid = GridContainer.new()
 	_grid.name = "FishBookGrid"
@@ -394,13 +400,16 @@ func _build_footer(root: Control) -> void:
 	back.add_theme_constant_override("outline_size", 3)
 	_add_button_icon(back, _footer_icon(1), true)
 	_place_control(footer, back, 0.786, 0.100, 0.970, 0.910)
+	_return_button = back
 
 
-func _refresh_all() -> void:
+func _refresh_all(retained_focus_id: String = "") -> void:
 	_refresh_header()
 	_rebuild_grid()
 	_refresh_detail()
 	_refresh_filter_buttons()
+	if _keyboard_focus_initialized:
+		_sync_keyboard_focus(retained_focus_id)
 
 
 func _refresh_header() -> void:
@@ -429,6 +438,7 @@ func _rebuild_grid() -> void:
 		var card := _make_fish_card(fish)
 		_grid.add_child(card)
 		_fish_card_buttons[fish_id] = card
+		card.focus_entered.connect(_keep_card_focus_visible.bind(card))
 
 
 func _make_fish_card(fish: Dictionary) -> Button:
@@ -680,14 +690,186 @@ func _rebuild_spot_strip(spot_ids: Array) -> void:
 func _set_filter(filter_id: String) -> void:
 	if _active_filter == filter_id:
 		return
+	var retained_focus_id := _focused_control_identity()
 	_active_filter = filter_id
 	_ensure_valid_selection()
-	_refresh_all()
+	if retained_focus_id.is_empty():
+		retained_focus_id = "filter:%s" % filter_id
+	_refresh_all(retained_focus_id)
 
 
 func _select_fish(fish_id: String) -> void:
 	_selected_fish_id = fish_id
-	_refresh_all()
+	_refresh_all("card:%s" % fish_id)
+
+
+func _configure_keyboard_focus() -> void:
+	_keyboard_focus_initialized = true
+	_sync_keyboard_focus("card:%s" % _selected_fish_id)
+
+
+func _sync_keyboard_focus(retained_focus_id: String = "") -> void:
+	var candidates: Array[Control] = []
+	var cards := _card_controls_in_display_order()
+	for card in cards:
+		candidates.append(card)
+	var filters := _filter_controls_in_display_order()
+	for filter_button in filters:
+		candidates.append(filter_button)
+	if _return_button != null:
+		candidates.append(_return_button)
+
+	var preferred := _focus_control_for_identity(retained_focus_id)
+	if preferred == null:
+		preferred = _fish_card_buttons.get(_selected_fish_id) as Button
+	if preferred == null and not filters.is_empty():
+		preferred = filters[0]
+	if preferred == null:
+		preferred = _return_button
+	setup_keyboard_focus(candidates, preferred)
+	_link_keyboard_focus_graph(cards, filters)
+
+
+func _card_controls_in_display_order() -> Array[Control]:
+	var result: Array[Control] = []
+	for fish_id in _filtered_fish_ids():
+		var card := _fish_card_buttons.get(fish_id) as Button
+		if card != null and is_instance_valid(card):
+			result.append(card)
+	return result
+
+
+func _filter_controls_in_display_order() -> Array[Control]:
+	var result: Array[Control] = []
+	for filter in FILTERS:
+		var button := _filter_buttons.get(String(filter["id"])) as Button
+		if button != null and is_instance_valid(button):
+			result.append(button)
+	return result
+
+
+func _focused_control_identity() -> String:
+	if not is_inside_tree():
+		return ""
+	return _control_focus_identity(get_viewport().gui_get_focus_owner())
+
+
+func _control_focus_identity(control: Control) -> String:
+	if control == null or not is_instance_valid(control):
+		return ""
+	if control == _return_button:
+		return "return"
+	if control.has_meta("fish_book_card"):
+		return "card:%s" % String(control.get_meta("fish_book_card", ""))
+	if control.has_meta("fish_book_filter"):
+		return "filter:%s" % String(control.get_meta("fish_book_filter", ""))
+	return ""
+
+
+func _focus_control_for_identity(identity: String) -> Control:
+	if identity == "return":
+		return _return_button
+	if identity.begins_with("card:"):
+		return _fish_card_buttons.get(identity.trim_prefix("card:")) as Button
+	if identity.begins_with("filter:"):
+		return _filter_buttons.get(identity.trim_prefix("filter:")) as Button
+	return null
+
+
+func _link_keyboard_focus_graph(cards: Array[Control], filters: Array[Control]) -> void:
+	var available: Array[Control] = []
+	available.append_array(cards)
+	available.append_array(filters)
+	if _return_button != null and is_keyboard_focus_available(_return_button):
+		available.append(_return_button)
+	for control in available:
+		control.focus_neighbor_left = NodePath()
+		control.focus_neighbor_right = NodePath()
+		control.focus_neighbor_top = NodePath()
+		control.focus_neighbor_bottom = NodePath()
+		control.focus_next = NodePath()
+		control.focus_previous = NodePath()
+	if available.is_empty():
+		return
+
+	for index in range(available.size()):
+		var control := available[index]
+		var previous := available[(index - 1 + available.size()) % available.size()]
+		var next := available[(index + 1) % available.size()]
+		control.focus_previous = control.get_path_to(previous)
+		control.focus_next = control.get_path_to(next)
+
+	for index in range(cards.size()):
+		var card := cards[index]
+		var column := index % 3
+		var left := cards[index - 1] if column > 0 else card
+		var right := cards[index + 1] if column < 2 and index + 1 < cards.size() else card
+		var top := cards[index - 3] if index >= 3 else card
+		var bottom := cards[index + 3] if index + 3 < cards.size() else _filter_at(filters, mini(column, filters.size() - 1))
+		_set_focus_neighbors(card, left, right, top, bottom)
+
+	for index in range(filters.size()):
+		var filter_button := filters[index]
+		var left := filters[index - 1] if index > 0 else (_return_button as Control)
+		var right := filters[index + 1] if index + 1 < filters.size() else (_return_button as Control)
+		var card_target := _bottom_card_for_filter(cards, index, filters.size())
+		if card_target == null:
+			card_target = _return_button
+		_set_focus_neighbors(filter_button, left, right, card_target, _return_button)
+
+	if _return_button != null:
+		var left_target := filters[filters.size() - 1] if not filters.is_empty() else (cards[cards.size() - 1] if not cards.is_empty() else _return_button)
+		var right_target := filters[0] if not filters.is_empty() else (cards[0] if not cards.is_empty() else _return_button)
+		var top_target := cards[cards.size() - 1] if not cards.is_empty() else left_target
+		var bottom_target := _fish_card_buttons.get(_selected_fish_id) as Control
+		if bottom_target == null:
+			bottom_target = right_target
+		_set_focus_neighbors(_return_button, left_target, right_target, top_target, bottom_target)
+
+
+func _filter_at(filters: Array[Control], index: int) -> Control:
+	if filters.is_empty():
+		return _return_button
+	return filters[clampi(index, 0, filters.size() - 1)]
+
+
+func _bottom_card_for_filter(cards: Array[Control], filter_index: int, filter_count: int) -> Control:
+	if cards.is_empty():
+		return null
+	var last_row_start := int(floor(float(cards.size() - 1) / 3.0)) * 3
+	var last_row_count := cards.size() - last_row_start
+	var column := 0
+	if last_row_count > 1 and filter_count > 1:
+		column = int(round(float(filter_index) * float(last_row_count - 1) / float(filter_count - 1)))
+	return cards[last_row_start + clampi(column, 0, last_row_count - 1)]
+
+
+func _set_focus_neighbors(control: Control, left: Control, right: Control, top: Control, bottom: Control) -> void:
+	if control == null:
+		return
+	control.focus_neighbor_left = control.get_path_to(left if left != null else control)
+	control.focus_neighbor_right = control.get_path_to(right if right != null else control)
+	control.focus_neighbor_top = control.get_path_to(top if top != null else control)
+	control.focus_neighbor_bottom = control.get_path_to(bottom if bottom != null else control)
+
+
+func _keep_card_focus_visible(card: Control) -> void:
+	call_deferred("_scroll_card_into_view", card)
+
+
+func _scroll_card_into_view(card: Control) -> void:
+	if (
+		_fish_scroll == null
+		or card == null
+		or not is_instance_valid(card)
+		or not _fish_scroll.is_ancestor_of(card)
+	):
+		return
+	_fish_scroll.ensure_control_visible(card)
+
+
+func _return_to_harbor() -> void:
+	navigate("harbor")
 
 
 func _ensure_valid_selection() -> void:
@@ -885,7 +1067,6 @@ func _apply_filter_button_skin(button: Button, selected: bool) -> void:
 	var hover := _filter_tab_style(selected, true)
 	button.add_theme_stylebox_override("normal", normal)
 	button.add_theme_stylebox_override("hover", hover)
-	button.add_theme_stylebox_override("focus", hover)
 	button.add_theme_stylebox_override("pressed", hover)
 	var font_color := Palette.TEXT_BONE if selected else Palette.TEXT_OUTLINE_LIGHT
 	var outline_color := Palette.TEXT_OUTLINE_DARK if selected else _alpha(Palette.GOLD_BRIGHT, 0.95)
