@@ -25,6 +25,7 @@ var _return_button: Button
 
 func _build_screen() -> void:
 	PlayerProgress.ensure_quest_board()
+	set_common_cancel_handler(func() -> void: navigate("harbor"))
 
 	var backdrop := HarborBackdropScript.new()
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -203,6 +204,10 @@ func _build_footer(root: Control) -> void:
 
 
 func _refresh() -> void:
+	var focus_owner := get_viewport().gui_get_focus_owner() if is_inside_tree() else null
+	var retained_slot := _quest_action_slot(focus_owner)
+	var retained_return := focus_owner == _return_button
+	var had_managed_focus := retained_slot >= 0 or retained_return
 	PlayerProgress.ensure_quest_board()
 	for index in range(_quest_cards.size()):
 		_refresh_card(index)
@@ -216,6 +221,7 @@ func _refresh() -> void:
 		_message_label.text = "達成済みの札だけ納品・報告できます。"
 	if _player_status_bar != null:
 		_player_status_bar.refresh()
+	_sync_keyboard_focus_context(retained_slot, retained_return, had_managed_focus)
 
 
 func _refresh_card(index: int) -> void:
@@ -257,6 +263,116 @@ func _refresh_card(index: int) -> void:
 	button.text = action_label if completed else "未達成"
 	button.disabled = not completed
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if completed else Control.CURSOR_ARROW
+
+
+func _sync_keyboard_focus_context(
+	retained_slot: int = -1,
+	retained_return := false,
+	had_managed_focus := false
+) -> void:
+	var action_buttons := _quest_action_buttons()
+	var preferred: Control = null
+	if retained_return:
+		preferred = _return_button
+	elif retained_slot >= 0:
+		var retained := action_buttons[retained_slot]
+		if not retained.disabled:
+			preferred = retained
+		else:
+			preferred = _next_enabled_action(retained_slot, action_buttons)
+	elif not had_managed_focus:
+		preferred = _next_enabled_action(-1, action_buttons)
+	if preferred == null:
+		preferred = _return_button
+
+	var candidates: Array[Control] = []
+	for button in action_buttons:
+		candidates.append(button)
+	candidates.append(_return_button)
+	_clear_keyboard_focus_graph(candidates)
+	setup_keyboard_focus(candidates, preferred)
+	_link_keyboard_focus_graph(keyboard_focus_candidates())
+
+
+func _quest_action_buttons() -> Array[Button]:
+	var buttons: Array[Button] = []
+	for card in _quest_cards:
+		buttons.append(card["button"] as Button)
+	return buttons
+
+
+func _quest_action_slot(control: Control) -> int:
+	if control == null or not is_instance_valid(control):
+		return -1
+	for index in range(_quest_cards.size()):
+		if control == _quest_cards[index]["button"]:
+			return index
+	return -1
+
+
+func _next_enabled_action(after_slot: int, action_buttons: Array[Button]) -> Button:
+	if action_buttons.is_empty():
+		return null
+	for offset in range(1, action_buttons.size() + 1):
+		var index := (after_slot + offset) % action_buttons.size()
+		if not action_buttons[index].disabled:
+			return action_buttons[index]
+	return null
+
+
+func _clear_keyboard_focus_graph(controls: Array[Control]) -> void:
+	for control in controls:
+		control.focus_neighbor_left = NodePath()
+		control.focus_neighbor_right = NodePath()
+		control.focus_neighbor_top = NodePath()
+		control.focus_neighbor_bottom = NodePath()
+		control.focus_next = NodePath()
+		control.focus_previous = NodePath()
+
+
+func _link_keyboard_focus_graph(available: Array[Control]) -> void:
+	if available.is_empty():
+		return
+	for index in range(available.size()):
+		var control := available[index]
+		var previous := available[(index - 1 + available.size()) % available.size()]
+		var next := available[(index + 1) % available.size()]
+		control.focus_previous = control.get_path_to(previous)
+		control.focus_next = control.get_path_to(next)
+
+	var enabled_actions: Array[Control] = []
+	for control in available:
+		if control != _return_button:
+			enabled_actions.append(control)
+	if enabled_actions.is_empty():
+		_set_focus_neighbors(_return_button, _return_button, _return_button, _return_button, _return_button)
+		return
+
+	for index in range(enabled_actions.size()):
+		var action := enabled_actions[index]
+		var left := enabled_actions[(index - 1 + enabled_actions.size()) % enabled_actions.size()]
+		var right := enabled_actions[(index + 1) % enabled_actions.size()]
+		_set_focus_neighbors(action, left, right, _return_button, _return_button)
+	_set_focus_neighbors(
+		_return_button,
+		enabled_actions.back(),
+		enabled_actions.front(),
+		enabled_actions.back(),
+		enabled_actions.front()
+	)
+
+
+func _set_focus_neighbors(
+	control: Control,
+	left: Control,
+	right: Control,
+	top: Control,
+	bottom: Control
+) -> void:
+	control.focus_neighbor_left = control.get_path_to(left)
+	control.focus_neighbor_right = control.get_path_to(right)
+	control.focus_neighbor_top = control.get_path_to(top)
+	control.focus_neighbor_bottom = control.get_path_to(bottom)
 
 
 func _complete_quest(index: int) -> void:

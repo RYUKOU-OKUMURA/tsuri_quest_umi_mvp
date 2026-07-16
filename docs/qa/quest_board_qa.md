@@ -1,6 +1,6 @@
 # 依頼ボード QA判断ログ
 
-最終更新: 2026-07-13 / 状態: UI-QUEST-01 close、Wave A authored素材uplift採用・freeze
+最終更新: 2026-07-16 / 状態: UI-QUEST-01 / Wave A / INPUT-QUEST-BOARD close・freeze
 参照画像: reference/11_quest_board_mockup.png
 QA更新コマンド: ./tools/quest_board_visual_qa.sh
 
@@ -15,6 +15,7 @@ QA更新コマンド: ./tools/quest_board_visual_qa.sh
 | 肖像と下段情報 | 肖像下端 `0.370`、進捗見出し/値 `0.575–0.630`、ゲージ `0.648–0.677`、報酬 `0.681–0.736` | `QuestFishPortrait` / `QuestProgress*` / `QuestReward` | 進捗の実行高（見出し24px、値27px）がゲージに重ならず、ゲージ→報酬も実矩形で分離する |
 | 行動ボタン | 上下 `0.765–0.905`、最小高54px、縦テクスチャmargin `14 + 14`、20px文字＋outline 2px | `QuestActionButton*` | 必要高52pxに2px余裕を置き、報酬・札下木枠との干渉を防ぐ |
 | 画面専用素材 | 木面 `quest_board_wood_panel.png`、ピン付き無地札 `quest_notice_card.png` | `assets/showcase/quest_board/` | 3列・全文・進捗・報酬・CTA矩形を不動にしたまま、参照との差分Top1だった紙質・ピン・木目を縮小比較でも解消 |
+| キーボード入力 | 初期focusは左端の達成済みCTA、全件未達成時は右下帰港。disabled CTAは`FOCUS_NONE`。enabled CTAをカード順→帰港でTab閉路、左右はenabled CTA間、CTA下→帰港、帰港上→右端enabled CTA。focused CTAがdisabledになれば次のenabled CTAへ循環し、なければ帰港へ復旧 | `QuestActionButton1..3` / `QuestBoardReturnButton` | INPUT-QUEST-BOARD。外部進捗でCTAが有効化されても有効な既存focusを奪わず、Escapeはecho込み港遷移1回 |
 
 ## 2. 不採用・再試行禁止リスト
 
@@ -38,9 +39,16 @@ QA更新コマンド: ./tools/quest_board_visual_qa.sh
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-P1再オープン範囲は主条件本文と、それを安全に収める依頼札内の下段クラスタだけ。動かした値は `QuestText`、肖像下端、`QuestProgressTitle` / `QuestProgressText`、`QuestProgressTrack`、`QuestReward`、`QuestActionButton*` の矩形、`QuestReward` の文字（20→18px）、`QuestActionButton*` の文字（22→20px）、CTA縦style margin・最小高。3列・外枠・依頼札枚数・魚名領域・下段の読み順（進捗→ゲージ→報酬→操作）・フッター右下の帰港導線・依頼生成/納品ロジックは不動とする。
+INPUT-QUEST-BOARDは局所入力uplift。再オープン範囲は`QuestActionButton1..3`と`QuestBoardReturnButton`のfocus mode・隣接・初期focus・状態遷移時のfocus復旧・Escapeだけ。3列、全Label/ゲージ/CTA矩形、外枠、依頼札枚数、本文/進捗/報酬/CTA文言、素材、フォント、色、依頼生成/進捗/納品/報酬/saveロジックは不動とする。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-16:
+
+- E11入力baselineの`INPUT_NO_INITIAL_FOCUS`、`INPUT_DISABLED_REACHED`、`INPUT_FOCUS_ISOLATED`、`INPUT_CANCEL_UNOBSERVED`を局所修正した。左から最初のenabled CTAを初期focusとし、全件未達成では帰港だけのsingleton閉路を作る。disabled CTAは`FOCUS_NONE`へ外し、refresh前のslot indexまたは帰港というsemantic identityを維持する。同枠がdisabledになったときだけ次のenabled CTAへ循環し、候補がなければ帰港へ復旧する。
+- `tools/quest_board_input_smoke.tscn`を追加し、slot 1納品可能・slot 2記録報告可能・slot 3未達成、全件未達成、空boardの3件補充、外部進捗によるdisabled/enabled往復、納品/報告後の即時入替、魚を消費しない記録報告、マウス回帰を実`InputEventKey` / `InputEventMouseButton`で固定した。EnterとEscapeはpress→echo→releaseでも副作用1回、ランダムな入替依頼IDには依存しない。
+- 1280x720原寸証拠は`evidence/quest_board/2026-07-16_input_initial_ready.png`（左端の納品CTA）、`..._input_all_unmet_return.png`（全件未達成の帰港）、`..._input_post_delivery.png`（納品後に右隣の報告CTAへ復旧）へ保存して個別確認した。表示構成、CTA矩形、素材、文言のfreezeは変更していない。
+- 専用input smoke、既存`quest_board_smoke`（料理条件190/190を含む）、`quest_board_visual_qa.sh`、fresh E11 baseline（quest_board finding 0）、`e11_qa_harness_verify.sh`をgreen確認した。
 
 2026-07-13:
 
