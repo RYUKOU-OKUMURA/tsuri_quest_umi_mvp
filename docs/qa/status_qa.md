@@ -1,6 +1,6 @@
 # ステータス画面 QA判断ログ
 
-最終更新: 2026-07-14 / 状態: R5-Aプレイヤーhero freeze
+最終更新: 2026-07-16 / 状態: INPUT-STATUS freeze（共通probe追従待ち）
 参照画像: reference/08_status_screen_mockup.png
 QA更新コマンド: ./tools/status_visual_qa.sh
 
@@ -13,6 +13,7 @@ QA更新コマンド: ./tools/status_visual_qa.sh
 | 現在難易度 | ヘッダー左クラスタに「難易度: <name>」を1回 | `src/ui/status_screen.gd` | `PlayerProgress.difficulty()["name"]`の実値。重複情報なし |
 | ヘッダー外形 | 現行矩形を維持 | `src/ui/status_screen.gd` | `PlayerStatusBar`・3ペイン・フッターを不動 |
 | 中央プレイヤーhero | `StatusSummaryBadge`内の海釣り人円形portrait。badge外形約x419–529 / y184–298、既存portrait slotを維持 | `src/ui/status_screen.gd` | 文字/UI/魚なしのscreen-local authored素材。「記録」はruntime描画を維持 |
+| 入力focus契約 | 初期=`StatusTitleListButton`。Tab順=`TitleList → FishBook → Cooking → Return`の閉路。称号overlay中は`StatusTitleOverlayCloseButton`だけ | `src/ui/status_screen.gd` | Escapeは通常時harborへ1回、overlay中は閉じるだけ。Enter/Escape後はopenerへ復帰 |
 
 ## 2. 不採用・再試行禁止リスト
 
@@ -28,7 +29,7 @@ QA更新コマンド: ./tools/status_visual_qa.sh
 
 ## 4. 暫定判定・再検証TODO
 
-なし。
+- 共通`e11_input_focus_probe`は、`StatusTitleListButton`のacceptで正しくmodal trapした後も初期snapshotの背景Buttonへaccept巡回を続けるため、`StatusFishBookButton`を`INPUT_ACCEPT_UNOBSERVED`として1件誤検知する。製品側のtrapは弱めず、親統合でprobeの可視・focusable再評価を入れて再実行する。
 
 ## 5. 現在の残ギャップ
 
@@ -43,12 +44,11 @@ QA更新コマンド: ./tools/status_visual_qa.sh
 
 ## 7. 判断ログ（直近パスのみ）
 
-2026-07-14 R5-A局所upliftを採用。
+2026-07-16 INPUT-STATUS局所upliftを採用。
 
-- 変えたもの: 中央「釣果サマリー」上部medallionの最近魚アイコンを、OpenAI built-in image generationで生成した海釣り人portraitへ置換。source→256×256円形alpha製品PNGは`tools/process_status_r5a_assets.py`で決定的に加工し、decoded pixel同値の再生成では既存製品bytesを保持する。
-- 変えていないもの: `PlayerStatusBar`、難易度1回表示、3ペイン/hero badge外形、runtime「記録」、右側4指標、最近魚4枚、称号、図鑑率、クーラー/装備/料理ログ、フッター3導線、難易度・保存ロジック。
-- 状態契約: normal / hardは同一seed・同一構成。差は難易度名と安全域の実値だけ。両状態で人物の頭部、竿、海が円形内に読み取れ、P1ゼロ。
-- 採否理由: 原寸beforeより「誰の釣果か」が明確で、320×180のbefore / after / reference比較でも魚アイコンから釣り人identityへ変わったことを判別できる。gray比較でも中央heroの人物シルエットを維持する。
-- 証拠: `2026-07-14_r5a_before_{normal,hard}.png`、`after_{normal,hard}.png`、`full_{normal,hard}_compare.png`、`thumbnail_compare.png`、`gray_compare.png`、`asset_contact.png`、`reference.png`（すべて`docs/qa/evidence/status/`）。
-- 回帰確認: before/afterの描画差はhero矩形内に集中。hero外の散発差は`HarborBackdrop`の時刻依存描画でnormal 40px / hard 10pxのみ。コード上のanchor/offset変更は0件で、smokeが既存釣果値・導線・normal/hard実値を維持する。
-- 固定条件: portrait slotとbadge外形を再調整しない。次のR5は全画面authored枠質感を別concernとして扱い、本hero素材の微調整へ戻らない。
+- 変えたもの: defaultの4操作を共通focus契約へ登録し、Tab/Shift+Tabと方向graphをenabled候補内の閉路にした。称号一覧は閉じるButtonだけへfocusをtrapし、Enter/Escape後にopenerへ復帰する。通常Escapeはharborへpress+echoで1回だけ遷移する。
+- 変えていないもの: `PlayerStatusBar`、難易度表示、3ペイン、hero、称号文言/獲得判定、釣果/所持品/料理ログ、フッター矩形、素材、配色、フォント、normal/hard実値、保存・成長ロジック。
+- 状態契約: 代表=normal初期focus、高リスク=称号overlay。A→B→Aでheader/3ペイン/footer/4操作の矩形が一致し、normal/hardでも同じ入力graphとanchorを維持する。overlayは背景mouse入力を遮断する。
+- 証拠: `docs/qa/evidence/status/2026-07-16_input_initial_focus.png`、`2026-07-16_input_overlay_focus.png`。各1280×720を単独で実見し、focus可視・見切れ・重なり・背景focus漏れのP1がないことを確認した。
+- 回帰確認: `status_input_smoke`（旧実装red→新実装green）、`status_smoke`、`status_visual_qa.sh`（normal/hard capture green）。共通E11の初期focus/4操作到達/neighbor/Escapeはgreenだが、accept巡回の既知誤検知1件は§4へ記録した。`e11_qa_harness_verify.sh`は新規smokeが親管理manifest未登録のため失敗し、親統合で追加後に再実行する。
+- 固定条件: modal trapを共通probe都合で弱めない。レイアウト・素材・表示階層の変更は本input concernへ混ぜない。

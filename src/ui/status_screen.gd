@@ -23,6 +23,7 @@ var _summary_panel: Control
 var _inventory_panel: Control
 var _title_list_button: Button
 var _title_overlay: Control
+var _title_overlay_close_button: Button
 var _fish_book_button: Button
 var _cooking_button: Button
 var _return_button: Button
@@ -54,6 +55,7 @@ func _build_screen() -> void:
 	_build_inventory_panel(root)
 	_build_footer(root)
 	_build_title_overlay(root)
+	_sync_keyboard_focus_context()
 
 
 func _build_header(root: Control) -> void:
@@ -517,10 +519,10 @@ func _build_title_overlay(root: Control) -> void:
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_place_control(panel, title, 0.055, 0.035, 0.510, 0.120)
 
-	var close_button := _textured_button("閉じる", func() -> void: _set_title_overlay_visible(false), false)
-	close_button.name = "StatusTitleOverlayCloseButton"
-	close_button.add_theme_font_size_override("font_size", 18)
-	_place_control(panel, close_button, 0.760, 0.040, 0.940, 0.120)
+	_title_overlay_close_button = _textured_button("閉じる", func() -> void: _set_title_overlay_visible(false), false)
+	_title_overlay_close_button.name = "StatusTitleOverlayCloseButton"
+	_title_overlay_close_button.add_theme_font_size_override("font_size", 18)
+	_place_control(panel, _title_overlay_close_button, 0.760, 0.040, 0.940, 0.120)
 
 	var scroll := ScrollContainer.new()
 	scroll.name = "StatusTitleOverlayScroll"
@@ -541,8 +543,88 @@ func _build_title_overlay(root: Control) -> void:
 
 
 func _set_title_overlay_visible(visible: bool) -> void:
-	if _title_overlay != null:
-		_title_overlay.visible = visible
+	if _title_overlay == null:
+		return
+	_title_overlay.visible = visible
+	_sync_keyboard_focus_context()
+
+
+func _sync_keyboard_focus_context() -> void:
+	set_common_cancel_handler(_handle_status_cancel)
+	if _title_overlay != null and _title_overlay.visible:
+		setup_keyboard_focus([_title_overlay_close_button], _title_overlay_close_button)
+		_link_keyboard_focus_graph(keyboard_focus_candidates())
+		return
+	var candidates: Array[Control] = [
+		_title_list_button,
+		_fish_book_button,
+		_cooking_button,
+		_return_button,
+	]
+	setup_keyboard_focus(candidates, _title_list_button if _title_list_button != null else _return_button)
+	_link_keyboard_focus_graph(keyboard_focus_candidates())
+
+
+func _handle_status_cancel() -> void:
+	if _title_overlay != null and _title_overlay.visible:
+		_set_title_overlay_visible(false)
+		return
+	navigate("harbor")
+
+
+func _link_keyboard_focus_graph(available: Array[Control]) -> void:
+	for control in available:
+		control.focus_neighbor_left = NodePath()
+		control.focus_neighbor_right = NodePath()
+		control.focus_neighbor_top = NodePath()
+		control.focus_neighbor_bottom = NodePath()
+		control.focus_next = NodePath()
+		control.focus_previous = NodePath()
+	if available.is_empty():
+		return
+	for index in range(available.size()):
+		var control := available[index]
+		var previous := available[(index - 1 + available.size()) % available.size()]
+		var next := available[(index + 1) % available.size()]
+		control.focus_previous = control.get_path_to(previous)
+		control.focus_next = control.get_path_to(next)
+		control.focus_neighbor_left = control.get_path_to(
+			_nearest_focus_control(control, available, Vector2.LEFT, previous)
+		)
+		control.focus_neighbor_right = control.get_path_to(
+			_nearest_focus_control(control, available, Vector2.RIGHT, next)
+		)
+		control.focus_neighbor_top = control.get_path_to(
+			_nearest_focus_control(control, available, Vector2.UP, previous)
+		)
+		control.focus_neighbor_bottom = control.get_path_to(
+			_nearest_focus_control(control, available, Vector2.DOWN, next)
+		)
+
+
+func _nearest_focus_control(
+	origin: Control,
+	available: Array[Control],
+	direction: Vector2,
+	fallback: Control
+) -> Control:
+	var origin_center := origin.get_global_rect().get_center()
+	var lateral_axis := Vector2(-direction.y, direction.x)
+	var best := fallback
+	var best_score := INF
+	for candidate in available:
+		if candidate == origin:
+			continue
+		var delta := candidate.get_global_rect().get_center() - origin_center
+		var primary := delta.dot(direction)
+		if primary <= 0.5:
+			continue
+		var lateral := absf(delta.dot(lateral_axis))
+		var score := primary + lateral * 2.0
+		if score < best_score:
+			best_score = score
+			best = candidate
+	return best
 
 
 func _add_title_overlay_row(parent: VBoxContainer, title_data: Dictionary, earned_ids: Array[String]) -> void:
