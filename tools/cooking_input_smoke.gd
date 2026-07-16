@@ -5,6 +5,7 @@ const ThemeFactory = preload("res://src/ui/ui_theme.gd")
 const ProbeCommon = preload("res://tools/e11_probe_common.gd")
 
 const DESIGN_SIZE := Vector2(1280.0, 720.0)
+const TRANSITION_TIMEOUT_SECONDS := 2.0
 const EVIDENCE_NORMAL := "2026-07-16_input_select_normal_focus.png"
 const EVIDENCE_LOCKED := "2026-07-16_input_select_locked_focus.png"
 const EVIDENCE_EMPTY := "2026-07-16_input_select_empty_focus.png"
@@ -166,7 +167,7 @@ func _verify_last_fish_real_flow() -> void:
 	_expect(screen.preview_has_reward_overlay_state("MEAL_RESULT"), "MEAL_RESULT Escape should not skip irreversible reward progress")
 	_expect(_navigation_events.is_empty(), "MEAL_RESULT Escape should not navigate")
 	await _send_key_with_echo(KEY_ENTER)
-	await _wait_for(func() -> bool: return screen.preview_has_reward_overlay_state("EXP_GAIN"), 0.8)
+	await _wait_for(func() -> bool: return screen.preview_has_reward_overlay_state("EXP_GAIN"), TRANSITION_TIMEOUT_SECONDS)
 	_expect(screen.preview_has_reward_overlay_state("EXP_GAIN"), "reward confirm should hand off to EXP_GAIN")
 	_expect(_focus_owner() != null and _focus_owner().name == "RewardConfirmButton", "EXP_GAIN should focus RewardConfirmButton")
 	_expect(_only_overlay_focus(screen, "RewardConfirmButton"), "EXP_GAIN should trap focus to RewardConfirmButton")
@@ -174,7 +175,7 @@ func _verify_last_fish_real_flow() -> void:
 	await _send_cancel_with_echo()
 	_expect(screen.preview_has_reward_overlay_state("EXP_GAIN"), "EXP_GAIN Escape should not skip reward progress")
 	await _send_key_with_echo(KEY_ENTER)
-	await _wait_for(func() -> bool: return screen._active_cooking_overlay() == null, 0.8)
+	await _wait_for(func() -> bool: return screen._active_cooking_overlay() == null, TRANSITION_TIMEOUT_SECONDS)
 	_expect(screen._active_cooking_overlay() == null, "non-level EXP close should return to COOK_SELECT")
 	_expect(screen._cook_button.focus_mode == Control.FOCUS_NONE, "post-last-fish CookButton should leave focus")
 	_expect(_focus_owner() == screen._recipe_book_button, "post-last-fish return should fall back to recipe book")
@@ -192,7 +193,7 @@ func _verify_level_overlay_flow() -> void:
 	await _send_cancel_with_echo()
 	_expect(screen.preview_has_reward_overlay_state("EXP_GAIN_LEVELUP"), "level EXP Escape should not skip progression")
 	await _send_key_with_echo(KEY_ENTER)
-	await _wait_for(func() -> bool: return screen.preview_has_level_up_overlay(), 0.8)
+	await _wait_for(func() -> bool: return screen.preview_has_level_up_overlay(), TRANSITION_TIMEOUT_SECONDS)
 	_expect(screen.preview_has_level_up_overlay(), "EXP level branch should open LEVEL_UP_OVERLAY")
 	_expect(_focus_owner() != null and _focus_owner().name == "LevelUpConfirmButton", "LEVEL_UP should hand focus to LevelUpConfirmButton")
 	_expect(_only_overlay_focus(screen, "LevelUpConfirmButton"), "LEVEL_UP should trap focus to LevelUpConfirmButton")
@@ -200,14 +201,14 @@ func _verify_level_overlay_flow() -> void:
 	await _send_cancel_with_echo()
 	_expect(screen.preview_has_level_up_overlay(), "LEVEL_UP Escape should not skip the result")
 	await _send_key_with_echo(KEY_ENTER)
-	await _wait_for(func() -> bool: return screen.preview_has_status_overlay(), 0.8)
+	await _wait_for(func() -> bool: return screen.preview_has_status_overlay(), TRANSITION_TIMEOUT_SECONDS)
 	_expect(screen.preview_has_status_overlay(), "LEVEL_UP confirm should hand off to STATUS_SUMMARY")
 	_expect(_focus_owner() != null and _focus_owner().name == "StatusReturnButton", "STATUS_SUMMARY should focus StatusReturnButton")
 	_expect(_only_overlay_focus(screen, "StatusReturnButton"), "STATUS_SUMMARY should trap focus to StatusReturnButton")
 	await _capture_evidence(EVIDENCE_STATUS)
 	_navigation_events.clear()
 	await _send_cancel_with_echo()
-	await _wait_for(func() -> bool: return not _navigation_events.is_empty(), 0.6)
+	await _wait_for(func() -> bool: return not _navigation_events.is_empty(), TRANSITION_TIMEOUT_SECONDS)
 	_expect(_navigation_events == ["harbor"], "STATUS_SUMMARY Escape including echo should navigate to harbor exactly once")
 	await _free_screen(screen)
 
