@@ -145,6 +145,12 @@ assert summary(input_strict) == summary(input_baseline)
 assert input_strict_rc == (1 if input_strict["findings"] else 0)
 shipyard = next(item for item in input_baseline["screens"] if item["id"] == "shipyard")
 assert shipyard["cancel_contract"] == "navigation" and shipyard["cancel_observed_count"] == 1
+# statusの称号modalが後続acceptを遮断しても製品finding扱いだけで通過させない。
+# 各Buttonをfresh画面で観測する回帰契約をverify自身に固定する。
+status = next(item for item in input_baseline["screens"] if item["id"] == "status")
+assert status["reachable_count"] == 4
+assert status["accept_observed_count"] == status["reachable_count"]
+assert not status["accept_unobserved_paths"]
 assert input_baseline["product_status"] in {"pass", "findings"}
 assert resolution_baseline["product_status"] in {"pass", "findings"}
 assert len(resolution_baseline["measurements"]) == 3

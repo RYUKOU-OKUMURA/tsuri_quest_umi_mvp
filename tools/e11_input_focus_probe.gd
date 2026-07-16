@@ -376,16 +376,15 @@ func _scan_screen(entry: Dictionary, screen: Control) -> void:
 	var navigation_count := [0]
 	if screen.has_signal("navigate_requested"):
 		screen.navigate_requested.connect(func(_id: String, _payload: Dictionary) -> void: navigation_count[0] += 1)
-	for control in focusables:
+	for focus_index in range(focusables.size()):
+		var control := focusables[focus_index]
 		if not is_instance_valid(control) or not (control is BaseButton) or (control as BaseButton).disabled:
 			continue
 		var path := str(screen.get_path_to(control))
 		if reachable.has(path):
-			var pressed_count := [0]
-			(control as BaseButton).pressed.connect(func() -> void: pressed_count[0] += 1)
-			control.grab_focus()
-			await _send_action("ui_accept")
-			if pressed_count[0] > 0:
+			# 決定でモーダルや画面状態が変わっても、後続Buttonの観測へ影響させない。
+			# 各Buttonを同じ初期状態のfresh instanceで検証する。
+			if await _observe_accept_on_fresh_screen(entry, focus_index, path):
 				accept_observed_count += 1
 			else:
 				accept_unobserved_paths.append(path)
@@ -424,6 +423,47 @@ func _scan_screen(entry: Dictionary, screen: Control) -> void:
 		"elements": elements,
 	})
 	_findings.append_array(_classification_findings(screen_id, focusables.size(), initial_path, disabled_reached_count, isolated, missing_style_count, cancel_observed, cancel_observed_count, cancel_kind, accept_unobserved_paths))
+
+
+func _observe_accept_on_fresh_screen(entry: Dictionary, focus_index: int, path: String) -> bool:
+	var screen_id := String(entry["id"])
+	var script := load(String(entry["script"])) as Script
+	if script == null:
+		_harness_errors.append(Common.finding("HARNESS_ACCEPT_SCREEN_LOAD", "harness_error", screen_id, "決定入力用のfresh画面を読み込めません", {"path": path}))
+		return false
+	var screen := script.new() as Control
+	if screen == null:
+		_harness_errors.append(Common.finding("HARNESS_ACCEPT_SCREEN_CREATE", "harness_error", screen_id, "決定入力用のfresh画面を生成できません", {"path": path}))
+		return false
+	if screen.has_method("configure"):
+		screen.call("configure", (entry["payload"] as Dictionary).duplicate(true))
+	add_child(screen)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await _apply_setup(screen, entry.get("setup", []))
+	var fresh_focusables: Array[Control] = []
+	_collect_focusables(screen, fresh_focusables)
+	var control: Control = fresh_focusables[focus_index] if focus_index < fresh_focusables.size() else null
+	if control == null or not (control is BaseButton) or (control as BaseButton).disabled:
+		_harness_errors.append(Common.finding("HARNESS_ACCEPT_TARGET", "harness_error", screen_id, "fresh画面で決定入力対象を再現できません", {"path": path, "focus_index": focus_index}))
+		await _discard_probe_screen(screen)
+		return false
+	var pressed_count := [0]
+	(control as BaseButton).pressed.connect(func() -> void: pressed_count[0] += 1)
+	control.grab_focus()
+	await _send_action("ui_accept")
+	var observed: bool = pressed_count[0] > 0
+	await _discard_probe_screen(screen)
+	return observed
+
+
+func _discard_probe_screen(screen: Control) -> void:
+	var focus_owner := get_viewport().gui_get_focus_owner()
+	if focus_owner != null and screen.is_ancestor_of(focus_owner):
+		focus_owner.release_focus()
+	remove_child(screen)
+	screen.queue_free()
+	await get_tree().process_frame
 
 
 func _classification_findings(screen_id: String, focusable_count: int, initial_path: String, disabled_reached_count: int, isolated: Array, missing_style_count: int, cancel_observed: bool, cancel_observed_count: int, cancel_kind: String, accept_unobserved_paths: Array) -> Array[Dictionary]:

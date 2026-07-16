@@ -24,6 +24,7 @@ tools/main_navigation_smoke.tscn|direct_scene
 tools/market_input_smoke.tscn|direct_scene
 tools/market_smoke.tscn|direct_scene
 tools/nushi_encounter_audit.tscn|direct_scene
+tools/quest_board_input_smoke.tscn|direct_scene
 tools/quest_board_smoke.tscn|direct_scene
 tools/save_namespace_migration_smoke.tscn|save_system
 tools/save_system_smoke.tscn|save_system
@@ -36,6 +37,7 @@ tools/shipyard_input_smoke.tscn|direct_scene
 tools/shipyard_smoke.tscn|direct_scene
 tools/settings_input_smoke.tscn|direct_scene
 tools/settings_smoke.tscn|settings_smoke
+tools/status_input_smoke.tscn|direct_scene
 tools/status_smoke.tscn|direct_scene
 tools/tackle_shop_input_smoke.tscn|direct_scene
 tools/tackle_shop_smoke.tscn|direct_scene
