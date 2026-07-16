@@ -1,6 +1,6 @@
 # 調理場 QA判断ログ
 
-最終更新: 2026-07-14 / 状態: 旧調理一括generator決定性修正 完了 / C1-A・C0・既存構成freeze維持 / 次: C1-B
+最終更新: 2026-07-16 / 状態: INPUT-COOKING完了 / C1-A・C0・既存構成freeze維持 / 次: C1-B
 参照画像: reference/cooking_flow/01_cook_select_concept.png, reference/cooking_flow/02_meal_result_concept.png, reference/cooking_flow/03_exp_gain_concept.png, reference/cooking_flow/04_level_up_overlay_concept.png, reference/cooking_flow/05_status_summary_concept.png
 QA更新コマンド: ./tools/cooking_visual_qa.sh
 
@@ -24,6 +24,8 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 | EXP_GAIN / LEVEL_UP 下部導線 | 本文左content margin `Reward=88px` / `LevelUp=92px`、各Button直下は単一の命名Label cue（`RewardConfirmCue` / `LevelUpConfirmCue`）のみ。`MEAL_RESULT` / `EXP_GAIN` / `LEVEL_UP` は `▶`、`EXP_GAIN_LEVELUP` は `▲` | `cooking_reward_panel.gd` / `level_up_panel.gd` / `tools/cooking_content_audit.gd` | 40px高の導線で複数小グリフが本文と潰れるP1を防ぐ。余白・cue名・単一Label構造・draw接続なし・状態別glyphはheadless監査する |
 | STATUS_SUMMARY 所持金 | 整数部は3桁カンマ区切り（例: `10,170 G`） | `src/ui/components/cooking_status_panel.gd` | docs/19 §4.3の金額表記規格 |
 | COOK_SELECT厨房背景 | source `b3e7d525...686cb` / output `67157172...81106`、1280x720、彩度 `0.84`、濃紺scrim alpha `48` | `tools/source_assets/cooking/c1a_kitchen_bg_source.png` / `tools/process_cooking_c1a_assets.py` / `assets/showcase/cooking/cooking_room_bg.png` | C1-A採用値。暖色ランタン光・海窓・調理棚を持つ環境のみ一点物。3列・全前景矩形・runtime glazeは不変 |
+| COOK_SELECT 入力導線 | 初期focusは「選択中の調理可能recipe → 選択中の所持fish → 料理図鑑 → 港」の順。所持fish / 調理可能recipe / 料理図鑑 / 有効な調理 / 港だけを候補とし、未所持・locked・disabledは `FOCUS_NONE`。Tab/Shift+Tabと方向入力は有効候補だけの閉路、再構築時は `fish:<id>` / `recipe:<id>` でA→B→A復元 | `src/ui/cooking_screen.gd` / `tools/cooking_input_smoke.gd` | INPUT-COOKING採用値。表示矩形を変えず、動的リストと調理可否をまたぐkeyboard/gamepad契約を固定する |
+| 調理5状態 入力handoff | `MEAL_RESULT` / `EXP_GAIN` は `RewardConfirmButton`、`LEVEL_UP_OVERLAY` は `LevelUpConfirmButton`、`STATUS_SUMMARY` は `StatusReturnButton` のみfocus可能。背面とoverlay内の他Controlは `FOCUS_NONE`。EscapeはCOOK_SELECTとSTATUS_SUMMARYのみ港へ1回、食事・EXP・レベルアップでは進行を飛ばさず消費 | `src/ui/cooking_screen.gd` / `tools/cooking_input_smoke.gd` | C0の単一cue構造を変えず、不可逆報酬の誤skipと背景focus漏れを防ぐ |
 | 旧調理一括generatorの製品保存 | size / mode / decoded pixels完全一致なら既存bytes保持。真の差・欠損・読込不能だけ同一directory tempへ `flush` + `fsync` 後atomic replace。C1-A背景は専用processor、採用済み11 slotは明示guard | `tools/generate_cooking_showcase_assets.py` / `tools/cooking_generator_determinism_verify.py` | Pillow版差で採用品を再encode・再描画しない。保存失敗時は旧製品とtemp cleanupを保証。製品57点のfile/decoded hash・size/modeをfocused検証で固定 |
 
 ## 2. 不採用・再試行禁止リスト
@@ -58,10 +60,20 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 - P2 Top2完了: `STATUS_SUMMARY` はヘッダーsubtitle、プレイヤーhero、ステータス5行、各カードのアート高さを見直し、人物・Lv/次EXP・ステータス名/数値が読める独立ステータス画面へ改善済み。参照ほどの人物一点物アート密度やカード装飾密度は残るが、次に触るなら素材フェーズとして扱う。
 - P2 Top3完了: `COOK_SELECT` は右詳細上部を料理タイトル帯に組み替え、料理名・説明・大皿・材料/EXP/効果・調理ボタンの順に読める構成へ改善済み。参照ほど行ラベルと効果行の一体感は残っていないが、残差はカード素材/行フレームの一点物素材フェーズとして扱う。
 - C1-A完了: COOK_SELECT厨房背景は、暖色ランタン光・海の見える窓・調理棚が読める authored sourceへ移行した。原寸と320x180比較で現行の平坦な矩形背景に明確に勝ち、参照01の背景差が縮んだ。次のCOOK_SELECT素材課題はC1-Bのカード質感であり、背景の再調整へ戻らない。
+- INPUT-COOKING完了: E11実イベント計測でCOOKING findings 0。COOK_SELECTの動的fish/recipe、空inventory、locked recipe、最後の魚消費、5状態handoff、Escape一重処理、mouse回帰を専用smokeで固定した。見た目の次工程は従来どおりC1-Bであり、入力対応を理由に既存構成やC0 cueを再オープンしない。
 - P2完了: `LEVEL_UP_OVERLAY` はタイトル帯を報酬プレート化し、`LEVEL UP!` と `Lv.4 -> Lv.5` を通常パネルより強い主導線へ改善済み。ステータス行とLv.5解放カードも下段に残り、報酬ピークとして読める。
 - P3止まり: 参照の立体的な巨大金文字、より密な金色光線/紙吹雪、月桂樹とメダルの一点物アート密度、魚種差、所持数差、枠線数px、星/小アイコン/紙汚れ/影/粒子の微差は、今後触るなら一点物素材/演出フェーズとして扱う。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
+
+2026-07-16: `INPUT-COOKING` を、E11入力共通化の画面別スライスとして開始し、同日完了。
+
+- 動かしたもの: `src/ui/cooking_screen.gd` のfocus候補・閉路・決定/戻る・動的再構築復元・5状態handoff、専用 `tools/cooking_input_smoke.*`、入力focus証拠、当QAログ。
+- 不動値: §1の既存レイアウト/素材/文言、C1-A背景、C0のReward/LevelUp Button直下単一cue、`src/ui/components/*`、料理/EXP/レベル/バフ/セーブの進行値、他画面、common/palette/project.godot。
+- 採用条件: 実 `InputEventKey` / `InputEventMouseButton` で、全有効候補到達、disabled/locked非到達、Tab/方向閉路、fish/recipe A→B→A focus復元、Enter/KP Enter一重処理、最後の魚1匹だけ消費、5状態handoff、不可逆報酬のEscape非skip、港遷移一重、mouse回帰がgreen。E11のCOOKING findingsが0であること。
+- 証拠画像: `docs/qa/evidence/cooking/2026-07-16_input_{select_normal_focus,select_locked_focus,select_empty_focus,select_last_fish_focus,meal_result_focus,exp_gain_focus,level_up_focus,status_summary_focus}.png`。全8枚を個別に原寸1280x720で確認し、focus可視、文字欠け/重なり/P1なし。入力表示以外の矩形・素材差はない。
+- 検証: `cooking_input_smoke: ok`、`Cooking headless verification passed.`、`Cooking visual QA passed.`、`Save system verification passed.`、`validate_project.sh` exit 0。E11実測は `focusable=2 / reachable=2 / disabled_reached=0 / isolated=0 / missing_focus_style=0 / cancel=1 / accept_unobserved=0`（probeの空inventory fixture）でCOOKING findings 0。`e11_qa_harness_verify: ok` は一時的にCOOKING行をmanifestへ登録して確認済みだが、`tools/release_test_manifest.txt` は親ownerの横断統合対象のため当branchでは未登録。親統合時にCOOKING行をunionし、統合後ハーネスを再確認する。
+- 固定条件: 入力改善で§1の構成freezeやC0 cueを動かさない。動的候補を追加する場合はsemantic identity、disabled除外、閉路、実イベントsmoke、代表/高リスク状態の原寸証拠を同時更新する。
 
 2026-07-14: `旧調理一括generator決定性修正` を、UI Wave B横断P2として開始し、同日完了。
 

@@ -404,6 +404,9 @@ const RECIPE_ICON_INDEX := {
 
 enum FlowState { COOK_SELECT, MEAL_RESULT, EXP_GAIN }
 
+const FOCUS_KIND_META := &"cooking_focus_kind"
+const FOCUS_ID_META := &"cooking_focus_id"
+
 var _flow_state := FlowState.COOK_SELECT
 var _selected_fish_id: String = ""
 var _selected_recipe_id: String = ""
@@ -426,6 +429,8 @@ var _stock_value: Label
 var _overwrite_note: Label
 var _cook_action_cue: CookActionCueVisual
 var _cook_button: Button
+var _harbor_button: Button
+var _recipe_book_button: Button
 var _result_panel: PanelContainer
 var _result_title_slot: HBoxContainer
 var _result_title: Label
@@ -436,6 +441,10 @@ var _status_button: Button
 
 var _fish_cards: Dictionary = {}
 var _recipe_cards: Dictionary = {}
+var _fish_focus_order: Array[Control] = []
+var _recipe_focus_order: Array[Control] = []
+var _recipe_focus_positions: Dictionary = {}
+var _pending_focus_identity := ""
 var _pending_level_up: Dictionary = {}
 
 
@@ -459,6 +468,7 @@ func _build_screen() -> void:
 
 	_refresh_all()
 	_show_status_summary()
+	set_common_cancel_handler(_handle_cooking_cancel)
 
 
 func _add_cooking_background() -> void:
@@ -521,9 +531,11 @@ func _build_header(layout: VBoxContainer) -> void:
 	_player_status_bar.custom_minimum_size = Vector2(0.0, 60.0)
 	header.add_child(_player_status_bar)
 
-	var back := make_button("港へ", func() -> void: navigate("harbor"), 96, false)
-	back.custom_minimum_size = Vector2(90, 52)
-	header.add_child(back)
+	_harbor_button = make_button("港へ", func() -> void: navigate("harbor"), 96, false)
+	_harbor_button.name = "CookingHarborButton"
+	_harbor_button.custom_minimum_size = Vector2(90, 52)
+	_harbor_button.set_meta(FOCUS_KIND_META, "harbor")
+	header.add_child(_harbor_button)
 
 
 func _build_cook_select(layout: VBoxContainer) -> void:
@@ -594,15 +606,16 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	_recipe_grid.add_theme_constant_override("h_separation", 7)
 	_recipe_grid.add_theme_constant_override("v_separation", 9)
 	recipe_layout.add_child(_recipe_grid)
-	var recipe_book_button := make_button("料理図鑑を見る", _show_status_overlay, 280, false)
-	recipe_book_button.name = "RecipeBookButton"
-	recipe_book_button.custom_minimum_size = Vector2(330.0, 44.0)
-	recipe_book_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	recipe_book_button.icon = _recipe_icon("locked")
-	recipe_book_button.expand_icon = true
-	recipe_book_button.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_apply_recipe_book_button_style(recipe_book_button)
-	recipe_layout.add_child(recipe_book_button)
+	_recipe_book_button = make_button("料理図鑑を見る", _show_status_overlay, 280, false)
+	_recipe_book_button.name = "RecipeBookButton"
+	_recipe_book_button.custom_minimum_size = Vector2(330.0, 44.0)
+	_recipe_book_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_recipe_book_button.icon = _recipe_icon("locked")
+	_recipe_book_button.expand_icon = true
+	_recipe_book_button.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_recipe_book_button.set_meta(FOCUS_KIND_META, "recipe_book")
+	_apply_recipe_book_button_style(_recipe_book_button)
+	recipe_layout.add_child(_recipe_book_button)
 
 	_recipe_to_detail_arrow = TextureRect.new()
 	_recipe_to_detail_arrow.name = "RecipeToDetailArrow"
@@ -781,6 +794,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	cue_row.add_child(_cook_action_cue)
 	_cook_button = make_button("調理する", _cook_selected, 300, true)
 	_cook_button.name = "CookButton"
+	_cook_button.set_meta(FOCUS_KIND_META, "cook")
 	_cook_button.custom_minimum_size = Vector2(356, 64)
 	_cook_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_apply_cook_button_style()
@@ -965,8 +979,10 @@ func _refresh_header() -> void:
 
 
 func _rebuild_fish_cards() -> void:
+	_remember_rebuilt_focus("fish")
 	_clear_container(_fish_box)
 	_fish_cards.clear()
+	_fish_focus_order.clear()
 	var first_id := ""
 	for fish_id in _fish_display_ids():
 		var count := PlayerProgress.fish_count(fish_id)
@@ -978,11 +994,13 @@ func _rebuild_fish_cards() -> void:
 		_selected_recipe_id = ""
 		_rebuild_recipe_cards()
 		_refresh_detail()
+		_refresh_cook_select_keyboard_focus()
 		return
 	if _selected_fish_id.is_empty() or PlayerProgress.fish_count(_selected_fish_id) <= 0:
 		_selected_fish_id = first_id
 	_rebuild_recipe_cards()
 	_refresh_fish_card_styles()
+	_refresh_cook_select_keyboard_focus()
 
 
 func _fish_display_ids() -> Array[String]:
@@ -1034,12 +1052,20 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	card.name = _fish_row_node_name(fish_id)
 	card.custom_minimum_size = Vector2(0, 72)
 	card.mouse_filter = Control.MOUSE_FILTER_STOP if owned else Control.MOUSE_FILTER_IGNORE
+	card.set_meta(FOCUS_KIND_META, "fish")
+	card.set_meta(FOCUS_ID_META, fish_id)
+	card.focus_mode = Control.FOCUS_ALL if owned else Control.FOCUS_NONE
 	if owned:
+		_fish_focus_order.append(card)
 		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		card.gui_input.connect(
 			func(event: InputEvent) -> void:
 				if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 					_select_fish(fish_id)
+		)
+		card.gui_input.connect(
+			func(event: InputEvent) -> void:
+				_handle_focus_card_accept(event, card, _select_fish.bind(fish_id))
 		)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 0)
@@ -1174,14 +1200,19 @@ func _refresh_fish_card_styles() -> void:
 
 
 func _rebuild_recipe_cards() -> void:
+	_remember_rebuilt_focus("recipe")
 	_clear_container(_recipe_grid)
 	_recipe_cards.clear()
+	_recipe_focus_order.clear()
+	_recipe_focus_positions.clear()
 	if _selected_fish_id.is_empty():
+		_refresh_cook_select_keyboard_focus()
 		return
 	var entries := _recipe_entries_for_fish(_selected_fish_id)
 	var first_available := ""
 	var selected_available := false
-	for entry in entries:
+	for entry_index in range(entries.size()):
+		var entry := entries[entry_index]
 		var recipe := Dictionary(entry.get("recipe", {}))
 		var recipe_id := String(recipe.get("id", ""))
 		var locked := bool(entry.get("locked", false))
@@ -1190,13 +1221,18 @@ func _rebuild_recipe_cards() -> void:
 			first_available = recipe_id
 		if recipe_id == _selected_recipe_id and not locked and not unavailable:
 			selected_available = true
-		_recipe_grid.add_child(_make_recipe_card(recipe, locked, unavailable))
+		var card := _make_recipe_card(recipe, locked, unavailable)
+		_recipe_grid.add_child(card)
+		if not locked and not unavailable:
+			_recipe_focus_order.append(card)
+			_recipe_focus_positions[card] = Vector2i(entry_index % 3, entry_index / 3)
 	for _i in range(maxi(0, 6 - entries.size())):
 		_recipe_grid.add_child(_make_recipe_preview_card())
 	if _selected_recipe_id.is_empty() or not selected_available:
 		_selected_recipe_id = first_available
 	_refresh_recipe_card_styles()
 	_refresh_detail()
+	_refresh_cook_select_keyboard_focus()
 
 
 func _recipe_entries_for_fish(fish_id: String) -> Array[Dictionary]:
@@ -1275,12 +1311,19 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	card.custom_minimum_size = Vector2(132, 196)
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
 	var selectable := not locked and not unavailable
+	card.set_meta(FOCUS_KIND_META, "recipe")
+	card.set_meta(FOCUS_ID_META, recipe_id)
+	card.focus_mode = Control.FOCUS_ALL if selectable else Control.FOCUS_NONE
 	if selectable:
 		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		card.gui_input.connect(
 			func(event: InputEvent) -> void:
 				if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 					_select_recipe(recipe_id)
+		)
+		card.gui_input.connect(
+			func(event: InputEvent) -> void:
+				_handle_focus_card_accept(event, card, _select_recipe.bind(recipe_id))
 		)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
@@ -1552,6 +1595,7 @@ func _refresh_detail() -> void:
 		_cook_action_cue.set_available(false)
 		_cook_button.disabled = true
 		_cook_button.queue_redraw()
+		_refresh_cook_select_keyboard_focus()
 		return
 	var exp_preview := PlayerProgress.cooking_exp_preview(
 		_selected_fish_id, _selected_recipe_id
@@ -1579,6 +1623,7 @@ func _refresh_detail() -> void:
 	_cook_action_cue.set_available(count > 0)
 	_cook_button.disabled = count <= 0
 	_cook_button.queue_redraw()
+	_refresh_cook_select_keyboard_focus()
 
 
 func _detail_buff_value_text(buff_text: String) -> String:
@@ -1586,6 +1631,269 @@ func _detail_buff_value_text(buff_text: String) -> String:
 	if buff_text.begins_with(prefix):
 		return buff_text.substr(prefix.length())
 	return buff_text
+
+
+func _handle_focus_card_accept(event: InputEvent, card: Control, callback: Callable) -> void:
+	if not (event is InputEventKey):
+		return
+	var key := event as InputEventKey
+	if not key.pressed or key.echo:
+		return
+	var is_enter := key.keycode in [KEY_ENTER, KEY_KP_ENTER]
+	if not is_enter and not key.is_action_pressed("ui_accept"):
+		return
+	card.accept_event()
+	callback.call()
+
+
+func _remember_rebuilt_focus(kind: String) -> void:
+	if not is_inside_tree():
+		return
+	var owner := get_viewport().gui_get_focus_owner() as Control
+	var identity := _control_focus_identity(owner)
+	if identity.begins_with("%s:" % kind):
+		_pending_focus_identity = identity
+
+
+func _control_focus_identity(control: Control) -> String:
+	if control == null or not is_instance_valid(control):
+		return ""
+	var kind := String(control.get_meta(FOCUS_KIND_META, ""))
+	if kind in ["fish", "recipe"]:
+		return "%s:%s" % [kind, String(control.get_meta(FOCUS_ID_META, ""))]
+	return kind
+
+
+func _focus_control_for_identity(identity: String, candidates: Array[Control]) -> Control:
+	if identity.is_empty():
+		return null
+	for control in candidates:
+		if _control_focus_identity(control) == identity:
+			return control
+	return null
+
+
+func _initial_cook_select_focus(candidates: Array[Control]) -> Control:
+	var recipe := _focus_control_for_identity("recipe:%s" % _selected_recipe_id, candidates)
+	if recipe != null:
+		return recipe
+	var fish := _focus_control_for_identity("fish:%s" % _selected_fish_id, candidates)
+	if fish != null:
+		return fish
+	if candidates.has(_recipe_book_button):
+		return _recipe_book_button
+	if candidates.has(_harbor_button):
+		return _harbor_button
+	return candidates[0] if not candidates.is_empty() else null
+
+
+func _cook_select_focus_candidates() -> Array[Control]:
+	var candidates: Array[Control] = []
+	for control in _fish_focus_order:
+		if control != null and is_instance_valid(control) and control.is_inside_tree():
+			candidates.append(control)
+	for control in _recipe_focus_order:
+		if control != null and is_instance_valid(control) and control.is_inside_tree():
+			candidates.append(control)
+	if _recipe_book_button != null and _recipe_book_button.is_inside_tree():
+		candidates.append(_recipe_book_button)
+	if _cook_button != null and _cook_button.is_inside_tree() and not _cook_button.disabled:
+		candidates.append(_cook_button)
+	if _harbor_button != null and _harbor_button.is_inside_tree():
+		candidates.append(_harbor_button)
+	return candidates
+
+
+func _refresh_cook_select_keyboard_focus() -> void:
+	if not is_inside_tree() or _active_cooking_overlay() != null:
+		return
+	var candidates := _cook_select_focus_candidates()
+	if candidates.is_empty():
+		setup_keyboard_focus([])
+		return
+	var owner := get_viewport().gui_get_focus_owner() as Control
+	var preferred := _focus_control_for_identity(_pending_focus_identity, candidates)
+	if preferred == null and candidates.has(owner):
+		preferred = owner
+	if preferred == null:
+		preferred = _initial_cook_select_focus(candidates)
+	_pending_focus_identity = ""
+	setup_keyboard_focus(candidates, preferred)
+	_apply_cook_select_focus_graph(candidates)
+
+
+func _apply_cook_select_focus_graph(candidates: Array[Control]) -> void:
+	if candidates.is_empty():
+		return
+	for index in range(candidates.size()):
+		var control := candidates[index]
+		var next := candidates[(index + 1) % candidates.size()]
+		var previous := candidates[(index - 1 + candidates.size()) % candidates.size()]
+		_set_focus_target(control, &"focus_next", next)
+		_set_focus_target(control, &"focus_previous", previous)
+
+	var fish_target := _focus_control_for_identity("fish:%s" % _selected_fish_id, candidates)
+	if fish_target == null and not _fish_focus_order.is_empty():
+		fish_target = _fish_focus_order[0]
+	var recipe_target := _focus_control_for_identity("recipe:%s" % _selected_recipe_id, candidates)
+	if recipe_target == null and not _recipe_focus_order.is_empty():
+		recipe_target = _recipe_focus_order[0]
+	var action_target: Control = _cook_button if candidates.has(_cook_button) else _harbor_button
+	var header_target: Control = _harbor_button if candidates.has(_harbor_button) else candidates[0]
+
+	for index in range(_fish_focus_order.size()):
+		var fish := _fish_focus_order[index]
+		if not candidates.has(fish):
+			continue
+		_set_focus_neighbors(
+			fish,
+			header_target,
+			recipe_target if recipe_target != null else _recipe_book_button,
+			_fish_focus_order[(index - 1 + _fish_focus_order.size()) % _fish_focus_order.size()],
+			_fish_focus_order[(index + 1) % _fish_focus_order.size()]
+		)
+
+	for recipe in _recipe_focus_order:
+		if not candidates.has(recipe):
+			continue
+		_set_focus_neighbors(
+			recipe,
+			_recipe_direction_target(recipe, Vector2i.LEFT, fish_target),
+			_recipe_direction_target(recipe, Vector2i.RIGHT, action_target),
+			_recipe_direction_target(recipe, Vector2i.UP, fish_target),
+			_recipe_direction_target(recipe, Vector2i.DOWN, _recipe_book_button)
+		)
+
+	if candidates.has(_recipe_book_button):
+		var book_top: Control = (
+			_recipe_focus_order[-1]
+			if not _recipe_focus_order.is_empty()
+			else fish_target if fish_target != null else header_target
+		)
+		_set_focus_neighbors(
+			_recipe_book_button,
+			fish_target if fish_target != null else header_target,
+			action_target,
+			book_top,
+			action_target
+		)
+	if candidates.has(_cook_button):
+		_set_focus_neighbors(
+			_cook_button,
+			_recipe_book_button,
+			header_target,
+			recipe_target if recipe_target != null else _recipe_book_button,
+			header_target
+		)
+	if candidates.has(_harbor_button):
+		var return_target: Control = _cook_button if candidates.has(_cook_button) else _recipe_book_button
+		var body_target: Control = fish_target if fish_target != null else _recipe_book_button
+		_set_focus_neighbors(_harbor_button, return_target, body_target, return_target, body_target)
+
+
+func _recipe_direction_target(control: Control, direction: Vector2i, fallback: Control) -> Control:
+	if not _recipe_focus_positions.has(control):
+		return fallback
+	var origin := _recipe_focus_positions[control] as Vector2i
+	var best: Control = null
+	var best_score := 1_000_000
+	for candidate in _recipe_focus_order:
+		if candidate == control or not _recipe_focus_positions.has(candidate):
+			continue
+		var position := _recipe_focus_positions[candidate] as Vector2i
+		var delta := position - origin
+		if direction.x < 0 and delta.x >= 0:
+			continue
+		if direction.x > 0 and delta.x <= 0:
+			continue
+		if direction.y < 0 and delta.y >= 0:
+			continue
+		if direction.y > 0 and delta.y <= 0:
+			continue
+		var cross_distance := absi(delta.y) if direction.x != 0 else absi(delta.x)
+		var forward_distance := absi(delta.x) if direction.x != 0 else absi(delta.y)
+		var score := cross_distance * 100 + forward_distance
+		if score < best_score:
+			best_score = score
+			best = candidate
+	return best if best != null else fallback
+
+
+func _set_focus_neighbors(
+	control: Control, left: Control, right: Control, top: Control, bottom: Control
+) -> void:
+	_set_focus_target(control, &"focus_neighbor_left", left)
+	_set_focus_target(control, &"focus_neighbor_right", right)
+	_set_focus_target(control, &"focus_neighbor_top", top)
+	_set_focus_target(control, &"focus_neighbor_bottom", bottom)
+
+
+func _set_focus_target(control: Control, property: StringName, target: Control) -> void:
+	if control == null or target == null or not is_instance_valid(control) or not is_instance_valid(target):
+		return
+	control.set(property, control.get_path_to(target))
+
+
+func _active_cooking_overlay() -> Control:
+	for child in get_children():
+		if (
+			child.get_script() == CookingRewardPanelScript
+			or child.get_script() == LevelUpPanelScript
+			or child.get_script() == CookingStatusPanelScript
+		):
+			return child as Control
+	return null
+
+
+func _activate_overlay_keyboard_focus(panel: Control, button_name: String) -> void:
+	_disable_subtree_focus(panel)
+	var button := _find_named_control(panel, button_name) as Button
+	if button == null:
+		push_error("Cooking focus handoff target is missing: %s" % button_name)
+		return
+	button.disabled = false
+	button.focus_mode = Control.FOCUS_ALL
+	button.set_meta(FOCUS_KIND_META, "overlay:%s" % button_name)
+	# 報酬Button直下の単一cue構造はC0 freeze。共通indicatorを子追加せず既存focus skinを使う。
+	setup_keyboard_focus([])
+	_set_focus_neighbors(button, button, button, button, button)
+	_set_focus_target(button, &"focus_next", button)
+	_set_focus_target(button, &"focus_previous", button)
+	button.call_deferred("grab_focus")
+
+
+func _disable_subtree_focus(root: Node) -> void:
+	for child in root.get_children():
+		if child is Control:
+			(child as Control).focus_mode = Control.FOCUS_NONE
+		_disable_subtree_focus(child)
+
+
+func _find_named_control(root: Node, node_name: String) -> Control:
+	if root.name == node_name and root is Control:
+		return root as Control
+	for child in root.get_children():
+		var found := _find_named_control(child, node_name)
+		if found != null:
+			return found
+	return null
+
+
+func _handle_cooking_cancel() -> void:
+	var overlay := _active_cooking_overlay()
+	if overlay == null:
+		navigate("harbor")
+		return
+	if overlay.get_script() != CookingStatusPanelScript:
+		# 食事・EXP・レベルアップの不可逆な報酬進行はEscapeで飛ばさない。
+		return
+	var return_button := _find_named_control(overlay, "StatusReturnButton") as Button
+	if return_button != null and not return_button.disabled:
+		# deterministic probeでは退場tweenを待たず、同じclose契約を即時観測可能にする。
+		if is_qa_deterministic() and overlay.has_method("preview_accept"):
+			overlay.call("preview_accept")
+		else:
+			return_button.pressed.emit()
 
 
 func _apply_cook_button_style() -> void:
@@ -1768,6 +2076,7 @@ func preview_show_meal_reward_result(result: Dictionary, leveled: bool) -> void:
 	var panel := CookingRewardPanelScript.new()
 	add_child(panel)
 	panel.show_meal_result(result)
+	_activate_overlay_keyboard_focus(panel, "RewardConfirmButton")
 
 
 func _preview_base_stats_for_level(level_value: int) -> Dictionary:
@@ -1907,6 +2216,7 @@ func _show_status_overlay() -> void:
 	add_child(panel)
 	panel.closed.connect(func() -> void: navigate("harbor"))
 	panel.show_summary()
+	_activate_overlay_keyboard_focus(panel, "StatusReturnButton")
 
 
 func _current_meal_summary_text() -> String:
@@ -1981,6 +2291,7 @@ func _show_reward_overlay(
 				leveled
 			)
 	)
+	_activate_overlay_keyboard_focus(panel, "RewardConfirmButton")
 
 
 func _meal_status_snapshot(level_before: int, exp_before: int, exp_max_before: int) -> Dictionary:
@@ -2025,6 +2336,7 @@ func _show_exp_reward_overlay(
 	else:
 		_pending_level_up = {}
 		panel.closed.connect(_show_post_reward_select_summary)
+	_activate_overlay_keyboard_focus(panel, "RewardConfirmButton")
 
 
 func _show_pending_level_up() -> void:
@@ -2045,6 +2357,7 @@ func _show_post_reward_select_summary() -> void:
 	_refresh_header()
 	_refresh_detail()
 	_show_status_summary()
+	call_deferred("_refresh_cook_select_keyboard_focus")
 
 
 func _small_icon(mode: String, accent: Color, minimum_size: Vector2) -> CookingSmallIcon:
@@ -2193,6 +2506,7 @@ func _show_level_up(
 	add_child(panel)
 	panel.show_level_up(level_from, level_to, old_stats, new_stats)
 	panel.closed.connect(_show_post_level_status_summary)
+	_activate_overlay_keyboard_focus(panel, "LevelUpConfirmButton")
 
 
 func _show_post_level_status_summary() -> void:
