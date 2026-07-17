@@ -10,6 +10,10 @@ const PIXEL_REGRESSION_FISH_ID := "aji"
 const PIXEL_REGRESSION_FISH_SIZE_CM := 24.5
 const PIXEL_REGRESSION_ENVIRONMENT_ID := "sunny_calm"
 const PIXEL_REGRESSION_TIME_SLOT_ID := "daytime"
+const STATE_PROBE_RECT := Rect2i(6, 574, 1268, 140)
+
+var _previous_state_probe := PackedByteArray()
+var _previous_capture_state := -1
 
 
 func _ready() -> void:
@@ -41,12 +45,12 @@ func _ready() -> void:
 	var out_bite := "%s_bite.png" % out_prefix
 
 	await _settle()
-	await _capture(vp, screen, out_ready)
+	await _capture(vp, screen, out_ready, FishingSimulator.State.READY)
 
 	screen._on_main_action_pressed()
 	await get_tree().create_timer(0.16).timeout
 	await _settle()
-	await _capture(vp, screen, out_casting)
+	await _capture(vp, screen, out_casting, FishingSimulator.State.CASTING)
 
 	var reached := await _wait_until(screen, FishingSimulator.State.WAITING, 3.2)
 	if not reached:
@@ -55,7 +59,7 @@ func _ready() -> void:
 	await get_tree().create_timer(0.26).timeout
 	await _settle()
 	print("capture waiting state=%d" % screen._simulator.state)
-	await _capture(vp, screen, out_waiting)
+	await _capture(vp, screen, out_waiting, FishingSimulator.State.WAITING)
 
 	reached = await _wait_until(screen, FishingSimulator.State.APPROACH, 5.2)
 	if not reached:
@@ -64,7 +68,7 @@ func _ready() -> void:
 	await get_tree().create_timer(0.38).timeout
 	await _settle()
 	print("capture approach state=%d" % screen._simulator.state)
-	await _capture(vp, screen, out_approach)
+	await _capture(vp, screen, out_approach, FishingSimulator.State.APPROACH)
 
 	reached = await _wait_until(screen, FishingSimulator.State.BITE, 4.2)
 	if not reached:
@@ -73,7 +77,7 @@ func _ready() -> void:
 	await get_tree().create_timer(0.10).timeout
 	await _settle()
 	print("capture bite state=%d" % screen._simulator.state)
-	await _capture(vp, screen, out_bite)
+	await _capture(vp, screen, out_bite, FishingSimulator.State.BITE)
 
 	print("fishing_surface_states_preview:")
 	print(out_ready)
@@ -186,9 +190,27 @@ func _settle() -> void:
 	await get_tree().process_frame
 
 
-func _capture(vp: SubViewport, screen: Control, out_path: String) -> void:
+func _capture(vp: SubViewport, screen: Control, out_path: String, expected_state: int) -> void:
 	# base/TIPの画素回帰では到達時刻やJuicer shakeを状態差にしない。
 	var surface_view = screen._surface_view
+	if screen._simulator.state != expected_state:
+		push_error("capture state mismatch: expected=%d actual=%d" % [expected_state, screen._simulator.state])
+		get_tree().quit(1)
+		return
+	var expected_status := {
+		FishingSimulator.State.CASTING: "投入中",
+		FishingSimulator.State.WAITING: "探索中",
+		FishingSimulator.State.APPROACH: "魚影あり",
+		FishingSimulator.State.BITE: "食いついた",
+	}
+	if expected_status.has(expected_state):
+		var actual_status: String = screen._fight_hud._intermediate_status_label()
+		if actual_status != String(expected_status[expected_state]):
+			push_error("capture status mismatch: state=%d expected=%s actual=%s" % [
+				expected_state, expected_status[expected_state], actual_status,
+			])
+			get_tree().quit(1)
+			return
 	# base/TIP全画面pixel回帰では、未確認魚カードが実時間を参照する
 	# sonar pulseを既知魚カードへ固定し、無関係な時計差分を除く。
 	if OS.get_environment("TSURI_SURFACE_STATE_PIXEL_REGRESSION") == "1":
@@ -221,17 +243,39 @@ func _capture(vp: SubViewport, screen: Control, out_path: String) -> void:
 	surface_view._approach_glow = 1.0 if screen._simulator.state in [FishingSimulator.State.APPROACH, FishingSimulator.State.BITE] else 0.24
 	Juicer._trauma = 0.0
 	Juicer._time = 0.0
-	surface_view.queue_redraw()
-	screen.queue_redraw()
+	for owner in [surface_view, screen, screen._fight_hud, screen._fight_sidebar, screen._fight_floating_card, screen._fight_status_bar]:
+		if owner != null:
+			owner.queue_redraw()
 	await get_tree().process_frame
-	await get_tree().process_frame
-	await get_tree().process_frame
+	# process_frameだけではMetalのSubViewport readbackが1状態遅れることがある。
+	# force_drawでqueue済みCanvasItemを描画し、連続readbackの一致まで確認する。
+	RenderingServer.force_draw(false)
+	var first := vp.get_texture().get_image()
+	RenderingServer.force_draw(false)
+	var img := vp.get_texture().get_image()
+	if first == null or img == null:
+		push_error("SubViewport get_image() returned null for %s" % out_path)
+		get_tree().quit(1)
+		return
+	if first.get_data() != img.get_data():
+		push_error("SubViewport readback was not stable for state %d: %s" % [expected_state, out_path])
+		get_tree().quit(1)
+		return
+	if screen._simulator.state != expected_state or not is_equal_approx(
+		screen._simulator.depth, float(fixed_depths[expected_state])
+	):
+		push_error("capture state/depth changed during draw sync: state=%d depth=%.1f" % [screen._simulator.state, screen._simulator.depth])
+		get_tree().quit(1)
+		return
+	var state_probe := img.get_region(STATE_PROBE_RECT).get_data()
+	if not _previous_state_probe.is_empty() and state_probe == _previous_state_probe:
+		push_error("stale state readback: state %d reused state %d HUD pixels" % [expected_state, _previous_capture_state])
+		get_tree().quit(1)
+		return
+	_previous_state_probe = state_probe
+	_previous_capture_state = expected_state
 	if FileAccess.file_exists(out_path):
 		DirAccess.remove_absolute(out_path)
-	var img := vp.get_texture().get_image()
-	if img == null:
-		push_error("SubViewport get_image() returned null for %s" % out_path)
-		return
 	img.save_png(out_path)
 	surface_view.set_process(true)
 	screen.set_process(true)

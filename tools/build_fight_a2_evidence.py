@@ -23,6 +23,7 @@ FOCUS_RING_BOX = (443, 628, 636, 692)
 REFERENCE_HUD_BOX = (0, 756, 1536, 1002)
 READY_HUD_BOX = (6, 490, 955, 714)
 REQUIRED_PIXEL_STATES = ("ready", "casting", "waiting", "approach", "bite")
+STATE_PROBE_BOX = (6, 574, 1274, 714)
 
 
 def opened(path: Path) -> Image.Image:
@@ -70,6 +71,18 @@ def assert_required_pixel_regressions(regressions: list[tuple[str, Path, Path]])
         )
     for label, before_path, after_path in regressions:
         assert_identical(before_path, after_path, label)
+    by_label = {label: (opened(before), opened(after)) for label, before, after in regressions}
+    for side_index, side in enumerate(("before", "after")):
+        previous_label = ""
+        previous_probe: Image.Image | None = None
+        for label in REQUIRED_PIXEL_STATES:
+            probe = by_label[label][side_index].crop(STATE_PROBE_BOX)
+            if previous_probe is not None and difference(previous_probe, probe).getbbox() is None:
+                raise ValueError(
+                    f"stale state capture: {side} {label} reused {previous_label} HUD pixels"
+                )
+            previous_label = label
+            previous_probe = probe
 
 
 def parse_regression(value: str) -> tuple[str, Path, Path]:
@@ -139,11 +152,14 @@ def main(args: argparse.Namespace) -> None:
 def self_test() -> None:
     with tempfile.TemporaryDirectory(prefix="fight-a2-evidence-self-test-") as tmp:
         root = Path(tmp)
-        before = root / "before.png"
-        after = root / "after.png"
-        Image.new("RGB", (1280, 720), (12, 34, 56)).save(before)
-        Image.open(before).save(after)
-        complete = [(label, before, after) for label in REQUIRED_PIXEL_STATES]
+        complete: list[tuple[str, Path, Path]] = []
+        for index, label in enumerate(REQUIRED_PIXEL_STATES):
+            before = root / f"{label}-before.png"
+            after = root / f"{label}-after.png"
+            Image.new("RGB", (1280, 720), (12 + index, 34, 56)).save(before)
+            with Image.open(before) as source:
+                source.save(after)
+            complete.append((label, before, after))
         assert_required_pixel_regressions(complete)
 
         try:
@@ -154,19 +170,28 @@ def self_test() -> None:
             raise AssertionError("missing state was not rejected")
 
         corrupted = root / "corrupted.png"
-        with Image.open(after) as source:
+        with Image.open(complete[2][2]) as source:
             damaged = source.convert("RGB")
         damaged.putpixel((640, 360), (255, 0, 0))
         damaged.save(corrupted)
         broken = list(complete)
-        broken[2] = ("waiting", before, corrupted)
+        broken[2] = ("waiting", complete[2][1], corrupted)
         try:
             assert_required_pixel_regressions(broken)
         except ValueError:
             pass
         else:
             raise AssertionError("pixel corruption was not rejected")
-    print("FIGHT-A2 evidence self-test: missing state / pixel corruption rejected")
+
+        stale = list(complete)
+        stale[3] = ("approach", complete[2][1], complete[2][2])
+        try:
+            assert_required_pixel_regressions(stale)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("stale state capture was not rejected")
+    print("FIGHT-A2 evidence self-test: missing state / pixel corruption / stale state rejected")
 
 
 if __name__ == "__main__":
