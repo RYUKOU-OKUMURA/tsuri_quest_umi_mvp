@@ -25,5 +25,7 @@ python3 "$ROOT/tools/audit_licensing_docs.py" --self-test
 python3 "$ROOT/tools/audit_licensing_docs.py"
 python3 "$ROOT/tools/build_screen_visual_comparison.py" --self-test
 python3 "$ROOT/tools/cooking_generator_determinism_verify.py"
+python3 "$ROOT/tools/process_cooking_c1b_assets.py" --check
+python3 "$ROOT/tools/process_cooking_c1b_assets.py" --check-self-test
 HOME="$GODOT_HOME" "$GODOT" --headless --editor --path "$ROOT" --quit
 HOME="$GODOT_HOME" "$GODOT" --headless --path "$ROOT" --quit-after 2

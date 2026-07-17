@@ -60,6 +60,16 @@ func _verify_normal_focus_graph_and_semantic_restore() -> void:
 	_expect_closed_graph(candidates)
 	for control in candidates:
 		_expect(_has_focus_style(control), "%s should expose a distinct focus style" % control.name)
+	var hover_card := _recipe_card(screen, "sashimi")
+	var hover_before := hover_card.self_modulate
+	hover_card.mouse_entered.emit()
+	await _settle()
+	_expect(hover_card.self_modulate != hover_before, "available unselected recipe hover should be visible")
+	# 正式なC1-B hover画像はcooking_preview.gdの単一viewport経路だけが所有する。
+	# 入力smokeは状態変化のassertに限定し、同名evidenceを再生成しない。
+	hover_card.mouse_exited.emit()
+	await _settle()
+	_expect(hover_card.self_modulate == hover_before, "recipe hover exit should restore normal tint")
 	await _capture_evidence(EVIDENCE_NORMAL)
 
 	var visited := {}

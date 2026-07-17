@@ -13,6 +13,7 @@ const FISH_ICON_SHEET := "res://assets/showcase/cooking/fish_icon_sheet.png"
 const RECIPE_GRID_FRAME := "res://assets/showcase/cooking/recipe_grid_frame.png"
 const RECIPE_CARD_FRAME := "res://assets/showcase/cooking/recipe_card_frame.png"
 const RECIPE_SELECTED_CARD_FRAME := "res://assets/showcase/cooking/recipe_selected_card_frame.png"
+const RECIPE_TITLE_BAND := "res://assets/showcase/cooking/recipe_title_band.png"
 const RECIPE_DISH_THUMB_FRAME := "res://assets/showcase/cooking/recipe_dish_thumb_frame.png"
 const RECIPE_MATERIAL_STRIP_FRAME := "res://assets/showcase/cooking/recipe_material_strip_frame.png"
 const RECIPE_TO_DETAIL_ARROW := "res://assets/showcase/cooking/recipe_to_detail_arrow.png"
@@ -441,6 +442,7 @@ var _status_button: Button
 
 var _fish_cards: Dictionary = {}
 var _recipe_cards: Dictionary = {}
+var _hovered_recipe_id := ""
 var _fish_focus_order: Array[Control] = []
 var _recipe_focus_order: Array[Control] = []
 var _recipe_focus_positions: Dictionary = {}
@@ -1201,6 +1203,7 @@ func _refresh_fish_card_styles() -> void:
 
 func _rebuild_recipe_cards() -> void:
 	_remember_rebuilt_focus("recipe")
+	_hovered_recipe_id = ""
 	_clear_container(_recipe_grid)
 	_recipe_cards.clear()
 	_recipe_focus_order.clear()
@@ -1274,19 +1277,37 @@ func _dish_display_name(fish_name: String, recipe_id: String, recipe_name: Strin
 	return "%sの%s" % [fish_name, recipe_name]
 
 
-func _recipe_card_title_slot(title_text: String, node_name: String) -> MarginContainer:
-	var slot := MarginContainer.new()
+func _recipe_card_title_slot(title_text: String, node_name: String) -> PanelContainer:
+	var slot := PanelContainer.new()
 	slot.custom_minimum_size = Vector2(0.0, 31.0)
 	slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	slot.add_theme_constant_override("margin_left", 8)
-	slot.add_theme_constant_override("margin_top", 6)
-	slot.add_theme_constant_override("margin_right", 8)
-	slot.add_theme_constant_override("margin_bottom", 1)
+	slot.add_theme_stylebox_override(
+		"panel",
+		_texture_style_box(
+			RECIPE_TITLE_BAND,
+			14,
+			_style_box(
+				Palette.COOKING_RECIPE_CARD_BORDER,
+				Palette.COOKING_RECIPE_CARD_INNER,
+				Palette.COOKING_RECIPE_TITLE_TEXT,
+				2,
+				4
+			),
+			0.0,
+			0.0
+		)
+	)
+	var title_margin := MarginContainer.new()
+	title_margin.add_theme_constant_override("margin_left", 8)
+	title_margin.add_theme_constant_override("margin_top", 6)
+	title_margin.add_theme_constant_override("margin_right", 8)
+	title_margin.add_theme_constant_override("margin_bottom", 1)
+	slot.add_child(title_margin)
 	var title_font_size := 12 if title_text.length() <= 7 else 11
 	var title := make_screen_label(
 		title_text,
 		title_font_size,
-		Palette.COOKING_RECIPE_TITLE_TEXT,
+		Palette.GOLD_BRIGHT,
 		true,
 		0,
 		Palette.COOKING_RECIPE_TITLE_OUTLINE,
@@ -1300,7 +1321,7 @@ func _recipe_card_title_slot(title_text: String, node_name: String) -> MarginCon
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title.clip_text = true
-	slot.add_child(title)
+	title_margin.add_child(title)
 	return slot
 
 
@@ -1316,6 +1337,17 @@ func _make_recipe_card(recipe: Dictionary, locked: bool, unavailable: bool) -> P
 	card.focus_mode = Control.FOCUS_ALL if selectable else Control.FOCUS_NONE
 	if selectable:
 		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		card.mouse_entered.connect(
+			func() -> void:
+				_hovered_recipe_id = recipe_id
+				_refresh_recipe_card_styles()
+		)
+		card.mouse_exited.connect(
+			func() -> void:
+				if _hovered_recipe_id == recipe_id:
+					_hovered_recipe_id = ""
+					_refresh_recipe_card_styles()
+		)
 		card.gui_input.connect(
 			func(event: InputEvent) -> void:
 				if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
@@ -1541,6 +1573,7 @@ func _refresh_recipe_card_styles() -> void:
 		var locked := bool(entry.get("locked", false))
 		var unavailable := bool(entry.get("unavailable", false))
 		var selected := String(recipe_id) == _selected_recipe_id
+		var hovered := String(recipe_id) == _hovered_recipe_id
 		if card == null:
 			continue
 		var fill := Palette.COOKING_RECIPE_CARD_SELECTED_FILL if selected else Palette.COOKING_RECIPE_CARD_FILL
@@ -1555,6 +1588,8 @@ func _refresh_recipe_card_styles() -> void:
 			tint = Palette.COOKING_RECIPE_CARD_LOCKED_MODULATE
 		elif unavailable:
 			tint = Palette.COOKING_RECIPE_CARD_UNAVAILABLE_MODULATE
+		elif hovered and not selected:
+			tint = Palette.GOLD_BRIGHT
 		card.self_modulate = tint
 		card.add_theme_stylebox_override(
 			"panel",
