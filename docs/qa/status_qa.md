@@ -1,6 +1,6 @@
 # ステータス画面 QA判断ログ
 
-最終更新: 2026-07-17 / 状態: STATUS-R5B 採用・freeze（独立レビュー待ち）
+最終更新: 2026-07-17 / 状態: STATUS-R5B 独立レビュー指摘解消・採用freeze
 参照画像: reference/08_status_screen_mockup.png
 QA更新コマンド: ./tools/status_visual_qa.sh
 
@@ -49,11 +49,11 @@ QA更新コマンド: ./tools/status_visual_qa.sh
 
 ## 7. 判断ログ（直近パスのみ）
 
-2026-07-17 STATUS-R5B局所素材upliftを採用（独立レビュー待ち）。
+2026-07-17 STATUS-R5B局所素材upliftを独立レビュー指摘解消後に採用・freeze。
 
 - スコープ宣言: 動かすのは背景外周、3ペイン背景frame、header/footer背景frameだけ。不動はR5-A portraitの円形crop/矩形、右4指標、3ペイン/header/footer外形、`PlayerStatusBar`、難易度名1回表示、文字・アイコン・ゲージ・魚・数値、全導線、称号overlay/focus trap、保存・成長ロジック。
 - 差分Top3: Top1=全画面がフラットな矩形の集合で木・真鍮・紙shellに見えない（R5-B対象P2）、Top2=参照の単一外周木箱との差（現行矩形維持のため残P3）、Top3=header/footer情報構成差（現行UX優先のP3）。
-- 変えたもの: OpenAI built-in生成の文字/UIなしsourceを、固定crop・9-slice再構成・濃紺grade・alpha matte除去する決定的processorへ通し、screen-localの紙frame/濃紺frame/外周shellを配線した。runtime描画の質感代替は追加していない。
+- 変えたもの: OpenAI built-in生成の文字・画面部品なしsourceを、固定crop・9-slice再構成・濃紺grade・alpha matte除去する決定的processorへ通し、screen-localの紙frame/濃紺frame/外周shellを配線した。runtime描画の質感代替は追加していない。
 - 状態契約: 代表=normal、高リスク=hard/カジキ竿・蒼槍の長文最大寄り状態/称号overlay。normal/hardは同一seed・同一データで難易度実値と安全域だけが変わる。全状態でheader/3ペイン/footerとR5-A hero矩形は同じanchorを維持する。
 - 採否: 原寸normal/hardでbeforeの平坦な茶枠へ明確に勝ち、320×180のbefore/after/referenceでafterは木・真鍮・紙の画面全体の反復が参照へ近づいた。grayscaleでも大ペインと濃紺header/footerの階層を維持。長文とoverlayに見切れ・枠侵入なし。
 - 証拠: `docs/qa/evidence/status/2026-07-17_r5b_{before,after}_{normal,hard}.png`、`2026-07-17_r5b_after_{normal,hard}_reference_compare.png`、`2026-07-17_r5b_{thumbnail,gray}_compare.png`、`2026-07-17_r5b_long_content.png`、`2026-07-17_r5b_title_overlay.png`。
