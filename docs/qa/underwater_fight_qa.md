@@ -1,6 +1,6 @@
 # 水中ファイト画面 QA判断ログ
 
-最終更新: 2026-07-17 / 状態: **FIGHT-A1 右上floating-card専用素材 採用 / docs/39基盤・E11入力契約freeze**
+最終更新: 2026-07-17 / 状態: **FIGHT-A1 P2証拠差し戻し解消・独立再レビュー待ち / docs/39基盤・E11入力契約freeze**
 参照画像: `reference/14_underwater_fight_simple_mockup.png`（基盤レイアウト） / `reference/02_underwater_fight_mockup.png`（旧v1素材・質感参照）
 QA更新コマンド: `./tools/fight_visual_qa.sh`（reference/14 + runtime capture標準） / 入力確認: `godot --headless --path . res://tools/fishing_input_smoke.tscn` / 水面天候確認: `./tools/surface_weather_visual_qa.sh` / 釣り上げ結果確認: `godot --path . res://tools/catch_fanfare_preview.tscn`（通常魚確認は `TSURI_CATCH_FANFARE_FISH_ID=aji`）
 詳細な経過履歴: `docs/qa/archive/underwater_fight_design_qa_2026-06.md`（旧 `design-qa.md`）
@@ -154,15 +154,18 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 ## 5. 現在の残ギャップ
 
 - **P2**: 下段140pxスリムバーのauthored専用PNG化は後続`FIGHT-A2`。FIGHT-A1採用済みカードをbeforeとして別採否にし、カードとバーを同一判断へ戻さない。
+- **P3**: 参照の行動アイコン相当の装飾密度は`FIGHT-A2`以降へ後続化する。現行288×120pxでは魚名・rarity・推定サイズ・行動文が判断情報として成立しており、アイコン追加は文字safe-areaまたは情報配置の再設計を伴うため、外装1スロットだけを置換するFIGHT-A1へ混ぜない。
 - **残**: 魚のアニメ/接地の微ポリッシュ、背景中央の理想画質、ヒットバッジの最終合わせ。非快晴の水面状態は天気専用ベースを維持済み。専用の状態別×天気PNG量産はしない。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-（現在作業中のフェーズなし。FIGHT-A1は2026-07-17に採用、独立レビューは親ownerが別担当へ依頼する）
+（現在作業中のフェーズなし。FIGHT-A1のP2証拠差し戻しは2026-07-17に解消し、独立再レビュー待ち）
 
 ## 7. 判断ログ（直近パスのみ）
 
-- 2026-07-17: `FIGHT-A1`を局所upliftとして採用。右上288×120pxカードの外形・runtime文字座標・`RarityStyles`動的幅を維持し、背景だけを画面専用の文字なし羊皮紙＋濃紺帯＋細金縁PNGへ置換した。標準クロダイの固定fixtureでbefore/afterのカード外画素差0を`tools/build_fight_a1_evidence.py`が検証し、原寸before/afterと320×180 after/referenceで平坦な紙面・帯・縁の差が縮小。未確認、`アカシュモクザメ`＋`アンコモン`＋実データ最長級行動文、アラ右端寄り大型でP1なし。focus/離脱modal/fanfareは実入力回帰green。証拠: `2026-07-17_fight_a1_{standard_before,standard_after,standard_before_after,card_before_after_reference,after_reference_320x180,unrevealed,long_rarity_name_action,ara_right_edge,focus_regression,modal_regression,fanfare_regression}.png`。下段140pxバー、READY、上部、背景、魚、safe clamp、line/lure、18分割ゲージ、入力ロジックは不変。残P3は参照の行動アイコン/大カード相当の装飾密度で、約288×120pxの現行情報密度では追加しない。
+- 2026-07-17: 独立レビューP2を解消。TIP内legacy toggleで作ったbeforeを廃止し、base `6d37322b`へTIPと同一の決定fixture（partly-cloudy固定、`_view._time=1.25`、同一描画待ち、standardはfocus解放）だけを一時適用したfresh capture `2026-07-17_fight_a1_base_6d37322b_recapture.png`を正式beforeとした。builderはbase decoded RGB SHA-256=`1791a4a46abd9d937844cee719842391351c339cad970c34b1d75f9042f27372`、TIP after=`2c265b09f3f7ccc15d2a5b81a868af45c83c91fd703a8fda07ee6d0cab8cdc30`、base→TIP全差分bbox=`(953,109)-(1243,231)`、カード外差分0pxを機械検証し、base自身/no-op/legacy afterをrejectする。全画面可視率と64×48px局所tileも検査し、header/HUDだけが黒矩形になる不完全captureを拒否する。focus証拠はafterと同じfixtureで`巻く`を実focus ownerにしたfresh capture（decoded RGB SHA-256=`ee6027f2378cb95b00db9560f27d8854987d52c1888d5818c0be557740abd626`）とし、standardとの差をring固有bbox=`(443,628)-(636,692)`・1,961pxだけに固定するため、standard-after-as-focus、非水中FIGHT、ringなし、操作文字未描画をrejectする。negative probeとして`--after=<base>`と`--focus=<standard after>`を個別投入し、両方が`ValueError`で終了することを確認した。P3の行動アイコンは288×120pxの文字safe-area/情報配置再設計を伴うためFIGHT-A2以降へ分離する。
+
+- 2026-07-17: `FIGHT-A1`を局所upliftとして採用。右上288×120pxカードの外形・runtime文字座標・`RarityStyles`動的幅を維持し、背景だけを画面専用の文字なし羊皮紙＋濃紺帯＋細金縁PNGへ置換した。base `6d37322b`の同一決定fixture beforeとTIP afterのカード外画素差0を`tools/build_fight_a1_evidence.py`が検証し、原寸before/afterと320×180 after/referenceで平坦な紙面・帯・縁の差が縮小。未確認、`アカシュモクザメ`＋`アンコモン`＋実データ最長級行動文、アラ右端寄り大型でP1なし。focus/離脱modal/fanfareは実入力回帰green。証拠: `2026-07-17_fight_a1_{base_6d37322b_recapture,standard_before,standard_after,standard_before_after,card_before_after_reference,after_reference_320x180,unrevealed,long_rarity_name_action,ara_right_edge,focus_regression,modal_regression,fanfare_regression}.png`。下段140pxバー、READY、上部、背景、魚、safe clamp、line/lure、18分割ゲージ、入力ロジックは不変。
 
 - 2026-07-17: INPUT統合後のV0 visual baselineを、V1 `FIGHT-A1` 着手前状態として再固定。`./tools/fight_visual_qa.sh` の標準クロダイと、`TSURI_FIGHT_FISH_ID=ara TSURI_FIGHT_VISUAL_X=0.86 TSURI_FIGHT_VISUAL_Y=0.46 TSURI_FIGHT_VISUAL_DIRECTION=1` のアラ右端寄りをruntime captureし、いずれもexit 0。証拠は `docs/qa/evidence/underwater_fight/2026-07-17_v1_prebaseline_{standard,ara_right_edge}.png` と各 `_reference_compare.png`。A1は右上floating card一枚だけを対象とし、下段140pxバー、READY 224px、上部、背景、魚、魚位置/clamp、line anchor、入力/modal/fanfareをこのbaselineから回帰させない。
 

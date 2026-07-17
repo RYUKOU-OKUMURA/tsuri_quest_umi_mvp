@@ -27,7 +27,7 @@ if [[ "$runtime_capture" == "1" ]]; then
     exit 1
   else
     echo "==> Try runtime fight capture"
-    rm -f /tmp/tsuri_fishing_fight.png
+    rm -f /tmp/tsuri_fishing_fight.png /tmp/tsuri_fishing_fight_focus.png
     "$GODOT" --path "$ROOT" "res://tools/fishing_fight_preview.tscn"
     capture_status=$?
     if [[ "$capture_status" -ne 0 ]]; then
@@ -37,6 +37,18 @@ if [[ "$runtime_capture" == "1" ]]; then
     fi
     if [[ ! -f /tmp/tsuri_fishing_fight.png ]]; then
       echo "Runtime capture completed without /tmp/tsuri_fishing_fight.png; docs/39 visual QA cannot continue." >&2
+      exit 1
+    fi
+    echo "==> Capture FIGHT focus signature"
+    TSURI_FIGHT_FOCUS=1 TSURI_FIGHT_CAPTURE_OUT=/tmp/tsuri_fishing_fight_focus.png \
+      "$GODOT" --path "$ROOT" "res://tools/fishing_fight_preview.tscn"
+    focus_capture_status=$?
+    if [[ "$focus_capture_status" -ne 0 ]]; then
+      echo "Focused FIGHT capture failed; FIGHT-A1 focus evidence cannot be verified." >&2
+      exit "$focus_capture_status"
+    fi
+    if [[ ! -f /tmp/tsuri_fishing_fight_focus.png ]]; then
+      echo "Focused FIGHT capture completed without its expected output." >&2
       exit 1
     fi
   fi
@@ -56,3 +68,4 @@ echo "/tmp/tsuri_full_static_compare.png"
 echo "/tmp/tsuri_fish_asset_contact.png"
 echo "/tmp/tsuri_fight_compare.png"
 echo "/tmp/tsuri_fight_compare.html"
+echo "/tmp/tsuri_fishing_fight_focus.png"

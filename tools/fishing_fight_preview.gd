@@ -97,9 +97,9 @@ func _ready() -> void:
 	s._simulator.tension = 0.66
 	s._view._fish_flash = 0.88
 	s._view._time = 1.25
-	s._fight_floating_card.set_floating_card_frame_enabled(
-		OS.get_environment("TSURI_FIGHT_LEGACY_CARD") != "1"
-	)
+	# Standard and focus evidence share every fixture value. The focus variant
+	# changes only the semantic owner/common ring.
+	var capture_focus := OS.get_environment("TSURI_FIGHT_FOCUS") == "1"
 	s._view.queue_redraw()
 	s._fight_sidebar.queue_redraw()
 	s._fight_floating_card.queue_redraw()
@@ -109,6 +109,24 @@ func _ready() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	await RenderingServer.frame_post_draw
+	var fight_focus_targets: Array[Control] = s._fight_hud.keyboard_focus_targets()
+	if capture_focus and not fight_focus_targets.is_empty():
+		fight_focus_targets[0].grab_focus()
+	else:
+		vp.gui_release_focus()
+	for focus_target in fight_focus_targets:
+		var indicator := focus_target.get_node_or_null("CommonFocusIndicator") as Control
+		if indicator != null:
+			indicator.visible = capture_focus and focus_target == fight_focus_targets[0]
+			indicator.queue_redraw()
+	await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	if capture_focus:
+		var expected_focus := fight_focus_targets[0] if not fight_focus_targets.is_empty() else null
+		if vp.gui_get_focus_owner() != expected_focus:
+			push_error("FIGHT focus capture did not retain the reel focus owner")
+			get_tree().quit(1)
+			return
 
 	var img := vp.get_texture().get_image()
 	if img == null:
