@@ -1,6 +1,6 @@
 # 調理場 QA判断ログ
 
-最終更新: 2026-07-16 / 状態: INPUT-COOKING完了 / C1-A・C0・既存構成freeze維持 / 次: C1-B
+最終更新: 2026-07-17 / 状態: COOK-C1B作業中 / C1-A・C0・既存構成freeze維持
 参照画像: reference/cooking_flow/01_cook_select_concept.png, reference/cooking_flow/02_meal_result_concept.png, reference/cooking_flow/03_exp_gain_concept.png, reference/cooking_flow/04_level_up_overlay_concept.png, reference/cooking_flow/05_status_summary_concept.png
 QA更新コマンド: ./tools/cooking_visual_qa.sh
 
@@ -65,6 +65,14 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 - P3止まり: 参照の立体的な巨大金文字、より密な金色光線/紙吹雪、月桂樹とメダルの一点物アート密度、魚種差、所持数差、枠線数px、星/小アイコン/紙汚れ/影/粒子の微差は、今後触るなら一点物素材/演出フェーズとして扱う。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
+
+2026-07-17: `COOK-C1B 料理カード紙面・タイトル帯` を、Visual Wave V1の局所素材スライスとして開始。
+
+- 差分Top1: COOK_SELECT中央3×2カードは、白い平坦な紙面と太い茶枠が支配的で、参照01の羊皮紙・木/金の細枠・濃紺タイトル帯が作る authored な料理札の階層に届いていない。
+- 動かすもの: 通常/選択カードの紙面・木/金細枠PNG、共通濃紺タイトル帯PNG、C1-B source/専用processor、カード素材の表示・状態契約、C1-B証拠、素材台帳。
+- 不動値: C1-A背景、COOK_SELECTの3列、カード `132x196` と3×2配置、タイトル `31px`、皿画像、星、素材footer矩形、右詳細、下部4区画、`PlayerStatusBar`、他4状態、料理/EXP/level-up/buff/saveロジック、common/palette/他画面。
+- 採用条件: 同一決定状態の原寸beforeに明確に勝ち、320×180 after/referenceでカード紙面・タイトル帯の差が縮む。normal / selected / locked / unavailable / hover / focus / 長い料理名 / hard初回・EXP上限 / 魚全種scrollにP1がなく、COOK_SELECT以外4状態は2026-07-17 V0 baselineから画素回帰しない。
+- 再現性: 専用processorをclean相当で2回実行し、source/outputのfile hash・decoded RGBA pixelsが不変。同値時は既存PNG bytesを保持し、真の差だけ同一directory tempからatomic replaceする。
 
 2026-07-16: `INPUT-COOKING` を、E11入力共通化の画面別スライスとして開始し、同日完了。
 
