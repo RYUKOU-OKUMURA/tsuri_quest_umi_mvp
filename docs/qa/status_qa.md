@@ -58,6 +58,7 @@ QA更新コマンド: ./tools/status_visual_qa.sh
 - 採否: 原寸normal/hardでbeforeの平坦な茶枠へ明確に勝ち、320×180のbefore/after/referenceでafterは木・真鍮・紙の画面全体の反復が参照へ近づいた。grayscaleでも大ペインと濃紺header/footerの階層を維持。長文とoverlayに見切れ・枠侵入なし。
 - 証拠: `docs/qa/evidence/status/2026-07-17_r5b_{before,after}_{normal,hard}.png`、`2026-07-17_r5b_after_{normal,hard}_reference_compare.png`、`2026-07-17_r5b_{thumbnail,gray}_compare.png`、`2026-07-17_r5b_long_content.png`、`2026-07-17_r5b_title_overlay.png`。
 - processor契約: clean状態相当から2回実行し、2回目は3製品すべて`unchanged`。file SHA-256とdecoded-pixel SHA-256が不変で、同値時は既存bytes保持、真の差だけ同一directory tempからatomic replace。
+- 独立レビュー差し戻し解消: 素材台帳の裸 `UI` 表記を監査誤検知しない日本語へ改め、R5-B processorを製品source consumer監査へ登録した。processorの同値判定はRGBA全channelのdecoded bytes比較へ修正し、alpha同一/RGB差分を`updated`、完全同値を`unchanged`として確認した。previewの不正/`null` image診断保存もnull-safeにした。
 - 固定条件: 9-slice margin 24px/18px、3ペイン/header/footer外形、R5-A heroを再調整しない。素材品質をruntime線やwashの追加で追わない。
 
 2026-07-17: INPUT統合後のV0 visual baselineを、V1 `STATUS-R5B` 着手前状態として再固定。

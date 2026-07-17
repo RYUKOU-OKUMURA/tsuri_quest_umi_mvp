@@ -85,7 +85,8 @@ func _ready() -> void:
 
 	var img := vp.get_texture().get_image()
 	if not _is_rendered_image_valid(img):
-		img.save_png("/tmp/tsuri_status_invalid.png")
+		if img != null and not img.is_empty():
+			img.save_png("/tmp/tsuri_status_invalid.png")
 		push_error("ステータス画面が空描画または黒矩形を含む不正captureになりました。")
 		get_tree().quit(1)
 		return

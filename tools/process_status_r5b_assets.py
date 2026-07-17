@@ -13,7 +13,7 @@ import os
 import tempfile
 from pathlib import Path
 
-from PIL import Image, ImageChops, ImageEnhance, ImageOps
+from PIL import Image, ImageEnhance, ImageOps
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -90,10 +90,10 @@ def _write_if_changed(path: Path, candidate: Image.Image) -> bool:
     if path.exists():
         with Image.open(path) as current:
             current.load()
-            if current.mode == candidate.mode and current.size == candidate.size:
-                if ImageChops.difference(current, candidate).getbbox() is None:
-                    print(f"unchanged {path.relative_to(ROOT)} {_decoded_hash(candidate)}")
-                    return False
+            current_rgba = current.convert("RGBA")
+            if current_rgba.size == candidate.size and current_rgba.tobytes() == candidate.tobytes():
+                print(f"unchanged {path.relative_to(ROOT)} {_decoded_hash(candidate)}")
+                return False
 
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, temp_name = tempfile.mkstemp(prefix=f".{path.stem}.", suffix=".png", dir=path.parent)
