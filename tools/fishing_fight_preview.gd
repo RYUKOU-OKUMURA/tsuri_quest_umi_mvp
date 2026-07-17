@@ -74,7 +74,10 @@ func _ready() -> void:
 	s._simulator.visual_position = capture_visual_position
 	s._simulator.visual_direction = capture_visual_direction
 	s._simulator.depth = 18.6
-	s._simulator.tension = 0.66
+	var fixture_tension := clampf(_env_float("TSURI_FIGHT_TENSION", 0.66), 0.0, 1.15)
+	var fixture_stamina_ratio := clampf(_env_float("TSURI_FIGHT_STAMINA_RATIO", 1.0), 0.0, 1.0)
+	s._simulator.tension = fixture_tension
+	s._simulator.fish_stamina = s._simulator.fish_stamina_max * fixture_stamina_ratio
 	s._view._fish_flash = 0.96
 	s._view.modulate.a = 1.0
 	s._surface_view.modulate.a = 0.0
@@ -94,12 +97,21 @@ func _ready() -> void:
 	s._simulator.visual_position = capture_visual_position
 	s._simulator.visual_direction = capture_visual_direction
 	s._simulator.depth = 18.6
-	s._simulator.tension = 0.66
+	s._simulator.tension = fixture_tension
+	s._simulator.fish_stamina = s._simulator.fish_stamina_max * fixture_stamina_ratio
+	match OS.get_environment("TSURI_FIGHT_PRESS_STATE").strip_edges():
+		"reel":
+			s._simulator.set_reeling(true)
+		"give_line":
+			s._simulator.set_giving_line(true)
 	s._view._fish_flash = 0.88
 	s._view._time = 1.25
 	# Standard and focus evidence share every fixture value. The focus variant
 	# changes only the semantic owner/common ring.
-	var capture_focus := OS.get_environment("TSURI_FIGHT_FOCUS") == "1"
+	var focus_target_name := OS.get_environment("TSURI_FIGHT_FOCUS_TARGET").strip_edges()
+	if focus_target_name.is_empty() and OS.get_environment("TSURI_FIGHT_FOCUS") == "1":
+		focus_target_name = "reel"
+	var capture_focus := not focus_target_name.is_empty()
 	s._view.queue_redraw()
 	s._fight_sidebar.queue_redraw()
 	s._fight_floating_card.queue_redraw()
@@ -110,21 +122,33 @@ func _ready() -> void:
 	await get_tree().process_frame
 	await RenderingServer.frame_post_draw
 	var fight_focus_targets: Array[Control] = s._fight_hud.keyboard_focus_targets()
-	if capture_focus and not fight_focus_targets.is_empty():
-		fight_focus_targets[0].grab_focus()
+	var focus_target_index := 1 if focus_target_name == "give_line" else 0
+	var selected_focus_target := fight_focus_targets[focus_target_index] if capture_focus and fight_focus_targets.size() > focus_target_index else null
+	if selected_focus_target != null:
+		selected_focus_target.grab_focus()
 	else:
 		vp.gui_release_focus()
 	for focus_target in fight_focus_targets:
 		var indicator := focus_target.get_node_or_null("CommonFocusIndicator") as Control
 		if indicator != null:
-			indicator.visible = capture_focus and focus_target == fight_focus_targets[0]
+			indicator.visible = capture_focus and focus_target == selected_focus_target
 			indicator.queue_redraw()
+	# Metal/Compatibilityではfocus indicatorだけをdirtyにした直後の
+	# SubViewport readbackが部分更新面（黒抜け）になることがある。
+	# 同一fixtureの全ownerを再描画してfreshな完成frameだけを保存する。
+	s.queue_redraw()
+	s._view.queue_redraw()
+	s._fight_sidebar.queue_redraw()
+	s._fight_floating_card.queue_redraw()
+	s._fight_hud.queue_redraw()
+	s._fight_status_bar.queue_redraw()
+	await get_tree().process_frame
+	await get_tree().process_frame
 	await get_tree().process_frame
 	await RenderingServer.frame_post_draw
 	if capture_focus:
-		var expected_focus := fight_focus_targets[0] if not fight_focus_targets.is_empty() else null
-		if vp.gui_get_focus_owner() != expected_focus:
-			push_error("FIGHT focus capture did not retain the reel focus owner")
+		if vp.gui_get_focus_owner() != selected_focus_target:
+			push_error("FIGHT focus capture did not retain the requested focus owner: %s" % focus_target_name)
 			get_tree().quit(1)
 			return
 

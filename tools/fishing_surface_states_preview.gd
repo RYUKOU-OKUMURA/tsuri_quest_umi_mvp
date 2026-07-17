@@ -35,12 +35,12 @@ func _ready() -> void:
 	var out_bite := "%s_bite.png" % out_prefix
 
 	await _settle()
-	_save(vp, out_ready)
+	await _capture(vp, screen, out_ready)
 
 	screen._on_main_action_pressed()
 	await get_tree().create_timer(0.16).timeout
 	await _settle()
-	_save(vp, out_casting)
+	await _capture(vp, screen, out_casting)
 
 	var reached := await _wait_until(screen, FishingSimulator.State.WAITING, 3.2)
 	if not reached:
@@ -49,7 +49,7 @@ func _ready() -> void:
 	await get_tree().create_timer(0.26).timeout
 	await _settle()
 	print("capture waiting state=%d" % screen._simulator.state)
-	_save(vp, out_waiting)
+	await _capture(vp, screen, out_waiting)
 
 	reached = await _wait_until(screen, FishingSimulator.State.APPROACH, 5.2)
 	if not reached:
@@ -58,7 +58,7 @@ func _ready() -> void:
 	await get_tree().create_timer(0.38).timeout
 	await _settle()
 	print("capture approach state=%d" % screen._simulator.state)
-	_save(vp, out_approach)
+	await _capture(vp, screen, out_approach)
 
 	reached = await _wait_until(screen, FishingSimulator.State.BITE, 4.2)
 	if not reached:
@@ -67,7 +67,7 @@ func _ready() -> void:
 	await get_tree().create_timer(0.10).timeout
 	await _settle()
 	print("capture bite state=%d" % screen._simulator.state)
-	_save(vp, out_bite)
+	await _capture(vp, screen, out_bite)
 
 	print("fishing_surface_states_preview:")
 	print(out_ready)
@@ -163,7 +163,46 @@ func _settle() -> void:
 	await get_tree().process_frame
 
 
-func _save(vp: SubViewport, out_path: String) -> void:
+func _capture(vp: SubViewport, screen: Control, out_path: String) -> void:
+	# base/TIPの画素回帰では到達時刻やJuicer shakeを状態差にしない。
+	var surface_view = screen._surface_view
+	# base/TIP全画面pixel回帰では、未確認魚カードが実時間を参照する
+	# sonar pulseを既知魚カードへ固定し、無関係な時計差分を除く。
+	if OS.get_environment("TSURI_SURFACE_STATE_PIXEL_REGRESSION") == "1":
+		screen._simulator.fish_revealed = true
+		screen._fight_sidebar.queue_redraw()
+	var fixed_depths := {
+		FishingSimulator.State.READY: 0.0,
+		FishingSimulator.State.CASTING: 4.0,
+		FishingSimulator.State.WAITING: 7.0,
+		FishingSimulator.State.APPROACH: 12.0,
+		FishingSimulator.State.BITE: 18.0,
+	}
+	var fixed_visual_x := {
+		FishingSimulator.State.READY: 0.0,
+		FishingSimulator.State.CASTING: 0.08,
+		FishingSimulator.State.WAITING: 0.16,
+		FishingSimulator.State.APPROACH: 0.68,
+		FishingSimulator.State.BITE: 1.0,
+	}
+	screen.set_process(false)
+	screen._simulator.depth = float(fixed_depths.get(screen._simulator.state, 0.0))
+	screen._simulator.visual_position = Vector2(float(fixed_visual_x.get(screen._simulator.state, 0.0)), 0.46)
+	surface_view.set_process(false)
+	surface_view._time = 1.25
+	surface_view._waiting_ring = 0.33
+	surface_view._bobber_dip = 1.0 if screen._simulator.state == FishingSimulator.State.BITE else 0.0
+	surface_view._splash = 0.72 if screen._simulator.state == FishingSimulator.State.BITE else 0.0
+	surface_view._hit_flash = 0.0
+	surface_view._cast_flight = 0.52 if screen._simulator.state == FishingSimulator.State.CASTING else 0.0
+	surface_view._approach_glow = 1.0 if screen._simulator.state in [FishingSimulator.State.APPROACH, FishingSimulator.State.BITE] else 0.24
+	Juicer._trauma = 0.0
+	Juicer._time = 0.0
+	surface_view.queue_redraw()
+	screen.queue_redraw()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await RenderingServer.frame_post_draw
 	if FileAccess.file_exists(out_path):
 		DirAccess.remove_absolute(out_path)
 	var img := vp.get_texture().get_image()
@@ -171,3 +210,5 @@ func _save(vp: SubViewport, out_path: String) -> void:
 		push_error("SubViewport get_image() returned null for %s" % out_path)
 		return
 	img.save_png(out_path)
+	surface_view.set_process(true)
+	screen.set_process(true)

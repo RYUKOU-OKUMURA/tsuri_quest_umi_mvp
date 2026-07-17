@@ -16,9 +16,11 @@ EVIDENCE = ROOT / "docs/qa/evidence/underwater_fight"
 REFERENCE = ROOT / "reference" / "14_underwater_fight_simple_mockup.png"
 DEFAULT_BEFORE = EVIDENCE / "2026-07-17_v2_prebaseline_standard.png"
 DEFAULT_FOCUS_BEFORE = EVIDENCE / "2026-07-17_v2_prebaseline_focus.png"
-HUD_BOX = (0, 576, 1280, 716)
+# 1280x720 screen上のFightHud実Rect。root margin 6pxと上部/scene gapを含む。
+HUD_BOX = (6, 574, 1274, 714)
 FOCUS_RING_BOX = (443, 628, 636, 692)
 REFERENCE_HUD_BOX = (0, 756, 1536, 1002)
+READY_HUD_BOX = (6, 490, 955, 714)
 
 
 def opened(path: Path) -> Image.Image:
@@ -60,6 +62,13 @@ def parse_regression(value: str) -> tuple[str, Path, Path]:
     return parts[0], Path(parts[1]), Path(parts[2])
 
 
+def parse_hud_regression(value: str) -> tuple[str, Path, Path, str]:
+    parts = value.split(":", 3)
+    if len(parts) != 4 or parts[3] not in {"ready", "slim"}:
+        raise argparse.ArgumentTypeError("HUD regression must be LABEL:BEFORE:AFTER:ready|slim")
+    return parts[0], Path(parts[1]), Path(parts[2]), parts[3]
+
+
 def main(args: argparse.Namespace) -> None:
     before = opened(args.before)
     after = opened(args.after)
@@ -75,6 +84,12 @@ def main(args: argparse.Namespace) -> None:
         )
     for label, before_path, after_path in args.pixel_identical:
         assert_identical(before_path, after_path, label)
+    for label, before_path, after_path, kind in args.hud_identical:
+        before_hud = opened(before_path).crop(READY_HUD_BOX if kind == "ready" else HUD_BOX)
+        after_hud = opened(after_path).crop(READY_HUD_BOX if kind == "ready" else HUD_BOX)
+        bbox = difference(before_hud, after_hud).getbbox()
+        if bbox is not None:
+            raise ValueError(f"{label} HUD must remain pixel-identical: diff={bbox}")
 
     with Image.open(REFERENCE) as source:
         reference = source.convert("RGB")
@@ -90,8 +105,8 @@ def main(args: argparse.Namespace) -> None:
 
     before_bar = before.crop(HUD_BOX)
     after_bar = after.crop(HUD_BOX)
-    reference_bar = reference.crop(REFERENCE_HUD_BOX).resize((1280, 140), Image.Resampling.LANCZOS)
-    bar_board = Image.new("RGB", (1280, 420), (5, 17, 29))
+    reference_bar = reference.crop(REFERENCE_HUD_BOX).resize((1268, 140), Image.Resampling.LANCZOS)
+    bar_board = Image.new("RGB", (1268, 420), (5, 17, 29))
     bar_board.paste(before_bar, (0, 0))
     bar_board.paste(after_bar, (0, 140))
     bar_board.paste(reference_bar, (0, 280))
@@ -102,6 +117,7 @@ def main(args: argparse.Namespace) -> None:
     print(f"FIGHT-A2 standard allowed-diff: {full_bbox}; outside HUD: 0px")
     print(f"FIGHT-A2 focus ring geometry preserved: {after_focus_bbox}")
     print(f"FIGHT-A2 pixel-identical regression states: {len(args.pixel_identical)}")
+    print(f"FIGHT-A2 pixel-identical HUD regression states: {len(args.hud_identical)}")
 
 
 if __name__ == "__main__":
@@ -116,5 +132,12 @@ if __name__ == "__main__":
         default=[],
         type=parse_regression,
         metavar="LABEL:BEFORE:AFTER",
+    )
+    parser.add_argument(
+        "--hud-identical",
+        action="append",
+        default=[],
+        type=parse_hud_regression,
+        metavar="LABEL:BEFORE:AFTER:ready|slim",
     )
     main(parser.parse_args())

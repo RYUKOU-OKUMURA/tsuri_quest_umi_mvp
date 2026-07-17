@@ -1,6 +1,6 @@
 # 水中ファイト画面 QA判断ログ
 
-最終更新: 2026-07-17 / 状態: **FIGHT-A1採用freeze・Visual Wave V2着手前baseline固定 / 次: FIGHT-A2**
+最終更新: 2026-07-17 / 状態: **FIGHT-A2採用freeze / 下段140px authored操作盤完了**
 参照画像: `reference/14_underwater_fight_simple_mockup.png`（基盤レイアウト） / `reference/02_underwater_fight_mockup.png`（旧v1素材・質感参照）
 QA更新コマンド: `./tools/fight_visual_qa.sh`（reference/14 + runtime capture標準） / 入力確認: `godot --headless --path . res://tools/fishing_input_smoke.tscn` / 水面天候確認: `./tools/surface_weather_visual_qa.sh` / 釣り上げ結果確認: `godot --path . res://tools/catch_fanfare_preview.tscn`（通常魚確認は `TSURI_CATCH_FANFARE_FISH_ID=aji`）
 詳細な経過履歴: `docs/qa/archive/underwater_fight_design_qa_2026-06.md`（旧 `design-qa.md`）
@@ -67,6 +67,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 |---|---|---|---|
 | 表示高さ | READY=224px / CASTING〜FIGHT=140px | `fishing_screen.gd` / `fight_hud.gd` | docs/39採用による改定。旧214px試行の不採用理由はREADY側にのみ残す |
 | 下段構成 | READY=docs/38専用バー / CASTING〜BITE=タナ・アワセ・反応+餌情報 / FIGHT=テンション・巻く/糸を出す+タナ・魚体力 | `fight_hud.gd` | 旧「エサ26.5% / メニュー17.5% / 操作ヒント」はFIGHT/中間状態では廃止 |
+| FIGHT下段外装 | 1280×140px文字なし専用PNG `fight_slim_bar_frame.png`。外周shell、木・真鍮・濃紺面、3ゾーンwellだけを素材が担い、文字・数値・ゲージ・操作状態はruntime | `fight_hud.gd` / `tools/process_fight_a2_slim_bar.py` | FIGHT-A2採用。FIGHT時だけ描画し、READYとCASTING〜BITEは従来描画を維持 |
 | 操作表記 | 実キー `Space` / `Shift` / `E / Enter`。FIGHT中は `Space` / `Shift` の主操作のみ、CASTING〜BITEは `E / Enter` のアワセを中心表示 | `fight_hud.gd` ほか | A/B/L/R 表記へ戻さない。`+ 釣り場変更` / `- 港へ戻る` はREADYのみ。FIGHT中の離脱はEscオーバーレイ |
 | BITE/FIGHT入力focus契約 | CASTING/WAITING/APPROACHはfocus候補なしで、早期EnterではFIGHTへ進まない。BITEはアワセ1候補へ初期focusし、`E` またはfocus中の `Enter/KP Enter` でFIGHTへ移る。FIGHTは `巻く` → `糸を出す` の2候補へ共通focus ringを付け、`Space` / `Shift` のpress/release契約を維持する。Esc確認は安全側の `続ける` を初期focusにし、見出し44px・説明56pxの文字領域を確保して、閉じた後に直前のFIGHT focusへ戻す | `src/ui/fishing_screen.gd` / `src/ui/components/fight_hud.gd` | キーechoではheld actionを重複変更しない。modal表示時は背景入力を遮断し、mouse held actionも解放する。各HUD Rect2・ゲージ・ゲームロジックは変更しない |
 | ゲージ | 18分割セグメント | `fight_hud.gd` | |
@@ -144,6 +145,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 | docs/35 P3魚素材 | 1 | `megochi/kurosoi/takenokomebaru/mejina` を新規source化し、P3暫定allowlistを削除 | 採用 |
 | フローティングカード・レアリティ帯 | 1 | 固定50pxから文字幅+paddingへ変更し、「アンコモン」が緑帯内に収まるようにした | 採用 |
 | フローティングカード・外装素材 | 1 | 平坦なruntime枠を文字なし羊皮紙＋濃紺帯＋細金縁の専用PNGへ1スロット置換 | 採用・freeze |
+| FIGHT下段140px外装素材 | 1 | 3つのruntime flat panelを、文字なし木・真鍮・濃紺の一体操作盤1PNGへ置換 | 採用・freeze |
 | 離脱modal文字領域 | 1 | autowrap Labelの最小高0による押し潰しを、見出し44px・説明56pxの固定文字領域で解消 | 採用・freeze |
 
 ## 4. 判定メモ・再検証ルール
@@ -153,15 +155,16 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 
 ## 5. 現在の残ギャップ
 
-- **P2**: 下段140pxスリムバーのauthored専用PNG化は後続`FIGHT-A2`。FIGHT-A1採用済みカードをbeforeとして別採否にし、カードとバーを同一判断へ戻さない。
-- **P3**: 参照の行動アイコン相当の装飾密度は`FIGHT-A2`以降へ後続化する。現行288×120pxでは魚名・rarity・推定サイズ・行動文が判断情報として成立しており、アイコン追加は文字safe-areaまたは情報配置の再設計を伴うため、外装1スロットだけを置換するFIGHT-A1へ混ぜない。
+- **P3**: 参照の行動アイコン相当の装飾密度は後続候補。現行288×120pxカードとFIGHT-A2操作盤は判断情報が成立しており、アイコン追加は文字safe-areaまたは情報配置の再設計を伴うため別sliceにする。
 - **残**: 魚のアニメ/接地の微ポリッシュ、背景中央の理想画質、ヒットバッジの最終合わせ。非快晴の水面状態は天気専用ベースを維持済み。専用の状態別×天気PNG量産はしない。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-**作業中: FIGHT-A2** — FIGHT-A1採用後をbeforeとし、FIGHT時の下段140pxスリムバー背景1素材だけをauthored source/productへ置換する。動かすのは `fight_hud.gd` のFIGHT専用背景描画、専用source/product/processor、preview/evidence builder、台帳/監査consumerのみ。不動値はA1カード、READY 224px、中間4状態、上部、背景、魚、位置/clamp、line/lure、18分割ゲージ、runtime文字・数値、input hit rect、modal/fanfare。正式採否はvisual QAロック解除後の同一fixture原寸・320×180・allowed-diff検査まで保留する。
+（現在作業中のフェーズなし。FIGHT-A2は2026-07-17に採用・freeze）
 
 ## 7. 判断ログ（直近パスのみ）
+
+- 2026-07-17: `FIGHT-A2`を採用・freeze。FIGHT-A1採用後をbeforeに、FIGHT時の下段140px背景だけを文字なし木・真鍮・濃紺の一体操作盤 `fight_slim_bar_frame.png` へ置換した。原寸before/afterの差分はHUD実Rect `(6,574)-(1274,714)` 内だけで外側0px、focus ringはbase/TIPとも `(443,628)-(636,692)` を維持。`sunny_calm` / `daytime` と各動的値を固定したbase `8da6d069` / TIP同一fixtureでは、READY / CASTING / WAITING / APPROACH / BITEの5全画面がpixel-identical。通常、`巻く` / `糸を出す` focus、両press、テンション0.94＋魚体力8%＋長い魚名/rarity/行動文、アラ右端寄りでP1なし。中央主操作が先に読め、左右ゲージと競合せず、320×180でreference/14の一体操作盤との差が縮小した。processorはsourceだけを固定加工し、read-only check、decoded pixel同値bytes保持、same-directory atomic replace、隔離RGB破損self-testを備える。FIGHT-A1カード、`fight_hud_frame.png`、runtime文字/数値/18分割ゲージ/input hit rect、上部、水中背景、魚、line/lure、modal/fanfare、進行ロジックは不変。検証: `fight_visual_qa.sh`、`surface_weather_visual_qa.sh`、5状態base/TIP pixel回帰、`fishing_reveal_smoke`、`fishing_harbor_return_smoke`、`fishing_input_smoke`、`catch_fanfare_smoke`、`validate_project.sh`、`git diff --check` green（既知の終了時ObjectDB/resource警告のみ）。証拠: `2026-07-17_fight_a2_{standard_before_after,after_reference_320x180,bar_before_after_reference,standard_after,focus_after,give_line_focus,reel_pressed,give_line_pressed,high_tension_low_stamina_long,ara_right_edge}.png`。素材の第三者権利clearanceは台帳どおりU-08待ちを維持する。
 
 - 2026-07-17: Visual Wave V2の共通起点 `e297692a` で、FIGHT-A2着手前のstandard / `巻く` focusを再固定。`./tools/fight_visual_qa.sh` exit 0。証拠は `docs/qa/evidence/underwater_fight/2026-07-17_v2_prebaseline_{standard,focus}.png` と `2026-07-17_v2_prebaseline_standard_reference_compare.png`。FIGHT-A2のallowed-diffはFIGHT時の下段140px HUD rect内だけで、A1カードを含む下段外、READY 224px、中間4状態、上部、背景、魚、line/lure、入力/modal/fanfareはこのbaselineから回帰させない。
 

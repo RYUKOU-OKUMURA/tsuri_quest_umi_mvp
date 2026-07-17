@@ -429,6 +429,9 @@ func _draw_fight_bar_background(rect: Rect2) -> void:
 
 func _draw_fight_a2_bar_background(rect: Rect2) -> void:
 	if _fight_slim_bar_frame != null:
+		# 旧StyleBoxの2px外側shadowはHUD rect外のfreeze画素。
+		# authored製品の背面へ残し、rect内だけを新素材で覆う。
+		_draw_fight_bar_background(rect)
 		draw_texture_rect(_fight_slim_bar_frame, rect, false, Color.WHITE)
 		return
 	_draw_fight_bar_background(rect)
