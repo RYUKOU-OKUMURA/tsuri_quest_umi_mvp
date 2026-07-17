@@ -61,9 +61,9 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 - P2 Top1完了: `EXP_GAIN` はステップ行を退け、中央の大見出し・巨大 `+EXP`・EXPゲージを先に読める構成へ改善済み。参照の一点物祝祭密度、巨大タイトルの余白、背景/光の素材差は残るが、次に触るなら数px調整ではなくAI生成一点物素材または祝祭設計フェーズとして扱う。
 - P2 Top2完了: `STATUS_SUMMARY` はヘッダーsubtitle、プレイヤーhero、ステータス5行、各カードのアート高さを見直し、人物・Lv/次EXP・ステータス名/数値が読める独立ステータス画面へ改善済み。参照ほどの人物一点物アート密度やカード装飾密度は残るが、次に触るなら素材フェーズとして扱う。
 - P2 Top3完了: `COOK_SELECT` は右詳細上部を料理タイトル帯に組み替え、料理名・説明・大皿・材料/EXP/効果・調理ボタンの順に読める構成へ改善済み。参照ほど行ラベルと効果行の一体感は残っていないが、残差はカード素材/行フレームの一点物素材フェーズとして扱う。
-- C1-A完了: COOK_SELECT厨房背景は、暖色ランタン光・海の見える窓・調理棚が読める authored sourceへ移行した。原寸と320x180比較で現行の平坦な矩形背景に明確に勝ち、参照01の背景差が縮んだ。次のCOOK_SELECT素材課題はC1-Bのカード質感であり、背景の再調整へ戻らない。
+- C1-A完了: COOK_SELECT厨房背景は、暖色ランタン光・海の見える窓・調理棚が読める authored sourceへ移行した。原寸と320x180比較で現行の平坦な矩形背景に明確に勝ち、参照01の背景差が縮んだ。後続C1-Bのカード質感も完了したため、背景の再調整へ戻らず、次はC2-WIREへ進む。
 - C1-B完了: 中央3×2料理カードは、通常/選択の羊皮紙・木/金細枠と共通濃紺タイトル帯へ移行した。320×180でもタイトル帯と紙面が参照01方向へ近づき、locked/unavailable/長文/hover/focusでP1なし。カード寸法・皿・星・footerは不動。
-- INPUT-COOKING完了: E11実イベント計測でCOOKING findings 0。COOK_SELECTの動的fish/recipe、空inventory、locked recipe、最後の魚消費、5状態handoff、Escape一重処理、mouse回帰を専用smokeで固定した。見た目の次工程は従来どおりC1-Bであり、入力対応を理由に既存構成やC0 cueを再オープンしない。
+- INPUT-COOKING完了: E11実イベント計測でCOOKING findings 0。COOK_SELECTの動的fish/recipe、空inventory、locked recipe、最後の魚消費、5状態handoff、Escape一重処理、mouse回帰を専用smokeで固定した。C1-Bも完了したため見た目の次工程はC2-WIREであり、入力対応を理由に既存構成やC0 cueを再オープンしない。
 - P2完了: `LEVEL_UP_OVERLAY` はタイトル帯を報酬プレート化し、`LEVEL UP!` と `Lv.4 -> Lv.5` を通常パネルより強い主導線へ改善済み。ステータス行とLv.5解放カードも下段に残り、報酬ピークとして読める。
 - P3止まり: 参照の立体的な巨大金文字、より密な金色光線/紙吹雪、月桂樹とメダルの一点物アート密度、魚種差、所持数差、枠線数px、星/小アイコン/紙汚れ/影/粒子の微差は、今後触るなら一点物素材/演出フェーズとして扱う。
 
@@ -116,6 +116,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 - P2-1回帰: 隔離temporary copyの1製品をRGB 1channelだけ破損し、`--check --output-dir <isolated>` がnonzeroとなり、破損copyのSHA-256/mtimeを不変に保つことを確認。`--check-self-test` はRGB差とalpha差の両方で同じ契約を自動検証し、`validate_project.sh` はproduction `--check` とこの隔離self-testを実行する。
 - P2-2: `cooking_input_smoke.gd` から正式名 `2026-07-17_c1b_hover_focus.png` の保存を撤去。input smokeはhover tintのenter/exit assertだけを担い、正式hover captureは `cooking_preview.gd` → `/tmp/tsuri_cooking_c1b_hover_focus.png` → evidence builder/採用証拠の単一所有とした。`cooking_visual_qa_check.py` の黒・透明・低情報量拒否は維持。
 - 検証: `--check` / 隔離破損CLI / `--check-self-test`、`./tools/cooking_visual_qa.sh`、`./tools/cooking_verify.sh`、`cooking_input_smoke.tscn`、content/layout/flow、`./tools/save_system_verify.sh`、`./tools/validate_project.sh`、`git diff --check` green。隔離破損CLIはexit 1、破損copyのSHA-256/mtime不変。全検証後も製品PNG・正式evidenceにtracked差分なし。
+- 独立再レビュー: TIP `fe238610`でP0/P1/P2/P3すべて0件。親も原寸before/after、320×180 after/reference、locked/長文/hover/focusと他4状態回帰を確認し、C1-Bを採用・freezeした。
 - 固定条件: C1-B 3製品/source、カード矩形、状態表現、正式evidence画素、調理進行・入力runtimeは不変。検証経路・証拠所有権以外へ範囲を広げない。
 
 2026-07-17: `COOK-C1B` 完了。中央料理カードの紙面・細枠・タイトル帯だけをauthored PNGへ移行した。

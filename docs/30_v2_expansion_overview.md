@@ -417,13 +417,14 @@ V2フェーズ外。ローンチ品質のための欠陥修正・素材工事。
 | `docs/46_quest_board_material_uplift_spec.md` / `docs/48_shark_pen_tank_uplift_spec.md` | 完了 | 品質トラック | authored木面/紙札と専用水槽背景・環境光を採用し、各screen QAをfreeze |
 | docs/33 C1-A / docs/52 R5-A（調理背景・Status hero） | 完了 | 品質トラック | 厨房背景と中央釣り人portraitを採用。既存構成・ロジックは維持 |
 | docs/51 C2素材準備 | 準備完了 / runtime未採用 | 次の調理候補 | brief、source、candidate、safe-area証拠、決定的processorまで完了。製品slotは未変更 |
-| docs/33 C1-B / C2 runtime / C3〜C5 | 未着手 | 次のvisualトラック | C1-B → C2 runtime採否 → C3 → C4 → C5を同一調理レーンで直列実装 |
-| docs/54 UIブラッシュアップ総合計画 | 現行 | M-INPUT完了、次はvisual 3並列 | 13画面finding 0。C1-B/R5-B/FIGHT authored 3並列を定義 |
+| docs/33 C1-B / C2 runtime / C3〜C5 | C1-B完了 | 次のvisualトラック | 次はC2-WIRE。以後C2 runtime採否 → C3 → C4 → C5を同一調理レーンで直列実装 |
+| docs/54 UIブラッシュアップ総合計画 | 現行 | M-V1完了、次はVisual Wave V2 | C1-B/R5-B/FIGHT-A1を採用・独立レビュー済み。次はC2-WIRE/MAP-M1/FIGHT-A2 |
 
 フェーズ完了・仕様変更・横展開障害リストは本docに追記する。オーケストレーション様式は docs/26 と同じ（Fable が計画・レビュー、Composer に scoped brief で fan-out）。
 
 ## 7. 更新履歴
 
+- 2026-07-17: INPUT統合後のV0 visual baselineをcommit `6d37322b`で再固定し、Visual Wave V1のCOOK-C1B / STATUS-R5B / FIGHT-A1を3つの独立worktreeで並列実装。各sliceは実装者と別のread-onlyレビューでP0/P1/P2/P3を0件まで収束し、親もdiff・原寸/縮小evidence・高リスク状態を独立確認した。COOK → STATUS → FIGHTの順でmainへ統合し、素材台帳と監査consumerをunion。cooking/status/fight visual QA、cooking verify、save、E11 harness、validate、release verifier 47対象がgreenとなったためM-V1を達成。次をC2-WIRE / MAP-M1 / FIGHT-A2のVisual Wave V2へ移行する
 - 2026-07-16: 画面別INPUT最終roundを完了。INPUT-SHARK-PENを単独worktreeで実装・独立レビューし、親のdiff・実入力・原寸証拠レビューを通過してmainへ統合。通常、last-stock、locked/empty、A→B→A、マウス/Escape一重を専用smokeへ固定し、release manifestを47対象へ更新。fresh隔離HOMEの最新baselineは13画面finding 0となり、M-INPUTを達成。次をCOOK-C1B / STATUS-R5B / FIGHT-A1の3並列へ移行する
 - 2026-07-16: 画面別INPUT第4roundを完了。INPUT-STATUS / COOKING / QUEST_BOARDを独立worktreeで実装・独立レビューし、指摘修正後の再レビューと親のdiff・実入力・原寸証拠レビューを通過してmainへ統合。称号modal trap、調理5状態handoff、依頼の納品/記録報告後の即時入替を専用smokeへ固定し、release manifestを46対象へ更新。fresh隔離HOMEの最新baselineは4件（P1 3 / P2 1）で、SHARK_PEN以外の12画面は0件。次をINPUT-SHARK-PEN単独roundへ移行する
 - 2026-07-16: 画面別INPUT第3roundを完了。INPUT-HARBOR / FISH_BOOK / MARKETを別セッションで実装・独立レビューし、親のdiff・実入力・原寸証拠レビューを通過してmainへ直列統合。動的時間帯lock、図鑑88操作の閉路、魚市場のmodal trap / empty復帰を専用smokeへ固定し、release manifestを43対象へ更新。`e11_qa_harness_verify.sh`、release verifier 43対象、関連visual QA / smoke / save回帰 / validateがgreen。fresh隔離HOMEの最新baselineは15件（P1 11 / P2 4）、完了済み9画面はいずれも0件。次をINPUT-STATUS / COOKING / QUEST_BOARDへ移行し、その後SHARK_PENを単独でcloseする
