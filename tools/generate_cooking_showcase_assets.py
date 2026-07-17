@@ -39,6 +39,8 @@ ADOPTED_PRODUCT_GUARDS: dict[str, str] = {
     "meal_banner_frame.png": "individually polished and adopted meal banner",
     "meal_table_spread.png": "reference-derived organic meal art",
     "next_effect_art.png": "organic one-off effect illustration",
+    "recipe_card_frame.png": "COOK-C1B authored source; run process_cooking_c1b_assets.py",
+    "recipe_selected_card_frame.png": "COOK-C1B authored source; run process_cooking_c1b_assets.py",
 }
 
 

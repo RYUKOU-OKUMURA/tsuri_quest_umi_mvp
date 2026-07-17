@@ -18,7 +18,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 GENERATOR_PATH = ROOT / "tools" / "generate_cooking_showcase_assets.py"
 PRODUCT_DIR = ROOT / "assets" / "showcase" / "cooking"
-EXPECTED_PRODUCT_COUNT = 57
+EXPECTED_PRODUCT_COUNT = 58
 
 
 def load_generator() -> ModuleType:
