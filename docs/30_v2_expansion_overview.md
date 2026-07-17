@@ -416,14 +416,15 @@ V2フェーズ外。ローンチ品質のための欠陥修正・素材工事。
 | docs/33 M1〜M3（魚市場素材工事） | 完了 | 品質トラック | backplate分解、市場背景、氷台、common CTA、4状態と実入力CTA 5状態の受入を完了 |
 | `docs/46_quest_board_material_uplift_spec.md` / `docs/48_shark_pen_tank_uplift_spec.md` | 完了 | 品質トラック | authored木面/紙札と専用水槽背景・環境光を採用し、各screen QAをfreeze |
 | docs/33 C1-A / docs/52 R5-A（調理背景・Status hero） | 完了 | 品質トラック | 厨房背景と中央釣り人portraitを採用。既存構成・ロジックは維持 |
-| docs/51 C2素材準備 | 準備完了 / runtime未採用 | 次の調理候補 | brief、source、candidate、safe-area証拠、決定的processorまで完了。製品slotは未変更 |
-| docs/33 C1-B / C2 runtime / C3〜C5 | C1-B完了 | 次のvisualトラック | 次はC2-WIRE。以後C2 runtime採否 → C3 → C4 → C5を同一調理レーンで直列実装 |
-| docs/54 UIブラッシュアップ総合計画 | 現行 | M-V1完了、次はVisual Wave V2 | C1-B/R5-B/FIGHT-A1を採用・独立レビュー済み。次はC2-WIRE/MAP-M1/FIGHT-A2 |
+| docs/51 C2素材準備・runtime採用 | 完了 / freeze | 調理品質トラック | MEAL_RESULT背景を正式採用。source→製品のpixel-stable processor、read-only check/self-test、旧generator guard、台帳・監査consumer、safe-area証拠を統合 |
+| docs/33 C1-B / C2 runtime / C3〜C5 | C2完了 | 次のvisualトラック | C1-B/C2を採用済み。次はC3 → C4 → C5を同一調理レーンで直列実装 |
+| docs/54 UIブラッシュアップ総合計画 | 現行 | M-V2完了、次はVisual Wave V3 | C2/FIGHT-A2を採用。MAP-M1は構成原因を確定してMAP-D0へ後続化。次はC3/SHIPYARD-D0/TACKLE-T1 |
 
 フェーズ完了・仕様変更・横展開障害リストは本docに追記する。オーケストレーション様式は docs/26 と同じ（Fable が計画・レビュー、Composer に scoped brief で fan-out）。
 
 ## 7. 更新履歴
 
+- 2026-07-17: 共通baselineをcommit `8da6d069`へ固定し、Visual Wave V2のC2-WIRE / MAP-M1 / FIGHT-A2を3つの独立worktreeで実施。C2はMEAL_RESULT背景、FIGHT-A2はFIGHT専用下段140px操作盤を正式採用した。MAP-M1は原寸・320×180・grayscale診断でmap面積、marker/chip/lock密度、右詳細域をTop1の構成原因と確定し、製品/runtime/freezeを変更せずMAP-D0へ後続化した。各sliceは実装者と別のread-onlyレビューでP0/P1/P2/P3を0件まで収束し、親もdiff・実画像・高リスク状態を確認。C2 → MAP → FIGHTの順でmainへ統合し、正式evidence、素材台帳・監査consumerをunionした。cooking/map/fight/surface visual QA、各smoke、save、E11 harness、validate、release gateがgreenとなったためM-V2を達成。U-08 pendingを維持し、次をC3 / SHIPYARD-D0 / TACKLE-T1のVisual Wave V3へ移行する
 - 2026-07-17: INPUT統合後のV0 visual baselineをcommit `6d37322b`で再固定し、Visual Wave V1のCOOK-C1B / STATUS-R5B / FIGHT-A1を3つの独立worktreeで並列実装。各sliceは実装者と別のread-onlyレビューでP0/P1/P2/P3を0件まで収束し、親もdiff・原寸/縮小evidence・高リスク状態を独立確認した。COOK → STATUS → FIGHTの順でmainへ統合し、素材台帳と監査consumerをunion。cooking/status/fight visual QA、cooking verify、save、E11 harness、validate、release verifier 47対象がgreenとなったためM-V1を達成。次をC2-WIRE / MAP-M1 / FIGHT-A2のVisual Wave V2へ移行する
 - 2026-07-16: 画面別INPUT最終roundを完了。INPUT-SHARK-PENを単独worktreeで実装・独立レビューし、親のdiff・実入力・原寸証拠レビューを通過してmainへ統合。通常、last-stock、locked/empty、A→B→A、マウス/Escape一重を専用smokeへ固定し、release manifestを47対象へ更新。fresh隔離HOMEの最新baselineは13画面finding 0となり、M-INPUTを達成。次をCOOK-C1B / STATUS-R5B / FIGHT-A1の3並列へ移行する
 - 2026-07-16: 画面別INPUT第4roundを完了。INPUT-STATUS / COOKING / QUEST_BOARDを独立worktreeで実装・独立レビューし、指摘修正後の再レビューと親のdiff・実入力・原寸証拠レビューを通過してmainへ統合。称号modal trap、調理5状態handoff、依頼の納品/記録報告後の即時入替を専用smokeへ固定し、release manifestを46対象へ更新。fresh隔離HOMEの最新baselineは4件（P1 3 / P2 1）で、SHARK_PEN以外の12画面は0件。次をINPUT-SHARK-PEN単独roundへ移行する
