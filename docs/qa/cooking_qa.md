@@ -93,6 +93,12 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 
 ## 7. 判断ログ（直近パスのみ）
 
+2026-07-17: INPUT統合後のV0 visual baselineを、V1 `COOK-C1B` 着手前状態として再固定。
+
+- 実行: `./tools/cooking_visual_qa.sh`（5状態capture / strict check green）。
+- 証拠: `docs/qa/evidence/cooking/2026-07-17_v1_prebaseline_{select,result,exp,levelup,status}.png`。全5枚1280x720、状態hashは相互に異なる。
+- 固定条件: C1-BはCOOK_SELECT中央料理カードの紙面・細枠・タイトル帯だけを対象とし、C1-A背景、右詳細、下部4区画、`PlayerStatusBar`、他4状態と調理・成長・保存ロジックはこのbaselineから画素/挙動回帰させない。
+
 2026-07-14: `旧調理一括generator決定性修正` 完了。採用済み製品PNG・runtime・freeze・accepted evidenceの意図的画素変更は0。
 
 - 独立再計測: `bc596c56` の隔離snapshotをPython 3.12.3 / Pillow 12.0で実行すると57点中32点がdirty。byte-only 21点は `cook_action_runway_frame`, `cook_button_frame`, `cooking_section_ribbon`, `dish_detail_frame`, `fish_row_frame`, `flow_action_button_frame`, `level_stat_row_frame`, `level_unlock_ribbon`, `level_up_frame`, `meal_result_frame`, `meal_scene_bg`, `player_eating_pose`, `player_exp_message_pose`, `player_status_portrait`, `recipe_grid_frame`, `recipe_to_detail_arrow`, `reward_card_frame`, `status_clock_art`, `status_cooler_art`, `status_money_art`, `status_summary_bg`。decoded差11点は `cooking_icon_sheet`, `cooking_title_banner`, `dish_feature_aji_shioyaki`, `dish_icon_sheet`, `exp_stage_bg`, `fish_icon_sheet`, `level_unlock_medallion`, `level_unlock_spot`, `meal_banner_frame`, `meal_table_spread`, `next_effect_art`。

@@ -44,6 +44,12 @@ QA更新コマンド: ./tools/status_visual_qa.sh
 
 ## 7. 判断ログ（直近パスのみ）
 
+2026-07-17: INPUT統合後のV0 visual baselineを、V1 `STATUS-R5B` 着手前状態として再固定。
+
+- 実行: `./tools/status_visual_qa.sh`（normal / hard同一preview契約、両captureとreference比較生成 green）。
+- 証拠: `docs/qa/evidence/status/2026-07-17_v1_prebaseline_{normal,hard}.png` と同名の `_reference_compare.png`。各1280x720。
+- 固定条件: R5-Bは背景・3ペイン・ヘッダー/フッターのscreen-local木・真鍮・紙フレームだけを対象とし、R5-A portraitの円形crop、右4指標、3ペイン外形、`PlayerStatusBar`、難易度1回表示、導線、称号overlay、保存・成長ロジックをこのbaselineから回帰させない。
+
 2026-07-16 INPUT-STATUS局所upliftを採用。
 
 - 変えたもの: defaultの4操作を共通focus契約へ登録し、Tab/Shift+Tabと方向graphをenabled候補内の閉路にした。称号一覧は閉じるButtonだけへfocusをtrapし、Enter/Escape後にopenerへ復帰する。通常Escapeはharborへpress+echoで1回だけ遷移する。
