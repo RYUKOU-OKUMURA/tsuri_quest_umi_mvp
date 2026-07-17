@@ -156,7 +156,13 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-（現在作業中のフェーズなし。docs/39は2026-07-07に採用・freeze改定済み）
+### FIGHT-A1（2026-07-17）
+
+- **局所uplift / 差分Top1**: 右上約288×120pxフローティングカード1枚の平坦なruntime枠を、文字なし羊皮紙紙面＋濃紺タイトル帯＋細い金縁の画面専用PNGへ置換する。構成・読み順はdocs/39で合格済みのため再設計しない。
+- **動かすもの**: `fight_sidebar.gd` のfloating-card背景描画、`fight_floating_card_frame.png` とその専用source / processor、代表・高リスク状態fixtureの最小差分。
+- **不動値**: カード外形288×120px、カード位置、魚名/rarity/推定サイズ/反応/行動文のruntime描画と座標、`RarityStyles` と動的rarity幅、下段140pxバー、READY 224pxバー、上部status、水中背景、魚素材・位置・safe clamp、line anchor、lure、18分割ゲージ、入力/modal/fanfare。
+- **代表/高リスク状態**: 標準クロダイ判明後、未確認、等長rarity＋長魚名/長行動文、アラ右端寄り大型。focus、離脱modal、釣果は回帰のみ。
+- **採否条件**: 同一状態原寸beforeへ明確に勝ち、320×180 after/referenceで紙面・タイトル帯・金縁の距離が縮む。fixture由来のデータ差以外、カード外画素差はゼロ。P1、freeze違反、別状態退行があれば不採用。
 
 ## 7. 判断ログ（直近パスのみ）
 
