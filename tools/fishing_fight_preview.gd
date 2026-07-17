@@ -32,6 +32,7 @@ func _ready() -> void:
 
 	await get_tree().process_frame
 	await get_tree().process_frame
+	_configure_capture_environment(s)
 
 	# ファイト画面を直接確認するため、通常の待ち時間を飛ばして状態を作る。
 	var requested_fish_id := OS.get_environment("TSURI_FIGHT_FISH_ID")
@@ -45,6 +46,12 @@ func _ready() -> void:
 		showcase_fish["size_max"] = 48.2
 		showcase_fish["start_distance"] = 38.0
 		showcase_fish["start_depth"] = 18.0
+	var fixture_name := OS.get_environment("TSURI_FIGHT_FISH_NAME").strip_edges()
+	if not fixture_name.is_empty():
+		showcase_fish["name"] = fixture_name
+	var fixture_rarity := OS.get_environment("TSURI_FIGHT_RARITY").strip_edges()
+	if not fixture_rarity.is_empty():
+		showcase_fish["rarity"] = fixture_rarity
 	var capture_visual_position := Vector2(
 		_env_float("TSURI_FIGHT_VISUAL_X", 0.42),
 		_env_float("TSURI_FIGHT_VISUAL_Y", 0.46)
@@ -80,12 +87,19 @@ func _ready() -> void:
 	s._fight_hud.set_process(false)
 	s._fight_status_bar.set_process(false)
 	s._simulator.action_name = "突進"
-	s._simulator.action_message = "一気に深く潜ろうとしている！ラインを緩めず耐えよう！"
+	var fixture_action := OS.get_environment("TSURI_FIGHT_ACTION_MESSAGE").strip_edges()
+	s._simulator.action_message = fixture_action if not fixture_action.is_empty() else "一気に深く潜ろうとしている！ラインを緩めず耐えよう！"
+	if OS.get_environment("TSURI_FIGHT_CARD_STATE") == "unrevealed":
+		s._simulator.fish_revealed = false
 	s._simulator.visual_position = capture_visual_position
 	s._simulator.visual_direction = capture_visual_direction
 	s._simulator.depth = 18.6
 	s._simulator.tension = 0.66
 	s._view._fish_flash = 0.88
+	s._view._time = 1.25
+	# Standard and focus evidence share every fixture value. The focus variant
+	# changes only the semantic owner/common ring.
+	var capture_focus := OS.get_environment("TSURI_FIGHT_FOCUS") == "1"
 	s._view.queue_redraw()
 	s._fight_sidebar.queue_redraw()
 	s._fight_floating_card.queue_redraw()
@@ -93,6 +107,26 @@ func _ready() -> void:
 	s._fight_status_bar.queue_redraw()
 	await get_tree().process_frame
 	await get_tree().process_frame
+	await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	var fight_focus_targets: Array[Control] = s._fight_hud.keyboard_focus_targets()
+	if capture_focus and not fight_focus_targets.is_empty():
+		fight_focus_targets[0].grab_focus()
+	else:
+		vp.gui_release_focus()
+	for focus_target in fight_focus_targets:
+		var indicator := focus_target.get_node_or_null("CommonFocusIndicator") as Control
+		if indicator != null:
+			indicator.visible = capture_focus and focus_target == fight_focus_targets[0]
+			indicator.queue_redraw()
+	await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	if capture_focus:
+		var expected_focus := fight_focus_targets[0] if not fight_focus_targets.is_empty() else null
+		if vp.gui_get_focus_owner() != expected_focus:
+			push_error("FIGHT focus capture did not retain the reel focus owner")
+			get_tree().quit(1)
+			return
 
 	var img := vp.get_texture().get_image()
 	if img == null:
@@ -101,6 +135,24 @@ func _ready() -> void:
 		return
 	img.save_png(out)
 	get_tree().quit()
+
+
+func _configure_capture_environment(screen) -> void:
+	var weather_id := OS.get_environment("TSURI_FIGHT_WEATHER_ID").strip_edges()
+	if weather_id.is_empty():
+		weather_id = "partly_cloudy"
+	var weather_labels := {
+		"sunny": "快晴",
+		"partly_cloudy": "晴れ曇り",
+		"cloudy": "曇り",
+		"rain": "小雨",
+		"fog": "霧",
+	}
+	screen._trip_stats["weather_id"] = weather_id
+	screen._trip_stats["weather_label"] = String(weather_labels.get(weather_id, "晴れ曇り"))
+	screen._trip_stats["wind_id"] = "weak"
+	screen._trip_stats["wind_label"] = "風 弱"
+	screen._fight_status_bar.bind(screen._simulator, screen._trip_stats)
 
 
 func _env_float(name: String, fallback: float) -> float:

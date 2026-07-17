@@ -7,6 +7,7 @@ const GameFontsScript = preload("res://src/ui/game_fonts.gd")
 const FightFishAssetsScript = preload("res://src/ui/fight_fish_assets.gd")
 const RarityStylesScript = preload("res://src/ui/rarity_styles.gd")
 const SIDEBAR_FRAME_PATH := "res://assets/showcase/underwater/sidebar_frame.png"
+const FLOATING_CARD_FRAME_PATH := "res://assets/showcase/underwater/fight_floating_card_frame.png"
 const ICON_SHEET_PATH := "res://assets/showcase/underwater/fight_icon_sheet.png"
 const ACTION_CARD_ICON_PATH := "res://assets/showcase/underwater/fight_action_card_icon.png"
 const TACKLE_CARD_ICON_PATH := "res://assets/showcase/underwater/fight_tackle_card_icon.png"
@@ -24,10 +25,12 @@ var trip_stats: Dictionary = {}
 var _fish_sheet: Texture2D
 var _fish_card_portrait: Texture2D
 var _sidebar_frame: Texture2D
+var _floating_card_frame: Texture2D
 var _icons: Texture2D
 var _action_card_icon: Texture2D
 var _tackle_card_icon: Texture2D
 var _floating_card := false
+var _floating_card_frame_enabled := true
 
 
 func bind(value: FishingSimulator, fish: Dictionary, stats: Dictionary) -> void:
@@ -50,10 +53,16 @@ func set_floating_card(value: bool) -> void:
 	queue_redraw()
 
 
+func set_floating_card_frame_enabled(value: bool) -> void:
+	_floating_card_frame_enabled = value
+	queue_redraw()
+
+
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_load_fish_assets_for_current_fish()
+	_floating_card_frame = ShowcaseAssets.load_texture(FLOATING_CARD_FRAME_PATH)
 	if ResourceLoader.exists(SIDEBAR_FRAME_PATH):
 		_sidebar_frame = load(SIDEBAR_FRAME_PATH) as Texture2D
 	if ResourceLoader.exists(ICON_SHEET_PATH):
@@ -115,22 +124,26 @@ func _draw() -> void:
 
 func _draw_floating_card(font: Font, rect: Rect2) -> void:
 	var card := rect.grow(-2.0)
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(Palette.PARCHMENT, 0.96)
-	style.border_color = Color(Palette.GOLD_DEEP, 0.94)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(6)
-	style.shadow_color = Color(Color.BLACK, 0.30)
-	style.shadow_size = 3
-	draw_style_box(style, card)
-	draw_rect(card.grow(-6.0), Color(Palette.GOLD_BRIGHT, 0.16), false, 1.0)
+	if _floating_card_frame_enabled and _floating_card_frame != null:
+		draw_texture_rect(_floating_card_frame, rect, false, Color.WHITE)
+	else:
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color(Palette.PARCHMENT, 0.96)
+		style.border_color = Color(Palette.GOLD_DEEP, 0.94)
+		style.set_border_width_all(2)
+		style.set_corner_radius_all(6)
+		style.shadow_color = Color(Color.BLACK, 0.30)
+		style.shadow_size = 3
+		draw_style_box(style, card)
+		draw_rect(card.grow(-6.0), Color(Palette.GOLD_BRIGHT, 0.16), false, 1.0)
 	var header := Rect2(card.position + Vector2(6.0, 6.0), Vector2(card.size.x - 12.0, 28.0))
-	var header_style := StyleBoxFlat.new()
-	header_style.bg_color = Color(Palette.DARK_PANEL, 0.95)
-	header_style.border_color = Color(Palette.GOLD_DEEP, 0.72)
-	header_style.set_border_width_all(1)
-	header_style.set_corner_radius_all(4)
-	draw_style_box(header_style, header)
+	if not _floating_card_frame_enabled or _floating_card_frame == null:
+		var header_style := StyleBoxFlat.new()
+		header_style.bg_color = Color(Palette.DARK_PANEL, 0.95)
+		header_style.border_color = Color(Palette.GOLD_DEEP, 0.72)
+		header_style.set_border_width_all(1)
+		header_style.set_corner_radius_all(4)
+		draw_style_box(header_style, header)
 	if _fish_is_revealed():
 		_draw_floating_revealed(font, card, header)
 	else:

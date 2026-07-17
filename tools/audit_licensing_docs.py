@@ -2962,6 +2962,9 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
             "process_status_r5a_assets.py",
             # R5-B authored shell is a product source-consuming pipeline.
             "process_status_r5b_assets.py",
+            # FIGHT-A1 consumes only its own deterministic first-party PIL source;
+            # keep it inventoried even though no external image pixels enter it.
+            "process_fight_a1_floating_card.py",
             "process_underwater_fish_assets.py",
         }
         known_non_product_or_intermediate_consumers = {
@@ -2974,6 +2977,8 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
             "build_fish_book_portrait_contact_sheet.py",
             # QA-only before/after/reference boards never ship product pixels.
             "build_fish_market_m2_evidence.py",
+            # FIGHT-A1 QA-only runtime/reference boards never ship product pixels.
+            "build_fight_a1_evidence.py",
             # C2 candidate stays under tools/source_assets until a separate runtime adoption review.
             "process_cooking_c2_candidate.py",
             # M3 QA-only triptychs and interaction contact sheets read the

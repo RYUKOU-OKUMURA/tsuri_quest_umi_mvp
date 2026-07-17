@@ -1,6 +1,6 @@
 # 水中ファイト画面 QA判断ログ
 
-最終更新: 2026-07-15 / 状態: **docs/39 水中ファイト基盤UI刷新 採用・freeze改定済み / docs/35 魚素材重複修正 完了 / E11 INPUT-FISHING入力契約freeze**
+最終更新: 2026-07-17 / 状態: **FIGHT-A1 P2証拠差し戻し解消・独立再レビュー待ち / docs/39基盤・E11入力契約freeze**
 参照画像: `reference/14_underwater_fight_simple_mockup.png`（基盤レイアウト） / `reference/02_underwater_fight_mockup.png`（旧v1素材・質感参照）
 QA更新コマンド: `./tools/fight_visual_qa.sh`（reference/14 + runtime capture標準） / 入力確認: `godot --headless --path . res://tools/fishing_input_smoke.tscn` / 水面天候確認: `./tools/surface_weather_visual_qa.sh` / 釣り上げ結果確認: `godot --path . res://tools/catch_fanfare_preview.tscn`（通常魚確認は `TSURI_CATCH_FANFARE_FISH_ID=aji`）
 詳細な経過履歴: `docs/qa/archive/underwater_fight_design_qa_2026-06.md`（旧 `design-qa.md`）
@@ -85,6 +85,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 |---|---|---|---|
 | READY右カラム | 右326px前後。釣り場情報・魚影/状態・仕掛けカードを表示 | `fishing_screen.gd` / `fight_sidebar.gd` | docs/38 READY専用。釣り場詳細はREADYにだけ残す |
 | CASTING〜FIGHT | 右カラムを隠し、シーンを全幅へ拡張。シーン右上に約288x120pxのフローティングカード1枚 | `fishing_screen.gd` / `fight_sidebar.gd` | docs/39採用による改定。旧サイドバー寸法はFIGHT/中間状態へ戻さない |
+| floating-card外装 | 288×120px文字なし専用PNG `fight_floating_card_frame.png`。羊皮紙紙面＋濃紺タイトル帯＋細い金縁 | `fight_sidebar.gd` / `tools/process_fight_a1_floating_card.py` | FIGHT-A1採用。source/productとも画面ownerの`underwater/`へ閉じ、runtime文字・rarity・状態値を焼き込まない |
 | 未確認カード | 「未確認の魚影」＋反応タグ＋行動行。魚名・レア度・推定サイズは出さない | `fight_sidebar.gd` | 正体秘匿を維持。APPROACH/BITEの餌魚主語文言は行動行へ移す |
 | 判明後カード | 魚名＋レア度バッジ＋推定サイズ＋行動行。生態解説・タックル欄は表示しない | `fight_sidebar.gd` | ファイト中の判断に使わない情報を削除し、図鑑/仕掛け画面へ役割分担 |
 
@@ -142,6 +143,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 | 旧派生crop修正とP2新規ソース化 | 1 | `rouninaji.contact_crop` 上端切断を修正し、rouninaji/ishidai/akahata/kajiki系を再生成。後続のdocs/35 P2バッチ2で `shimaaji/gingameaji/kaiwari/ishigakidai/oomonhata` は新規 `source + contact_crop` に置換済み。ヌシ派生はdocs/35対象外の意図的派生として扱う | 採用 |
 | docs/35 P3魚素材 | 1 | `megochi/kurosoi/takenokomebaru/mejina` を新規source化し、P3暫定allowlistを削除 | 採用 |
 | フローティングカード・レアリティ帯 | 1 | 固定50pxから文字幅+paddingへ変更し、「アンコモン」が緑帯内に収まるようにした | 採用 |
+| フローティングカード・外装素材 | 1 | 平坦なruntime枠を文字なし羊皮紙＋濃紺帯＋細金縁の専用PNGへ1スロット置換 | 採用・freeze |
 | 離脱modal文字領域 | 1 | autowrap Labelの最小高0による押し潰しを、見出し44px・説明56pxの固定文字領域で解消 | 採用・freeze |
 
 ## 4. 判定メモ・再検証ルール
@@ -151,14 +153,19 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 
 ## 5. 現在の残ギャップ
 
-- **P2**: reference/14の最終アート質感（フローティングカード/スリムバー専用PNG化、カード縁やボタン質感のauthored素材化）は未着手。現状は共通paletteのruntime描画でv1採用。
+- **P2**: 下段140pxスリムバーのauthored専用PNG化は後続`FIGHT-A2`。FIGHT-A1採用済みカードをbeforeとして別採否にし、カードとバーを同一判断へ戻さない。
+- **P3**: 参照の行動アイコン相当の装飾密度は`FIGHT-A2`以降へ後続化する。現行288×120pxでは魚名・rarity・推定サイズ・行動文が判断情報として成立しており、アイコン追加は文字safe-areaまたは情報配置の再設計を伴うため、外装1スロットだけを置換するFIGHT-A1へ混ぜない。
 - **残**: 魚のアニメ/接地の微ポリッシュ、背景中央の理想画質、ヒットバッジの最終合わせ。非快晴の水面状態は天気専用ベースを維持済み。専用の状態別×天気PNG量産はしない。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-（現在作業中のフェーズなし。docs/39は2026-07-07に採用・freeze改定済み）
+（現在作業中のフェーズなし。FIGHT-A1のP2証拠差し戻しは2026-07-17に解消し、独立再レビュー待ち）
 
 ## 7. 判断ログ（直近パスのみ）
+
+- 2026-07-17: 独立レビューP2を解消。TIP内legacy toggleで作ったbeforeを廃止し、base `6d37322b`へTIPと同一の決定fixture（partly-cloudy固定、`_view._time=1.25`、同一描画待ち、standardはfocus解放）だけを一時適用したfresh capture `2026-07-17_fight_a1_base_6d37322b_recapture.png`を正式beforeとした。builderはbase decoded RGB SHA-256=`1791a4a46abd9d937844cee719842391351c339cad970c34b1d75f9042f27372`、TIP after=`2c265b09f3f7ccc15d2a5b81a868af45c83c91fd703a8fda07ee6d0cab8cdc30`、base→TIP全差分bbox=`(953,109)-(1243,231)`、カード外差分0pxを機械検証し、base自身/no-op/legacy afterをrejectする。全画面可視率と64×48px局所tileも検査し、header/HUDだけが黒矩形になる不完全captureを拒否する。focus証拠はafterと同じfixtureで`巻く`を実focus ownerにしたfresh capture（decoded RGB SHA-256=`ee6027f2378cb95b00db9560f27d8854987d52c1888d5818c0be557740abd626`）とし、standardとの差をring固有bbox=`(443,628)-(636,692)`・1,961pxだけに固定するため、standard-after-as-focus、非水中FIGHT、ringなし、操作文字未描画をrejectする。negative probeとして`--after=<base>`と`--focus=<standard after>`を個別投入し、両方が`ValueError`で終了することを確認した。P3の行動アイコンは288×120pxの文字safe-area/情報配置再設計を伴うためFIGHT-A2以降へ分離する。
+
+- 2026-07-17: `FIGHT-A1`を局所upliftとして採用。右上288×120pxカードの外形・runtime文字座標・`RarityStyles`動的幅を維持し、背景だけを画面専用の文字なし羊皮紙＋濃紺帯＋細金縁PNGへ置換した。base `6d37322b`の同一決定fixture beforeとTIP afterのカード外画素差0を`tools/build_fight_a1_evidence.py`が検証し、原寸before/afterと320×180 after/referenceで平坦な紙面・帯・縁の差が縮小。未確認、`アカシュモクザメ`＋`アンコモン`＋実データ最長級行動文、アラ右端寄り大型でP1なし。focus/離脱modal/fanfareは実入力回帰green。証拠: `2026-07-17_fight_a1_{base_6d37322b_recapture,standard_before,standard_after,standard_before_after,card_before_after_reference,after_reference_320x180,unrevealed,long_rarity_name_action,ara_right_edge,focus_regression,modal_regression,fanfare_regression}.png`。下段140pxバー、READY、上部、背景、魚、safe clamp、line/lure、18分割ゲージ、入力ロジックは不変。
 
 - 2026-07-17: INPUT統合後のV0 visual baselineを、V1 `FIGHT-A1` 着手前状態として再固定。`./tools/fight_visual_qa.sh` の標準クロダイと、`TSURI_FIGHT_FISH_ID=ara TSURI_FIGHT_VISUAL_X=0.86 TSURI_FIGHT_VISUAL_Y=0.46 TSURI_FIGHT_VISUAL_DIRECTION=1` のアラ右端寄りをruntime captureし、いずれもexit 0。証拠は `docs/qa/evidence/underwater_fight/2026-07-17_v1_prebaseline_{standard,ara_right_edge}.png` と各 `_reference_compare.png`。A1は右上floating card一枚だけを対象とし、下段140pxバー、READY 224px、上部、背景、魚、魚位置/clamp、line anchor、入力/modal/fanfareをこのbaselineから回帰させない。
 
