@@ -1,6 +1,6 @@
 # 水中ファイト画面 QA判断ログ
 
-最終更新: 2026-07-17 / 状態: **FIGHT-A1 独立再レビューP0/P1/P2/P3 0・採用freeze / docs/39基盤・E11入力契約freeze**
+最終更新: 2026-07-17 / 状態: **FIGHT-A1採用freeze・Visual Wave V2着手前baseline固定 / 次: FIGHT-A2**
 参照画像: `reference/14_underwater_fight_simple_mockup.png`（基盤レイアウト） / `reference/02_underwater_fight_mockup.png`（旧v1素材・質感参照）
 QA更新コマンド: `./tools/fight_visual_qa.sh`（reference/14 + runtime capture標準） / 入力確認: `godot --headless --path . res://tools/fishing_input_smoke.tscn` / 水面天候確認: `./tools/surface_weather_visual_qa.sh` / 釣り上げ結果確認: `godot --path . res://tools/catch_fanfare_preview.tscn`（通常魚確認は `TSURI_CATCH_FANFARE_FISH_ID=aji`）
 詳細な経過履歴: `docs/qa/archive/underwater_fight_design_qa_2026-06.md`（旧 `design-qa.md`）
@@ -162,6 +162,8 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 （現在作業中のフェーズなし。FIGHT-A1は2026-07-17に独立再レビューP0/P1/P2/P3 0で採用・freeze。次は下段バーだけを扱うFIGHT-A2）
 
 ## 7. 判断ログ（直近パスのみ）
+
+- 2026-07-17: Visual Wave V2の共通起点 `e297692a` で、FIGHT-A2着手前のstandard / `巻く` focusを再固定。`./tools/fight_visual_qa.sh` exit 0。証拠は `docs/qa/evidence/underwater_fight/2026-07-17_v2_prebaseline_{standard,focus}.png` と `2026-07-17_v2_prebaseline_standard_reference_compare.png`。FIGHT-A2のallowed-diffはFIGHT時の下段140px HUD rect内だけで、A1カードを含む下段外、READY 224px、中間4状態、上部、背景、魚、line/lure、入力/modal/fanfareはこのbaselineから回帰させない。
 
 - 2026-07-17: 独立レビューP2を解消。TIP内legacy toggleで作ったbeforeを廃止し、base `6d37322b`へTIPと同一の決定fixture（partly-cloudy固定、`_view._time=1.25`、同一描画待ち、standardはfocus解放）だけを一時適用したfresh capture `2026-07-17_fight_a1_base_6d37322b_recapture.png`を正式beforeとした。builderはbase decoded RGB SHA-256=`1791a4a46abd9d937844cee719842391351c339cad970c34b1d75f9042f27372`、TIP after=`2c265b09f3f7ccc15d2a5b81a868af45c83c91fd703a8fda07ee6d0cab8cdc30`、base→TIP全差分bbox=`(953,109)-(1243,231)`、カード外差分0pxを機械検証し、base自身/no-op/legacy afterをrejectする。全画面可視率と64×48px局所tileも検査し、header/HUDだけが黒矩形になる不完全captureを拒否する。focus証拠はafterと同じfixtureで`巻く`を実focus ownerにしたfresh capture（decoded RGB SHA-256=`ee6027f2378cb95b00db9560f27d8854987d52c1888d5818c0be557740abd626`）とし、standardとの差をring固有bbox=`(443,628)-(636,692)`・1,961pxだけに固定するため、standard-after-as-focus、非水中FIGHT、ringなし、操作文字未描画をrejectする。negative probeとして`--after=<base>`と`--focus=<standard after>`を個別投入し、両方が`ValueError`で終了することを確認した。P3の行動アイコンは288×120pxの文字safe-area/情報配置再設計を伴うためFIGHT-A2以降へ分離する。
 

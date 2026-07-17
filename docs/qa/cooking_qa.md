@@ -1,6 +1,6 @@
 # 調理場 QA判断ログ
 
-最終更新: 2026-07-17 / 状態: COOK-C1B完了 / C1-A・C0・既存構成freeze維持 / 次: C2 runtime採否
+最終更新: 2026-07-17 / 状態: COOK-C1B完了・Visual Wave V2着手前baseline固定 / C1-A・C0・既存構成freeze維持 / 次: C2 runtime採否
 参照画像: reference/cooking_flow/01_cook_select_concept.png, reference/cooking_flow/02_meal_result_concept.png, reference/cooking_flow/03_exp_gain_concept.png, reference/cooking_flow/04_level_up_overlay_concept.png, reference/cooking_flow/05_status_summary_concept.png
 QA更新コマンド: ./tools/cooking_visual_qa.sh
 
@@ -109,6 +109,12 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 - baseline: `docs/qa/evidence/cooking/2026-07-14_c1a_before_{select,result,exp,levelup,status}.png`（5状態1280x720、2026-07-14固定）。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-17: Visual Wave V2の共通起点 `e297692a` で、C2-WIRE着手前の調理5状態baselineを再固定。
+
+- 実行: `./tools/cooking_visual_qa.sh` exit 0。`COOK_SELECT / MEAL_RESULT / EXP_GAIN / LEVEL_UP_OVERLAY / STATUS_SUMMARY` はすべて1280x720で、5枚のSHA-256は相互に異なる。
+- 証拠: `docs/qa/evidence/cooking/2026-07-17_v2_prebaseline_{select,result,exp,levelup,status}.png`。
+- 固定条件: C2-WIREのallowed-diffはMEAL_RESULT背景画素だけ。人物、料理、報酬4枚、文字、全foreground geometry、他4状態、料理・EXP・level-up・buff・saveロジックはこのbaselineから回帰させない。
 
 2026-07-17: `COOK-C1B` 独立レビューのP2差し戻し2件を解消。素材・見た目・runtime表示は変更していない。
 

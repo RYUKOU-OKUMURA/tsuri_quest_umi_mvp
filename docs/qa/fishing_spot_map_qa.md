@@ -1,6 +1,6 @@
 # 釣り場マップ画面 QA判断ログ
 
-最終更新: 2026-07-15 / 状態: **アップリフト進行中のfreeze値あり**（E11入力契約追加済み）
+最終更新: 2026-07-17 / 状態: **Visual Wave V2着手前baseline固定 / MAP-M1 Stage A診断待ち**（既存freeze・E11入力契約維持）
 参照画像: `reference/` 内の釣り場マップモック
 QA更新コマンド: `./tools/fishing_spot_map_visual_qa.sh`
 入力QAコマンド: `godot --headless --path . --scene res://tools/fishing_spot_input_smoke.tscn`
@@ -45,6 +45,8 @@ QA更新コマンド: `./tools/fishing_spot_map_visual_qa.sh`
 （現在作業中のフェーズなし。2026-07-15 のE11入力P1再収束ではマップfocus・既存`SPOT_MARKER_ORDER`によるkeyboard巡回・Enter signal契約だけを追加し、`DETAIL_FRAME_SOURCE_SIZE`、全ウェル座標、`狙い`行、戻るボタン高さ、9サムネイル、素材・font・palette、既存航路/マーカー/spot座標、ロック・access・trip logicは触っていない）
 
 ## 7. 判断ログ（直近パスのみ）
+
+- 2026-07-17: Visual Wave V2の共通起点 `e297692a` で、MAP-M1着手前のnormal / continue / danger chart lockを再固定。`./tools/fishing_spot_map_visual_qa.sh` exit 0、3状態とも1280x720 RGBA・opaque比率1.000で、SHA-256は相互に異なる。証拠は `docs/qa/evidence/fishing_spot_map/2026-07-17_v2_prebaseline_{normal,continue,danger_chart_lock}.png` と `2026-07-17_v2_prebaseline_normal_reference_compare.png`。Stage Aでは製品asset/source/processor/runtime/freezeを変更せず、このbaselineと `reference/06_fishing_spot_map_mockup.png` を原寸・320x180・grayscaleで診断する。
 
 - 2026-07-05: R5/R1スライス。通常/釣行継続の現状比較で、右詳細の`エサ`行と`仕掛け`行に省略表示が出るP1再発を確認。エサ行は餌リストだけを単行表示し、相性は仕掛け行へ`サビキ / ふつう`・`ちょい投げ / 一致`の短縮表記で移した。`src/ui/fishing_spot_select_screen.gd` と `src/ui/components/fishing_spot_map_view.gd` の釣り場マップ画面固有hexは `Palette.MAP_*` へ移行し、表示色の実値は維持した。判断根拠: `docs/qa/evidence/fishing_spot_map/2026-07-05_detail_text_p1_fix_compare.png`、`docs/qa/evidence/fishing_spot_map/2026-07-05_detail_text_p1_fix_continue_compare.png`。
 - 2026-07-06: E4危険海域追加。`danger_reef` の暗い外洋サムネ、サメヒレ系ピン、海図未完成時の「？」ピン/`海図 2/3`表示、青物ルートからの航路を追加。通常/釣行継続で既存詳細レイアウトのP1再発なし、Lv30・船ランク3・海図2/3状態で右詳細の海図メッセージとボタン文言が収まることを確認。判断根拠: `docs/qa/evidence/fishing_spot_map/2026-07-06_e4_danger_reef_default_compare.png`、`docs/qa/evidence/fishing_spot_map/2026-07-06_e4_danger_reef_continue_compare.png`、`docs/qa/evidence/fishing_spot_map/2026-07-06_e4_danger_reef_chart_lock_compare.png`。

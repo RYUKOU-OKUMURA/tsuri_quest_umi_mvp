@@ -1,6 +1,6 @@
 # 水上キャスト画面 QA判断ログ
 
-最終更新: 2026-07-15 / 状態: UI-READY局所P1対応済み（名前スロットfreeze）/ E11 INPUT-FISHING入力契約freeze
+最終更新: 2026-07-17 / 状態: UI-READY・E11入力契約freeze / Visual Wave V2着手前の天候baseline固定
 参照画像: `reference/01_surface_fishing_mockup.png` / `reference/13_fishing_ready_danger_mockup.png`
 QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `./tools/fishing_time_slot_visual_qa.sh` / `godot --path . res://tools/fishing_surface_states_preview.tscn` / `godot --path . res://tools/catch_fanfare_preview.tscn` / `godot --headless --path . res://tools/fishing_input_smoke.tscn` / `./tools/fight_visual_qa.sh`
 
@@ -59,6 +59,12 @@ QA更新コマンド: `./tools/surface_weather_visual_qa.sh` / `./tools/fishing_
 完了済みのためなし。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-17 Visual Wave V2の共通起点 `e297692a` で、READYの5天候回帰baselineを再固定。
+
+- 実行: `./tools/surface_weather_visual_qa.sh` exit 0。
+- 証拠: `docs/qa/evidence/fishing_surface/2026-07-17_v2_prebaseline_ready_{sunny,partly_cloudy,cloudy,rain,fog}.png` と `2026-07-17_v2_prebaseline_weather_compare.png`。
+- 固定条件: FIGHT-A2はFIGHT時の下段140pxだけを対象とし、READY 224px、5天候のシーン/grade/overlay、上部・右カード、餌魚セレクタ、時間帯、入力はこのbaselineから画素・挙動回帰させない。
 
 2026-07-15 E11 INPUT-FISHINGのREADY入力契約を採用・freeze。
 
