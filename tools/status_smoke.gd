@@ -25,6 +25,10 @@ func _ready() -> void:
 	_expect(_screen._summary_panel != null, "catch summary panel should be present")
 	_expect(_find_named(_screen, "StatusPlayerFishingPortrait") != null, "player fishing portrait should be present in summary medallion")
 	_expect(_screen._inventory_panel != null, "inventory panel should be present")
+	_expect(_find_named(_screen, "StatusScreenShell") != null, "authored status screen shell should be present")
+	_expect(_count_named(_screen, "StatusPaperFrame") == 3, "all three status panes should use the shared screen-local paper frame")
+	_expect(_count_named(_screen, "StatusDarkFrame") == 2, "header and footer should use the shared screen-local dark frame")
+	_verify_r5b_frame_contract()
 	_expect(_screen._fish_book_button != null, "fish book navigation should be present")
 	_expect(_screen._cooking_button != null, "cooking navigation should be present")
 	_expect(_screen._return_button != null, "harbor return button should be present")
@@ -170,6 +174,30 @@ func _verify_inventory_domain_contract() -> void:
 	)
 
 
+func _verify_r5b_frame_contract() -> void:
+	var frames: Array[Node] = []
+	_collect_named(_screen, "StatusPaperFrame", frames)
+	_collect_named(_screen, "StatusDarkFrame", frames)
+	for frame_node in frames:
+		_expect(frame_node is Panel, "R5-B frame node should remain a Panel")
+		if not frame_node is Panel:
+			continue
+		var frame := frame_node as Panel
+		var style := frame.get_theme_stylebox("panel")
+		_expect(style is StyleBoxTexture, "%s should render an authored 9-slice texture" % frame.name)
+		if not style is StyleBoxTexture:
+			continue
+		var texture_style := style as StyleBoxTexture
+		_expect(
+			texture_style.texture_margin_left + texture_style.texture_margin_right < frame.size.x,
+			"%s horizontal frame margins should leave a content well" % frame.name
+		)
+		_expect(
+			texture_style.texture_margin_top + texture_style.texture_margin_bottom < frame.size.y,
+			"%s vertical frame margins should leave a content well" % frame.name
+		)
+
+
 func _make_screen(payload: Dictionary = {}) -> Control:
 	var screen := StatusScreenScript.new()
 	screen.theme = ThemeFactory.build_theme()
@@ -209,6 +237,20 @@ func _count_labels_containing(root: Node, text: String) -> int:
 	for child in root.get_children():
 		count += _count_labels_containing(child, text)
 	return count
+
+
+func _count_named(root: Node, node_name: String) -> int:
+	var count := 1 if root.name == node_name else 0
+	for child in root.get_children():
+		count += _count_named(child, node_name)
+	return count
+
+
+func _collect_named(root: Node, node_name: String, output: Array[Node]) -> void:
+	if root.name == node_name:
+		output.append(root)
+	for child in root.get_children():
+		_collect_named(child, node_name, output)
 
 
 func _buttons_with_meta(root: Node, meta_name: String) -> Array[Button]:

@@ -2960,6 +2960,8 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
             "process_harbor_plan_assets.py",
             # R5-A authored player portrait is a product source-consuming pipeline.
             "process_status_r5a_assets.py",
+            # R5-B authored shell is a product source-consuming pipeline.
+            "process_status_r5b_assets.py",
             "process_underwater_fish_assets.py",
         }
         known_non_product_or_intermediate_consumers = {
