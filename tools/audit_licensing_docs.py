@@ -2953,6 +2953,9 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
             "process_fish_market_m2_assets.py",
             # C1-A authored kitchen art is a product source-consuming pipeline.
             "process_cooking_c1a_assets.py",
+            # C1-B reads only its committed project-owned PIL masters; keep it
+            # inventoried as a product source consumer despite no external pixels.
+            "process_cooking_c1b_assets.py",
             "process_harbor_info_board_assets.py",
             "process_harbor_plan_assets.py",
             # R5-A authored player portrait is a product source-consuming pipeline.
@@ -2976,6 +2979,8 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
             "build_market_m3_evidence.py",
             # R5-A QA-only boards read source/reference for evidence, never product output.
             "build_status_r5a_evidence.py",
+            # C1-B QA-only boards read the reference for evidence, never product output.
+            "build_cooking_c1b_evidence.py",
             "build_fishing_spot_thumb_contact_sheet.py",
             "build_shark_pen_reference.py",
             "build_screen_visual_comparison.py",
