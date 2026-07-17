@@ -110,6 +110,14 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 
 ## 7. 判断ログ（直近パスのみ）
 
+2026-07-17: `COOK-C1B` 独立レビューのP2差し戻し2件を解消。素材・見た目・runtime表示は変更していない。
+
+- P2-1: `validate_project.sh` が生成モード `--verify-twice` を呼び、製品PNG driftを先にatomic replaceして隠せる経路を廃止。専用processorへ純read-only `--check` を追加し、sourceからメモリ生成した期待RGBAと3製品の全channel decoded pixels/hashを照合する。欠損・読込不能・size/画素差はnonzeroで、書込みは明示した通常生成 / `--refresh-sources` / `--verify-twice` にだけ残した。
+- P2-1回帰: 隔離temporary copyの1製品をRGB 1channelだけ破損し、`--check --output-dir <isolated>` がnonzeroとなり、破損copyのSHA-256/mtimeを不変に保つことを確認。`--check-self-test` はRGB差とalpha差の両方で同じ契約を自動検証し、`validate_project.sh` はproduction `--check` とこの隔離self-testを実行する。
+- P2-2: `cooking_input_smoke.gd` から正式名 `2026-07-17_c1b_hover_focus.png` の保存を撤去。input smokeはhover tintのenter/exit assertだけを担い、正式hover captureは `cooking_preview.gd` → `/tmp/tsuri_cooking_c1b_hover_focus.png` → evidence builder/採用証拠の単一所有とした。`cooking_visual_qa_check.py` の黒・透明・低情報量拒否は維持。
+- 検証: `--check` / 隔離破損CLI / `--check-self-test`、`./tools/cooking_visual_qa.sh`、`./tools/cooking_verify.sh`、`cooking_input_smoke.tscn`、content/layout/flow、`./tools/save_system_verify.sh`、`./tools/validate_project.sh`、`git diff --check` green。隔離破損CLIはexit 1、破損copyのSHA-256/mtime不変。全検証後も製品PNG・正式evidenceにtracked差分なし。
+- 固定条件: C1-B 3製品/source、カード矩形、状態表現、正式evidence画素、調理進行・入力runtimeは不変。検証経路・証拠所有権以外へ範囲を広げない。
+
 2026-07-17: `COOK-C1B` 完了。中央料理カードの紙面・細枠・タイトル帯だけをauthored PNGへ移行した。
 
 - 採用: `recipe_card_frame.png`, `recipe_selected_card_frame.png`, 新規 `recipe_title_band.png`。日本語料理名、星、素材数、locked/unavailable文言はruntimeのまま。

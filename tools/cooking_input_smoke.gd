@@ -14,7 +14,6 @@ const EVIDENCE_MEAL := "2026-07-16_input_meal_result_focus.png"
 const EVIDENCE_EXP := "2026-07-16_input_exp_gain_focus.png"
 const EVIDENCE_LEVEL := "2026-07-16_input_level_up_focus.png"
 const EVIDENCE_STATUS := "2026-07-16_input_status_summary_focus.png"
-const EVIDENCE_C1B_HOVER := "2026-07-17_c1b_hover_focus.png"
 
 var _failed := false
 var _navigation_events: Array[String] = []
@@ -66,7 +65,8 @@ func _verify_normal_focus_graph_and_semantic_restore() -> void:
 	hover_card.mouse_entered.emit()
 	await _settle()
 	_expect(hover_card.self_modulate != hover_before, "available unselected recipe hover should be visible")
-	await _capture_evidence(EVIDENCE_C1B_HOVER)
+	# 正式なC1-B hover画像はcooking_preview.gdの単一viewport経路だけが所有する。
+	# 入力smokeは状態変化のassertに限定し、同名evidenceを再生成しない。
 	hover_card.mouse_exited.emit()
 	await _settle()
 	_expect(hover_card.self_modulate == hover_before, "recipe hover exit should restore normal tint")
