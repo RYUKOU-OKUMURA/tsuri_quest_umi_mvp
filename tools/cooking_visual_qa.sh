@@ -26,6 +26,7 @@ CAPTURES=(
   /tmp/tsuri_cooking_exp.png
   /tmp/tsuri_cooking_levelup.png
   /tmp/tsuri_cooking_status.png
+  /tmp/tsuri_cooking_c1b_hover_focus.png
   /tmp/tsuri_cooking_capture_manifest.json
 )
 

@@ -10,6 +10,7 @@ const OUT_RESULT := "/tmp/tsuri_cooking_result.png"
 const OUT_EXP := "/tmp/tsuri_cooking_exp.png"
 const OUT_LEVELUP := "/tmp/tsuri_cooking_levelup.png"
 const OUT_STATUS := "/tmp/tsuri_cooking_status.png"
+const OUT_C1B_HOVER_FOCUS := "/tmp/tsuri_cooking_c1b_hover_focus.png"
 const OUT_MANIFEST := "/tmp/tsuri_cooking_capture_manifest.json"
 const VW := Vector2i(1280, 720)
 const CAPTURE_SETTLE_FRAMES := 10
@@ -36,6 +37,24 @@ func _ready() -> void:
 		return
 	_record_capture("COOK_SELECT", OUT_SELECT, "current_prep_summary")
 	if not await _save_viewport(vp, OUT_ALL):
+		get_tree().quit(1)
+		return
+	var hover_card := _find_named(screen, "RecipeCard_sashimi") as Control
+	if hover_card == null:
+		push_error("COOK-C1B hover capture requires RecipeCard_sashimi.")
+		get_tree().quit(1)
+		return
+	var hover_before := hover_card.self_modulate
+	var hover_motion := InputEventMouseMotion.new()
+	hover_motion.position = hover_card.get_global_rect().get_center()
+	hover_motion.global_position = hover_motion.position
+	vp.push_input(hover_motion, true)
+	await _await_capture_ready(vp)
+	if hover_card.self_modulate == hover_before:
+		push_error("COOK-C1B hover capture did not activate the recipe hover tint.")
+		get_tree().quit(1)
+		return
+	if not await _save_viewport(vp, OUT_C1B_HOVER_FOCUS):
 		get_tree().quit(1)
 		return
 

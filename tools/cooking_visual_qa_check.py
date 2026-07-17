@@ -16,6 +16,7 @@ from PIL import Image
 
 EXPECTED_SIZE = (1280, 720)
 MANIFEST = Path("/tmp/tsuri_cooking_capture_manifest.json")
+C1B_HOVER_FOCUS = Path("/tmp/tsuri_cooking_c1b_hover_focus.png")
 EXPECTED_MANIFEST_STATES = {
     "COOK_SELECT": "current_prep_summary",
     "MEAL_RESULT": "MEAL_RESULT",
@@ -54,6 +55,9 @@ def check_visual_content(path: Path, label: str, failures: list[str]) -> None:
             channel_spread = max(maximum - minimum for minimum, maximum in extrema)
             sample = rgb.resize((64, 36))
             colors = sample.getcolors(maxcolors=(64 * 36) + 1) or []
+            sampled_pixels = list(sample.getdata())
+            near_black_ratio = sum(1 for pixel in sampled_pixels if max(pixel) < 18) / len(sampled_pixels)
+            transparent_ratio = sum(1 for alpha in rgba.getchannel("A").resize((64, 36)).getdata() if alpha < 250) / len(sampled_pixels)
     except OSError as exc:
         failures.append(f"{label}: could not inspect PNG pixels {path}: {exc}")
         return
@@ -62,6 +66,10 @@ def check_visual_content(path: Path, label: str, failures: list[str]) -> None:
         failures.append(f"{label}: image has too little color variation at {path}")
     if len(colors) < 16:
         failures.append(f"{label}: image has too few sampled colors at {path}")
+    if near_black_ratio > 0.45:
+        failures.append(f"{label}: near-black area is too large ({near_black_ratio:.1%}) at {path}")
+    if transparent_ratio > 0.01:
+        failures.append(f"{label}: transparent area is too large ({transparent_ratio:.1%}) at {path}")
 
 
 def check_png(path: Path, label: str, failures: list[str], expected_size: tuple[int, int] | None) -> None:
@@ -173,6 +181,10 @@ def main() -> int:
         check_png(capture, f"{state_id} capture", failures, EXPECTED_SIZE)
         if len(failures) > before and not capture.exists():
             missing_capture_failures.append(failures[-1])
+    before = len(failures)
+    check_png(C1B_HOVER_FOCUS, "COOK-C1B hover/focus capture", failures, EXPECTED_SIZE)
+    if len(failures) > before and not C1B_HOVER_FOCUS.exists():
+        missing_capture_failures.append(failures[-1])
     if not missing_capture_failures:
         check_manifest(failures)
         check_capture_uniqueness(failures)
