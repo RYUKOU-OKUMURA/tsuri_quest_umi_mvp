@@ -11,6 +11,8 @@ const OUT_EXP := "/tmp/tsuri_cooking_exp.png"
 const OUT_LEVELUP := "/tmp/tsuri_cooking_levelup.png"
 const OUT_STATUS := "/tmp/tsuri_cooking_status.png"
 const OUT_C1B_HOVER_FOCUS := "/tmp/tsuri_cooking_c1b_hover_focus.png"
+const OUT_C2_FIRST_LONG := "/tmp/tsuri_cooking_c2_first_long.png"
+const OUT_C2_REPEAT_LONG := "/tmp/tsuri_cooking_c2_repeat_long.png"
 const OUT_MANIFEST := "/tmp/tsuri_cooking_capture_manifest.json"
 const VW := Vector2i(1280, 720)
 const CAPTURE_SETTLE_FRAMES := 10
@@ -61,6 +63,12 @@ func _ready() -> void:
 	screen.queue_free()
 	vp.queue_free()
 	await get_tree().process_frame
+	if not await _capture_c2_meal_fixture(_fake_c2_first_long_result(), OUT_C2_FIRST_LONG):
+		get_tree().quit(1)
+		return
+	if not await _capture_c2_meal_fixture(_fake_c2_repeat_long_result(), OUT_C2_REPEAT_LONG):
+		get_tree().quit(1)
+		return
 
 	_seed_select_state()
 	vp = _new_capture_viewport()
@@ -221,6 +229,35 @@ func _mount_screen(vp: SubViewport, suppress_level_overlay := true) -> Control:
 	return screen
 
 
+func _capture_c2_meal_fixture(result: Dictionary, output_path: String) -> bool:
+	_seed_select_state()
+	var vp := _new_capture_viewport()
+	var screen := await _mount_screen(vp)
+	_seed_after_meal_state()
+	var fixture := result.duplicate(true)
+	fixture["status_snapshot"] = _meal_status_snapshot(7, 165, 285)
+	screen.preview_show_meal_reward_result(fixture, true)
+	await _await_capture_ready(vp)
+	var valid := (
+		_expect_reward_state(screen, "MEAL_RESULT", "C2 MEAL_RESULT fixture")
+		and _expect_c0_meal_result_contract(screen, "C2 MEAL_RESULT fixture")
+		and _expect_c0_flow_button_contract(
+			screen,
+			"RewardConfirmButton",
+			"RewardConfirmCue",
+			"meal",
+			88.0,
+			"C2 MEAL_RESULT fixture"
+		)
+	)
+	if valid:
+		valid = await _save_viewport(vp, output_path)
+	screen.queue_free()
+	vp.queue_free()
+	await get_tree().process_frame
+	return valid
+
+
 func _await_capture_ready(vp: SubViewport) -> void:
 	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	var frames := CAPTURE_SETTLE_FRAMES if ScreenBase.is_qa_deterministic() else 2
@@ -344,6 +381,44 @@ func _fake_meal_result() -> Dictionary:
 			"stat": "max_energy",
 			"value": 0.05,
 			"text": "次の釣行で最大体力 +5%",
+		},
+	}
+
+
+func _fake_c2_first_long_result() -> Dictionary:
+	return {
+		"ok": true,
+		"dish_name": "港町特製アジの香草塩焼き",
+		"base_exp": 60,
+		"first_time": true,
+		"first_bonus": 30,
+		"total_exp": 90,
+		"leveled_to": [],
+		"buff": {
+			"recipe_id": "salt_grill",
+			"name": "港町特製アジの香草塩焼き",
+			"stat": "safe_max",
+			"value": 0.10,
+			"text": "次の釣行で安全テンション域と最大体力が大きく上がる",
+		},
+	}
+
+
+func _fake_c2_repeat_long_result() -> Dictionary:
+	return {
+		"ok": true,
+		"dish_name": "ヒラメと彩り野菜の港町ムニエル",
+		"base_exp": 48,
+		"first_time": false,
+		"first_bonus": 0,
+		"total_exp": 48,
+		"leveled_to": [],
+		"buff": {
+			"recipe_id": "sashimi",
+			"name": "ヒラメと彩り野菜の港町ムニエル",
+			"stat": "focus",
+			"value": 0.12,
+			"text": "次の釣行で集中力と獲得経験値が長時間にわたり上昇する",
 		},
 	}
 

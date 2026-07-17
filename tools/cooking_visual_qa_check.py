@@ -17,6 +17,8 @@ from PIL import Image
 EXPECTED_SIZE = (1280, 720)
 MANIFEST = Path("/tmp/tsuri_cooking_capture_manifest.json")
 C1B_HOVER_FOCUS = Path("/tmp/tsuri_cooking_c1b_hover_focus.png")
+C2_FIRST_LONG = Path("/tmp/tsuri_cooking_c2_first_long.png")
+C2_REPEAT_LONG = Path("/tmp/tsuri_cooking_c2_repeat_long.png")
 EXPECTED_MANIFEST_STATES = {
     "COOK_SELECT": "current_prep_summary",
     "MEAL_RESULT": "MEAL_RESULT",
@@ -185,6 +187,14 @@ def main() -> int:
     check_png(C1B_HOVER_FOCUS, "COOK-C1B hover/focus capture", failures, EXPECTED_SIZE)
     if len(failures) > before and not C1B_HOVER_FOCUS.exists():
         missing_capture_failures.append(failures[-1])
+    for path, label in (
+        (C2_FIRST_LONG, "COOK-C2 first-time/long capture"),
+        (C2_REPEAT_LONG, "COOK-C2 repeat/long capture"),
+    ):
+        before = len(failures)
+        check_png(path, label, failures, EXPECTED_SIZE)
+        if len(failures) > before and not path.exists():
+            missing_capture_failures.append(failures[-1])
     if not missing_capture_failures:
         check_manifest(failures)
         check_capture_uniqueness(failures)

@@ -1,0 +1,43 @@
+{
+  "state": "MEAL_RESULT",
+  "order": [
+    "before",
+    "after",
+    "reference"
+  ],
+  "before_sha256": "a378ca58ebfd6d1147936cb3b8b3e000feb2941e9314d29ff50b0ebc548c7d79",
+  "after_sha256": "59fd1e74554362032cddf22ae89ca918d4ed22276cbde6d59562f8959fa1b54f",
+  "reference_sha256": "c65d78660bd6f8319d4d3235002eafad2d8ff3674bf585e14dbeffaf889d1045",
+  "result_difference_bbox": [
+    0,
+    0,
+    1280,
+    720
+  ],
+  "required_fixtures": {
+    "first_time_bonus_four_cards_long_buff": "be9fa20ddf6461645353c7a4c033ee34db8f47feee94a2946d14900d33a02dcc",
+    "repeat_long_dish_and_effect": "8934f063e60369465e555deb07cb4622886ac6d752de2b4cc04a53eaf41452b9"
+  },
+  "non_meal_result_regression": {
+    "select": {
+      "baseline_sha256": "bd23bf0c4b15a7a23a0cbcaa84029d5cd0b956522d4c86d5b4e23a06ce2ec372",
+      "after_sha256": "bd23bf0c4b15a7a23a0cbcaa84029d5cd0b956522d4c86d5b4e23a06ce2ec372",
+      "decoded_pixels_equal": true
+    },
+    "exp": {
+      "baseline_sha256": "11925c6f2737b329bb74156bf147188f503d365d3df731ea987b57017fbd2ee4",
+      "after_sha256": "11925c6f2737b329bb74156bf147188f503d365d3df731ea987b57017fbd2ee4",
+      "decoded_pixels_equal": true
+    },
+    "levelup": {
+      "baseline_sha256": "0c377ce91e175faa7130873b09d91e46a12236a4e162b8d3c1ce3a6547ce0d31",
+      "after_sha256": "0c377ce91e175faa7130873b09d91e46a12236a4e162b8d3c1ce3a6547ce0d31",
+      "decoded_pixels_equal": true
+    },
+    "status": {
+      "baseline_sha256": "61c55c190df98cb3958afdfaadfb0eb98a93801ce6168ef5a1e35653fd1c0d4e",
+      "after_sha256": "61c55c190df98cb3958afdfaadfb0eb98a93801ce6168ef5a1e35653fd1c0d4e",
+      "decoded_pixels_equal": true
+    }
+  }
+}
