@@ -69,6 +69,16 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
+2026-07-17: `C2-WIRE MEAL_RESULT食事シーン背景` を、Visual Wave V2の局所素材スライスとして開始。
+
+- 差分Top1: 現行 `meal_scene_bg.png` は丸灯・床線・空皿を幾何描画した平坦な下地で、参照02の「木の食卓・暖色ランタン・港の夕景窓」が作る独立した食事payoffに届いていない。
+- 動かすもの: C2 source/candidate、製品 `meal_scene_bg.png`、C2専用product processor、旧一括generator guard、production read-only checkと隔離破損self-test、C2 preview/visual QA fixture、C2証拠、素材台帳・ライセンス監査consumer分類。
+- 不動値: COOK_SELECTとC1-A/C1-B、`player_eating_pose`、料理画像、`meal_result_scene_art_v2`、バナー・料理カード・報酬4枚・ステータス帯、全foreground geometry/文字座標、EXP_GAIN / LEVEL_UP_OVERLAY / STATUS_SUMMARY、料理/EXP/level-up/buff/saveロジック、common/palette/他画面。
+- 代表状態: 初回bonusあり・報酬4枚・長いbuff文言のMEAL_RESULT。高リスク状態: 初回済み、長い料理名・効果文、MEAL_RESULT→EXP_GAIN、他4状態。
+- 採用条件: 同一決定状態の原寸beforeに明確に勝ち、320×180 after/referenceで「食卓・ランタン・港の夕景窓」の差が縮む。背景より人物・料理・報酬が先に読め、safe-area文字干渉がなく、他4状態と進行ロジックが回帰しない。
+- allowed-diff: MEAL_RESULTの背景画素だけ。人物・料理・カード・文字のgeometryは不変、他4状態は `2026-07-17_v2_prebaseline_*` とpixel完全一致を要求する。
+- baseline: `2026-07-17_v2_prebaseline_{select,result,exp,levelup,status}.png`。同一worktreeの再撮影SHA-256が5枚すべてbaselineと一致することを仮配線前に確認済み。
+
 2026-07-17: `COOK-C1B 料理カード紙面・タイトル帯` を、Visual Wave V1の局所素材スライスとして開始し、同日完了。
 
 - 差分Top1: COOK_SELECT中央3×2カードは、白い平坦な紙面と太い茶枠が支配的で、参照01の羊皮紙・木/金の細枠・濃紺タイトル帯が作る authored な料理札の階層に届いていない。
