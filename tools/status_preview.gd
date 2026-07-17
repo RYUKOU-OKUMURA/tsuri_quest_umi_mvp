@@ -5,6 +5,8 @@ const ThemeFactory = preload("res://src/ui/ui_theme.gd")
 const StatusScreen = preload("res://src/ui/status_screen.gd")
 const NORMAL_OUT := "/tmp/tsuri_status_normal.png"
 const HARD_OUT := "/tmp/tsuri_status_hard.png"
+const LONG_OUT := "/tmp/tsuri_status_long_content.png"
+const OVERLAY_OUT := "/tmp/tsuri_status_title_overlay.png"
 const VW := Vector2i(1280, 720)
 
 
@@ -23,6 +25,9 @@ func _ready() -> void:
 	PlayerProgress.money = 12450
 	PlayerProgress.equipped_rod_id = "iso"
 	PlayerProgress.owned_rods = ["starter", "iso"]
+	if OS.get_environment("TSURI_STATUS_LONG_CONTENT") == "1":
+		PlayerProgress.equipped_rod_id = "marlin"
+		PlayerProgress.owned_rods = ["starter", "iso", "offshore", "big_game", "marlin"]
 	PlayerProgress.owned_boats = ["skiff"]
 	PlayerProgress.pending_buff = {
 		"recipe_id": "salt_grill",
@@ -80,10 +85,17 @@ func _ready() -> void:
 
 	var img := vp.get_texture().get_image()
 	if not _is_rendered_image_valid(img):
+		img.save_png("/tmp/tsuri_status_invalid.png")
 		push_error("ステータス画面が空描画または黒矩形を含む不正captureになりました。")
 		get_tree().quit(1)
 		return
-	var out := HARD_OUT if PlayerProgress.difficulty_id == "hard" else NORMAL_OUT
+	var out := NORMAL_OUT
+	if OS.get_environment("TSURI_STATUS_TITLE_OVERLAY") == "1":
+		out = OVERLAY_OUT
+	elif OS.get_environment("TSURI_STATUS_LONG_CONTENT") == "1":
+		out = LONG_OUT
+	elif PlayerProgress.difficulty_id == "hard":
+		out = HARD_OUT
 	img.save_png(out)
 	get_tree().quit()
 

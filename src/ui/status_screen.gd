@@ -12,10 +12,12 @@ const COMMON_BUTTON_HOVER_PATH := "res://assets/showcase/common/button_frame_hov
 const COMMON_BUTTON_PRIMARY_PATH := "res://assets/showcase/common/button_frame_primary.png"
 const COMMON_CARD_FRAME_PATH := "res://assets/showcase/common/card_frame.png"
 const COMMON_CARD_SELECTED_FRAME_PATH := "res://assets/showcase/common/card_selected_frame.png"
-const COMMON_PARCHMENT_CARD_PATH := "res://assets/showcase/common/parchment_card.png"
 const ICON_FISH_BOOK_PATH := "res://assets/showcase/common/nav_status_icon.png"
 const ICON_COOKING_PATH := "res://assets/showcase/common/nav_cooking_icon.png"
 const STATUS_PLAYER_PORTRAIT_PATH := "res://assets/showcase/status/status_player_fishing_portrait.png"
+const STATUS_PANEL_FRAME_PATH := "res://assets/showcase/status/status_panel_frame.png"
+const STATUS_DARK_FRAME_PATH := "res://assets/showcase/status/status_dark_frame.png"
+const STATUS_SCREEN_SHELL_PATH := "res://assets/showcase/status/status_screen_shell.png"
 
 var _player_status_bar: PlayerStatusBar
 var _player_panel: Control
@@ -42,6 +44,11 @@ func _build_screen() -> void:
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(shade)
+
+	var shell := _texture_rect(STATUS_SCREEN_SHELL_PATH)
+	shell.name = "StatusScreenShell"
+	shell.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(shell)
 
 	var root := Control.new()
 	root.name = "StatusRoot"
@@ -288,26 +295,24 @@ func _section_panel(parent: Control, left: float, top: float, right: float, bott
 
 
 func _add_paper_backdrop(parent: Control) -> void:
-	var shadow := Panel.new()
-	shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	shadow.add_theme_stylebox_override("panel", _outer_panel_style())
-	shadow.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	parent.add_child(shadow)
-
-	var paper := _texture_rect(COMMON_PARCHMENT_CARD_PATH)
-	paper.modulate = _alpha(Palette.PARCHMENT, 0.96)
-	_place_control(parent, paper, 0.018, 0.022, 0.982, 0.978)
-
-	var wash := ColorRect.new()
-	wash.color = _alpha(Palette.PARCHMENT_DEEP, 0.18)
-	wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place_control(parent, wash, 0.035, 0.052, 0.965, 0.950)
+	var frame := Panel.new()
+	frame.name = "StatusPaperFrame"
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var texture_style := _texture_style(STATUS_PANEL_FRAME_PATH, Vector4(24.0, 24.0, 24.0, 24.0))
+	frame.add_theme_stylebox_override("panel", texture_style if texture_style != null else _outer_panel_style())
+	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	parent.add_child(frame)
 
 
 func _add_framed_backdrop(parent: Control, dark: bool) -> void:
 	var panel := Panel.new()
+	panel.name = "StatusDarkFrame" if dark else "StatusPaperFrame"
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.add_theme_stylebox_override("panel", _header_style() if dark else _outer_panel_style())
+	var path := STATUS_DARK_FRAME_PATH if dark else STATUS_PANEL_FRAME_PATH
+	var margin := 18.0 if dark else 24.0
+	var texture_style := _texture_style(path, Vector4(margin, margin, margin, margin))
+	var fallback := _header_style() if dark else _outer_panel_style()
+	panel.add_theme_stylebox_override("panel", texture_style if texture_style != null else fallback)
 	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	parent.add_child(panel)
 
