@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+import tempfile
 
 from PIL import Image, ImageChops
 
@@ -21,6 +22,7 @@ HUD_BOX = (6, 574, 1274, 714)
 FOCUS_RING_BOX = (443, 628, 636, 692)
 REFERENCE_HUD_BOX = (0, 756, 1536, 1002)
 READY_HUD_BOX = (6, 490, 955, 714)
+REQUIRED_PIXEL_STATES = ("ready", "casting", "waiting", "approach", "bite")
 
 
 def opened(path: Path) -> Image.Image:
@@ -55,6 +57,21 @@ def assert_identical(before_path: Path, after_path: Path, label: str) -> None:
         raise ValueError(f"{label} must remain pixel-identical: diff={bbox}")
 
 
+def assert_required_pixel_regressions(regressions: list[tuple[str, Path, Path]]) -> None:
+    labels = [label for label, _before, _after in regressions]
+    missing = [label for label in REQUIRED_PIXEL_STATES if labels.count(label) == 0]
+    duplicate = sorted({label for label in labels if labels.count(label) > 1})
+    unexpected = sorted(set(labels) - set(REQUIRED_PIXEL_STATES))
+    if missing or duplicate or unexpected or len(labels) != len(REQUIRED_PIXEL_STATES):
+        raise ValueError(
+            "pixel-identical regression requires each state exactly once: "
+            f"required={REQUIRED_PIXEL_STATES} missing={missing} "
+            f"duplicate={duplicate} unexpected={unexpected}"
+        )
+    for label, before_path, after_path in regressions:
+        assert_identical(before_path, after_path, label)
+
+
 def parse_regression(value: str) -> tuple[str, Path, Path]:
     parts = value.split(":", 2)
     if len(parts) != 3:
@@ -82,8 +99,7 @@ def main(args: argparse.Namespace) -> None:
         raise ValueError(
             f"focus ring geometry changed: before={before_focus_bbox} after={after_focus_bbox}"
         )
-    for label, before_path, after_path in args.pixel_identical:
-        assert_identical(before_path, after_path, label)
+    assert_required_pixel_regressions(args.pixel_identical)
     for label, before_path, after_path, kind in args.hud_identical:
         before_hud = opened(before_path).crop(READY_HUD_BOX if kind == "ready" else HUD_BOX)
         after_hud = opened(after_path).crop(READY_HUD_BOX if kind == "ready" else HUD_BOX)
@@ -120,12 +136,46 @@ def main(args: argparse.Namespace) -> None:
     print(f"FIGHT-A2 pixel-identical HUD regression states: {len(args.hud_identical)}")
 
 
+def self_test() -> None:
+    with tempfile.TemporaryDirectory(prefix="fight-a2-evidence-self-test-") as tmp:
+        root = Path(tmp)
+        before = root / "before.png"
+        after = root / "after.png"
+        Image.new("RGB", (1280, 720), (12, 34, 56)).save(before)
+        Image.open(before).save(after)
+        complete = [(label, before, after) for label in REQUIRED_PIXEL_STATES]
+        assert_required_pixel_regressions(complete)
+
+        try:
+            assert_required_pixel_regressions(complete[:-1])
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("missing state was not rejected")
+
+        corrupted = root / "corrupted.png"
+        with Image.open(after) as source:
+            damaged = source.convert("RGB")
+        damaged.putpixel((640, 360), (255, 0, 0))
+        damaged.save(corrupted)
+        broken = list(complete)
+        broken[2] = ("waiting", before, corrupted)
+        try:
+            assert_required_pixel_regressions(broken)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("pixel corruption was not rejected")
+    print("FIGHT-A2 evidence self-test: missing state / pixel corruption rejected")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--self-test", action="store_true")
     parser.add_argument("--before", type=Path, default=DEFAULT_BEFORE)
-    parser.add_argument("--after", type=Path, required=True)
+    parser.add_argument("--after", type=Path)
     parser.add_argument("--focus-before", type=Path, default=DEFAULT_FOCUS_BEFORE)
-    parser.add_argument("--focus-after", type=Path, required=True)
+    parser.add_argument("--focus-after", type=Path)
     parser.add_argument(
         "--pixel-identical",
         action="append",
@@ -140,4 +190,10 @@ if __name__ == "__main__":
         type=parse_hud_regression,
         metavar="LABEL:BEFORE:AFTER:ready|slim",
     )
-    main(parser.parse_args())
+    parsed = parser.parse_args()
+    if parsed.self_test:
+        self_test()
+    else:
+        if parsed.after is None or parsed.focus_after is None:
+            parser.error("--after and --focus-after are required unless --self-test is used")
+        main(parsed)

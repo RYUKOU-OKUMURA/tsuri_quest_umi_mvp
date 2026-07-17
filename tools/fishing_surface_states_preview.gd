@@ -6,6 +6,10 @@ const FishingScreen = preload("res://src/ui/fishing_screen.gd")
 
 const VW := Vector2i(1280, 720)
 const DEFAULT_OUT_PREFIX := "/tmp/tsuri_fishing_surface"
+const PIXEL_REGRESSION_FISH_ID := "aji"
+const PIXEL_REGRESSION_FISH_SIZE_CM := 24.5
+const PIXEL_REGRESSION_ENVIRONMENT_ID := "sunny_calm"
+const PIXEL_REGRESSION_TIME_SLOT_ID := "daytime"
 
 
 func _ready() -> void:
@@ -24,6 +28,8 @@ func _ready() -> void:
 	screen.configure(config)
 	screen.size = Vector2(VW)
 	vp.add_child(screen)
+	if OS.get_environment("TSURI_SURFACE_STATE_PIXEL_REGRESSION") == "1":
+		_fix_pixel_regression_fish(screen)
 
 	var out_prefix := OS.get_environment("TSURI_SURFACE_STATE_OUT_PREFIX").strip_edges()
 	if out_prefix.is_empty():
@@ -78,6 +84,20 @@ func _ready() -> void:
 	get_tree().quit()
 
 
+func _fix_pixel_regression_fish(screen: Control) -> void:
+	# GameDataの抽選RNGを跨がず、base/TIPを同一の魚辞書と表示サイズで比較する。
+	var fish := GameData.get_fish(PIXEL_REGRESSION_FISH_ID).duplicate(true)
+	if fish.is_empty():
+		push_error("pixel regression fish is missing: %s" % PIXEL_REGRESSION_FISH_ID)
+		get_tree().quit(1)
+		return
+	fish["size_min"] = PIXEL_REGRESSION_FISH_SIZE_CM
+	fish["size_max"] = PIXEL_REGRESSION_FISH_SIZE_CM
+	screen._current_fish = fish
+	screen._prepare_simulator_with_current_fish()
+	screen._refresh_fish_info()
+
+
 func _preview_config() -> Dictionary:
 	var config := {}
 	var spot_id := OS.get_environment("TSURI_SURFACE_STATE_SPOT_ID").strip_edges()
@@ -86,6 +106,9 @@ func _preview_config() -> Dictionary:
 	var lure_fish_id := OS.get_environment("TSURI_SURFACE_STATE_SHARK_LURE_FISH_ID").strip_edges()
 	var lure_count_text := OS.get_environment("TSURI_SURFACE_STATE_SHARK_LURE_COUNT").strip_edges()
 	var lure_remaining_text := OS.get_environment("TSURI_SURFACE_STATE_SHARK_LURE_REMAINING").strip_edges()
+	if OS.get_environment("TSURI_SURFACE_STATE_PIXEL_REGRESSION") == "1":
+		environment_id = PIXEL_REGRESSION_ENVIRONMENT_ID
+		time_slot_id = PIXEL_REGRESSION_TIME_SLOT_ID
 	var lure_count := maxi(0, int(lure_count_text))
 	var lure_remaining := maxi(0, int(lure_remaining_text))
 	if not spot_id.is_empty():
@@ -202,7 +225,7 @@ func _capture(vp: SubViewport, screen: Control, out_path: String) -> void:
 	screen.queue_redraw()
 	await get_tree().process_frame
 	await get_tree().process_frame
-	await RenderingServer.frame_post_draw
+	await get_tree().process_frame
 	if FileAccess.file_exists(out_path):
 		DirAccess.remove_absolute(out_path)
 	var img := vp.get_texture().get_image()

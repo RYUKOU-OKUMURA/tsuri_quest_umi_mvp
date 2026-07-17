@@ -31,5 +31,6 @@ python3 "$ROOT/tools/process_cooking_c2_product.py" --check
 python3 "$ROOT/tools/process_cooking_c2_product.py" --check-self-test
 python3 "$ROOT/tools/process_fight_a2_slim_bar.py" --check
 python3 "$ROOT/tools/process_fight_a2_slim_bar.py" --self-test
+python3 "$ROOT/tools/build_fight_a2_evidence.py" --self-test
 HOME="$GODOT_HOME" "$GODOT" --headless --editor --path "$ROOT" --quit
 HOME="$GODOT_HOME" "$GODOT" --headless --path "$ROOT" --quit-after 2
