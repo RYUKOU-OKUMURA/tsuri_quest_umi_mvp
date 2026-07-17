@@ -1,6 +1,6 @@
 # 調理場 QA判断ログ
 
-最終更新: 2026-07-17 / 状態: COOK-C1B完了・Visual Wave V2着手前baseline固定 / C1-A・C0・既存構成freeze維持 / 次: C2 runtime採否
+最終更新: 2026-07-17 / 状態: C2-WIRE採用完了 / C1-A・C1-B・C0・既存構成freeze維持 / 次: C3
 参照画像: reference/cooking_flow/01_cook_select_concept.png, reference/cooking_flow/02_meal_result_concept.png, reference/cooking_flow/03_exp_gain_concept.png, reference/cooking_flow/04_level_up_overlay_concept.png, reference/cooking_flow/05_status_summary_concept.png
 QA更新コマンド: ./tools/cooking_visual_qa.sh
 
@@ -25,6 +25,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 | STATUS_SUMMARY 所持金 | 整数部は3桁カンマ区切り（例: `10,170 G`） | `src/ui/components/cooking_status_panel.gd` | docs/19 §4.3の金額表記規格 |
 | COOK_SELECT厨房背景 | source `b3e7d525...686cb` / output `67157172...81106`、1280x720、彩度 `0.84`、濃紺scrim alpha `48` | `tools/source_assets/cooking/c1a_kitchen_bg_source.png` / `tools/process_cooking_c1a_assets.py` / `assets/showcase/cooking/cooking_room_bg.png` | C1-A採用値。暖色ランタン光・海窓・調理棚を持つ環境のみ一点物。3列・全前景矩形・runtime glazeは不変 |
 | COOK_SELECT料理カード C1-B | source: 通常/選択 `560x440`、濃紺タイトル帯 `560x124`。output: 通常/選択 `280x220`、濃紺タイトル帯 `280x62`。runtime表示 `132x196`、タイトル領域 `31px`。source SHA-256 `388b926f...27ad5` / `19ca076a...b5f9` / `d3ac1640...14b21`、output `4320ed58...3fe4` / `82151085...82f5` / `b509b93c...02bf` | `tools/source_assets/cooking/c1b_recipe_*_source.png` / `tools/process_cooking_c1b_assets.py` / `assets/showcase/cooking/recipe_{card_frame,selected_card_frame,title_band}.png` | 羊皮紙・木/金細枠・濃紺帯をPNGへ移し、日本語名/星/素材footer/lock文言はruntime維持。locked/unavailableは既存modulate、hoverは未選択availableだけ暖色tint、focusは共通枠を維持 |
+| MEAL_RESULT食事シーン背景 C2 | source `1672x941 RGB`、製品 `1280x720 RGBA`。source file SHA-256 `673783a3...a245`、product file SHA-256 `42b68430...d8cb`、product decoded RGBA SHA-256 `fcdfcd62...873` | `tools/source_assets/cooking/c2_meal_scene_bg_source.png` / `tools/process_cooking_c2_product.py` / `assets/showcase/cooking/meal_scene_bg.png` | 2026-07-17採用。食卓・暖色ランタン・港の夕景窓を持つ環境背景だけを置換。人物/料理/UI/文字なし。product processorが単一writerで、同一画素bytes保持・差時same-dir atomic replace・read-only check・隔離破損self-testを所有する |
 | COOK_SELECT 入力導線 | 初期focusは「選択中の調理可能recipe → 選択中の所持fish → 料理図鑑 → 港」の順。所持fish / 調理可能recipe / 料理図鑑 / 有効な調理 / 港だけを候補とし、未所持・locked・disabledは `FOCUS_NONE`。Tab/Shift+Tabと方向入力は有効候補だけの閉路、再構築時は `fish:<id>` / `recipe:<id>` でA→B→A復元 | `src/ui/cooking_screen.gd` / `tools/cooking_input_smoke.gd` | INPUT-COOKING採用値。表示矩形を変えず、動的リストと調理可否をまたぐkeyboard/gamepad契約を固定する |
 | 調理5状態 入力handoff | `MEAL_RESULT` / `EXP_GAIN` は `RewardConfirmButton`、`LEVEL_UP_OVERLAY` は `LevelUpConfirmButton`、`STATUS_SUMMARY` は `StatusReturnButton` のみfocus可能。背面とoverlay内の他Controlは `FOCUS_NONE`。EscapeはCOOK_SELECTとSTATUS_SUMMARYのみ港へ1回、食事・EXP・レベルアップでは進行を飛ばさず消費 | `src/ui/cooking_screen.gd` / `tools/cooking_input_smoke.gd` | C0の単一cue構造を変えず、不可逆報酬の誤skipと背景focus漏れを防ぐ |
 | 旧調理一括generatorの製品保存 | size / mode / decoded pixels完全一致なら既存bytes保持。真の差・欠損・読込不能だけ同一directory tempへ `flush` + `fsync` 後atomic replace。C1-A背景は専用processor、採用済み11 slotは明示guard | `tools/generate_cooking_showcase_assets.py` / `tools/cooking_generator_determinism_verify.py` | Pillow版差で採用品を再encode・再描画しない。保存失敗時は旧製品とtemp cleanupを保証。製品57点のfile/decoded hash・size/modeをfocused検証で固定 |
@@ -50,6 +51,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 | C0 runtime表示破綻 | 1 | 不透明ステージ下地、静かなカード見出し帯、単一導線グリフ、金額formatへ置換 | 完了 |
 | C1-A厨房背景 | 1 | OpenAI生成sourceを彩度統一・濃紺減光して既存slotへ差し替え | 素材採用・freeze |
 | C1-B料理カード紙面・タイトル帯 | 1 | 通常/選択の羊皮紙・木/金細枠と共通濃紺タイトル帯を専用PNGへ移行 | 素材採用・freeze |
+| C2 MEAL_RESULT食事シーン背景 | 1 | 準備済み候補を同一runtime状態へ仮配線し、木の食卓・ランタン・港の夕景窓を持つ背景へ置換 | 素材採用・freeze |
 
 ## 4. 暫定判定・再検証TODO
 
@@ -63,13 +65,14 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 - P2 Top3完了: `COOK_SELECT` は右詳細上部を料理タイトル帯に組み替え、料理名・説明・大皿・材料/EXP/効果・調理ボタンの順に読める構成へ改善済み。参照ほど行ラベルと効果行の一体感は残っていないが、残差はカード素材/行フレームの一点物素材フェーズとして扱う。
 - C1-A完了: COOK_SELECT厨房背景は、暖色ランタン光・海の見える窓・調理棚が読める authored sourceへ移行した。原寸と320x180比較で現行の平坦な矩形背景に明確に勝ち、参照01の背景差が縮んだ。後続C1-Bのカード質感も完了したため、背景の再調整へ戻らず、次はC2-WIREへ進む。
 - C1-B完了: 中央3×2料理カードは、通常/選択の羊皮紙・木/金細枠と共通濃紺タイトル帯へ移行した。320×180でもタイトル帯と紙面が参照01方向へ近づき、locked/unavailable/長文/hover/focusでP1なし。カード寸法・皿・星・footerは不動。
+- C2-WIRE完了: MEAL_RESULT背景は、幾何的な丸灯・床線・空皿の下地から、木の食卓・暖色ランタン・港の夕景窓を持つ authored 食堂へ移行した。原寸beforeへ明確に勝ち、320×180で参照02の暗い木部/食卓/ランタン方向との差が縮んだ。人物・料理・報酬4枚・文字・全foreground geometryは不動で、他4状態はV2 prebaselineとpixel完全一致。次は背景へ戻らずC3へ進む。
 - INPUT-COOKING完了: E11実イベント計測でCOOKING findings 0。COOK_SELECTの動的fish/recipe、空inventory、locked recipe、最後の魚消費、5状態handoff、Escape一重処理、mouse回帰を専用smokeで固定した。C1-Bも完了したため見た目の次工程はC2-WIREであり、入力対応を理由に既存構成やC0 cueを再オープンしない。
 - P2完了: `LEVEL_UP_OVERLAY` はタイトル帯を報酬プレート化し、`LEVEL UP!` と `Lv.4 -> Lv.5` を通常パネルより強い主導線へ改善済み。ステータス行とLv.5解放カードも下段に残り、報酬ピークとして読める。
 - P3止まり: 参照の立体的な巨大金文字、より密な金色光線/紙吹雪、月桂樹とメダルの一点物アート密度、魚種差、所持数差、枠線数px、星/小アイコン/紙汚れ/影/粒子の微差は、今後触るなら一点物素材/演出フェーズとして扱う。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-2026-07-17: `C2-WIRE MEAL_RESULT食事シーン背景` を、Visual Wave V2の局所素材スライスとして開始。
+2026-07-17: `C2-WIRE MEAL_RESULT食事シーン背景` を、Visual Wave V2の局所素材スライスとして開始し、同日完了。
 
 - 差分Top1: 現行 `meal_scene_bg.png` は丸灯・床線・空皿を幾何描画した平坦な下地で、参照02の「木の食卓・暖色ランタン・港の夕景窓」が作る独立した食事payoffに届いていない。
 - 動かすもの: C2 source/candidate、製品 `meal_scene_bg.png`、C2専用product processor、旧一括generator guard、production read-only checkと隔離破損self-test、C2 preview/visual QA fixture、C2証拠、素材台帳・ライセンス監査consumer分類。
@@ -78,6 +81,12 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 - 採用条件: 同一決定状態の原寸beforeに明確に勝ち、320×180 after/referenceで「食卓・ランタン・港の夕景窓」の差が縮む。背景より人物・料理・報酬が先に読め、safe-area文字干渉がなく、他4状態と進行ロジックが回帰しない。
 - allowed-diff: MEAL_RESULTの背景画素だけ。人物・料理・カード・文字のgeometryは不変、他4状態は `2026-07-17_v2_prebaseline_*` とpixel完全一致を要求する。
 - baseline: `2026-07-17_v2_prebaseline_{select,result,exp,levelup,status}.png`。同一worktreeの再撮影SHA-256が5枚すべてbaselineと一致することを仮配線前に確認済み。
+- 判定: 採用。原寸では現行の幾何的な丸灯・床線・空皿が消え、人物/料理/報酬の背後が木造食堂として一貫した。320×180では参照02の暗い木部・食卓・暖色ランタンとの差が縮み、背景より人物・料理・報酬が先に読める。追加scrimは不要。
+- 状態確認: 標準MEAL_RESULTは初回bonusあり・報酬4枚。C2専用captureで初回+長buff、初回済み+長料理名/長効果を原寸確認し、背景起因の文字衝突なし。`cooking_flow_smoke`でMEAL_RESULT→EXP_GAIN、`cooking_input_smoke`で状態handoffを確認。
+- 回帰: `COOK_SELECT / EXP_GAIN / LEVEL_UP_OVERLAY / STATUS_SUMMARY` はV2 prebaselineとfile SHA-256・decoded pixelsが完全一致。`cooking_layout_audit`で人物・料理・カード・文字を含むMEAL_RESULT全foreground矩形を維持。
+- 再現性: product processorを2回実行し2回目までfile/decoded hash不変・`preserved pixel-identical`。production `--check` はread-only、隔離copyのRGB/alpha 1channel破損をnonzero検出し、破損copyのSHA-256/mtimeを不変に保つ。旧一括generatorは採用製品を明示guard。
+- 証拠: `2026-07-17_c2_full_before_after_reference.png`、`c2_thumbnail_before_after_reference.png`、`c2_after_result.png`、`c2_first_long.png`、`c2_repeat_long.png`、`c2_regression_{select,exp,levelup,status}.png`、`c2_report.json`。
+- 固定条件: source/product/processorとMEAL_RESULT背景slotだけをC2正本としてfreezeする。C3以降で人物、料理、banner/cards/status、foreground geometry/text座標や他4状態へC2差分を波及させない。
 
 2026-07-17: `COOK-C1B 料理カード紙面・タイトル帯` を、Visual Wave V1の局所素材スライスとして開始し、同日完了。
 
@@ -119,6 +128,15 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 - baseline: `docs/qa/evidence/cooking/2026-07-14_c1a_before_{select,result,exp,levelup,status}.png`（5状態1280x720、2026-07-14固定）。
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-17: `C2-WIRE` 完了。準備済みの食事シーン候補をMEAL_RESULT背景slotへ正式採用した。
+
+- 採用製品: `assets/showcase/cooking/meal_scene_bg.png`。runtimeは既存slotを既に参照していたため、`src/ui/components/cooking_reward_panel.gd` は無変更。
+- 比較: 原寸before/after/referenceと320×180 before/after/referenceを同一決定状態で確認。現行の平坦な丸灯・空皿・床線より明確に勝ち、参照02の木造食堂、食卓、暖色ランタン方向へ縮小距離が縮んだ。
+- allowed-diff: MEAL_RESULT背景画素だけ。他4状態はfile SHA-256完全一致。人物・料理・報酬4枚・ステータス帯・文字・全foreground geometryはlayout/content auditで維持。
+- 製品契約: 専用product processor、pixel-stable、同一画素bytes保持、差時same-dir atomic replace、production read-only `--check`、隔離RGB/alpha corruption self-test、旧generator guard、台帳/consumer分類を同期。U-08 pendingは維持。
+- 検証: `cooking_visual_qa.sh`、`cooking_verify.sh`、`cooking_flow_smoke.tscn`、`cooking_input_smoke.tscn`、`save_system_verify.sh`、`validate_project.sh`、`git diff --check` green。save/validateのObjectDB/resource終了警告は既知契約。
+- 未解決: C2内P1/P2なし。production catalogの最大値を超える合成stress fixtureでは副次的な小枠が既定ellipsisを使うが、主バナーと効果カードは読め、背景起因の干渉はない。通常データの収まり契約は既存content/layout auditでgreen。
 
 2026-07-17: Visual Wave V2の共通起点 `e297692a` で、C2-WIRE着手前の調理5状態baselineを再固定。
 
