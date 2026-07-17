@@ -2956,6 +2956,8 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
             # C1-B reads only its committed project-owned PIL masters; keep it
             # inventoried as a product source consumer despite no external pixels.
             "process_cooking_c1b_assets.py",
+            # C2 authored meal-scene art is adopted into the production background slot.
+            "process_cooking_c2_product.py",
             "process_harbor_info_board_assets.py",
             "process_harbor_plan_assets.py",
             # R5-A authored player portrait is a product source-consuming pipeline.
