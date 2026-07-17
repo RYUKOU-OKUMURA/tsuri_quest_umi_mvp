@@ -14,6 +14,7 @@ signal shark_lure_next_pressed
 const GameFontsScript = preload("res://src/ui/game_fonts.gd")
 const FightFishAssetsScript = preload("res://src/ui/fight_fish_assets.gd")
 const HUD_FRAME_PATH := "res://assets/showcase/underwater/fight_hud_frame.png"
+const FIGHT_SLIM_BAR_FRAME_PATH := "res://assets/showcase/underwater/fight_slim_bar_frame.png"
 const ICON_SHEET_PATH := "res://assets/showcase/underwater/fight_icon_sheet.png"
 const HUD_BAIT_ICON_PATH := "res://assets/showcase/underwater/hud_bait_icon.png"
 const HUD_TENSION_ICON_PATH := "res://assets/showcase/underwater/hud_tension_icon.png"
@@ -47,6 +48,7 @@ var trip_stats: Dictionary = {}
 var shark_lure_selector: Dictionary = {}
 
 var _hud_frame: Texture2D
+var _fight_slim_bar_frame: Texture2D
 var _icons: Texture2D
 var _bait_icon: Texture2D
 var _tension_icon: Texture2D
@@ -106,6 +108,8 @@ func _ready() -> void:
 	_build_keyboard_focus_targets()
 	if ResourceLoader.exists(HUD_FRAME_PATH):
 		_hud_frame = load(HUD_FRAME_PATH) as Texture2D
+	if ResourceLoader.exists(FIGHT_SLIM_BAR_FRAME_PATH):
+		_fight_slim_bar_frame = load(FIGHT_SLIM_BAR_FRAME_PATH) as Texture2D
 	if ResourceLoader.exists(ICON_SHEET_PATH):
 		_icons = load(ICON_SHEET_PATH) as Texture2D
 	if ResourceLoader.exists(HUD_BAIT_ICON_PATH):
@@ -322,7 +326,9 @@ func _draw() -> void:
 		_sync_keyboard_focus_target_rects()
 		return
 
-	if state == FishingSimulator.State.FIGHT or _is_intermediate_state(state):
+	if state == FishingSimulator.State.FIGHT:
+		_draw_fight_a2_bar_background(rect)
+	elif _is_intermediate_state(state):
 		_draw_fight_bar_background(rect)
 	elif _hud_frame != null:
 		draw_texture_rect(_hud_frame, rect, false, Color.WHITE)
@@ -383,9 +389,9 @@ func _draw_fight_slim_controls(font: Font, rect: Rect2) -> void:
 	_reel_rect = Rect2()
 	_give_rect = Rect2()
 
-	_draw_tension(font, tension_rect)
+	_draw_tension(font, tension_rect, false)
 	_draw_fight_action_zone(font, action_rect)
-	_draw_stamina(font, stamina_rect)
+	_draw_stamina(font, stamina_rect, false)
 
 
 func _draw_intermediate_slim_controls(font: Font, rect: Rect2) -> void:
@@ -421,8 +427,14 @@ func _draw_fight_bar_background(rect: Rect2) -> void:
 	draw_rect(rect.grow(-7.0), Color(Palette.GOLD_BRIGHT, 0.10), false, 1.0)
 
 
+func _draw_fight_a2_bar_background(rect: Rect2) -> void:
+	if _fight_slim_bar_frame != null:
+		draw_texture_rect(_fight_slim_bar_frame, rect, false, Color.WHITE)
+		return
+	_draw_fight_bar_background(rect)
+
+
 func _draw_fight_action_zone(font: Font, rect: Rect2) -> void:
-	_draw_ready_panel(rect, Color(Palette.FIGHT_HUD_PANEL_BLUE_FILL, 0.88), Palette.FIGHT_HUD_PANEL_BLUE_BORDER, Palette.GOLD)
 	var depth_chip := Rect2(
 		rect.position + Vector2(rect.size.x * 0.5 - 72.0, 7.0),
 		Vector2(144.0, 28.0)
@@ -541,8 +553,9 @@ func _draw_fight_action_button(font: Font, rect: Rect2, key: String, label: Stri
 	_draw_text(font, label, Vector2(label_x, rect.position.y + rect.size.y * 0.5 + 9.0), label_size, Palette.TEXT_BONE, 2)
 
 
-func _draw_tension(font: Font, rect: Rect2) -> void:
-	_draw_panel(rect, Palette.FIGHT_HUD_PANEL_DARK_FILL, Palette.FIGHT_HUD_PANEL_DARK_BORDER, Palette.GOLD_DEEP)
+func _draw_tension(font: Font, rect: Rect2, draw_background := true) -> void:
+	if draw_background:
+		_draw_panel(rect, Palette.FIGHT_HUD_PANEL_DARK_FILL, Palette.FIGHT_HUD_PANEL_DARK_BORDER, Palette.GOLD_DEEP)
 	var title_y := 25.0 if _hud_frame == null else 26.0
 	var bar_y := 42.0 if _hud_frame == null else 43.0
 	var icon_size := 34.0 if _hud_frame == null else 24.0
@@ -591,8 +604,9 @@ func _draw_depth(font: Font, rect: Rect2) -> void:
 	_draw_triangle(Vector2(cx, rect.position.y + 72.0), arrow_radius, Palette.FIGHT_HUD_DEPTH_DOWN_ARROW, false)
 
 
-func _draw_stamina(font: Font, rect: Rect2) -> void:
-	_draw_panel(rect, Palette.FIGHT_HUD_PANEL_DARK_FILL, Palette.FIGHT_HUD_PANEL_DARK_BORDER, Palette.GOLD_DEEP)
+func _draw_stamina(font: Font, rect: Rect2, draw_background := true) -> void:
+	if draw_background:
+		_draw_panel(rect, Palette.FIGHT_HUD_PANEL_DARK_FILL, Palette.FIGHT_HUD_PANEL_DARK_BORDER, Palette.GOLD_DEEP)
 	var title_y := 25.0 if _hud_frame == null else 26.0
 	var bar_y := 42.0 if _hud_frame == null else 43.0
 	var icon_size := 34.0 if _hud_frame == null else 24.0

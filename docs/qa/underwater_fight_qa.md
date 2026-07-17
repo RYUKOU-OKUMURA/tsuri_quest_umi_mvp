@@ -159,7 +159,7 @@ P1破綻（黒帯・マスク境界・残像・破綻カットアウト・文字
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-（現在作業中のフェーズなし。FIGHT-A1は2026-07-17に独立再レビューP0/P1/P2/P3 0で採用・freeze。次は下段バーだけを扱うFIGHT-A2）
+**作業中: FIGHT-A2** — FIGHT-A1採用後をbeforeとし、FIGHT時の下段140pxスリムバー背景1素材だけをauthored source/productへ置換する。動かすのは `fight_hud.gd` のFIGHT専用背景描画、専用source/product/processor、preview/evidence builder、台帳/監査consumerのみ。不動値はA1カード、READY 224px、中間4状態、上部、背景、魚、位置/clamp、line/lure、18分割ゲージ、runtime文字・数値、input hit rect、modal/fanfare。正式採否はvisual QAロック解除後の同一fixture原寸・320×180・allowed-diff検査まで保留する。
 
 ## 7. 判断ログ（直近パスのみ）
 
