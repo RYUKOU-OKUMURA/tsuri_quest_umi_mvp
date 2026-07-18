@@ -2971,6 +2971,9 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
             "process_fight_a1_floating_card.py",
             # FIGHT-A2 consumes its dedicated OpenAI-authored screen-local source.
             "process_fight_a2_slim_bar.py",
+            # TACKLE-T1 consumes only its dedicated OpenAI-authored marlin source;
+            # keep the one-cell pilot processor inventoried for U-03/U-08 tracking.
+            "process_tackle_shop_t1_marlin.py",
             "process_underwater_fish_assets.py",
         }
         known_non_product_or_intermediate_consumers = {

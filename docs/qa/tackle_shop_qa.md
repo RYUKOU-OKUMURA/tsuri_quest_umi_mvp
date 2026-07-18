@@ -1,6 +1,6 @@
 # 釣具店画面 QA判断ログ
 
-最終更新: 2026-07-15 / 状態: 座標・素材・入力契約 v1 freeze中 / E11 INPUT-SHOP確認済み
+最終更新: 2026-07-18 / 状態: 座標・素材・入力契約 v1 freeze中 / E11 INPUT-SHOP確認済み / TACKLE-T1 marlin pilot採用
 参照画像: `reference/09_tackle_shop_rod_mockup.png` / `reference/09_tackle_shop_gear_mockup.png`
 QA更新コマンド: `./tools/tackle_shop_visual_qa.sh`
 
@@ -15,6 +15,8 @@ QA更新コマンド: `./tools/tackle_shop_visual_qa.sh`
 | 商品カード座標 | 3x2共通グリッド。竿は先頭5枠、仕掛けは6枠 | `shop_screen.gd` / `CARD_SLOT_RECTS` | 透明Button、選択ハイライトは共通カード枠へ合わせる |
 | 商品名/状態プレート | 商品名はカード上部プレート中央、価格/所持/装備中/Lv不足は下部プレート中央。太字・輪郭付き | `shop_screen.gd` / `ROD_CARD_*_RECTS` / `RIG_CARD_*_RECTS` | 竿/仕掛けで微妙に異なる実プレート位置へruntime文字を合わせ、列が右へ流れる再発を防ぐ |
 | 詳細表示 | 右紙面上にruntime表示 + 選択商品詳細大絵 | `shop_screen.gd` / `shop_detail_item_sheet.png` | 商品名、状態、説明、性能、対応エサ、購入/装備文言は焼き込まない。詳細大絵は384x224セルで商品ID差し替え |
+| TACKLE-T1 pilot対象 | 竿タブ `marlin`（詳細sheet index 4）のみ | `tools/source_assets/tackle_shop/t1_marlin_detail_source.png` → `tools/process_tackle_shop_t1_marlin.py` → `shop_detail_item_sheet.png` | 高視線の竿タブ選択商品。カード/詳細矩形・runtime文言・購入可能→購入後disabled契約は不変 |
+| TACKLE-T1 非対象セル | index 0–3, 5–10の10セル | `shop_detail_item_sheet.png` | decoded RGBA連結hash `6f5304272900d7f5fcdc61d5dbf496c8a98cbdd2040241357e3f92a01a1e19a9` をbefore/afterで一致させ、batch化しない |
 | 下部操作 | 右下購入/装備、下部右の紙面中央に港戻り | `shop_screen.gd` | 戻る文言が紙面ボタン内の縦横中央に乗るよう透明Button領域を合わせる |
 | 入力検証 | 初期focus=選択カード。タブ・表示カード・有効な購入/装備・港戻りを閉じたgraphで結び、disabled主操作をskipする。refresh/rebuild後は意味IDでfocusを保持し、Escapeは港へ1回戻る | `src/ui/shop_screen.gd` / `tools/tackle_shop_input_smoke.gd` / `tools/tackle_shop_smoke.gd` | 実Viewportのキーpress/releaseとmouse clickで、カード可視focus・決定・購入後fallback・戻るを固定する。1280x720矩形と既存mouse hit領域は不変 |
 
@@ -46,6 +48,7 @@ QA更新コマンド: `./tools/tackle_shop_visual_qa.sh`
 | 港戻り導線 | 3 | 右端飾りではなく紙面ボタン中央へ透明Button/文字位置を再配置 | P1解消としてfreeze |
 | visual QA拡大キャプチャ | 2 | キャプチャごとにSubViewportを作り、描画待ちと`RenderingServer.force_draw()`を追加 | P1再発防止としてfreeze |
 | 入力focus収束 | 1 | 選択カード初期focus、closed graph、disabled skip、意味ID復元、共通Escapeを追加 | 採用・freeze |
+| T1詳細大絵 | 0 | marlin 1セルだけを高解像度一点物へ置換。矩形・文言・入力は不変 | 採用。別の数px調整へ戻さない |
 
 ## 4. 暫定判定・再検証TODO
 
@@ -53,13 +56,23 @@ QA更新コマンド: `./tools/tackle_shop_visual_qa.sh`
 
 ## 5. 現在の残ギャップ
 
-- **将来改善**: 詳細大絵は既存backplateからの透過切り抜き拡大でv1採用。看板品質へ上げる場合は、11商品分の専用高解像度詳細絵を別素材フェーズで作る。
+- 仕掛け6商品と竿の他4商品は既存v1詳細絵を維持。T1の勝ちを根拠に一括batch化しない。
+- OpenAI生成sourceの個別権利clearanceは `docs/31_asset_ledger.md` と同じくU-08 pending。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
 （現在作業中のフェーズなし）
 
 ## 7. 判断ログ（直近パスのみ）
+
+2026-07-18:
+- TACKLE-T1として、竿タブの高視線代表商品 `marlin` だけをpilotした。現行の同一seed・同一データ・同一選択（`tools/tackle_shop_preview.gd` の竿タブ `marlin`、Lv.3、5,400 G、装備竿=外海・青嵐）を1280x720と2124x1507で再撮影し、旧v1詳細絵をbefore、T1候補をafterとして比較した。
+- 変えたもの: `tools/source_assets/tackle_shop/t1_marlin_detail_source.png`、T1専用の決定的processor/check/self-test、`shop_detail_item_sheet.png` のindex 4セル、比較/evidence。変えていないもの: index 0–3/5–10の10セル、backplate、3x2カード、全Rect、商品/価格/状態/runtime文言、GameData/PlayerProgress、購入/装備ロジック、mouse hit領域、仕掛け6カード、focus graph。
+- 非対象10セルのdecoded RGBA連結hashはbefore/afterで一致（`6f5304272900d7f5fcdc61d5dbf496c8a98cbdd2040241357e3f92a01a1e19a9`）。processorの`--check`と`--self-test`は、対象外セル変更、対象セルstale、decoded同値rewrite、atomic失敗時の旧output/temp cleanupを検出した。
+- 採用理由: 原寸で旧切り抜き拡大よりmarlinの竿全体・ガイド・両軸リールの構造が明瞭になり、detail wellの横幅を使って主対象として読める。320x180比較でも詳細大絵が商品カード群に埋もれず、参照の「商品を大きく見せる」方向へ近づいた。候補生成そのものは採用理由にせず、before/after/reference比較で採否した。
+- 証拠: `docs/qa/evidence/tackle_shop/2026-07-18_tackle_t1_marlin_before_after.png`、`2026-07-18_tackle_t1_marlin_before_after_reference_320x180.png`、`2026-07-18_tackle_t1_marlin_detail_before_after.png`、`2026-07-18_tackle_t1_marlin_expanded_before_after.png`、`2026-07-18_tackle_t1_focus_disabled-card.png`。
+- 高リスク回帰: `tackle_shop_smoke.tscn` のmarlin購入可能→購入後disabled、資金不足big_game、竿/仕掛け切替、`tackle_shop_input_smoke.tscn` の初期focus/disabled skip/Tab/Shift+Tab/Enter/Escape/mouse、仕掛け6カードを維持する。focus原寸証拠はafter状態で保存した。
+- 固定条件: `marlin` 以外の詳細絵を同じcommitで作らない。sourceをreference/候補へ戻さず、商品名・価格・状態値をPNGへ焼き込まない。次の大絵は別pilotとして同一比較条件を満たす場合だけ起票する。
 
 2026-07-15:
 - E11 INPUT-SHOPとして、選択中カードを安全な初期focusにし、竿/仕掛けタブ・現在表示中の商品カード・有効な購入/装備・港戻りを閉じたfocus graphへ登録した。disabledの購入/装備は候補から除外する。
