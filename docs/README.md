@@ -1,6 +1,6 @@
 # docs 索引
 
-最終更新: 2026-07-14
+最終更新: 2026-07-18
 
 ## 1. 分類の定義
 
@@ -88,6 +88,7 @@
 | `52_status_r5a_player_hero_spec.md` | ステータスR5-Aの中央プレイヤーhero素材仕様と採用記録 | 現行 |
 | `53_pre_ui_code_review_and_refactor.md` | UI Wave継続前の全体コードレビュー、behavior-preserving修正、残課題 | 現行 |
 | `54_ui_uplift_master_plan.md` | 今後のUIブラッシュアップ順、画面別残課題、並列owner、DoD、レビュー契約 | 現行 |
+| `55_ipad_test_deployment_and_save_management.md` | iPad実機テスト導入、現行3slotセーブ、更新・端末データ寿命、将来cloud方針の運用仕様 | 現行 |
 
 **番号体系外の正本**
 
