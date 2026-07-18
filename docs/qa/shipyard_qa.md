@@ -1,64 +1,76 @@
 # 船着き場 QA判断ログ
 
-最終更新: 2026-07-15 / 状態: INPUT-SHIPYARD収束 / 帰港導線・RF3 freeze維持
-参照画像: なし（`docs/28_harbor_return_placement_unification.md` の配置規約を正とする）
-QA更新コマンド: `HOME=/tmp/tsuri_shipyard_home /Applications/Godot.app/Contents/MacOS/Godot --path . res://tools/shipyard_preview.tscn -- --state=available_focus --output=<evidence path>`
+最終更新: 2026-07-18 / 状態: SHIPYARD-D0観測基盤完了・製品UI/freeze維持
+参照画像: `reference/shipyard_d0_proposal_unapproved.png`（D0提案候補・未採用。専用referenceがないため作成。製品runtime/assetの正本ではない）
+QA更新コマンド: `./tools/shipyard_visual_qa.sh`
 
 ## 1. freeze値（正本）
 
 | 項目 | 値 | 場所 | 理由・備考 |
 |---|---|---|---|
-| 論理画面サイズ | 1280x720 | `tools/shipyard_preview.tscn` | 他showcase画面と同じ固定キャンバス運用 |
-| 港へ戻る導線 | `_place_control(root, _return_button, 0.842, 0.912, 0.976, 0.976)` | `src/ui/shipyard_screen.gd` `_build_footer()` | docs/28の「画面右下 = 港へ戻る」規約に合わせる。幅とy帯は旧配置を維持 |
-| フッター説明 | `_place_control(root, _footer_label, 0.270, 0.912, 0.768, 0.976)` | `src/ui/shipyard_screen.gd` `_build_footer()` | RF4では触らないfreeze値 |
-| キーボード候補 | 船カード3件＋購入＋港へ戻る | `src/ui/shipyard_screen.gd` `_configure_keyboard_focus()` | 初期focusは選択中の船カード。購入disabled時は候補から外す |
-| focus遷移 | 矢印は画面配置順、Tab / Shift+Tabは有効候補を循環 | `src/ui/shipyard_screen.gd` `_refresh_keyboard_navigation()` | 資金不足・所有済み・全所有でdisabled購入をskip |
-| 可視focus | `ScreenBase` 共通4px `Palette.GOLD_BRIGHT` | `setup_keyboard_focus()` 適用後 | 造船所ローカルの空styleを共通focus styleで上書きし、normalと識別可能にする |
-| 戻る入力 | `ScreenBase` 共通cancel handlerで港へ戻る | `src/ui/shipyard_screen.gd` `_return_to_harbor()` | Escapeの1 pressにつき1回。echoは消費 |
+| 論理画面サイズ | 1280x720 | `tools/shipyard_preview.tscn` | プロジェクト固定キャンバス |
+| 船カード矩形 | `0.022–0.253 × 0.124–0.345` / `0.022–0.253 × 0.365–0.586` / `0.022–0.253 × 0.606–0.827` | `src/ui/shipyard_screen.gd` `_build_boat_cards()` | 3船選択・マウス入力の既存契約。D0で不動 |
+| 購入ボタン矩形 | `0.545–0.654 × 0.794–0.862` | `src/ui/shipyard_screen.gd` `_build_center_detail()` | 価格/購入導線と入力矩形を維持 |
+| 港へ戻る矩形 | `0.842–0.976 × 0.912–0.976` | `src/ui/shipyard_screen.gd` `_build_footer()` | docs/28の右下規約。幅・y帯ともfreeze |
+| フッター説明矩形 | `0.270–0.768 × 0.912–0.976` | `src/ui/shipyard_screen.gd` `_build_footer()` | 帰港導線移動時から維持。D0で不動 |
+| 航路パネル領域 | `0.746–0.976 × 0.140–0.895` | `src/ui/shipyard_screen.gd` `_build_route_panel()` | 現在/購入後航路の表示領域。D0で不動 |
+| 価格・購入・所有 | `GameData` / `PlayerProgress` の現行契約 | `src/ui/shipyard_screen.gd` | 価格、購入、所有、航路解放、save/economyは変更しない |
+| キーボードfocus | 代表: 購入可能→購入focus。高リスク: 資金不足/所有済み/全所有は購入をskipし、選択中カードへ退避 | `src/ui/shipyard_screen.gd` / `tools/shipyard_input_smoke.gd` | E11 INPUT-SHIPYARD finding 0。共通focus styleとEscape一重を維持 |
 
 ## 2. 不採用・再試行禁止リスト
 
 | 案 | 却下理由 | 判断日 |
 |---|---|---|
-| フッター説明を右下移動に合わせて再配置 | RF4は帰港導線位置のみのスライスで、説明文の構成変更は別判断になるため | 2026-07-05 |
-| 戻るボタンの見た目を共通化 | docs/28でスタイル共通化はスコープ外。造船所固有ボタンアートを維持するため | 2026-07-05 |
+| D0「船舶司令盤」提案候補を製品runtimeへ仮配線 | 方向性は未承認。製品UI、製品asset、freeze値、入力矩形を変更しないD0のため | 2026-07-18 |
+| 旧構成の左下帰港ボタンへ戻す | docs/28の「画面右下 = 港へ戻る」に反し、既存freezeを再オープンする根拠がない | 2026-07-05 |
+| フッター説明を帰港導線に合わせて再配置 | RF4は帰港導線位置だけのスライス。説明文の構成変更は別concern | 2026-07-05 |
+| 帰港ボタンの見た目をcommonへ置換 | docs/28でスタイル共通化はスコープ外。造船所固有ボタンアートを維持 | 2026-07-05 |
 
 ## 3. 微調整カウンタ
 
 | パラメータ | 回数 | 直近の変更内容 | 状態 |
-|---|---|---|---|
-| 港へ戻る位置 | 1 | 左下アンカー `0.018–0.152` から右下 `0.842–0.976` へ移動 | 採用 |
-| 装飾パス累計 | 0 | — | — |
+|---|---:|---|---|
+| 港へ戻る位置 | 1 | 左下アンカーから右下 `0.842–0.976 × 0.912–0.976` へ移動 | freeze |
+| D0提案モックの構成 | 0 | 製品画面へ未配線。候補生成・比較のみ | 未承認 |
+| 装飾パス累計 | 0 | 製品runtimeの装飾変更なし | — |
 
 ## 4. 暫定判定・再検証TODO
 
-- visual QA専用シェルは未整備。通常起動の `shipyard_preview.tscn` で、2026-07-15の購入可能／購入後focus証拠を1280x720で再生成できる。専用シェル整備は `SHIPYARD-D0` のtooling課題として維持する。
+- D0のvisual QAは通常表示driverによる1280x720実キャプチャで確定。`2026-07-18_current_*.png` と `2026-07-18_d0_current_reference_{full,320x180}.png` を正式保存済み。
+- `reference/shipyard_d0_proposal_unapproved.png` はユーザー未採用の方向性候補。採用承認までは製品参照・製品assetとして扱わない。
+- ユーザー承認後に実装へ進む場合だけ、候補がsupersedeする旧構成範囲と再オープンするfreezeを別フェーズで宣言する。現時点で再オープンなし。
 
 ## 5. 現在の残ギャップ
 
-- 船着き場専用のreference画像は未整備。現時点ではdocs/28の右下配置規約と実スクショで判断する。
-- 専用visual QAシェル未整備（`SHIPYARD-D0`で扱う）。INPUT-SHIPYARDの入力findingは0。
+- 船着き場の専用正式referenceは未採用。D0では「船舶司令盤」方向を1案だけ提示した。
+- 現行の左船列・中央購入面・右航路面という旧構成を、将来この候補が承認された場合に視覚的にsupersedeする提案である。現時点では製品UIを変更していない。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-- 現在作業中のP2フェーズなし。
+SHIPYARD-D0は完了。今回動かしたのは `tools/shipyard_preview.gd/.tscn` のキャプチャ状態/安定化、`tools/shipyard_visual_qa.sh`、専用比較/check builder、未採用reference候補、evidence、QA記録だけ。製品runtime、製品asset、価格/購入/所有、`PlayerProgress`、`project.godot`、既存freeze/input矩形は触っていない。
+
+状態契約は次の通り固定した。
+
+| 状態 | 固定seed/データ | 表示/非表示 | 固定アンカー | 可変領域 | evidence出力 | smoke契約 |
+|---|---|---|---|---|---|---|
+| 代表・購入可能 | Lv5 / 4,000 G / 船なし / skiff選択 | 購入有効・購入focus | 3船、購入、帰港、航路 | 詳細ステータス/フッター文 | `2026-07-18_current_available_focus.png` | `shipyard_smoke` の購入可能・価格表示 |
+| 高リスク・資金不足 | Lv5 / 500 G / 船なし / skiff選択 | 購入disabled・カードfocus | 同上 | 不足額/フッター文 | `2026-07-18_current_insufficient.png` | `shipyard_input_smoke` のdisabled skip |
+| 高リスク・購入直後 | Lv5 / 400 G / skiff所有 / skiff選択 | 購入disabled・選択カードfocus | 同上 | 所有状態/帰港文 | `2026-07-18_current_purchased_focus_fallback.png` | 購入後focus fallback |
+| 高リスク・全所有 | Lv5 / 999,999 G / 3船所有 / bluewater選択 | 購入disabled・最終カードfocus | 同上 | 全航路/所有表示 | `2026-07-18_current_all_owned.png` | 全所有で購入skip・帰港到達 |
 
 ## 7. 判断ログ（直近パスのみ）
 
+2026-07-18 SHIPYARD-D0:
+
+- 構成再設計ゲートを、専用reference不在・現行の左船列/中央購入/右航路の同格面・視覚的な主役不在という設計課題の観測として開いた。ただし方向性未承認のため、コード/製品asset/freezeの再オープンは行っていない。
+- 1方向だけ「船舶司令盤」候補を `reference/shipyard_d0_proposal_unapproved.png` として作成した。現行スクリーンの背景・船/航路の観測画素を提案用に再配置し、現行機能文言・価格・所有状態を保持した。日本語・動的値・CTAは製品assetへ焼き込まず、候補PNGはreference/evidence専用である。
+- 候補が将来supersedeする提案範囲は、旧構成の「左の3船カード列・中央の詳細購入面・右の航路面・下部説明の並列構成」。右下帰港、3船の入力矩形、購入入力矩形、状態遷移、価格/所有/economyは候補承認後も別途維持条件として扱う。
+- `shipyard_preview.gd` は `available_focus`、`insufficient`、`purchased_focus_fallback`、`all_owned` の4状態を追加し、SubViewportのclear/force draw/frame_post_draw待機を固定した。これにより同じ1280x720 viewportで代表/高リスクを再生成できる。製品screenの配置/文言/ロジックは変更していない。
+- `shipyard_visual_qa.sh` は毎回対象tmp capture/evidenceを消してから撮影し、専用checkerのself-testで黒/透明/重複captureをfailする。実キャプチャ4枚は1280x720、不透明、状態間ハッシュ重複なし。現行/reference候補の原寸比較は `2026-07-18_d0_current_reference_full.png`、320x180比較は `2026-07-18_d0_current_reference_320x180.png`、状態一覧は `2026-07-18_d0_current_states_320x180.png` に保存した。
+- 変えていないもの: `src/ui/shipyard_screen.gd`、`assets/showcase/shipyard/**`、`GameData/PlayerProgress`、価格/購入/所有/economy、`project.godot`、他画面、docs/30・docs/54、既存freeze値、既存input矩形。
+- 検証: `./tools/shipyard_visual_qa.sh`、`shipyard_smoke.tscn`、`shipyard_input_smoke.tscn`、E11入力probe strict（SHIPYARD finding 0）、`./tools/validate_project.sh`、`git diff --check` を実行し、全てgreen。
+
 2026-07-15 INPUT-SHIPYARD:
 
-- 変更仮説は「既存5操作を `ScreenBase` 共通入力契約へ登録し、購入disabled化時だけ安全にfocusを退避すれば、マウス契約を保ったままキーボードfindingを0にできる」。船カード3件、購入、港へ戻るへ矢印／Tabで到達できるgraphを画面側に定義した。
-- 購入成功でfocus中の購入ボタンがdisabledへ変わった場合は、選択中の船カードへ退避する。資金不足・所有済み・全所有では購入をgraphから外す。
-- 戻るは既存の帰港先を変えず、共通cancel handlerへ接続してEscape echoを含む1 press 1回を固定した。
-- 不動値: 3船カードと中央／航路／フッターの全矩形、帰港導線右下、船着き場固有PNG、価格・購入・恒久unlock・economy契約、RF3 palette、採用済み素材。
-
-| 状態 | 固定データ | 有効候補 / 初期・退避focus | 証拠 / smoke契約 |
-|---|---|---|---|
-| 資金不足 | 500 G・船なし | 4件 / 小型船カード | `shipyard_input_smoke`: 購入disabled skip、矢印、Enter一重 |
-| 購入可能 | 4,000 G・船なし | 5件 / 小型船カード（証拠では購入へ移動） | `docs/qa/evidence/shipyard/2026-07-15_input_available_buy_focus.png` |
-| 購入成功直後 | 400 G・小型船所有 | 4件 / 購入から小型船カードへ退避 | `docs/qa/evidence/shipyard/2026-07-15_input_purchased_focus_fallback.png`。smokeは非defaultの沖釣り船購入でも同契約を確認 |
-| 全所有 | 999,999 G・3船所有 | 4件 / 外洋船カード | `shipyard_input_smoke`: 購入skip、帰港到達 |
-
-- 原寸確認では、購入可能状態の購入ボタンと購入後状態の小型船カードに共通focus枠が表示され、同じ画面内のnormal操作と識別できる。購入後も文字欠け・重なり・既存freezeの移動はない。
-- マウスは実 `InputEventMouseButton` で船選択→購入→港へ戻るを回帰確認した。キーボードは実 `InputEventKey` で矢印／Tab／Enter／Escapeを確認し、private handler直呼びを入力根拠にしていない。
-- 検証: `shipyard_smoke.tscn`、`shipyard_input_smoke.tscn`、E11入力probe（SHIPYARD finding 0）、`validate_project.sh`、`git diff --check` green。`e11_qa_harness_verify.sh` は製品findingではなく、新設scene `tools/shipyard_input_smoke.tscn` の共有release test manifest未登録だけでfailするため、3画面統合時に親ownerが一括同期する。
+- 船カード3件、購入、港へ戻るへ矢印/Tabで到達できるgraphを定義。購入成功でfocus中の購入がdisabledになった場合は選択カードへ退避し、資金不足/所有済み/全所有では購入をgraphから外した。
+- 戻るは既存の帰港先を変えず、共通cancel handlerへ接続してEscape echoを含む1 press 1回を固定した。入力findingは0件。
