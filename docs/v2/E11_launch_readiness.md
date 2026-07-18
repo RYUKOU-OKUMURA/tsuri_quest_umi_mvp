@@ -65,7 +65,9 @@
 - RIGHTS-01A（出所・入力権利・icon・商標・権利者名）は素材差し替えへ発展し得るためRC固定前に完了する。RIGHTS-01B（notice / Godot由来license / OFL / 質問票の最終成果物確認）は固定したRC exportに対して行う
 - `docs/31_asset_ledger.md` の「要記入」をゼロにする（音源10件・AI生成画像の生成手段と商用条件）
 - タイトル「釣りクエスト」の商標調査
-- `LICENSE.md` の権利者名と適用範囲を確定し、Godot・font・その他同梱依存を `THIRD_PARTY_NOTICES.md` 相当へ列挙。必要なlicense本文が最終配布物に含まれることを確認
+- `LICENSE.md` の権利者名について、2026-07-18に所有者回答 `奥村 龍晃` または `OKUMURA RYUKOU` を受領した。公開表記は日本語＋ローマ字併記 `奥村 龍晃（OKUMURA RYUKOU）` を推奨するが、exact表記は未確定。予定適用範囲はoriginal source codeとdocumentationで、第三者component・font・service-generated output・project-owned visual/audio assetを除外する。exact表記、非公開原本を確認したU-05 canonical attestation、証拠index同期は未保存のため、placeholderとRIGHTS-01Aのpendingを維持し、証拠なしにcloseしない
+- Godot・font・その他同梱依存を `THIRD_PARTY_NOTICES.md` 相当へ列挙し、必要なlicense本文が最終配布物に含まれることを確認
+- 現行 `assets/icon.svg` は2026-07-18に製品不採用を確定。新規製品iconを制作し、作者・作成手段・権利者・製品bytesを台帳化するまでU-04をcloseしない
 - 子供向けレーティング（IARC等。チャネル決定後にそのストアの手順で）
 
 ## E11-6. チャネル固有要件（§E11-7 の決定後に確定）
@@ -92,6 +94,12 @@
 | 5 | 正式名称 / version表記 | 「釣りクエスト ～海釣り編～」/ v1.0.0 | 2026-07-11 |
 
 セーブスロット数は決定#17の3スロットで解消済み。上表はdocs/30決定#20と同期する。ID-01ではuser data namespace=`tsuri_quest_umi`、macOS bundle ID=`net.physical-balance-lab.tsuri-quest-umi`、itch.io予定slug=`tsuri-quest-umi`、store App ID=`未発行`を正式名称とは別に固定し、旧MVP namespaceの非破壊コピー移行を実装した。`config/name`の正式名称反映は最小export spike後のE11-EXTERIORで行う。macOSの最低対象ハードウェア / 性能計測の基準機も、PERF-RELEASE着手前の別技術判断として記録する。
+
+### E11-7.1. macOS署名・公証（2026-07-18確定）
+
+- 初回itch.io直接配布版のRCは、`Developer ID Application`で署名し、Hardened Runtimeを有効化し、`notarytool`によるApple公証を通して対象成果物へticketをstapleする。この4点をRC必須ゲートとし、いずれかが欠ける成果物を発売版としない
+- 2026-07-18時点ではApple Developer Program**未加入**、`Developer ID Application`証明書**未発行**。加入、証明書発行、署名・公証実行、staple済み成果物の検証証拠は外部pendingであり、完了を推定しない
+- 未署名・未公証exportは最小export spike、ローカルsmoke、QAには使用できるが、RC固定および発売判定には使用しない。証明書・秘密鍵・Appleアカウント情報はrepositoryへ保存しない
 
 ## E11-8. 並列実装構成
 

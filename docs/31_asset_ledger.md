@@ -23,6 +23,8 @@ RIGHTS-01A状態marker（`docs/qa/evidence/licensing/README.md` の未完/完了
 
 2026-07-12の全件監査は `docs/qa/evidence/licensing/2026-07-12_RIGHTS-01A_AUDIT.md`。リポジトリ側の棚卸し・証拠受入準備は完了したが、U-01〜U-06・U-08は外部証拠待ちであり、RIGHTS-01A全体は未完了。
 
+2026-07-18に所有者回答として、製品コードの権利者名候補 `奥村 龍晃` または `OKUMURA RYUKOU` と、現行 `assets/icon.svg` の製品不採用を受領した。公開表記は日本語＋ローマ字併記 `奥村 龍晃（OKUMURA RYUKOU）` を推奨するが、exact表記は未確定。U-05はexact表記と、非公開原本を確認したcanonical attestation、証拠index同期が未保存のため、`LICENSE.md` のplaceholderとmarkerを`pending`のまま維持する。U-04も差し替え製品とその権利証拠が台帳化されるまで`pending`であり、現行iconの不採用判断だけで完了扱いにしない。
+
 ## 1. フォント — 記入済み・問題なし
 
 | 素材 | パス | 作者/出所 | ライセンス | 同梱ライセンス文書 |
@@ -138,8 +140,9 @@ generate外画像に加え、§2.2のsource-consuming出力も対象。OpenAI Te
 | 項目 | 状態 |
 |---|---|
 | 正式製品名「釣りクエスト ～海釣り編～」の商標調査 | 正式名称 / v1.0.0は決定#20で確定済み。販売地域・商標対象区分の確定と、その範囲での公式DB検索・必要な専門家確認の証跡は未完（証拠index U-06）。類似検索だけで法的clearance完了とは扱わない |
-| `assets/icon.svg`（魚と釣り針のcustom SVG。Godotデフォルトではない） | commit `9a9974a`（2026-06-24）で新規追加された履歴は確認済み。U-04 decisionの現行原本bytesはSHA-256 `493a29b86943751f2441343ebc347a9fa42b046032dedd7d1fcb86fd51567595`へ固定し、非採用後に原本を削除しても同一bytesの再利用を差し替えと認めない。ただしコミット著者だけでは作者・作成手段・権利者を確定できない。製品採否と権利者申告待ち（証拠index U-04） |
-| 製品コードのMIT権利者・適用範囲 | `LICENSE.md` に適用範囲を追記。法的権利者名はユーザー入力待ち（証拠index U-05）のためplaceholderを残し、発売不可条件として明示 |
+| `assets/icon.svg`（魚と釣り針のcustom SVG。Godotデフォルトではない） | commit `9a9974a`（2026-06-24）で新規追加された履歴は確認済み。U-04 decisionの現行原本bytesはSHA-256 `493a29b86943751f2441343ebc347a9fa42b046032dedd7d1fcb86fd51567595`へ固定し、非採用後に原本を削除しても同一bytesの再利用を差し替えと認めない。2026-07-18の所有者回答で**製品不採用**を確定し、新規製品iconを制作中。差し替え製品の作者・作成手段・権利者・製品bytesが台帳化されるまで、差し替え製品側の権利者申告待ち（証拠index U-04）としてpendingを維持 |
+| 製品コードのMIT権利者・適用範囲 | 2026-07-18の所有者回答は権利者名候補 `奥村 龍晃` または `OKUMURA RYUKOU`。公開表記は `奥村 龍晃（OKUMURA RYUKOU）` を推奨するがexact表記は未確定。MITの予定適用範囲はoriginal source codeとdocumentationで、第三者component・font・service-generated output・project-owned visual/audio assetは`LICENSE.md`のScopeで除外。exact表記、非公開原本を確認したU-05 canonical attestation、証拠index同期が未保存のため、`LICENSE.md` placeholderと監査schema上の `ユーザー入力待ち（証拠index U-05）` を維持 |
+| macOS直接配布の署名・公証 | 初回itch.io版v1.0.0は `Developer ID Application` 署名＋Hardened Runtime＋`notarytool`公証＋対象成果物へのstapleをRC必須ゲートとする。2026-07-18時点でApple Developer Program未加入、証明書未発行のため外部pending。未署名・未公証成果物は最小export spike / QAに限り、RC・発売成果物には採用しない |
 | Godot / font / 同梱依存notice | `THIRD_PARTY_NOTICES.md` を新設し、repoで確認できるGodot・LINE Seed JP・M PLUS 1pを列挙。初回販売=itch.io、対象OS=macOS Universal、bundle ID=`net.physical-balance-lab.tsuri-quest-umi`、予定slug=`tsuri-quest-umi`、store App ID=`未発行`は確定済み。正確なGodot export preset/templateへの配線と、clean exportへの必要notice・OFL全文の同梱確認は未完（証拠index U-07） |
 | Steam AI開示 | 初回itch.io版v1.0.0の発売ゲート対象外。将来Steamを採用する場合はOpenAI画像・Suno音源をPre-Generated AIとしてContent Surveyへ申告し、提出控えを保存する（公式: https://partner.steamgames.com/doc/gettingstarted/contentsurvey） |
 | itch.io公開時の質問項目 | itch.ioの実公開フローで、AI生成コンテンツ開示、年齢・コンテンツ区分、その他質問票の入力要否を公式手順により確認し、必要な場合は回答控えを保存する（証拠index U-07） |
@@ -183,3 +186,4 @@ generate外画像に加え、§2.2のsource-consuming出力も対象。OpenAI Te
 - 2026-07-17: FIGHT-A2の文字なし下段140pxスリムバーsourceをOpenAI built-inで生成し、専用の決定的processorから画面owner製品へ配線。reference画素とruntime画素は非消費、read-only check、decoded pixels同値保持、atomic replace、隔離破損self-testを採用
 - 2026-07-18: 調理C3 `exp_burst_frame.png` をOpenAI built-in生成source + `tools/cooking_c3_product.py` の決定的processorへ移行。旧一括generator guard、EXP_GAIN_LEVELUPの採否前capture、原寸/320×180比較、他4状態の回帰証拠を同一コミットへ登録。U-08待ちは維持
 - 2026-07-18: TACKLE-T1としてmarlin詳細大絵のOpenAI built-in生成sourceを追加。専用processorでチェッカー背景除去・384×224整形を行い、既存詳細sheetのindex 4セルだけへatomic統合。`--check` / `--self-test`、非対象10セルdecoded RGBA不変検証、U-08 pendingを記録
+- 2026-07-18: 製品コード権利者名候補 `奥村 龍晃` / `OKUMURA RYUKOU` の所有者回答、日本語＋ローマ字併記の推奨、現行iconの製品不採用と差し替え待ち、Apple Developer Program未加入、およびitch.io版RCのDeveloper ID署名・Hardened Runtime・公証・staple必須方針を記録。U-04/U-05と署名証拠はpendingを維持し、LICENSE置換はexact表記とU-05 canonical attestationの確定時に行う
