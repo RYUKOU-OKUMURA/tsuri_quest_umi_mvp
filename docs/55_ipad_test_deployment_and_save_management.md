@@ -10,6 +10,8 @@
 
 この文書は、現在のセーブデータの内容、iPadへゲームのテスト版を入れる手順、更新時のセーブ維持確認、端末故障・アプリ削除時の扱い、将来のクラウドセーブ方針をまとめた運用の正本である。
 
+2026-07-18の初回導入で実行したcommand、失敗原因、解決策、次回の短縮runbookは`docs/56_ipad_deployment_execution_report.md`を参照する。
+
 - iPadへ入れるのは **Godotエディタではなく、GodotからiOS向けにexportした本ゲームのアプリ**
 - 初回販売対象は引き続き itch.io / macOS Universal。iPad実機テストはローンチを止めない技術spike
 - iPad正式対応を確定する文書ではない。タッチ操作、4:3表示、性能、配布、審査は実機検証後に別途判断する
@@ -392,6 +394,7 @@ backupは端末内の原子的保存を守るローカル世代であり、cloud
 - `src/ui/settings_screen.gd` — `settings.json`
 - `project.godot` — namespace、1280×720、keep、renderer
 - `export_presets.cfg` — macOS UniversalとiOS iPad Debugのexport設定
+- `docs/56_ipad_deployment_execution_report.md` — 初回導入の実行記録、トラブルシュート、次回runbook
 - `docs/30_v2_expansion_overview.md` §3-5 / §4-1 — IDとV2追加save項目・意味検証方針の正本
 - `docs/v2/E11_launch_readiness.md` §E11-6 — モバイル正式対応のスコープ判断
 
