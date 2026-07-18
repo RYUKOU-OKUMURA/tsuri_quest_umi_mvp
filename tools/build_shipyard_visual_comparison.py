@@ -17,7 +17,7 @@ import build_shipyard_d0_proposal
 ROOT = Path(__file__).resolve().parents[1]
 VIEWPORT = (1280, 720)
 EVIDENCE = ROOT / "docs" / "qa" / "evidence" / "shipyard"
-REFERENCE = ROOT.joinpath("reference", "shipyard_d0_proposal_unapproved.png")
+REFERENCE = ROOT / "reference" / "shipyard_d0_proposal_unapproved.png"
 DEFAULT_DATE = "2026-07-18"
 CAPTURES = {
     "available_focus": Path("/tmp/tsuri_shipyard_available.png"),

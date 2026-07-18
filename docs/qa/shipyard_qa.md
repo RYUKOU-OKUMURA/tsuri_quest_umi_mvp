@@ -47,7 +47,7 @@ QA更新コマンド: `./tools/shipyard_visual_qa.sh`
 
 ## 6. フェーズスコープ宣言（作業中のみ）
 
-SHIPYARD-D0は完了。今回動かしたのは `tools/shipyard_preview.gd/.tscn` のキャプチャ状態/安定化、`tools/shipyard_visual_qa.sh`、専用比較/check builder、未採用reference候補、evidence、QA記録だけ。製品runtime、製品asset、価格/購入/所有、`PlayerProgress`、`project.godot`、既存freeze/input矩形は触っていない。
+SHIPYARD-D0は完了。今回動かしたのは `tools/shipyard_preview.gd` のキャプチャ状態/安定化、`tools/shipyard_visual_qa.sh`、専用比較/check builder、未採用reference候補、evidence、QA記録だけ。製品runtime、製品asset、価格/購入/所有、`PlayerProgress`、`project.godot`、既存freeze/input矩形は触っていない。
 
 状態契約は次の通り固定した。
 

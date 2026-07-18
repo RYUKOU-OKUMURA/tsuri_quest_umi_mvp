@@ -3001,6 +3001,9 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
             "build_cooking_c1b_evidence.py",
             # C2 QA-only runtime/reference boards never ship reference pixels.
             "build_cooking_c2_evidence.py",
+            # SHIPYARD-D0 QA-only runtime/reference comparison regenerates and
+            # inspects an explicitly unadopted proposal; it never feeds product assets.
+            "build_shipyard_visual_comparison.py",
             "build_fishing_spot_thumb_contact_sheet.py",
             "build_shark_pen_reference.py",
             "build_screen_visual_comparison.py",
