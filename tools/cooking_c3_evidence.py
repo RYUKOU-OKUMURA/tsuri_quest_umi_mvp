@@ -9,6 +9,7 @@ import json
 import subprocess
 import tempfile
 from pathlib import Path
+from pathlib import PurePosixPath
 
 from PIL import Image, ImageChops
 
@@ -165,6 +166,47 @@ def _json_bbox(bounds: tuple[int, int, int, int] | None) -> list[int] | None:
     return None if bounds is None else list(bounds)
 
 
+def _repo_relative(path: Path, root: Path = ROOT) -> str:
+    resolved_root = root.resolve()
+    resolved_path = path.resolve()
+    try:
+        relative = resolved_path.relative_to(resolved_root)
+    except ValueError as exc:
+        raise SystemExit(f"formal evidence path is outside repository root: {path}") from exc
+    return relative.as_posix()
+
+
+def _assert_report_portable(report: dict, root: Path = ROOT) -> None:
+    serialized = json.dumps(report, ensure_ascii=False, sort_keys=True)
+    root_text = root.resolve().as_posix()
+    if root_text in serialized:
+        raise SystemExit(f"C3 evidence JSON contains repository absolute path: {root_text}")
+
+    def walk(value: object, field: str = ""):
+        if isinstance(value, dict):
+            for key, child in value.items():
+                child_field = f"{field}.{key}" if field else str(key)
+                yield from walk(child, child_field)
+        elif isinstance(value, list):
+            for index, child in enumerate(value):
+                yield from walk(child, f"{field}[{index}]")
+        elif field.endswith(".file") or field.endswith(".after_evidence"):
+            yield field, value
+
+    for field, value in walk(report):
+        if not isinstance(value, str):
+            raise SystemExit(f"C3 evidence path must be a string: {field}")
+        pure = PurePosixPath(value)
+        if (
+            not value
+            or pure.is_absolute()
+            or "\\" in value
+            or value != pure.as_posix()
+            or any(part in {".", ".."} for part in pure.parts)
+        ):
+            raise SystemExit(f"C3 evidence path must be repo-relative POSIX: {field}={value!r}")
+
+
 def _side_by_side(left: Image.Image, right: Image.Image, size: tuple[int, int] | None = None) -> Image.Image:
     if size is not None:
         left = left.resize(size, Image.Resampling.LANCZOS)
@@ -279,7 +321,7 @@ def _build_bundle() -> tuple[dict[Path, Image.Image], dict]:
             "after_file_sha256": _sha256(after_path),
             "before_decoded_rgba_sha256": _decoded_sha256(prior),
             "after_decoded_rgba_sha256": _decoded_sha256(current),
-            "after_evidence": str(after_evidence),
+            "after_evidence": _repo_relative(after_evidence),
             "diff_bbox": _json_bbox(_bbox(prior, current)),
             "pixel_identical": prior.tobytes() == current.tobytes(),
         }
@@ -300,7 +342,7 @@ def _build_bundle() -> tuple[dict[Path, Image.Image], dict]:
         },
         "high_risk": {
             "state": "EXP_GAIN_LEVELUP",
-            "file": str(HIGH_RISK_CASES["EXP_GAIN_LEVELUP"]["evidence"]),
+            "file": _repo_relative(HIGH_RISK_CASES["EXP_GAIN_LEVELUP"]["evidence"]),
             "file_sha256": _sha256(HIGH_RISK),
             "decoded_rgba_sha256": _decoded_sha256(high_risk_images["EXP_GAIN_LEVELUP"]),
             "note": "全5ケースをEXP_GAINの実runtime previewで再撮影。EXP_GAIN_LEVELUPはoverlay受理前。",
@@ -311,7 +353,7 @@ def _build_bundle() -> tuple[dict[Path, Image.Image], dict]:
                     "state": state,
                     "case_id": state,
                     "source_capture": str(spec["capture"]),
-                    "file": str(spec["evidence"]),
+                    "file": _repo_relative(spec["evidence"]),
                     "file_sha256": _sha256(spec["capture"]),
                     "decoded_rgba_sha256": _decoded_sha256(high_risk_images[state]),
                     "size": list(high_risk_images[state].size),
@@ -328,6 +370,7 @@ def _build_bundle() -> tuple[dict[Path, Image.Image], dict]:
     report["project_godot_head_sha256"] = hashlib.sha256(head_project).hexdigest()
     if report["project_godot_sha256"] != report["project_godot_head_sha256"]:
         raise SystemExit("project.godot differs from HEAD; restore baseline before C3 evidence")
+    _assert_report_portable(report)
     return outputs, report
 
 
@@ -431,7 +474,48 @@ def _self_test() -> None:
         if report.read_bytes() != stale_json_bytes:
             raise AssertionError("formal JSON stale self-test changed bytes")
 
-    print("C3 evidence self-test passed: corrupt formal PNG/JSON rejected, bytes preserved")
+        repo_a = root / "repo_a"
+        repo_b = root / "repo_b"
+        relative_paths = {
+            "formal": Path("docs/qa/evidence/cooking/formal.png"),
+            "regression": Path("docs/qa/evidence/cooking/after_cook_select.png"),
+        }
+
+        def portable_fixture(repo_root: Path) -> dict:
+            return {
+                "high_risk": {
+                    "file": _repo_relative(repo_root / relative_paths["formal"], repo_root),
+                    "cases": {
+                        "EXP_GAIN_LEVELUP": {
+                            "file": _repo_relative(repo_root / relative_paths["formal"], repo_root)
+                        }
+                    },
+                },
+                "regression": {
+                    "COOK_SELECT": {
+                        "after_evidence": _repo_relative(
+                            repo_root / relative_paths["regression"], repo_root
+                        )
+                    }
+                },
+            }
+
+        portable_a = portable_fixture(repo_a)
+        portable_b = portable_fixture(repo_b)
+        _assert_report_portable(portable_a, repo_a)
+        _assert_report_portable(portable_b, repo_b)
+        if portable_a != portable_b:
+            raise AssertionError("portable evidence JSON differs across repository roots")
+        try:
+            _assert_report_portable(
+                {"high_risk": {"file": str(repo_a / relative_paths["formal"])}}, repo_a
+            )
+        except SystemExit:
+            pass
+        else:
+            raise AssertionError("repository absolute evidence path must be rejected")
+
+    print("C3 evidence self-test passed: corrupt/stale formal PNG/JSON rejected, bytes preserved, portable JSON guarded")
 
 
 def main() -> int:
