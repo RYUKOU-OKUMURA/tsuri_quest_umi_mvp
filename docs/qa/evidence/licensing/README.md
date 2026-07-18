@@ -10,7 +10,7 @@
 |---|---|---|
 | LINE Seed JP OFL 1.1 | 保存済み | `assets/fonts/line_seed/OFL.txt` |
 | M PLUS 1p OFL 1.1 | 保存済み | `assets/fonts/OFL-MPLUS1p.txt` |
-| icon追加履歴 | 履歴あり・作者未確定 | commit `9a9974a` で `assets/icon.svg` が新規追加。コミット著者だけでは法的な作者・権利者を確定しない |
+| icon追加履歴 | 履歴あり・現行不採用回答済み | commit `9a9974a` で `assets/icon.svg` が新規追加。2026-07-18に製品不採用回答を受領したが、差し替え製品の統合と権利attestationは未完 |
 | Godot開発版 | QAログあり | `docs/qa/evidence/refactor/2026-07-05_final_dod_command_log.txt` に 4.7 stable。最終export templateは未決 |
 
 ## 公式一次情報（2026-07-12確認）
@@ -26,15 +26,15 @@
 
 ## 2026-07-11 U-01〜U-08再監査結果
 
-リポジトリ内の保存証拠をファイル単位・証拠単位で再確認した。現時点では管理文書だけで、closeに使えるsanitized attestationは0件。アカウント所有者の画面等の原本は非公開保管も未確認である。一般規約の確認は個別素材のclearanceを意味しない。
+リポジトリ内の保存証拠をファイル単位・証拠単位で再確認した。現時点では管理文書だけで、closeに使えるsanitized attestationは0件。アカウント所有者の画面等の原本は非公開保管も未確認である。一般規約の確認は個別素材のclearanceを意味しない。2026-07-18にU-04の現行icon不採用と、U-05の権利者名候補回答を受領したが、下表のとおりclose条件の一部だけであり、両IDを未完表に維持する。
 
 | ID | 状態 | 再監査結果 / 次の証拠 |
 |---|---|---|
 | U-01 | 所有者証拠待ち | `assets/audio/*.mp3` 10件は列挙済みだが、各ファイルに対応するSuno曲と生成日時を確認したattestationが0件。確認形式は `OWNER_EVIDENCE_REQUEST.md` §1 |
 | U-02 | 所有者証拠待ち | Billing History / Pro・Premier加入期間画面が0件。U-01の最古〜最新生成日時を連続して覆う証拠が必要 |
 | U-03 | 所有者申告・証拠待ち | `docs/31` §2.2のsource/reference-consuming全行と§4のgenerate外画像について、既存作業記録がある一部を除き、ファイル単位のサービス・生成日・作成者・製品採否が未確定。453 PNGという母集団件数は追跡補助値であり、純粋生成・中間物・製品出力を含むため、それ自体を未clear件数とは扱わない |
-| U-04 | 所有者申告待ち | `assets/icon.svg` はcommit `9a9974a`（2026-06-24）で追加。SVG本文とコミット著者は確認済みだが、作者・作成手段・権利者・製品採否の申告がない |
-| U-05 | 所有者回答待ち | 法的権利者名が未回答のため `LICENSE.md` placeholderを維持。Git author名を転記しない |
+| U-04 | 部分回答済み・差し替え証拠待ち | `assets/icon.svg` は2026-07-18の所有者回答で製品不採用。新規製品iconの統合、現行iconのrejected decision record、差し替え側のrights attestationは未保存 |
+| U-05 | 候補回答済み・exact表記/証拠待ち | 所有者回答は `奥村 龍晃` または `OKUMURA RYUKOU`。公開表記は日本語＋ローマ字併記を推奨するがexactな単一表記は未確定で、canonical attestationも0件のため `LICENSE.md` placeholderを維持 |
 | U-06 | 対象範囲決定・検索証拠待ち | 製品名は確定済み。販売地域と対象商品・役務区分が未決で、J-PlatPat検索条件・結果画面は0件。対象確定後、商標(検索用)・称呼・区分/類似群コード・検索日時・全結果を保存する |
 | U-07 | **RIGHTS-01Bへ分離** | bundle ID等の決定値は保存済み。正確なexport template、clean export notice、itch.io実公開質問票はRC/公開フローでしか確定できないためRIGHTS-01Aのclose条件に含めない |
 | U-08 | 作成者申告待ち | Suno 10曲とAI画像/source/referenceについて、第三者著作物・音源・画像・商標・人物素材を入力したかの作成者申告が0件。サービス一般規約だけではcloseしない |
@@ -50,8 +50,8 @@
 | U-01 | Suno 10音源それぞれの生成日時・曲詳細を非公開原本で確認したattestation | 全ファイルとSuno生成物を一対一対応できる |
 | U-02 | 生成期間を覆うSuno Billing HistoryとPro/Premier加入画面の非公開原本確認 | U-01の全生成日時が有料加入期間内に含まれ、公開repoにはsanitized attestationだけがある |
 | U-03 | 各 `assets/showcase/` generate外PNG、および `tools/source_assets/**` / `reference/**` を画素入力として読むsource/reference-consuming pipeline全件の採否・生成サービス・生成日・作成者申告・製品出力先 | 全source/referenceと製品出力が一対一または派生関係で追跡でき、原本非同梱を理由に派生製品を除外せず、推定が残らない。OpenAI以外のサービス利用も記録される |
-| U-04 | `assets/icon.svg` の作者・作成手段・権利者、および製品採否 | 採用なら権利者申告、非採用なら差し替え側の証拠を台帳化 |
-| U-05 | MITでライセンスするコードの法的権利者名 | `LICENSE.md` のplaceholderを実名または法人名へ置換 |
+| U-04 | 現行icon不採用回答は受領済み。新規製品iconの統合と、現行iconのrejected decision record、差し替え側rights attestation | 差し替え製品のpath / bytes / 配線が確定し、decision recordとreplacement-rights recordを台帳化 |
+| U-05 | 候補回答 `奥村 龍晃` / `OKUMURA RYUKOU` からexactな単一表記を確定し、非公開原本を確認したcanonical attestationを保存 | `LICENSE.md` のplaceholderを確定表記へ置換し、U-05 attestationと証拠indexを同時更新 |
 | U-06 | 正式製品名「釣りクエスト ～海釣り編～」/ v1.0.0は確定済み。販売地域・商標対象区分と、公式DB検索・必要な専門家確認の証跡 | 対象範囲を確定し、J-PlatPat等の公式DBと必要地域での調査結果を保存する |
 | U-08 | AI入力に第三者著作物・音源を用いたかの作成者申告 | サービス規約上必要な入力権利の確認を完了 |
 

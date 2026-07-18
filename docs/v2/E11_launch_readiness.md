@@ -97,7 +97,7 @@
 
 ### E11-7.1. macOS署名・公証（2026-07-18確定）
 
-- 初回itch.io直接配布版のRCは、`Developer ID Application`で署名し、Hardened Runtimeを有効化し、`notarytool`によるApple公証を通して対象成果物へticketをstapleする。この4点をRC必須ゲートとし、いずれかが欠ける成果物を発売版としない
+- 初回itch.io直接配布版のRCは、`Developer ID Application`で`.app`を署名し、Hardened Runtimeを有効化し、`notarytool`によるApple公証を通した後、署名済み`.app`へticketをstapleして検証し、その後に最終配布ZIPを作る。この4点をRC必須ゲートとし、いずれかが欠ける成果物を発売版としない
 - 2026-07-18時点ではApple Developer Program**未加入**、`Developer ID Application`証明書**未発行**。加入、証明書発行、署名・公証実行、staple済み成果物の検証証拠は外部pendingであり、完了を推定しない
 - 未署名・未公証exportは最小export spike、ローカルsmoke、QAには使用できるが、RC固定および発売判定には使用しない。証明書・秘密鍵・Appleアカウント情報はrepositoryへ保存しない
 
