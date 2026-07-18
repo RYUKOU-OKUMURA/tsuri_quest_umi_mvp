@@ -34,6 +34,7 @@
     "cases": {
       "EXP_GAIN_LEVELUP": {
         "state": "EXP_GAIN_LEVELUP",
+        "case_id": "EXP_GAIN_LEVELUP",
         "source_capture": "/tmp/tsuri_cooking_c3_exp_gain_levelup.png",
         "file": "/Users/ryukouokumura/.codex/worktrees/267d/tsuri_quest_umi_mvp/docs/qa/evidence/cooking/2026-07-18_c3_highrisk_exp_gain_levelup.png",
         "file_sha256": "e184bd81f37f77d34abff3bda974d3acf3fc0d426920a0231cc8bdb0d108409b",
@@ -42,10 +43,26 @@
           1280,
           720
         ],
-        "verified_state": "EXP_GAIN_LEVELUP"
+        "verified_state": "EXP_GAIN_LEVELUP",
+        "observed": {
+          "bonus_badge_text": "初回 記録済み",
+          "bonus_badge_visible": true,
+          "bonus_text_visible": false,
+          "effect_name_text": "アジの塩焼き",
+          "effect_name_visible": true,
+          "effect_text": "最大体力 +5%",
+          "effect_text_visible": true,
+          "progress_text": "EXP 92 / 150  ->  150 / 150",
+          "progress_visible": true,
+          "runtime_state": "EXP_GAIN_LEVELUP",
+          "runtime_state_visible": true,
+          "title_text": "食経験値が成長へ！",
+          "title_visible": true
+        }
       },
       "EXP_GAIN_FIRST_BONUS": {
         "state": "EXP_GAIN_FIRST_BONUS",
+        "case_id": "EXP_GAIN_FIRST_BONUS",
         "source_capture": "/tmp/tsuri_cooking_c3_exp_gain_first_bonus.png",
         "file": "/Users/ryukouokumura/.codex/worktrees/267d/tsuri_quest_umi_mvp/docs/qa/evidence/cooking/2026-07-18_c3_highrisk_exp_gain_first_bonus.png",
         "file_sha256": "b07db4354d6a36d419c4b8e633d65e4073938a19410d13ece42eb6921fca8d66",
@@ -54,10 +71,26 @@
           1280,
           720
         ],
-        "verified_state": "EXP_GAIN_FIRST_BONUS"
+        "verified_state": "EXP_GAIN_FIRST_BONUS",
+        "observed": {
+          "bonus_badge_text": "初回ボーナス +30 EXP",
+          "bonus_badge_visible": true,
+          "bonus_text_visible": true,
+          "effect_name_text": "メジナの煮付け",
+          "effect_name_visible": true,
+          "effect_text": "安全域 +10%",
+          "effect_text_visible": true,
+          "progress_text": "EXP 132 / 285  ->  198 / 285",
+          "progress_visible": true,
+          "runtime_state": "EXP_GAIN",
+          "runtime_state_visible": true,
+          "title_text": "食経験値を獲得！",
+          "title_visible": true
+        }
       },
       "EXP_GAIN_NO_BONUS": {
         "state": "EXP_GAIN_NO_BONUS",
+        "case_id": "EXP_GAIN_NO_BONUS",
         "source_capture": "/tmp/tsuri_cooking_c3_exp_gain_no_bonus.png",
         "file": "/Users/ryukouokumura/.codex/worktrees/267d/tsuri_quest_umi_mvp/docs/qa/evidence/cooking/2026-07-18_c3_highrisk_exp_gain_no_bonus.png",
         "file_sha256": "eecc449b12a02f366249de64f682c2e8c979000f71bd4613830feb34ee25f2c3",
@@ -66,10 +99,26 @@
           1280,
           720
         ],
-        "verified_state": "EXP_GAIN_NO_BONUS"
+        "verified_state": "EXP_GAIN_NO_BONUS",
+        "observed": {
+          "bonus_badge_text": "初回 記録済み",
+          "bonus_badge_visible": true,
+          "bonus_text_visible": false,
+          "effect_name_text": "メジナの煮付け",
+          "effect_name_visible": true,
+          "effect_text": "安全域 +10%",
+          "effect_text_visible": true,
+          "progress_text": "EXP 127 / 285  ->  165 / 285",
+          "progress_visible": true,
+          "runtime_state": "EXP_GAIN",
+          "runtime_state_visible": true,
+          "title_text": "食経験値を獲得！",
+          "title_visible": true
+        }
       },
       "EXP_GAIN_EXP_CAP": {
         "state": "EXP_GAIN_EXP_CAP",
+        "case_id": "EXP_GAIN_EXP_CAP",
         "source_capture": "/tmp/tsuri_cooking_c3_exp_gain_exp_cap.png",
         "file": "/Users/ryukouokumura/.codex/worktrees/267d/tsuri_quest_umi_mvp/docs/qa/evidence/cooking/2026-07-18_c3_highrisk_exp_gain_exp_cap.png",
         "file_sha256": "c39b050cfb1d7a9ea4b14cc2c82834af9bfebce464773fae38cd7c66af8f27f9",
@@ -78,10 +127,26 @@
           1280,
           720
         ],
-        "verified_state": "EXP_GAIN_EXP_CAP"
+        "verified_state": "EXP_GAIN_EXP_CAP",
+        "observed": {
+          "bonus_badge_text": "初回 記録済み",
+          "bonus_badge_visible": true,
+          "bonus_text_visible": false,
+          "effect_name_text": "メジナの煮付け",
+          "effect_name_visible": true,
+          "effect_text": "安全域 +10%",
+          "effect_text_visible": true,
+          "progress_text": "EXP 260 / 285  ->  285 / 285",
+          "progress_visible": true,
+          "runtime_state": "EXP_GAIN",
+          "runtime_state_visible": true,
+          "title_text": "食経験値を獲得！",
+          "title_visible": true
+        }
       },
       "EXP_GAIN_LONG_BUFF": {
         "state": "EXP_GAIN_LONG_BUFF",
+        "case_id": "EXP_GAIN_LONG_BUFF",
         "source_capture": "/tmp/tsuri_cooking_c3_exp_gain_long_buff.png",
         "file": "/Users/ryukouokumura/.codex/worktrees/267d/tsuri_quest_umi_mvp/docs/qa/evidence/cooking/2026-07-18_c3_highrisk_exp_gain_long_buff.png",
         "file_sha256": "cfd0b8fccdab679f8d3e0d686a0ceb45320e017ae4fd663176d4e8475eab1bad",
@@ -90,7 +155,22 @@
           1280,
           720
         ],
-        "verified_state": "EXP_GAIN_LONG_BUFF"
+        "verified_state": "EXP_GAIN_LONG_BUFF",
+        "observed": {
+          "bonus_badge_text": "初回 記録済み",
+          "bonus_badge_visible": true,
+          "bonus_text_visible": false,
+          "effect_name_text": "港町特製メジナと彩り野菜の香草煮",
+          "effect_name_visible": true,
+          "effect_text": "安全域と最大体力が長時間にわたり大きく上がる",
+          "effect_text_visible": true,
+          "progress_text": "EXP 127 / 285  ->  165 / 285",
+          "progress_visible": true,
+          "runtime_state": "EXP_GAIN",
+          "runtime_state_visible": true,
+          "title_text": "食経験値を獲得！",
+          "title_visible": true
+        }
       }
     }
   },

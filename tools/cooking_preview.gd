@@ -173,10 +173,16 @@ func _ready() -> void:
 	):
 		get_tree().quit(1)
 		return
+	var levelup_observed := _expect_c3_highrisk_runtime_contract(
+		screen, "EXP_GAIN_LEVELUP", boss_unlock_result, 92, 150, 150, true
+	)
+	if levelup_observed.is_empty():
+		get_tree().quit(1)
+		return
 	if not await _save_viewport(vp, OUT_C3_EXP_GAIN_LEVELUP):
 		get_tree().quit(1)
 		return
-	if not _record_c3_highrisk_capture("EXP_GAIN_LEVELUP", OUT_C3_EXP_GAIN_LEVELUP):
+	if not _record_c3_highrisk_capture("EXP_GAIN_LEVELUP", OUT_C3_EXP_GAIN_LEVELUP, levelup_observed):
 		get_tree().quit(1)
 		return
 	if not screen.preview_accept_reward_overlay():
@@ -306,8 +312,11 @@ func _capture_c3_exp_highrisk_fixture(
 	_seed_after_non_level_meal_state()
 	screen.preview_show_reward_result(result, exp_before, exp_after, exp_max, false)
 	await _await_capture_ready(vp)
+	var observed := _expect_c3_highrisk_runtime_contract(
+		screen, case_id, result, exp_before, exp_after, exp_max, false
+	)
 	var valid := (
-		_expect_reward_state(screen, "EXP_GAIN", "C3 %s" % case_id)
+		not observed.is_empty()
 		and _expect_c0_non_meal_stage_contract(screen, "C3 %s" % case_id)
 		and _expect_c0_flow_button_contract(
 			screen,
@@ -321,7 +330,7 @@ func _capture_c3_exp_highrisk_fixture(
 	if valid:
 		valid = await _save_viewport(vp, output_path)
 	if valid:
-		valid = _record_c3_highrisk_capture(case_id, output_path)
+		valid = _record_c3_highrisk_capture(case_id, output_path, observed)
 	screen.queue_free()
 	vp.queue_free()
 	await get_tree().process_frame
@@ -640,14 +649,16 @@ func _reset_c3_highrisk_manifest() -> void:
 		DirAccess.remove_absolute(OUT_C3_HIGH_RISK_MANIFEST)
 
 
-func _record_c3_highrisk_capture(case_id: String, path: String) -> bool:
+func _record_c3_highrisk_capture(case_id: String, path: String, observed: Dictionary) -> bool:
 	_c3_highrisk_manifest.append(
 		{
 			"state": case_id,
+			"case_id": case_id,
 			"capture": path,
 			"verified_state": case_id,
 			"width": VW.x,
 			"height": VW.y,
+			"observed": observed,
 		}
 	)
 	var file := FileAccess.open(OUT_C3_HIGH_RISK_MANIFEST, FileAccess.WRITE)
@@ -702,6 +713,83 @@ func _push_headless_capture_error(path: String) -> void:
 		)
 		% path
 	)
+
+
+func _c3_highrisk_contract(case_id: String, exp_before: int, exp_after: int, exp_max: int) -> Dictionary:
+	var is_levelup := case_id == "EXP_GAIN_LEVELUP"
+	var is_first_bonus := case_id == "EXP_GAIN_FIRST_BONUS"
+	var effect_name := "アジの塩焼き" if is_levelup else "メジナの煮付け"
+	if case_id == "EXP_GAIN_LONG_BUFF":
+		effect_name = "港町特製メジナと彩り野菜の香草煮"
+	var effect_text := "最大体力 +5%" if is_levelup else "安全域 +10%"
+	if case_id == "EXP_GAIN_LONG_BUFF":
+		effect_text = "安全域と最大体力が長時間にわたり大きく上がる"
+	return {
+		"runtime_state": "EXP_GAIN_LEVELUP" if is_levelup else "EXP_GAIN",
+		"title_text": "食経験値が成長へ！" if is_levelup else "食経験値を獲得！",
+		"progress_text": "EXP %d / %d  ->  %d / %d" % [
+			exp_before,
+			exp_max,
+			exp_after,
+			exp_max,
+		],
+		"bonus_badge_text": "初回ボーナス +30 EXP" if is_first_bonus else "初回 記録済み",
+		"bonus_text_visible": is_first_bonus,
+		"effect_name_text": effect_name,
+		"effect_text": effect_text,
+	}
+
+
+func _expect_c3_highrisk_runtime_contract(
+	screen: Control,
+	case_id: String,
+	result: Dictionary,
+	exp_before: int,
+	exp_after: int,
+	exp_max: int,
+	leveled: bool
+) -> Dictionary:
+	var expected := _c3_highrisk_contract(case_id, exp_before, exp_after, exp_max)
+	var expected_state := String(expected["runtime_state"])
+	var state_visible: bool = screen.preview_has_reward_overlay_state(expected_state)
+	var title := _find_named(screen, "ExpGainTitle") as Label
+	var progress := _find_named(screen, "ExpProgressText") as Label
+	var bonus := _find_named(screen, "MealSceneBonusBadge") as Label
+	var effect_name := _find_label_exact(screen, String(expected["effect_name_text"]))
+	var effect_text := _find_label_exact(screen, String(expected["effect_text"]))
+	var bonus_text_visible := (
+		bonus != null and bonus.is_visible_in_tree() and bonus.text.contains("初回ボーナス")
+	)
+	var observed := {
+		"runtime_state": expected_state if state_visible else "",
+		"runtime_state_visible": state_visible,
+		"title_text": "" if title == null else title.text,
+		"title_visible": title != null and title.is_visible_in_tree(),
+		"progress_text": "" if progress == null else progress.text,
+		"progress_visible": progress != null and progress.is_visible_in_tree(),
+		"bonus_badge_text": "" if bonus == null else bonus.text,
+		"bonus_badge_visible": bonus != null and bonus.is_visible_in_tree(),
+		"bonus_text_visible": bonus_text_visible,
+		"effect_name_text": "" if effect_name == null else effect_name.text,
+		"effect_name_visible": effect_name != null and effect_name.is_visible_in_tree(),
+		"effect_text": "" if effect_text == null else effect_text.text,
+		"effect_text_visible": effect_text != null and effect_text.is_visible_in_tree(),
+	}
+	var valid: bool = (
+		state_visible
+		and bool(result.get("first_time", false)) == (case_id == "EXP_GAIN_FIRST_BONUS")
+		and int(result.get("first_bonus", 0)) == (30 if case_id == "EXP_GAIN_FIRST_BONUS" else 0)
+		and bool(leveled) == (case_id == "EXP_GAIN_LEVELUP")
+	)
+	for key in expected:
+		if observed.get(key) != expected[key]:
+			valid = false
+	if not valid:
+		push_error("C3 %s runtime node/text contract failed: %s" % [case_id, observed])
+		return {}
+	return observed
+
+
 func _expect_reward_state(screen: Control, expected_state: String, context: String) -> bool:
 	if screen.preview_has_reward_overlay_state(expected_state):
 		return true
@@ -838,6 +926,16 @@ func _find_named(node: Node, node_name: String) -> Node:
 		return node
 	for child in node.get_children():
 		var found := _find_named(child, node_name)
+		if found != null:
+			return found
+	return null
+
+
+func _find_label_exact(node: Node, expected_text: String) -> Label:
+	if node is Label and (node as Label).text == expected_text:
+		return node as Label
+	for child in node.get_children():
+		var found := _find_label_exact(child, expected_text)
 		if found != null:
 			return found
 	return null

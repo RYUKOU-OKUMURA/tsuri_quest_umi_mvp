@@ -90,6 +90,7 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 - 320×180判断: `2026-07-18_c3_after_reference_320x180.png` で、参照03の中央から広がる暖色放射光・粒子方向との差が縮んだため採用。現行背景、見出し/ゲージ台座/料理画像、runtime演出、他4状態は採否対象外。
 - 証拠: `docs/qa/evidence/cooking/2026-07-18_c3_after_exp.png`, `2026-07-18_c3_before_after_exp.png`, `2026-07-18_c3_after_reference.png`, `2026-07-18_c3_after_reference_320x180.png` と、実runtime previewで再撮影した `2026-07-18_c3_highrisk_exp_gain_{levelup,first_bonus,no_bonus,exp_cap,long_buff}.png`、`2026-07-18_c3_evidence.json`。他4状態はbefore/after decoded pixels一致をJSONへ記録し、高リスクmanifestは5状態ID・1280x720を検査する。
 - 検査補強: `tools/cooking_c3_product.py --self-test` は隔離tmpでdecoded同値のbyte保持、真差分の書込、破損検出、保存失敗時の旧製品保持・temp cleanupを実証する。`cooking_visual_qa.sh` は通常5状態の回帰検査に加え、C3高リスク5状態の存在・サイズ・状態識別・fresh runtime同値を検査する。
+- 再レビューP1補正: `tools/cooking_c3_evidence.py --update` を明示的な書込モード、`--check` を正式PNG/JSONを一切変更しないread-onlyモードとして分離。fresh captureと既存正式evidenceのdecoded一致、JSON一致、PNG/JSON破損拒否を検査し、previewは各高リスクfixtureのruntime state・title・EXP値・bonus表示・料理名・buff本文をnode/text/visibilityでassertしてmanifestへ観測値を記録する。
 - 固定条件: `project.godot` は `b73d275c` のHEAD bytesへ復元済みで、C3製品/証拠commitへ含めない。旧一括generatorはC3製品をguardし、更新はC3専用processorだけで行う。`EXP_GAIN_LEVELUP` はoverlay受理前を高リスク証拠とし、LEVEL_UP後の別画面を変更しない。
 
 2026-07-17: `C2-WIRE MEAL_RESULT食事シーン背景` を、Visual Wave V2の局所素材スライスとして開始し、同日完了。

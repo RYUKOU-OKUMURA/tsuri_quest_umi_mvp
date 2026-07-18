@@ -57,6 +57,7 @@ fi
 
 echo "==> Check cooking captures and refresh report"
 python3 "$ROOT/tools/cooking_visual_qa_check.py"
+python3 "$ROOT/tools/cooking_c3_evidence.py" --self-test
 python3 "$ROOT/tools/cooking_c3_evidence.py" --check
 
 echo "Cooking visual QA passed."
