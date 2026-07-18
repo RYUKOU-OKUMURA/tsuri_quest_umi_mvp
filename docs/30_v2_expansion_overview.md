@@ -421,12 +421,13 @@ V2フェーズ外。ローンチ品質のための欠陥修正・素材工事。
 | docs/51 C2素材準備・runtime採用 | 完了 / freeze | 調理品質トラック | MEAL_RESULT背景を正式採用。source→製品のpixel-stable processor、read-only check/self-test、旧generator guard、台帳・監査consumer、safe-area証拠を統合 |
 | docs/33 C1-B / C2 runtime / C3〜C5 | C3完了 | visual後続 | C1-B/C2/C3を採用済み。C4/C5は発売外装close後の別slice |
 | docs/54 UIブラッシュアップ総合計画 | 現行 | M-V3完了、次はE11-EXTERIOR | C3 EXP光背とT1 marlin詳細大絵を採用。SHIPYARD-D0は製品不変で4状態QA・未採用モックを固定。V4以降は外装close後に再開判断 |
-| docs/55 iPad実機テスト・セーブ運用 | 計画確定・未実施 | 初回ローンチ非ブロッカー | 現行3slotの内容、Xcode直入れ / 無線更新 / TestFlight移行、A→Bセーブ回帰、将来cloud境界を固定。iPad正式対応は実機spike後に別判断 |
+| docs/55〜57 iPad実機テスト・モバイル対応 | 初回導入spike完了 / 対応計画は草案 | 初回ローンチ非ブロッカー | Xcode直入れと起動を実機確認。セーブ運用、再導入runbook、iPad背景拡張、touch契約、iPhone landscape pilotの順序を整理。表示・入力・save QAとユーザー承認後に正式対応を判断 |
 
 フェーズ完了・仕様変更・横展開障害リストは本docに追記する。オーケストレーション様式は docs/26 と同じ（Fable が計画・レビュー、Composer に scoped brief で fan-out）。
 
 ## 7. 更新履歴
 
+- 2026-07-18: `docs/57_mobile_display_and_input_adaptation_plan.md` を追加。iPad実測の`keep`黒帯を基に、中央1280×720 safe canvasを維持した背景拡張、共通adaptive frame、touch action契約、iPad全画面QA、iPhone landscape pilot、Android判断の段階計画を草案化。着手ゲートはユーザー未承認で、モバイル対応は初回macOSローンチの非ブロッカーを維持
 - 2026-07-18: `docs/55_ipad_test_deployment_and_save_management.md` を追加。現行version 1セーブ全項目、iPad上のデータ寿命、Xcode実機導入・無線更新・TestFlight移行、A→B更新回帰、local-firstからplatform cloud / 横断backendへ進む境界を固定。iPad正式対応は決定せず、初回itch.io macOSローンチの非ブロッカーとして管理
 - 2026-07-18: TARGET-01とSIGN-01を進捗正本で分離。TARGET-01は最低macOS・最低対象Mac・Intel確認のユーザー判断待ちを維持し、SIGN-01はDeveloper ID Application署名＋Hardened Runtime＋`notarytool`公証＋署名済み`.app`へのstapleをRC必須方針として確定。Apple Developer Program加入、証明書発行、署名・公証・staple実行証拠は外部pendingとして継続
 - 2026-07-18: `b73d275c`を共通baselineにVisual Wave V3のC3 / SHIPYARD-D0 / TACKLE-T1を独立worktreeで並行実装。C3はEXP_GAINの光背1スロット、T1はmarlin詳細sheet index 4だけを正式採用し、SHIPYARD-D0は製品runtime/asset/freezeを変えず4状態visual QAと未採用「船舶司令盤」モックを確立した。独立レビューで見つかったC3 evidenceの自己修復型check、T1非対象セルの自己参照check、船着き場reference consumerの監査漏れを補正し、再レビュー問題0まで収束。正式evidence、source→processor→product、台帳・権利監査consumerをunionしてM-V3を達成し、次を発売優先のE11-EXTERIORへ戻す。U-04/U-08、TARGET/SIGNの外部判断待ちは継続

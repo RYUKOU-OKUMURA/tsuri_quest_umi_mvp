@@ -395,6 +395,7 @@ backupは端末内の原子的保存を守るローカル世代であり、cloud
 - `project.godot` — namespace、1280×720、keep、renderer
 - `export_presets.cfg` — macOS UniversalとiOS iPad Debugのexport設定
 - `docs/56_ipad_deployment_execution_report.md` — 初回導入の実行記録、トラブルシュート、次回runbook
+- `docs/57_mobile_display_and_input_adaptation_plan.md` — iPad黒帯解消、touch契約、iPhone landscape検討の計画正本
 - `docs/30_v2_expansion_overview.md` §3-5 / §4-1 — IDとV2追加save項目・意味検証方針の正本
 - `docs/v2/E11_launch_readiness.md` §E11-6 — モバイル正式対応のスコープ判断
 
