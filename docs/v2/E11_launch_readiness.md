@@ -15,7 +15,7 @@
 | E11-7 Release Gate 0の5件 | **2026-07-11確定済み** | 決定値をexport、設定、入力、表示、製品外装へ引き渡す |
 | ID-01: user data namespace / OS application ID / store識別子 / 旧save移行 | **2026-07-11完了** | 正式名称変更前に固定し、旧MVP saveを非破壊コピー |
 | 最小export spike / 権利証跡 | **E7と並走または先行** | 正式名称変更と最終パッケージの手戻りを防ぐ |
-| E11-4・6・EXTERIORの実装 | **E7完了後・ローンチ前** | SETTINGS-AUDIO / SLOT-DELETE UI / DISPLAY / INPUT-COMMONは完了済み。残りの画面別INPUTと外周を締める |
+| E11-4・6・EXTERIORの実装 | **E7完了後・ローンチ前** | SETTINGS-AUDIO / SLOT-DELETE UI / DISPLAY / INPUT-COMMONは完了済み。残りのEXTERIORと最終受入を締める |
 
 ## E11-1. 設定画面（新画面）
 
