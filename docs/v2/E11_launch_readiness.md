@@ -2,7 +2,7 @@
 
 正本: `docs/30_v2_expansion_overview.md`（読む順: docs/30 §4 共通仕様 → 本doc）
 前提フェーズ: 実施時期は分割型（下記 §E11-0）。画面実装はE7完了後
-状態: E11進行中（SETTINGS-AUDIO、SLOT-DELETE UI、DISPLAY、INPUT-COMMON、画面別INPUT第1〜3round、3スロット、素材台帳基盤、Release Gate 0、ID-01完了）。入力baselineは15件（P1 11 / P2 4）。残りは画面別INPUT修正、EXTERIOR、最終受入。進行状況はdocs/30 §6、監査追加事項はdocs/45参照
+状態: E11進行中（SETTINGS-AUDIO、SLOT-DELETE UI、DISPLAY、INPUT-COMMON、画面別INPUT全round、3スロット、素材台帳基盤、Release Gate 0、ID-01完了）。入力baselineは0件（13画面すべてfinding 0）。残りはEXTERIOR、最終受入。進行状況はdocs/30 §6、監査追加事項はdocs/45参照
 
 目的: ローンチ対象（E0〜E7＋E10）の外周——設定・セーブ保護・表示・入力・権利・export・製品外装——を販売品質にする。2026-07-10の横断監査結果はdocs/45を正とする。
 
@@ -56,7 +56,9 @@
 - INPUT-COMMONは2026-07-15完了。実キー8 action、共通focus / cancel契約、13画面registry、self-test / baseline / strict harnessを統合し、初期の画面別baselineは42件（P1 34 / P2 8）
 - 画面別INPUT第1roundは2026-07-15完了。TITLE / FISHING / SHIPYARDを別セッションで実装・独立レビューし、専用smokeと原寸証拠を固定。3画面のfindingを0件にしてbaselineを35件（P1 27 / P2 8）へ更新した
 - 画面別INPUT第2roundは2026-07-15完了。SETTINGS / FISHING_SPOTS / SHOPを別セッションで実装・独立レビューし、専用smokeと原寸証拠を固定。3画面のfindingを0件にしてbaselineを24件（P1 18 / P2 6）へ更新した
-- 画面別INPUT第3roundは2026-07-16完了。HARBOR / FISH_BOOK / MARKETを別セッションで実装・独立レビューし、動的lock、88操作の図鑑閉路、modal / empty復帰を専用smokeと原寸証拠へ固定。3画面のfindingを0件にして最新baselineを15件（P1 11 / P2 4）へ更新し、release verifier 43対象もgreen。次はSTATUS / COOKING / QUEST_BOARD、その後SHARK_PEN
+- 画面別INPUT第3roundは2026-07-16完了。HARBOR / FISH_BOOK / MARKETを別セッションで実装・独立レビューし、動的lock、88操作の図鑑閉路、modal / empty復帰を専用smokeと原寸証拠へ固定。3画面のfindingを0件にしてbaselineを15件（P1 11 / P2 4）へ更新し、release verifier 43対象もgreen
+- 画面別INPUT第4roundは2026-07-16完了。STATUS / COOKING / QUEST_BOARDを別セッションで実装・独立レビューし、称号modal trap、調理5状態handoff、依頼の納品/記録報告後の即時入替を専用smokeと原寸証拠へ固定。3画面のfindingを0件にしてbaselineを4件（P1 3 / P2 1）へ更新し、release verifier 46対象もgreen
+- 画面別INPUT最終roundは2026-07-16完了。SHARK_PENを単独で実装・独立レビューし、通常、last-stock、locked/empty、A→B→A、マウス/Escape一重を専用smokeと原寸証拠へ固定。13画面すべてfinding 0、入力baselineを0件へ更新し、release verifier 47対象もgreen。残りはEXTERIOR、最終受入
 
 ## E11-5. 権利・台帳（docs/31）
 
