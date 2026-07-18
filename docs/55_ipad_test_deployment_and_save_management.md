@@ -2,7 +2,7 @@
 
 最終更新: 2026-07-18
 
-状態: **運用仕様確定・実機spike未実施**
+状態: **初回実機導入spike進行中（install済み・初回の署名信頼待ち）**
 
 対象: Godot 4.7 / iPad実機への開発ビルド導入 / version 1セーブ / 将来クラウド方針
 
@@ -21,8 +21,8 @@
 
 | 質問 | 現在の回答 |
 |---|---|
-| iPadへテスト導入できるか | **準備を済ませれば可能**。現時点ではまだワンクリックで導入できる状態ではない |
-| 今すぐ入れて通常プレイできるか | **未確認**。iOS export template、iOS preset、署名設定、実機入力QAが未完 |
+| iPadへテスト導入できるか | **可能**。Personal Team署名のdebug buildを実機へinstall済み。初回のデベロッパ信頼後に起動確認する |
+| 今すぐ入れて通常プレイできるか | **通常プレイは未確認**。export / build / installまでは完了し、タイトル起動・実機入力QAが未完 |
 | Apple Developer Program加入は必須か | 所有するiPadへの個人テストだけならApple AccountのPersonal Teamでも可能。TestFlight配布、iCloud機能、正式配布には加入が必要 |
 | ゲーム更新のたびにUSB接続が必要か | 初回の接続・信頼・ペアリングは必要。無線接続を有効化できれば、以後は同一ネットワーク上でXcodeから更新可能。ただし再export / build / installは必要 |
 | 更新するとセーブは消えるか | 同じBundle IDかつ互換なTeam / App ID / 署名identityのアプリを、削除せず上書きする場合は維持される想定。配布境界ごとの更新回帰が通るまで保証扱いしない |
@@ -36,19 +36,19 @@
 | Godot | 4.7導入済み | 維持 |
 | renderer | desktop / mobileとも`gl_compatibility` | 実機描画を確認 |
 | 表示 | 1280×720、`canvas_items`、`keep` | iPad 4:3では黒帯前提で実機確認 |
-| 画面向き | mobile向け明示設定なし（Godot既定はlandscape） | spikeではlandscapeに明示固定し、回転時挙動を確認 |
-| Xcode | 26.6導入済み | 初回起動、license、Apple Accountを確認 |
-| active developer directory | `/Library/Developer/CommandLineTools`で不適切 | Xcode本体へ切替 |
-| Godot export template | macOS templateのみ | Godot 4.7と同版のiOS templateを追加 |
-| `export_presets.cfg` | macOS presetのみ | iOS presetを追加 |
-| iOS署名 | Team / provisioning未設定 | Personal Teamまたは加入済みTeamを設定 |
-| iOS Bundle ID | 未確定 | 下記候補を登録確認後にfreeze |
-| iPad接続 | 未確認 | USB接続、信頼、Developer Mode、pairing |
+| 画面向き | `window/handheld/orientation=0`でlandscapeを明示 | 端末回転・復帰後の挙動を確認 |
+| Xcode | 26.6、iOS 26.5 platform component導入済み | 維持 |
+| active developer directory | `/Applications/Xcode.app/Contents/Developer` | 維持 |
+| Godot export template | Godot 4.7と同版のiOS / macOS template導入済み | Godot更新時は同版へ揃える |
+| `export_presets.cfg` | `iOS iPad Debug` preset追加済み | 正式Team移行時に署名境界を再確認 |
+| iOS署名 | Personal TeamのApple Development証明書とmanaged profileでbuild成功 | 7日失効を前提にテスト運用 |
+| iOS Bundle ID | spike用に`net.physical-balance-lab.tsuri-quest-umi`を採用 | 正式Team移行前に最終freeze |
+| iPad接続 | USB接続、信頼、Developer Mode、pairing、install完了 | 初回のみデベロッパAppを端末側で信頼 |
 | タッチ入力 | Godot既定のtouch→mouse変換は有効だが、正式対応外・実機QA未実施 | §7でtap / drag / holdと、外付けキーボードなしで到達不能な導線がないことを確認 |
 | iPad save fixture harness | 未実装 | 通常アプリのcontainerを触らないtest専用debug harnessを用意 |
 | クラウド同期 | 未実装 | 当面はlocal-first |
 
-したがって、最初の作業は「iPadへ入れる」だけではなく、**iOS exportの最小spikeを1回通し、入力とセーブ更新回帰を同じ実機で確認すること**である。
+したがって、iOS export / build / installの最小spikeは通過した。次は**タイトル起動を確認し、入力とセーブ更新回帰を同じ実機で確認すること**である。
 
 ## 2. 現行セーブの保存場所と構成
 
@@ -377,7 +377,7 @@ backupは端末内の原子的保存を守るローカル世代であり、cloud
 - `src/autoload/player_progress.gd` — 3slot、save / load、backup、意味検証、migration
 - `src/ui/settings_screen.gd` — `settings.json`
 - `project.godot` — namespace、1280×720、keep、renderer
-- `export_presets.cfg` — 現在はmacOS Universalのみ
+- `export_presets.cfg` — macOS UniversalとiOS iPad Debugのexport設定
 - `docs/30_v2_expansion_overview.md` §3-5 / §4-1 — IDとV2追加save項目・意味検証方針の正本
 - `docs/v2/E11_launch_readiness.md` §E11-6 — モバイル正式対応のスコープ判断
 
