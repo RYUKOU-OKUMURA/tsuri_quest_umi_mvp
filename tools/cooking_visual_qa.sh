@@ -25,12 +25,17 @@ CAPTURES=(
   /tmp/tsuri_cooking_result.png
   /tmp/tsuri_cooking_exp.png
   /tmp/tsuri_cooking_c3_exp_gain_levelup.png
+  /tmp/tsuri_cooking_c3_exp_gain_first_bonus.png
+  /tmp/tsuri_cooking_c3_exp_gain_no_bonus.png
+  /tmp/tsuri_cooking_c3_exp_gain_exp_cap.png
+  /tmp/tsuri_cooking_c3_exp_gain_long_buff.png
   /tmp/tsuri_cooking_levelup.png
   /tmp/tsuri_cooking_status.png
   /tmp/tsuri_cooking_c1b_hover_focus.png
   /tmp/tsuri_cooking_c2_first_long.png
   /tmp/tsuri_cooking_c2_repeat_long.png
   /tmp/tsuri_cooking_capture_manifest.json
+  /tmp/tsuri_cooking_c3_highrisk_manifest.json
 )
 
 for capture in "${CAPTURES[@]}"; do
@@ -52,5 +57,6 @@ fi
 
 echo "==> Check cooking captures and refresh report"
 python3 "$ROOT/tools/cooking_visual_qa_check.py"
+python3 "$ROOT/tools/cooking_c3_evidence.py" --check
 
 echo "Cooking visual QA passed."

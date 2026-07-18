@@ -9,16 +9,22 @@ const OUT_SELECT := "/tmp/tsuri_cooking_select.png"
 const OUT_RESULT := "/tmp/tsuri_cooking_result.png"
 const OUT_EXP := "/tmp/tsuri_cooking_exp.png"
 const OUT_C3_EXP_GAIN_LEVELUP := "/tmp/tsuri_cooking_c3_exp_gain_levelup.png"
+const OUT_C3_EXP_GAIN_FIRST_BONUS := "/tmp/tsuri_cooking_c3_exp_gain_first_bonus.png"
+const OUT_C3_EXP_GAIN_NO_BONUS := "/tmp/tsuri_cooking_c3_exp_gain_no_bonus.png"
+const OUT_C3_EXP_GAIN_EXP_CAP := "/tmp/tsuri_cooking_c3_exp_gain_exp_cap.png"
+const OUT_C3_EXP_GAIN_LONG_BUFF := "/tmp/tsuri_cooking_c3_exp_gain_long_buff.png"
 const OUT_LEVELUP := "/tmp/tsuri_cooking_levelup.png"
 const OUT_STATUS := "/tmp/tsuri_cooking_status.png"
 const OUT_C1B_HOVER_FOCUS := "/tmp/tsuri_cooking_c1b_hover_focus.png"
 const OUT_C2_FIRST_LONG := "/tmp/tsuri_cooking_c2_first_long.png"
 const OUT_C2_REPEAT_LONG := "/tmp/tsuri_cooking_c2_repeat_long.png"
 const OUT_MANIFEST := "/tmp/tsuri_cooking_capture_manifest.json"
+const OUT_C3_HIGH_RISK_MANIFEST := "/tmp/tsuri_cooking_c3_highrisk_manifest.json"
 const VW := Vector2i(1280, 720)
 const CAPTURE_SETTLE_FRAMES := 10
 
 var _capture_manifest: Array[Dictionary] = []
+var _c3_highrisk_manifest: Array[Dictionary] = []
 
 
 func _ready() -> void:
@@ -26,6 +32,7 @@ func _ready() -> void:
 		seed(20260705)
 	theme = ThemeFactory.build_theme()
 	_reset_manifest()
+	_reset_c3_highrisk_manifest()
 
 	var vp := _new_capture_viewport()
 
@@ -100,6 +107,26 @@ func _ready() -> void:
 	screen.queue_free()
 	vp.queue_free()
 	await get_tree().process_frame
+	if not await _capture_c3_exp_highrisk_fixture(
+		"EXP_GAIN_FIRST_BONUS", _fake_c3_first_bonus_result(), 132, 198, 285, OUT_C3_EXP_GAIN_FIRST_BONUS
+	):
+		get_tree().quit(1)
+		return
+	if not await _capture_c3_exp_highrisk_fixture(
+		"EXP_GAIN_NO_BONUS", _fake_c3_no_bonus_result(), 127, 165, 285, OUT_C3_EXP_GAIN_NO_BONUS
+	):
+		get_tree().quit(1)
+		return
+	if not await _capture_c3_exp_highrisk_fixture(
+		"EXP_GAIN_EXP_CAP", _fake_c3_exp_cap_result(), 260, 285, 285, OUT_C3_EXP_GAIN_EXP_CAP
+	):
+		get_tree().quit(1)
+		return
+	if not await _capture_c3_exp_highrisk_fixture(
+		"EXP_GAIN_LONG_BUFF", _fake_c3_long_buff_result(), 127, 165, 285, OUT_C3_EXP_GAIN_LONG_BUFF
+	):
+		get_tree().quit(1)
+		return
 
 	_seed_select_state()
 	vp = _new_capture_viewport()
@@ -147,6 +174,9 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 	if not await _save_viewport(vp, OUT_C3_EXP_GAIN_LEVELUP):
+		get_tree().quit(1)
+		return
+	if not _record_c3_highrisk_capture("EXP_GAIN_LEVELUP", OUT_C3_EXP_GAIN_LEVELUP):
 		get_tree().quit(1)
 		return
 	if not screen.preview_accept_reward_overlay():
@@ -256,6 +286,42 @@ func _capture_c2_meal_fixture(result: Dictionary, output_path: String) -> bool:
 	)
 	if valid:
 		valid = await _save_viewport(vp, output_path)
+	screen.queue_free()
+	vp.queue_free()
+	await get_tree().process_frame
+	return valid
+
+
+func _capture_c3_exp_highrisk_fixture(
+	case_id: String,
+	result: Dictionary,
+	exp_before: int,
+	exp_after: int,
+	exp_max: int,
+	output_path: String
+) -> bool:
+	_seed_select_state()
+	var vp := _new_capture_viewport()
+	var screen := await _mount_screen(vp)
+	_seed_after_non_level_meal_state()
+	screen.preview_show_reward_result(result, exp_before, exp_after, exp_max, false)
+	await _await_capture_ready(vp)
+	var valid := (
+		_expect_reward_state(screen, "EXP_GAIN", "C3 %s" % case_id)
+		and _expect_c0_non_meal_stage_contract(screen, "C3 %s" % case_id)
+		and _expect_c0_flow_button_contract(
+			screen,
+			"RewardConfirmButton",
+			"RewardConfirmCue",
+			"summary",
+			88.0,
+			"C3 %s" % case_id
+		)
+	)
+	if valid:
+		valid = await _save_viewport(vp, output_path)
+	if valid:
+		valid = _record_c3_highrisk_capture(case_id, output_path)
 	screen.queue_free()
 	vp.queue_free()
 	await get_tree().process_frame
@@ -450,6 +516,43 @@ func _fake_non_level_result() -> Dictionary:
 	}
 
 
+func _fake_c3_first_bonus_result() -> Dictionary:
+	var result := _fake_non_level_result()
+	result["dish_name"] = "アジの香草焼き"
+	result["base_exp"] = 38
+	result["first_time"] = true
+	result["first_bonus"] = 30
+	result["total_exp"] = 68
+	return result
+
+
+func _fake_c3_no_bonus_result() -> Dictionary:
+	var result := _fake_non_level_result()
+	result["dish_name"] = "メジナの煮付け（記録済み）"
+	return result
+
+
+func _fake_c3_exp_cap_result() -> Dictionary:
+	var result := _fake_non_level_result()
+	result["dish_name"] = "カサゴの潮煮"
+	result["base_exp"] = 120
+	result["total_exp"] = 120
+	return result
+
+
+func _fake_c3_long_buff_result() -> Dictionary:
+	var result := _fake_non_level_result()
+	result["dish_name"] = "港町特製メジナと彩り野菜の香草煮"
+	result["buff"] = {
+		"recipe_id": "simmered",
+		"name": "港町特製メジナと彩り野菜の香草煮",
+		"stat": "safe_max",
+		"value": 0.10,
+		"text": "次の釣行で安全テンション域と最大体力が長時間にわたり大きく上がる",
+	}
+	return result
+
+
 func _fake_boss_unlock_result() -> Dictionary:
 	return {
 		"ok": true,
@@ -529,6 +632,43 @@ func _reset_manifest() -> void:
 	var file_exists := FileAccess.file_exists(OUT_MANIFEST)
 	if file_exists:
 		DirAccess.remove_absolute(OUT_MANIFEST)
+
+
+func _reset_c3_highrisk_manifest() -> void:
+	_c3_highrisk_manifest.clear()
+	if FileAccess.file_exists(OUT_C3_HIGH_RISK_MANIFEST):
+		DirAccess.remove_absolute(OUT_C3_HIGH_RISK_MANIFEST)
+
+
+func _record_c3_highrisk_capture(case_id: String, path: String) -> bool:
+	_c3_highrisk_manifest.append(
+		{
+			"state": case_id,
+			"capture": path,
+			"verified_state": case_id,
+			"width": VW.x,
+			"height": VW.y,
+		}
+	)
+	var file := FileAccess.open(OUT_C3_HIGH_RISK_MANIFEST, FileAccess.WRITE)
+	if file == null:
+		push_error("Failed to write C3 high-risk manifest: %s" % OUT_C3_HIGH_RISK_MANIFEST)
+		_c3_highrisk_manifest.pop_back()
+		return false
+	file.store_string(
+		JSON.stringify(
+			{
+				"version": 1,
+				"source": "tools/cooking_preview.gd",
+				"runtime_preview": true,
+				"contract": "C3 EXP_GAIN high-risk",
+				"captures": _c3_highrisk_manifest,
+			},
+			"\t"
+		)
+	)
+	file.close()
+	return true
 
 
 func _record_capture(state_id: String, path: String, verified_state: String) -> void:

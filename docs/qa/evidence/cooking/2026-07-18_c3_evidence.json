@@ -28,7 +28,71 @@
     "file": "/Users/ryukouokumura/.codex/worktrees/267d/tsuri_quest_umi_mvp/docs/qa/evidence/cooking/2026-07-18_c3_highrisk_exp_gain_levelup.png",
     "file_sha256": "e184bd81f37f77d34abff3bda974d3acf3fc0d426920a0231cc8bdb0d108409b",
     "decoded_rgba_sha256": "4cfa99d7eabdd25a61005b781eeb2c1e651831b4368c7cf3e5984301e4f9012e",
-    "note": "EXP_GAIN_LEVELUPのoverlay受理前。LEVEL_UP後の別画面を採否対象にしない。"
+    "note": "全5ケースをEXP_GAINの実runtime previewで再撮影。EXP_GAIN_LEVELUPはoverlay受理前。",
+    "manifest": "/tmp/tsuri_cooking_c3_highrisk_manifest.json",
+    "runtime_source": "tools/cooking_preview.gd",
+    "cases": {
+      "EXP_GAIN_LEVELUP": {
+        "state": "EXP_GAIN_LEVELUP",
+        "source_capture": "/tmp/tsuri_cooking_c3_exp_gain_levelup.png",
+        "file": "/Users/ryukouokumura/.codex/worktrees/267d/tsuri_quest_umi_mvp/docs/qa/evidence/cooking/2026-07-18_c3_highrisk_exp_gain_levelup.png",
+        "file_sha256": "e184bd81f37f77d34abff3bda974d3acf3fc0d426920a0231cc8bdb0d108409b",
+        "decoded_rgba_sha256": "4cfa99d7eabdd25a61005b781eeb2c1e651831b4368c7cf3e5984301e4f9012e",
+        "size": [
+          1280,
+          720
+        ],
+        "verified_state": "EXP_GAIN_LEVELUP"
+      },
+      "EXP_GAIN_FIRST_BONUS": {
+        "state": "EXP_GAIN_FIRST_BONUS",
+        "source_capture": "/tmp/tsuri_cooking_c3_exp_gain_first_bonus.png",
+        "file": "/Users/ryukouokumura/.codex/worktrees/267d/tsuri_quest_umi_mvp/docs/qa/evidence/cooking/2026-07-18_c3_highrisk_exp_gain_first_bonus.png",
+        "file_sha256": "b07db4354d6a36d419c4b8e633d65e4073938a19410d13ece42eb6921fca8d66",
+        "decoded_rgba_sha256": "b80ccac5f7530720dea51b46db4bc24ed74870a257fa06677c49dfb6bf336d37",
+        "size": [
+          1280,
+          720
+        ],
+        "verified_state": "EXP_GAIN_FIRST_BONUS"
+      },
+      "EXP_GAIN_NO_BONUS": {
+        "state": "EXP_GAIN_NO_BONUS",
+        "source_capture": "/tmp/tsuri_cooking_c3_exp_gain_no_bonus.png",
+        "file": "/Users/ryukouokumura/.codex/worktrees/267d/tsuri_quest_umi_mvp/docs/qa/evidence/cooking/2026-07-18_c3_highrisk_exp_gain_no_bonus.png",
+        "file_sha256": "eecc449b12a02f366249de64f682c2e8c979000f71bd4613830feb34ee25f2c3",
+        "decoded_rgba_sha256": "7200ef1f22e6f3fb8c6b6241b94999822ebbe36513d3e06ba1023d574622403f",
+        "size": [
+          1280,
+          720
+        ],
+        "verified_state": "EXP_GAIN_NO_BONUS"
+      },
+      "EXP_GAIN_EXP_CAP": {
+        "state": "EXP_GAIN_EXP_CAP",
+        "source_capture": "/tmp/tsuri_cooking_c3_exp_gain_exp_cap.png",
+        "file": "/Users/ryukouokumura/.codex/worktrees/267d/tsuri_quest_umi_mvp/docs/qa/evidence/cooking/2026-07-18_c3_highrisk_exp_gain_exp_cap.png",
+        "file_sha256": "c39b050cfb1d7a9ea4b14cc2c82834af9bfebce464773fae38cd7c66af8f27f9",
+        "decoded_rgba_sha256": "70762a0ff618cad9d21872bcc067d1e25f35dd927a64f7f26fcd76500cb27fbb",
+        "size": [
+          1280,
+          720
+        ],
+        "verified_state": "EXP_GAIN_EXP_CAP"
+      },
+      "EXP_GAIN_LONG_BUFF": {
+        "state": "EXP_GAIN_LONG_BUFF",
+        "source_capture": "/tmp/tsuri_cooking_c3_exp_gain_long_buff.png",
+        "file": "/Users/ryukouokumura/.codex/worktrees/267d/tsuri_quest_umi_mvp/docs/qa/evidence/cooking/2026-07-18_c3_highrisk_exp_gain_long_buff.png",
+        "file_sha256": "cfd0b8fccdab679f8d3e0d686a0ceb45320e017ae4fd663176d4e8475eab1bad",
+        "decoded_rgba_sha256": "fea0ddde96cf079228e13d6ba5319764245b851bcad8e8de0d9b1ce0715cf06d",
+        "size": [
+          1280,
+          720
+        ],
+        "verified_state": "EXP_GAIN_LONG_BUFF"
+      }
+    }
   },
   "regression": {
     "COOK_SELECT": {

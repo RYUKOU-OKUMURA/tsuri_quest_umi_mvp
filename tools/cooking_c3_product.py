@@ -8,6 +8,7 @@ import hashlib
 import os
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 from PIL import Image
 
@@ -82,7 +83,10 @@ def _write_if_changed(image: Image.Image, output_path: Path) -> str:
 def _check(output_path: Path, expected: Image.Image) -> None:
     if not output_path.is_file():
         raise SystemExit(f"missing product: {output_path}")
-    actual = Image.open(output_path).convert("RGBA")
+    try:
+        actual = Image.open(output_path).convert("RGBA")
+    except OSError as exc:
+        raise SystemExit(f"unreadable product: {output_path}: {exc}") from exc
     if actual.size != PRODUCT_SIZE:
         raise SystemExit(f"unexpected product size: {actual.size}")
     if actual.tobytes() != expected.tobytes():
@@ -95,12 +99,82 @@ def _check(output_path: Path, expected: Image.Image) -> None:
     print(f"C3 product check passed: {_rgba_sha256(actual)}")
 
 
+def _self_test() -> None:
+    """隔離tmpだけでprocessorの保存・破損・失敗時保護を検証する。"""
+    with tempfile.TemporaryDirectory(prefix="tsuri_cooking_c3_product_test_") as temp_dir:
+        root = Path(temp_dir)
+        output = root / "exp_burst_frame.png"
+        expected = Image.new("RGBA", PRODUCT_SIZE, (0, 0, 0, 0))
+        expected.putpixel((PRODUCT_SIZE[0] // 2, PRODUCT_SIZE[1] // 2), (255, 239, 190, 220))
+        expected.save(output, format="PNG", optimize=False)
+        original_bytes = output.read_bytes()
+
+        status = _write_if_changed(expected, output)
+        if status != "preserved pixel-identical" or output.read_bytes() != original_bytes:
+            raise AssertionError("decoded-identical product must preserve existing bytes")
+
+        changed = expected.copy()
+        changed.putpixel((PRODUCT_SIZE[0] // 2 + 1, PRODUCT_SIZE[1] // 2), (39, 193, 164, 190))
+        status = _write_if_changed(changed, output)
+        if status != "written" or output.read_bytes() == original_bytes:
+            raise AssertionError("decoded-different product must be rewritten")
+        if Image.open(output).convert("RGBA").tobytes() != changed.tobytes():
+            raise AssertionError("rewritten product pixels differ from the candidate")
+
+        corrupted = changed.copy()
+        corrupted.putpixel((PRODUCT_SIZE[0] // 2, PRODUCT_SIZE[1] // 2), (240, 30, 30, 255))
+        corrupted.save(output, format="PNG", optimize=False)
+        corrupted_bytes = output.read_bytes()
+        try:
+            _check(output, expected)
+        except SystemExit:
+            pass
+        else:
+            raise AssertionError("decoded-corrupt product must be detected")
+        if output.read_bytes() != corrupted_bytes:
+            raise AssertionError("check must not repair or overwrite a corrupt product")
+
+        output.write_bytes(b"not-a-png")
+        unreadable_bytes = output.read_bytes()
+        try:
+            _check(output, expected)
+        except SystemExit:
+            pass
+        else:
+            raise AssertionError("unreadable product must be detected")
+        if output.read_bytes() != unreadable_bytes:
+            raise AssertionError("check must not overwrite an unreadable product")
+
+        output.write_bytes(original_bytes)
+        replacement = expected.copy()
+        replacement.putpixel((PRODUCT_SIZE[0] // 2, PRODUCT_SIZE[1] // 2), (255, 180, 60, 255))
+        try:
+            with patch.object(os, "replace", side_effect=OSError("self-test save failure")):
+                _write_if_changed(replacement, output)
+        except OSError:
+            pass
+        else:
+            raise AssertionError("save failure must be surfaced")
+        if output.read_bytes() != original_bytes:
+            raise AssertionError("save failure must preserve the old product bytes")
+        if list(root.glob(f".{output.name}.*.tmp")):
+            raise AssertionError("save failure must clean up the temporary product")
+
+    print("C3 product self-test passed: byte preservation, rewrite, corruption, failure cleanup")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=Path, default=SOURCE)
     parser.add_argument("--output", type=Path, default=PRODUCT)
     parser.add_argument("--check", action="store_true")
+    parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
+    if args.check and args.self_test:
+        parser.error("--check and --self-test cannot be combined")
+    if args.self_test:
+        _self_test()
+        return
     product = build_product(args.source)
     if args.check:
         _check(args.output, product)
