@@ -1,6 +1,6 @@
 # 調理場 QA判断ログ
 
-最終更新: 2026-07-17 / 状態: C2-WIRE採用完了 / C1-A・C1-B・C0・既存構成freeze維持 / 次: C3
+最終更新: 2026-07-18 / 状態: C3 EXP_GAIN祝祭スロット採用完了 / C1-A・C1-B・C2-WIRE・C0・既存構成freeze維持
 参照画像: reference/cooking_flow/01_cook_select_concept.png, reference/cooking_flow/02_meal_result_concept.png, reference/cooking_flow/03_exp_gain_concept.png, reference/cooking_flow/04_level_up_overlay_concept.png, reference/cooking_flow/05_status_summary_concept.png
 QA更新コマンド: ./tools/cooking_visual_qa.sh
 
@@ -71,6 +71,25 @@ QA更新コマンド: ./tools/cooking_visual_qa.sh
 - P3止まり: 参照の立体的な巨大金文字、より密な金色光線/紙吹雪、月桂樹とメダルの一点物アート密度、魚種差、所持数差、枠線数px、星/小アイコン/紙汚れ/影/粒子の微差は、今後触るなら一点物素材/演出フェーズとして扱う。
 
 ## 6. フェーズスコープ宣言（作業中のみ）
+
+2026-07-18: `Visual Wave V3 C3 EXP_GAIN祝祭` を、Top1の光背/バースト1スロットだけの局所素材スライスとして開始。
+
+- 着手前baseline: `./tools/cooking_visual_qa.sh` を編集前に実行。現行5状態を同一決定状態で再撮影し、`/tmp/tsuri_cooking_{select,result,exp,levelup,status}.png` を確認。正式証拠は採否後に `docs/qa/evidence/cooking/2026-07-18_c3_*` へ保存する。
+- C3差分Top3: 1) `EXP_GAIN` の `exp_burst_frame.png` がPILの黄青ストライプとゲージ要素の混在で祝祭の光背/放射粒子として弱い、2) `EXP_GAIN` 大見出し・`+EXP` の金文字/光量が参照03より小さく弱い、3) EXPゲージ台座が専用祝祭フレームと一体化していない。
+- 今回動かすもの: Top1の `exp_burst_frame` 祝祭光背/放射光/粒子slotのみ、C3専用source、決定的processor、製品slot、C3証拠、素材台帳、必要最小限の素材監査consumer。
+- 今回動かさないもの: `exp_stage_bg`、大見出し/`+EXP` のruntime文字とサイズ、ゲージ台座/ゲージ値、料理画像、`MEAL_RESULT` / `LEVEL_UP_OVERLAY` / `STATUS_SUMMARY` runtime、C1-A/C1-B/C2-WIRE製品とfreeze、既存レイアウト・Palette・common・進行/入力/バフ/セーブロジック・他画面。
+- 代表状態: level-upなしEXP_GAIN、`EXP 127 / 285 -> 165 / 285`、初回済みの `メジナの煮付け`、効果 `安全域 +10%`。
+- 高リスク状態: `EXP_GAIN_LEVELUP`、初回bonus有無、EXP上限、長いbuff文言。C3では料理画像・ゲージ台座・背景の差を混ぜず、光背slotの差だけを確認する。
+- 採用条件: 同一状態の原寸afterが現行に明確に勝ち、320×180 after/referenceで参照03の「中央から広がる暖色放射光・粒子」の差が縮むこと。PIL有機バーストの再利用/改造は採用不可。参照PNGの直接import・日本語/可変数値の焼き込み不可。負けた候補はrevertし、不採用理由と証拠を記録する。
+- allowed-diff: EXP_GAINの `exp_burst_frame` で表現されるslotの画素だけ。背景・runtime文字・ゲージ値/台座・料理画像・下部stripと、他4状態の非対象画素は不動。
+
+2026-07-18: `C3 EXP_GAIN祝祭` を採用完了。Top1の `exp_burst_frame` 1スロットだけを差し替え、参照03の中央放射光・暖色粒子方向へ寄せた。
+
+- 採用候補: `tools/source_assets/cooking/c3_exp_burst_source.png` を `tools/cooking_c3_product.py` で `assets/showcase/cooking/exp_burst_frame.png` へ決定的変換。sourceは文字・数値・UI・料理・魚なし、参照PNGは比較だけに使用し、本番へ直接importしていない。
+- 原寸判断: `2026-07-18_c3_before_after_exp.png` で、現行PIL黄青ストライプ/ゲージ混在より、中央の金色放射光・青緑アクセント・粒子の祝祭性が明確に勝ち、`+38 EXP` の可読性を維持した。
+- 320×180判断: `2026-07-18_c3_after_reference_320x180.png` で、参照03の中央から広がる暖色放射光・粒子方向との差が縮んだため採用。現行背景、見出し/ゲージ台座/料理画像、runtime演出、他4状態は採否対象外。
+- 証拠: `docs/qa/evidence/cooking/2026-07-18_c3_after_exp.png`, `2026-07-18_c3_before_after_exp.png`, `2026-07-18_c3_after_reference.png`, `2026-07-18_c3_after_reference_320x180.png`, `2026-07-18_c3_highrisk_exp_gain_levelup.png`, `2026-07-18_c3_evidence.json`。他4状態はbefore/after decoded pixels一致をJSONへ記録。
+- 固定条件: `project.godot` は `b73d275c` のHEAD bytesへ復元済みで、C3製品/証拠commitへ含めない。旧一括generatorはC3製品をguardし、更新はC3専用processorだけで行う。`EXP_GAIN_LEVELUP` はoverlay受理前を高リスク証拠とし、LEVEL_UP後の別画面を変更しない。
 
 2026-07-17: `C2-WIRE MEAL_RESULT食事シーン背景` を、Visual Wave V2の局所素材スライスとして開始し、同日完了。
 

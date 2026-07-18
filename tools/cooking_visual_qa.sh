@@ -24,6 +24,7 @@ CAPTURES=(
   /tmp/tsuri_cooking_select.png
   /tmp/tsuri_cooking_result.png
   /tmp/tsuri_cooking_exp.png
+  /tmp/tsuri_cooking_c3_exp_gain_levelup.png
   /tmp/tsuri_cooking_levelup.png
   /tmp/tsuri_cooking_status.png
   /tmp/tsuri_cooking_c1b_hover_focus.png

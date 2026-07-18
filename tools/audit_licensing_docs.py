@@ -2958,6 +2958,8 @@ def main(management_text_overrides: dict[Path, str] | None = None) -> int:
             "process_cooking_c1b_assets.py",
             # C2 authored meal-scene art is adopted into the production background slot.
             "process_cooking_c2_product.py",
+            # C3 authored EXP celebration art is adopted into one production slot.
+            "cooking_c3_product.py",
             "process_harbor_info_board_assets.py",
             "process_harbor_plan_assets.py",
             # R5-A authored player portrait is a product source-consuming pipeline.

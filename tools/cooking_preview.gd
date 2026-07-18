@@ -8,6 +8,7 @@ const OUT_ALL := "/tmp/tsuri_cooking.png"
 const OUT_SELECT := "/tmp/tsuri_cooking_select.png"
 const OUT_RESULT := "/tmp/tsuri_cooking_result.png"
 const OUT_EXP := "/tmp/tsuri_cooking_exp.png"
+const OUT_C3_EXP_GAIN_LEVELUP := "/tmp/tsuri_cooking_c3_exp_gain_levelup.png"
 const OUT_LEVELUP := "/tmp/tsuri_cooking_levelup.png"
 const OUT_STATUS := "/tmp/tsuri_cooking_status.png"
 const OUT_C1B_HOVER_FOCUS := "/tmp/tsuri_cooking_c1b_hover_focus.png"
@@ -143,6 +144,9 @@ func _ready() -> void:
 	if not _expect_c0_flow_button_contract(
 		screen, "RewardConfirmButton", "RewardConfirmCue", "level", 88.0, "LEVEL_UP transition"
 	):
+		get_tree().quit(1)
+		return
+	if not await _save_viewport(vp, OUT_C3_EXP_GAIN_LEVELUP):
 		get_tree().quit(1)
 		return
 	if not screen.preview_accept_reward_overlay():

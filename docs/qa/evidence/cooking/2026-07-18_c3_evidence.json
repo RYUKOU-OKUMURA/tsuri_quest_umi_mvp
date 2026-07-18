@@ -1,0 +1,73 @@
+{
+  "date": "2026-07-18",
+  "scope": "C3 EXP_GAIN祝祭 Top1 exp_burst_frame 1 slot",
+  "representative": {
+    "before_file_sha256": "11925c6f2737b329bb74156bf147188f503d365d3df731ea987b57017fbd2ee4",
+    "after_file_sha256": "508a4ca65a0792b4522908c4228a108d161199d828b39ef8493f3bc7c298ac73",
+    "reference_file_sha256": "2707c7372490451abd700946bbe7969b2f645fbf15f27a9ff5ccd536f4216686",
+    "before_decoded_rgba_sha256": "5ba8652c030673d3083eda396001c76d3019da99baa687878f61a33f2ede632d",
+    "after_decoded_rgba_sha256": "d0ab7cf7606ab8094c6eb4d540b5542976d3145d6444024adf7746308a41e4fa",
+    "reference_decoded_rgba_sha256": "e2912a4037c965cd82227ba67037a008a8ac5c086d2ce8f8f7daababcad77da5",
+    "before_after_diff_bbox": [
+      418,
+      165,
+      976,
+      513
+    ],
+    "after_reference_size": [
+      1672,
+      941
+    ],
+    "after_reference_320_each_size": [
+      320,
+      180
+    ]
+  },
+  "high_risk": {
+    "state": "EXP_GAIN_LEVELUP",
+    "file": "/Users/ryukouokumura/.codex/worktrees/267d/tsuri_quest_umi_mvp/docs/qa/evidence/cooking/2026-07-18_c3_highrisk_exp_gain_levelup.png",
+    "file_sha256": "e184bd81f37f77d34abff3bda974d3acf3fc0d426920a0231cc8bdb0d108409b",
+    "decoded_rgba_sha256": "4cfa99d7eabdd25a61005b781eeb2c1e651831b4368c7cf3e5984301e4f9012e",
+    "note": "EXP_GAIN_LEVELUPのoverlay受理前。LEVEL_UP後の別画面を採否対象にしない。"
+  },
+  "regression": {
+    "COOK_SELECT": {
+      "before_file_sha256": "bd23bf0c4b15a7a23a0cbcaa84029d5cd0b956522d4c86d5b4e23a06ce2ec372",
+      "after_file_sha256": "bd23bf0c4b15a7a23a0cbcaa84029d5cd0b956522d4c86d5b4e23a06ce2ec372",
+      "before_decoded_rgba_sha256": "92fde6eb1bbd711c8d499de53001171c8bb20be1cf392b342db3b4371205d085",
+      "after_decoded_rgba_sha256": "92fde6eb1bbd711c8d499de53001171c8bb20be1cf392b342db3b4371205d085",
+      "after_evidence": "/Users/ryukouokumura/.codex/worktrees/267d/tsuri_quest_umi_mvp/docs/qa/evidence/cooking/2026-07-18_c3_after_cook_select.png",
+      "diff_bbox": null,
+      "pixel_identical": true
+    },
+    "MEAL_RESULT": {
+      "before_file_sha256": "59fd1e74554362032cddf22ae89ca918d4ed22276cbde6d59562f8959fa1b54f",
+      "after_file_sha256": "59fd1e74554362032cddf22ae89ca918d4ed22276cbde6d59562f8959fa1b54f",
+      "before_decoded_rgba_sha256": "464fda75f4f85f49d1fec9c5dc4c52a073e9f1d412dcf79ef68d60fe2fa618e1",
+      "after_decoded_rgba_sha256": "464fda75f4f85f49d1fec9c5dc4c52a073e9f1d412dcf79ef68d60fe2fa618e1",
+      "after_evidence": "/Users/ryukouokumura/.codex/worktrees/267d/tsuri_quest_umi_mvp/docs/qa/evidence/cooking/2026-07-18_c3_after_meal_result.png",
+      "diff_bbox": null,
+      "pixel_identical": true
+    },
+    "LEVEL_UP_OVERLAY": {
+      "before_file_sha256": "0c377ce91e175faa7130873b09d91e46a12236a4e162b8d3c1ce3a6547ce0d31",
+      "after_file_sha256": "0c377ce91e175faa7130873b09d91e46a12236a4e162b8d3c1ce3a6547ce0d31",
+      "before_decoded_rgba_sha256": "c94fb37b5344aefd107a86c280aaa318945e714a4bb1f3cc4644c768512d006d",
+      "after_decoded_rgba_sha256": "c94fb37b5344aefd107a86c280aaa318945e714a4bb1f3cc4644c768512d006d",
+      "after_evidence": "/Users/ryukouokumura/.codex/worktrees/267d/tsuri_quest_umi_mvp/docs/qa/evidence/cooking/2026-07-18_c3_after_level_up_overlay.png",
+      "diff_bbox": null,
+      "pixel_identical": true
+    },
+    "STATUS_SUMMARY": {
+      "before_file_sha256": "61c55c190df98cb3958afdfaadfb0eb98a93801ce6168ef5a1e35653fd1c0d4e",
+      "after_file_sha256": "61c55c190df98cb3958afdfaadfb0eb98a93801ce6168ef5a1e35653fd1c0d4e",
+      "before_decoded_rgba_sha256": "ddb8519b86054c66a7c1c5bc774cad61468bcc8642939c68a2aa85480ff90676",
+      "after_decoded_rgba_sha256": "ddb8519b86054c66a7c1c5bc774cad61468bcc8642939c68a2aa85480ff90676",
+      "after_evidence": "/Users/ryukouokumura/.codex/worktrees/267d/tsuri_quest_umi_mvp/docs/qa/evidence/cooking/2026-07-18_c3_after_status_summary.png",
+      "diff_bbox": null,
+      "pixel_identical": true
+    }
+  },
+  "project_godot_sha256": "1a4bc97cf7dd131d91357b8bdbb05215b3ef1bead4a3131f74e618a7f8cff9b1",
+  "project_godot_head_sha256": "1a4bc97cf7dd131d91357b8bdbb05215b3ef1bead4a3131f74e618a7f8cff9b1"
+}

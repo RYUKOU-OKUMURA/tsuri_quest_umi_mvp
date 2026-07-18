@@ -32,6 +32,7 @@ ADOPTED_PRODUCT_GUARDS: dict[str, str] = {
     "cooking_title_banner.png": "adopted screen-specific banner",
     "dish_feature_aji_shioyaki.png": "reference-derived organic dish art",
     "dish_icon_sheet.png": "adopted dish art sheet",
+    "exp_burst_frame.png": "C3 authored source; run tools/cooking_c3_product.py",
     "exp_stage_bg.png": "organic one-off EXP background",
     "fish_icon_sheet.png": "reference-derived fish art sheet",
     "level_unlock_medallion.png": "organic one-off reward motif",
