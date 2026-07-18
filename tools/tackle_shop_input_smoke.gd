@@ -4,7 +4,7 @@ const ShopScreenScript = preload("res://src/ui/shop_screen.gd")
 const ThemeFactory = preload("res://src/ui/ui_theme.gd")
 
 const DESIGN_SIZE := Vector2(1280.0, 720.0)
-const EVIDENCE_FILE := "2026-07-15_input_card_focus.png"
+const EVIDENCE_FILE := "2026-07-18_tackle_t1_focus_disabled-card.png"
 
 var _screen: Variant
 var _navigation_events: Array[String] = []
@@ -90,6 +90,34 @@ func _verify_mouse_purchase_and_focus_restore() -> void:
 	await _settle()
 	iso = _card_button("iso")
 	_expect(get_viewport().gui_get_focus_owner() == iso, "card focus should survive an explicit rebuild")
+	await _capture_marlin_purchase_disabled_evidence()
+
+
+func _capture_marlin_purchase_disabled_evidence() -> void:
+	# T1専用証拠は、marlinを実際に選択して購入後disabledへ遷移し、
+	# action focusが選択カードへfallbackしたafter状態を保存する。
+	PlayerProgress.level = 3
+	PlayerProgress.money = 10000
+	PlayerProgress.owned_rods = ["starter", "iso", "offshore"]
+	PlayerProgress.equipped_rod_id = "offshore"
+	_screen._set_shop_mode("rod")
+	_screen._select_item("marlin")
+	await _settle()
+	var marlin := _card_button("marlin")
+	_expect(_screen._selected_item_id == "marlin", "T1 evidence must select marlin")
+	_expect(marlin != null, "T1 evidence must render the marlin card")
+	_expect(_screen._detail_title_label.text == "カジキ竿・蒼槍", "T1 evidence must show the marlin detail title")
+	_expect(not _screen._action_button.disabled, "T1 evidence must start from an affordable marlin action")
+
+	_screen._action_button.grab_focus()
+	await _send_key(KEY_ENTER)
+	await _settle()
+	marlin = _card_button("marlin")
+	_expect(PlayerProgress.equipped_rod_id == "marlin", "T1 evidence must purchase and equip marlin")
+	_expect(_screen._action_button.disabled, "T1 evidence must show the post-purchase disabled action")
+	_expect(get_viewport().gui_get_focus_owner() == marlin, "T1 evidence must show disabled-action focus fallback to marlin card")
+	_expect(_has_visible_common_focus(marlin), "T1 evidence must show the marlin card focus ring")
+	await _capture_evidence()
 
 
 func _verify_tab_and_card_rebuild_focus() -> void:

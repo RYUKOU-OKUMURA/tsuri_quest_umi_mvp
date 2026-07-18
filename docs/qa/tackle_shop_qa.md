@@ -68,17 +68,17 @@ QA更新コマンド: `./tools/tackle_shop_visual_qa.sh`
 2026-07-18:
 - TACKLE-T1として、竿タブの高視線代表商品 `marlin` だけをpilotした。現行の同一seed・同一データ・同一選択（`tools/tackle_shop_preview.gd` の竿タブ `marlin`、Lv.3、5,400 G、装備竿=外海・青嵐）を1280x720と2124x1507で再撮影し、旧v1詳細絵をbefore、T1候補をafterとして比較した。
 - 変えたもの: `tools/source_assets/tackle_shop/t1_marlin_detail_source.png`、T1専用の決定的processor/check/self-test、`shop_detail_item_sheet.png` のindex 4セル、比較/evidence。変えていないもの: index 0–3/5–10の10セル、backplate、3x2カード、全Rect、商品/価格/状態/runtime文言、GameData/PlayerProgress、購入/装備ロジック、mouse hit領域、仕掛け6カード、focus graph。
-- 非対象10セルのdecoded RGBA連結hashはbefore/afterで一致（`6f5304272900d7f5fcdc61d5dbf496c8a98cbdd2040241357e3f92a01a1e19a9`）。processorの`--check`と`--self-test`は、対象外セル変更、対象セルstale、decoded同値rewrite、atomic失敗時の旧output/temp cleanupを検出した。
+- 非対象10セルのdecoded RGBA連結freeze hashはbaseline `b73d275c` と一致（`6f5304272900d7f5fcdc61d5dbf496c8a98cbdd2040241357e3f92a01a1e19a9`）。hashはprocessor定数へ固定し、`--check`と`--self-test`は非対象任意セル変更、対象index 4のsource期待値stale、decoded同値rewrite、atomic失敗時の旧output/temp cleanupを検出する。現行sheet自身から期待値を再生成しない。
 - 採用理由: 原寸で旧切り抜き拡大よりmarlinの竿全体・ガイド・両軸リールの構造が明瞭になり、detail wellの横幅を使って主対象として読める。320x180比較でも詳細大絵が商品カード群に埋もれず、参照の「商品を大きく見せる」方向へ近づいた。候補生成そのものは採用理由にせず、before/after/reference比較で採否した。
 - 証拠: `docs/qa/evidence/tackle_shop/2026-07-18_tackle_t1_marlin_before_after.png`、`2026-07-18_tackle_t1_marlin_before_after_reference_320x180.png`、`2026-07-18_tackle_t1_marlin_detail_before_after.png`、`2026-07-18_tackle_t1_marlin_expanded_before_after.png`、`2026-07-18_tackle_t1_focus_disabled-card.png`。
-- 高リスク回帰: `tackle_shop_smoke.tscn` のmarlin購入可能→購入後disabled、資金不足big_game、竿/仕掛け切替、`tackle_shop_input_smoke.tscn` の初期focus/disabled skip/Tab/Shift+Tab/Enter/Escape/mouse、仕掛け6カードを維持する。focus原寸証拠はafter状態で保存した。
+- 高リスク回帰: `tackle_shop_smoke.tscn` のmarlin購入可能→購入後disabled、資金不足big_game、竿/仕掛け切替、`tackle_shop_input_smoke.tscn` の初期focus/disabled skip/Tab/Shift+Tab/Enter/Escape/mouse、仕掛け6カードを維持する。focus原寸証拠はinput smokeがmarlinを実表示し、購入後disabled actionからmarlinカードへfocus fallbackしたfresh after状態で保存した。
 - 固定条件: `marlin` 以外の詳細絵を同じcommitで作らない。sourceをreference/候補へ戻さず、商品名・価格・状態値をPNGへ焼き込まない。次の大絵は別pilotとして同一比較条件を満たす場合だけ起票する。
 
 2026-07-15:
 - E11 INPUT-SHOPとして、選択中カードを安全な初期focusにし、竿/仕掛けタブ・現在表示中の商品カード・有効な購入/装備・港戻りを閉じたfocus graphへ登録した。disabledの購入/装備は候補から除外する。
 - カードはrefreshごとに再生成されるため、`tab:<mode>` / `card:<item_id>` / `action` / `return` の意味IDで操作文脈を復元する。購入直後にfocus中の主操作がdisabledになった場合は、選択カードへfallbackする。
 - 代表状態は「竿・入門竿装備中（主操作disabled）」、高リスク状態は「磯竿を選択して購入可能→購入後disabled」と「仕掛けタブ・6カード」。実キーのTab/Shift+Tab/Enter/Escapeと実mouse clickで、全enabled到達、disabled skip、カード選択、購入1回、タブ切替、港戻り1回を確認した。
-- 原寸証拠: `docs/qa/evidence/tackle_shop/2026-07-15_input_card_focus.png`。1280x720で入門竿カードの共通4px focus ringを確認した。
+- 原寸証拠: `docs/qa/evidence/tackle_shop/2026-07-15_input_card_focus.png` は既存E11初期focus証拠。T1高リスク証拠は `docs/qa/evidence/tackle_shop/2026-07-18_tackle_t1_focus_disabled-card.png` で、input smokeがmarlin購入後のdisabled actionとmarlinカードfocus ringを1280x720でfresh captureした。
 - 変えていないもの: 1280x720 design canvas、backplate、3x2カード、全Rect、商品/詳細素材、runtime文言、GameData、PlayerProgress、価格・購入・装備ロジック、既存mouse hit領域。
 - 検証: `tackle_shop_input_smoke.tscn` / `tackle_shop_smoke.tscn` / `tackle_shop_visual_qa.sh` / E11 input baselineのSHOP finding 0件 / `./tools/validate_project.sh` / `git diff --check`。
 - 固定条件: カード再生成後のfocusは意味IDで復元し、disabled操作をgraphへ戻さない。カードのローカル透明styleで共通focus ringを上書きしない。

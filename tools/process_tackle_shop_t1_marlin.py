@@ -21,11 +21,30 @@ TARGET_INDEX = 4  # ITEM_ICON_INDEX の marlin
 EXPECTED_SOURCE_SIZE = (1641, 958)
 BACKGROUND_CHROMA_MAX = 8
 BACKGROUND_LUMA_MIN = 220
+NON_TARGET_INDICES = tuple(index for index in range(CELL_COUNT) if index != TARGET_INDEX)
+# b73d275c の製品sheetから取得したT1 freeze。現行sheet自身から再計算して
+# 期待値にすることは禁止し、index 0–3/5–10 のdecoded RGBAを固定する。
+EXPECTED_NON_TARGET_FREEZE_HASH = "6f5304272900d7f5fcdc61d5dbf496c8a98cbdd2040241357e3f92a01a1e19a9"
+EXPECTED_TARGET_HASH = "dd27bd9fd0bd8225bbb90a8c105240a999385dba472307e3d9aae181f7abc832"
 
 
 def _decoded_hash(image: Image.Image) -> str:
     payload = image.mode.encode() + b"\0" + str(image.size).encode() + b"\0" + image.tobytes()
     return hashlib.sha256(payload).hexdigest()
+
+
+def _non_target_freeze_hash(cells: list[Image.Image]) -> str:
+    payload = b"".join(cells[index].tobytes() for index in NON_TARGET_INDICES)
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _assert_non_target_freeze(cells: list[Image.Image]) -> None:
+    actual = _non_target_freeze_hash(cells)
+    if actual != EXPECTED_NON_TARGET_FREEZE_HASH:
+        raise ValueError(
+            "T1 non-target decoded RGBA freeze drifted: "
+            f"{actual} != {EXPECTED_NON_TARGET_FREEZE_HASH}"
+        )
 
 
 def _background_mask(source: Image.Image) -> Image.Image:
@@ -78,6 +97,14 @@ def _split_cells(sheet: Image.Image) -> list[Image.Image]:
     return [sheet.crop((index * CELL_SIZE[0], 0, (index + 1) * CELL_SIZE[0], CELL_SIZE[1])) for index in range(CELL_COUNT)]
 
 
+def _load_cells(path: Path) -> list[Image.Image]:
+    if not path.is_file():
+        raise FileNotFoundError(f"missing detail sheet: {path}")
+    with Image.open(path) as opened:
+        opened.load()
+        return _split_cells(opened.convert("RGBA"))
+
+
 def _build_sheet(output_path: Path = OUTPUT, source_path: Path = SOURCE) -> tuple[Image.Image, list[str], str]:
     if not output_path.is_file():
         raise FileNotFoundError(f"missing detail sheet: {output_path}")
@@ -85,12 +112,16 @@ def _build_sheet(output_path: Path = OUTPUT, source_path: Path = SOURCE) -> tupl
         opened.load()
         current = opened.convert("RGBA")
     cells = _split_cells(current)
+    _assert_non_target_freeze(cells)
     before_hashes = [_decoded_hash(cell) for cell in cells]
     cells[TARGET_INDEX] = _build_product_cell(source_path)
+    target_hash = _decoded_hash(cells[TARGET_INDEX])
+    if target_hash != EXPECTED_TARGET_HASH:
+        raise ValueError(f"T1 marlin source output drifted: {target_hash} != {EXPECTED_TARGET_HASH}")
     sheet = Image.new("RGBA", current.size, (0, 0, 0, 0))
     for index, cell in enumerate(cells):
         sheet.alpha_composite(cell, (index * CELL_SIZE[0], 0))
-    return sheet, before_hashes, _decoded_hash(cells[TARGET_INDEX])
+    return sheet, before_hashes, target_hash
 
 
 def _write_if_changed(path: Path, candidate: Image.Image) -> bool:
@@ -133,6 +164,7 @@ def _display_path(path: Path) -> str:
 
 def _validate_target_and_others(sheet: Image.Image, before_hashes: list[str], target_hash: str) -> None:
     cells = _split_cells(sheet)
+    _assert_non_target_freeze(cells)
     for index, cell in enumerate(cells):
         actual = _decoded_hash(cell)
         if index == TARGET_INDEX:
@@ -143,31 +175,33 @@ def _validate_target_and_others(sheet: Image.Image, before_hashes: list[str], ta
 
 
 def check_product(source_path: Path = SOURCE, output_path: Path = OUTPUT) -> None:
-    expected, before_hashes, target_hash = _build_sheet(output_path, source_path)
-    # The current product is expected to contain the generated target; reconstructing
-    # the comparison from its ten non-target cells prevents accidental full-sheet regeneration.
-    with Image.open(output_path) as opened:
-        opened.load()
-        actual = opened.convert("RGBA")
-    _split_cells(actual)
-    actual_cells = _split_cells(actual)
-    expected_cells = _split_cells(expected)
-    for index in range(CELL_COUNT):
-        if index == TARGET_INDEX:
-            if actual_cells[index].tobytes() != expected_cells[index].tobytes():
-                raise ValueError("T1 marlin target cell is stale")
-        elif actual_cells[index].tobytes() != expected_cells[index].tobytes():
-            raise ValueError(f"T1 sheet changed outside target cell at index {index}")
-    _validate_target_and_others(expected, before_hashes, target_hash)
-    print(f"TACKLE-T1 product check passed: {_display_path(output_path)} target={target_hash}")
+    actual_cells = _load_cells(output_path)
+    _assert_non_target_freeze(actual_cells)
+    expected_target = _build_product_cell(source_path)
+    target_hash = _decoded_hash(expected_target)
+    if target_hash != EXPECTED_TARGET_HASH:
+        raise ValueError(f"T1 marlin source output drifted: {target_hash} != {EXPECTED_TARGET_HASH}")
+    actual_target_hash = _decoded_hash(actual_cells[TARGET_INDEX])
+    if actual_target_hash != EXPECTED_TARGET_HASH or actual_cells[TARGET_INDEX].tobytes() != expected_target.tobytes():
+        raise ValueError(
+            "T1 marlin target is stale: "
+            f"{actual_target_hash} != {EXPECTED_TARGET_HASH} or source pixels differ"
+        )
+    print(
+        f"TACKLE-T1 product check passed: {_display_path(output_path)} "
+        f"target={target_hash} non_target={EXPECTED_NON_TARGET_FREEZE_HASH}"
+    )
 
 
 def self_test() -> None:
-    with Image.open(OUTPUT) as opened:
-        opened.load()
-        baseline = opened.convert("RGBA")
-    baseline_cells = _split_cells(baseline)
+    baseline_cells = _load_cells(OUTPUT)
+    _assert_non_target_freeze(baseline_cells)
+    baseline = Image.new("RGBA", (CELL_SIZE[0] * CELL_COUNT, CELL_SIZE[1]), (0, 0, 0, 0))
+    for index, cell in enumerate(baseline_cells):
+        baseline.alpha_composite(cell, (index * CELL_SIZE[0], 0))
     expected_target = _build_product_cell(SOURCE)
+    if _decoded_hash(expected_target) != EXPECTED_TARGET_HASH:
+        raise AssertionError("T1 self-test source target hash drifted")
     before_hashes = [_decoded_hash(cell) for cell in baseline_cells]
 
     with tempfile.TemporaryDirectory(prefix="tackle_shop_t1_processor_") as directory:
@@ -192,9 +226,19 @@ def self_test() -> None:
         if isolated.read_bytes() != preserved_bytes:
             raise AssertionError("T1 identical sheet bytes changed")
 
-        corrupted = expected.copy()
-        corrupted.putpixel((TARGET_INDEX * CELL_SIZE[0] + 20, 20), (0, 0, 0, 255))
-        corrupted.save(isolated, format="PNG", optimize=False, compress_level=9)
+        corrupted_non_target = expected.copy()
+        corrupted_non_target.putpixel((20, 20), (0, 0, 0, 255))
+        corrupted_non_target.save(isolated, format="PNG", optimize=False, compress_level=9)
+        try:
+            check_product(SOURCE, isolated)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("T1 self-test failed to detect non-target cell drift")
+
+        corrupted_target = expected.copy()
+        corrupted_target.putpixel((TARGET_INDEX * CELL_SIZE[0] + 20, 20), (0, 0, 0, 255))
+        corrupted_target.save(isolated, format="PNG", optimize=False, compress_level=9)
         try:
             check_product(SOURCE, isolated)
         except ValueError:
@@ -227,9 +271,9 @@ def self_test() -> None:
         if set(isolated.parent.glob(f".{isolated.stem}.*.png")) != temporary_before:
             raise AssertionError("T1 self-test left a temporary file")
 
-    if expected_target.size != CELL_SIZE:
+    if _decoded_hash(expected_target) != EXPECTED_TARGET_HASH or expected_target.size != CELL_SIZE:
         raise AssertionError("T1 target cell size mismatch")
-    print("TACKLE-T1 processor self-test passed (target-only integration, invariance, stale and atomic failure checks)")
+    print("TACKLE-T1 processor self-test passed (baseline freeze, target-only integration, corruption and atomic failure checks)")
 
 
 def main() -> None:
