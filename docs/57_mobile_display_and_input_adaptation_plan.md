@@ -327,7 +327,7 @@ DoD: 1280×720が非回帰。`keep`維持下の4:3 simulationで、港のextende
 
 ### M3. Touch契約
 
-2026-07-19の局所対応として、調理場の所持魚一覧だけは `MOUSE_FILTER_PASS`、release-only透明hit target、12px drag deadzoneへ移行した。desktop emulated dragの専用smokeでtap一重発火、drag時の選択cancel、wheel、keyboard focus、row寸法不変を固定済み。iPad実機の再確認と、recipeカード・他画面・cancel・multi-touchを含むM3全体は未完であり、`IPAD-INPUT-01`完了には数えない。
+2026-07-19の局所対応として、調理場の所持魚一覧だけは `MOUSE_FILTER_PASS`、72px row全面のrelease-only透明hit target、12px drag deadzoneへ移行した。desktop emulated dragの専用smokeで上下端tapを含む一重発火、上下端起点drag時の選択cancel、wheel、keyboard focus、row寸法不変を固定済み。iPad実機の再確認と、recipeカード・他画面・cancel・multi-touchを含むM3全体は未完であり、`IPAD-INPUT-01`完了には数えない。
 
 - direct mouse判定を意味actionへ置換
 - tap / hold / release / cancel

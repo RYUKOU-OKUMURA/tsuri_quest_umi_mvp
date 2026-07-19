@@ -1049,12 +1049,13 @@ func _ordered_cooking_fish_ids() -> Array[String]:
 	return ids
 
 
-func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
+func _make_fish_card(fish_id: String, count: int) -> Control:
 	var fish := GameData.get_fish(fish_id)
 	var owned := count > 0
-	var card := PanelContainer.new()
+	var card := Control.new()
 	card.name = _fish_row_node_name(fish_id)
 	card.custom_minimum_size = Vector2(0, 72)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.mouse_filter = Control.MOUSE_FILTER_PASS if owned else Control.MOUSE_FILTER_IGNORE
 	card.set_meta(FOCUS_KIND_META, "fish")
 	card.set_meta(FOCUS_ID_META, fish_id)
@@ -1066,9 +1067,14 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 			func(event: InputEvent) -> void:
 				_handle_focus_card_accept(event, card, _select_fish.bind(fish_id))
 		)
+	var panel := PanelContainer.new()
+	panel.name = "%sVisual" % _fish_row_node_name(fish_id)
+	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.add_child(panel)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 0)
-	card.add_child(row)
+	panel.add_child(row)
 	var marker := make_shadow_label("", 20, Palette.GOLD_BRIGHT, 2)
 	marker.custom_minimum_size = Vector2(0, 0)
 	marker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -1109,13 +1115,15 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	amount.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	amount.clip_text = true
 	row.add_child(amount)
-	_make_card_contents_click_through(card)
+	_make_card_contents_click_through(panel)
 	var hit_target: Button = null
 	if owned:
 		hit_target = _make_fish_hit_target(fish_id)
+		hit_target.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		card.add_child(hit_target)
 	_fish_cards[fish_id] = {
 		"card": card,
+		"panel": panel,
 		"marker": marker,
 		"owned": owned,
 		"hit_target": hit_target,
@@ -1190,10 +1198,11 @@ func _refresh_fish_card_styles() -> void:
 	for fish_id in _fish_cards.keys():
 		var selected := String(fish_id) == _selected_fish_id
 		var entry := Dictionary(_fish_cards[fish_id])
-		var card := entry.get("card") as PanelContainer
+		var card := entry.get("card") as Control
+		var panel := entry.get("panel") as PanelContainer
 		var marker := entry.get("marker") as Label
 		var owned := bool(entry.get("owned", true))
-		if card == null:
+		if card == null or panel == null:
 			continue
 		var card_tint := Palette.COOKING_FISH_ROW_MUTED_MODULATE
 		var fill := Palette.COOKING_FISH_ROW_MUTED_FILL
@@ -1209,8 +1218,8 @@ func _refresh_fish_card_styles() -> void:
 			fill = Palette.COOKING_FISH_ROW_FILL
 			border = Palette.COOKING_FISH_ROW_BORDER
 			inner = Palette.COOKING_FISH_ROW_INNER
-		card.self_modulate = card_tint
-		card.add_theme_stylebox_override(
+		panel.self_modulate = card_tint
+		panel.add_theme_stylebox_override(
 			"panel",
 			_texture_style_box(
 				FISH_ROW_FRAME,

@@ -264,17 +264,25 @@ func _verify_fish_touch_scroll_contract() -> void:
 	_expect(hit_target.action_mode == BaseButton.ACTION_MODE_BUTTON_RELEASE, "fish hit target should select only on release")
 	for state in ["normal", "hover", "pressed", "focus", "disabled", "hover_pressed"]:
 		_expect(hit_target.get_theme_stylebox(state) is StyleBoxEmpty, "fish hit target state %s should remain visually empty" % state)
-	var visual_row := card.get_child(0) as Control
-	_expect(visual_row != null and hit_target.get_global_rect().is_equal_approx(visual_row.get_global_rect()), "fish hit target should cover the complete visual row")
+	_expect(hit_target.get_global_rect().is_equal_approx(card.get_global_rect()), "fish hit target should cover the complete 72px row")
 	_expect(is_equal_approx(card.size.y, 72.0), "fish hit target should not change the frozen 72px row height")
 
 	var tap_count := [0]
 	hit_target.pressed.connect(func() -> void: tap_count[0] += 1)
 	scroll.scroll_vertical = 0
 	await _settle()
+	var hit_rect := hit_target.get_global_rect()
+	await _click_position(Vector2(hit_rect.get_center().x, hit_rect.position.y + 1.0))
+	_expect(tap_count[0] == 1 and screen._selected_fish_id == "saba", "top edge of the 72px fish row should select on release")
+	screen._select_fish("aji")
+	await _settle()
+	await _click_position(Vector2(hit_rect.get_center().x, hit_rect.end.y - 1.0))
+	_expect(tap_count[0] == 2 and screen._selected_fish_id == "saba", "bottom edge of the 72px fish row should select on release")
+	screen._select_fish("aji")
+	await _settle()
 	await _drag_control(hit_target, [Vector2(0.0, -6.0)])
 	_expect(scroll.scroll_vertical == 0, "sub-deadzone fish jitter should not scroll")
-	_expect(tap_count[0] == 1, "sub-deadzone fish tap should activate exactly once on release")
+	_expect(tap_count[0] == 3, "sub-deadzone fish tap should activate exactly once on release")
 	_expect(screen._selected_fish_id == "saba", "sub-deadzone fish tap should select its fish")
 
 	screen._select_fish("aji")
@@ -286,7 +294,10 @@ func _verify_fish_touch_scroll_contract() -> void:
 	scroll.scroll_started.connect(func() -> void: scroll_started_count[0] += 1)
 	scroll.scroll_vertical = 0
 	await _settle()
-	await _drag_control(hit_target, [Vector2(0.0, -24.0), Vector2(0.0, -24.0), Vector2(0.0, -24.0)])
+	await _drag_from_position(
+		Vector2(hit_rect.get_center().x, hit_rect.end.y - 1.0),
+		[Vector2(0.0, -24.0), Vector2(0.0, -24.0), Vector2(0.0, -24.0)]
+	)
 	_expect(scroll_started_count[0] == 1, "fish swipe should start one ScrollContainer drag")
 	_expect(scroll.scroll_vertical > 0, "fish swipe should move the vertical scroll position")
 	_expect(tap_count[0] == drag_activation_count, "fish swipe should cancel release selection")
@@ -504,7 +515,11 @@ func _drag_control(control: Control, relative_steps: Array[Vector2]) -> void:
 	_expect(control != null, "drag target should exist")
 	if control == null:
 		return
-	var position := control.get_global_rect().get_center()
+	await _drag_from_position(control.get_global_rect().get_center(), relative_steps)
+
+
+func _drag_from_position(start_position: Vector2, relative_steps: Array[Vector2]) -> void:
+	var position := start_position
 	var hover := InputEventMouseMotion.new()
 	hover.position = position
 	hover.global_position = position
@@ -534,6 +549,10 @@ func _drag_control(control: Control, relative_steps: Array[Vector2]) -> void:
 	up.pressed = false
 	_active_viewport.push_input(up, true)
 	await _settle()
+
+
+func _click_position(position: Vector2) -> void:
+	await _drag_from_position(position, [])
 
 
 func _wheel_control(control: Control, button_index: MouseButton) -> void:
