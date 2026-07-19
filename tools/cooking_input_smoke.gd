@@ -6,6 +6,7 @@ const ProbeCommon = preload("res://tools/e11_probe_common.gd")
 
 const DESIGN_SIZE := Vector2(1280.0, 720.0)
 const TRANSITION_TIMEOUT_SECONDS := 2.0
+const FISH_SCROLL_DEADZONE := 12
 const EVIDENCE_NORMAL := "2026-07-16_input_select_normal_focus.png"
 const EVIDENCE_LOCKED := "2026-07-16_input_select_locked_focus.png"
 const EVIDENCE_EMPTY := "2026-07-16_input_select_empty_focus.png"
@@ -18,9 +19,14 @@ const EVIDENCE_STATUS := "2026-07-16_input_status_summary_focus.png"
 var _failed := false
 var _navigation_events: Array[String] = []
 var _active_viewport: SubViewport
+var _original_emulate_touch_from_mouse := false
+var _input_emulation_overridden := false
 
 
 func _ready() -> void:
+	_original_emulate_touch_from_mouse = Input.emulate_touch_from_mouse
+	Input.emulate_touch_from_mouse = true
+	_input_emulation_overridden = true
 	get_tree().root.theme = ThemeFactory.build_theme()
 	await _verify_normal_focus_graph_and_semantic_restore()
 	if _failed:
@@ -37,11 +43,14 @@ func _ready() -> void:
 	await _verify_mouse_regression()
 	if _failed:
 		return
+	await _verify_fish_touch_scroll_contract()
+	if _failed:
+		return
 	await _verify_cook_select_cancel_once()
 	if _failed:
 		return
 	print("cooking_input_smoke: ok")
-	get_tree().quit(0)
+	_finish(0)
 
 
 func _verify_normal_focus_graph_and_semantic_restore() -> void:
@@ -236,6 +245,64 @@ func _verify_mouse_regression() -> void:
 	await _free_screen(screen)
 
 
+func _verify_fish_touch_scroll_contract() -> void:
+	_seed_progress(4, _all_owned_fish_inventory())
+	var screen: Variant = await _make_screen()
+	var scroll := screen._fish_scroll as ScrollContainer
+	var scrollbar := scroll.get_v_scroll_bar()
+	_expect(scroll.scroll_deadzone == FISH_SCROLL_DEADZONE, "fish scroll should keep a 12px logical drag deadzone")
+	_expect(scrollbar.max_value > scrollbar.page, "all-owned fish fixture should overflow the visible list")
+	var card := _fish_card(screen, "saba")
+	var hit_target := _fish_hit_target(screen, "saba")
+	_expect(card != null and hit_target != null, "owned fish row should expose its release-only hit target")
+	if card == null or hit_target == null:
+		await _free_screen(screen)
+		return
+	_expect(card.mouse_filter == Control.MOUSE_FILTER_PASS, "owned fish row should pass drag input to FishListScroll")
+	_expect(hit_target.mouse_filter == Control.MOUSE_FILTER_PASS, "fish hit target should pass drag input to FishListScroll")
+	_expect(hit_target.focus_mode == Control.FOCUS_NONE, "fish hit target should stay outside the keyboard focus graph")
+	_expect(hit_target.action_mode == BaseButton.ACTION_MODE_BUTTON_RELEASE, "fish hit target should select only on release")
+	for state in ["normal", "hover", "pressed", "focus", "disabled", "hover_pressed"]:
+		_expect(hit_target.get_theme_stylebox(state) is StyleBoxEmpty, "fish hit target state %s should remain visually empty" % state)
+	var visual_row := card.get_child(0) as Control
+	_expect(visual_row != null and hit_target.get_global_rect().is_equal_approx(visual_row.get_global_rect()), "fish hit target should cover the complete visual row")
+	_expect(is_equal_approx(card.size.y, 72.0), "fish hit target should not change the frozen 72px row height")
+
+	var tap_count := [0]
+	hit_target.pressed.connect(func() -> void: tap_count[0] += 1)
+	scroll.scroll_vertical = 0
+	await _settle()
+	await _drag_control(hit_target, [Vector2(0.0, -6.0)])
+	_expect(scroll.scroll_vertical == 0, "sub-deadzone fish jitter should not scroll")
+	_expect(tap_count[0] == 1, "sub-deadzone fish tap should activate exactly once on release")
+	_expect(screen._selected_fish_id == "saba", "sub-deadzone fish tap should select its fish")
+
+	screen._select_fish("aji")
+	await _settle()
+	var selected_fish_before := String(screen._selected_fish_id)
+	var selected_recipe_before := String(screen._selected_recipe_id)
+	var drag_activation_count := int(tap_count[0])
+	var scroll_started_count := [0]
+	scroll.scroll_started.connect(func() -> void: scroll_started_count[0] += 1)
+	scroll.scroll_vertical = 0
+	await _settle()
+	await _drag_control(hit_target, [Vector2(0.0, -24.0), Vector2(0.0, -24.0), Vector2(0.0, -24.0)])
+	_expect(scroll_started_count[0] == 1, "fish swipe should start one ScrollContainer drag")
+	_expect(scroll.scroll_vertical > 0, "fish swipe should move the vertical scroll position")
+	_expect(tap_count[0] == drag_activation_count, "fish swipe should cancel release selection")
+	_expect(screen._selected_fish_id == selected_fish_before, "fish swipe should not change the selected fish")
+	_expect(screen._selected_recipe_id == selected_recipe_before, "fish swipe should not rebuild the selected recipe")
+
+	var wheel_activation_count := int(tap_count[0])
+	scroll.scroll_vertical = 0
+	await _settle()
+	await _wheel_control(hit_target, MOUSE_BUTTON_WHEEL_DOWN)
+	_expect(scroll.scroll_vertical > 0, "mouse wheel should continue scrolling over an owned fish row")
+	_expect(tap_count[0] == wheel_activation_count, "mouse wheel should not select a fish")
+	_expect(screen._selected_fish_id == selected_fish_before, "mouse wheel should preserve the selected fish")
+	await _free_screen(screen)
+
+
 func _verify_cook_select_cancel_once() -> void:
 	_seed_progress(4, {"aji": 2})
 	var screen: Variant = await _make_screen()
@@ -256,6 +323,13 @@ func _seed_progress(level: int, inventory: Dictionary) -> void:
 	PlayerProgress.best_sizes = {}
 	PlayerProgress.eaten_recipes = {}
 	PlayerProgress.pending_buff = {}
+
+
+func _all_owned_fish_inventory() -> Dictionary:
+	var inventory := {}
+	for fish_id in GameData.get_all_cookable_fish_ids():
+		inventory[String(fish_id)] = 2
+	return inventory
 
 
 func _fake_level_result() -> Dictionary:
@@ -303,6 +377,11 @@ func _make_screen() -> Variant:
 func _fish_card(screen: Variant, fish_id: String) -> Control:
 	var entry := Dictionary(screen._fish_cards.get(fish_id, {}))
 	return entry.get("card") as Control
+
+
+func _fish_hit_target(screen: Variant, fish_id: String) -> Button:
+	var entry := Dictionary(screen._fish_cards.get(fish_id, {}))
+	return entry.get("hit_target") as Button
 
 
 func _recipe_card(screen: Variant, recipe_id: String) -> Control:
@@ -421,6 +500,57 @@ func _click_control(control: Control) -> void:
 	await _settle()
 
 
+func _drag_control(control: Control, relative_steps: Array[Vector2]) -> void:
+	_expect(control != null, "drag target should exist")
+	if control == null:
+		return
+	var position := control.get_global_rect().get_center()
+	var hover := InputEventMouseMotion.new()
+	hover.position = position
+	hover.global_position = position
+	_active_viewport.push_input(hover, true)
+	var down := InputEventMouseButton.new()
+	down.position = position
+	down.global_position = position
+	down.button_index = MOUSE_BUTTON_LEFT
+	down.button_mask = MOUSE_BUTTON_MASK_LEFT
+	down.pressed = true
+	_active_viewport.push_input(down, true)
+	await get_tree().process_frame
+	for relative in relative_steps:
+		position += relative
+		var motion := InputEventMouseMotion.new()
+		motion.position = position
+		motion.global_position = position
+		motion.relative = relative
+		motion.button_mask = MOUSE_BUTTON_MASK_LEFT
+		_active_viewport.push_input(motion, true)
+		await get_tree().process_frame
+	var up := InputEventMouseButton.new()
+	up.position = position
+	up.global_position = position
+	up.button_index = MOUSE_BUTTON_LEFT
+	up.button_mask = 0
+	up.pressed = false
+	_active_viewport.push_input(up, true)
+	await _settle()
+
+
+func _wheel_control(control: Control, button_index: MouseButton) -> void:
+	_expect(control != null, "wheel target should exist")
+	if control == null:
+		return
+	var position := control.get_global_rect().get_center()
+	var wheel := InputEventMouseButton.new()
+	wheel.position = position
+	wheel.global_position = position
+	wheel.button_index = button_index
+	wheel.factor = 1.0
+	wheel.pressed = true
+	_active_viewport.push_input(wheel, true)
+	await _settle()
+
+
 func _wait_for(predicate: Callable, timeout_seconds: float) -> void:
 	var deadline := Time.get_ticks_msec() + int(timeout_seconds * 1000.0)
 	while Time.get_ticks_msec() < deadline:
@@ -462,4 +592,11 @@ func _expect(condition: bool, message: String) -> void:
 		return
 	_failed = true
 	push_error("cooking_input_smoke: %s" % message)
-	get_tree().quit(1)
+	_finish(1)
+
+
+func _finish(exit_code: int) -> void:
+	if _input_emulation_overridden:
+		Input.emulate_touch_from_mouse = _original_emulate_touch_from_mouse
+		_input_emulation_overridden = false
+	get_tree().quit(exit_code)

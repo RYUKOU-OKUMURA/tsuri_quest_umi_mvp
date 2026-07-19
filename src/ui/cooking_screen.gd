@@ -37,6 +37,7 @@ const COOKING_FISH_DISPLAY_ORDER := [
 	"boss_kurodai",
 ]
 const COOKING_FISH_MIN_VISIBLE_ROWS := 6
+const FISH_SCROLL_DEADZONE := 12
 const FISH_ROW_ICON_MIN_WIDTH := 120.0
 const FISH_ROW_NAME_MIN_WIDTH := 48.0
 const FISH_ROW_AMOUNT_WIDTH := 58.0
@@ -574,6 +575,7 @@ func _build_cook_select(layout: VBoxContainer) -> void:
 	_fish_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_fish_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	_fish_scroll.follow_focus = true
+	_fish_scroll.scroll_deadzone = FISH_SCROLL_DEADZONE
 	fish_layout.add_child(_fish_scroll)
 	_fish_box = VBoxContainer.new()
 	_fish_box.name = "FishList"
@@ -1053,18 +1055,13 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	var card := PanelContainer.new()
 	card.name = _fish_row_node_name(fish_id)
 	card.custom_minimum_size = Vector2(0, 72)
-	card.mouse_filter = Control.MOUSE_FILTER_STOP if owned else Control.MOUSE_FILTER_IGNORE
+	card.mouse_filter = Control.MOUSE_FILTER_PASS if owned else Control.MOUSE_FILTER_IGNORE
 	card.set_meta(FOCUS_KIND_META, "fish")
 	card.set_meta(FOCUS_ID_META, fish_id)
 	card.focus_mode = Control.FOCUS_ALL if owned else Control.FOCUS_NONE
 	if owned:
 		_fish_focus_order.append(card)
 		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		card.gui_input.connect(
-			func(event: InputEvent) -> void:
-				if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-					_select_fish(fish_id)
-		)
 		card.gui_input.connect(
 			func(event: InputEvent) -> void:
 				_handle_focus_card_accept(event, card, _select_fish.bind(fish_id))
@@ -1113,8 +1110,34 @@ func _make_fish_card(fish_id: String, count: int) -> PanelContainer:
 	amount.clip_text = true
 	row.add_child(amount)
 	_make_card_contents_click_through(card)
-	_fish_cards[fish_id] = {"card": card, "marker": marker, "owned": owned}
+	var hit_target: Button = null
+	if owned:
+		hit_target = _make_fish_hit_target(fish_id)
+		card.add_child(hit_target)
+	_fish_cards[fish_id] = {
+		"card": card,
+		"marker": marker,
+		"owned": owned,
+		"hit_target": hit_target,
+	}
 	return card
+
+
+func _make_fish_hit_target(fish_id: String) -> Button:
+	var hit_target := Button.new()
+	hit_target.name = "%sHitTarget" % _fish_row_node_name(fish_id)
+	hit_target.text = ""
+	hit_target.flat = true
+	hit_target.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
+	hit_target.focus_mode = Control.FOCUS_NONE
+	hit_target.mouse_filter = Control.MOUSE_FILTER_PASS
+	hit_target.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	hit_target.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hit_target.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	for state in ["normal", "hover", "pressed", "focus", "disabled", "hover_pressed"]:
+		hit_target.add_theme_stylebox_override(state, StyleBoxEmpty.new())
+	hit_target.pressed.connect(_select_fish.bind(fish_id))
+	return hit_target
 
 
 func _fish_row_display_name(fish_id: String, fallback: String) -> String:
